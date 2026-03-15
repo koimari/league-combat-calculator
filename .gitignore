@@ -4,11 +4,7 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Cached data (re-generated via "Update to latest patch")
-data/champions.json
-data/items.json
-
-# lolstaticdata cache
+# lolstaticdata download cache
 lolstaticdata/__cache__/
 
 # IDE
