@@ -357,4 +357,4 @@ See `src/calculator/champions/scaling.py` for the full unit-string → stat-key 
 When writing a new custom module, study these existing ones for patterns:
 - **`aatrox.py`** (preferred pattern): JSON-driven, 3-cast Q with sweetspot option, R stat buff, W double-hit, passive on-hit from per-level data.
 - **`akali.py`**: JSON-driven, E total (both hits), R with missing-HP scaling, passive with user-configurable proc count.
-- **`ahri.py`**: Legacy (hardcoded values). Multi-part W, multi-dash R, mixed damage Q.
+- **`ahri.py`**: JSON-driven, mixed damage Q (magic + true), multi-part W (initial + subsequent), multi-dash R (3 casts).

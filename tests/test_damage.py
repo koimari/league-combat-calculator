@@ -3,12 +3,11 @@
 import pytest
 
 from src.calculator.resistance import apply_resistance, apply_magic_penetration
-from src.calculator.champions.common import calculate_ability_damage
+from src.calculator.champions.common import calculate_ability_damage, effective_cooldown
 from src.calculator.champions.ahri import (
-    get_ability_rank,
-    get_effective_cooldown,
     parse_abilities as parse_ahri_abilities,
 )
+from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.damage import (
     calculate_fight_damage,
     _simulate_bork_damage,
@@ -120,10 +119,10 @@ class TestGetEffectiveCooldown:
     """Tests for cooldown reduction from ability haste."""
 
     def test_no_haste(self) -> None:
-        assert get_effective_cooldown("Q", 1) == 7.0
+        assert effective_cooldown(7.0, 0.0) == 7.0
 
     def test_with_haste(self) -> None:
-        result = get_effective_cooldown("Q", 1, ability_haste=15.0)
+        result = effective_cooldown(7.0, 15.0)
         expected = 7.0 * 100 / 115
         assert abs(result - expected) < 0.01
 
@@ -1355,7 +1354,7 @@ class TestBloodsongSpellbladeAndExposeWeakness:
     ) -> None:
         """Ahri level 18 with Bloodsong vs 1000 HP / 100 Armor / 100 MR.
 
-        5-second fight, 100% auto uptime. Expected ~1050 total damage (±5%).
+        5-second fight, 100% auto uptime. Expected ~1161 total damage (±5%).
         """
         from src.calculator.stats import calculate_total_stats
 
@@ -1372,7 +1371,7 @@ class TestBloodsongSpellbladeAndExposeWeakness:
             items=items,
             one_rotation=False,
         )
-        expected = 1050
+        expected = 1161
         actual = fight["total_damage"]
         tolerance = expected * 0.05
         assert abs(actual - expected) <= tolerance, (
@@ -1543,7 +1542,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     ) -> None:
         """Ahri level 18, D&D + Nashor's vs 1000 HP / 100 Armor / 100 MR.
 
-        4-second fight, 100% auto uptime. Expected ~1565 total damage (+-5%).
+        4-second fight, 100% auto uptime. Expected ~1656 total damage (+-5%).
         """
         from src.calculator.stats import calculate_total_stats
 
@@ -1560,7 +1559,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
             items=items,
             one_rotation=False,
         )
-        expected = 1565
+        expected = 1656
         actual = fight["total_damage"]
         tolerance = expected * 0.05
         assert abs(actual - expected) <= tolerance, (
