@@ -620,6 +620,15 @@ class LolWikiDataHandler:
                     description = description.replace("  ", " ")
                 leveling = data.get_source(f"leveling{ending}")
                 leveling = self._render_levelings(leveling, nvalues) if leveling else []
+                # Extract per-level scaling from pp-tooltip spans in
+                # the description HTML.  These contain data-bot-values
+                # with the actual (often non-linear) per-level values
+                # that would otherwise be lost by .text.strip().
+                desc_source = data.get_source(f"description{ending}")
+                if desc_source:
+                    leveling = leveling + self._extract_per_level_data(
+                        desc_source,
+                    )
                 if description or leveling:
                     effects.append(Effect(description=description, leveling=leveling))
 
@@ -667,6 +676,194 @@ class LolWikiDataHandler:
                 hashes.append(h)
                 unique_abilities.append(ability)
         return skill_key, unique_abilities
+
+    @staticmethod
+    def _extract_per_level_data(desc_html) -> List[Leveling]:
+        """Extract per-level scaling from pp-tooltip spans in description HTML.
+
+        Wiki ability descriptions embed per-level scaling data in
+        ``<span class="pp-tooltip" data-bot-values="...">`` elements.
+        The ``data-bot-values`` attribute contains semicolon-separated
+        actual per-level values (often 20, for levels 1-20) that the
+        normal text extraction discards.
+
+        Only extracts spans whose text contains "(based on level)" with
+        the "X − Y" or "X : Y" range format (i.e. the ones that
+        ``parse_based_on_level`` would otherwise linearly interpolate).
+        Slash-separated values like "30% / 40% / 50% / 60%" are already
+        handled correctly by the existing parser.
+
+        Returns a list of synthetic ``Leveling`` entries with the actual
+        per-level values stored as modifiers.
+        """
+        if isinstance(desc_html, str):
+            desc_html = BeautifulSoup(desc_html, "html.parser")
+
+        results = []  # type: List[Leveling]
+        tooltips = desc_html.find_all("span", class_="pp-tooltip")
+        for span in tooltips:
+            bot_values = span.get("data-bot-values")
+            if not bot_values:
+                continue
+
+            text = span.get_text()
+            # Only process "X − Y (based on level)" or "X : Y (based
+            # on level)" range format.  Skip slash-separated values
+            # ("30% / 40% / 50%") since those are already parsed
+            # correctly from the text.
+            if "(based on level)" not in text:
+                continue
+            if "/" in text:
+                continue
+
+            values = []
+            for v in bot_values.split(";"):
+                try:
+                    num = float(v)
+                    values.append(int(num) if num == int(num) else num)
+                except ValueError:
+                    continue
+
+            if not values:
+                continue
+
+            # Determine the attribute name from surrounding context.
+            # Walk up/forward in the HTML to find descriptive text.
+            # Common patterns:
+            #   "deal 35 − 212 (based on level) ... bonus magic damage"
+            #   "equal to 4% − 10.71% (based on level) of the target's
+            #    maximum health"
+            attr_name = LolWikiDataHandler._infer_per_level_attribute(
+                span,
+            )
+
+            # Determine units from the text.  If the range has "%" like
+            # "4% − 10.71%", the values represent percentages.
+            unit = ""
+            range_match = re.search(
+                r"(\d+\.?\d*)(%?)\s*[−:]\s*(\d+\.?\d*)(%?)",
+                text,
+            )
+            if range_match and range_match.group(2) == "%":
+                unit = "%"
+
+            modifier = Modifier(
+                values=values,
+                units=[unit] * len(values),
+            )
+
+            # Check for additional scaling ratios in adjacent spans
+            # e.g. "(+ 60% bonus AD) (+ 55% AP)" following the tooltip
+            extra_modifiers = LolWikiDataHandler._extract_adjacent_scaling(
+                span,
+            )
+
+            leveling = Leveling(
+                attribute=attr_name,
+                modifiers=[modifier] + extra_modifiers,
+            )
+            results.append(leveling)
+
+        return results
+
+    @staticmethod
+    def _infer_per_level_attribute(span) -> str:
+        """Infer a descriptive attribute name from HTML context around a
+        pp-tooltip span.
+
+        Looks at the text after the span for keywords like "magic damage",
+        "physical damage", "maximum health", etc.
+        """
+        # Get text after the span within the same parent
+        following_text = ""
+        for sibling in span.next_siblings:
+            if hasattr(sibling, "get_text"):
+                following_text += sibling.get_text()
+            else:
+                following_text += str(sibling)
+            if len(following_text) > 100:
+                break
+
+        following_lower = following_text.lower().strip()
+
+        # Check for common damage/stat patterns
+        if "magic damage" in following_lower:
+            return "Bonus Magic Damage"
+        if "physical damage" in following_lower:
+            return "Bonus Physical Damage"
+        if "true damage" in following_lower:
+            return "Bonus True Damage"
+
+        # Check the span's own text for percentage patterns
+        span_text = span.get_text().lower()
+        if "%" in span_text:
+            # Look for "of the target's maximum health" etc.
+            if "maximum health" in following_lower:
+                return "Max Health Damage"
+            if "current health" in following_lower:
+                return "Current Health Damage"
+            if "missing health" in following_lower:
+                return "Missing Health Damage"
+            return "Per-Level Scaling"
+
+        # Check preceding text
+        preceding_text = ""
+        for sibling in span.previous_siblings:
+            if hasattr(sibling, "get_text"):
+                preceding_text = sibling.get_text() + preceding_text
+            else:
+                preceding_text = str(sibling) + preceding_text
+            if len(preceding_text) > 100:
+                break
+
+        preceding_lower = preceding_text.lower().strip()
+        if "damage" in preceding_lower:
+            return "Bonus Damage"
+        if "heal" in preceding_lower:
+            return "Heal"
+        if "shield" in preceding_lower:
+            return "Shield"
+
+        return "Per-Level Scaling"
+
+    @staticmethod
+    def _extract_adjacent_scaling(span) -> List[Modifier]:
+        """Extract scaling ratios from spans adjacent to a pp-tooltip.
+
+        After a pp-tooltip like "35 − 212 (based on level)", there are
+        often colored spans with scaling ratios like "(+ 60% bonus AD)"
+        and "(+ 55% AP)".  These should become additional modifiers on
+        the same leveling entry.
+        """
+        modifiers = []
+        # Pattern: "(+ N% stat_name)"
+        scaling_re = re.compile(
+            r"\(\+\s*(\d+\.?\d*)%\s+(.+?)\)",
+        )
+
+        for sibling in span.next_siblings:
+            text = ""
+            if hasattr(sibling, "get_text"):
+                text = sibling.get_text()
+            else:
+                text = str(sibling)
+
+            match = scaling_re.search(text)
+            if match:
+                ratio = float(match.group(1))
+                stat = match.group(2).strip()
+                # Map common stat names to unit strings
+                unit = f"% {stat}"
+                modifier = Modifier(
+                    values=[ratio],
+                    units=[unit],
+                )
+                modifiers.append(modifier)
+            elif text.strip() and not text.strip().startswith("(+"):
+                # Stop at non-scaling text
+                break
+
+        return modifiers
 
     def _render_levelings(self, html: BeautifulSoup, nvalues: int) -> List[Leveling]:
         # Do some pre-processing on the html

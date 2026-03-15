@@ -1,9 +1,8 @@
 """Akali ability parsing and damage calculation.
 
 Custom module needed because:
-- P (Assassin's Mark): Empowered auto with non-linear per-level scaling
-  only in description text, not structured leveling data. User-configurable
-  proc count via champion options.
+- P (Assassin's Mark): Empowered auto with per-level scaling and
+  user-configurable proc count via champion options.
 - E (Shuriken Flip): Two-part ability (throw + dash). Uses "Total Magic
   Damage" attribute to capture both hits.
 - R (Perfect Execution): Two-cast ultimate (R1 dash + R2 execute). R2
@@ -11,12 +10,9 @@ Custom module needed because:
   separately so the fight engine can apply missing-HP scaling to R2
   based on damage dealt earlier in the rotation.
 
-All numeric values are read from the champion JSON data where available.
-Passive per-level base values use the wiki growth formula because the
-JSON description only stores min:max, not the actual non-linear curve.
+All numeric values are read from the champion JSON data.
 """
 
-import re
 from typing import Any
 
 from .generic_parser import extract_cooldown, extract_damage
@@ -77,17 +73,6 @@ def _extract_leveling_damage(
 # Passive parsing
 # ---------------------------------------------------------------------------
 
-# Per-level base damage values from the LoL Wiki (levels 1-20).
-# The JSON description only stores "35 : 212 (based on level)" which
-# loses the non-linear growth curve (+3/lvl until 7, +9 until 13, +15
-# after). These values are NOT in the JSON in any structured form.
-# Source: https://wiki.leagueoflegends.com/en-us/Akali
-_PASSIVE_BASE_BY_LEVEL: list[float] = [
-    35, 38, 41, 44, 47, 50, 53,       # +3 per level (1-7)
-    62, 71, 80, 89, 98, 107,           # +9 per level (8-13)
-    122, 137, 152, 167, 182, 197, 212, # +15 per level (14-20)
-]
-
 
 def _parse_passive_damage(
     passive: dict[str, Any],
@@ -95,10 +80,11 @@ def _parse_passive_damage(
     champion_stats: dict[str, float] | None = None,
     total_ability_power: float = 0.0,
 ) -> float:
-    """Parse Akali passive damage per proc.
+    """Parse Akali passive damage per proc from JSON leveling data.
 
-    Uses the wiki per-level base values (non-linear growth) plus
-    scaling ratios parsed from the JSON description text.
+    The JSON now contains structured per-level data extracted from
+    the wiki's ``data-bot-values`` attribute (20 values for levels
+    1-20) plus scaling modifiers (e.g. ``60% bonus AD``, ``55% AP``).
 
     Args:
         passive: Passive ability dict from champion JSON.
@@ -109,35 +95,47 @@ def _parse_passive_damage(
     Returns:
         Damage per passive proc before resistances.
     """
-    clamped_level = max(1, min(level, 20))
-    base_damage = _PASSIVE_BASE_BY_LEVEL[clamped_level - 1]
-
-    # Extract scaling ratios from description: "(+ Z% bonus AD)" etc.
-    description = ""
+    # Find the per-level leveling entry in the passive effects
     for effect in passive.get("effects", []):
-        description += effect.get("description", "")
+        for leveling in effect.get("leveling", []):
+            attribute = leveling.get("attribute", "").lower()
+            if "damage" not in attribute:
+                continue
 
-    scaling_matches = re.findall(
-        r"\(\+\s*(\d+(?:\.\d+)?)%\s+(bonus AD|AP|AD)\)",
-        description,
-    )
+            modifiers = leveling.get("modifiers", [])
+            if not modifiers:
+                continue
 
-    bonus_damage = 0.0
-    for ratio_str, stat_name in scaling_matches:
-        ratio = float(ratio_str) / 100.0
-        if stat_name == "bonus AD":
-            stat_val = (champion_stats or {}).get(
-                "bonus_attack_damage", 0.0,
-            )
-        elif stat_name == "AD":
-            stat_val = (champion_stats or {}).get("attack_damage", 0.0)
-        elif stat_name == "AP":
-            stat_val = total_ability_power
-        else:
-            stat_val = 0.0
-        bonus_damage += ratio * stat_val
+            # First modifier: per-level base values
+            base_values = modifiers[0].get("values", [])
+            if not base_values:
+                continue
 
-    return base_damage + bonus_damage
+            clamped_level = max(1, min(level, len(base_values)))
+            base_damage = float(base_values[clamped_level - 1])
+
+            # Remaining modifiers: scaling ratios
+            stats_context = dict(champion_stats) if champion_stats else {}
+            stats_context["ability_power"] = total_ability_power
+
+            bonus_damage = 0.0
+            for modifier in modifiers[1:]:
+                values = modifier.get("values", [])
+                units = modifier.get("units", [])
+                if not values or not units:
+                    continue
+                value = float(values[0])
+                unit = units[0] if units else ""
+                if is_flat_unit(unit):
+                    bonus_damage += value
+                else:
+                    bonus_damage += resolve_scaling(
+                        unit, value, stats_context, None,
+                    )
+
+            return base_damage + bonus_damage
+
+    return 0.0
 
 
 # ---------------------------------------------------------------------------

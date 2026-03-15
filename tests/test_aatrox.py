@@ -158,10 +158,20 @@ class TestPassiveOnHit:
         assert abs(damage - 80.0) < 1.0
 
     def test_passive_level18_percent(self, aatrox_data: dict) -> None:
-        """Level 18 passive should deal ~10.71% of target max health."""
+        """Level 18 passive should deal 10% of target max health."""
         target_stats = {"target_max_health": 2000.0}
         abilities = parse_abilities(
             aatrox_data, 18, 0.0, target_stats=target_stats,
+        )
+        damage = abilities["passive"]["on_hit"]["damage_per_hit"]
+        # 10% of 2000 = 200 (10.71% is level 20, not 18)
+        assert abs(damage - 200.0) < 1.0
+
+    def test_passive_level20_percent(self, aatrox_data: dict) -> None:
+        """Level 20 passive should deal ~10.71% of target max health."""
+        target_stats = {"target_max_health": 2000.0}
+        abilities = parse_abilities(
+            aatrox_data, 20, 0.0, target_stats=target_stats,
         )
         damage = abilities["passive"]["on_hit"]["damage_per_hit"]
         # 10.71% of 2000 = 214.2

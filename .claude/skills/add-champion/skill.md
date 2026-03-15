@@ -54,7 +54,7 @@ Create a custom module for champions with:
 - **Multi-cast with different damage per cast:** Abilities where each cast does different damage (Aatrox Q — 3 casts summed)
 - **Stat-buff ultimates:** R that grants stats (bonus AD, AP, etc.) instead of dealing damage (Aatrox R)
 - **Conditional hit counts:** Abilities that hit multiple times conditionally (Aatrox W — initial + pull-back)
-- **Passive on-hit without structured leveling data:** Passives where damage is only in description text, not in `effects[].leveling[]` (Aatrox P)
+- **Passive on-hit with per-level scaling:** Passives where damage scales with champion level (Aatrox P, Akali P) — now auto-extracted from JSON
 
 ## No Hardcoded Values
 
@@ -63,7 +63,29 @@ Create a custom module for champions with:
 - `extract_damage(ability, rank, stats, target_stats)` for standard abilities
 - `_extract_leveling_damage(ability, attribute_name, rank, stats)` for specific named attributes (when the generic `extract_damage` picks the wrong one)
 - `_extract_r_bonus_ad_percent(ability, rank)` pattern for reading specific leveling values
-- Regex on `effect["description"]` text as a last resort when structured leveling data is absent (e.g., passive per-level scaling like `"4% : 10.71% (based on level)"`)
+
+### Per-level scaling data
+
+Champion abilities with "X : Y (based on level)" scaling now have structured leveling data in the JSON. The lolstaticdata scraper extracts actual per-level values from the wiki's `data-bot-values` HTML attributes (typically 20 values for levels 1-20). This captures non-linear growth curves that linear interpolation would get wrong.
+
+**Where it appears:** Per-level data is stored as synthetic leveling entries on the effect that contains the scaling in its description. Common attributes:
+- `"Bonus Magic Damage"` — flat per-level damage (e.g., Akali passive)
+- `"Max Health Damage"` — % max HP scaling (e.g., Aatrox passive)
+- `"Bonus Damage"` — generic per-level bonus damage
+
+**How to use it:** Search `effects[].leveling[]` for the appropriate attribute. The first modifier's `values` array contains the per-level base values. Subsequent modifiers contain scaling ratios (e.g., `"% bonus AD"`, `"% AP"`).
+
+```python
+# Example: reading Akali passive per-level damage
+for effect in passive.get("effects", []):
+    for leveling in effect.get("leveling", []):
+        if "damage" in leveling["attribute"].lower():
+            base_values = leveling["modifiers"][0]["values"]  # 20 values
+            base_at_level = base_values[level - 1]
+            # Additional modifiers have scaling ratios
+```
+
+**Note:** This only applies to champion abilities. Item per-level scaling uses a separate pipeline (`passive_parser.py`) that currently does linear interpolation and may need a separate fix for non-linear item scaling.
 
 ### JSON attribute gotchas
 
@@ -355,4 +377,5 @@ Full mapping in `src/calculator/champions/scaling.py`.
 ## Reference Implementations
 
 - **Ahri** (`ahri.py`): Mixed damage Q, multi-part W (initial + subsequent), multi-dash R. Uses hardcoded values (legacy).
-- **Aatrox** (`aatrox.py`): JSON-driven. 3-cast Q with sweetspot option, R stat buff, W double-hit via "Total Damage" attribute, passive on-hit parsed from description text. The preferred pattern for new champions.
+- **Aatrox** (`aatrox.py`): JSON-driven. 3-cast Q with sweetspot option, R stat buff, W double-hit via "Total Damage" attribute, passive on-hit from JSON per-level leveling data. The preferred pattern for new champions.
+- **Akali** (`akali.py`): JSON-driven. Standard Q, E total (both hits), R with missing-HP scaling (R2 damage computed from target HP after prior abilities), passive from JSON per-level leveling data with user-configurable proc count.

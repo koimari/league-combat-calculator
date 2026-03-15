@@ -12,7 +12,6 @@ All numeric values are read from the champion JSON data; nothing is
 hardcoded.
 """
 
-import re
 from typing import Any
 
 from .generic_parser import extract_cooldown, extract_damage
@@ -109,55 +108,55 @@ def _parse_passive_on_hit(
     level: int,
     target_stats: dict[str, float] | None = None,
 ) -> dict[str, Any] | None:
-    """Parse Aatrox passive on-hit damage from description text.
+    """Parse Aatrox passive on-hit damage from JSON leveling data.
 
-    The passive has no structured leveling data. Damage is described as
-    ``"X% : Y% (based on level) of the target's maximum health"`` in the
-    effect description. We extract X (level 1) and Y (level 18) and
-    interpolate for the current level.
+    The JSON now contains structured per-level data extracted from
+    the wiki's ``data-bot-values`` attribute (20 values for levels
+    1-20).  The passive deals a percentage of the target's max health
+    as magic damage.
 
     Args:
         passive: Passive ability dict from champion JSON.
-        level: Champion level (1-18).
+        level: Champion level (1-20).
         target_stats: Target stats (for target max health).
 
     Returns:
         On-hit data dict, or None if parsing fails.
     """
-    description = ""
+    # Find the "Max Health Damage" leveling entry
     for effect in passive.get("effects", []):
-        description += effect.get("description", "")
+        for leveling in effect.get("leveling", []):
+            attribute = leveling.get("attribute", "").lower()
+            if "max health" not in attribute and "health damage" not in attribute:
+                continue
 
-    # Pattern: "X% : Y% (based on level) of the target's maximum health"
-    match = re.search(
-        r"(\d+(?:\.\d+)?)%\s*:\s*(\d+(?:\.\d+)?)%\s*\(based on level\)"
-        r"\s+of\s+the\s+target's\s+maximum\s+health",
-        description,
-    )
-    if not match:
-        return None
+            modifiers = leveling.get("modifiers", [])
+            if not modifiers:
+                continue
 
-    min_percent = float(match.group(1))
-    max_percent = float(match.group(2))
+            values = modifiers[0].get("values", [])
+            if not values:
+                continue
 
-    # Linear interpolation: level 1 → min_percent, level 18 → max_percent
-    clamped_level = max(1, min(level, 18))
-    percent = min_percent + (max_percent - min_percent) * (
-        (clamped_level - 1) / 17.0
-    )
+            clamped_level = max(1, min(level, len(values)))
+            percent = float(values[clamped_level - 1])
 
-    target_max_health = 0.0
-    if target_stats:
-        target_max_health = target_stats.get("target_max_health", 0.0)
+            target_max_health = 0.0
+            if target_stats:
+                target_max_health = target_stats.get(
+                    "target_max_health", 0.0,
+                )
 
-    damage = (percent / 100.0) * target_max_health
+            damage = (percent / 100.0) * target_max_health
 
-    passive_name = passive.get("name", "Deathbringer Stance")
-    return {
-        "name": f"{passive_name} (on-hit)",
-        "damage_per_hit": damage,
-        "damage_type": "magic",
-    }
+            passive_name = passive.get("name", "Deathbringer Stance")
+            return {
+                "name": f"{passive_name} (on-hit)",
+                "damage_per_hit": damage,
+                "damage_type": "magic",
+            }
+
+    return None
 
 
 # ---------------------------------------------------------------------------
