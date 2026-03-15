@@ -41,6 +41,11 @@ On first launch, click **"Update to latest patch"** to fetch champion and item d
 pytest
 ```
 
+## Credits
+
+- **[lolstaticdata](https://github.com/meraki-analytics/lolstaticdata)** by Meraki Analytics — Champion and item data scraping library. This project uses a local copy of their code to pull accurate ability data from the wiki.
+- **[League of Legends Wiki](https://wiki.leagueoflegends.com)** — The source of truth for champion ability values, item effects, and game formulas.
+
 ## Tech Stack
 
 - **Backend:** Python / Flask
