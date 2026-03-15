@@ -21,6 +21,7 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Akali": "akali",
     "Akshan": "akshan",
     "Alistar": "alistar",
+    "Ambessa": "ambessa",
 }
 
 

@@ -379,7 +379,7 @@ def _calculate_shadowflame_bonus(
         Total bonus damage from Shadowflame crits.
     """
     if cast_order is None:
-        cast_order = ["Q", "W", "E", "R"]
+        cast_order = ["Q", "Q2", "W", "E", "R"]
     effect = item_effects.ITEM_EFFECTS.get("Shadowflame")
     if not effect:
         return 0.0
@@ -547,7 +547,7 @@ def calculate_fight_damage(
         Dictionary with damage breakdown and total.
     """
     if cast_order is None:
-        cast_order = ["Q", "W", "E", "R"]
+        cast_order = ["Q", "Q2", "W", "E", "R"]
     if items is None:
         items = []
 
@@ -705,6 +705,22 @@ def calculate_fight_damage(
                     champion_stats.get("base_attack_damage", 0.0)
                     + champion_stats.get("bonus_attack_damage", 0.0)
                 )
+            # Recalculate armor penetration if it was buffed
+            if "armor_penetration_percent" in stat_buff:
+                armor_pen_percent = (
+                    champion_stats.get("armor_penetration_percent", 0.0)
+                    / 100.0
+                )
+                reduced_armor = target_armor * (1.0 - bc_reduction)
+                effective_armor = apply_armor_penetration(
+                    reduced_armor, flat_armor_pen, armor_pen_percent
+                )
+                if prep_lethality > 0:
+                    effective_armor_prep = apply_armor_penetration(
+                        reduced_armor, prep_flat_pen, armor_pen_percent
+                    )
+                else:
+                    effective_armor_prep = effective_armor
 
     # Compute crit stats early — needed by both ability crit scaling (Step 2)
     # and auto-attack simulation (Step 3).
@@ -739,6 +755,8 @@ def calculate_fight_damage(
 
     basic_ability_haste = champion_stats.get("basic_ability_haste", 0.0)
 
+    recast_counts: dict[str, int] = {}  # Track casts for recast pairing
+
     for ability_key in cast_order:
         if ability_key not in ability_damages:
             continue
@@ -749,16 +767,23 @@ def calculate_fight_damage(
         elif one_rotation or ability_key == "R":
             num_casts = 1
         else:
-            base_cd = ability_info.get("cooldown", 0.0)
-            # Basic ability haste (e.g. Spear of Shojin) applies to Q, W, E
-            total_haste = ability_haste
-            if ability_key in ("Q", "W", "E"):
-                total_haste += basic_ability_haste
-            cd = effective_cooldown(base_cd, total_haste)
-            # Navori reduces basic ability CDs (Q, W, E) via auto attacks
-            if navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
-                cd = _navori_effective_cd(cd, autos_per_second, navori_refund)
-            num_casts = 1 + int(fight_duration_seconds / cd) if cd > 0 else 1
+            # Recasts (e.g. Q2) always match their parent ability's casts
+            parent_key = ability_info.get("recast_of")
+            if parent_key and parent_key in recast_counts:
+                num_casts = recast_counts[parent_key]
+            else:
+                base_cd = ability_info.get("cooldown", 0.0)
+                # Basic ability haste (e.g. Spear of Shojin) applies to Q, W, E
+                total_haste = ability_haste
+                if ability_key in ("Q", "W", "E"):
+                    total_haste += basic_ability_haste
+                cd = effective_cooldown(base_cd, total_haste)
+                # Navori reduces basic ability CDs (Q, W, E) via auto attacks
+                if navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
+                    cd = _navori_effective_cd(cd, autos_per_second, navori_refund)
+                num_casts = 1 + int(fight_duration_seconds / cd) if cd > 0 else 1
+
+        recast_counts[ability_key] = num_casts
 
         # Malignance MR reduction activates when R is cast
         if ability_key == "R":

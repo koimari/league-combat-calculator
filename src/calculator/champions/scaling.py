@@ -123,16 +123,18 @@ def _parse_compound_unit(
     Returns:
         Computed damage, or None if the pattern is not recognized.
     """
-    # Check for "of target's [current/maximum/missing] health" suffix
+    # Check for "of [the] target's [current/maximum/missing] health" suffix
     target_hp_match = re.search(
-        r"of\s+target's\s+(maximum|current|missing)\s+health",
+        r"of\s+(?:the\s+)?target's\s+(maximum|current|missing)\s+health",
         unit, re.IGNORECASE,
     )
     if not target_hp_match:
         return None
 
     hp_type = target_hp_match.group(1).lower()
-    hp_key = f"target_{hp_type}_health"
+    # Map to the stat key convention used in target_stats
+    hp_type_key = {"maximum": "max", "current": "current", "missing": "missing"}
+    hp_key = f"target_{hp_type_key.get(hp_type, hp_type)}_health"
     target_hp = stats.get(hp_key, 0.0)
 
     # Base percentage is the value itself

@@ -239,6 +239,42 @@ document.addEventListener("DOMContentLoaded", () => {
         ],
     };
 
+    championOptionsDefs["Ambessa"] = {
+        render(container) {
+            container.innerHTML = `
+                <label class="toggle-label compact">
+                    <input type="checkbox" id="opt-ambessa-sweetspot" checked>
+                    <span class="toggle-text">Q/Q2 Sweetspot (doubled damage)</span>
+                </label>
+                <label class="toggle-label compact" style="margin-top:6px;">
+                    <span class="toggle-text">Passive procs</span>
+                    <input type="number" id="opt-ambessa-passive-procs" value="4"
+                           min="0" max="20" style="width:48px; margin-left:8px;
+                           background:var(--bg-dark); color:var(--text-light);
+                           border:1px solid var(--border-subtle); border-radius:4px;
+                           padding:2px 6px; font-size:0.85rem;">
+                </label>`;
+            document.getElementById("opt-ambessa-sweetspot")
+                .addEventListener("change", scheduleRecalc);
+            document.getElementById("opt-ambessa-passive-procs")
+                .addEventListener("input", scheduleRecalc);
+        },
+        getValues() {
+            return {
+                sweetspot: document.getElementById("opt-ambessa-sweetspot")?.checked ?? true,
+                passive_procs: parseInt(
+                    document.getElementById("opt-ambessa-passive-procs")?.value ?? "4", 10
+                ),
+            };
+        },
+        assumptions: [
+            "R passive (armor penetration) is always active when R is skilled",
+            "W always uses increased (empowered) damage",
+            "E always hits twice (both passes)",
+            "Q2 (Sundering Slam) shown separately from Q1 (Cunning Sweep)",
+        ],
+    };
+
     function selectChampion(name, icon) {
         championSelect.value = name;
         championNameText.textContent = name || "Select Champion";
