@@ -682,6 +682,21 @@ def calculate_fight_damage(
     # Horizon Focus Hypershot: 10% damage amp after first ability triggers it
     hypershot_amp = item_effects.get_hypershot_amplifier(items)
 
+    # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ───────────────
+    for ability_info in ability_damages.values():
+        stat_buff = ability_info.get("stat_buff")
+        if stat_buff:
+            for stat_key, buff_value in stat_buff.items():
+                champion_stats[stat_key] = (
+                    champion_stats.get(stat_key, 0.0) + buff_value
+                )
+            # Recalculate attack_damage if bonus_attack_damage was buffed
+            if "bonus_attack_damage" in stat_buff:
+                champion_stats["attack_damage"] = (
+                    champion_stats.get("base_attack_damage", 0.0)
+                    + champion_stats.get("bonus_attack_damage", 0.0)
+                )
+
     # ── Step 2: Ability damage ────────────────────────────────────────────
     breakdown: dict[str, Any] = {}
     total_damage = 0.0
@@ -690,6 +705,7 @@ def calculate_fight_damage(
     total_muramana_procs = 0  # One proc per cast, but multi-cast R counts each
     vile_decay_stacks = 0  # Bloodletter's Curse MR reduction stacks
     ult_cast = False  # Tracks if R has been reached in cast_order
+    mitigated_damage_dealt = 0.0  # Running total for missing-HP scaling
     first_ability_damage = 0.0  # Track for Horizon Focus (trigger, not amped)
     first_ability_key: str | None = None
 
@@ -784,6 +800,26 @@ def calculate_fight_damage(
                 ability_total = (
                     per_dash * ability_info["total_casts"] * num_casts
                 )
+            elif ability_info.get("missing_hp_scaling"):
+                # Two-part ability with missing-HP scaling on the second
+                # cast (e.g. Akali R: R1 flat + R2 scales 0-200% with
+                # target missing HP). Compute R2 based on damage dealt
+                # so far in the rotation.
+                r1_raw = ability_info.get("magic_damage", 0)
+                r2_min = ability_info.get("r2_min", 0)
+                r2_max = ability_info.get("r2_max", 0)
+                r1_mit = apply_resistance(r1_raw, ability_mr) * magic_amp
+                # After R1, estimate target HP to scale R2
+                hp_after_r1 = max(
+                    0.0,
+                    target_health - mitigated_damage_dealt - r1_mit,
+                )
+                missing_ratio = 1.0 - (hp_after_r1 / target_health) \
+                    if target_health > 0 else 1.0
+                # R2 damage linearly interpolates min→max by missing %
+                r2_raw = r2_min + (r2_max - r2_min) * missing_ratio
+                r2_mit = apply_resistance(r2_raw, ability_mr) * magic_amp
+                ability_total = (r1_mit + r2_mit) * num_casts
             else:
                 raw = ability_info.get(
                     "magic_damage", ability_info.get("total_raw", 0)
@@ -859,6 +895,7 @@ def calculate_fight_damage(
             "damage_type": damage_type,
         }
         total_damage += ability_total
+        mitigated_damage_dealt += ability_total
 
     # Update effective MR for non-ability damage using final Vile Decay stacks.
     # Non-ability damage occurs during/after the full rotation, so use
@@ -872,6 +909,40 @@ def calculate_fight_damage(
         effective_mr = apply_magic_penetration(
             mr_with_stacks, magic_pen_flat, magic_pen_percent
         )
+
+    # ── Step 2a: Pre-calculated proc damage (e.g. Akali passive) ─────────
+    # Ability entries with a proc_count field represent damage that occurs
+    # a fixed number of times (not tied to cooldowns or auto attacks).
+    for key, info in ability_damages.items():
+        if key in cast_order or "on_hit" in info or "stat_buff" in info:
+            continue
+        proc_count = info.get("proc_count", 0)
+        if proc_count <= 0:
+            continue
+
+        raw_per_proc = info.get("magic_damage", info.get(
+            "physical_damage", info.get("total_raw", 0),
+        ))
+        if raw_per_proc <= 0:
+            continue
+
+        dtype = info.get("damage_type", "magic")
+        if dtype == "magic":
+            per_proc = apply_resistance(raw_per_proc, effective_mr) * magic_amp
+        elif dtype == "physical":
+            per_proc = apply_resistance(raw_per_proc, effective_armor)
+        else:
+            per_proc = raw_per_proc
+
+        proc_total = per_proc * proc_count
+        breakdown[key] = {
+            "name": info.get("name", key),
+            "count": proc_count,
+            "damage_per_hit": per_proc,
+            "total_damage": proc_total,
+            "damage_type": dtype,
+        }
+        total_damage += proc_total
 
     # ── Step 2b: Bastionbreaker Shaped Charge ─────────────────────────────
     if "Bastionbreaker" in [i.get("name", "") for i in items]:

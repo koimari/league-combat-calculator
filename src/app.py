@@ -142,6 +142,7 @@ def api_calculate():
     ability_ranks = data.get("ability_ranks", None)
     include_actives = data.get("include_actives", True)
     cast_order = data.get("cast_order", None)
+    champion_options = data.get("champion_options", None)
 
     # Validate
     if not champion_name:
@@ -201,6 +202,7 @@ def api_calculate():
         ability_ranks=ability_ranks,
         champion_stats=champion_stats,
         target_stats=target_stats,
+        champion_options=champion_options,
     )
 
     # Determine fight parameters based on mode

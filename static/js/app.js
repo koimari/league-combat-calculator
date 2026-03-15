@@ -131,6 +131,55 @@ document.addEventListener("DOMContentLoaded", () => {
     //   };
     const championOptionsDefs = {};
 
+    championOptionsDefs["Aatrox"] = {
+        render(container) {
+            container.innerHTML = `
+                <label class="toggle-label compact">
+                    <input type="checkbox" id="opt-aatrox-sweetspot" checked>
+                    <span class="toggle-text">Q Sweetspot hits</span>
+                </label>`;
+            document.getElementById("opt-aatrox-sweetspot")
+                .addEventListener("change", scheduleRecalc);
+        },
+        getValues() {
+            return {
+                sweetspot: document.getElementById("opt-aatrox-sweetspot")?.checked ?? true,
+            };
+        },
+        assumptions: [
+            "Assumed R is always active",
+            "W always hits both initial and pull-back damage",
+        ],
+    };
+
+    championOptionsDefs["Akali"] = {
+        render(container) {
+            container.innerHTML = `
+                <label class="toggle-label compact">
+                    <span class="toggle-text">Passive procs</span>
+                    <input type="number" id="opt-akali-passive-procs" value="4"
+                           min="0" max="20" style="width:48px; margin-left:8px;
+                           background:var(--bg-dark); color:var(--text-light);
+                           border:1px solid var(--border-subtle); border-radius:4px;
+                           padding:2px 6px; font-size:0.85rem;">
+                </label>`;
+            document.getElementById("opt-akali-passive-procs")
+                .addEventListener("input", scheduleRecalc);
+        },
+        getValues() {
+            return {
+                passive_procs: parseInt(
+                    document.getElementById("opt-akali-passive-procs")?.value ?? "4", 10
+                ),
+            };
+        },
+        assumptions: [
+            "E always hits both shuriken and recast dash",
+            "R always hits both R1 dash and R2 execute",
+            "R2 damage scales with target missing HP from prior abilities",
+        ],
+    };
+
     function selectChampion(name, icon) {
         championSelect.value = name;
         championNameText.textContent = name || "Select Champion";
@@ -142,16 +191,22 @@ document.addEventListener("DOMContentLoaded", () => {
             championIcon.classList.add("hidden");
         }
 
-        // Show/hide the + button based on whether a champion is selected
+        // Update champion options panel content
+        updateChampionOptionsContent(name);
+
+        // Show/hide the + button based on whether a champion is selected.
+        // Auto-open the panel when the champion has custom options defined.
         if (name) {
             championOptionsBtn.classList.remove("hidden");
+            if (championOptionsDefs[name]) {
+                championOptionsPanel.classList.remove("hidden");
+            } else {
+                championOptionsPanel.classList.add("hidden");
+            }
         } else {
             championOptionsBtn.classList.add("hidden");
             championOptionsPanel.classList.add("hidden");
         }
-
-        // Update champion options panel content
-        updateChampionOptionsContent(name);
 
         // Fetch and display ability icons + names
         if (name) {
@@ -599,6 +654,12 @@ document.addEventListener("DOMContentLoaded", () => {
             payload.cast_order = castOrderSelects.map((sel) => sel.value);
         }
 
+        // Champion-specific options
+        const optDef = championOptionsDefs[champion];
+        if (optDef && optDef.getValues) {
+            payload.champion_options = optDef.getValues();
+        }
+
         // Show loading state
         if (!hasCalculated) {
             btnText.textContent = "Calculating...";
@@ -813,6 +874,23 @@ document.addEventListener("DOMContentLoaded", () => {
             tr.appendChild(tdDetail);
             tr.appendChild(tdDmg);
             tbody.appendChild(tr);
+        }
+
+        // Champion assumptions
+        const assumptionsPanel = document.getElementById("champion-assumptions");
+        const assumptionsList = document.getElementById("champion-assumptions-list");
+        const champion = championSelect.value;
+        const optDef = championOptionsDefs[champion];
+        if (optDef && optDef.assumptions && optDef.assumptions.length > 0) {
+            assumptionsList.innerHTML = "";
+            optDef.assumptions.forEach((text) => {
+                const li = document.createElement("li");
+                li.textContent = text;
+                assumptionsList.appendChild(li);
+            });
+            assumptionsPanel.classList.remove("hidden");
+        } else {
+            assumptionsPanel.classList.add("hidden");
         }
     }
 

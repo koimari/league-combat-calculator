@@ -16,7 +16,9 @@ from typing import Any
 # Only champions with unique mechanics that the generic parser cannot
 # handle need entries here. All other champions use the generic parser.
 _CHAMPION_MODULES: dict[str, str] = {
+    "Aatrox": "aatrox",
     "Ahri": "ahri",
+    "Akali": "akali",
 }
 
 
@@ -28,6 +30,7 @@ def parse_abilities(
     ability_ranks: dict[str, int] | None = None,
     champion_stats: dict[str, float] | None = None,
     target_stats: dict[str, float] | None = None,
+    champion_options: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Parse abilities for any champion.
 
@@ -42,6 +45,8 @@ def parse_abilities(
         ability_ranks: Optional ability rank overrides.
         champion_stats: Champion's calculated stats (for AD/HP scaling).
         target_stats: Target stats (for %HP abilities).
+        champion_options: Champion-specific options from the frontend
+            (e.g., ``{"sweetspot": True}`` for Aatrox).
 
     Returns:
         Ability damage dictionary keyed by Q/W/E/R.
@@ -51,6 +56,9 @@ def parse_abilities(
         module = importlib.import_module(f".{module_name}", package=__name__)
         return module.parse_abilities(
             champion_data, level, total_ability_power, ability_ranks,
+            champion_options=champion_options,
+            champion_stats=champion_stats,
+            target_stats=target_stats,
         )
 
     # Fall through to generic parser

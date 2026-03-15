@@ -18,6 +18,7 @@ src/calculator/champions/
 ├── attribute_classifier.py  # Detects damage vs utility attributes in JSON
 ├── skill_orders.py          # Default Q>W>E skill order + per-champion overrides
 ├── ahri.py                  # Custom: Ahri (mixed Q, multi-part W, multi-dash R)
+├── aatrox.py                # Custom: Aatrox (3-cast Q, R stat buff, passive on-hit)
 └── <champion>.py            # Custom modules for other unique champions
 ```
 
@@ -27,7 +28,7 @@ src/calculator/champions/
 2. If yes → dispatches to that module's `parse_abilities()`
 3. If no → falls through to `generic_parser.py` which reads directly from JSON
 
-**Key principle:** `damage.py` is the generic fight engine. It uses **field-based dispatch** (checks for `"initial_damage"`, `"damage_per_cast"`, `"on_hit"` fields) rather than ability-key checks (`ability_key == "W"`), so it works with any champion.
+**Key principle:** `damage.py` is the generic fight engine. It uses **field-based dispatch** (checks for `"initial_damage"`, `"damage_per_cast"`, `"on_hit"`, `"stat_buff"` fields) rather than ability-key checks (`ability_key == "W"`), so it works with any champion.
 
 ## When You DON'T Need a Custom Module
 
@@ -50,6 +51,28 @@ Create a custom module for champions with:
 - **External stacking:** Nasus Q stacks, Veigar passive AP, Senna souls
 - **Multi-part damage:** Abilities with initial + subsequent hits at different ratios (Ahri W)
 - **Multi-cast abilities:** Abilities with N dashes/casts per use (Ahri R)
+- **Multi-cast with different damage per cast:** Abilities where each cast does different damage (Aatrox Q — 3 casts summed)
+- **Stat-buff ultimates:** R that grants stats (bonus AD, AP, etc.) instead of dealing damage (Aatrox R)
+- **Conditional hit counts:** Abilities that hit multiple times conditionally (Aatrox W — initial + pull-back)
+- **Passive on-hit without structured leveling data:** Passives where damage is only in description text, not in `effects[].leveling[]` (Aatrox P)
+
+## No Hardcoded Values
+
+**All numeric values must come from the champion JSON data.** Do not hardcode base damages, scaling ratios, cooldowns, or stat buff percentages. Use:
+- `extract_cooldown(ability, rank)` for cooldowns
+- `extract_damage(ability, rank, stats, target_stats)` for standard abilities
+- `_extract_leveling_damage(ability, attribute_name, rank, stats)` for specific named attributes (when the generic `extract_damage` picks the wrong one)
+- `_extract_r_bonus_ad_percent(ability, rank)` pattern for reading specific leveling values
+- Regex on `effect["description"]` text as a last resort when structured leveling data is absent (e.g., passive per-level scaling like `"4% : 10.71% (based on level)"`)
+
+### JSON attribute gotchas
+
+The generic `extract_damage()` uses `attribute_classifier.py` to find the primary damage attribute. It **excludes** attributes containing keywords like "total", "subsequent", "minion", "monster". This means:
+- `"Physical Damage"` → picked (single hit)
+- `"Total Damage"` → excluded (even though it may be what you want for multi-hit)
+- `"First Cast Damage"` → excluded by generic parser, but you can extract it directly
+
+When the generic parser picks the wrong attribute, use `_extract_leveling_damage(ability, "Total Damage", rank, stats)` to target the exact attribute you need.
 
 ## Adding a Skill Order Override
 
@@ -72,26 +95,36 @@ R is always at levels 6, 11, 16. The remaining 15 levels distribute Q/W/E.
 ### Step 1: Examine the Champion's JSON Data
 
 ```python
+import json, pprint
 from src.calculator.data_fetcher import get_champion
-champion_data = get_champion("Lux")
-# Inspect: champion_data["abilities"]["Q"][0]["effects"][0]["leveling"]
+champion_data = get_champion("ChampionName")
+for slot in ['P', 'Q', 'W', 'E', 'R']:
+    ab = champion_data['abilities'][slot][0]
+    print(f'=== {slot}: {ab["name"]} ===')
+    print(f'damageType: {ab.get("damageType")}')
+    print(f'targeting: {ab.get("targeting")}')
+    for i, effect in enumerate(ab.get('effects', [])):
+        for j, lev in enumerate(effect.get('leveling', [])):
+            attr = lev.get('attribute', '')
+            mods = [{'values': m['values'][:5], 'units': m['units'][:5]}
+                    for m in lev.get('modifiers', [])]
+            print(f'  effect[{i}].leveling[{j}]: attr="{attr}" mods={mods}')
 ```
 
 Cross-reference with the [LoL Wiki](https://wiki.leagueoflegends.com). The JSON data is wiki-scraped and usually accurate, but verify edge cases.
 
 ### Step 2: Create the Module
 
-Create `src/calculator/champions/<champion_name>.py`. You can import shared utilities:
+Create `src/calculator/champions/<champion_name>.py`. The full signature for custom modules:
 
 ```python
-"""Lux ability parsing and damage calculation."""
+"""Champion ability parsing and damage calculation."""
 
 from typing import Any
 
-from .common import calculate_ability_damage
-from .generic_parser import extract_cooldown, extract_damage  # Reuse JSON extraction
-from .scaling import resolve_scaling                           # Reuse scaling math
-from .skill_orders import get_ability_rank                     # Reuse rank calculation
+from .generic_parser import extract_cooldown, extract_damage
+from .scaling import is_flat_unit, resolve_scaling
+from .skill_orders import get_ability_rank
 
 
 def parse_abilities(
@@ -99,32 +132,15 @@ def parse_abilities(
     level: int,
     total_ability_power: float,
     ability_ranks: dict[str, int] | None = None,
+    champion_options: dict[str, Any] | None = None,
+    champion_stats: dict[str, float] | None = None,
+    target_stats: dict[str, float] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    """Parse Lux's abilities and calculate damage."""
-    results: dict[str, dict[str, Any]] = {}
-
-    def rank_for(key: str) -> int:
-        if ability_ranks and key in ability_ranks:
-            return ability_ranks[key]
-        return get_ability_rank(key, level, "Lux")
-
-    # Q - Light Binding
-    q_rank = rank_for("Q")
-    if q_rank > 0:
-        q_base = [80, 120, 160, 200, 240][q_rank - 1]
-        q_damage = calculate_ability_damage(q_base, 0.60, total_ability_power)
-        results["Q"] = {
-            "name": "Light Binding",
-            "rank": q_rank,
-            "cooldown": 11.0,  # or extract from JSON via extract_cooldown()
-            "magic_damage": q_damage,
-            "total_raw": q_damage,
-            "damage_type": "magic",
-        }
-
-    # ... W, E, R follow the same pattern ...
-    return results
+    """Parse abilities and calculate damage."""
+    ...
 ```
+
+**Important:** Custom modules receive `champion_options`, `champion_stats`, and `target_stats` from the dispatcher. Use `champion_stats` for AD/HP scaling, `target_stats` for %HP abilities, and `champion_options` for user-configurable toggles.
 
 ### Hybrid Approach: Mix Generic + Custom
 
@@ -133,9 +149,11 @@ For champions where most abilities are standard but one is unique, you can parse
 ```python
 from .generic_parser import parse_abilities as generic_parse
 
-def parse_abilities(champion_data, level, total_ability_power, ability_ranks=None):
-    # Let generic parser handle Q, E, R
-    results = generic_parse(champion_data, level, total_ability_power, ability_ranks)
+def parse_abilities(champion_data, level, total_ability_power, ability_ranks=None,
+                    champion_options=None, champion_stats=None, target_stats=None):
+    # Let generic parser handle standard abilities
+    results = generic_parse(champion_data, level, total_ability_power, ability_ranks,
+                            champion_stats=champion_stats, target_stats=target_stats)
     # Override W with custom logic
     results["W"] = _custom_w_logic(...)
     return results
@@ -147,8 +165,9 @@ Add to `_CHAMPION_MODULES` in `src/calculator/champions/__init__.py` (keep alpha
 
 ```python
 _CHAMPION_MODULES: dict[str, str] = {
+    "Aatrox": "aatrox",
     "Ahri": "ahri",
-    "Lux": "lux",     # <-- add this line
+    "NewChampion": "new_champion",  # <-- add in alphabetical order
 }
 ```
 
@@ -176,21 +195,126 @@ Every ability returned by `parse_abilities()` **must** include:
 | `initial_damage` + `subsequent_damage` | Multi-part (e.g., Fox-Fire) | 1 initial + 2 subsequent per cast |
 | `damage_per_cast` + `total_casts` | Multi-dash (e.g., Spirit Rush) | N hits per ability use |
 | `on_hit` | Passive on-hit | `{"name": "...", "damage_per_hit": X, "damage_type": "..."}` |
+| `stat_buff` | Stat-granting abilities (e.g., Aatrox R) | `{"bonus_attack_damage": X}` — applied to `champion_stats` by `damage.py` before fight calculations |
+
+### Stat Buff Abilities (e.g., Aatrox R)
+
+For abilities that grant stats instead of dealing damage:
+1. Return the ability with `total_raw: 0.0` and the appropriate damage key set to `0.0`
+2. Include a `stat_buff` dict mapping stat keys to bonus values
+3. `damage.py` applies stat buffs to `champion_stats` before the fight engine runs, so auto-attack damage benefits from the buff
+4. Apply the same buff in your parser's `stats_context` before calculating other abilities, so ability damage also benefits
+
+```python
+# Example: R grants 20/30/40% bonus AD
+bonus_ad = stats_context["attack_damage"] * bonus_ad_fraction
+stats_context["attack_damage"] += bonus_ad
+stats_context["bonus_attack_damage"] += bonus_ad
+
+results["R"] = {
+    "name": "World Ender",
+    "rank": r_rank,
+    "cooldown": r_cooldown,
+    "damage_type": "physical",
+    "total_raw": 0.0,
+    "physical_damage": 0.0,
+    "stat_buff": {"bonus_attack_damage": bonus_ad},
+}
+```
+
+## Champion Options (Frontend Toggles)
+
+For champion-specific configuration (e.g., "assume sweetspot hits"), add a frontend toggle:
+
+### Step 1: Register in `static/js/app.js`
+
+Add an entry to `championOptionsDefs` (near the top of the file, after the empty dict declaration):
+
+```javascript
+championOptionsDefs["Aatrox"] = {
+    render(container) {
+        container.innerHTML = `
+            <label class="toggle-label compact">
+                <input type="checkbox" id="opt-aatrox-sweetspot" checked>
+                <span class="toggle-text">Q Sweetspot hits</span>
+            </label>`;
+        document.getElementById("opt-aatrox-sweetspot")
+            .addEventListener("change", scheduleRecalc);
+    },
+    getValues() {
+        return {
+            sweetspot: document.getElementById("opt-aatrox-sweetspot")?.checked ?? true,
+        };
+    },
+    assumptions: [
+        "Assumed R is always active",
+        "W always hits both initial and pull-back damage",
+    ],
+};
+```
+
+**Three functions/properties:**
+- `render(container)`: Populates the panel HTML with checkboxes/inputs. **Must** call `scheduleRecalc` on change events for live updates.
+- `getValues()`: Returns an object with current settings. This is sent as `champion_options` in the API payload.
+- `assumptions`: Array of strings displayed in the "Champion Assumptions" section below the damage breakdown. Use for any simplifying assumptions the calculator makes (e.g., "R always active", "all hits land", "full stacks assumed").
+
+The panel **auto-opens** when selecting a champion that has options defined. Champions without options show "No special options for this champion." when manually opened via the "+" button.
+
+### Step 2: Consume in the Champion Module
+
+The `champion_options` dict is passed through: `app.js → app.py → __init__.py → your_module.parse_abilities()`. Access it in your parser:
+
+```python
+def parse_abilities(..., champion_options=None, ...):
+    sweetspot = True  # default
+    if champion_options and "sweetspot" in champion_options:
+        sweetspot = bool(champion_options["sweetspot"])
+```
+
+### ID Convention
+
+Use `id="opt-<champion>-<option>"` for option input elements to avoid collisions.
+
+## Champion Assumptions
+
+When a champion module makes simplifying assumptions (e.g., R is always active, all hits land), document them in the `assumptions` array of the champion's `championOptionsDefs` entry. These display as a list below the damage breakdown in the results panel.
+
+Common assumptions to document:
+- Stat buff ultimates always active (e.g., "Assumed R is always active")
+- Conditional damage always lands (e.g., "W always hits both initial and pull-back damage")
+- Passive always available / off cooldown
+- Full stacks assumed
+- All projectiles hit
 
 ## Adding Tests
 
-Add tests to `tests/test_generic_parser.py` (for generic parser champions) or create `tests/test_<champion>.py` for custom modules:
+Create `tests/test_<champion>.py` for custom modules:
 
 ```python
-class TestLuxAbilities:
-    def test_q_rank5_with_500ap(self) -> None:
-        abilities = parse_abilities({}, 18, 500.0)
-        assert abs(abilities["Q"]["magic_damage"] - 540.0) < 0.1
+import pytest
+from src.calculator.data_fetcher import get_champion
+from src.calculator.stats import calculate_total_stats
+from src.calculator.champions.<champion> import parse_abilities
+from src.calculator.damage import calculate_fight_damage
 
-    def test_damage_type(self) -> None:
-        abilities = parse_abilities({}, 18, 0.0)
-        assert abilities["Q"]["damage_type"] == "magic"
+@pytest.fixture
+def champion_data() -> dict:
+    return get_champion("ChampionName")
 ```
+
+### Test categories to cover:
+
+1. **Each ability's damage type** (physical/magic/true/mixed)
+2. **Damage values match JSON data** (use `calculate_total_stats` for accurate AD/AP)
+3. **Cooldowns are present and positive**
+4. **Champion options toggle behavior** (sweetspot on vs off, etc.)
+5. **Non-damaging abilities excluded** (E not in results if utility)
+6. **Stat buff abilities** (R deals 0 damage, has stat_buff key, buff value is correct)
+7. **Fight engine integration** (stat_buff applied to champion_stats, R 0 damage in breakdown)
+8. **Level awareness** (test at levels where R is/isn't ranked to avoid R buff distortion)
+9. **On-hit passive** (correct damage type, scales with level, correct % values)
+
+**Important:** When testing ability damage at levels where R is ranked, the R stat buff will be applied. If comparing manual calculations to parser output, use a level where R is not yet ranked (pre-level 6) to avoid the buff distorting the comparison.
 
 ## Verify
 
@@ -227,3 +351,8 @@ Common unit strings in JSON and what stats they resolve against:
 | `"% maximum mana"` / `"% bonus mana"` | `max_mana` / `bonus_mana` | `2% max mana` |
 
 Full mapping in `src/calculator/champions/scaling.py`.
+
+## Reference Implementations
+
+- **Ahri** (`ahri.py`): Mixed damage Q, multi-part W (initial + subsequent), multi-dash R. Uses hardcoded values (legacy).
+- **Aatrox** (`aatrox.py`): JSON-driven. 3-cast Q with sweetspot option, R stat buff, W double-hit via "Total Damage" attribute, passive on-hit parsed from description text. The preferred pattern for new champions.
