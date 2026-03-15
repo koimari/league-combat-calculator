@@ -40,3 +40,15 @@ Interpret creatively and make unexpected choices that feel genuinely designed fo
 **IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
 
 Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+
+## Project Context: LoL Calculator
+
+This project uses a **Hextech Dark Theme** inspired by the League of Legends client. Key design tokens defined in `static/css/style.css`:
+
+- **Palette:** Deep navy backgrounds (`--bg-deepest: #010A13`, `--bg-dark: #0A1428`), gold accents (`--gold: #C89B3C`, `--border-gold: #785A28`), teal highlights (`--teal: #0AC8B9`)
+- **Text:** Warm gold hierarchy (`--text-primary: #F0E6D2`, `--text-body: #A09B8C`, `--text-dim: #5B5A56`)
+- **Stat colors:** AD orange (`#FF6E26`), AP purple (`#7B68EE`), HP green (`#1F8C42`), mana blue (`#2166C7`)
+- **Damage colors:** Physical orange, magic cyan (`#4FC3F7`), true damage gold
+- **Layout:** CSS variables for spacing (`--gap-xs` through `--gap-lg`), border-radius, and transitions
+
+When building new UI for this project, match the existing Hextech aesthetic. Reference `templates/index.html` for component patterns and `static/js/app.js` for interaction conventions.

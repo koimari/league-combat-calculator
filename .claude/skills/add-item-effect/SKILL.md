@@ -5,17 +5,6 @@ description: Guide for adding item passive/active effects to the LoL calculator.
 
 # Add an Item Effect
 
-## Architecture
-
-Item logic spans four files:
-
-- **`passive_parser.py`** — Parses item passive/active effect values from the cached JSON wiki markup. This is the **primary data source** for numeric values (base damage, ratios, cooldowns, etc.). When the JSON data is refreshed from the API, values update automatically.
-- **`item_effects.py`** — Registry of all item effects (`ITEM_EFFECTS` dict). Built by merging parsed JSON values over hardcoded defaults in `_DEFAULT_ITEM_EFFECTS`. Consumed by both the fight engine and stat calculations.
-- **`stats.py`** — Stat bonuses and stat-modifying passives (Rabadon's AP multiplier, Archangel's mana-to-AP). Reads numeric values from `ITEM_EFFECTS` — never hardcodes them. Handled in `check_item_passives()` and `calculate_total_stats()`.
-- **`damage.py`** — Fight engine. Consumes `ITEM_EFFECTS` entries and applies them per auto/ability/tick.
-
-**Rule of thumb:** If the item grants or modifies a stat → `stats.py`. If the item deals damage → `item_effects.py` + `passive_parser.py`.
-
 ## How Values Are Loaded
 
 1. `passive_parser.py` reads item JSON from `data/items.json`
@@ -270,20 +259,6 @@ def test_my_item_reads_from_registry(self, champion_data: dict, monkeypatch) -> 
 ```
 
 4. Run the test suite: `pytest`
-
-### Currently implemented stat passives
-
-| Item | Passive | Parser Key | Effect |
-|------|---------|------------|--------|
-| Rabadon's Deathcap | Magical Opus | `ap_percent_increase` | AP multiplier |
-| Blackfire Torch | Blackfire | `ap_amp_per_target` | AP multiplier (1 target) |
-| Archangel's Staff | Awe | `bonus_mana_to_ap_ratio` | Bonus mana → AP |
-| Seraph's Embrace | Awe | `bonus_mana_to_ap_ratio` | Bonus mana → AP |
-| Dawncore | First Light | `ap_per_mana_regen_unit`, `mana_regen_threshold_percent` | Mana regen → AP |
-| Muramana | Awe | `max_mana_to_ad_ratio` | Max mana → bonus AD |
-| Overlord's Bloodmail | Tyranny | `bonus_health_to_ad_ratio` | Bonus health → bonus AD |
-| Bandlepipes | Fanfare | `bonus_attack_speed_melee/ranged` | Conditional AS |
-| Experimental Hexplate | Overdrive | `bonus_attack_speed_percent` | Conditional AS |
 
 ## Common Pitfalls
 

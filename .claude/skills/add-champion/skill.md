@@ -5,32 +5,9 @@ description: Step-by-step guide for adding a new LoL champion to the calculator.
 
 # Add a New Champion
 
-## Architecture Overview
-
-Most champions (~80%+) are handled **automatically** by the generic parser — no code needed. Custom modules are only required for champions with unique mechanics.
-
-```
-src/calculator/champions/
-├── __init__.py              # Registry: custom modules → generic parser fallback
-├── common.py                # Shared: calculate_ability_damage, effective_cooldown
-├── generic_parser.py        # Generic JSON parser — handles most champions automatically
-├── scaling.py               # Unit string → stat resolution ("% AP", "% bonus AD", etc.)
-├── attribute_classifier.py  # Detects damage vs utility attributes in JSON
-├── skill_orders.py          # Default Q>W>E skill order + per-champion overrides
-├── ahri.py                  # Custom: Ahri (mixed Q, multi-part W, multi-dash R)
-├── aatrox.py                # Custom: Aatrox (3-cast Q, R stat buff, passive on-hit)
-└── <champion>.py            # Custom modules for other unique champions
-```
-
-### How it works
-
-1. `__init__.py` checks if a custom module exists in `_CHAMPION_MODULES`
-2. If yes → dispatches to that module's `parse_abilities()`
-3. If no → falls through to `generic_parser.py` which reads directly from JSON
-
-**Key principle:** `damage.py` is the generic fight engine. It uses **field-based dispatch** (checks for `"initial_damage"`, `"damage_per_cast"`, `"on_hit"`, `"stat_buff"` fields) rather than ability-key checks (`ability_key == "W"`), so it works with any champion.
-
 ## When You DON'T Need a Custom Module
+
+Most champions (~80%+) are handled automatically by `generic_parser.py` — no code needed. Custom modules are only for unique mechanics. The dispatcher in `champions/__init__.py` checks `_CHAMPION_MODULES` first, then falls through to the generic parser.
 
 The generic parser handles champions with:
 - Standard Q/W/E/R abilities with base + ratio scaling
@@ -373,29 +350,11 @@ All existing tests plus your new ones must pass.
 - If the wiki disagrees with JSON data, trust the wiki and note the discrepancy
 - Known-good test cases (validated against the game client) go in `tests/test_known_good.py`
 
-## Scaling Unit Reference
-
-Common unit strings in JSON and what stats they resolve against:
-
-| Unit String | Stat Key | Example |
-|---|---|---|
-| `""` (empty) | Flat damage | `100` base damage |
-| `"% AP"` | `ability_power` | `50% AP` |
-| `"% AD"` | `attack_damage` | `100% AD` |
-| `"% bonus AD"` | `bonus_attack_damage` | `75% bonus AD` |
-| `"% bonus health"` | `bonus_health` | `8% bonus health` |
-| `"% maximum health"` | `health` | `10% max health` |
-| `"% of target's maximum health"` | `target_max_health` | `6% target max HP` |
-| `"% of target's current health"` | `target_current_health` | `9% current HP` |
-| `"% of target's missing health"` | `target_missing_health` | `8% missing HP` |
-| `"% armor"` / `"% bonus armor"` | `armor` | `40% armor` |
-| `"% magic resistance"` | `magic_resistance` | `50% MR` |
-| `"% maximum mana"` / `"% bonus mana"` | `max_mana` / `bonus_mana` | `2% max mana` |
-
-Full mapping in `src/calculator/champions/scaling.py`.
-
 ## Reference Implementations
 
-- **Ahri** (`ahri.py`): Mixed damage Q, multi-part W (initial + subsequent), multi-dash R. Uses hardcoded values (legacy).
-- **Aatrox** (`aatrox.py`): JSON-driven. 3-cast Q with sweetspot option, R stat buff, W double-hit via "Total Damage" attribute, passive on-hit from JSON per-level leveling data. The preferred pattern for new champions.
-- **Akali** (`akali.py`): JSON-driven. Standard Q, E total (both hits), R with missing-HP scaling (R2 damage computed from target HP after prior abilities), passive from JSON per-level leveling data with user-configurable proc count.
+See `src/calculator/champions/scaling.py` for the full unit-string → stat-key mapping used by scaling resolution.
+
+When writing a new custom module, study these existing ones for patterns:
+- **`aatrox.py`** (preferred pattern): JSON-driven, 3-cast Q with sweetspot option, R stat buff, W double-hit, passive on-hit from per-level data.
+- **`akali.py`**: JSON-driven, E total (both hits), R with missing-HP scaling, passive with user-configurable proc count.
+- **`ahri.py`**: Legacy (hardcoded values). Multi-part W, multi-dash R, mixed damage Q.
