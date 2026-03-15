@@ -33,7 +33,7 @@ python -m flask --app src.app run
 
 Then open http://localhost:5000 in your browser.
 
-On first launch, click **"Update to latest patch"** to fetch champion and item data.
+On first launch, click **"Update to latest patch"** to fetch champion and item data or after a patch.
 
 ## Running Tests
 
