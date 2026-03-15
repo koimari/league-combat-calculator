@@ -152,6 +152,49 @@ document.addEventListener("DOMContentLoaded", () => {
         ],
     };
 
+    championOptionsDefs["Akshan"] = {
+        render(container) {
+            container.innerHTML = `
+                <label class="toggle-label compact">
+                    <span class="toggle-text">Passive procs (3-stack)</span>
+                    <input type="number" id="opt-akshan-passive-procs" value="3"
+                           min="0" max="20" style="width:48px; margin-left:8px;
+                           background:var(--bg-dark); color:var(--text-light);
+                           border:1px solid var(--border-subtle); border-radius:4px;
+                           padding:2px 6px; font-size:0.85rem;">
+                </label>
+                <label class="toggle-label compact" style="margin-top:6px;">
+                    <span class="toggle-text">E shots fired</span>
+                    <input type="number" id="opt-akshan-e-shots" value="5"
+                           min="0" max="20" style="width:48px; margin-left:8px;
+                           background:var(--bg-dark); color:var(--text-light);
+                           border:1px solid var(--border-subtle); border-radius:4px;
+                           padding:2px 6px; font-size:0.85rem;">
+                </label>`;
+            document.getElementById("opt-akshan-passive-procs")
+                .addEventListener("input", scheduleRecalc);
+            document.getElementById("opt-akshan-e-shots")
+                .addEventListener("input", scheduleRecalc);
+        },
+        getValues() {
+            return {
+                passive_procs: parseInt(
+                    document.getElementById("opt-akshan-passive-procs")?.value ?? "3", 10
+                ),
+                e_shots: parseInt(
+                    document.getElementById("opt-akshan-e-shots")?.value ?? "5", 10
+                ),
+            };
+        },
+        assumptions: [
+            "Q always hits both passes (outgoing and return)",
+            "R assumes full channel (max bullets at max damage)",
+            "R crit scaling at 30% effectiveness applied",
+            "Double shot applies on-hit effects and can crit",
+            "W is utility only (no damage)",
+        ],
+    };
+
     championOptionsDefs["Akali"] = {
         render(container) {
             container.innerHTML = `
@@ -177,6 +220,22 @@ document.addEventListener("DOMContentLoaded", () => {
             "E always hits both shuriken and recast dash",
             "R always hits both R1 dash and R2 execute",
             "R2 damage scales with target missing HP from prior abilities",
+        ],
+    };
+
+    championOptionsDefs["Alistar"] = {
+        render(container) {
+            container.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">
+                No configurable options for Alistar.</p>`;
+        },
+        getValues() {
+            return {};
+        },
+        assumptions: [
+            "E Trample deals full duration damage (10 ticks over 5 seconds)",
+            "E empowered auto always procs once per cast (5 stacks reached)",
+            "Passive (Triumphant Roar) healing is ignored",
+            "R (Unbreakable Will) damage reduction is ignored",
         ],
     };
 

@@ -280,6 +280,7 @@ def _simulate_bork_damage(
     effective_armor: float,
     is_melee: bool,
     phantom_hit_autos: set[int] | None = None,
+    double_hit_all: bool = False,
 ) -> tuple[float, int]:
     """Simulate Blade of the Ruined King damage with decreasing target HP.
 
@@ -288,7 +289,8 @@ def _simulate_bork_damage(
     reaches zero, BoRK deals a flat minimum damage instead.
 
     On phantom hit autos, BoRK procs twice (the normal hit + phantom hit),
-    both reducing the target's HP.
+    both reducing the target's HP. When ``double_hit_all`` is True (e.g.
+    Akshan double shot), BoRK procs an extra time on every auto.
 
     Args:
         target_health: Target's starting health.
@@ -299,6 +301,8 @@ def _simulate_bork_damage(
         is_melee: Whether the champion is melee.
         phantom_hit_autos: Set of 0-indexed auto numbers that trigger phantom
             hits (from Guinsoo's Rageblade). BoRK procs an extra time on these.
+        double_hit_all: If True, BoRK procs an extra time on every auto
+            (e.g. Akshan's double shot applies on-hits).
 
     Returns:
         Tuple of (total mitigated BoRK damage, total BoRK hit count).
@@ -319,8 +323,13 @@ def _simulate_bork_damage(
     total_bork_hits = 0
 
     for i in range(num_auto_attacks):
-        # How many times BoRK procs this auto (1 normally, 2 on phantom hit)
-        procs_this_auto = 2 if i in phantom_hit_autos else 1
+        # How many times BoRK procs this auto (1 normally, +1 on phantom hit,
+        # +1 if double_hit_all e.g. Akshan double shot)
+        procs_this_auto = 1
+        if i in phantom_hit_autos:
+            procs_this_auto += 1
+        if double_hit_all:
+            procs_this_auto += 1
 
         for _ in range(procs_this_auto):
             if current_hp > 0:
@@ -697,6 +706,13 @@ def calculate_fight_damage(
                     + champion_stats.get("bonus_attack_damage", 0.0)
                 )
 
+    # Compute crit stats early — needed by both ability crit scaling (Step 2)
+    # and auto-attack simulation (Step 3).
+    crit_chance = min(
+        champion_stats.get("critical_strike_chance", 0) / 100.0, 1.0,
+    )
+    crit_multiplier = item_effects.get_crit_multiplier(items)
+
     # ── Step 2: Ability damage ────────────────────────────────────────────
     breakdown: dict[str, Any] = {}
     total_damage = 0.0
@@ -831,6 +847,25 @@ def calculate_fight_damage(
             raw = ability_info.get(
                 "physical_damage", ability_info.get("total_raw", 0)
             )
+            # Crit scaling at reduced effectiveness (e.g. Akshan R)
+            if "crit_effectiveness" in ability_info:
+                eff = ability_info["crit_effectiveness"]
+                bonus_crit = crit_multiplier - 2.0
+                raw *= (
+                    1 + eff * crit_chance
+                    + eff * bonus_crit * crit_chance
+                )
+            # Missing HP scaling (e.g. Akshan R: 0-200% bonus)
+            if "missing_hp_max_bonus" in ability_info:
+                max_bonus = ability_info["missing_hp_max_bonus"]
+                hp_remaining = max(
+                    0.0, target_health - mitigated_damage_dealt,
+                )
+                missing_ratio = (
+                    1.0 - (hp_remaining / target_health)
+                    if target_health > 0 else 1.0
+                )
+                raw *= 1 + max_bonus * missing_ratio
             if prep_lethality > 0 and num_casts > 0:
                 if one_rotation:
                     # All casts benefit from Preparation bonus lethality
@@ -960,8 +995,13 @@ def calculate_fight_damage(
     # ── Step 3: Auto attacks (per-auto crit simulation) ───────────────────
     attack_damage = champion_stats["attack_damage"]
 
-    crit_chance = min(champion_stats.get("critical_strike_chance", 0) / 100.0, 1.0)
-    crit_multiplier = item_effects.get_crit_multiplier(items)
+    # Detect champion double-shot passive (e.g. Akshan — second auto per
+    # attack at reduced AD ratio, applies on-hits and can crit).
+    double_shot_info: dict[str, Any] | None = None
+    for _ds_key, _ds_info in ability_damages.items():
+        if "double_shot" in _ds_info:
+            double_shot_info = _ds_info["double_shot"]
+            break
 
     # Simulate each auto attack individually, rolling for crits
     auto_physical_total = 0.0
@@ -1104,7 +1144,37 @@ def calculate_fight_damage(
             "note": "included in auto attack totals above",
         }
 
-    total_damage += auto_total + fiendhunter_true_total
+    # Double shot: second auto per attack at reduced AD (e.g. Akshan passive)
+    double_shot_total = 0.0
+    if double_shot_info and num_auto_attacks > 0:
+        ds_ratio = double_shot_info.get("ad_ratio", 0.5)
+        ds_crits = 0
+        for i in range(num_auto_attacks):
+            ds_ad = attack_damage * ds_ratio
+            ds_crit = random.random() < crit_chance
+            if ds_crit:
+                ds_crits += 1
+                raw_ds = ds_ad * crit_multiplier
+            else:
+                raw_ds = ds_ad
+            auto_armor = (
+                effective_armor_prep if i < prep_autos else effective_armor
+            )
+            double_shot_total += (
+                apply_resistance(raw_ds, auto_armor) * basic_amp
+            )
+
+        ds_non_crits = num_auto_attacks - ds_crits
+        breakdown["double_shot"] = {
+            "name": double_shot_info.get("name", "Double Shot"),
+            "count": num_auto_attacks,
+            "num_crits": ds_crits,
+            "num_non_crits": ds_non_crits,
+            "total_damage": double_shot_total,
+            "damage_type": "physical",
+        }
+
+    total_damage += auto_total + fiendhunter_true_total + double_shot_total
 
     # ── Step 4: On-hit item damage ────────────────────────────────────────
     on_hit_total = 0.0
@@ -1116,7 +1186,9 @@ def calculate_fight_damage(
     phantom_hit_count, phantom_hit_autos = _calculate_phantom_hits(
         num_auto_attacks, item_names
     )
-    on_hit_hits = num_auto_attacks + phantom_hit_count
+    # Double shot applies on-hit effects an additional time per auto
+    double_shot_extra = num_auto_attacks if double_shot_info else 0
+    on_hit_hits = num_auto_attacks + phantom_hit_count + double_shot_extra
 
     # Process non-BoRK on-hit items (constant damage per hit)
     non_bork_on_hit_per_hit = 0.0  # Track for BoRK HP simulation
@@ -1195,6 +1267,7 @@ def calculate_fight_damage(
 
     # BoRK: simulate with decreasing target current HP per auto attack.
     # Phantom hit autos cause BoRK to proc twice (at different current HP).
+    # Double shot (e.g. Akshan) also procs BoRK an extra time per auto.
     if has_bork and num_auto_attacks > 0:
         bork_total, bork_hits = _simulate_bork_damage(
             target_health=target_health,
@@ -1204,6 +1277,7 @@ def calculate_fight_damage(
             effective_armor=effective_armor,
             is_melee=is_melee,
             phantom_hit_autos=phantom_hit_autos,
+            double_hit_all=double_shot_info is not None,
         )
         avg_bork_per_hit = bork_total / bork_hits if bork_hits > 0 else 0.0
         on_hit_total += bork_total
@@ -1281,6 +1355,11 @@ def calculate_fight_damage(
                     "damage_type": "mixed",
                 }
                 total_damage += extra_on_hit
+
+    # Double shot on-hit stacking: each auto generates an extra on-hit
+    # application, accelerating Kraken Slayer / Hullbreaker procs.
+    if double_shot_info:
+        double_on_hit_procs += num_auto_attacks
 
     # ── Step 6: Burn / DoT damage ─────────────────────────────────────────
     for name in item_names:
