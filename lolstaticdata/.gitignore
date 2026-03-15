@@ -1,0 +1,14 @@
+/items/
+/champions/
+__pycache__/
+__cache__/
+champions.json
+items.json
+.vscode/
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/

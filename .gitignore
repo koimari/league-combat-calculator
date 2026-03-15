@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Cached data (re-generated via "Update to latest patch")
+data/champions.json
+data/items.json
+
+# lolstaticdata cache
+lolstaticdata/__cache__/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Claude Code plans (temporary)
+.claude/plans/

@@ -1,0 +1,90 @@
+TEST CASE 1: Ahri Level 6, Items: Liandry's Torment
+===================================
+Champion: Ahri
+Level: 6
+Items: Liandry's Torment
+
+Expected Stats:
+- Total HP: 1301
+- Total AD: 65
+- Total AP: 60
+- Armor: 38
+- Magic Resist: 35
+
+Expected Ability Damage:
+- Q(Rank3) (Orb of Deception - magic): 90 + (0.50 * AP) = 120
+- Q(Rank3) (Orb of Deception - true): 90 + (0.50 * AP) = 120
+- W(Rank1) (Fox-Fire): 40 + (0.4 * AP) + 16 + (0.16 * AP) 16 + (0.16 * AP) = 64 + 26 + 26 (Reduced beyond the first)
+- E(Rank1) (Charm): 80 + (0.85 * AP) = 131
+- R(Rank1) (Spirit Rush): 75 + (0.35 * AP) = 96
+
+Expected Item Damage:
+2% max health magic damage per second for 3 seconds. = 60
+
+Enemy: Dummy
+Stats:
+- Total HP: 1000
+- Armor: 100
+- Magic Resist: 100
+
+Total Damage: 663 (Including several auto attacks over 8 second fight duration)
+
+
+TEST CASE 2: Ahri Level 11, Items: Liandry's Torment, Malignance, Rylai's Crystal Scepter
+===================================
+Champion: Ahri
+Level: 11
+Items: Liandry's Torment
+
+Expected Stats:
+- Total HP: 2203
+- Total AD: 79
+- Total AP: 215
+- Armor: 58
+- Magic Resist: 41
+
+Expected Ability Damage:
+- Q(Rank5) (Orb of Deception - magic): 140 + (0.50 * AP) = 248
+- Q(Rank5) (Orb of Deception - true): 140 + (0.50 * AP) = 248
+- W(Rank3) (Fox-Fire): 80 + (0.4 * AP) + 32 + (0.16 * AP) 32 + (0.16 * AP) = 166 + 66 + 66 (Reduced beyond the first)
+- E(Rank1) (Charm): 80 + (0.85 * AP) = 263
+- R(Rank2) (Spirit Rush): 125 + (0.35 * AP) = 200
+
+Expected Item Damage:
+2% max health magic damage per second for 3 seconds. = 60
+
+Enemy: Dummy
+Stats:
+- Total HP: 1000
+- Armor: 100
+- Magic Resist: 100
+
+Total Damage: 1402 (Including several auto attacks over 8 second fight duration)
+
+TEST CASE 3: Ahri Level 18, Items: Liandry's Torment, Malignance, Rylai's Crystal Scepter, Sorcerer's Shoes, Void Staff, Rabadon's Deathcap
+===================================
+Champion: Ahri
+Level: 18
+Items: Liandry's Torment
+
+Expected Stats:
+- Total HP: 3059
+- Total AD: 104
+- Total AP: 572
+- Armor: 92
+- Magic Resist: 52
+
+Expected Ability Damage:
+- Q(Rank5) = 426
+- Q(Rank5)  = 426
+- W(Rank5) (Fox-Fire): = 349 + 140 + 140 (Reduced beyond the first)
+- E(Rank5) (Charm): 80 + (0.6 * AP) = 726
+- R(Rank5) (Spirit Rush): 375 * 3
+
+Enemy: Dummy
+Stats:
+- Total HP: 1000
+- Armor: 100
+- Magic Resist: 100
+
+Total Damage: 3083 (Including several auto attacks over 8 second fight duration)
