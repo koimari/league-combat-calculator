@@ -15,7 +15,6 @@ from .attribute_classifier import (
     is_damage_attribute,
     is_primary_damage_attribute,
 )
-from .common import calculate_ability_damage
 from .scaling import is_flat_unit, resolve_scaling
 from .skill_orders import get_ability_rank
 

@@ -127,7 +127,9 @@ def fetch_champion_data(
             "No champion data found. Click 'Update to latest patch' to fetch data."
         )
 
-    return _read_cache(data_directory, filename)
+    data = _read_cache(data_directory, filename)
+    _validate_champion_data(data)
+    return data
 
 
 def fetch_item_data(
@@ -152,7 +154,9 @@ def fetch_item_data(
             "No item data found. Click 'Update to latest patch' to fetch data."
         )
 
-    return _read_cache(data_directory, filename)
+    data = _read_cache(data_directory, filename)
+    _validate_item_data(data)
+    return data
 
 
 def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
