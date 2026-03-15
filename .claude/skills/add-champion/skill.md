@@ -310,24 +310,44 @@ Common assumptions to document:
 
 ## Adding Tests
 
-Create `tests/test_<champion>.py` for custom modules:
+Create `tests/test_<champion>.py` for custom modules. Shared fixtures are in `tests/conftest.py`:
+
+- **`<champion>_data`** — fixture that loads champion JSON (add new ones to conftest.py)
+- **`parse_at`** — factory fixture: `stats, abilities = parse_at(data, level, *, items=None, ap=0.0, **kwargs)` — calculates stats and parses abilities in one call via the dispatcher
 
 ```python
-import pytest
-from src.calculator.data_fetcher import get_champion
-from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.<champion> import parse_abilities
-from src.calculator.damage import calculate_fight_damage
-
+# tests/conftest.py — add a new data fixture for each champion:
 @pytest.fixture
 def champion_data() -> dict:
     return get_champion("ChampionName")
 ```
 
+```python
+# tests/test_<champion>.py — use shared fixtures:
+from src.calculator.champions.<champion> import _private_helper  # only if needed
+from src.calculator.damage import calculate_fight_damage
+
+
+class TestQAbilityName:
+    def test_q_is_physical_damage(self, champion_data, parse_at) -> None:
+        _, abilities = parse_at(champion_data, 9)
+        assert abilities["Q"]["damage_type"] == "physical"
+
+    def test_q_has_cooldown(self, champion_data, parse_at) -> None:
+        _, abilities = parse_at(champion_data, 9)
+        assert abilities["Q"]["cooldown"] > 0
+
+    def test_q_with_options(self, champion_data, parse_at) -> None:
+        _, abilities = parse_at(
+            champion_data, 9, champion_options={"sweetspot": True},
+        )
+        assert abilities["Q"]["total_raw"] > 0
+```
+
 ### Test categories to cover:
 
 1. **Each ability's damage type** (physical/magic/true/mixed)
-2. **Damage values match JSON data** (use `calculate_total_stats` for accurate AD/AP)
+2. **Damage values match JSON data** (use `parse_at` which includes stat calculation)
 3. **Cooldowns are present and positive**
 4. **Champion options toggle behavior** (sweetspot on vs off, etc.)
 5. **Non-damaging abilities excluded** (E not in results if utility)
