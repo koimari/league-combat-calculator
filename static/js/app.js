@@ -275,6 +275,124 @@ document.addEventListener("DOMContentLoaded", () => {
         ],
     };
 
+    championOptionsDefs["Anivia"] = {
+        render(container) {
+            container.innerHTML = `
+                <label class="toggle-label compact">
+                    <span class="toggle-text">R duration (seconds)</span>
+                    <input type="number" id="opt-anivia-r-duration" value="5"
+                           min="1.5" max="30" step="0.5" style="width:56px; margin-left:8px;
+                           background:var(--bg-dark); color:var(--text-light);
+                           border:1px solid var(--border-subtle); border-radius:4px;
+                           padding:2px 6px; font-size:0.85rem;">
+                </label>`;
+            document.getElementById("opt-anivia-r-duration")
+                .addEventListener("input", scheduleRecalc);
+        },
+        getValues() {
+            return {
+                r_duration: parseFloat(
+                    document.getElementById("opt-anivia-r-duration")?.value ?? "5"
+                ),
+            };
+        },
+        assumptions: [
+            "Q hits both pass-through and detonation (total damage used)",
+            "E target is always Chilled (empowered damage used)",
+            "R first 1.5s uses initial tick damage, remaining uses fully-formed tick damage",
+            "W skipped (utility wall, no damage)",
+            "Passive skipped (resurrection only, no damage)",
+        ],
+    };
+
+    championOptionsDefs["Annie"] = {
+        render(container) {
+            container.innerHTML = `
+                <label class="toggle-label compact">
+                    <span class="toggle-text">Tibbers aura duration (seconds)</span>
+                    <input type="number" id="opt-annie-tibbers-aura" value="5"
+                           min="0" max="45" step="0.5" style="width:56px; margin-left:8px;
+                           background:var(--bg-dark); color:var(--text-light);
+                           border:1px solid var(--border-subtle); border-radius:4px;
+                           padding:2px 6px; font-size:0.85rem;">
+                </label>`;
+            document.getElementById("opt-annie-tibbers-aura")
+                .addEventListener("input", scheduleRecalc);
+        },
+        getValues() {
+            return {
+                tibbers_aura_seconds: parseFloat(
+                    document.getElementById("opt-annie-tibbers-aura")?.value ?? "5"
+                ),
+            };
+        },
+        assumptions: [
+            "R magic penetration passive is always active",
+            "Tibbers auto-attack damage is not modeled (positioning-dependent)",
+            "E retaliation damage is not modeled (requires enemies to hit Annie)",
+            "Tibbers aura defaults to 5 seconds of damage",
+        ],
+    };
+
+    championOptionsDefs["Amumu"] = {
+        render(container) {
+            container.innerHTML = `
+                <label class="toggle-label compact">
+                    <input type="checkbox" id="opt-amumu-cursed" checked>
+                    <span class="toggle-text">Target already Cursed (10% bonus true damage)</span>
+                </label>
+                <label class="toggle-label compact" style="margin-top:6px;">
+                    <span class="toggle-text">W seconds active</span>
+                    <input type="number" id="opt-amumu-w-seconds" value="3"
+                           min="0.5" max="30" step="0.5" style="width:48px; margin-left:8px;
+                           background:var(--bg-dark); color:var(--text-light);
+                           border:1px solid var(--border-subtle); border-radius:4px;
+                           padding:2px 6px; font-size:0.85rem;">
+                </label>`;
+            document.getElementById("opt-amumu-cursed")
+                .addEventListener("change", scheduleRecalc);
+            document.getElementById("opt-amumu-w-seconds")
+                .addEventListener("input", scheduleRecalc);
+        },
+        getValues() {
+            return {
+                target_cursed: document.getElementById("opt-amumu-cursed")?.checked ?? true,
+                w_seconds: parseFloat(
+                    document.getElementById("opt-amumu-w-seconds")?.value ?? "3"
+                ),
+            };
+        },
+        assumptions: [
+            "Target is assumed already Cursed (Passive) — all magic damage gets 10% bonus true damage",
+            "Q uses recharge timer as cooldown (fight engine determines cast count)",
+            "W defaults to 3 seconds active (6 ticks at 0.5s intervals)",
+            "E passive (damage reduction) is not modeled — defensive only",
+        ],
+    };
+
+    championOptionsDefs["Ashe"] = {
+        render(container) {
+            container.innerHTML = `
+                <label class="toggle-label compact">
+                    <input type="checkbox" id="opt-ashe-q-active" checked>
+                    <span class="toggle-text">Ranger's Focus active</span>
+                </label>`;
+            document.getElementById("opt-ashe-q-active")
+                .addEventListener("change", scheduleRecalc);
+        },
+        getValues() {
+            return {
+                q_active: document.getElementById("opt-ashe-q-active")?.checked ?? true,
+            };
+        },
+        assumptions: [
+            "Q (Ranger's Focus) assumed active by default",
+            "Passive bonus damage from crit chance applied to all auto attacks",
+            "W hits a single target (one arrow per enemy)",
+            "E (Hawkshot) is utility only and deals no damage",
+        ],
+    };
+
     function selectChampion(name, icon) {
         championSelect.value = name;
         championNameText.textContent = name || "Select Champion";

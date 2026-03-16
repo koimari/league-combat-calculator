@@ -350,6 +350,19 @@ All existing tests plus your new ones must pass.
 - If the wiki disagrees with JSON data, trust the wiki and note the discrepancy
 - Known-good test cases (validated against the game client) go in `tests/test_known_good.py`
 
+## Log Bugs for Future Reference
+
+When the user reports a bug or incorrect behavior after implementation, **immediately** append it to `.claude/skills/analyze-champion/bug-history.md` using this format:
+
+```
+### <Champion> — <short description>
+- **What happened:** <the incorrect behavior>
+- **Root cause:** <why it was wrong>
+- **Pattern to watch for:** <generalized rule for future champions>
+```
+
+The "Pattern to watch for" is the most important part — it should describe the general class of mistake so `/analyze-champion` can flag it on future champions. For example, don't just write "Alistar E was wrong." Write "Empowered auto passives that say 'next basic attack' apply once per cast, not per auto."
+
 ## Reference Implementations
 
 See `src/calculator/champions/scaling.py` for the full unit-string → stat-key mapping used by scaling resolution.

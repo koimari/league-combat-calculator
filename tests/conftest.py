@@ -47,6 +47,30 @@ def ambessa_data() -> dict:
     return get_champion("Ambessa")
 
 
+@pytest.fixture
+def amumu_data() -> dict:
+    """Load Amumu champion data from the cached JSON."""
+    return get_champion("Amumu")
+
+
+@pytest.fixture
+def anivia_data() -> dict:
+    """Load Anivia champion data from the cached JSON."""
+    return get_champion("Anivia")
+
+
+@pytest.fixture
+def annie_data() -> dict:
+    """Load Annie champion data from the cached JSON."""
+    return get_champion("Annie")
+
+
+@pytest.fixture
+def ashe_data() -> dict:
+    """Load Ashe champion data from the cached JSON."""
+    return get_champion("Ashe")
+
+
 # ---------------------------------------------------------------------------
 # Shared helper fixture
 # ---------------------------------------------------------------------------

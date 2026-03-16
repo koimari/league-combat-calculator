@@ -705,6 +705,19 @@ def calculate_fight_damage(
                     champion_stats.get("base_attack_damage", 0.0)
                     + champion_stats.get("bonus_attack_damage", 0.0)
                 )
+            # Recalculate magic penetration if it was buffed
+            if "magic_penetration_percent" in stat_buff:
+                magic_pen_percent = (
+                    champion_stats.get("magic_penetration_percent", 0.0)
+                    / 100.0
+                )
+                effective_mr_pre_ult = apply_magic_penetration(
+                    base_mr, magic_pen_flat, magic_pen_percent
+                )
+                effective_mr_post_ult = apply_magic_penetration(
+                    reduced_mr, magic_pen_flat, magic_pen_percent
+                )
+                effective_mr = effective_mr_post_ult
             # Recalculate armor penetration if it was buffed
             if "armor_penetration_percent" in stat_buff:
                 armor_pen_percent = (
@@ -721,6 +734,14 @@ def calculate_fight_damage(
                     )
                 else:
                     effective_armor_prep = effective_armor
+            # Recalculate attack speed and auto count if AS was buffed
+            if "bonus_attack_speed" in stat_buff:
+                bonus_as_pct = stat_buff["bonus_attack_speed"]
+                attack_speed = attack_speed + as_ratio * (bonus_as_pct / 100.0)
+                champion_stats["attack_speed"] = attack_speed
+                num_auto_attacks = math.floor(
+                    attack_speed * fight_duration_seconds * auto_attack_uptime
+                )
 
     # Compute crit stats early — needed by both ability crit scaling (Step 2)
     # and auto-attack simulation (Step 3).
@@ -1020,6 +1041,14 @@ def calculate_fight_damage(
     # ── Step 3: Auto attacks (per-auto crit simulation) ───────────────────
     attack_damage = champion_stats["attack_damage"]
 
+    # Detect auto_attack_override (e.g. Ashe passive — crit chance converts
+    # to bonus damage instead of crit strikes; Q changes AD ratio).
+    auto_attack_override: dict[str, Any] | None = None
+    for _ov_key, _ov_info in ability_damages.items():
+        if "auto_attack_override" in _ov_info:
+            auto_attack_override = _ov_info["auto_attack_override"]
+            break
+
     # Detect champion double-shot passive (e.g. Akshan — second auto per
     # attack at reduced AD ratio, applies on-hits and can crit).
     double_shot_info: dict[str, Any] | None = None
@@ -1055,6 +1084,14 @@ def calculate_fight_damage(
 
     sundered_sky_damage_diff = 0.0  # + = bonus damage, - = lost damage
 
+    # Ashe-style override: crit chance converts to bonus AD ratio on every
+    # auto instead of random crit strikes.  ad_ratio replaces the normal 1.0.
+    override_ad_ratio = 0.0
+    override_crit_as_bonus = False
+    if auto_attack_override:
+        override_ad_ratio = auto_attack_override.get("ad_ratio", 1.0)
+        override_crit_as_bonus = auto_attack_override.get("crit_as_bonus", False)
+
     for i in range(num_auto_attacks):
         is_empowered = has_fiendhunter and i < empowered_autos
         is_sundered = has_sundered_sky and i == 0
@@ -1063,7 +1100,18 @@ def calculate_fight_damage(
         if natural_crit:
             num_crits += 1
 
-        if is_empowered:
+        if override_crit_as_bonus:
+            # Crit chance converts to bonus damage on every auto (e.g. Ashe).
+            # Passive: "bonus damage equal to X% of the attack's damage."
+            # The bonus is multiplicative with the attack's base damage ratio,
+            # because each Q arrow individually applies Frost Shot.
+            # Formula: AD * ad_ratio * (1 + crit_chance * (crit_mult - 1))
+            # Without IE: AD * ratio * (1 + crit_chance)
+            # With IE:    AD * ratio * (1 + crit_chance * 1.30)
+            bonus_crit_ratio = crit_multiplier - 1.0
+            raw_phys = attack_damage * override_ad_ratio * (1 + crit_chance * bonus_crit_ratio)
+            raw_true = 0.0
+        elif is_empowered:
             if natural_crit:
                 # Full crit + bonus true damage
                 raw_phys = attack_damage * crit_multiplier

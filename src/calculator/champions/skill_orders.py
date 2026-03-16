@@ -28,6 +28,18 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "Q", "E", "Q", "E", "R", "E",
         "E", "W", "W", "R", "W", "W",
     ],
+    # ── W max first ──
+    "Amumu": [
+        "Q", "W", "E", "W", "W", "R",
+        "W", "Q", "W", "Q", "R", "Q",
+        "Q", "E", "E", "R", "E", "E",
+    ],
+    # ── E max second ──
+    "Anivia": [
+        "Q", "E", "W", "Q", "Q", "R",
+        "Q", "E", "Q", "E", "R", "E",
+        "E", "W", "W", "R", "W", "W",
+    ],
     # ── W max first (standard pattern) ──
     "Kog'Maw": [
         "Q", "W", "E", "W", "W", "R",
