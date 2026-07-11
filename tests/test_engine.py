@@ -25,6 +25,7 @@ from src.calculator.champions.generic_parser import (
 )
 from src.calculator.champions.slotlib import (
     extract_value,
+    multi_cast,
     on_hit_auto,
     proc_damage,
     simple_damage,
@@ -591,6 +592,59 @@ class TestToggleDot:
             "TestChamp",
         )
         results = parse(self._dot_champ(), 16, 0.0, ability_ranks={"R": 0})
+        assert "R" not in results
+
+
+# ---------------------------------------------------------------------------
+# multi_cast archetype
+# ---------------------------------------------------------------------------
+
+
+class TestMultiCast:
+    """N recasts per activation, reported per-cast (Ahri R pattern)."""
+
+    def _dash_champ(self) -> dict:
+        return _champion(
+            R=[
+                _ability(
+                    name="Dash R",
+                    cooldowns=[130, 105, 80],
+                    leveling=[_leveling("Magic Damage", [60, 90, 120])],
+                )
+            ],
+        )
+
+    def test_emits_per_cast_shape_without_cooldown(self) -> None:
+        """total_casts stays an int; no cooldown key in the entry."""
+        parse = build_parser(
+            {"R": multi_cast(casts=3, dmg_type="magic")},
+            "TestChamp",
+        )
+        results = parse(self._dash_champ(), 16, 0.0)  # R rank 3
+        assert results["R"] == {
+            "name": "Dash R",
+            "rank": 3,
+            "damage_per_cast": 120.0,
+            "total_casts": 3,
+            "total_raw": 360.0,
+            "damage_type": "magic",
+        }
+
+    def test_explicit_attr_mode(self) -> None:
+        parse = build_parser(
+            {"R": multi_cast(casts=2, attr="Magic Damage", dmg_type="magic")},
+            "TestChamp",
+        )
+        results = parse(self._dash_champ(), 6, 0.0)  # R rank 1
+        assert results["R"]["damage_per_cast"] == 60.0
+        assert results["R"]["total_raw"] == 120.0
+
+    def test_rank_gate(self) -> None:
+        parse = build_parser(
+            {"R": multi_cast(casts=3, dmg_type="magic")},
+            "TestChamp",
+        )
+        results = parse(self._dash_champ(), 16, 0.0, ability_ranks={"R": 0})
         assert "R" not in results
 
 

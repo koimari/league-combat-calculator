@@ -489,6 +489,62 @@ def toggle_dot(
     return parse
 
 
+def multi_cast(
+    casts: int,
+    attr: str | None = None,
+    dmg_type: str = "auto",
+    source: tuple[str, int] | None = None,
+) -> SlotParser:
+    """Ability recast N times per activation (Ahri R's three dashes).
+
+    Emits ``{name, rank, damage_per_cast, total_casts, total_raw,
+    damage_type}`` — deliberately NO cooldown key: damage.py treats a
+    ``total_casts`` slot as one activation and spaces the recasts
+    itself.
+
+    Args:
+        casts: Recasts per activation (kept as an int in the entry).
+        attr: Exact leveling attribute for per-cast damage, or None to
+            auto-detect via the classifier.
+        dmg_type: "magic"/"physical"/"true", or "auto" to classify.
+        source: (slot, index) of the JSON entry to read; defaults to
+            entry 0 of the parser's own slot.
+
+    Returns:
+        A DAMAGE-phase slot parser.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability, src_slot = _resolve_source(ctx, source)
+        if ability is None:
+            return None
+        rank = ctx.rank_for(src_slot)
+        if rank < 1:
+            return None
+
+        if attr is None:
+            per_cast, resolved_type = extract_auto(
+                ability, rank, ctx.stats, ctx.target
+            )
+        else:
+            per_cast = extract_named(ability, attr, rank, ctx.stats, ctx.target)
+            resolved_type = classify_damage_type(ability)
+        if dmg_type != "auto":
+            resolved_type = dmg_type
+
+        return {
+            "name": ability.get("name", f"Ability {ctx.slot}"),
+            "rank": rank,
+            "damage_per_cast": per_cast,
+            "total_casts": casts,
+            "total_raw": per_cast * casts,
+            "damage_type": resolved_type,
+        }
+
+    parse.phase = DAMAGE
+    return parse
+
+
 # Damage type -> entry key for per-proc damage values.
 _DAMAGE_TYPE_KEYS = {
     "magic": "magic_damage",
