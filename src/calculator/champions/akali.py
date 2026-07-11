@@ -1,28 +1,30 @@
-"""Akali ability parsing and damage calculation.
+"""Akali — slot map for the archetype engine.
 
-Custom module needed because:
-- P (Assassin's Mark): Empowered auto with per-level scaling and
-  user-configurable proc count via champion options.
-- E (Shuriken Flip): Two-part ability (throw + dash). Uses "Total Magic
-  Damage" attribute to capture both hits.
-- R (Perfect Execution): Two-cast ultimate (R1 dash + R2 execute). R2
-  scales 0-200% based on target missing HP. R1 and R2 are returned
-  separately so the fight engine can apply missing-HP scaling to R2
-  based on damage dealt earlier in the rotation.
+Why each slot is non-generic:
+- P (Assassin's Mark) is a per-level empowered-auto proc with a
+  user-configurable proc count (``passive_procs``) — the proc_damage
+  archetype.
+- E (Shuriken Flip) is two hits (throw + dash); "Total Magic Damage"
+  captures both.
+- R (Perfect Execution) is a custom two-cast slot: R1 dash plus an R2
+  execute that scales 0-200% with target missing HP. The entry carries
+  ``r2_min``/``r2_max``/``missing_hp_scaling`` so damage.py can compute
+  R2 from the HP remaining after earlier casts in the rotation.
+- W (Twilight Shroud) deals no damage and is absent from the slot map.
 
 All numeric values are read from the champion JSON data.
 """
 
 from typing import Any
 
-from .common import build_stats_context, extract_leveling_damage, make_rank_fn
-from .generic_parser import extract_cooldown, extract_damage
-from .scaling import is_flat_unit, resolve_scaling
-
-
-# ---------------------------------------------------------------------------
-# Passive parsing
-# ---------------------------------------------------------------------------
+from .engine import SlotCtx, build_parser
+from .slotlib import (
+    build_stats_context,
+    extract_cooldown,
+    extract_named,
+    proc_damage,
+    simple_damage,
+)
 
 
 def _parse_passive_damage(
@@ -31,197 +33,50 @@ def _parse_passive_damage(
     champion_stats: dict[str, float] | None = None,
     total_ability_power: float = 0.0,
 ) -> float:
-    """Parse Akali passive damage per proc from JSON leveling data.
+    """Per-proc passive damage at a champion level.
 
-    The JSON now contains structured per-level data extracted from
-    the wiki's ``data-bot-values`` attribute (20 values for levels
-    1-20) plus scaling modifiers (e.g. ``60% bonus AD``, ``55% AP``).
-
-    Args:
-        passive: Passive ability dict from champion JSON.
-        level: Champion level (1-20).
-        champion_stats: Champion stats for bonus AD.
-        total_ability_power: Total AP.
-
-    Returns:
-        Damage per passive proc before resistances.
+    Thin seam over the same extraction the P slot's proc_damage
+    archetype performs ("Bonus Magic Damage" holds per-level base values
+    plus bonus-AD/AP scaling modifiers); kept because tests exercise the
+    passive numbers directly against the wiki.
     """
-    # Find the per-level leveling entry in the passive effects
-    for effect in passive.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            attribute = leveling.get("attribute", "").lower()
-            if "damage" not in attribute:
-                continue
-
-            modifiers = leveling.get("modifiers", [])
-            if not modifiers:
-                continue
-
-            # First modifier: per-level base values
-            base_values = modifiers[0].get("values", [])
-            if not base_values:
-                continue
-
-            clamped_level = max(1, min(level, len(base_values)))
-            base_damage = float(base_values[clamped_level - 1])
-
-            # Remaining modifiers: scaling ratios
-            stats_context = dict(champion_stats) if champion_stats else {}
-            stats_context["ability_power"] = total_ability_power
-
-            bonus_damage = 0.0
-            for modifier in modifiers[1:]:
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values or not units:
-                    continue
-                value = float(values[0])
-                unit = units[0] if units else ""
-                if is_flat_unit(unit):
-                    bonus_damage += value
-                else:
-                    bonus_damage += resolve_scaling(
-                        unit, value, stats_context, None,
-                    )
-
-            return base_damage + bonus_damage
-
-    return 0.0
+    stats = build_stats_context(champion_stats, total_ability_power)
+    return extract_named(passive, "Bonus Magic Damage", level, stats)
 
 
-# ---------------------------------------------------------------------------
-# Main parser
-# ---------------------------------------------------------------------------
+def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: R1 dash damage plus R2 execute bounds for missing-HP scaling."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    r1_damage = extract_named(ability, "Magic Damage", rank, ctx.stats)
+    r2_min = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats)
+    r2_max = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats)
+
+    # magic_damage is R1 only; total_raw shows the R1 + R2-max upper
+    # bound. damage.py resolves actual R2 from missing HP at cast time.
+    return {
+        "name": ability.get("name", "Perfect Execution"),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "damage_type": "magic",
+        "magic_damage": r1_damage,
+        "total_raw": r1_damage + r2_max,
+        "r2_min": r2_min,
+        "r2_max": r2_max,
+        "missing_hp_scaling": True,
+    }
 
 
-def parse_abilities(
-    champion_data: dict[str, Any],
-    level: int,
-    total_ability_power: float,
-    ability_ranks: dict[str, int] | None = None,
-    champion_options: dict[str, Any] | None = None,
-    champion_stats: dict[str, float] | None = None,
-    target_stats: dict[str, float] | None = None,
-) -> dict[str, dict[str, Any]]:
-    """Parse Akali's abilities and calculate damage.
+SLOTS = {
+    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
+    "R": _perfect_execution,
+    "P": proc_damage(attr="Bonus Magic Damage", dmg_type="magic"),
+}
 
-    Args:
-        champion_data: Akali's champion data dictionary from JSON.
-        level: Champion level (1-20).
-        total_ability_power: Total AP after items and multipliers.
-        ability_ranks: Optional dict of ability key -> rank override.
-        champion_options: Champion-specific options. Supports:
-            ``{"passive_procs": int}`` — number of passive procs in the
-            fight (default 4).
-        champion_stats: Champion's calculated stats (for AD scaling).
-        target_stats: Target stats (unused for Akali).
-
-    Returns:
-        Dictionary with ability key -> damage information.
-    """
-    abilities_data = champion_data.get("abilities", {})
-    results: dict[str, dict[str, Any]] = {}
-
-    passive_procs = 4
-    if champion_options and "passive_procs" in champion_options:
-        passive_procs = int(champion_options["passive_procs"])
-
-    stats_context = build_stats_context(champion_stats, total_ability_power)
-    rank_for = make_rank_fn("Akali", ability_ranks, level)
-
-    # ── Q: Five Point Strike (standard magic damage) ──────────────────
-    q_rank = rank_for("Q")
-    if q_rank > 0:
-        q_ability_list = abilities_data.get("Q", [])
-        if q_ability_list:
-            q_ability = q_ability_list[0]
-            q_damage, q_damage_type = extract_damage(
-                q_ability, q_rank, stats_context, target_stats,
-            )
-            q_cooldown = extract_cooldown(q_ability, q_rank)
-
-            if q_damage > 0:
-                results["Q"] = {
-                    "name": q_ability.get("name", "Five Point Strike"),
-                    "rank": q_rank,
-                    "cooldown": q_cooldown,
-                    "damage_type": q_damage_type,
-                    "magic_damage": q_damage,
-                    "total_raw": q_damage,
-                }
-
-    # W: Twilight Shroud — no damage, skipped
-
-    # ── E: Shuriken Flip (both hits) ──────────────────────────────────
-    e_rank = rank_for("E")
-    if e_rank > 0:
-        e_ability_list = abilities_data.get("E", [])
-        if e_ability_list:
-            e_ability = e_ability_list[0]
-            e_damage = extract_leveling_damage(
-                e_ability, "Total Magic Damage", e_rank, stats_context,
-            )
-            e_cooldown = extract_cooldown(e_ability, e_rank)
-
-            if e_damage > 0:
-                results["E"] = {
-                    "name": e_ability.get("name", "Shuriken Flip"),
-                    "rank": e_rank,
-                    "cooldown": e_cooldown,
-                    "damage_type": "magic",
-                    "magic_damage": e_damage,
-                    "total_raw": e_damage,
-                }
-
-    # ── R: Perfect Execution (R1 + R2 with missing HP scaling) ────────
-    r_rank = rank_for("R")
-    if r_rank > 0:
-        r_ability_list = abilities_data.get("R", [])
-        if r_ability_list:
-            r_ability = r_ability_list[0]
-            r1_damage = extract_leveling_damage(
-                r_ability, "Magic Damage", r_rank, stats_context,
-            )
-            r2_min = extract_leveling_damage(
-                r_ability, "Minimum Magic Damage", r_rank, stats_context,
-            )
-            r2_max = extract_leveling_damage(
-                r_ability, "Maximum Magic Damage", r_rank, stats_context,
-            )
-            r_cooldown = extract_cooldown(r_ability, r_rank)
-
-            # R1 is standard magic damage. R2 scales with target missing
-            # HP (0%-200% increase). We store both R1 and R2 data so
-            # damage.py can compute R2 based on actual HP after prior
-            # abilities in the rotation.
-            results["R"] = {
-                "name": r_ability.get("name", "Perfect Execution"),
-                "rank": r_rank,
-                "cooldown": r_cooldown,
-                "damage_type": "magic",
-                "magic_damage": r1_damage,
-                "total_raw": r1_damage + r2_max,
-                "r2_min": r2_min,
-                "r2_max": r2_max,
-                "missing_hp_scaling": True,
-            }
-
-    # ── P: Assassin's Mark (empowered auto procs) ─────────────────────
-    if passive_procs > 0:
-        passive_list = abilities_data.get("P", [])
-        if passive_list:
-            per_proc = _parse_passive_damage(
-                passive_list[0], level, champion_stats, total_ability_power,
-            )
-            if per_proc > 0:
-                results["passive"] = {
-                    "name": passive_list[0].get(
-                        "name", "Assassin's Mark",
-                    ),
-                    "damage_type": "magic",
-                    "magic_damage": per_proc,
-                    "total_raw": per_proc * passive_procs,
-                    "proc_count": passive_procs,
-                }
-
-    return results
+parse_abilities = build_parser(SLOTS, "Akali")

@@ -26,6 +26,7 @@ from src.calculator.champions.generic_parser import (
 from src.calculator.champions.slotlib import (
     extract_value,
     on_hit_auto,
+    proc_damage,
     simple_damage,
     toggle_dot,
     utility,
@@ -553,6 +554,61 @@ class TestToggleDot:
         )
         results = parse(self._dot_champ(), 16, 0.0, ability_ranks={"R": 0})
         assert "R" not in results
+
+
+# ---------------------------------------------------------------------------
+# proc_damage archetype
+# ---------------------------------------------------------------------------
+
+
+class TestProcDamage:
+    """Count-configurable passive procs (Akali/Ambessa/Akshan pattern)."""
+
+    def _proc_champ(self) -> dict:
+        per_level = [float(10 + 5 * i) for i in range(18)]
+        return _champion(
+            P=[
+                _ability(
+                    name="Mark",
+                    leveling=[_leveling("Bonus Magic Damage", per_level)],
+                )
+            ],
+        )
+
+    def _parse(self, options: dict | None = None, **params) -> dict:
+        defaults = {"attr": "Bonus Magic Damage", "dmg_type": "magic"}
+        defaults.update(params)
+        parse = build_parser({"P": proc_damage(**defaults)}, "TestChamp")
+        return parse(self._proc_champ(), 9, 0.0, champion_options=options)
+
+    def test_per_proc_scales_with_level_and_count_multiplies(self) -> None:
+        """Level 9 per-proc = 50; 3 procs -> 150 total under "passive"."""
+        results = self._parse(options={"passive_procs": 3})
+        assert results["passive"] == {
+            "name": "Mark",
+            "damage_type": "magic",
+            "magic_damage": 50.0,
+            "total_raw": 150.0,
+            "proc_count": 3,
+        }
+
+    def test_default_count_when_option_absent(self) -> None:
+        results = self._parse(default_count=4)
+        assert results["passive"]["proc_count"] == 4
+        assert results["passive"]["total_raw"] == 200.0
+
+    def test_zero_procs_emits_nothing(self) -> None:
+        results = self._parse(options={"passive_procs": 0})
+        assert results == {}
+
+    def test_zero_damage_emits_nothing(self) -> None:
+        results = self._parse(attr="No Such Attribute")
+        assert results == {}
+
+    def test_physical_type_uses_physical_key(self) -> None:
+        results = self._parse(dmg_type="physical", options={"passive_procs": 2})
+        assert results["passive"]["physical_damage"] == 50.0
+        assert "magic_damage" not in results["passive"]
 
 
 # ---------------------------------------------------------------------------

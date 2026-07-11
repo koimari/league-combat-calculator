@@ -464,6 +464,64 @@ def toggle_dot(
     return parse
 
 
+# Damage type -> entry key for per-proc damage values.
+_DAMAGE_TYPE_KEYS = {
+    "magic": "magic_damage",
+    "physical": "physical_damage",
+    "true": "true_damage",
+}
+
+
+def proc_damage(
+    attr: str,
+    dmg_type: str,
+    count_option: str = "passive_procs",
+    default_count: int = 4,
+) -> SlotParser:
+    """Passive that procs N times per fight (Akali/Ambessa/Akshan P).
+
+    Per-proc damage scales per LEVEL (rank pinned to champion level);
+    the proc count comes from a champion option. Emits
+    ``{name, damage_type, <type>_damage: per_proc, total_raw:
+    per_proc * count, proc_count}`` — damage.py schedules entries with a
+    ``proc_count`` outside the cast rotation.
+
+    Args:
+        attr: Exact leveling attribute holding the per-proc damage.
+        dmg_type: "magic"/"physical"/"true" — picks the per-proc key.
+        count_option: Champion option holding the proc count.
+        default_count: Proc count when the option is absent.
+
+    Returns:
+        A DAMAGE-phase slot parser; emits nothing at zero procs or zero
+        per-proc damage.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability = ctx.ability()
+        if ability is None:
+            return None
+
+        count = int(ctx.options.get(count_option, default_count))
+        if count <= 0:
+            return None
+
+        per_proc = extract_named(ability, attr, ctx.level, ctx.stats, ctx.target)
+        if per_proc <= 0:
+            return None
+
+        return {
+            "name": ability.get("name", f"Ability {ctx.slot}"),
+            "damage_type": dmg_type,
+            _DAMAGE_TYPE_KEYS[dmg_type]: per_proc,
+            "total_raw": per_proc * count,
+            "proc_count": count,
+        }
+
+    parse.phase = DAMAGE
+    return parse
+
+
 def utility(dmg_type: str = "magic") -> SlotParser:
     """Zero-damage display placeholder for a ranked utility ability.
 
