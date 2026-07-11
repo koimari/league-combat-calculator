@@ -949,3 +949,67 @@ touched: test_known_good.py, test_kogmaw.py, conftest.py). pylint
 damage.py **9.64/10** — unchanged from Phase 4 (the two deletions
 removed no finding class). Wrap-up runs: `pytest -q` → **790 passed**;
 `golden_snapshot.py compare` → `OK: snapshot identical`.
+
+## Post-Phase-5 bug fixes
+
+The two product bugs Phase 5 flagged as asides, fixed with user sign-off
+(the one authorized golden re-capture — these fixes legitimately change
+values). Suite: **794 passed, 0 failed** (790 + 4 new tests in
+test_item_damage.py). TDD: all bug tests written and confirmed red first.
+
+### Fix 1 — Shadowflame counted synthetic recast rows twice
+
+`_calculate_shadowflame_bonus` step 1 walks `cast_order` (default
+includes `"Q2"`) building one event per ability row, but step 3's skip
+set was the literal `{"Q","W","E","R","auto_attacks","execute"}` — so a
+synthetic cast-order breakdown row (Ambessa's `"Q2"`) was counted AGAIN
+as an "item effect" event. Fix: `skip_keys = set(cast_order) |
+{"auto_attacks", "execute"}` — derived from what step 1 actually
+consumed. Checked the other non-QWER breakdown keys champions emit:
+Akshan's `passive`/`double_shot` and Ambessa/Akali's `passive` rows are
+NOT in cast_order, so step 3 counting them once was already correct.
+The `damage_amplification` skip literal the task flagged was already
+deleted in Phase 5 commit 4 (with the step-9.5-before-step-10 comment).
+
+### Fix 2 — Actualizer informational row overstated its base
+
+The display-only `ability_amp_*` row summed ALL non-auto, non-`damage_amp_*`
+rows as the "amplified base". The amp is actually applied in exactly two
+places: rotation ability rows (`ability_total *= state.ability_amp`,
+step 2) and `is_ability_damage` item procs (Stormsurge/Zaz'Zak, step 7).
+The row now mirrors that set: `set(state.cast_order)` plus `proc_<name>`
+for `is_ability_damage` effects. Burns, on-hits, spellblades, and other
+item rows no longer inflate it. Display-only — `total_damage` unmoved.
+
+### Tests (test_item_damage.py, all red-first)
+
+- `TestShadowflameCinderbloom::test_synthetic_recast_row_counted_once` —
+  hand-computed unit case (Q2 once = 60.0; double-count gave 140.0).
+- `TestShadowflameCinderbloom::test_ambessa_q2_not_double_counted` —
+  real Ambessa + Shadowflame + Luden's Echo; target HP tuned from a
+  probe run so the 40% crossing before the fight's only magic event
+  flips on whether Q2 is counted once or twice.
+- `TestActualizerAmpRow::test_amp_row_excludes_burn_rows` (red-first) and
+  `::test_amp_row_includes_ability_damage_procs` (green guard locking
+  Stormsurge's inclusion so the fix couldn't overshoot).
+
+### Golden re-capture
+
+Pre-recapture diff vs the old baseline: **2 differing paths, both
+explained by Fix 1** (Fix 2 is display-only and no golden build contains
+Actualizer, so it produces zero diffs by construction):
+
+- `/registered_champion_fights/Ambessa/18/magic_build/breakdown_totals/shadowflame_Shadowflame: 31.07 -> <absent>`
+  (the row was entirely fabricated by the Q2 double-count)
+- `/registered_champion_fights/Ambessa/18/magic_build/total_damage: 1256.8 -> 1225.73`
+
+No other champion, level, build, sweep, or baseline entry differed
+(level-11 and sustained Ambessa fights never crossed the threshold off
+the duplicate event, so their bonus was unchanged). Baseline re-captured;
+`compare` → `OK: snapshot identical`.
+
+### Verification
+
+black clean on damage.py + test_item_damage.py; pylint damage.py
+**9.64/10** (unchanged — no new finding class). `pytest -q` →
+**794 passed**; `golden_snapshot.py compare` → `OK: snapshot identical`.

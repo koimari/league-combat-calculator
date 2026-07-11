@@ -625,10 +625,13 @@ def _calculate_shadowflame_bonus(
         events.append((auto["total_damage"], False))
 
     # 3. Item effect damage (burns, procs, on-hits, etc.)
+    # Skip every ability row step 1 already consumed — derived from
+    # cast_order, not a Q/W/E/R literal, so synthetic recast rows
+    # (e.g. Ambessa "Q2") are not double-counted.
     # No damage_amp_* rows can exist here: this runs (step 9.5) before
     # _apply_damage_amplifiers (step 10). "execute" is likewise created
     # later (step 11) and is a zero-damage display row regardless.
-    skip_keys = {"Q", "W", "E", "R", "auto_attacks", "execute"}
+    skip_keys = set(cast_order) | {"auto_attacks", "execute"}
     for key, entry in breakdown.items():
         if key in skip_keys:
             continue
@@ -2286,24 +2289,33 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
     # in the item-proc step, so this entry is informational only (damage
     # already counted).
     if state.ability_amp > 1.0:
-        # Sum all ability + ability-proc damage that was amplified
+        # Sum exactly the rows the amp multiplied: rotation ability rows
+        # (cast_order keys, step 2) and is_ability_damage item procs
+        # (Stormsurge / Zaz'Zak, step 7). Burns, on-hits, spellblades and
+        # other item rows are never ability-amped and must not be counted.
+        amped_keys = set(state.cast_order)
+        amped_keys.update(
+            f"proc_{name}"
+            for name in state.item_effect_names
+            if item_effects.ITEM_EFFECTS.get(name, {}).get("is_ability_damage")
+        )
         amped_base = sum(
             v.get("total_damage", 0)
             for k, v in breakdown.items()
-            if isinstance(v, dict)
-            and k != "auto_attacks"
-            and not k.startswith("damage_amp_")
+            if isinstance(v, dict) and k in amped_keys
         )
         # The amplified damage = base * amp, so the amp contribution is
         # base * (amp - 1) / amp  (since base already includes the amp).
         actualizer_bonus = amped_base * (state.ability_amp - 1.0) / state.ability_amp
-        actualizer_items = [
-            i.get("name", "")
-            for i in state.items
-            if item_effects.ITEM_EFFECTS.get(i.get("name", ""), {}).get("type")
-            == "ability_damage_amp"
-        ]
-        amp_name = actualizer_items[0] if actualizer_items else "Actualizer"
+        amp_name = next(
+            (
+                i.get("name", "")
+                for i in state.items
+                if item_effects.ITEM_EFFECTS.get(i.get("name", ""), {}).get("type")
+                == "ability_damage_amp"
+            ),
+            "Actualizer",
+        )
         breakdown[f"ability_amp_{amp_name}"] = {
             "name": f"Damage Amplification ({amp_name})",
             "multiplier": state.ability_amp,

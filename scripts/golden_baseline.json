@@ -25940,7 +25940,7 @@
     ],
     "champion_count": 173,
     "champions_fetched_at": 1783743759.197702,
-    "git_head": "2ff3f68b45b98aa826efd5818f021daf7ce8fed9",
+    "git_head": "eda50e2c8bfa947331d1804ba2e99ffd016f3888",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1783743782.0325496,
@@ -26725,10 +26725,9 @@
             "W": 166.67,
             "auto_attacks": 0.0,
             "passive": 88.89,
-            "proc_Luden's Echo": 155.36,
-            "shadowflame_Shadowflame": 31.07
+            "proc_Luden's Echo": 155.36
           },
-          "total_damage": 1256.8
+          "total_damage": 1225.73
         },
         "no_items": {
           "breakdown_totals": {

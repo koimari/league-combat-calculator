@@ -583,6 +583,187 @@ class TestShadowflameCinderbloom:
             f"(diff: {abs(actual - expected) / expected * 100:.1f}%)"
         )
 
+    def test_synthetic_recast_row_counted_once(self) -> None:
+        """A synthetic recast row (e.g. Ambessa Q2) is one damage event, not two.
+
+        Q (400) and Q2 (400) drop the target from 1000 to 200; W (300 magic)
+        then lands below the 400 threshold -> bonus = 300 * 0.2 = 60.
+        Counting the Q2 breakdown row AGAIN as an "item effect" event would
+        add a bogus below-threshold event worth another 80.
+        """
+        from src.calculator.damage import _calculate_shadowflame_bonus
+
+        breakdown = {
+            "Q": {
+                "name": "Cast",
+                "casts": 1,
+                "total_damage": 400.0,
+                "damage_type": "magic",
+            },
+            "Q2": {
+                "name": "Recast",
+                "casts": 1,
+                "total_damage": 400.0,
+                "damage_type": "magic",
+            },
+            "W": {
+                "name": "Follow Up",
+                "casts": 1,
+                "total_damage": 300.0,
+                "damage_type": "magic",
+            },
+        }
+        ability_damages = {
+            "Q": {"damage_type": "magic", "magic_damage": 400, "total_raw": 400},
+            "Q2": {
+                "damage_type": "magic",
+                "magic_damage": 400,
+                "total_raw": 400,
+                "recast_of": "Q",
+            },
+            "W": {"damage_type": "magic", "magic_damage": 300, "total_raw": 300},
+        }
+        # Default cast_order includes "Q2" — step 1 already consumes it.
+        bonus = _calculate_shadowflame_bonus(breakdown, ability_damages, 1000.0)
+        assert abs(bonus - 60.0) < 0.01
+
+    def test_ambessa_q2_not_double_counted(
+        self,
+        ambessa_data: dict,
+        shadowflame: dict,
+        parse_at,
+    ) -> None:
+        """Ambessa (real synthetic Q2 row) + Shadowflame + Luden's Echo.
+
+        Target health is chosen so that whether the 40% threshold is crossed
+        before the fight's only magic event (the Luden's proc, last in event
+        order) depends on Q2 being counted once vs twice.  A probe run
+        against a huge target measures the per-row damages D (none scale
+        with target health here); we then pick
+
+            H = (sum of all rows before Luden's + D_Q2 / 2) / 0.6
+
+        With every row counted once, HP at the Luden's proc is
+        0.4*H + D_Q2/2 — above the threshold, so there is NO Cinderbloom
+        bonus.  Double-counting Q2 pushes it below and fabricates one.
+        """
+        from src.calculator.data_fetcher import get_item_by_name
+
+        items = [shadowflame, get_item_by_name("Luden's Echo")]
+        stats, abilities = parse_at(ambessa_data, 18, items=items)
+
+        def run(target_health: float) -> dict:
+            return calculate_fight_damage(
+                dict(stats),
+                abilities,
+                target_health=target_health,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                ability_haste=0.0,
+                items=items,
+                one_rotation=True,
+            )
+
+        probe = run(100000.0)["breakdown"]
+        assert "Q2" in probe and probe["Q2"]["total_damage"] > 0
+        assert "shadowflame_Shadowflame" not in probe  # nothing crosses 40%
+        luden_key = "proc_Luden's Echo"
+        luden_damage = probe[luden_key]["total_damage"]
+        assert luden_damage > 0
+        before_luden = sum(
+            row["total_damage"] for key, row in probe.items() if key != luden_key
+        )
+        target_health = (before_luden + probe["Q2"]["total_damage"] / 2) / 0.6
+
+        fight = run(target_health)
+        # Guard: same per-row damages at the tuned target health.
+        assert fight["breakdown"]["Q2"]["total_damage"] == pytest.approx(
+            probe["Q2"]["total_damage"]
+        )
+        assert fight["breakdown"][luden_key]["total_damage"] == pytest.approx(
+            luden_damage
+        )
+        # With Q2 counted once, the threshold is never crossed before the
+        # only magic event — no Cinderbloom bonus row may exist.
+        assert "shadowflame_Shadowflame" not in fight["breakdown"]
+
+
+class TestActualizerAmpRow:
+    """The informational Actualizer row must reflect only rows the amp touched.
+
+    The ability amp is applied in exactly two places in the fight engine:
+    rotation ability rows (cast_order keys, damage.py step 2) and
+    ``is_ability_damage`` item procs (Stormsurge / Zaz'Zak's Realmspike,
+    step 7).  The display-only ``ability_amp_*`` row's "amplified base"
+    must mirror that exact set — not burns, on-hits, or other item rows.
+    """
+
+    @pytest.fixture
+    def actualizer(self) -> dict:
+        from src.calculator.data_fetcher import get_item_by_name
+
+        return get_item_by_name("Actualizer")
+
+    @staticmethod
+    def _run(ahri_data: dict, items: list) -> dict:
+        from src.calculator.stats import calculate_total_stats
+
+        stats = calculate_total_stats(ahri_data, 18, items)
+        abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
+        return calculate_fight_damage(
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
+            target_magic_resistance=100,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=0.0,
+            ability_haste=0.0,
+            items=items,
+            one_rotation=True,
+            include_actives=True,
+        )
+
+    @staticmethod
+    def _amp_row_and_expected(fight: dict, extra_keys: tuple = ()) -> tuple:
+        """Return (amp row, hand-computed bonus over the rows the amp touched)."""
+        breakdown = fight["breakdown"]
+        row = breakdown["ability_amp_Actualizer"]
+        amp = row["multiplier"]
+        amped_keys = ("Q", "Q2", "W", "E", "R") + extra_keys
+        base = sum(
+            breakdown[key]["total_damage"] for key in amped_keys if key in breakdown
+        )
+        # base already includes the amp: contribution = base * (amp-1) / amp.
+        return row, base * (amp - 1.0) / amp
+
+    def test_amp_row_excludes_burn_rows(
+        self,
+        ahri_data: dict,
+        liandrys: dict,
+        actualizer: dict,
+    ) -> None:
+        """Liandry's burn is not ability-amped; it must not inflate the row."""
+        fight = self._run(ahri_data, [actualizer, liandrys])
+        assert any(key.startswith("burn_") for key in fight["breakdown"])
+        row, expected = self._amp_row_and_expected(fight)
+        assert row["total_damage"] == pytest.approx(expected, abs=0.01)
+
+    def test_amp_row_includes_ability_damage_procs(
+        self,
+        ahri_data: dict,
+        actualizer: dict,
+    ) -> None:
+        """Stormsurge's proc IS ability-amped and belongs in the row's base."""
+        from src.calculator.data_fetcher import get_item_by_name
+
+        fight = self._run(ahri_data, [actualizer, get_item_by_name("Stormsurge")])
+        assert "proc_Stormsurge" in fight["breakdown"]
+        row, expected = self._amp_row_and_expected(fight, ("proc_Stormsurge",))
+        assert row["total_damage"] == pytest.approx(expected, abs=0.01)
+
 
 class TestBloodsongSpellbladeAndExposeWeakness:
     """Tests for Bloodsong's Spellblade and Expose Weakness passives."""
