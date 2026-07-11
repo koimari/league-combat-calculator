@@ -1316,6 +1316,40 @@ class TestPassiveSlot:
         assert "passive" in results
         assert results["passive"]["on_hit"]["damage_per_hit"] == 14.0
 
+    def test_synthetic_slot_key_maps_to_itself(self) -> None:
+        """Every non-P slot key IS its results key — a synthetic "Q2"
+        recast slot (Ambessa) needs no engine extension."""
+        container = _ability(
+            name="Q1",
+            damage_type="PHYSICAL_DAMAGE",
+            cooldowns=[9, 8, 7, 6, 5],
+            leveling=[_leveling("Physical Damage", [50, 60, 70, 80, 90])],
+        )
+        recast = _ability(
+            name="Q2",
+            damage_type="PHYSICAL_DAMAGE",
+            leveling=[_leveling("Physical Damage", [80, 95, 110, 125, 140])],
+        )
+        champ = _champion(Q=[container, recast])
+        parse = build_parser(
+            {
+                "Q": simple_damage(attr="Physical Damage", dmg_type="physical"),
+                "Q2": simple_damage(
+                    attr="Physical Damage",
+                    dmg_type="physical",
+                    source=("Q", 1),
+                    cooldown_from=("Q", 0),
+                ),
+            },
+            "TestChamp",
+        )
+        results = parse(champ, 9, 0.0)  # Q rank 5
+        assert results["Q2"]["name"] == "Q2"
+        assert results["Q2"]["total_raw"] == 140.0
+        # The recast shares its container's rank and cooldown.
+        assert results["Q2"]["rank"] == results["Q"]["rank"] == 5
+        assert results["Q2"]["cooldown"] == results["Q"]["cooldown"] == 5.0
+
     def test_on_hit_auto_requires_keywords(self) -> None:
         """A passive without on-hit keywords emits nothing."""
         champ = _champion(
