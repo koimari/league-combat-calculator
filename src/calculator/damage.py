@@ -1690,6 +1690,589 @@ def _layer_on_hit_effects(state: FightState, autos: AutoAttackResult) -> OnHitRe
     return result
 
 
+@dataclass
+class SpellbladeResult:
+    """Values produced by the spellblade step and consumed by later steps."""
+
+    item: str | None = None
+    procs: int = 0
+    damage_per_proc: float = 0.0  # mitigated damage per proc
+    double_on_hit_procs: int = 0  # extra on-hit stacks (Dusk and Dawn + double shot)
+
+
+def _add_spellblade_damage(
+    state: FightState,
+    rotation: RotationResult,
+    autos: AutoAttackResult,
+    on_hits: OnHitResult,
+) -> SpellbladeResult:
+    """Add spellblade proc damage and Dusk and Dawn's double on-hit.
+
+    Procs are limited by ability casts, the spellblade's cooldown plus
+    weave delay, and the fight's auto count. Also totals the extra on-hit
+    stack applications (Dusk and Dawn double on-hits, double-shot autos)
+    that accelerate Kraken Slayer / Hullbreaker stacking later.
+    """
+    resists = state.resists
+    result = SpellbladeResult()
+
+    for name in state.item_effect_names:
+        effect = item_effects.ITEM_EFFECTS.get(name, {})
+        if effect.get("type") == "spellblade":
+            result.item = name
+            break  # Only one spellblade can be active
+
+    if result.item and state.num_auto_attacks > 0:
+        raw_sb = item_effects.get_spellblade_damage(result.item, state.champion_stats)
+        sb_type = item_effects.get_spellblade_damage_type(result.item)
+        sb_effect = item_effects.ITEM_EFFECTS[result.item]
+        sb_cd = sb_effect["cooldown"]
+        weave_delay = sb_effect["weave_delay"]
+        effective_sb_cd = sb_cd + weave_delay
+
+        if sb_type == "magic":
+            result.damage_per_proc = (
+                apply_resistance(raw_sb, resists.effective_mr) * state.magic_amp
+            )
+        elif sb_type == "physical":
+            result.damage_per_proc = apply_resistance(raw_sb, resists.effective_armor)
+        else:
+            result.damage_per_proc = raw_sb
+
+        # Number of procs: limited by ability casts and cooldown
+        result.procs = min(
+            rotation.total_ability_casts,
+            1 + int(state.fight_duration_seconds / effective_sb_cd),
+            state.num_auto_attacks,
+        )
+        sb_total = result.damage_per_proc * result.procs
+
+        state.breakdown[f"spellblade_{result.item}"] = {
+            "name": f"{result.item} (Spellblade)",
+            "procs": result.procs,
+            "damage_per_proc": result.damage_per_proc,
+            "total_damage": sb_total,
+            "damage_type": sb_type,
+        }
+        state.total_damage += sb_total
+
+    # ── Double on-hit from spellblade (Dusk and Dawn) ──
+    if result.item and result.procs > 0:
+        sb_doh_effect = item_effects.ITEM_EFFECTS.get(result.item, {})
+        if sb_doh_effect.get("double_on_hit"):
+            result.double_on_hit_procs = result.procs
+            extra_on_hit = on_hits.non_bork_on_hit_per_hit * result.double_on_hit_procs
+
+            # BoRK extra procs (approximate with average per-hit damage)
+            if on_hits.has_bork and state.num_auto_attacks > 0:
+                extra_on_hit += on_hits.avg_bork_per_hit * result.double_on_hit_procs
+
+            if extra_on_hit > 0:
+                state.breakdown[f"double_on_hit_{result.item}"] = {
+                    "name": f"{result.item} (Double On-Hit)",
+                    "procs": result.double_on_hit_procs,
+                    "total_damage": extra_on_hit,
+                    "damage_type": "mixed",
+                }
+                state.total_damage += extra_on_hit
+
+    # Double shot on-hit stacking: each auto generates an extra on-hit
+    # application, accelerating Kraken Slayer / Hullbreaker procs.
+    if autos.double_shot_info:
+        result.double_on_hit_procs += state.num_auto_attacks
+
+    return result
+
+
+def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
+    """Add burn/DoT item damage: burns, Immolate, and Unending Despair.
+
+    Burns refresh on each ability hit (and on Malignance's Hatefog DoT),
+    so the effective burn window stretches across the rotation's cast
+    spread — capped at the fight duration outside one-rotation mode.
+    """
+    resists = state.resists
+    ability_damages = state.ability_damages
+
+    for name in state.item_effect_names:
+        effect = item_effects.ITEM_EFFECTS.get(name, {})
+        etype = effect.get("type", "")
+
+        if etype == "burn":
+            raw_burn = item_effects.calculate_burn_damage(
+                name, state.champion_stats, state.target_health
+            )
+            burn_duration = effect["duration"]
+            # Burn refreshes on each ability hit (including R dashes).
+            r_info = ability_damages.get("R")
+            r_extra = 0
+            if r_info:
+                r_extra = r_info.get("total_casts", 3) - 1
+            # Estimate time from first to last ability hit.  In a fast
+            # one-rotation combo, casts are ~0.5s apart (GCD-limited).
+            inter_cast_delay = 0.5
+            cast_spread = (
+                rotation.total_ability_casts - 1 + r_extra
+            ) * inter_cast_delay
+
+            # Other item DoTs (e.g. Malignance Hatefog) deal ability
+            # damage that also refreshes burns.  Hatefog starts at R cast
+            # (not at fight start), so its refresh window begins partway
+            # through the cast_spread.
+            dot_refresh_end = cast_spread  # default: last ability hit
+            for other_name in state.item_effect_names:
+                other_eff = item_effects.ITEM_EFFECTS.get(other_name, {})
+                if other_eff.get("type") == "ult_proc" and "R" in ability_damages:
+                    # R1 is cast at (cast_spread - r_extra) into the fight
+                    r_start = cast_spread - r_extra
+                    hatefog_end = r_start + other_eff["duration"]
+                    dot_refresh_end = max(dot_refresh_end, hatefog_end)
+
+            if state.one_rotation:
+                effective_burn_time = dot_refresh_end + burn_duration
+            else:
+                effective_burn_time = min(
+                    dot_refresh_end + burn_duration,
+                    state.fight_duration_seconds,
+                )
+            if effective_burn_time > burn_duration:
+                burn_multiplier = effective_burn_time / burn_duration
+                raw_burn *= burn_multiplier
+            burn_mitigated = (
+                apply_resistance(raw_burn, resists.effective_mr) * state.magic_amp
+            )
+
+            state.breakdown[f"burn_{name}"] = {
+                "name": f"{name} (burn)",
+                "total_damage": burn_mitigated,
+                "damage_type": "magic",
+            }
+            state.total_damage += burn_mitigated
+
+        elif etype == "immolate":
+            raw_immolate = item_effects.calculate_immolate_damage(
+                name, state.champion_stats, state.fight_duration_seconds
+            )
+            immolate_mitigated = (
+                apply_resistance(raw_immolate, resists.effective_mr) * state.magic_amp
+            )
+
+            state.breakdown[f"immolate_{name}"] = {
+                "name": f"{name} (Immolate)",
+                "total_damage": immolate_mitigated,
+                "damage_type": "magic",
+            }
+            state.total_damage += immolate_mitigated
+
+    # ── Unending Despair periodic AoE ──
+    if "Unending Despair" in state.item_effect_names:
+        raw_despair = item_effects.calculate_unending_despair_damage(
+            state.champion_stats, state.fight_duration_seconds
+        )
+        if raw_despair > 0:
+            despair_mitigated = (
+                apply_resistance(raw_despair, resists.effective_mr) * state.magic_amp
+            )
+            state.breakdown["periodic_Unending Despair"] = {
+                "name": "Unending Despair (Anguish)",
+                "total_damage": despair_mitigated,
+                "damage_type": "magic",
+            }
+            state.total_damage += despair_mitigated
+
+
+def _add_item_proc_damage(state: FightState) -> None:
+    """Add proc-type item damage and ultimate-triggered procs (Malignance)."""
+    resists = state.resists
+
+    for name in state.item_effect_names:
+        effect = item_effects.ITEM_EFFECTS.get(name, {})
+        if effect.get("type") != "proc":
+            continue
+
+        raw_proc = item_effects.calculate_proc_damage(
+            name,
+            state.champion_stats,
+            state.target_health,
+            state.fight_duration_seconds,
+            state.level,
+        )
+        dmg_type = effect.get("damage_type", "magic")
+        if dmg_type == "magic":
+            proc_mitigated = (
+                apply_resistance(raw_proc, resists.effective_mr) * state.magic_amp
+            )
+        elif dmg_type == "physical":
+            proc_mitigated = apply_resistance(raw_proc, resists.effective_armor)
+        else:
+            proc_mitigated = raw_proc
+
+        # Stormsurge and Zaz'Zak deal ability damage — amplified by Actualizer
+        if effect.get("is_ability_damage"):
+            proc_mitigated *= state.ability_amp
+
+        state.breakdown[f"proc_{name}"] = {
+            "name": f"{name} (proc)",
+            "total_damage": proc_mitigated,
+            "damage_type": dmg_type,
+        }
+        state.total_damage += proc_mitigated
+
+    # ── Ultimate-triggered procs (Malignance) ──
+    for name in state.item_effect_names:
+        effect = item_effects.ITEM_EFFECTS.get(name, {})
+        if effect.get("type") != "ult_proc":
+            continue
+        # Only triggers if R was cast
+        r_info = state.ability_damages.get("R")
+        if r_info is None:
+            continue
+        ap = state.champion_stats.get("ability_power", 0)
+        raw = effect["base"] + effect["ap_ratio"] * ap
+
+        # Hatefog zone refreshes on each R dash.  Effective duration is
+        # the time from R1 to R_last plus the base zone duration.
+        hatefog_duration = effect["duration"]
+        r_total_casts = r_info.get("total_casts", 1)
+        r_dash_spread = (r_total_casts - 1) * 0.5  # ~0.5s between dashes
+        effective_hatefog = r_dash_spread + hatefog_duration
+        raw *= effective_hatefog / hatefog_duration
+
+        ult_proc_mitigated = (
+            apply_resistance(raw, resists.effective_mr) * state.magic_amp
+        )
+
+        state.breakdown[f"ult_proc_{name}"] = {
+            "name": f"{name} (Hatefog)",
+            "total_damage": ult_proc_mitigated,
+            "damage_type": "magic",
+        }
+        state.total_damage += ult_proc_mitigated
+
+
+def _add_item_active_damage(state: FightState) -> None:
+    """Add active-item damage (skipped when actives are excluded)."""
+    if not state.include_actives:
+        return
+    resists = state.resists
+    for name in state.item_effect_names:
+        effect = item_effects.ITEM_EFFECTS.get(name, {})
+        if effect.get("type") != "active":
+            continue
+
+        raw_active = item_effects.calculate_active_damage(
+            name, state.champion_stats, state.target_health
+        )
+        dmg_type = effect.get("damage_type", "magic")
+        if dmg_type == "magic":
+            active_mitigated = (
+                apply_resistance(raw_active, resists.effective_mr) * state.magic_amp
+            )
+        elif dmg_type == "physical":
+            active_mitigated = apply_resistance(raw_active, resists.effective_armor)
+        else:
+            active_mitigated = raw_active
+
+        state.breakdown[f"active_{name}"] = {
+            "name": f"{name} (active)",
+            "total_damage": active_mitigated,
+            "damage_type": dmg_type,
+        }
+        state.total_damage += active_mitigated
+
+
+def _add_single_proc_on_hits(
+    state: FightState,
+    rotation: RotationResult,
+    autos: AutoAttackResult,
+    on_hits: OnHitResult,
+    spellblade: SpellbladeResult,
+) -> None:
+    """Add items that proc once (or on a stack counter) rather than per hit.
+
+    First-hit procs (Dead Man's Plate, Heartsteel, energized Rapid
+    Firecannon / Stormrazor / Voltaic Cyclosword / Statikk Shiv), the
+    Titanic Hydra Crescent active, stack-counter procs simulated against
+    the target's dropping HP (Kraken Slayer, Hullbreaker — phantom hits
+    and double on-hits each grant an extra stack), Eclipse, and
+    Muramana's per-ability-cast Shock damage.
+    """
+    resists = state.resists
+    breakdown = state.breakdown
+    item_names = state.item_effect_names
+    num_auto_attacks = state.num_auto_attacks
+    is_melee = state.is_melee
+    effective_armor = resists.effective_armor
+    effective_mr = resists.effective_mr
+
+    # Dead Man's Plate: one proc at fight start
+    if "Dead Man's Plate" in item_names and num_auto_attacks > 0:
+        raw_dmp = item_effects.calculate_dead_mans_plate_damage(state.champion_stats)
+        dmp_mitigated = apply_resistance(raw_dmp, effective_armor)
+        breakdown["on_hit_once_Dead Man's Plate"] = {
+            "name": "Dead Man's Plate (first hit)",
+            "total_damage": dmp_mitigated,
+            "damage_type": "physical",
+        }
+        state.total_damage += dmp_mitigated
+
+    # Heartsteel: one proc per fight (30s CD, assumed single proc)
+    if "Heartsteel" in item_names and num_auto_attacks > 0:
+        raw_hs = item_effects.calculate_heartsteel_damage(state.champion_stats)
+        hs_mitigated = apply_resistance(raw_hs, effective_armor)
+        breakdown["on_hit_once_Heartsteel"] = {
+            "name": "Heartsteel (Colossal Consumption)",
+            "total_damage": hs_mitigated,
+            "damage_type": "physical",
+        }
+        state.total_damage += hs_mitigated
+
+    # Rapid Firecannon: one energized proc on first auto
+    if "Rapid Firecannon" in item_names and num_auto_attacks > 0:
+        rfc_effect = item_effects.ITEM_EFFECTS.get("Rapid Firecannon", {})
+        raw_rfc = rfc_effect["base"]
+        rfc_mitigated = apply_resistance(raw_rfc, effective_mr)
+        breakdown["on_hit_once_Rapid Firecannon"] = {
+            "name": "Rapid Firecannon (Sharpshooter)",
+            "total_damage": rfc_mitigated,
+            "damage_type": "magic",
+        }
+        state.total_damage += rfc_mitigated
+
+    # Stormrazor: one energized proc on first auto
+    if "Stormrazor" in item_names and num_auto_attacks > 0:
+        sr_effect = item_effects.ITEM_EFFECTS.get("Stormrazor", {})
+        raw_sr = sr_effect["base"]
+        sr_mitigated = apply_resistance(raw_sr, effective_mr)
+        breakdown["on_hit_once_Stormrazor"] = {
+            "name": "Stormrazor (Bolt)",
+            "total_damage": sr_mitigated,
+            "damage_type": "magic",
+        }
+        state.total_damage += sr_mitigated
+
+    # Voltaic Cyclosword: one energized proc on first auto (physical).
+    # Firmament deals a % of the target's CURRENT health (melee/ranged
+    # split), capped. The proc lands on the first auto, when the target is
+    # still at full health (same convention as BoRK's simulation start).
+    if "Voltaic Cyclosword" in item_names and num_auto_attacks > 0:
+        vc_effect = item_effects.ITEM_EFFECTS.get("Voltaic Cyclosword", {})
+        vc_ratio = (
+            vc_effect["current_hp_ratio_melee"]
+            if is_melee
+            else vc_effect["current_hp_ratio_ranged"]
+        )
+        vc_cap = vc_effect["damage_cap"]
+        raw_vc = min(vc_ratio * state.target_health, vc_cap)
+        vc_mitigated = apply_resistance(raw_vc, effective_armor)
+        breakdown["on_hit_once_Voltaic Cyclosword"] = {
+            "name": "Voltaic Cyclosword (Firmament)",
+            "total_damage": vc_mitigated,
+            "damage_type": "physical",
+        }
+        state.total_damage += vc_mitigated
+
+    # Statikk Shiv: one empowered chain-lightning auto per energize cycle.
+    # Single-target model: the chain (chain_targets_min/max) has nothing to
+    # bounce to, so damage is one base-damage proc.
+    if "Statikk Shiv" in item_names and num_auto_attacks > 0:
+        ss_effect = item_effects.ITEM_EFFECTS.get("Statikk Shiv", {})
+        ss_count = min(
+            int(ss_effect["empowered_auto_count"]),
+            num_auto_attacks,
+        )
+        raw_ss = ss_effect["base"] * ss_count
+        ss_mitigated = apply_resistance(raw_ss, effective_mr)
+        breakdown["on_hit_once_Statikk Shiv"] = {
+            "name": "Statikk Shiv (Electrospark)",
+            "procs": ss_count,
+            "total_damage": ss_mitigated,
+            "damage_type": "magic",
+        }
+        state.total_damage += ss_mitigated
+
+    # Titanic Hydra Crescent active: empowered Cleave on next auto (10s CD)
+    if "Titanic Hydra" in item_names and num_auto_attacks > 0:
+        th_effect = item_effects.ITEM_EFFECTS.get("Titanic Hydra", {})
+        th_active_ratio = (
+            th_effect["active_max_hp_ratio_melee"]
+            if is_melee
+            else th_effect["active_max_hp_ratio_ranged"]
+        )
+        if th_active_ratio > 0:
+            th_cd = th_effect["active_cooldown"]
+            th_procs = 1 + int(state.fight_duration_seconds / th_cd) if th_cd > 0 else 1
+            th_procs = min(th_procs, num_auto_attacks)
+            champion_hp = state.champion_stats.get("health", 0)
+            raw_th_active = th_active_ratio * champion_hp * th_procs
+            th_mitigated = apply_resistance(raw_th_active, effective_armor)
+            breakdown["active_Titanic Hydra"] = {
+                "name": "Titanic Hydra (Titanic Crescent)",
+                "procs": th_procs,
+                "total_damage": th_mitigated,
+                "damage_type": "physical",
+            }
+            state.total_damage += th_mitigated
+
+    # Kraken Slayer: every 3rd on-hit application. Phantom hits and double
+    # on-hit procs each grant an extra stack (not an extra damage proc).
+    # Damage scales with target's missing HP, so we simulate per-auto.
+    if "Kraken Slayer" in item_names and num_auto_attacks > 0:
+        kraken_procs, kraken_proc_autos = _calculate_kraken_procs(
+            num_auto_attacks,
+            on_hits.phantom_hit_autos,
+            spellblade.double_on_hit_procs,
+        )
+        if kraken_procs > 0:
+            # Estimate total on-hit damage per auto for HP tracking
+            # (auto damage + non-BoRK on-hits + average BoRK per hit)
+            kraken_other_on_hit = on_hits.non_bork_on_hit_per_hit
+            if on_hits.has_bork and on_hits.avg_bork_per_hit > 0:
+                kraken_other_on_hit += on_hits.avg_bork_per_hit
+
+            kraken_total = _simulate_kraken_damage(
+                target_health=state.target_health,
+                num_auto_attacks=num_auto_attacks,
+                auto_damage_per_hit=autos.auto_damage_per_hit,
+                other_on_hit_per_hit=kraken_other_on_hit,
+                effective_armor=effective_armor,
+                is_melee=is_melee,
+                level=state.level,
+                kraken_proc_autos=kraken_proc_autos,
+            )
+            breakdown["on_hit_Kraken Slayer"] = {
+                "name": "Kraken Slayer (Bring It Down)",
+                "procs": kraken_procs,
+                "damage_per_proc": kraken_total / kraken_procs,
+                "total_damage": kraken_total,
+                "damage_type": "physical",
+            }
+            state.total_damage += kraken_total
+
+    # Hullbreaker Skipper: every 5th on-hit application. Phantom hits and
+    # double on-hit procs each grant an extra stack (not extra damage).
+    # Damage is constant per proc (base AD ratio + champion max HP ratio).
+    if "Hullbreaker" in item_names and num_auto_attacks > 0:
+        hb_effect = item_effects.ITEM_EFFECTS.get("Hullbreaker", {})
+        hb_hits = hb_effect["hits_required"]
+        hb_procs, _ = _calculate_hullbreaker_procs(
+            num_auto_attacks,
+            on_hits.phantom_hit_autos,
+            spellblade.double_on_hit_procs,
+            hits_required=hb_hits,
+        )
+        if hb_procs > 0:
+            raw_per_proc = item_effects.calculate_hullbreaker_proc_damage(
+                state.champion_stats,
+                is_melee,
+            )
+            hb_mitigated = apply_resistance(
+                raw_per_proc * hb_procs,
+                effective_armor,
+            )
+            breakdown["on_hit_Hullbreaker"] = {
+                "name": "Hullbreaker (Skipper)",
+                "procs": hb_procs,
+                "damage_per_proc": hb_mitigated / hb_procs,
+                "total_damage": hb_mitigated,
+                "damage_type": "physical",
+            }
+            state.total_damage += hb_mitigated
+
+    # Eclipse: Ever Rising Moon proc (% max HP physical damage)
+    if "Eclipse" in item_names:
+        raw_eclipse = item_effects.calculate_eclipse_damage(
+            state.target_health,
+            is_melee,
+            state.fight_duration_seconds,
+        )
+        eclipse_mitigated = apply_resistance(raw_eclipse, effective_armor)
+        breakdown["proc_Eclipse"] = {
+            "name": "Eclipse (Ever Rising Moon)",
+            "total_damage": eclipse_mitigated,
+            "damage_type": "physical",
+        }
+        state.total_damage += eclipse_mitigated
+
+    # Muramana ability damage bonus — procs once per ability cast, but
+    # multi-cast abilities (e.g. Ahri R with 3 dashes) proc each sub-cast.
+    if "Muramana" in item_names:
+        raw_mura = item_effects.get_muramana_ability_damage(
+            state.champion_stats, is_melee, rotation.total_muramana_procs
+        )
+        mura_mitigated = apply_resistance(raw_mura, effective_armor)
+        breakdown["muramana_ability"] = {
+            "name": "Muramana (Shock - abilities)",
+            "total_damage": mura_mitigated,
+            "damage_type": "physical",
+        }
+        state.total_damage += mura_mitigated
+
+
+def _add_shadowflame_cinderbloom(state: FightState) -> None:
+    """Add Shadowflame's Cinderbloom bonus (magic/true crits below 40% HP)."""
+    if "Shadowflame" not in state.item_effect_names:
+        return
+    shadowflame_bonus = _calculate_shadowflame_bonus(
+        state.breakdown,
+        state.ability_damages,
+        state.target_health,
+        state.cast_order,
+    )
+    if shadowflame_bonus > 0:
+        state.breakdown["shadowflame_Shadowflame"] = {
+            "name": "Shadowflame (Cinderbloom)",
+            "total_damage": shadowflame_bonus,
+            "damage_type": "mixed",
+        }
+        state.total_damage += shadowflame_bonus
+
+
+def _add_expose_weakness(
+    state: FightState,
+    autos: AutoAttackResult,
+    spellblade: SpellbladeResult,
+) -> None:
+    """Add Bloodsong's Expose Weakness amp on damage after the first proc."""
+    if not (spellblade.item and spellblade.procs > 0):
+        return
+    sb_ew_effect = item_effects.ITEM_EFFECTS.get(spellblade.item, {})
+    # Polymorphic lookup across all spellblades: only Bloodsong has the
+    # expose_weakness keys, so 0 here means "no such passive" — it is
+    # NOT a stale duplicate of a registry value.
+    expose_rate = (
+        sb_ew_effect.get("expose_weakness_melee", 0)
+        if state.is_melee
+        else sb_ew_effect.get("expose_weakness_ranged", 0)
+    )
+    if expose_rate <= 0:
+        return
+
+    # First ability cast + first auto + first spellblade proc
+    # occur before Expose Weakness is applied and don't benefit.
+    breakdown = state.breakdown
+    first_ability_key = next((k for k in state.cast_order if k in breakdown), None)
+    damage_before_expose = 0.0
+    if first_ability_key:
+        entry = breakdown[first_ability_key]
+        casts = entry.get("casts", 1)
+        if casts > 0:
+            damage_before_expose += entry["total_damage"] / casts
+    damage_before_expose += autos.auto_damage_per_hit
+    damage_before_expose += spellblade.damage_per_proc
+
+    amped_damage = max(0, state.total_damage - damage_before_expose)
+    expose_bonus = amped_damage * expose_rate
+
+    breakdown[f"expose_weakness_{spellblade.item}"] = {
+        "name": f"{spellblade.item} (Expose Weakness)",
+        "amplifier": 1.0 + expose_rate,
+        "total_damage": expose_bonus,
+        "damage_type": "mixed",
+    }
+    state.total_damage += expose_bonus
+
+
 def calculate_fight_damage(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
@@ -1774,528 +2357,40 @@ def calculate_fight_damage(
     # ── Step 4: On-hit damage layered onto the autos ────────────────────
     on_hits = _layer_on_hit_effects(state, autos)
 
+    # ── Step 5: Spellblade + Dusk and Dawn double on-hit ────────────────
+    spellblade = _add_spellblade_damage(state, rotation, autos, on_hits)
+
+    # ── Step 6: Burn / DoT item damage ──────────────────────────────────
+    _add_burn_damage(state, rotation)
+
+    # ── Step 7: Item procs (incl. ult-triggered Malignance) ─────────────
+    _add_item_proc_damage(state)
+
+    # ── Step 8: Active item damage ──────────────────────────────────────
+    _add_item_active_damage(state)
+
+    # ── Step 9: Single-proc on-hits, Shadowflame, Expose Weakness ───────
+    _add_single_proc_on_hits(state, rotation, autos, on_hits, spellblade)
+    _add_shadowflame_cinderbloom(state)
+    _add_expose_weakness(state, autos, spellblade)
+
     # ── Transitional unpack ── deleted as later Phase 4 groups extract the
     # remaining inline steps below into functions that read the state.
     resists = state.resists
-    is_melee = state.is_melee
-    level = state.level
-    item_names = state.item_effect_names
     has_hexplate = state.has_hexplate
     has_fiendhunter = state.has_fiendhunter
-    num_auto_attacks = state.num_auto_attacks
-    magic_amp = state.magic_amp
     ability_amp = state.ability_amp
     hypershot_amp = state.hypershot_amp
     effective_armor = resists.effective_armor
     effective_mr = resists.effective_mr
     breakdown = state.breakdown
     total_damage = state.total_damage
-    total_ability_casts = rotation.total_ability_casts
-    total_muramana_procs = rotation.total_muramana_procs
     first_ability_damage = rotation.first_ability_damage
     has_navori = rotation.has_navori
     navori_refund = rotation.navori_refund
     autos_per_second = rotation.autos_per_second
-    auto_damage_per_hit = autos.auto_damage_per_hit
-    double_shot_info = autos.double_shot_info
     phantom_hit_count = on_hits.phantom_hit_count
     phantom_hit_autos = on_hits.phantom_hit_autos
-    non_bork_on_hit_per_hit = on_hits.non_bork_on_hit_per_hit
-    avg_bork_per_hit = on_hits.avg_bork_per_hit
-    has_bork = on_hits.has_bork
-
-    # ── Step 5: Spellblade damage ─────────────────────────────────────────
-    spellblade_item = None
-    sb_mitigated = 0.0
-    sb_procs = 0
-
-    for name in item_names:
-        effect = item_effects.ITEM_EFFECTS.get(name, {})
-        if effect.get("type") == "spellblade":
-            spellblade_item = name
-            break  # Only one spellblade can be active
-
-    if spellblade_item and num_auto_attacks > 0:
-        raw_sb = item_effects.get_spellblade_damage(spellblade_item, champion_stats)
-        sb_type = item_effects.get_spellblade_damage_type(spellblade_item)
-        sb_effect = item_effects.ITEM_EFFECTS[spellblade_item]
-        sb_cd = sb_effect["cooldown"]
-        weave_delay = sb_effect["weave_delay"]
-        effective_sb_cd = sb_cd + weave_delay
-
-        if sb_type == "magic":
-            sb_mitigated = apply_resistance(raw_sb, effective_mr) * magic_amp
-        elif sb_type == "physical":
-            sb_mitigated = apply_resistance(raw_sb, effective_armor)
-        else:
-            sb_mitigated = raw_sb
-
-        # Number of procs: limited by ability casts and cooldown
-        sb_procs = min(
-            total_ability_casts,
-            1 + int(fight_duration_seconds / effective_sb_cd),
-            num_auto_attacks,
-        )
-        sb_total = sb_mitigated * sb_procs
-
-        breakdown[f"spellblade_{spellblade_item}"] = {
-            "name": f"{spellblade_item} (Spellblade)",
-            "procs": sb_procs,
-            "damage_per_proc": sb_mitigated,
-            "total_damage": sb_total,
-            "damage_type": sb_type,
-        }
-        total_damage += sb_total
-
-    # ── Step 5b: Double on-hit from spellblade (Dusk and Dawn) ──────────
-    double_on_hit_procs = 0
-    if spellblade_item and sb_procs > 0:
-        sb_doh_effect = item_effects.ITEM_EFFECTS.get(spellblade_item, {})
-        if sb_doh_effect.get("double_on_hit"):
-            double_on_hit_procs = sb_procs
-            extra_on_hit = non_bork_on_hit_per_hit * double_on_hit_procs
-
-            # BoRK extra procs (approximate with average per-hit damage)
-            if has_bork and num_auto_attacks > 0:
-                extra_on_hit += avg_bork_per_hit * double_on_hit_procs
-
-            if extra_on_hit > 0:
-                breakdown[f"double_on_hit_{spellblade_item}"] = {
-                    "name": f"{spellblade_item} (Double On-Hit)",
-                    "procs": double_on_hit_procs,
-                    "total_damage": extra_on_hit,
-                    "damage_type": "mixed",
-                }
-                total_damage += extra_on_hit
-
-    # Double shot on-hit stacking: each auto generates an extra on-hit
-    # application, accelerating Kraken Slayer / Hullbreaker procs.
-    if double_shot_info:
-        double_on_hit_procs += num_auto_attacks
-
-    # ── Step 6: Burn / DoT damage ─────────────────────────────────────────
-    for name in item_names:
-        effect = item_effects.ITEM_EFFECTS.get(name, {})
-        etype = effect.get("type", "")
-
-        if etype == "burn":
-            raw_burn = item_effects.calculate_burn_damage(
-                name, champion_stats, target_health
-            )
-            burn_duration = effect["duration"]
-            # Burn refreshes on each ability hit (including R dashes).
-            r_info = ability_damages.get("R")
-            r_extra = 0
-            if r_info:
-                r_extra = r_info.get("total_casts", 3) - 1
-            # Estimate time from first to last ability hit.  In a fast
-            # one-rotation combo, casts are ~0.5s apart (GCD-limited).
-            inter_cast_delay = 0.5
-            cast_spread = (total_ability_casts - 1 + r_extra) * inter_cast_delay
-
-            # Other item DoTs (e.g. Malignance Hatefog) deal ability
-            # damage that also refreshes burns.  Hatefog starts at R cast
-            # (not at fight start), so its refresh window begins partway
-            # through the cast_spread.
-            dot_refresh_end = cast_spread  # default: last ability hit
-            for other_name in item_names:
-                other_eff = item_effects.ITEM_EFFECTS.get(other_name, {})
-                if other_eff.get("type") == "ult_proc" and "R" in ability_damages:
-                    # R1 is cast at (cast_spread - r_extra) into the fight
-                    r_start = cast_spread - r_extra
-                    hatefog_end = r_start + other_eff["duration"]
-                    dot_refresh_end = max(dot_refresh_end, hatefog_end)
-
-            if one_rotation:
-                effective_burn_time = dot_refresh_end + burn_duration
-            else:
-                effective_burn_time = min(
-                    dot_refresh_end + burn_duration,
-                    fight_duration_seconds,
-                )
-            if effective_burn_time > burn_duration:
-                burn_multiplier = effective_burn_time / burn_duration
-                raw_burn *= burn_multiplier
-            burn_mitigated = apply_resistance(raw_burn, effective_mr) * magic_amp
-
-            breakdown[f"burn_{name}"] = {
-                "name": f"{name} (burn)",
-                "total_damage": burn_mitigated,
-                "damage_type": "magic",
-            }
-            total_damage += burn_mitigated
-
-        elif etype == "immolate":
-            raw_immolate = item_effects.calculate_immolate_damage(
-                name, champion_stats, fight_duration_seconds
-            )
-            immolate_mitigated = (
-                apply_resistance(raw_immolate, effective_mr) * magic_amp
-            )
-
-            breakdown[f"immolate_{name}"] = {
-                "name": f"{name} (Immolate)",
-                "total_damage": immolate_mitigated,
-                "damage_type": "magic",
-            }
-            total_damage += immolate_mitigated
-
-    # ── Step 6b: Unending Despair periodic AoE ─────────────────────────────
-    if "Unending Despair" in item_names:
-        raw_despair = item_effects.calculate_unending_despair_damage(
-            champion_stats, fight_duration_seconds
-        )
-        if raw_despair > 0:
-            despair_mitigated = apply_resistance(raw_despair, effective_mr) * magic_amp
-            breakdown["periodic_Unending Despair"] = {
-                "name": "Unending Despair (Anguish)",
-                "total_damage": despair_mitigated,
-                "damage_type": "magic",
-            }
-            total_damage += despair_mitigated
-
-    # ── Step 7: Proc damage ───────────────────────────────────────────────
-    for name in item_names:
-        effect = item_effects.ITEM_EFFECTS.get(name, {})
-        if effect.get("type") != "proc":
-            continue
-
-        raw_proc = item_effects.calculate_proc_damage(
-            name,
-            champion_stats,
-            target_health,
-            fight_duration_seconds,
-            level,
-        )
-        dmg_type = effect.get("damage_type", "magic")
-        if dmg_type == "magic":
-            proc_mitigated = apply_resistance(raw_proc, effective_mr) * magic_amp
-        elif dmg_type == "physical":
-            proc_mitigated = apply_resistance(raw_proc, effective_armor)
-        else:
-            proc_mitigated = raw_proc
-
-        # Stormsurge and Zaz'Zak deal ability damage — amplified by Actualizer
-        if effect.get("is_ability_damage"):
-            proc_mitigated *= ability_amp
-
-        breakdown[f"proc_{name}"] = {
-            "name": f"{name} (proc)",
-            "total_damage": proc_mitigated,
-            "damage_type": dmg_type,
-        }
-        total_damage += proc_mitigated
-
-    # ── Step 7b: Ultimate-triggered procs (Malignance) ─────────────────────
-    for name in item_names:
-        effect = item_effects.ITEM_EFFECTS.get(name, {})
-        if effect.get("type") != "ult_proc":
-            continue
-        # Only triggers if R was cast
-        r_info = ability_damages.get("R")
-        if r_info is None:
-            continue
-        ap = champion_stats.get("ability_power", 0)
-        raw = effect["base"] + effect["ap_ratio"] * ap
-
-        # Hatefog zone refreshes on each R dash.  Effective duration is
-        # the time from R1 to R_last plus the base zone duration.
-        hatefog_duration = effect["duration"]
-        r_total_casts = r_info.get("total_casts", 1)
-        r_dash_spread = (r_total_casts - 1) * 0.5  # ~0.5s between dashes
-        effective_hatefog = r_dash_spread + hatefog_duration
-        raw *= effective_hatefog / hatefog_duration
-
-        ult_proc_mitigated = apply_resistance(raw, effective_mr) * magic_amp
-
-        breakdown[f"ult_proc_{name}"] = {
-            "name": f"{name} (Hatefog)",
-            "total_damage": ult_proc_mitigated,
-            "damage_type": "magic",
-        }
-        total_damage += ult_proc_mitigated
-
-    # ── Step 8: Active item damage ────────────────────────────────────────
-    if include_actives:
-        for name in item_names:
-            effect = item_effects.ITEM_EFFECTS.get(name, {})
-            if effect.get("type") != "active":
-                continue
-
-            raw_active = item_effects.calculate_active_damage(
-                name, champion_stats, target_health
-            )
-            dmg_type = effect.get("damage_type", "magic")
-            if dmg_type == "magic":
-                active_mitigated = (
-                    apply_resistance(raw_active, effective_mr) * magic_amp
-                )
-            elif dmg_type == "physical":
-                active_mitigated = apply_resistance(raw_active, effective_armor)
-            else:
-                active_mitigated = raw_active
-
-            breakdown[f"active_{name}"] = {
-                "name": f"{name} (active)",
-                "total_damage": active_mitigated,
-                "damage_type": dmg_type,
-            }
-            total_damage += active_mitigated
-
-    # ── Step 9: Single-proc on-hit items ──────────────────────────────────
-    # Dead Man's Plate: one proc at fight start
-    if "Dead Man's Plate" in item_names and num_auto_attacks > 0:
-        raw_dmp = item_effects.calculate_dead_mans_plate_damage(champion_stats)
-        dmp_mitigated = apply_resistance(raw_dmp, effective_armor)
-        breakdown["on_hit_once_Dead Man's Plate"] = {
-            "name": "Dead Man's Plate (first hit)",
-            "total_damage": dmp_mitigated,
-            "damage_type": "physical",
-        }
-        total_damage += dmp_mitigated
-
-    # Heartsteel: one proc per fight (30s CD, assumed single proc)
-    if "Heartsteel" in item_names and num_auto_attacks > 0:
-        raw_hs = item_effects.calculate_heartsteel_damage(champion_stats)
-        hs_mitigated = apply_resistance(raw_hs, effective_armor)
-        breakdown["on_hit_once_Heartsteel"] = {
-            "name": "Heartsteel (Colossal Consumption)",
-            "total_damage": hs_mitigated,
-            "damage_type": "physical",
-        }
-        total_damage += hs_mitigated
-
-    # Rapid Firecannon: one energized proc on first auto
-    if "Rapid Firecannon" in item_names and num_auto_attacks > 0:
-        rfc_effect = item_effects.ITEM_EFFECTS.get("Rapid Firecannon", {})
-        raw_rfc = rfc_effect["base"]
-        rfc_mitigated = apply_resistance(raw_rfc, effective_mr)
-        breakdown["on_hit_once_Rapid Firecannon"] = {
-            "name": "Rapid Firecannon (Sharpshooter)",
-            "total_damage": rfc_mitigated,
-            "damage_type": "magic",
-        }
-        total_damage += rfc_mitigated
-
-    # Stormrazor: one energized proc on first auto
-    if "Stormrazor" in item_names and num_auto_attacks > 0:
-        sr_effect = item_effects.ITEM_EFFECTS.get("Stormrazor", {})
-        raw_sr = sr_effect["base"]
-        sr_mitigated = apply_resistance(raw_sr, effective_mr)
-        breakdown["on_hit_once_Stormrazor"] = {
-            "name": "Stormrazor (Bolt)",
-            "total_damage": sr_mitigated,
-            "damage_type": "magic",
-        }
-        total_damage += sr_mitigated
-
-    # Voltaic Cyclosword: one energized proc on first auto (physical).
-    # Firmament deals a % of the target's CURRENT health (melee/ranged
-    # split), capped. The proc lands on the first auto, when the target is
-    # still at full health (same convention as BoRK's simulation start).
-    if "Voltaic Cyclosword" in item_names and num_auto_attacks > 0:
-        vc_effect = item_effects.ITEM_EFFECTS.get("Voltaic Cyclosword", {})
-        vc_ratio = (
-            vc_effect["current_hp_ratio_melee"]
-            if is_melee
-            else vc_effect["current_hp_ratio_ranged"]
-        )
-        vc_cap = vc_effect["damage_cap"]
-        raw_vc = min(vc_ratio * target_health, vc_cap)
-        vc_mitigated = apply_resistance(raw_vc, effective_armor)
-        breakdown["on_hit_once_Voltaic Cyclosword"] = {
-            "name": "Voltaic Cyclosword (Firmament)",
-            "total_damage": vc_mitigated,
-            "damage_type": "physical",
-        }
-        total_damage += vc_mitigated
-
-    # Statikk Shiv: one empowered chain-lightning auto per energize cycle.
-    # Single-target model: the chain (chain_targets_min/max) has nothing to
-    # bounce to, so damage is one base-damage proc.
-    if "Statikk Shiv" in item_names and num_auto_attacks > 0:
-        ss_effect = item_effects.ITEM_EFFECTS.get("Statikk Shiv", {})
-        ss_count = min(
-            int(ss_effect["empowered_auto_count"]),
-            num_auto_attacks,
-        )
-        raw_ss = ss_effect["base"] * ss_count
-        ss_mitigated = apply_resistance(raw_ss, effective_mr)
-        breakdown["on_hit_once_Statikk Shiv"] = {
-            "name": "Statikk Shiv (Electrospark)",
-            "procs": ss_count,
-            "total_damage": ss_mitigated,
-            "damage_type": "magic",
-        }
-        total_damage += ss_mitigated
-
-    # Titanic Hydra Crescent active: empowered Cleave on next auto (10s CD)
-    if "Titanic Hydra" in item_names and num_auto_attacks > 0:
-        th_effect = item_effects.ITEM_EFFECTS.get("Titanic Hydra", {})
-        th_active_ratio = (
-            th_effect["active_max_hp_ratio_melee"]
-            if is_melee
-            else th_effect["active_max_hp_ratio_ranged"]
-        )
-        if th_active_ratio > 0:
-            th_cd = th_effect["active_cooldown"]
-            th_procs = 1 + int(fight_duration_seconds / th_cd) if th_cd > 0 else 1
-            th_procs = min(th_procs, num_auto_attacks)
-            champion_hp = champion_stats.get("health", 0)
-            raw_th_active = th_active_ratio * champion_hp * th_procs
-            th_mitigated = apply_resistance(raw_th_active, effective_armor)
-            breakdown["active_Titanic Hydra"] = {
-                "name": "Titanic Hydra (Titanic Crescent)",
-                "procs": th_procs,
-                "total_damage": th_mitigated,
-                "damage_type": "physical",
-            }
-            total_damage += th_mitigated
-
-    # Kraken Slayer: every 3rd on-hit application. Phantom hits and double
-    # on-hit procs each grant an extra stack (not an extra damage proc).
-    # Damage scales with target's missing HP, so we simulate per-auto.
-    if "Kraken Slayer" in item_names and num_auto_attacks > 0:
-        kraken_procs, kraken_proc_autos = _calculate_kraken_procs(
-            num_auto_attacks,
-            phantom_hit_autos,
-            double_on_hit_procs,
-        )
-        if kraken_procs > 0:
-            # Estimate total on-hit damage per auto for HP tracking
-            # (auto damage + non-BoRK on-hits + average BoRK per hit)
-            kraken_other_on_hit = non_bork_on_hit_per_hit
-            if has_bork and avg_bork_per_hit > 0:
-                kraken_other_on_hit += avg_bork_per_hit
-
-            kraken_total = _simulate_kraken_damage(
-                target_health=target_health,
-                num_auto_attacks=num_auto_attacks,
-                auto_damage_per_hit=auto_damage_per_hit,
-                other_on_hit_per_hit=kraken_other_on_hit,
-                effective_armor=effective_armor,
-                is_melee=is_melee,
-                level=level,
-                kraken_proc_autos=kraken_proc_autos,
-            )
-            breakdown["on_hit_Kraken Slayer"] = {
-                "name": "Kraken Slayer (Bring It Down)",
-                "procs": kraken_procs,
-                "damage_per_proc": kraken_total / kraken_procs,
-                "total_damage": kraken_total,
-                "damage_type": "physical",
-            }
-            total_damage += kraken_total
-
-    # Hullbreaker Skipper: every 5th on-hit application. Phantom hits and
-    # double on-hit procs each grant an extra stack (not extra damage).
-    # Damage is constant per proc (base AD ratio + champion max HP ratio).
-    if "Hullbreaker" in item_names and num_auto_attacks > 0:
-        hb_effect = item_effects.ITEM_EFFECTS.get("Hullbreaker", {})
-        hb_hits = hb_effect["hits_required"]
-        hb_procs, _ = _calculate_hullbreaker_procs(
-            num_auto_attacks,
-            phantom_hit_autos,
-            double_on_hit_procs,
-            hits_required=hb_hits,
-        )
-        if hb_procs > 0:
-            raw_per_proc = item_effects.calculate_hullbreaker_proc_damage(
-                champion_stats,
-                is_melee,
-            )
-            hb_mitigated = apply_resistance(
-                raw_per_proc * hb_procs,
-                effective_armor,
-            )
-            breakdown["on_hit_Hullbreaker"] = {
-                "name": "Hullbreaker (Skipper)",
-                "procs": hb_procs,
-                "damage_per_proc": hb_mitigated / hb_procs,
-                "total_damage": hb_mitigated,
-                "damage_type": "physical",
-            }
-            total_damage += hb_mitigated
-
-    # Eclipse: Ever Rising Moon proc (% max HP physical damage)
-    if "Eclipse" in item_names:
-        raw_eclipse = item_effects.calculate_eclipse_damage(
-            target_health,
-            is_melee,
-            fight_duration_seconds,
-        )
-        eclipse_mitigated = apply_resistance(raw_eclipse, effective_armor)
-        breakdown["proc_Eclipse"] = {
-            "name": "Eclipse (Ever Rising Moon)",
-            "total_damage": eclipse_mitigated,
-            "damage_type": "physical",
-        }
-        total_damage += eclipse_mitigated
-
-    # Muramana ability damage bonus — procs once per ability cast, but
-    # multi-cast abilities (e.g. Ahri R with 3 dashes) proc each sub-cast.
-    if "Muramana" in item_names:
-        raw_mura = item_effects.get_muramana_ability_damage(
-            champion_stats, is_melee, total_muramana_procs
-        )
-        mura_mitigated = apply_resistance(raw_mura, effective_armor)
-        breakdown["muramana_ability"] = {
-            "name": "Muramana (Shock - abilities)",
-            "total_damage": mura_mitigated,
-            "damage_type": "physical",
-        }
-        total_damage += mura_mitigated
-
-    # ── Step 9.5: Shadowflame Cinderbloom ──────────────────────────────────
-    if "Shadowflame" in item_names:
-        shadowflame_bonus = _calculate_shadowflame_bonus(
-            breakdown,
-            ability_damages,
-            target_health,
-            cast_order,
-        )
-        if shadowflame_bonus > 0:
-            breakdown["shadowflame_Shadowflame"] = {
-                "name": "Shadowflame (Cinderbloom)",
-                "total_damage": shadowflame_bonus,
-                "damage_type": "mixed",
-            }
-            total_damage += shadowflame_bonus
-
-    # ── Step 9.6: Expose Weakness (Bloodsong) ──────────────────────────────
-    if spellblade_item and sb_procs > 0:
-        sb_ew_effect = item_effects.ITEM_EFFECTS.get(spellblade_item, {})
-        # Polymorphic lookup across all spellblades: only Bloodsong has the
-        # expose_weakness keys, so 0 here means "no such passive" — it is
-        # NOT a stale duplicate of a registry value.
-        expose_rate = (
-            sb_ew_effect.get("expose_weakness_melee", 0)
-            if is_melee
-            else sb_ew_effect.get("expose_weakness_ranged", 0)
-        )
-        if expose_rate > 0:
-            # First ability cast + first auto + first spellblade proc
-            # occur before Expose Weakness is applied and don't benefit.
-            first_ability_key = next((k for k in cast_order if k in breakdown), None)
-            damage_before_expose = 0.0
-            if first_ability_key:
-                entry = breakdown[first_ability_key]
-                casts = entry.get("casts", 1)
-                if casts > 0:
-                    damage_before_expose += entry["total_damage"] / casts
-            damage_before_expose += auto_damage_per_hit
-            damage_before_expose += sb_mitigated
-
-            amped_damage = max(0, total_damage - damage_before_expose)
-            expose_bonus = amped_damage * expose_rate
-
-            breakdown[f"expose_weakness_{spellblade_item}"] = {
-                "name": f"{spellblade_item} (Expose Weakness)",
-                "amplifier": 1.0 + expose_rate,
-                "total_damage": expose_bonus,
-                "damage_type": "mixed",
-            }
-            total_damage += expose_bonus
 
     # ── Step 10: Damage amplifiers ────────────────────────────────────────
     amp_sources, amp = item_effects.get_damage_amplifier_breakdown(
