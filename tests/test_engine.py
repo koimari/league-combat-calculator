@@ -24,12 +24,14 @@ from src.calculator.champions.generic_parser import (
     parse_abilities as legacy_generic_parse,
 )
 from src.calculator.champions.slotlib import (
+    by_option,
     extract_value,
     multi_cast,
     on_hit_auto,
     pct_health_per_hit,
     proc_damage,
     simple_damage,
+    stat_buff,
     toggle_dot,
     utility,
 )
@@ -774,6 +776,245 @@ class TestExtractValue:
     def test_missing_attribute_returns_zero(self) -> None:
         ability = self._ability_with_two_modifiers()
         assert extract_value(ability, "No Such Attribute", 3) == 0.0
+
+
+class TestStatBuff:
+    """BUFF-phase stat steroid entries (Vayne/Aatrox/Ambessa R pattern)."""
+
+    def _steroid_champ(self, extra_leveling: list | None = None) -> dict:
+        leveling = [
+            _leveling("Bonus Attack Damage", [35, 50, 65]),
+        ] + (extra_leveling or [])
+        return _champion(
+            R=[
+                _ability(
+                    name="Steroid R",
+                    damage_type=None,
+                    cooldowns=[100, 85, 70],
+                    leveling=leveling,
+                )
+            ],
+            Q=[
+                _ability(
+                    name="Q",
+                    damage_type="PHYSICAL_DAMAGE",
+                    cooldowns=[6, 5, 4, 3, 2],
+                    leveling=[
+                        {
+                            "attribute": "Physical Damage",
+                            "modifiers": [
+                                {
+                                    "values": [50, 75, 100, 125, 150],
+                                    "units": ["% AD"] * 5,
+                                },
+                            ],
+                        },
+                    ],
+                )
+            ],
+        )
+
+    def test_flat_mode_entry_shape(self) -> None:
+        """The entry is a zero-damage damage_entry plus the stat_buff."""
+        parse = build_parser(
+            {"R": stat_buff("Bonus Attack Damage", "bonus_attack_damage")},
+            "TestChamp",
+        )
+        results = parse(self._steroid_champ(), 16, 0.0)  # R rank 3
+        assert results["R"] == {
+            "name": "Steroid R",
+            "rank": 3,
+            "cooldown": 70.0,
+            "damage_type": "physical",
+            "total_raw": 0.0,
+            "physical_damage": 0.0,
+            "stat_buff": {"bonus_attack_damage": 65.0},
+        }
+
+    def test_apply_to_mutates_stats_for_damage_slots(self) -> None:
+        """apply_to feeds the buff into ctx.stats before DAMAGE slots."""
+        parse = build_parser(
+            {
+                "Q": simple_damage(attr="Physical Damage", dmg_type="physical"),
+                "R": stat_buff(
+                    "Bonus Attack Damage",
+                    "bonus_attack_damage",
+                    apply_to=("attack_damage", "bonus_attack_damage"),
+                ),
+            },
+            "TestChamp",
+        )
+        results = parse(
+            self._steroid_champ(),
+            16,
+            0.0,
+            champion_stats={"attack_damage": 100.0, "bonus_attack_damage": 0.0},
+        )
+        # Q rank 5 = 150% AD of (100 + 65) buffed AD.
+        assert results["Q"]["total_raw"] == pytest.approx(1.5 * 165.0)
+
+    def test_percent_of_mode(self) -> None:
+        """Aatrox R: the leveling value is a % of another stat."""
+        champ = self._steroid_champ()
+        parse = build_parser(
+            {
+                "R": stat_buff(
+                    "Bonus Attack Damage",
+                    "bonus_attack_damage",
+                    mode="percent_of",
+                    percent_of="attack_damage",
+                )
+            },
+            "TestChamp",
+        )
+        results = parse(champ, 6, 0.0, champion_stats={"attack_damage": 150.0})
+        # R rank 1 = 35% of 150 AD.
+        assert results["R"]["stat_buff"]["bonus_attack_damage"] == pytest.approx(52.5)
+
+    def test_damage_attr_gives_active_damage(self) -> None:
+        """Ambessa R: the buff entry also carries active cast damage."""
+        champ = self._steroid_champ(
+            extra_leveling=[_leveling("Physical Damage", [150, 250, 350])],
+        )
+        parse = build_parser(
+            {
+                "R": stat_buff(
+                    "Bonus Attack Damage",
+                    "bonus_attack_damage",
+                    damage_attr="Physical Damage",
+                )
+            },
+            "TestChamp",
+        )
+        results = parse(champ, 11, 0.0)  # R rank 2
+        assert results["R"]["physical_damage"] == 250.0
+        assert results["R"]["total_raw"] == 250.0
+        assert results["R"]["stat_buff"] == {"bonus_attack_damage": 50.0}
+
+    def test_couples_publishes_value_for_dependent_slot(self) -> None:
+        """Vayne pattern: R publishes a leveling value into ctx.stats."""
+        champ = self._steroid_champ(
+            extra_leveling=[
+                _leveling("Tumble Cooldown Reduction", [30, 40, 50], ["%"] * 3),
+            ],
+        )
+
+        def q_reads_stash(ctx):
+            return {"name": "Q", "total_raw": ctx.stats.get("r_q_cdr", 0.0)}
+
+        parse = build_parser(
+            {
+                "Q": q_reads_stash,
+                "R": stat_buff(
+                    "Bonus Attack Damage",
+                    "bonus_attack_damage",
+                    couples=("r_q_cdr", "Tumble Cooldown Reduction"),
+                ),
+            },
+            "TestChamp",
+        )
+        results = parse(champ, 16, 0.0)  # R rank 3
+        assert results["Q"]["total_raw"] == 50.0
+
+    def test_rank_gate_skips_buff_and_stash(self) -> None:
+        """Unranked R: no entry, no stats mutation, no stash."""
+        champ = self._steroid_champ()
+
+        def q_reads_stats(ctx):
+            return {
+                "name": "Q",
+                "total_raw": ctx.stats.get("attack_damage", 0.0),
+                "stash": ctx.stats.get("r_q_cdr", 0.0),
+            }
+
+        parse = build_parser(
+            {
+                "Q": q_reads_stats,
+                "R": stat_buff(
+                    "Bonus Attack Damage",
+                    "bonus_attack_damage",
+                    apply_to=("attack_damage",),
+                    couples=("r_q_cdr", "Tumble Cooldown Reduction"),
+                ),
+            },
+            "TestChamp",
+        )
+        results = parse(
+            champ,
+            16,
+            0.0,
+            ability_ranks={"R": 0},
+            champion_stats={"attack_damage": 100.0},
+        )
+        assert "R" not in results
+        assert results["Q"]["total_raw"] == 100.0
+        assert results["Q"]["stash"] == 0.0
+
+    def test_unknown_mode_rejected_at_factory_time(self) -> None:
+        with pytest.raises(ValueError, match="sideways"):
+            stat_buff("Bonus Attack Damage", "bonus_attack_damage", mode="sideways")
+
+
+class TestByOption:
+    """Option-dispatched slot parsing (sweetspot / condemn_wall pattern)."""
+
+    def _toggle_champ(self) -> dict:
+        return _champion(
+            E=[
+                _ability(
+                    name="Toggle E",
+                    damage_type="PHYSICAL_DAMAGE",
+                    cooldowns=[20, 18, 16, 14, 12],
+                    leveling=[
+                        _leveling("Physical Damage", [50, 85, 120, 155, 190]),
+                        _leveling("Total Physical Damage", [125, 212, 300, 387, 475]),
+                    ],
+                )
+            ],
+        )
+
+    def _toggle_parser(self):
+        return by_option(
+            "wall",
+            {
+                True: simple_damage(attr="Total Physical Damage", dmg_type="physical"),
+                False: simple_damage(attr="Physical Damage", dmg_type="physical"),
+            },
+            default=True,
+        )
+
+    def test_option_selects_case(self) -> None:
+        parse = build_parser({"E": self._toggle_parser()}, "TestChamp")
+        on = parse(self._toggle_champ(), 18, 0.0, champion_options={"wall": True})
+        off = parse(self._toggle_champ(), 18, 0.0, champion_options={"wall": False})
+        assert on["E"]["total_raw"] == 475.0
+        assert off["E"]["total_raw"] == 190.0
+
+    def test_default_when_option_absent(self) -> None:
+        parse = build_parser({"E": self._toggle_parser()}, "TestChamp")
+        results = parse(self._toggle_champ(), 18, 0.0)
+        assert results["E"]["total_raw"] == 475.0
+
+    def test_truthy_values_normalize_for_bool_cases(self) -> None:
+        """A truthy non-bool option value still hits the True case."""
+        parse = build_parser({"E": self._toggle_parser()}, "TestChamp")
+        results = parse(self._toggle_champ(), 18, 0.0, champion_options={"wall": 1})
+        assert results["E"]["total_raw"] == 475.0
+
+    def test_case_phases_must_agree(self) -> None:
+        """Cases in different engine phases are a build-time error."""
+        buffed = stat_buff("Bonus Attack Damage", "bonus_attack_damage")
+        with pytest.raises(ValueError, match="phase"):
+            by_option("x", {True: buffed, False: simple_damage()}, default=True)
+
+    def test_composite_carries_case_phase(self) -> None:
+        """The dispatcher parser inherits its cases' shared phase."""
+        buffed = by_option(
+            "x",
+            {True: stat_buff("Bonus Attack Damage", "bonus_attack_damage")},
+            default=True,
+        )
+        assert buffed.phase == BUFF
 
 
 class TestPctHealthPerHit:

@@ -35,7 +35,7 @@ from .attribute_classifier import (
     is_damage_attribute,
     is_primary_damage_attribute,
 )
-from .engine import DAMAGE, ONHIT, SlotCtx, SlotParser
+from .engine import BUFF, DAMAGE, ONHIT, SlotCtx, SlotParser
 from .scaling import is_flat_unit, resolve_scaling
 
 # ---------------------------------------------------------------------------
@@ -481,6 +481,127 @@ def simple_damage(
         return damage_entry(name, rank, cd_value, total, resolved_type)
 
     parse.phase = DAMAGE
+    return parse
+
+
+def stat_buff(
+    attr: str,
+    stat: str,
+    mode: str = "flat",
+    percent_of: str = "attack_damage",
+    apply_to: tuple[str, ...] = (),
+    damage_attr: str | None = None,
+    dmg_type: str = "physical",
+    couples: tuple[str, str] | None = None,
+) -> SlotParser:
+    """BUFF-phase stat steroid (Vayne/Aatrox/Ambessa R pattern).
+
+    Emits a standard damage entry (zero damage unless ``damage_attr``)
+    carrying a ``stat_buff`` dict for the fight engine, and optionally
+    feeds the buff into the shared ``ctx.stats`` so every later damage
+    slot scales off buffed stats (the BUFF phase guarantee).
+
+    Args:
+        attr: Leveling attribute holding the buff value.
+        stat: Key inside the emitted ``stat_buff`` dict (the fight
+            engine dispatches on it, e.g. ``"bonus_attack_damage"``).
+        mode: "flat" — the leveling value IS the buff (Vayne R);
+            "percent_of" — the leveling value is a percentage of the
+            ``percent_of`` stat (Aatrox R: % of total AD).
+        percent_of: Stat the percentage applies to (mode="percent_of").
+        apply_to: ctx.stats keys the buff value is added to, for
+            in-parse scaling. Empty when only the fight engine applies
+            it (Ambessa R's armor pen is not a parse-time scaling stat).
+        damage_attr: Leveling attribute for the ability's own active
+            damage (Ambessa R), extracted from PRE-buff stats. None
+            emits 0.0 damage.
+        dmg_type: Damage type labeling the entry.
+        couples: ``(stats_key, attr_name)`` — publish another leveling
+            value into ``ctx.stats`` under ``stats_key`` for a dependent
+            slot listed later (Vayne R's Tumble cooldown reduction,
+            read by Q). The key never leaves the parse context.
+
+    Returns:
+        A BUFF-phase slot parser.
+    """
+    if mode not in ("flat", "percent_of"):
+        raise ValueError(
+            f"stat_buff: unknown mode {mode!r} (must be 'flat' or 'percent_of')"
+        )
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability = ctx.ability()
+        if ability is None:
+            return None
+        rank = ctx.rank_for()
+        if rank < 1:
+            return None
+
+        value = extract_value(ability, attr, rank)
+        if mode == "percent_of":
+            value = value / 100.0 * ctx.stats.get(percent_of, 0.0)
+
+        damage = 0.0
+        if damage_attr is not None:
+            damage = extract_named(ability, damage_attr, rank, ctx.stats, ctx.target)
+
+        for key in apply_to:
+            ctx.stats[key] = ctx.stats.get(key, 0.0) + value
+        if couples is not None:
+            stats_key, couple_attr = couples
+            ctx.stats[stats_key] = extract_value(ability, couple_attr, rank)
+
+        name = ability.get("name", f"Ability {ctx.slot}")
+        entry = damage_entry(
+            name, rank, extract_cooldown(ability, rank), damage, dmg_type
+        )
+        entry["stat_buff"] = {stat: value}
+        return entry
+
+    parse.phase = BUFF
+    return parse
+
+
+def by_option(
+    option: str,
+    cases: dict[Any, SlotParser],
+    default: Any,
+) -> SlotParser:
+    """Dispatch a slot to one of several parsers by a champion option.
+
+    The sweetspot/condemn_wall pattern: the option value picks which
+    configured parser runs (e.g. Aatrox Q's sweetspot triad vs normal
+    triad). All cases MUST emit the same entry keys — an option may
+    change values, never the emitted shape (the archetype guardrail) —
+    and must share one engine phase (checked at factory time).
+
+    Args:
+        option: Champion option key holding the selector value.
+        cases: Selector value -> slot parser. Bool-keyed cases
+            normalize the option value with ``bool()`` (truthy ints
+            from the frontend select the True case).
+        default: Selector used when the option is absent.
+
+    Returns:
+        A slot parser in the cases' shared phase; an unmatched selector
+        emits nothing.
+    """
+    phases = {getattr(parser, "phase", DAMAGE) for parser in cases.values()}
+    if len(phases) != 1:
+        raise ValueError(
+            f"by_option({option!r}): case parsers span multiple engine "
+            f"phases {sorted(phases)} — a slot has exactly one phase"
+        )
+    bool_cases = all(isinstance(key, bool) for key in cases)
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        value = ctx.options.get(option, default)
+        if bool_cases:
+            value = bool(value)
+        case = cases.get(value)
+        return case(ctx) if case is not None else None
+
+    parse.phase = phases.pop()
     return parse
 
 
