@@ -81,7 +81,7 @@ Check for these **specific pitfalls** that have caused bugs in past implementati
 
 2. **Retaliation/shield damage**: Annie E, Rammus W — enemies take damage for hitting you. Usually NOT modeled. Flag it and ask.
 
-3. **Stat-granting abilities not applied before damage calc**: If R grants bonus AD/AP/armor pen, it MUST be applied to `stats_context` BEFORE calculating other abilities. Past bug: Ambessa R armor pen wasn't applied before Q/W/E damage.
+3. **Stat-granting abilities not applied before damage calc**: If R grants bonus AD/AP/armor pen, it must be a BUFF-phase slot (the `stat_buff` archetype with `apply_to=` for parse-time scaling stats) so the engine guarantees damage slots see buffed stats. Past bug (pre-engine): Ambessa R armor pen wasn't applied before Q/W/E damage. Note: fight-engine-applied stats like armor pen take no `apply_to`.
 
 4. **Empowered auto applied every auto instead of once**: Alistar E's empowered auto only applies ONCE per cast, not on every auto. If an ability says "next basic attack," it's once. Flag and clarify frequency.
 
@@ -157,9 +157,11 @@ Agent tool:
 ```
 
 **Critical rules for the prompt you pass to the agent:**
+- Say which triage tier you expect (generic path / archetype slot map / custom slot fns) — most champions should need NO module at all; verify the generic path first
 - Include the exact JSON `attribute` names for each damage value (e.g., "use `Total Physical Damage` attribute, not `Physical Damage`")
 - Specify damage types explicitly
-- For stat buffs: say "apply to stats_context BEFORE calculating other abilities"
+- For stat buffs: specify a BUFF-phase `stat_buff` slot (with `apply_to=` when the stat scales other abilities at parse time)
+- Champion options become the module's `OPTIONS` declarations (key/type/default/label/min/max) and assumptions become `ASSUMPTIONS` — no JS work
 - For skipped abilities: explain WHY so the implementer doesn't add them
 - For multi-hit: specify exact hit count or formula
 - For conditionals: specify the default assumption AND the champion option toggle

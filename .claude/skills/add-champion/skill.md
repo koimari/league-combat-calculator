@@ -5,354 +5,324 @@ description: Step-by-step guide for adding a new LoL champion to the calculator.
 
 # Add a New Champion
 
-## When You DON'T Need a Custom Module
+Every champion — registered or not — runs on the slot-archetype engine
+(`src/calculator/champions/engine.py`). A champion is a **slot map**
+`{slot: slot_parser}`; slot parsers come from the archetype factories in
+`slotlib.py` or are custom functions in the champion's own module. There is
+no other parse path.
 
-Most champions (~80%+) are handled automatically by `generic_parser.py` — no code needed. Custom modules are only for unique mechanics. The dispatcher in `champions/__init__.py` checks `_CHAMPION_MODULES` first, then falls through to the generic parser.
+## Triage: three tiers, cheapest first
 
-The generic parser handles champions with:
-- Standard Q/W/E/R abilities with base + ratio scaling
-- AP, AD, bonus AD, %HP, armor, MR, mana scaling
-- Physical, magic, true, or mixed damage types
-- Passive on-hit effects (e.g., Vayne W detected via `targeting: "Passive"`)
-- Any combination of flat + percentage scaling modifiers
+Work down this ladder and stop at the first tier that fits. Most champions
+stop at tier 1 — every champion that needs a file is a small failure of the
+generic path, so don't skip ahead "just in case."
 
-**To add such a champion:** No code needed! The generic parser reads the JSON automatically. You may optionally add a skill order override in `skill_orders.py` if the champion doesn't use Q>W>E max order.
+1. **Nothing (generic path).** Champions absent from `_CHAMPION_MODULES`
+   run `GENERIC_SLOTS` (classifier-driven `simple_damage()` on Q/W/E/R,
+   `on_hit_auto()` on P). Verify it already works — see "Tier 1" below.
+2. **Slot map of archetypes.** The generic parser picked a wrong attribute
+   or the kit matches an existing archetype (stat-buff R, option-dispatched
+   Q, %maxHP on-hit, toggle DoT, ...). New `champions/<name>.py` that is
+   mostly `SLOTS = {...}` of `slotlib` factory calls + one registry line.
+3. **Custom slot functions.** Genuinely unique mechanics (prose-regex
+   values, multi-part entry shapes, cross-slot dependencies). Still a slot
+   map — the custom fn sits next to the archetype calls in the same file.
 
-## When You DO Need a Custom Module
-
-Create a custom module for champions with:
-- **Transform kits:** Jayce, Nidalee, Elise (two ability sets)
-- **Sub-ability selection:** Hwei (12+ sub-abilities), Karma (R-empowered Q/W/E)
-- **Weapon systems:** Aphelios (weapon-dependent abilities)
-- **No traditional R:** Udyr (all stances)
-- **External stacking:** Nasus Q stacks, Veigar passive AP, Senna souls
-- **Multi-part damage:** Abilities with initial + subsequent hits at different ratios (Ahri W)
-- **Multi-cast abilities:** Abilities with N dashes/casts per use (Ahri R)
-- **Multi-cast with different damage per cast:** Abilities where each cast does different damage (Aatrox Q — 3 casts summed)
-- **Stat-buff ultimates:** R that grants stats (bonus AD, AP, etc.) instead of dealing damage (Aatrox R)
-- **Conditional hit counts:** Abilities that hit multiple times conditionally (Aatrox W — initial + pull-back)
-- **Passive on-hit with per-level scaling:** Passives where damage scales with champion level (Aatrox P, Akali P) — now auto-extracted from JSON
-
-## No Hardcoded Values
-
-**All numeric values must come from the champion JSON data.** Do not hardcode base damages, scaling ratios, cooldowns, or stat buff percentages. Use:
-- `extract_cooldown(ability, rank)` for cooldowns
-- `extract_damage(ability, rank, stats, target_stats)` for standard abilities
-- `_extract_leveling_damage(ability, attribute_name, rank, stats)` for specific named attributes (when the generic `extract_damage` picks the wrong one)
-- `_extract_r_bonus_ad_percent(ability, rank)` pattern for reading specific leveling values
-
-### Per-level scaling data
-
-Champion abilities with "X : Y (based on level)" scaling now have structured leveling data in the JSON. The lolstaticdata scraper extracts actual per-level values from the wiki's `data-bot-values` HTML attributes (typically 20 values for levels 1-20). This captures non-linear growth curves that linear interpolation would get wrong.
-
-**Where it appears:** Per-level data is stored as synthetic leveling entries on the effect that contains the scaling in its description. Common attributes:
-- `"Bonus Magic Damage"` — flat per-level damage (e.g., Akali passive)
-- `"Max Health Damage"` — % max HP scaling (e.g., Aatrox passive)
-- `"Bonus Damage"` — generic per-level bonus damage
-
-**How to use it:** Search `effects[].leveling[]` for the appropriate attribute. The first modifier's `values` array contains the per-level base values. Subsequent modifiers contain scaling ratios (e.g., `"% bonus AD"`, `"% AP"`).
+## Tier 1 — verify the generic path
 
 ```python
-# Example: reading Akali passive per-level damage
-for effect in passive.get("effects", []):
-    for leveling in effect.get("leveling", []):
-        if "damage" in leveling["attribute"].lower():
-            base_values = leveling["modifiers"][0]["values"]  # 20 values
-            base_at_level = base_values[level - 1]
-            # Additional modifiers have scaling ratios
+import json
+from src.calculator.data_fetcher import get_champion
+from src.calculator.champions import parse_abilities
+champ = get_champion("ChampionName")
+stats = {"attack_damage": 150.0, "bonus_attack_damage": 50.0, "ability_power": 200.0}
+result = parse_abilities("ChampionName", champ, 13, 200.0,
+                         champion_stats=stats,
+                         target_stats={"target_max_health": 2500.0})
+print(json.dumps(result, indent=2))
 ```
 
-**Note:** This only applies to champion abilities. Item per-level scaling uses a separate pipeline (`passive_parser.py`) that currently does linear interpolation and may need a separate fix for non-linear item scaling.
+Cross-check each slot's `total_raw` / `damage_type` / `cooldown` against the
+[LoL Wiki](https://wiki.leagueoflegends.com/en-us/ChampionName). If every
+damaging slot is right: **done, no code**. Optionally add a skill-order
+override (below). The mass-coverage tests in `tests/test_generic_path.py`
+and the golden snapshot already cover the champion.
 
-### JSON attribute gotchas
+Typical generic-path failures that push you to tier 2:
+- Classifier picked the single-hit attribute when the kit always lands more
+  (`"Physical Damage"` instead of `"Total Physical Damage"` — the
+  classifier deliberately excludes "total"/"subsequent" names).
+- A zero-damage stat-buff/utility slot was dropped that should display.
+- Wrong damage type (mixed kits), missed on-hit passive, charge cooldown.
 
-The generic `extract_damage()` uses `attribute_classifier.py` to find the primary damage attribute. It **excludes** attributes containing keywords like "total", "subsequent", "minion", "monster". This means:
-- `"Physical Damage"` → picked (single hit)
-- `"Total Damage"` → excluded (even though it may be what you want for multi-hit)
-- `"First Cast Damage"` → excluded by generic parser, but you can extract it directly
+## Tier 2 — slot map of archetypes
 
-When the generic parser picks the wrong attribute, use `_extract_leveling_damage(ability, "Total Damage", rank, stats)` to target the exact attribute you need.
-
-## Adding a Skill Order Override
-
-If the champion maxes W or E first (instead of default Q>W>E), add to `skill_orders.py`:
-
-```python
-_SKILL_ORDERS: dict[str, list[str]] = {
-    "Kog'Maw": [
-        "Q", "W", "E", "W", "W", "R",
-        "W", "Q", "W", "Q", "R", "Q",
-        "Q", "E", "E", "R", "E", "E",
-    ],
-}
-```
-
-R is always at levels 6, 11, 16. The remaining 15 levels distribute Q/W/E.
-
-## Creating a Custom Champion Module
-
-### Step 1: Examine the Champion's JSON Data
+### Step 1: Inspect the JSON
 
 ```python
-import json, pprint
 from src.calculator.data_fetcher import get_champion
 champion_data = get_champion("ChampionName")
 for slot in ['P', 'Q', 'W', 'E', 'R']:
-    ab = champion_data['abilities'][slot][0]
-    print(f'=== {slot}: {ab["name"]} ===')
-    print(f'damageType: {ab.get("damageType")}')
-    print(f'targeting: {ab.get("targeting")}')
-    for i, effect in enumerate(ab.get('effects', [])):
-        for j, lev in enumerate(effect.get('leveling', [])):
-            attr = lev.get('attribute', '')
-            mods = [{'values': m['values'][:5], 'units': m['units'][:5]}
-                    for m in lev.get('modifiers', [])]
-            print(f'  effect[{i}].leveling[{j}]: attr="{attr}" mods={mods}')
+    for k, ab in enumerate(champion_data['abilities'][slot]):
+        print(f'=== {slot}[{k}]: {ab["name"]} ===')
+        print(f'damageType: {ab.get("damageType")}  targeting: {ab.get("targeting")}')
+        for i, effect in enumerate(ab.get('effects', [])):
+            for j, lev in enumerate(effect.get('leveling', [])):
+                mods = [{'values': m['values'][:5], 'units': m['units'][:5]}
+                        for m in lev.get('modifiers', [])]
+                print(f'  effect[{i}].leveling[{j}]: attr="{lev.get("attribute", "")}" mods={mods}')
 ```
 
-Cross-reference with the [LoL Wiki](https://wiki.leagueoflegends.com). The JSON data is wiki-scraped and usually accurate, but verify edge cases.
+The `attribute` strings you see here are what you pass to the archetypes.
+Per-level scaling ("X : Y (based on level)") appears as synthetic leveling
+entries with ~20 values; archetypes with `ranks="level"` / `scale="level"`
+index them by champion level.
 
-### Step 2: Create the Module
+### Step 2: Write the module
 
-Create `src/calculator/champions/<champion_name>.py`. The full signature for custom modules:
+`src/calculator/champions/<name>.py` — the whole file for a pure-archetype
+champion (Anivia, 3 slots + options, ~40 lines):
 
 ```python
-"""Champion ability parsing and damage calculation."""
+"""Anivia — slot map for the archetype engine.
 
-from typing import Any
+Why each slot is non-generic:
+- Q must read "Total Magic Damage" (pass-through + detonation combined).
+- ... (one bullet per slot; also note deliberately-absent slots)
+"""
 
-from .generic_parser import extract_cooldown, extract_damage
-from .scaling import is_flat_unit, resolve_scaling
-from .skill_orders import get_ability_rank
+from .engine import build_parser
+from .slotlib import simple_damage, toggle_dot
 
+OPTIONS = [
+    {"key": "r_duration", "type": "float", "default": 5.0,
+     "label": "R duration (seconds)", "min": 1.5, "max": 30, "step": 0.5},
+]
 
-def parse_abilities(
-    champion_data: dict[str, Any],
-    level: int,
-    total_ability_power: float,
-    ability_ranks: dict[str, int] | None = None,
-    champion_options: dict[str, Any] | None = None,
-    champion_stats: dict[str, float] | None = None,
-    target_stats: dict[str, float] | None = None,
-) -> dict[str, dict[str, Any]]:
-    """Parse abilities and calculate damage."""
-    ...
+ASSUMPTIONS = [
+    "Q hits both pass-through and detonation (total damage used)",
+    "W skipped (utility wall, no damage)",
+]
+
+SLOTS = {
+    "Q": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
+    "E": simple_damage(attr="Enhanced Damage", dmg_type="magic"),
+    "R": toggle_dot(
+        phases=[("Magic Damage per Tick", 3), ("Empowered Damage per Tick", None)],
+        duration_option=("r_duration", 5.0),
+        min_duration=1.5,
+        cooldown=999.0,
+        dmg_type="magic",
+    ),
+}
+
+parse_abilities = build_parser(SLOTS, "Anivia")
 ```
 
-**Important:** Custom modules receive `champion_options`, `champion_stats`, and `target_stats` from the dispatcher. Use `champion_stats` for AD/HP scaling, `target_stats` for %HP abilities, and `champion_options` for user-configurable toggles.
+Rules:
+- **Module docstring says WHY each slot is non-generic** — that is the
+  file's reason to exist.
+- **No hardcoded numbers.** Everything comes from the JSON attributes. The
+  only exception: wiki-prose values with no JSON home (Annie's Tibbers
+  aura, Vayne's every-3rd-hit) — quarantine them as module constants under
+  a `# HARDCODED: verify on patch updates` comment with the wiki URL.
+- A slot that deals no damage and shouldn't display is simply **absent**
+  from the map.
+- `OPTIONS` and `ASSUMPTIONS` are **mandatory** on every module (empty
+  lists are fine) — the dispatcher reads them unconditionally.
 
-### Hybrid Approach: Mix Generic + Custom
+### The archetype library (slotlib.py)
 
-For champions where most abilities are standard but one is unique, you can parse most from JSON and override just the special one:
+| Archetype | Use for | Key params |
+|---|---|---|
+| `simple_damage` | any single damage read | `attr` (None = classifier), `dmg_type`, `casts` (int or attribute name), `source`/`cooldown_from` `(slot, idx)`, `cooldown="recharge"`, `ranks="level"` |
+| `stat_buff` | steroid R/Q (BUFF phase) | `attr`, `stat`, `mode="flat"/"percent_of"`, `apply_to` (ctx.stats keys for in-parse scaling), `damage_attr`, `couples` |
+| `by_option` | option picks the parser (sweetspot / condemn_wall) | `option`, `{value: parser}`, `default` — cases must share phase and entry keys |
+| `multi_hit_sum` | fixed hit sequence, named attrs (Aatrox Q triad) | `attrs` list |
+| `multi_cast` | N recasts per activation (Ahri R) | `casts` — emits `damage_per_cast`/`total_casts`, no cooldown key |
+| `on_hit_pct_health` | %maxHP on-hit (Aatrox P) | `scale="rank"/"level"`, `ap_ratio_per_100`, `floor_attr`, `stacks_required` |
+| `toggle_dot` | toggle/channel DoT summed over ticks (Anivia R) | `phases` [(attr, tick_cap)], `duration_option`, `interval`, `cooldown` pinned by caller |
+| `proc_damage` | per-level passive x option-driven proc count (Akali P) | `attr`, `count_option`, `default_count` |
+| `utility` | zero-damage display row with real cooldown (Annie E) | `dmg_type` |
 
-```python
-from .generic_parser import parse_abilities as generic_parse
+Extraction helpers for custom fns: `extract_named` (damage for an exact
+attribute), `extract_value` (raw leveling number, no scaling),
+`extract_auto` (classifier detection), `extract_cooldown`,
+`pct_health_per_hit` (shared %maxHP math), entry builders `damage_entry` /
+`on_hit_entry`.
 
-def parse_abilities(champion_data, level, total_ability_power, ability_ranks=None,
-                    champion_options=None, champion_stats=None, target_stats=None):
-    # Let generic parser handle standard abilities
-    results = generic_parse(champion_data, level, total_ability_power, ability_ranks,
-                            champion_stats=champion_stats, target_stats=target_stats)
-    # Override W with custom logic
-    results["W"] = _custom_w_logic(...)
-    return results
-```
+**Growing the library:** an archetype must have **>= 2 real users**, and no
+flag may change WHICH fight-engine keys it emits — if a new user needs a
+different entry shape, that user is a custom fn over the shared math
+(precedent: Kog'Maw W / Vayne W around `pct_health_per_hit`).
 
-### Step 3: Register the Champion
+### The phase system
 
-Add to `_CHAMPION_MODULES` in `src/calculator/champions/__init__.py` (keep alphabetical):
+The engine evaluates slots in phase order **BUFF -> DEBUFF -> DAMAGE ->
+ONHIT -> AMP**, insertion order within a phase. Archetypes stamp their own
+phase; a custom fn defaults to DAMAGE and opts in via
+`my_parser.phase = BUFF` (import the constant from `.engine`).
+
+- **BUFF** mutates `ctx.stats` (steroids) — every damage slot then parses
+  against buffed stats automatically. Never hand-order "R first".
+- **DEBUFF** documents shreds (Kog'Maw Q); damage.py applies them at fight
+  time.
+- **ONHIT** emits per-auto entries; **AMP** mutates other slots' entries in
+  `ctx.results` after all damage is parsed (Amumu's curse pseudo-slot).
+- Within a phase, `ctx.results` is readable — a slot that depends on
+  another lists AFTER it in the map (Ashe P reads whether Q emitted).
+- Slot keys map to results keys identically except `"P"` -> `"passive"`.
+  Synthetic keys are fine (`"Q2"`, `"passive_double_shot"`); a display row
+  that must land under literal `"P"` is written into `ctx.results["P"]`
+  directly by a custom fn returning None (Annie/Amumu pattern).
+- The engine emits every non-None entry, **including zero damage** — a
+  stat-buff ultimate must never silently vanish.
+
+### Step 3: Register
+
+Add to `_CHAMPION_MODULES` in `src/calculator/champions/__init__.py`
+(alphabetical):
 
 ```python
 _CHAMPION_MODULES: dict[str, str] = {
-    "Aatrox": "aatrox",
-    "Ahri": "ahri",
-    "NewChampion": "new_champion",  # <-- add in alphabetical order
+    ...
+    "NewChampion": "new_champion",
 }
 ```
 
-Only champions in this dict use custom modules. All others automatically use the generic parser.
+### Skill-order override (optional, any tier)
 
-## Required Ability Fields
+If the champion doesn't max Q>W>E, add its 18-level sequence to
+`_SKILL_ORDERS` in `skill_orders.py` (R at 6/11/16).
 
-Every ability returned by `parse_abilities()` **must** include:
+## Tier 3 — custom slot functions
 
-| Field | Type | Description |
-|---|---|---|
-| `name` | `str` | Display name (e.g., "Light Binding") |
-| `rank` | `int` | Current rank (1-5 for basic, 1-3 for R) |
-| `cooldown` | `float` | Base cooldown in seconds at current rank |
-| `total_raw` | `float` | Total raw damage before resistances |
-| `damage_type` | `str` | `"magic"`, `"physical"`, `"true"`, or `"mixed"` |
+A custom slot parser is `def _my_slot(ctx: SlotCtx) -> dict | None:` living
+in the champion's file, mixed freely into `SLOTS` beside archetype calls.
+`SlotCtx` gives you: `ctx.ability(slot=None, index=0)` (JSON entry),
+`ctx.rank_for(slot=None)`, `ctx.level`, `ctx.stats` (mutable, AP already
+merged), `ctx.target`, `ctx.options`, `ctx.results`.
 
-### Optional Fields (field-based dispatch in fight engine)
-
-| Field | When to Use | Fight Engine Behavior |
-|---|---|---|
-| `magic_damage` | Magic type | Used for magic resistance calculation |
-| `physical_damage` | Physical type | Used for armor calculation |
-| `true_damage` | True/mixed type | Bypasses resistances |
-| `initial_damage` + `subsequent_damage` | Multi-part (e.g., Fox-Fire) | 1 initial + 2 subsequent per cast |
-| `damage_per_cast` + `total_casts` | Multi-dash (e.g., Spirit Rush) | N hits per ability use |
-| `on_hit` | Passive on-hit | `{"name": "...", "damage_per_hit": X, "damage_type": "..."}` |
-| `stat_buff` | Stat-granting abilities (e.g., Aatrox R) | `{"bonus_attack_damage": X}` — applied to `champion_stats` by `damage.py` before fight calculations |
-
-### Stat Buff Abilities (e.g., Aatrox R)
-
-For abilities that grant stats instead of dealing damage:
-1. Return the ability with `total_raw: 0.0` and the appropriate damage key set to `0.0`
-2. Include a `stat_buff` dict mapping stat keys to bonus values
-3. `damage.py` applies stat buffs to `champion_stats` before the fight engine runs, so auto-attack damage benefits from the buff
-4. Apply the same buff in your parser's `stats_context` before calculating other abilities, so ability damage also benefits
+Standard preamble (rank-gated slots):
 
 ```python
-# Example: R grants 20/30/40% bonus AD
-bonus_ad = stats_context["attack_damage"] * bonus_ad_fraction
-stats_context["attack_damage"] += bonus_ad
-stats_context["bonus_attack_damage"] += bonus_ad
-
-results["R"] = {
-    "name": "World Ender",
-    "rank": r_rank,
-    "cooldown": r_cooldown,
-    "damage_type": "physical",
-    "total_raw": 0.0,
-    "physical_damage": 0.0,
-    "stat_buff": {"bonus_attack_damage": bonus_ad},
-}
+def _my_slot(ctx: SlotCtx) -> dict[str, Any] | None:
+    """One-line: what this slot emits and why it's custom."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    ...
+    return damage_entry(ability.get("name", "..."), rank,
+                        extract_cooldown(ability, rank), total, "magic")
 ```
 
-## Champion Options (Frontend Toggles)
+Go custom when the mechanic is single-user: prose-regex extraction (Akshan,
+Ambessa P), multi-part entry keys (`initial_damage`/`subsequent_damage`,
+per-tick display keys), coupling a buff with conditional entry parts
+(Ashe Q), or a legacy entry shape an archetype may not emit. A thin wrapper
+over an archetype is also fine (Kog'Maw R = `simple_damage` + missing-HP
+flags; Ambessa Q2 = `by_option` + `recast_of` stamp).
 
-For champion-specific configuration (e.g., "assume sweetspot hits"), add a frontend toggle:
+Study for patterns: `anivia.py` (pure archetypes), `vayne.py` (stat_buff
+couples + wrapper), `amumu.py` (AMP pseudo-slot, literal-"P" display row),
+`akshan.py` (the honest ceiling: mostly regex custom fns).
 
-### Step 1: Register in `static/js/app.js`
+## Entry shape (what the fight engine expects)
 
-Add an entry to `championOptionsDefs` (near the top of the file, after the empty dict declaration):
+Castable entries carry `name`, `rank`, `cooldown`, `total_raw`,
+`damage_type` ("magic"/"physical"/"true"/"mixed") plus the type-specific
+key (`magic_damage` etc.) — `slotlib.damage_entry` builds this. Optional
+keys the fight engine dispatches on: `on_hit` (`{name, damage_per_hit,
+damage_type, stacks_required?}`), `stat_buff` (`{stat_key: value}`,
+applied to champion stats before the fight), `target_debuff`,
+`damage_per_cast`+`total_casts`, `initial_damage`+`subsequent_damage`,
+`proc_count`, `recast_of`, `missing_hp_scaling`, `auto_attack_override`.
+Copy the exact key set from the closest existing module — the golden
+snapshot locks key shapes, not just values.
 
-```javascript
-championOptionsDefs["Aatrox"] = {
-    render(container) {
-        container.innerHTML = `
-            <label class="toggle-label compact">
-                <input type="checkbox" id="opt-aatrox-sweetspot" checked>
-                <span class="toggle-text">Q Sweetspot hits</span>
-            </label>`;
-        document.getElementById("opt-aatrox-sweetspot")
-            .addEventListener("change", scheduleRecalc);
-    },
-    getValues() {
-        return {
-            sweetspot: document.getElementById("opt-aatrox-sweetspot")?.checked ?? true,
-        };
-    },
-    assumptions: [
-        "Assumed R is always active",
-        "W always hits both initial and pull-back damage",
-    ],
-};
-```
+## OPTIONS and ASSUMPTIONS (frontend, zero JS)
 
-**Three functions/properties:**
-- `render(container)`: Populates the panel HTML with checkboxes/inputs. **Must** call `scheduleRecalc` on change events for live updates.
-- `getValues()`: Returns an object with current settings. This is sent as `champion_options` in the API payload.
-- `assumptions`: Array of strings displayed in the "Champion Assumptions" section below the damage breakdown. Use for any simplifying assumptions the calculator makes (e.g., "R always active", "all hits land", "full stacks assumed").
-
-The panel **auto-opens** when selecting a champion that has options defined. Champions without options show "No special options for this champion." when manually opened via the "+" button.
-
-### Step 2: Consume in the Champion Module
-
-The `champion_options` dict is passed through: `app.js → app.py → __init__.py → your_module.parse_abilities()`. Access it in your parser:
+Champion options and assumption notes are **declared in the module** and
+served to the frontend via `/api/config` (`get_champion_options_meta` in
+`champions/__init__.py`). app.js renders them generically — adding an
+option never touches JavaScript.
 
 ```python
-def parse_abilities(..., champion_options=None, ...):
-    sweetspot = True  # default
-    if champion_options and "sweetspot" in champion_options:
-        sweetspot = bool(champion_options["sweetspot"])
+OPTIONS = [
+    # bool -> checkbox; int/float -> number input with min/max/step.
+    {"key": "sweetspot", "type": "bool", "default": True, "label": "Q Sweetspot hits"},
+    {"key": "passive_procs", "type": "int", "default": 4,
+     "label": "Passive procs", "min": 0, "max": 20},
+]
+ASSUMPTIONS = [
+    "Assumed R is always active",   # shown under the damage breakdown
+]
 ```
 
-### ID Convention
+Rules:
+- The parse path reads options via `ctx.options.get(key, default)` or
+  archetype params (`by_option(key, ...)`, `count_option=key`,
+  `duration_option=(key, default)`).
+- **The Python default is the source of truth** — the declared `default`
+  must match what the parse path falls back to.
+- Every declared key must appear as a string in the module source —
+  `tests/test_champion_options.py` enforces this (pass `count_option=`
+  explicitly rather than relying on a slotlib default).
+- Document every simplifying assumption (always-active buffs, all hits
+  land, full stacks, skipped abilities) in ASSUMPTIONS.
 
-Use `id="opt-<champion>-<option>"` for option input elements to avoid collisions.
+## Tests
 
-## Champion Assumptions
+Champion test files are for champions with modules (tiers 2-3); the generic
+path is covered by `tests/test_generic_path.py` + the golden snapshot.
+Create `tests/test_<champion>.py` using the conftest fixtures:
 
-When a champion module makes simplifying assumptions (e.g., R is always active, all hits land), document them in the `assumptions` array of the champion's `championOptionsDefs` entry. These display as a list below the damage breakdown in the results panel.
+- **`<champion>_data`** — add a `get_champion("Name")` fixture to
+  `tests/conftest.py`.
+- **`parse_at`** — `stats, abilities = parse_at(data, level, *, items=None,
+  ap=0.0, **kwargs)` — stats + dispatcher parse in one call.
 
-Common assumptions to document:
-- Stat buff ultimates always active (e.g., "Assumed R is always active")
-- Conditional damage always lands (e.g., "W always hits both initial and pull-back damage")
-- Passive always available / off cooldown
-- Full stacks assumed
-- All projectiles hit
+Cover: damage types; hand-validated damage values against the wiki (use
+`parse_at`); cooldowns present; each champion option's effect (on vs off);
+absent slots stay absent; stat-buff entries (0 damage + correct buff
+value); fight-engine integration where the module adds flags. When
+comparing manual math to parser output, use a pre-6 level so the R buff
+doesn't distort the comparison. Validate raw JSON reads with
+`slotlib.extract_named` / `extract_value` — don't add module-private
+wrappers just for tests.
 
-## Adding Tests
-
-Create `tests/test_<champion>.py` for custom modules. Shared fixtures are in `tests/conftest.py`:
-
-- **`<champion>_data`** — fixture that loads champion JSON (add new ones to conftest.py)
-- **`parse_at`** — factory fixture: `stats, abilities = parse_at(data, level, *, items=None, ap=0.0, **kwargs)` — calculates stats and parses abilities in one call via the dispatcher
-
-```python
-# tests/conftest.py — add a new data fixture for each champion:
-@pytest.fixture
-def champion_data() -> dict:
-    return get_champion("ChampionName")
-```
-
-```python
-# tests/test_<champion>.py — use shared fixtures:
-from src.calculator.champions.<champion> import _private_helper  # only if needed
-from src.calculator.damage import calculate_fight_damage
-
-
-class TestQAbilityName:
-    def test_q_is_physical_damage(self, champion_data, parse_at) -> None:
-        _, abilities = parse_at(champion_data, 9)
-        assert abilities["Q"]["damage_type"] == "physical"
-
-    def test_q_has_cooldown(self, champion_data, parse_at) -> None:
-        _, abilities = parse_at(champion_data, 9)
-        assert abilities["Q"]["cooldown"] > 0
-
-    def test_q_with_options(self, champion_data, parse_at) -> None:
-        _, abilities = parse_at(
-            champion_data, 9, champion_options={"sweetspot": True},
-        )
-        assert abilities["Q"]["total_raw"] > 0
-```
-
-### Test categories to cover:
-
-1. **Each ability's damage type** (physical/magic/true/mixed)
-2. **Damage values match JSON data** (use `parse_at` which includes stat calculation)
-3. **Cooldowns are present and positive**
-4. **Champion options toggle behavior** (sweetspot on vs off, etc.)
-5. **Non-damaging abilities excluded** (E not in results if utility)
-6. **Stat buff abilities** (R deals 0 damage, has stat_buff key, buff value is correct)
-7. **Fight engine integration** (stat_buff applied to champion_stats, R 0 damage in breakdown)
-8. **Level awareness** (test at levels where R is/isn't ranked to avoid R buff distortion)
-9. **On-hit passive** (correct damage type, scales with level, correct % values)
-
-**Important:** When testing ability damage at levels where R is ranked, the R stat buff will be applied. If comparing manual calculations to parser output, use a level where R is not yet ranked (pre-level 6) to avoid the buff distorting the comparison.
-
-## Verify
+## Gates (run before calling it done)
 
 ```bash
-pytest
+.venv/Scripts/python.exe -m pytest -q
+.venv/Scripts/python.exe scripts/golden_snapshot.py capture <tmpfile>
+.venv/Scripts/python.exe scripts/golden_snapshot.py compare scripts/golden_baseline.json
 ```
 
-All existing tests plus your new ones must pass.
+Full suite green. For a NEW champion the golden compare must be identical
+for every existing entry (your champion's entries are additions); after the
+champion is validated, re-capture the baseline so it's locked too. When a
+refactor is involved: never re-capture to make a diff go away.
 
-## Data Accuracy
+Also run `black` on touched files and check `pylint` for new findings.
 
-- The JSON data is scraped from the LoL Wiki and auto-updates via "Update to latest patch"
-- For custom modules, cross-reference the [LoL Wiki](https://wiki.leagueoflegends.com)
-- If the wiki disagrees with JSON data, trust the wiki and note the discrepancy
-- Known-good test cases (validated against the game client) go in `tests/test_known_good.py`
+## Data accuracy
 
-## Log Bugs for Future Reference
+- JSON is wiki-scraped; on any suspect value check the wiki page's **Patch
+  history** section first — it settles buffed/nerfed/reworked/removed
+  questions authoritatively.
+- If the wiki disagrees with the JSON, trust the wiki and note the
+  discrepancy.
+- Known-good cases validated against the game client go in
+  `tests/test_known_good.py`.
 
-When the user reports a bug or incorrect behavior after implementation, **immediately** append it to `.claude/skills/analyze-champion/bug-history.md` using this format:
+## Log bugs for future reference
+
+When the user reports a bug after implementation, **immediately** append it
+to `.claude/skills/analyze-champion/bug-history.md`:
 
 ```
 ### <Champion> — <short description>
@@ -361,13 +331,5 @@ When the user reports a bug or incorrect behavior after implementation, **immedi
 - **Pattern to watch for:** <generalized rule for future champions>
 ```
 
-The "Pattern to watch for" is the most important part — it should describe the general class of mistake so `/analyze-champion` can flag it on future champions. For example, don't just write "Alistar E was wrong." Write "Empowered auto passives that say 'next basic attack' apply once per cast, not per auto."
-
-## Reference Implementations
-
-See `src/calculator/champions/scaling.py` for the full unit-string → stat-key mapping used by scaling resolution.
-
-When writing a new custom module, study these existing ones for patterns:
-- **`aatrox.py`** (preferred pattern): JSON-driven, 3-cast Q with sweetspot option, R stat buff, W double-hit, passive on-hit from per-level data.
-- **`akali.py`**: JSON-driven, E total (both hits), R with missing-HP scaling, passive with user-configurable proc count.
-- **`ahri.py`**: JSON-driven, mixed damage Q (magic + true), multi-part W (initial + subsequent), multi-dash R (3 casts).
+The "Pattern to watch for" is the important part — describe the general
+class of mistake so `/analyze-champion` can flag it on future champions.
