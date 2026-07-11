@@ -53,12 +53,11 @@ def _apply_curse(result: dict[str, Any]) -> None:
 def _cursed_touch_amp(ctx: SlotCtx) -> None:
     """AMP pseudo-slot: apply the curse to every magic-damage ability."""
     if not ctx.options.get("target_cursed", True):
-        return None
+        return
     for key in ("Q", "W", "E", "R"):
         entry = ctx.results.get(key)
         if entry is not None:
             _apply_curse(entry)
-    return None
 
 
 _cursed_touch_amp.phase = AMP
@@ -71,7 +70,6 @@ def _cursed_touch_display(ctx: SlotCtx) -> None:
         ctx.results["P"] = damage_entry(
             ability.get("name", "Cursed Touch"), 1, 0.0, 0.0, "true"
         )
-    return None
 
 
 def _despair(ctx: SlotCtx) -> dict[str, Any] | None:

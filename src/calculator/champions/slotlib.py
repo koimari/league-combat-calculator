@@ -473,15 +473,15 @@ def toggle_dot(
         total = 0.0
         for attr, tick_cap in phases:
             ticks = (
-                ticks_remaining
-                if tick_cap is None
-                else min(tick_cap, ticks_remaining)
+                ticks_remaining if tick_cap is None else min(tick_cap, ticks_remaining)
             )
             per_tick = extract_named(ability, attr, rank, ctx.stats, ctx.target)
             total += ticks * per_tick
             ticks_remaining -= ticks
 
-        resolved_type = classify_damage_type(ability) if dmg_type == "auto" else dmg_type
+        resolved_type = (
+            classify_damage_type(ability) if dmg_type == "auto" else dmg_type
+        )
         name = ability.get("name", f"Ability {ctx.slot}")
         return damage_entry(name, rank, cooldown, total, resolved_type)
 
@@ -523,9 +523,7 @@ def multi_cast(
             return None
 
         if attr is None:
-            per_cast, resolved_type = extract_auto(
-                ability, rank, ctx.stats, ctx.target
-            )
+            per_cast, resolved_type = extract_auto(ability, rank, ctx.stats, ctx.target)
         else:
             per_cast = extract_named(ability, attr, rank, ctx.stats, ctx.target)
             resolved_type = classify_damage_type(ability)

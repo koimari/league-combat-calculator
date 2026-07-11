@@ -331,3 +331,93 @@ black clean (engine.py, slotlib.py, __init__.py, test_engine.py). pylint
 fixed 7-arg `parse_abilities` signature; legacy generic_parser/anivia score
 9.51 with the same classes) plus two design-mandated shapes: `SlotCtx`'s 9
 attributes and `simple_damage`'s 6 params (the design table's signature).
+
+## Phase 3b (completed)
+
+Six champions ported to the slot-archetype engine, simplest-first, one commit
+each: Anivia, Annie, Akali, Amumu, Ahri, Ashe. Suite after each commit and at
+the end: **745 passed, 0 failed** (723 after 3a + 22 new slotlib unit tests);
+every hand-validated expected value unchanged. Golden compare after every
+champion: **identical** to `scripts/golden_baseline.json` (the snapshot
+captures full ability dicts, so key shapes — not just values — are locked).
+
+### Per-champion (non-blank LOC, before -> after)
+
+| Champion | LOC | Archetypes used | Custom slot fns |
+|---|---|---|---|
+| Anivia | 121 -> 33 | simple_damage(attr=) x2, **toggle_dot** (new) | — |
+| Annie | 178 -> 105 | simple_damage x2, **utility** (new) | `_summon_tibbers` (BUFF: magic-pen stat buff + burst + hardcoded Tibbers aura constants), `_pyromania_placeholder` |
+| Akali | 192 -> 68 | simple_damage x2, **proc_damage** (new) | `_perfect_execution` (r2_min/r2_max/missing_hp_scaling shape) |
+| Amumu | 180 -> 91 | simple_damage x3 (Q with new `cooldown="recharge"`) | `_despair` (W toggle DoT with per-tick display keys), `_cursed_touch_display`, `_cursed_touch_amp` (AMP-phase `"curse"` pseudo-slot) |
+| Ahri | 121 -> 44 | simple_damage x2 (Q: mixed + casts=2), **multi_cast** (new) | `_fox_fire` (initial/subsequent per-flame keys) |
+| Ashe | 154 -> 80 | simple_damage x2 | `_rangers_focus` (BUFF: AS stat buff + flurry auto_attack_override, `q_active` gate), `_frost_shot` (override falls back to P when Q absent — reads ctx.results, listed after Q) |
+
+### slotlib additions (340 -> 565 lines, 22 unit tests in test_engine.py)
+
+- `toggle_dot(phases, duration_option, interval, min_duration, cooldown,
+  dmg_type, source)` — phase-structured toggle/channel DoT summed into ONE
+  standard damage entry; ticks consumed by `(attr, tick_cap)` phases in
+  order; cooldown pinned by the caller (0.0 = free toggle, 999.0 =
+  cast-once). User: Anivia R.
+- `proc_damage(attr, dmg_type, count_option, default_count)` — per-LEVEL
+  per-proc damage x option-driven proc count, emitting the
+  `proc_count`-shaped entry damage.py schedules outside the rotation.
+  User: Akali P (Ambessa/Akshan P join in the next step).
+- `multi_cast(casts, attr, dmg_type, source)` — N recasts per activation:
+  `damage_per_cast`/`total_casts` (int preserved), deliberately NO cooldown
+  key (damage.py spaces recasts itself). User: Ahri R.
+- `utility(dmg_type)` — zero-damage display placeholder with real cooldown,
+  rank-gated. User: Annie E.
+- `simple_damage(cooldown="recharge")` — new cooldown mode: charge abilities
+  report rechargeRate at rank (falls back to the plain cooldown). User:
+  Amumu Q.
+- `extract_value(ability, attribute, rank, modifier_index)` — extraction-core
+  addition mirroring `common.extract_leveling_value` (raw leveling numbers:
+  pen %, AS %, flurry ratios). Users: Annie R, Ashe Q.
+
+### Behavior notes / deviations for orchestrator review
+
+1. **toggle_dot serves Anivia, not Amumu.** The design table listed Amumu W,
+   Alistar E, and Anivia R as toggle_dot users, but their legacy entries
+   emit three DIFFERENT key shapes (Amumu W carries `damage_per_tick`/
+   `total_ticks`; Anivia R is a standard entry; Alistar E is a
+   total-attribute read plus an on-hit addend). Under the "no flag may
+   change emitted keys" guardrail + the golden lock on key shapes, toggle_dot
+   got the standard-entry shape (Anivia R, the design's `phases` amendment);
+   Amumu W stayed a ~30-line custom fn. Flag for the step-3 porter: Alistar E
+   will NOT fit toggle_dot either.
+2. **Placeholders under the literal "P" key.** Annie P and Amumu P emit
+   zero-damage display rows keyed `"P"` (legacy UI shape), but the engine
+   maps a returned P-slot entry to `"passive"` — the only slot key that
+   doesn't map to itself, so no returned entry can land under `"P"`. Ported
+   as custom fns that write `ctx.results["P"]` directly and return None
+   (commented in both modules). If more champions need this, consider a
+   parser-stamped `result_key` engine extension instead.
+3. **stat_buff archetype NOT added yet.** Its two users in this batch
+   (Annie R, Ashe Q) both couple the buff with entry parts an archetype may
+   not emit conditionally (Tibbers aura + burst; auto_attack_override), so
+   both are custom BUFF-phase fns. The archetype should debut in the next
+   step with the plain-shaped users (Aatrox/Vayne/Ambessa/Kog'Maw).
+4. **Amumu "curse" pseudo-slot.** The Cursed Touch amplifier is an AMP-phase
+   parser under the non-ability map key `"curse"`; it mutates the Q/W/E/R
+   entries in `ctx.results` and returns None (so the key never appears in
+   results). First use of the AMP phase.
+5. **Akali `_parse_passive_damage` kept as a seam.** test_akali.py validates
+   the passive per-level numbers through it; it is now a 2-line wrapper over
+   `extract_named` at rank=level (verified equivalent: the 40-value
+   per-level base and single-value scaling modifiers index identically in
+   `_sum_modifiers`). Repointing those tests remains step-3 work.
+6. **Dropped legacy quirk (unreachable):** Anivia/Ahri's old modules aborted
+   the WHOLE parse (`return results`) when a slot's ability list was empty
+   mid-loop; the engine skips just that slot. Unreachable with real data —
+   every champion has all slot entries — and golden-verified identical.
+7. Amumu's old module docstring claimed a `q_casts` option that the code
+   never read; the claim was not carried over.
+
+### Verification
+
+black clean on all touched files. pylint **9.80/10** on the seven touched
+src modules — remaining findings are the established patterns only:
+`simple_damage`/`toggle_dot` 7-param factory signatures (design-mandated,
+same class Phase 3a documented) and R0801 duplicate-code on the 5-line
+ability/rank gate preamble shared by custom slot fns across champion files.

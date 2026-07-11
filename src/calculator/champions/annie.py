@@ -112,7 +112,6 @@ def _pyromania_placeholder(ctx: SlotCtx) -> None:
         ctx.results["P"] = damage_entry(
             ability.get("name", "Pyromania"), 0, 0.0, 0.0, "magic"
         )
-    return None
 
 
 SLOTS = {
