@@ -2273,6 +2273,144 @@ def _add_expose_weakness(
     state.total_damage += expose_bonus
 
 
+def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> None:
+    """Apply fight-wide damage amplifiers and their breakdown rows.
+
+    General amps (Lord Dominik's Regards, Riftmaker-class) multiply the
+    whole running total, one ``damage_amp_<source>`` row per source. The
+    Actualizer ability amp was already applied per-ability/per-proc, so
+    its row is informational only. Horizon Focus amplifies everything
+    except the first ability cast (the trigger).
+    """
+    breakdown = state.breakdown
+
+    amp_sources, amp = item_effects.get_damage_amplifier_breakdown(
+        state.items,
+        state.fight_duration_seconds,
+        target_bonus_health=max(0, state.target_bonus_health),
+    )
+    if amp > 1.0:
+        amp_bonus = state.total_damage * (amp - 1.0)
+        # Create per-source breakdown entries
+        for source_name, source_amp in amp_sources:
+            if source_amp > 0:
+                source_bonus = state.total_damage * source_amp
+                breakdown[f"damage_amp_{source_name}"] = {
+                    "name": f"Damage Amplification ({source_name})",
+                    "multiplier": 1.0 + source_amp,
+                    "total_damage": source_bonus,
+                }
+        state.total_damage += amp_bonus
+
+    # Actualizer ability damage amp — show as separate breakdown entry.
+    # The amp was already applied per-ability in the rotation and per-proc
+    # in the item-proc step, so this entry is informational only (damage
+    # already counted).
+    if state.ability_amp > 1.0:
+        # Sum all ability + ability-proc damage that was amplified
+        amped_base = sum(
+            v.get("total_damage", 0)
+            for k, v in breakdown.items()
+            if isinstance(v, dict)
+            and k
+            not in (
+                "auto_attacks",
+                "damage_amplification",
+            )
+            and not k.startswith("damage_amp_")
+        )
+        # The amplified damage = base * amp, so the amp contribution is
+        # base * (amp - 1) / amp  (since base already includes the amp).
+        actualizer_bonus = amped_base * (state.ability_amp - 1.0) / state.ability_amp
+        actualizer_items = [
+            i.get("name", "")
+            for i in state.items
+            if item_effects.ITEM_EFFECTS.get(i.get("name", ""), {}).get("type")
+            == "ability_damage_amp"
+        ]
+        amp_name = actualizer_items[0] if actualizer_items else "Actualizer"
+        breakdown[f"ability_amp_{amp_name}"] = {
+            "name": f"Damage Amplification ({amp_name})",
+            "multiplier": state.ability_amp,
+            "total_damage": actualizer_bonus,
+            "note": "included in ability/proc totals above",
+        }
+
+    # Horizon Focus Hypershot: amp all damage except the first ability cast
+    # (the first ability triggers the mark; its own damage is not amped).
+    if state.hypershot_amp > 1.0:
+        amped_damage = state.total_damage - rotation.first_ability_damage
+        hypershot_bonus = amped_damage * (state.hypershot_amp - 1.0)
+        breakdown["damage_amp_Horizon Focus"] = {
+            "name": "Damage Amplification (Horizon Focus)",
+            "multiplier": state.hypershot_amp,
+            "total_damage": hypershot_bonus,
+        }
+        state.total_damage += hypershot_bonus
+
+
+def _add_execute_display(state: FightState) -> None:
+    """Add The Collector's execute-threshold display row.
+
+    The execute damage is NOT added to the total; the row displays the HP
+    threshold at which the target would be executed.
+    """
+    collector_threshold = item_effects.get_collector_execution_threshold(
+        state.items, state.target_health
+    )
+    if collector_threshold is not None:
+        state.breakdown["execute"] = {
+            "name": "The Collector (Execute)",
+            "total_damage": 0.0,
+            "damage_type": "true",
+            "execution_threshold_hp": collector_threshold,
+            "note": (
+                f"Collector Execution Threshold: {collector_threshold:.0f} HP "
+                f"({item_effects.ITEM_EFFECTS.get('The Collector', {}).get('threshold', 0.05) * 100:.0f}% "
+                f"of {state.target_health:.0f})"
+            ),
+        }
+
+
+def _collect_fight_notes(
+    state: FightState,
+    rotation: RotationResult,
+    on_hits: OnHitResult,
+) -> None:
+    """Collect the notes documenting conditional item assumptions."""
+    notes = state.notes
+    if state.has_hexplate:
+        notes.append(
+            "R is assumed to be cast at the start of the fight. "
+            "Experimental Hexplate Overdrive (50% bonus AS) is applied "
+            "from time 0."
+        )
+    if state.has_fiendhunter:
+        notes.append(
+            "R is assumed to be cast at the start of the fight. "
+            "Fiendhunter Bolts empowered attacks (50% bonus AS, "
+            "guaranteed crits) are applied from time 0."
+        )
+
+    if (
+        rotation.has_navori
+        and rotation.navori_refund > 0
+        and rotation.autos_per_second > 0
+    ):
+        notes.append(
+            f"Navori Flickerblade: basic ability CDs reduced by "
+            f"{rotation.navori_refund:.0%} per auto attack "
+            f"({rotation.autos_per_second:.2f} autos/sec effective)."
+        )
+
+    if on_hits.phantom_hit_count > 0:
+        notes.append(
+            f"Guinsoo's Rageblade: {on_hits.phantom_hit_count} phantom hit(s) — "
+            f"all on-hit effects apply an additional time on autos "
+            f"#{', #'.join(str(a + 1) for a in sorted(on_hits.phantom_hit_autos))}."
+        )
+
+
 def calculate_fight_damage(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
@@ -2374,147 +2512,26 @@ def calculate_fight_damage(
     _add_shadowflame_cinderbloom(state)
     _add_expose_weakness(state, autos, spellblade)
 
-    # ── Transitional unpack ── deleted as later Phase 4 groups extract the
-    # remaining inline steps below into functions that read the state.
-    resists = state.resists
-    has_hexplate = state.has_hexplate
-    has_fiendhunter = state.has_fiendhunter
-    ability_amp = state.ability_amp
-    hypershot_amp = state.hypershot_amp
-    effective_armor = resists.effective_armor
-    effective_mr = resists.effective_mr
-    breakdown = state.breakdown
-    total_damage = state.total_damage
-    first_ability_damage = rotation.first_ability_damage
-    has_navori = rotation.has_navori
-    navori_refund = rotation.navori_refund
-    autos_per_second = rotation.autos_per_second
-    phantom_hit_count = on_hits.phantom_hit_count
-    phantom_hit_autos = on_hits.phantom_hit_autos
+    # ── Step 10: Fight-wide damage amplifiers ───────────────────────────
+    _apply_damage_amplifiers(state, rotation)
 
-    # ── Step 10: Damage amplifiers ────────────────────────────────────────
-    amp_sources, amp = item_effects.get_damage_amplifier_breakdown(
-        items,
-        fight_duration_seconds,
-        target_bonus_health=max(0, target_bonus_health),
-    )
-    if amp > 1.0:
-        amp_bonus = total_damage * (amp - 1.0)
-        # Create per-source breakdown entries
-        for source_name, source_amp in amp_sources:
-            if source_amp > 0:
-                source_bonus = total_damage * source_amp
-                breakdown[f"damage_amp_{source_name}"] = {
-                    "name": f"Damage Amplification ({source_name})",
-                    "multiplier": 1.0 + source_amp,
-                    "total_damage": source_bonus,
-                }
-        total_damage += amp_bonus
+    # ── Step 11: Execute threshold display (The Collector) ──────────────
+    _add_execute_display(state)
 
-    # Actualizer ability damage amp — show as separate breakdown entry.
-    # The amp was already applied per-ability in Step 2 and per-proc in
-    # Step 7, so this entry is informational only (damage already counted).
-    if ability_amp > 1.0:
-        # Sum all ability + ability-proc damage that was amplified
-        amped_base = sum(
-            v.get("total_damage", 0)
-            for k, v in breakdown.items()
-            if isinstance(v, dict)
-            and k
-            not in (
-                "auto_attacks",
-                "damage_amplification",
-            )
-            and not k.startswith("damage_amp_")
-        )
-        # The amplified damage = base * amp, so the amp contribution is
-        # base * (amp - 1) / amp  (since base already includes the amp).
-        actualizer_bonus = amped_base * (ability_amp - 1.0) / ability_amp
-        actualizer_items = [
-            i.get("name", "")
-            for i in items
-            if item_effects.ITEM_EFFECTS.get(i.get("name", ""), {}).get("type")
-            == "ability_damage_amp"
-        ]
-        amp_name = actualizer_items[0] if actualizer_items else "Actualizer"
-        breakdown[f"ability_amp_{amp_name}"] = {
-            "name": f"Damage Amplification ({amp_name})",
-            "multiplier": ability_amp,
-            "total_damage": actualizer_bonus,
-            "note": "included in ability/proc totals above",
-        }
-
-    # Horizon Focus Hypershot: amp all damage except the first ability cast
-    # (the first ability triggers the mark; its own damage is not amped).
-    if hypershot_amp > 1.0:
-        amped_damage = total_damage - first_ability_damage
-        hypershot_bonus = amped_damage * (hypershot_amp - 1.0)
-        breakdown["damage_amp_Horizon Focus"] = {
-            "name": "Damage Amplification (Horizon Focus)",
-            "multiplier": hypershot_amp,
-            "total_damage": hypershot_bonus,
-        }
-        total_damage += hypershot_bonus
-
-    # ── Step 11: Execute threshold display (The Collector) ────────────────
-    # The Collector's execute damage is NOT added to the total; instead we
-    # display the HP threshold at which the target would be executed.
-    collector_threshold = item_effects.get_collector_execution_threshold(
-        items, target_health
-    )
-    if collector_threshold is not None:
-        breakdown["execute"] = {
-            "name": "The Collector (Execute)",
-            "total_damage": 0.0,
-            "damage_type": "true",
-            "execution_threshold_hp": collector_threshold,
-            "note": (
-                f"Collector Execution Threshold: {collector_threshold:.0f} HP "
-                f"({item_effects.ITEM_EFFECTS.get('The Collector', {}).get('threshold', 0.05) * 100:.0f}% "
-                f"of {target_health:.0f})"
-            ),
-        }
-
-    # ── Notes for conditional item assumptions ─────────────────────────────
-    notes: list[str] = []
-    if has_hexplate:
-        notes.append(
-            "R is assumed to be cast at the start of the fight. "
-            "Experimental Hexplate Overdrive (50% bonus AS) is applied "
-            "from time 0."
-        )
-    if has_fiendhunter:
-        notes.append(
-            "R is assumed to be cast at the start of the fight. "
-            "Fiendhunter Bolts empowered attacks (50% bonus AS, "
-            "guaranteed crits) are applied from time 0."
-        )
-
-    if has_navori and navori_refund > 0 and autos_per_second > 0:
-        notes.append(
-            f"Navori Flickerblade: basic ability CDs reduced by "
-            f"{navori_refund:.0%} per auto attack "
-            f"({autos_per_second:.2f} autos/sec effective)."
-        )
-
-    if phantom_hit_count > 0:
-        notes.append(
-            f"Guinsoo's Rageblade: {phantom_hit_count} phantom hit(s) — "
-            f"all on-hit effects apply an additional time on autos "
-            f"#{', #'.join(str(a + 1) for a in sorted(phantom_hit_autos))}."
-        )
+    # ── Notes for conditional item assumptions ──────────────────────────
+    _collect_fight_notes(state, rotation, on_hits)
 
     return {
-        "breakdown": breakdown,
-        "total_damage": total_damage,
-        "effective_mr": effective_mr,
-        "effective_armor": effective_armor,
-        "notes": notes,
+        "breakdown": state.breakdown,
+        "total_damage": state.total_damage,
+        "effective_mr": state.resists.effective_mr,
+        "effective_armor": state.resists.effective_armor,
+        "notes": state.notes,
         # Exposed for champion-specific ability calculators (Case 1: stack
         # acceleration). Champions like Vayne can check which autos grant
         # double stacks to calculate ability procs more accurately.
-        "phantom_hit_autos": phantom_hit_autos,
-        "phantom_hit_count": phantom_hit_count,
+        "phantom_hit_autos": on_hits.phantom_hit_autos,
+        "phantom_hit_count": on_hits.phantom_hit_count,
     }
 
 
