@@ -86,6 +86,30 @@ changes which fight-engine keys it emits — that's the signal to split or go cu
 Projected: ~3,100 lines (12 modules + common + generic_parser) → ~1,050, with adding a
 champion = 2-file touch (module + registry line; conftest fixture optional).
 
+## Sizing context: the roadmap is the FULL roster (170+ champions)
+
+The design must be judged at N=173, not N=12. Consequences:
+
+- **The generic path is the product.** Most champions should need NO file at all —
+  `GENERIC_SLOTS` + the classifier must carry the median champion. Every improvement to
+  auto-detection (attribute tiers, on-hit sniffing) pays 100+ champions at once; every
+  champion that needs a spec file is a small failure of the generic path. Triage order
+  when onboarding: generic → attr-override spec row → archetype map → custom fns.
+- **Archetype reuse compounds.** At 12 champions the library looked borderline (~14
+  archetypes); at 173 the Xerath/Lucian/Illaoi pattern (stress test) predicts heavy
+  reuse. Keep the ≥2-users rule — it will be satisfied quickly and often.
+- **Per-champion test files don't scale to 173.** The golden snapshot (all champions,
+  stats + abilities) plus the generic-parser coverage test (≥95% parse with damage) are
+  the primary safety net; hand-written test files are reserved for champions with custom
+  specs. (Phase 5 should note this.)
+- **Known blocked class (future work, NOT Phase 3):** multi-kit champions — weapon
+  systems (Aphelios), subspell casters (Hwei), transformers (Jayce/Elise/Udyr/Kayn/
+  Nidalee/Gnar) — are blocked by the fight engine's four-castable-slot assumption and
+  app.py's Q/W/E/R cast-order validation, not by the parse layer. Reaching true full
+  roster requires a "rotation engine multi-kit" workstream after this campaign.
+  Stack-dependent kits (Nasus, Veigar, Senna, Kindred) are NOT blocked: stacks arrive
+  as champion options.
+
 ## Stress-test amendments (whiteboarded Aphelios, Xerath, Lucian, Bel'Veth, Hwei, Illaoi)
 
 Six-champion whiteboard against real JSON shapes produced four interface amendments:
