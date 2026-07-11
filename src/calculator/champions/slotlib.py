@@ -24,8 +24,9 @@ stamped with their engine phase. Shared factory params:
                                (rank pinned to champion level, for
                                passives and no-skill-point kits)
 
-Later Phase 3 steps add stat_buff / on_hit_pct_health / toggle_dot / etc.
-here; the engine needs no changes for them.
+The full Phase 3 archetype set (simple_damage, on_hit_auto, stat_buff,
+by_option, multi_hit_sum, on_hit_pct_health, toggle_dot, multi_cast,
+proc_damage, utility) landed with zero engine changes.
 """
 
 from typing import Any

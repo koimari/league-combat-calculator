@@ -421,3 +421,114 @@ src modules — remaining findings are the established patterns only:
 `simple_damage`/`toggle_dot` 7-param factory signatures (design-mandated,
 same class Phase 3a documented) and R0801 duplicate-code on the 5-line
 ability/rank gate preamble shared by custom slot fns across champion files.
+
+## Phase 3c (completed)
+
+The remaining six champions ported hardest-last, one commit each:
+Kog'Maw `8771046`, Vayne `59af552`, Aatrox `55d5039`, Alistar `45bb62c`,
+Ambessa `e6765ec`, Akshan `e5d920a`. Suite after each commit and at the
+end: **773 passed, 0 failed** (745 after 3b + 28 new engine/slotlib unit
+tests); every hand-validated expected value unchanged. Golden compare
+after every champion: **identical** to `scripts/golden_baseline.json`
+(the one intermediate diff it caught — a missed `rank` key on Vayne W's
+shell — was fixed before that commit). All 12 registered modules now run
+on the engine; no champion resisted, none left on the legacy path.
+
+### Per-champion (non-blank LOC, before -> after)
+
+| Champion | LOC | Archetypes used | Custom slot fns |
+|---|---|---|---|
+| Kog'Maw | 185 -> 109 | simple_damage x2 | `_caustic_spittle` (first live DEBUFF-phase parser: damage + AS stat_buff + shred target_debuff), `_bio_arcane_barrage` (castable shell over `pct_health_per_hit`), `_living_artillery` (wrapper adding missing-HP flags) |
+| Vayne | 183 -> 87 | **stat_buff** (new, with `couples`), **by_option** (new), simple_damage x3 | `_tumble` (cooldown scaled by R's published CDR), `_silver_bolts` (cooldown-less shell, floor + stacks/3) |
+| Aatrox | 201 -> 66 | stat_buff (percent_of), by_option, **multi_hit_sum** (new) x2, **on_hit_pct_health** (new, scale="level"), simple_damage | — (seam `_extract_r_bonus_ad_percent` kept for tests) |
+| Alistar | 115 -> 78 | simple_damage x2 (auto mode — Q/W ARE generic) | `_trample` (tick total + level-scaled add-once empowered auto; confirmed no toggle_dot fit, per the 3b flag) |
+| Ambessa | 256 -> 147 | stat_buff (damage_attr), by_option x2, simple_damage x6 | `_sundering_slam` (recast_of wrapper), `_drakehounds_step` (seam `_parse_passive_damage`: per-level base + description-regex AD ratio) |
+| Akshan | 266 -> 224 | simple_damage | `_heroic_swing`, `_comeuppance`, `_double_shot`, `_dirty_fighting_procs` — fat custom fns over the three kept regex seams; NOT bigger than the old module |
+
+### slotlib additions (565 -> ~825 lines, 28 unit tests in test_engine.py)
+
+- `stat_buff(attr, stat, mode=flat|percent_of, percent_of, apply_to,
+  damage_attr, dmg_type, couples)` — BUFF-phase steroid entry
+  (zero-damage unless `damage_attr`); `apply_to` mutates ctx.stats for
+  later slots; `couples=(stats_key, attr)` publishes a second leveling
+  value into ctx.stats for a dependent slot. Users: Vayne R (flat +
+  couples), Aatrox R (percent_of AD), Ambessa R (damage_attr, no
+  apply_to — armor pen is fight-engine-applied). Kog'Maw Q was checked
+  per the task flag and stayed custom (damage + buff + debuff in one
+  entry).
+- `by_option(option, {value: parser}, default)` — option-dispatched
+  cases; factory-time check that cases share ONE phase; bool-keyed
+  cases normalize the option with `bool()`. Users: Aatrox Q, Ambessa
+  Q1/Q2, Vayne E.
+- `multi_hit_sum(attrs, dmg_type, source, cooldown_from)` — named
+  attributes summed into one standard entry. User: Aatrox Q triads
+  (both by_option branches). Ahri W / Akshan Q / Ambessa E from the
+  design table turned out to be single-attribute reads (simple_damage);
+  Alistar E stayed custom per the 3b flag.
+- `on_hit_pct_health(attr, dmg_type, scale=rank|level,
+  ap_ratio_per_100, floor_attr, stacks_required, source)` — ONHIT-phase
+  %maxHP on-hit in the minimal `{name, on_hit}` shell. Direct user:
+  Aatrox P (scale="level").
+- `pct_health_per_hit(...)` extraction-core helper — the SHARED math
+  (base %, per-100-AP ratio, floor, stacks division) under
+  on_hit_pct_health, Kog'Maw W, and Vayne W. The three legacy shells
+  differ in which fight-engine keys they carry (castable rank/cooldown
+  shell vs cooldown-less stacks shell vs minimal passive shell), and
+  golden locks key shapes — so per the "no flag may change emitted
+  keys" guardrail the archetype owns ONE shell and the other two users
+  are thin custom fns over the shared math (same resolution as 3b's
+  toggle_dot note 1).
+- Internal: `_find_named_leveling` / `_modifier_value` factored out of
+  `extract_value` and reused by the new helper.
+
+### The result_key decision (Ambessa Q2)
+
+**No engine extension was needed.** The engine's slot->results mapping
+is the identity for every key except `"P"` -> `"passive"`, so a slot
+map may simply declare a synthetic `"Q2"` key
+(`simple_damage(source=("Q", 1), cooldown_from=("Q", 0))` + a wrapper
+stamping `recast_of: "Q"`); rank resolution follows the source slot
+("Q"). Phase 3b's suggested parser-stamped `result_key` attribute was
+not required; the contract is now locked by
+`test_synthetic_slot_key_maps_to_itself`. The same identity mapping
+serves Akshan's `"passive_double_shot"` key.
+
+### Behavior notes / deviations for orchestrator review
+
+1. **Kog'Maw Q is the first live DEBUFF-phase parser** but does NOT
+   mutate `ctx.target`: damage.py owns shred application at fight
+   time, and no parse-time scaling reads target resistances. The phase
+   stamp documents the slot's role and its ordering guarantee.
+2. **Dropped legacy `> 0` emission gates (unreachable):** Kog'Maw E,
+   Aatrox W, Ambessa W/E, Akshan Q gated emission on damage > 0;
+   explicit-attr `simple_damage` always emits (3a deviation 3's defined
+   semantics). Real data always has positive damage for these
+   attributes — golden-verified identical.
+3. **Custom fns emitting nothing when an attribute is absent:**
+   Kog'Maw W and Vayne W now drop the slot if their %maxHP attribute is
+   missing (legacy emitted a zero-damage entry). Unreachable with real
+   data; golden-verified identical.
+4. **Test seams kept** (test files import module privates; repointing
+   is step-4-adjacent work per the design's migration list): Aatrox
+   `_extract_r_bonus_ad_percent` (now 3 lines over `extract_value`),
+   Alistar `_extract_e_on_hit_damage`, Ambessa `_parse_passive_damage`,
+   Akshan `_extract_e_per_shot` / `_parse_passive_proc_damage` /
+   `_extract_double_shot_ratio`.
+5. **Quarantined constants** (wiki prose, no JSON home, documented at
+   module top): Vayne `_SILVER_BOLTS_STACKS = 3`; Akshan
+   `_R_CRIT_EFFECTIVENESS = 0.3`, `_R_MISSING_HP_MAX_BONUS = 2.0`.
+6. **proc_damage did not gain Ambessa/Akshan P** (3b predicted they
+   would join): both passives need description-regex extraction, so
+   they are custom fns that emit proc_damage's exact `proc_count`
+   shape. proc_damage keeps its one attribute-driven user (Akali P).
+
+### Verification
+
+black clean on all touched files (`black --check` exit 0). pylint
+**9.70/10** on the seven touched src modules — remaining findings are
+the established classes only: R0913/R0917 on the design-mandated
+factory signatures (`simple_damage` 7, `stat_buff` 8,
+`on_hit_pct_health` 7, `toggle_dot` 7, `pct_health_per_hit` 8) and
+R0801 duplicate-code on the 5-line ability/rank gate preamble shared
+by custom slot fns. Full suite `773 passed` and golden compare
+`OK: snapshot identical` re-run at wrap-up.
