@@ -4638,16 +4638,40 @@ class TestSplitAutoVsAbility:
 
     def test_amp_and_execute_split_proportionally(self) -> None:
         # auto 100 / ability 300 -> auto ratio 0.25; amp 40 + execute 20
-        # redistribute 60 as 15 auto / 45 ability.
+        # redistribute 60 as 15 auto / 45 ability. Amp rows use the
+        # damage_amp_<source> keys the engine actually emits.
         breakdown = {
             "auto_attacks": {"name": "Auto Attacks", "total_damage": 100.0},
             "Q": {"name": "Q", "total_damage": 300.0},
-            "damage_amplification": {"name": "Amp", "total_damage": 40.0},
+            "damage_amp_Lord Dominik's Regards": {
+                "name": "Damage Amplification (Lord Dominik's Regards)",
+                "total_damage": 40.0,
+            },
             "execute": {"name": "Execute", "total_damage": 20.0},
         }
         auto, ability = split_auto_vs_ability(breakdown)
         assert auto == pytest.approx(115.0)
         assert ability == pytest.approx(345.0)
+
+    def test_multiple_damage_amp_sources_redistribute(self) -> None:
+        # Several damage_amp_<source> rows (e.g. LDR + Horizon Focus) all
+        # redistribute proportionally — amps scale both buckets.
+        breakdown = {
+            "auto_attacks": {"name": "Auto Attacks", "total_damage": 150.0},
+            "W": {"name": "W", "total_damage": 50.0},
+            "damage_amp_Lord Dominik's Regards": {
+                "name": "Damage Amplification (Lord Dominik's Regards)",
+                "total_damage": 30.0,
+            },
+            "damage_amp_Horizon Focus": {
+                "name": "Damage Amplification (Horizon Focus)",
+                "total_damage": 10.0,
+            },
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        # auto ratio 0.75: 150 + 40*0.75 = 180; ability 50 + 40*0.25 = 60
+        assert auto == pytest.approx(180.0)
+        assert ability == pytest.approx(60.0)
 
     def test_sundered_sky_excluded_and_not_redistributed(self) -> None:
         # sundered_sky is a display-only row: excluded from both buckets
@@ -4664,7 +4688,10 @@ class TestSplitAutoVsAbility:
         # With no attributable damage there is no ratio to split by;
         # amp/execute damage is dropped entirely.
         breakdown = {
-            "damage_amplification": {"name": "Amp", "total_damage": 40.0},
+            "damage_amp_Lord Dominik's Regards": {
+                "name": "Damage Amplification (Lord Dominik's Regards)",
+                "total_damage": 40.0,
+            },
             "execute": {"name": "Execute", "total_damage": 20.0},
         }
         auto, ability = split_auto_vs_ability(breakdown)

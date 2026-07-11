@@ -2098,7 +2098,7 @@ def split_auto_vs_ability(
     - Entries whose ``note`` contains "included in" are informational only
       (e.g. Actualizer's amp row) — their damage is already counted in
       other rows, so they are skipped.
-    - ``damage_amplification`` and ``execute`` rows amplify both buckets,
+    - ``damage_amp_<source>`` and ``execute`` rows amplify both buckets,
       so their damage is redistributed proportionally to the pre-amp
       auto/ability ratio (dropped entirely if that total is zero).
     - ``sundered_sky`` is a display-only row and is excluded outright.
@@ -2106,6 +2106,7 @@ def split_auto_vs_ability(
     """
     auto_attack_damage = 0.0
     ability_damage = 0.0
+    redistributed_damage = 0.0  # damage_amp_<source> + execute rows
 
     on_hit_prefixes = ("on_hit_", "spellblade_")
 
@@ -2121,21 +2122,20 @@ def split_auto_vs_ability(
             or key.startswith(on_hit_prefixes)
         ):
             auto_attack_damage += dmg
-        elif key in ("damage_amplification", "execute", "sundered_sky"):
-            # Handled below (amp/execute redistribution); sundered_sky is
-            # display-only (0 damage).
-            pass
+        elif key.startswith("damage_amp_") or key == "execute":
+            # Amplifiers scale both buckets — redistribute proportionally
+            # below instead of attributing to either bucket.
+            redistributed_damage += dmg
+        elif key == "sundered_sky":
+            pass  # Display-only row.
         else:
             ability_damage += dmg
 
     # Damage amplification and execute — split proportionally.
-    amp_dmg = breakdown.get("damage_amplification", {}).get("total_damage", 0.0)
-    exec_dmg = breakdown.get("execute", {}).get("total_damage", 0.0)
-
     pre_amp_total = auto_attack_damage + ability_damage
     if pre_amp_total > 0:
         auto_ratio = auto_attack_damage / pre_amp_total
-        auto_attack_damage += (amp_dmg + exec_dmg) * auto_ratio
-        ability_damage += (amp_dmg + exec_dmg) * (1 - auto_ratio)
+        auto_attack_damage += redistributed_damage * auto_ratio
+        ability_damage += redistributed_damage * (1 - auto_ratio)
 
     return auto_attack_damage, ability_damage
