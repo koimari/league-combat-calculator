@@ -86,6 +86,36 @@ changes which fight-engine keys it emits — that's the signal to split or go cu
 Projected: ~3,100 lines (12 modules + common + generic_parser) → ~1,050, with adding a
 champion = 2-file touch (module + registry line; conftest fixture optional).
 
+## Stress-test amendments (whiteboarded Aphelios, Xerath, Lucian, Bel'Veth, Hwei, Illaoi)
+
+Six-champion whiteboard against real JSON shapes produced four interface amendments:
+
+1. **`casts` accepts int or attribute name** — Xerath R's recast count is itself leveling
+   data ("Number of Recasts"), not a constant like Ahri's ×3.
+2. **Within-phase ordering is map insertion order** (deterministic, declared), and
+   `ctx.results` is readable within a phase; cross-slot dependents list after their
+   dependency. Illaoi falsified the earlier "order within a phase is irrelevant" claim:
+   her Q's only attribute is "Damage Increase" — Q is defined in terms of P's computed
+   slam damage. Cross-PHASE ordering (BUFF before DAMAGE) remains engine-guaranteed.
+3. **`source=(slot, index)` and `cooldown_from` are first-class factory params** — the
+   JSON stores Hwei's subspells (Q entries 1-3 under a cooldown-bearing container at
+   index 0) and Aphelios's five weapon Qs (entries 1-5) as multi-entry slots; Ambessa Q2
+   already needed this informally.
+4. **`ranks="level"` mode** — Aphelios's Q/W/E take no skill points; damage scales via
+   per-level modifiers with rank pinned (the Aatrox-P mechanism generalized).
+
+Confidence result: the ≥2-users archetype rule held — the stress test PROMOTED archetypes
+(Lucian's Lightslinger joins Akshan's double-shot; Illaoi W is the third
+on_hit_pct_health-with-floor user; Bel'Veth's modified autos likely join Ashe's
+auto_attack_override) rather than breaking any.
+
+Scope honesty: for weapon/subspell champions (Aphelios, Hwei) the parse layer is NOT the
+binding constraint — app.py validates cast order as a Q/W/E/R permutation and the
+rotation engine assumes four castable slots. Product-level rotation/UI work for such
+kits is an explicit non-goal of Phase 3. Prose-sourced values (Lucian R shot count,
+passive ratio; Aphelios weapon behaviors) remain custom-fn territory, per the
+data-vs-behavior boundary.
+
 ## Alternatives considered
 
 - Pure declarative spec DSL (Design A): most uniform, but invents a config language with
