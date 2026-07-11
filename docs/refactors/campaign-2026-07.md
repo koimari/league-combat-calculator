@@ -7,13 +7,15 @@ Branch: `feature/build-optimizer`. Baseline commit: `a5627bd` (WIP), data update
 
 1. Wiki data was re-pulled at campaign start (patch 16.13.1). Do NOT re-pull again mid-campaign.
 2. Run the full suite with the project venv: `.venv/Scripts/python.exe -m pytest -q`
-3. **Baseline pass/fail set** (established 2026-07-10, after re-pull): 652 passed, 9 failed.
-   Refactor phases must keep every baseline-passing test passing with identical values —
-   calculations replicate to the 2nd decimal. The 9 baseline failures are being triaged
-   separately (patch drift vs parser regression); do not "fix" them inside a refactor phase.
-4. Golden snapshot: `scripts/golden_snapshot.py` (built in Phase 0). After any refactor phase:
-   `capture` to a temp file and `compare` against `scripts/golden_baseline.json` — must be
-   identical to 2 decimals.
+3. **Baseline pass/fail set** (updated after Phase 0b): **656 passed, 0 failed.**
+   Refactor phases must keep the suite fully green with identical values —
+   calculations replicate to the 2nd decimal.
+4. Golden snapshot: `scripts/golden_snapshot.py`. After any refactor phase: `capture` to a
+   temp file and `compare` against `scripts/golden_baseline.json` — must be identical to
+   2 decimals. Coverage: all-champion stats/abilities, one-rotation AND sustained
+   (auto_attack_uptime=1.0) fights for registered champions, and a 324-item sweep with
+   autos enabled (on-hit paths exercised). **If compare shows ANY diff, stop and report
+   to the orchestrator — never re-capture the baseline inside a refactor phase.**
 
 ## Baseline failures under triage
 

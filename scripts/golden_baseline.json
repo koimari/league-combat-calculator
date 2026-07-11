@@ -18390,7 +18390,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 722.2
+        "total_damage": 880.2
       },
       "vayne": {
         "breakdown_keys": [
@@ -18398,9 +18398,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Actualizer": {
@@ -18413,7 +18414,7 @@
           "ability_amp_Actualizer",
           "auto_attacks"
         ],
-        "total_damage": 1054.16
+        "total_damage": 1212.16
       },
       "vayne": {
         "breakdown_keys": [
@@ -18422,9 +18423,10 @@
           "R",
           "W",
           "ability_amp_Actualizer",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 297.58
+        "total_damage": 860.25
       }
     },
     "Aether Wisp": {
@@ -18436,7 +18438,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 741.14
+        "total_damage": 899.14
       },
       "vayne": {
         "breakdown_keys": [
@@ -18444,9 +18446,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 235.43
+        "total_damage": 798.1
       }
     },
     "Amplifying Tome": {
@@ -18458,7 +18461,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 713.86
+        "total_damage": 871.86
       },
       "vayne": {
         "breakdown_keys": [
@@ -18466,9 +18469,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 232.1
+        "total_damage": 794.77
       }
     },
     "Anathema's Chains": {
@@ -18480,7 +18484,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -18488,9 +18492,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Anti-Tower Socks": {
@@ -18502,7 +18507,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -18510,9 +18515,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Arcane Sweeper (Trinket)": {
@@ -18524,7 +18530,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -18532,9 +18538,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Archangel's Staff": {
@@ -18546,7 +18553,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 866.66
+        "total_damage": 1024.66
       },
       "vayne": {
         "breakdown_keys": [
@@ -18554,9 +18561,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 250.77
+        "total_damage": 813.43
       }
     },
     "Ardent Censer": {
@@ -18568,7 +18576,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 782.07
+        "total_damage": 940.07
       },
       "vayne": {
         "breakdown_keys": [
@@ -18576,9 +18584,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 240.43
+        "total_damage": 803.1
       }
     },
     "Armored Advance": {
@@ -18590,7 +18599,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -18598,9 +18607,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Atma's Reckoning": {
@@ -18612,7 +18622,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 848.89
       },
       "vayne": {
         "breakdown_keys": [
@@ -18620,9 +18630,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 857.97
       }
     },
     "Axiom Arc": {
@@ -18634,7 +18645,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 957.51
       },
       "vayne": {
         "breakdown_keys": [
@@ -18642,9 +18653,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 348.78
+        "total_damage": 1114.04
       }
     },
     "B. F. Sword": {
@@ -18656,7 +18668,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 897.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -18664,9 +18676,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 289.43
+        "total_damage": 958.77
       }
     },
     "Bami's Cinder": {
@@ -18678,7 +18691,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -18686,9 +18699,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Bandleglass Mirror": {
@@ -18700,7 +18714,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 713.86
+        "total_damage": 871.86
       },
       "vayne": {
         "breakdown_keys": [
@@ -18708,9 +18722,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 232.1
+        "total_damage": 794.77
       }
     },
     "Bandlepipes": {
@@ -18722,7 +18737,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 869.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -18730,9 +18745,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Banshee's Veil": {
@@ -18744,7 +18760,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 945.79
+        "total_damage": 1103.79
       },
       "vayne": {
         "breakdown_keys": [
@@ -18752,9 +18768,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 260.43
+        "total_damage": 823.1
       }
     },
     "Base Turret Reinforced Armor (Turret Item)": {
@@ -18766,7 +18783,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -18774,9 +18791,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Bastionbreaker": {
@@ -18789,7 +18807,7 @@
           "auto_attacks",
           "shaped_charge_Bastionbreaker"
         ],
-        "total_damage": 690.79
+        "total_damage": 996.67
       },
       "vayne": {
         "breakdown_keys": [
@@ -18798,9 +18816,10 @@
           "R",
           "W",
           "auto_attacks",
+          "on_hit_ability_W",
           "shaped_charge_Bastionbreaker"
         ],
-        "total_damage": 389.24
+        "total_damage": 1168.69
       }
     },
     "Berserker's Greaves": {
@@ -18812,7 +18831,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 869.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -18820,9 +18839,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.77
       }
     },
     "Black Cleaver": {
@@ -18834,7 +18854,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 917.98
       },
       "vayne": {
         "breakdown_keys": [
@@ -18842,9 +18862,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 301.49
+        "total_damage": 1023.59
       }
     },
     "Black Hole Gauntlet": {
@@ -18856,7 +18877,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -18864,9 +18885,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Black Spear": {
@@ -18878,7 +18900,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -18886,9 +18908,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Blackfire Torch": {
@@ -18901,7 +18924,7 @@
           "auto_attacks",
           "burn_Blackfire Torch"
         ],
-        "total_damage": 970.85
+        "total_damage": 1128.85
       },
       "vayne": {
         "breakdown_keys": [
@@ -18910,9 +18933,10 @@
           "R",
           "W",
           "auto_attacks",
-          "burn_Blackfire Torch"
+          "burn_Blackfire Torch",
+          "on_hit_ability_W"
         ],
-        "total_damage": 338.19
+        "total_damage": 900.86
       }
     },
     "Blade of the Ruined King": {
@@ -18922,9 +18946,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_Blade of the Ruined King"
         ],
-        "total_damage": 659.29
+        "total_damage": 1259.39
       },
       "vayne": {
         "breakdown_keys": [
@@ -18932,9 +18957,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_Blade of the Ruined King",
+          "on_hit_ability_W"
         ],
-        "total_damage": 289.43
+        "total_damage": 1431.05
       }
     },
     "Blasting Wand": {
@@ -18946,7 +18973,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 782.07
+        "total_damage": 940.07
       },
       "vayne": {
         "breakdown_keys": [
@@ -18954,9 +18981,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 240.43
+        "total_damage": 803.1
       }
     },
     "Blighting Jewel": {
@@ -18968,7 +18996,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 749.87
+        "total_damage": 907.87
       },
       "vayne": {
         "breakdown_keys": [
@@ -18976,9 +19004,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 233.77
+        "total_damage": 796.43
       }
     },
     "Bloodletter's Curse": {
@@ -18990,7 +19019,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 881.68
+        "total_damage": 1039.68
       },
       "vayne": {
         "breakdown_keys": [
@@ -18998,9 +19027,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 247.1
+        "total_damage": 809.77
       }
     },
     "Bloodsong": {
@@ -19010,9 +19040,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "expose_weakness_Bloodsong",
+          "spellblade_Bloodsong"
         ],
-        "total_damage": 659.29
+        "total_damage": 951.91
       },
       "vayne": {
         "breakdown_keys": [
@@ -19020,9 +19052,12 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "expose_weakness_Bloodsong",
+          "on_hit_ability_W",
+          "spellblade_Bloodsong"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.82
       }
     },
     "Bloodthirster": {
@@ -19034,7 +19069,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 977.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19042,9 +19077,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 353.43
+        "total_damage": 1129.43
       }
     },
     "Boots": {
@@ -19056,7 +19092,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19064,9 +19100,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Boots of Swiftness": {
@@ -19078,7 +19115,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19086,9 +19123,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Bounty of Worlds": {
@@ -19100,7 +19138,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19108,9 +19146,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Bramble Vest": {
@@ -19122,7 +19161,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19130,9 +19169,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Cappa Juice": {
@@ -19144,7 +19184,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19152,9 +19192,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Catalyst of Aeons": {
@@ -19166,7 +19207,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19174,9 +19215,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Caulfield's Warhammer": {
@@ -19188,7 +19230,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 857.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19196,9 +19238,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 257.43
+        "total_damage": 873.43
       }
     },
     "Celestial Opposition": {
@@ -19210,7 +19253,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19218,9 +19261,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Chain Vest": {
@@ -19232,7 +19276,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19240,9 +19284,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Chainlaced Crushers": {
@@ -19254,7 +19299,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19262,9 +19307,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Chempunk Chainsword": {
@@ -19276,7 +19322,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 907.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19284,9 +19330,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 297.43
+        "total_damage": 980.1
       }
     },
     "Cloak of Agility": {
@@ -19298,7 +19345,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 840.99
       },
       "vayne": {
         "breakdown_keys": [
@@ -19306,9 +19353,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 840.5
       }
     },
     "Cloak of Starry Night": {
@@ -19320,7 +19368,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19328,9 +19376,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Cloth Armor": {
@@ -19342,7 +19391,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19350,9 +19399,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Control Ward": {
@@ -19364,7 +19414,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19372,9 +19422,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Cosmic Drive": {
@@ -19386,7 +19437,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 850.29
+        "total_damage": 1008.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19394,9 +19445,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 248.77
+        "total_damage": 811.43
       }
     },
     "Crimson Lucidity": {
@@ -19408,7 +19460,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19416,9 +19468,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Crown of the Shattered Queen": {
@@ -19430,7 +19483,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 891.21
+        "total_damage": 1049.21
       },
       "vayne": {
         "breakdown_keys": [
@@ -19438,9 +19491,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 253.77
+        "total_damage": 816.43
       }
     },
     "Cruelty": {
@@ -19452,7 +19506,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 877.57
+        "total_damage": 1035.57
       },
       "vayne": {
         "breakdown_keys": [
@@ -19460,9 +19514,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 252.1
+        "total_damage": 814.77
       }
     },
     "Cryptbloom": {
@@ -19474,7 +19529,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 928.75
+        "total_damage": 1086.75
       },
       "vayne": {
         "breakdown_keys": [
@@ -19482,9 +19537,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 250.43
+        "total_damage": 813.1
       }
     },
     "Crystalline Bracer": {
@@ -19496,7 +19552,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19504,9 +19560,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Crystalline Overgrowth": {
@@ -19518,7 +19575,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19526,9 +19583,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Cull": {
@@ -19540,7 +19598,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 831.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19548,9 +19606,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 236.63
+        "total_damage": 817.97
       }
     },
     "Dagger": {
@@ -19562,7 +19621,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 869.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -19570,9 +19629,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Dark Seal": {
@@ -19584,7 +19644,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 700.21
+        "total_damage": 858.21
       },
       "vayne": {
         "breakdown_keys": [
@@ -19592,9 +19652,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 230.43
+        "total_damage": 793.1
       }
     },
     "Darksteel Talons": {
@@ -19606,7 +19667,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 922.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -19614,9 +19675,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.77
       }
     },
     "Dawncore": {
@@ -19628,7 +19690,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 809.36
+        "total_damage": 967.36
       },
       "vayne": {
         "breakdown_keys": [
@@ -19636,9 +19698,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 243.77
+        "total_damage": 806.43
       }
     },
     "Dead Man's Plate": {
@@ -19648,9 +19711,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_once_Dead Man's Plate"
         ],
-        "total_damage": 659.29
+        "total_damage": 896.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -19658,9 +19722,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "on_hit_once_Dead Man's Plate"
         ],
-        "total_damage": 225.43
+        "total_damage": 868.77
       }
     },
     "Death's Dance": {
@@ -19672,7 +19738,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 937.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19680,9 +19746,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 321.43
+        "total_damage": 1044.1
       }
     },
     "Death's Daughter": {
@@ -19694,7 +19761,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19702,9 +19769,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Decapitator": {
@@ -19716,7 +19784,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 922.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -19724,9 +19792,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.77
       }
     },
     "Demon King's Crown": {
@@ -19738,7 +19807,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19746,9 +19815,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Demonic Embrace": {
@@ -19760,7 +19830,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 877.57
+        "total_damage": 1035.57
       },
       "vayne": {
         "breakdown_keys": [
@@ -19768,9 +19838,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 252.1
+        "total_damage": 814.77
       }
     },
     "Detonation Orb": {
@@ -19782,7 +19853,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 972.81
+        "total_damage": 1130.81
       },
       "vayne": {
         "breakdown_keys": [
@@ -19790,9 +19861,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 255.43
+        "total_damage": 818.1
       }
     },
     "Diadem of Songs": {
@@ -19804,7 +19876,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19812,9 +19884,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Diamond-Tipped Spear": {
@@ -19826,7 +19899,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 869.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -19834,9 +19907,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.77
       }
     },
     "Divine Sunderer": {
@@ -19848,7 +19922,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 927.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19856,9 +19930,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 313.43
+        "total_damage": 1022.77
       }
     },
     "Doran's Blade": {
@@ -19870,7 +19945,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 837.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19878,9 +19953,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 241.43
+        "total_damage": 830.77
       }
     },
     "Doran's Bow": {
@@ -19892,7 +19968,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 891.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19900,9 +19976,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 238.23
+        "total_damage": 822.23
       }
     },
     "Doran's Helm": {
@@ -19914,7 +19991,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19922,9 +19999,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Doran's Ring": {
@@ -19936,7 +20014,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 708.4
+        "total_damage": 866.4
       },
       "vayne": {
         "breakdown_keys": [
@@ -19944,9 +20022,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 231.43
+        "total_damage": 794.1
       }
     },
     "Doran's Shield": {
@@ -19958,7 +20037,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19966,9 +20045,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Dragonheart": {
@@ -19980,7 +20060,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -19988,9 +20068,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Dream Maker": {
@@ -20002,7 +20083,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20010,9 +20091,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Dusk and Dawn": {
@@ -20022,9 +20104,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "spellblade_Dusk and Dawn"
         ],
-        "total_damage": 823.0
+        "total_damage": 1126.88
       },
       "vayne": {
         "breakdown_keys": [
@@ -20032,9 +20115,12 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "double_on_hit_Dusk and Dawn",
+          "on_hit_ability_W",
+          "spellblade_Dusk and Dawn"
         ],
-        "total_damage": 245.43
+        "total_damage": 1010.12
       }
     },
     "Duskblade of Draktharr": {
@@ -20046,7 +20132,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 950.02
       },
       "vayne": {
         "breakdown_keys": [
@@ -20054,9 +20140,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 344.19
+        "total_damage": 1101.43
       }
     },
     "Echoes of Helia": {
@@ -20068,7 +20155,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 754.79
+        "total_damage": 912.79
       },
       "vayne": {
         "breakdown_keys": [
@@ -20076,9 +20163,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 237.1
+        "total_damage": 799.77
       }
     },
     "Eclipse": {
@@ -20091,7 +20179,7 @@
           "auto_attacks",
           "proc_Eclipse"
         ],
-        "total_damage": 712.62
+        "total_damage": 990.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -20100,9 +20188,10 @@
           "R",
           "W",
           "auto_attacks",
+          "on_hit_ability_W",
           "proc_Eclipse"
         ],
-        "total_damage": 374.77
+        "total_damage": 1097.43
       }
     },
     "Edge of Night": {
@@ -20114,7 +20203,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 941.08
       },
       "vayne": {
         "breakdown_keys": [
@@ -20122,9 +20211,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 333.6
+        "total_damage": 1074.12
       }
     },
     "Eleisa's Miracle": {
@@ -20136,7 +20226,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20144,9 +20234,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Elixir of Avarice": {
@@ -20158,7 +20249,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20166,9 +20257,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Elixir of Force": {
@@ -20180,7 +20272,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20188,9 +20280,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Elixir of Iron": {
@@ -20202,7 +20295,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20210,9 +20303,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Elixir of Skill": {
@@ -20224,7 +20318,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20232,9 +20326,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Elixir of Sorcery": {
@@ -20246,7 +20341,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20254,9 +20349,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Elixir of Wrath": {
@@ -20268,7 +20364,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20276,9 +20372,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Empyrean Promise": {
@@ -20290,7 +20387,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 850.29
+        "total_damage": 1008.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20298,9 +20395,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 248.77
+        "total_damage": 811.43
       }
     },
     "Endless Hunger": {
@@ -20312,7 +20410,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 947.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20320,9 +20418,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 329.43
+        "total_damage": 1065.43
       }
     },
     "Enhanced Lucky Dice": {
@@ -20334,7 +20433,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20342,9 +20441,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Essence Reaver": {
@@ -20354,9 +20454,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "spellblade_Essence Reaver"
         ],
-        "total_damage": 659.29
+        "total_damage": 1130.12
       },
       "vayne": {
         "breakdown_keys": [
@@ -20364,9 +20465,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "spellblade_Essence Reaver"
         ],
-        "total_damage": 305.43
+        "total_damage": 1273.77
       }
     },
     "Everfrost": {
@@ -20378,7 +20481,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 932.14
+        "total_damage": 1090.14
       },
       "vayne": {
         "breakdown_keys": [
@@ -20386,9 +20489,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 258.77
+        "total_damage": 821.43
       }
     },
     "Executioner's Calling": {
@@ -20400,7 +20504,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 847.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20408,9 +20512,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 249.43
+        "total_damage": 852.1
       }
     },
     "Experimental Hexplate": {
@@ -20422,7 +20527,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 1135.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20430,9 +20535,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 289.43
+        "total_damage": 1293.43
       }
     },
     "Eye of the Herald": {
@@ -20444,7 +20550,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20452,9 +20558,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Faerie Charm": {
@@ -20466,7 +20573,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20474,9 +20581,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Farsight Alteration": {
@@ -20488,7 +20596,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20496,9 +20604,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Fated Ashes": {
@@ -20510,7 +20619,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 741.14
+        "total_damage": 899.14
       },
       "vayne": {
         "breakdown_keys": [
@@ -20518,9 +20627,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 235.43
+        "total_damage": 798.1
       }
     },
     "Fiendhunter Bolts": {
@@ -20530,9 +20640,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "fiendhunter_true_damage"
         ],
-        "total_damage": 659.29
+        "total_damage": 1143.16
       },
       "vayne": {
         "breakdown_keys": [
@@ -20540,9 +20651,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "fiendhunter_true_damage",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 1347.81
       }
     },
     "Fiendish Codex": {
@@ -20554,7 +20667,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 727.5
+        "total_damage": 885.5
       },
       "vayne": {
         "breakdown_keys": [
@@ -20562,9 +20675,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 233.77
+        "total_damage": 796.43
       }
     },
     "Fimbulwinter": {
@@ -20576,7 +20690,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20584,9 +20698,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Fire at Will": {
@@ -20598,7 +20713,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20606,9 +20721,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Flesheater": {
@@ -20620,7 +20736,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20628,9 +20744,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Forbidden Idol": {
@@ -20642,7 +20759,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20650,9 +20767,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Force of Entropy": {
@@ -20664,7 +20782,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 856.79
       },
       "vayne": {
         "breakdown_keys": [
@@ -20672,9 +20790,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 875.43
       }
     },
     "Force of Nature": {
@@ -20686,7 +20805,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20694,9 +20813,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Frozen Heart": {
@@ -20708,7 +20828,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20716,9 +20836,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Fulmination": {
@@ -20730,7 +20851,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 1105.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -20738,9 +20859,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 313.43
+        "total_damage": 1200.1
       }
     },
     "Galeforce": {
@@ -20752,7 +20874,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 1139.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20760,9 +20882,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 329.43
+        "total_damage": 1412.77
       }
     },
     "Gambler's Blade": {
@@ -20774,7 +20897,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 975.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20782,9 +20905,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 1069.43
       }
     },
     "Gargoyle Stoneplate": {
@@ -20796,7 +20920,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20804,9 +20928,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Ghostcrawlers": {
@@ -20818,7 +20943,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20826,9 +20951,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Giant's Belt": {
@@ -20840,7 +20966,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20848,9 +20974,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Glacial Buckler": {
@@ -20862,7 +20989,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20870,9 +20997,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Glowing Mote": {
@@ -20884,7 +21012,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20892,9 +21020,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Gluttonous Greaves": {
@@ -20906,7 +21035,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20914,9 +21043,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Goredrinker": {
@@ -20928,7 +21058,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 927.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20936,9 +21066,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 313.43
+        "total_damage": 1022.77
       }
     },
     "Guardian Angel": {
@@ -20950,7 +21081,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 927.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -20958,9 +21089,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 313.43
+        "total_damage": 1022.77
       }
     },
     "Guardian's Amulet": {
@@ -20972,7 +21104,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 713.86
+        "total_damage": 871.86
       },
       "vayne": {
         "breakdown_keys": [
@@ -20980,9 +21112,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 232.1
+        "total_damage": 794.77
       }
     },
     "Guardian's Blade": {
@@ -20994,7 +21127,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 877.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21002,9 +21135,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 273.43
+        "total_damage": 916.1
       }
     },
     "Guardian's Dirk": {
@@ -21016,7 +21150,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 881.02
       },
       "vayne": {
         "breakdown_keys": [
@@ -21024,9 +21158,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 282.96
+        "total_damage": 939.75
       }
     },
     "Guardian's Hammer": {
@@ -21038,7 +21173,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 867.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21046,9 +21181,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 265.43
+        "total_damage": 894.77
       }
     },
     "Guardian's Horn": {
@@ -21060,7 +21196,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21068,9 +21204,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Guardian's Orb": {
@@ -21082,7 +21219,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 795.71
+        "total_damage": 953.71
       },
       "vayne": {
         "breakdown_keys": [
@@ -21090,9 +21227,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 242.1
+        "total_damage": 804.77
       }
     },
     "Guardian's Shroud": {
@@ -21104,7 +21242,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 754.79
+        "total_damage": 912.79
       },
       "vayne": {
         "breakdown_keys": [
@@ -21112,9 +21250,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 237.1
+        "total_damage": 799.77
       }
     },
     "Guinsoo's Rageblade": {
@@ -21127,7 +21266,7 @@
           "auto_attacks",
           "on_hit_Guinsoo's Rageblade"
         ],
-        "total_damage": 741.14
+        "total_damage": 1117.52
       },
       "vayne": {
         "breakdown_keys": [
@@ -21136,9 +21275,10 @@
           "R",
           "W",
           "auto_attacks",
-          "on_hit_Guinsoo's Rageblade"
+          "on_hit_Guinsoo's Rageblade",
+          "on_hit_ability_W"
         ],
-        "total_damage": 283.43
+        "total_damage": 1193.91
       }
     },
     "Gunmetal Greaves": {
@@ -21150,7 +21290,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 922.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -21158,9 +21298,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.77
       }
     },
     "Gusto": {
@@ -21172,7 +21313,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21180,9 +21321,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Gustwalker Hatchling": {
@@ -21194,7 +21336,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21202,9 +21344,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Hamstringer": {
@@ -21216,7 +21359,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 1175.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -21224,9 +21367,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 297.43
+        "total_damage": 1297.43
       }
     },
     "Haunting Guise": {
@@ -21238,7 +21382,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 741.14
+        "total_damage": 899.14
       },
       "vayne": {
         "breakdown_keys": [
@@ -21246,9 +21390,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 235.43
+        "total_damage": 798.1
       }
     },
     "Health Potion": {
@@ -21260,7 +21405,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21268,9 +21413,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Hearthbound Axe": {
@@ -21282,7 +21428,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 923.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21290,9 +21436,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 257.43
+        "total_damage": 873.43
       }
     },
     "Heartsteel": {
@@ -21302,9 +21449,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_once_Heartsteel"
         ],
-        "total_damage": 659.29
+        "total_damage": 960.07
       },
       "vayne": {
         "breakdown_keys": [
@@ -21312,9 +21460,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "on_hit_once_Heartsteel"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.93
       }
     },
     "Hellfire Hatchet": {
@@ -21326,7 +21476,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 903.8
       },
       "vayne": {
         "breakdown_keys": [
@@ -21334,9 +21484,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 301.82
+        "total_damage": 989.89
       }
     },
     "Hemomancer's Helm": {
@@ -21348,7 +21499,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 957.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21356,9 +21507,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 337.43
+        "total_damage": 1086.77
       }
     },
     "Hexbolt Companion": {
@@ -21370,7 +21522,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 975.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21378,9 +21530,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 1069.43
       }
     },
     "Hexdrinker": {
@@ -21392,7 +21545,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 867.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21400,9 +21553,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 265.43
+        "total_damage": 894.77
       }
     },
     "Hexoptics C44": {
@@ -21415,7 +21569,7 @@
           "auto_attacks",
           "basic_amp_Hexoptics C44"
         ],
-        "total_damage": 659.29
+        "total_damage": 1027.79
       },
       "vayne": {
         "breakdown_keys": [
@@ -21424,9 +21578,10 @@
           "R",
           "W",
           "auto_attacks",
-          "basic_amp_Hexoptics C44"
+          "basic_amp_Hexoptics C44",
+          "on_hit_ability_W"
         ],
-        "total_damage": 313.43
+        "total_damage": 1208.77
       }
     },
     "Hextech Alternator": {
@@ -21438,7 +21593,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 782.07
+        "total_damage": 940.07
       },
       "vayne": {
         "breakdown_keys": [
@@ -21446,9 +21601,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 240.43
+        "total_damage": 803.1
       }
     },
     "Hextech Gunblade": {
@@ -21461,7 +21617,7 @@
           "active_Hextech Gunblade",
           "auto_attacks"
         ],
-        "total_damage": 1052.42
+        "total_damage": 1290.42
       },
       "vayne": {
         "breakdown_keys": [
@@ -21470,9 +21626,10 @@
           "R",
           "W",
           "active_Hextech Gunblade",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 490.95
+        "total_damage": 1160.28
       }
     },
     "Hextech Rocketbelt": {
@@ -21485,7 +21642,7 @@
           "active_Hextech Rocketbelt",
           "auto_attacks"
         ],
-        "total_damage": 926.71
+        "total_damage": 1084.71
       },
       "vayne": {
         "breakdown_keys": [
@@ -21494,9 +21651,10 @@
           "R",
           "W",
           "active_Hextech Rocketbelt",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 325.2
+        "total_damage": 887.86
       }
     },
     "Hollow Radiance": {
@@ -21509,7 +21667,7 @@
           "auto_attacks",
           "immolate_Hollow Radiance"
         ],
-        "total_damage": 727.14
+        "total_damage": 885.14
       },
       "vayne": {
         "breakdown_keys": [
@@ -21518,9 +21676,10 @@
           "R",
           "W",
           "auto_attacks",
-          "immolate_Hollow Radiance"
+          "immolate_Hollow Radiance",
+          "on_hit_ability_W"
         ],
-        "total_damage": 293.29
+        "total_damage": 855.96
       }
     },
     "Horizon Focus": {
@@ -21533,7 +21692,7 @@
           "auto_attacks",
           "damage_amp_Horizon Focus"
         ],
-        "total_damage": 938.0
+        "total_damage": 1111.8
       },
       "vayne": {
         "breakdown_keys": [
@@ -21542,9 +21701,10 @@
           "R",
           "W",
           "auto_attacks",
-          "damage_amp_Horizon Focus"
+          "damage_amp_Horizon Focus",
+          "on_hit_ability_W"
         ],
-        "total_damage": 262.93
+        "total_damage": 881.87
       }
     },
     "Hubris": {
@@ -21556,7 +21716,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 957.51
       },
       "vayne": {
         "breakdown_keys": [
@@ -21564,9 +21724,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 348.78
+        "total_damage": 1114.04
       }
     },
     "Hullbreaker": {
@@ -21578,7 +21739,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 897.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21586,9 +21747,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 289.43
+        "total_damage": 958.77
       }
     },
     "Iceborn Gauntlet": {
@@ -21598,9 +21760,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "spellblade_Iceborn Gauntlet"
         ],
-        "total_damage": 659.29
+        "total_damage": 975.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21608,9 +21771,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "spellblade_Iceborn Gauntlet"
         ],
-        "total_damage": 225.43
+        "total_damage": 950.1
       }
     },
     "Immortal Path": {
@@ -21622,7 +21787,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21630,9 +21795,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Immortal Shieldbow": {
@@ -21644,7 +21810,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 994.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21652,9 +21818,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 313.43
+        "total_damage": 1146.77
       }
     },
     "Imperial Mandate": {
@@ -21666,7 +21833,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 823.0
+        "total_damage": 981.0
       },
       "vayne": {
         "breakdown_keys": [
@@ -21674,9 +21841,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 245.43
+        "total_damage": 808.1
       }
     },
     "Infinity Edge": {
@@ -21688,7 +21856,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 1067.39
       },
       "vayne": {
         "breakdown_keys": [
@@ -21696,9 +21864,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 345.43
+        "total_damage": 1286.63
       }
     },
     "Innervating Locket": {
@@ -21710,7 +21879,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 850.29
+        "total_damage": 1008.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21718,9 +21887,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 248.77
+        "total_damage": 811.43
       }
     },
     "Ionian Boots of Lucidity": {
@@ -21732,7 +21902,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21740,9 +21910,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Jak'Sho, The Protean": {
@@ -21754,7 +21925,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21762,9 +21933,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Jarvan I's": {
@@ -21776,7 +21948,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 708.44
+        "total_damage": 919.1
       },
       "vayne": {
         "breakdown_keys": [
@@ -21784,9 +21956,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.77
       }
     },
     "Juice of Haste": {
@@ -21798,7 +21971,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21806,9 +21979,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Juice of Power": {
@@ -21820,7 +21994,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21828,9 +22002,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Juice of Vitality": {
@@ -21842,7 +22017,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21850,9 +22025,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Kaenic Rookern": {
@@ -21864,7 +22040,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21872,9 +22048,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Kindlegem": {
@@ -21886,7 +22063,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21894,9 +22071,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Kinkou Jitte": {
@@ -21908,7 +22086,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21916,9 +22094,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Knight's Vow": {
@@ -21930,7 +22109,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -21938,9 +22117,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Kraken Slayer": {
@@ -21950,9 +22130,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_Kraken Slayer"
         ],
-        "total_damage": 659.29
+        "total_damage": 1166.08
       },
       "vayne": {
         "breakdown_keys": [
@@ -21960,9 +22141,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_Kraken Slayer",
+          "on_hit_ability_W"
         ],
-        "total_damage": 297.43
+        "total_damage": 1250.03
       }
     },
     "Last Whisper": {
@@ -21974,7 +22157,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 869.92
       },
       "vayne": {
         "breakdown_keys": [
@@ -21982,9 +22165,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 273.87
+        "total_damage": 915.57
       }
     },
     "Legendary Assassin Item": {
@@ -21996,7 +22180,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22004,9 +22188,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Legendary Fighter Item": {
@@ -22018,7 +22203,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22026,9 +22211,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Legendary Mage Item": {
@@ -22040,7 +22226,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22048,9 +22234,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Legendary Marksman Item": {
@@ -22062,7 +22249,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22070,9 +22257,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Legendary Support Item": {
@@ -22084,7 +22272,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22092,9 +22280,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Legendary Tank Item": {
@@ -22106,7 +22295,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22114,9 +22303,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Liandry's Torment": {
@@ -22130,7 +22320,7 @@
           "burn_Liandry's Torment",
           "damage_amp_Liandry's Torment"
         ],
-        "total_damage": 1009.55
+        "total_damage": 1172.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22140,9 +22330,10 @@
           "W",
           "auto_attacks",
           "burn_Liandry's Torment",
-          "damage_amp_Liandry's Torment"
+          "damage_amp_Liandry's Torment",
+          "on_hit_ability_W"
         ],
-        "total_damage": 414.65
+        "total_damage": 994.2
       }
     },
     "Lich Bane": {
@@ -22152,9 +22343,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "spellblade_Lich Bane"
         ],
-        "total_damage": 932.14
+        "total_damage": 1239.07
       },
       "vayne": {
         "breakdown_keys": [
@@ -22162,9 +22354,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "spellblade_Lich Bane"
         ],
-        "total_damage": 258.77
+        "total_damage": 972.5
       }
     },
     "Lifeline": {
@@ -22176,7 +22370,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 873.31
       },
       "vayne": {
         "breakdown_keys": [
@@ -22184,9 +22378,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 273.12
+        "total_damage": 914.5
       }
     },
     "Lightning Rod": {
@@ -22198,7 +22393,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22206,9 +22401,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Locket of the Iron Solari": {
@@ -22220,7 +22416,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22228,9 +22424,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Long Sword": {
@@ -22242,7 +22439,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 837.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22250,9 +22447,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 241.43
+        "total_damage": 830.77
       }
     },
     "Lord Dominik's Regards": {
@@ -22264,7 +22462,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 981.93
       },
       "vayne": {
         "breakdown_keys": [
@@ -22272,9 +22470,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 318.6
+        "total_damage": 1158.35
       }
     },
     "Lost Chapter": {
@@ -22286,7 +22485,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 768.43
+        "total_damage": 926.43
       },
       "vayne": {
         "breakdown_keys": [
@@ -22294,9 +22493,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 238.77
+        "total_damage": 801.43
       }
     },
     "Lucky Dice": {
@@ -22308,7 +22508,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22316,9 +22516,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Luden's Echo": {
@@ -22331,7 +22532,7 @@
           "auto_attacks",
           "proc_Luden's Echo"
         ],
-        "total_damage": 1046.43
+        "total_damage": 1204.43
       },
       "vayne": {
         "breakdown_keys": [
@@ -22340,9 +22541,10 @@
           "R",
           "W",
           "auto_attacks",
+          "on_hit_ability_W",
           "proc_Luden's Echo"
         ],
-        "total_damage": 373.05
+        "total_damage": 935.72
       }
     },
     "Malignance": {
@@ -22355,7 +22557,7 @@
           "auto_attacks",
           "ult_proc_Malignance"
         ],
-        "total_damage": 1129.12
+        "total_damage": 1287.12
       },
       "vayne": {
         "breakdown_keys": [
@@ -22364,9 +22566,10 @@
           "R",
           "W",
           "auto_attacks",
+          "on_hit_ability_W",
           "ult_proc_Malignance"
         ],
-        "total_damage": 404.28
+        "total_damage": 966.95
       }
     },
     "Manamune": {
@@ -22378,7 +22581,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 887.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22386,9 +22589,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 281.43
+        "total_damage": 937.43
       }
     },
     "Maw of Malmortius": {
@@ -22400,7 +22604,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 937.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22408,9 +22612,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 321.43
+        "total_damage": 1044.1
       }
     },
     "Mejai's Soulstealer": {
@@ -22422,7 +22627,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 713.86
+        "total_damage": 871.86
       },
       "vayne": {
         "breakdown_keys": [
@@ -22430,9 +22635,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 232.1
+        "total_damage": 794.77
       }
     },
     "Mercurial Scimitar": {
@@ -22444,7 +22650,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 917.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22452,9 +22658,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 305.43
+        "total_damage": 1001.43
       }
     },
     "Mercury's Treads": {
@@ -22466,7 +22673,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22474,9 +22681,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Mikael's Blessing": {
@@ -22488,7 +22696,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22496,9 +22704,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Mirage Blade": {
@@ -22510,7 +22719,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 922.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -22518,9 +22727,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 1069.43
       }
     },
     "Moonflair Spellblade": {
@@ -22532,7 +22742,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 891.21
+        "total_damage": 1049.21
       },
       "vayne": {
         "breakdown_keys": [
@@ -22540,9 +22750,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 253.77
+        "total_damage": 816.43
       }
     },
     "Moonstone Renewer": {
@@ -22554,7 +22765,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 727.5
+        "total_damage": 885.5
       },
       "vayne": {
         "breakdown_keys": [
@@ -22562,9 +22773,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 233.77
+        "total_damage": 796.43
       }
     },
     "Morellonomicon": {
@@ -22576,7 +22788,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 863.93
+        "total_damage": 1021.93
       },
       "vayne": {
         "breakdown_keys": [
@@ -22584,9 +22796,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 250.43
+        "total_damage": 813.1
       }
     },
     "Mortal Reminder": {
@@ -22598,7 +22811,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 975.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -22606,9 +22819,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 312.7
+        "total_damage": 1140.85
       }
     },
     "Mosstomper Seedling": {
@@ -22620,7 +22834,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22628,9 +22842,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Multitool": {
@@ -22642,7 +22857,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22650,9 +22865,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Muramana": {
@@ -22666,7 +22882,7 @@
           "muramana_ability",
           "on_hit_Muramana"
         ],
-        "total_damage": 855.73
+        "total_damage": 1189.01
       },
       "vayne": {
         "breakdown_keys": [
@@ -22676,9 +22892,10 @@
           "W",
           "auto_attacks",
           "muramana_ability",
-          "on_hit_Muramana"
+          "on_hit_Muramana",
+          "on_hit_ability_W"
         ],
-        "total_damage": 453.39
+        "total_damage": 1241.3
       }
     },
     "Nashor's Tooth": {
@@ -22691,7 +22908,7 @@
           "auto_attacks",
           "on_hit_Nashor's Tooth"
         ],
-        "total_damage": 877.57
+        "total_damage": 1237.33
       },
       "vayne": {
         "breakdown_keys": [
@@ -22700,9 +22917,10 @@
           "R",
           "W",
           "auto_attacks",
-          "on_hit_Nashor's Tooth"
+          "on_hit_Nashor's Tooth",
+          "on_hit_ability_W"
         ],
-        "total_damage": 252.1
+        "total_damage": 1051.86
       }
     },
     "Navori Flickerblade": {
@@ -22714,7 +22932,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 988.45
       },
       "vayne": {
         "breakdown_keys": [
@@ -22722,9 +22940,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 1037.93
       }
     },
     "Needlessly Large Rod": {
@@ -22736,7 +22955,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 836.64
+        "total_damage": 994.64
       },
       "vayne": {
         "breakdown_keys": [
@@ -22744,9 +22963,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 247.1
+        "total_damage": 809.77
       }
     },
     "Negatron Cloak": {
@@ -22758,7 +22978,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22766,9 +22986,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Night Harvester": {
@@ -22780,7 +23001,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 904.86
+        "total_damage": 1062.86
       },
       "vayne": {
         "breakdown_keys": [
@@ -22788,9 +23009,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 255.43
+        "total_damage": 818.1
       }
     },
     "Noonquiver": {
@@ -22802,7 +23024,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 884.89
       },
       "vayne": {
         "breakdown_keys": [
@@ -22810,9 +23032,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 249.43
+        "total_damage": 929.97
       }
     },
     "Null-Magic Mantle": {
@@ -22824,7 +23047,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22832,9 +23055,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Oblivion Orb": {
@@ -22846,7 +23070,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 727.5
+        "total_damage": 885.5
       },
       "vayne": {
         "breakdown_keys": [
@@ -22854,9 +23078,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 233.77
+        "total_damage": 796.43
       }
     },
     "Ohmwrecker (Turret Item)": {
@@ -22868,7 +23093,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 834.84
       },
       "vayne": {
         "breakdown_keys": [
@@ -22876,9 +23101,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 250.48
+        "total_damage": 851.96
       }
     },
     "Oracle Lens": {
@@ -22890,7 +23116,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22898,9 +23124,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Overcharged": {
@@ -22912,7 +23139,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22920,9 +23147,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Overlord's Bloodmail": {
@@ -22934,7 +23162,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 905.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22942,9 +23170,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 295.07
+        "total_damage": 975.07
       }
     },
     "Perplexity": {
@@ -22956,7 +23185,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 884.69
+        "total_damage": 1055.19
       },
       "vayne": {
         "breakdown_keys": [
@@ -22964,9 +23193,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 264.86
+        "total_damage": 855.17
       }
     },
     "Phage": {
@@ -22978,7 +23208,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 847.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -22986,9 +23216,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 249.43
+        "total_damage": 852.1
       }
     },
     "Phantom Dancer": {
@@ -23000,7 +23231,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 988.45
       },
       "vayne": {
         "breakdown_keys": [
@@ -23008,9 +23239,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 1200.43
       }
     },
     "Phreakish Gusto": {
@@ -23022,7 +23254,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23030,9 +23262,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Pickaxe": {
@@ -23044,7 +23277,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 867.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23052,9 +23285,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 265.43
+        "total_damage": 894.77
       }
     },
     "Plated Steelcaps": {
@@ -23066,7 +23300,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23074,9 +23308,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Poro-Snax": {
@@ -23088,7 +23323,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23096,9 +23331,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Prismatic Item": {
@@ -23110,7 +23346,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23118,9 +23354,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Profane Hydra": {
@@ -23133,7 +23370,7 @@
           "active_Profane Hydra",
           "auto_attacks"
         ],
-        "total_damage": 738.81
+        "total_damage": 1037.03
       },
       "vayne": {
         "breakdown_keys": [
@@ -23142,9 +23379,10 @@
           "R",
           "W",
           "active_Profane Hydra",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 459.16
+        "total_damage": 1224.42
       }
     },
     "Protoplasm Harness": {
@@ -23156,7 +23394,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23164,9 +23402,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Prowler's Claw": {
@@ -23178,7 +23417,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 965.17
       },
       "vayne": {
         "breakdown_keys": [
@@ -23186,9 +23425,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 357.74
+        "total_damage": 1137.19
       }
     },
     "Puppeteer": {
@@ -23200,7 +23440,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 869.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -23208,9 +23448,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.77
       }
     },
     "Pyromancer's Cloak": {
@@ -23222,7 +23463,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23230,9 +23471,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Quicksilver Sash": {
@@ -23244,7 +23486,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23252,9 +23494,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Rabadon's Deathcap": {
@@ -23266,7 +23509,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 1120.41
+        "total_damage": 1278.41
       },
       "vayne": {
         "breakdown_keys": [
@@ -23274,9 +23517,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 281.77
+        "total_damage": 844.43
       }
     },
     "Radiant Virtue": {
@@ -23288,7 +23532,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23296,9 +23540,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Raise Morale": {
@@ -23310,7 +23555,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23318,9 +23563,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Randuin's Omen": {
@@ -23332,7 +23578,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23340,9 +23586,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Rapid Firecannon": {
@@ -23352,9 +23599,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_once_Rapid Firecannon"
         ],
-        "total_damage": 659.29
+        "total_damage": 1017.02
       },
       "vayne": {
         "breakdown_keys": [
@@ -23362,9 +23610,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "on_hit_once_Rapid Firecannon"
         ],
-        "total_damage": 225.43
+        "total_damage": 1066.5
       }
     },
     "Ravenous Hydra": {
@@ -23377,7 +23627,7 @@
           "active_Ravenous Hydra",
           "auto_attacks"
         ],
-        "total_damage": 736.09
+        "total_damage": 1024.09
       },
       "vayne": {
         "breakdown_keys": [
@@ -23386,9 +23636,10 @@
           "R",
           "W",
           "active_Ravenous Hydra",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 433.97
+        "total_damage": 1169.97
       }
     },
     "Reality Fracture": {
@@ -23400,7 +23651,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 877.57
+        "total_damage": 1140.9
       },
       "vayne": {
         "breakdown_keys": [
@@ -23408,9 +23659,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 252.1
+        "total_damage": 955.43
       }
     },
     "Reaper's Toll": {
@@ -23422,7 +23674,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 922.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -23430,9 +23682,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.77
       }
     },
     "Rectrix": {
@@ -23444,7 +23697,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 847.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23452,9 +23705,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 249.43
+        "total_damage": 852.1
       }
     },
     "Recurve Bow": {
@@ -23466,7 +23720,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 869.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -23474,9 +23728,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Redemption": {
@@ -23488,7 +23743,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 741.14
+        "total_damage": 899.14
       },
       "vayne": {
         "breakdown_keys": [
@@ -23496,9 +23751,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 235.43
+        "total_damage": 798.1
       }
     },
     "Refillable Potion": {
@@ -23510,7 +23766,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23518,9 +23774,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Regicide": {
@@ -23532,7 +23789,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 962.93
       },
       "vayne": {
         "breakdown_keys": [
@@ -23540,9 +23797,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 351.08
+        "total_damage": 1120.72
       }
     },
     "Reinforced Armor (Turret Item)": {
@@ -23554,7 +23812,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23562,9 +23820,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Rejuvenation Bead": {
@@ -23576,7 +23835,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23584,9 +23843,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Reverberation": {
@@ -23598,7 +23858,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 922.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -23606,9 +23866,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.77
       }
     },
     "Riftmaker": {
@@ -23621,7 +23882,7 @@
           "auto_attacks",
           "damage_amp_Riftmaker"
         ],
-        "total_damage": 884.3
+        "total_damage": 1048.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -23630,9 +23891,10 @@
           "R",
           "W",
           "auto_attacks",
-          "damage_amp_Riftmaker"
+          "damage_amp_Riftmaker",
+          "on_hit_ability_W"
         ],
-        "total_damage": 258.72
+        "total_damage": 843.89
       }
     },
     "Rite of Ruin": {
@@ -23644,7 +23906,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 795.71
+        "total_damage": 993.21
       },
       "vayne": {
         "breakdown_keys": [
@@ -23652,9 +23914,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 242.1
+        "total_damage": 892.1
       }
     },
     "Rod of Ages": {
@@ -23666,7 +23929,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 782.07
+        "total_damage": 940.07
       },
       "vayne": {
         "breakdown_keys": [
@@ -23674,9 +23937,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 240.43
+        "total_damage": 803.1
       }
     },
     "Ruby Crystal": {
@@ -23688,7 +23952,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23696,9 +23960,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Runaan's Hurricane": {
@@ -23710,7 +23975,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 988.45
       },
       "vayne": {
         "breakdown_keys": [
@@ -23718,9 +23983,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 1037.93
       }
     },
     "Runecarver": {
@@ -23732,7 +23998,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 877.57
+        "total_damage": 1035.57
       },
       "vayne": {
         "breakdown_keys": [
@@ -23740,9 +24006,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 252.1
+        "total_damage": 814.77
       }
     },
     "Runic Compass": {
@@ -23754,7 +24021,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23762,9 +24029,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Rylai's Crystal Scepter": {
@@ -23776,7 +24044,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 836.64
+        "total_damage": 994.64
       },
       "vayne": {
         "breakdown_keys": [
@@ -23784,9 +24052,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 247.1
+        "total_damage": 809.77
       }
     },
     "Sanguine Gift": {
@@ -23798,7 +24067,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 877.57
+        "total_damage": 1035.57
       },
       "vayne": {
         "breakdown_keys": [
@@ -23806,9 +24075,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 252.1
+        "total_damage": 814.77
       }
     },
     "Sapphire Crystal": {
@@ -23820,7 +24090,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23828,9 +24098,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Scarecrow Effigy": {
@@ -23842,7 +24113,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23850,9 +24121,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Scorchclaw Pup": {
@@ -23864,7 +24136,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -23872,9 +24144,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Scout's Slingshot": {
@@ -23886,7 +24159,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 869.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -23894,9 +24167,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Seeker's Armguard": {
@@ -23908,7 +24182,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 768.43
+        "total_damage": 926.43
       },
       "vayne": {
         "breakdown_keys": [
@@ -23916,9 +24190,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 238.77
+        "total_damage": 801.43
       }
     },
     "Seraph's Embrace": {
@@ -23930,7 +24205,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 904.86
+        "total_damage": 1062.86
       },
       "vayne": {
         "breakdown_keys": [
@@ -23938,9 +24213,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 255.43
+        "total_damage": 818.1
       }
     },
     "Serpent's Fang": {
@@ -23952,7 +24228,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 952.0
       },
       "vayne": {
         "breakdown_keys": [
@@ -23960,9 +24236,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 342.34
+        "total_damage": 1097.42
       }
     },
     "Serrated Dirk": {
@@ -23974,7 +24251,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 869.1
       },
       "vayne": {
         "breakdown_keys": [
@@ -23982,9 +24259,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 272.79
+        "total_damage": 912.81
       }
     },
     "Serylda's Grudge": {
@@ -23996,7 +24274,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 940.04
       },
       "vayne": {
         "breakdown_keys": [
@@ -24004,9 +24282,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 336.72
+        "total_damage": 1081.37
       }
     },
     "Shadowflame": {
@@ -24018,7 +24297,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 1051.76
+        "total_damage": 1209.76
       },
       "vayne": {
         "breakdown_keys": [
@@ -24026,9 +24305,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 262.1
+        "total_damage": 824.77
       }
     },
     "Shattered Armguard": {
@@ -24040,7 +24320,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 768.43
+        "total_damage": 926.43
       },
       "vayne": {
         "breakdown_keys": [
@@ -24048,9 +24328,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 238.77
+        "total_damage": 801.43
       }
     },
     "Sheen": {
@@ -24062,7 +24343,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24070,9 +24351,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Shield of Molten Stone": {
@@ -24084,7 +24366,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24092,9 +24374,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Shurelya's Battlesong": {
@@ -24106,7 +24389,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 795.71
+        "total_damage": 953.71
       },
       "vayne": {
         "breakdown_keys": [
@@ -24114,9 +24397,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 242.1
+        "total_damage": 804.77
       }
     },
     "Slightly Magical Boots": {
@@ -24128,7 +24412,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24136,9 +24420,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Solstice Sleigh": {
@@ -24150,7 +24435,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24158,9 +24443,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Sorcerer's Shoes": {
@@ -24172,7 +24458,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 708.44
+        "total_damage": 866.44
       },
       "vayne": {
         "breakdown_keys": [
@@ -24180,9 +24466,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Spear of Shojin": {
@@ -24195,7 +24482,7 @@
           "auto_attacks",
           "damage_amp_Spear of Shojin"
         ],
-        "total_damage": 698.84
+        "total_damage": 961.72
       },
       "vayne": {
         "breakdown_keys": [
@@ -24204,9 +24491,10 @@
           "R",
           "W",
           "auto_attacks",
-          "damage_amp_Spear of Shojin"
+          "damage_amp_Spear of Shojin",
+          "on_hit_ability_W"
         ],
-        "total_damage": 315.28
+        "total_damage": 1038.91
       }
     },
     "Spectral Cutlass": {
@@ -24218,7 +24506,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 941.08
       },
       "vayne": {
         "breakdown_keys": [
@@ -24226,9 +24514,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 333.6
+        "total_damage": 1074.12
       }
     },
     "Spectre's Cowl": {
@@ -24240,7 +24529,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24248,9 +24537,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Spellslinger's Shoes": {
@@ -24262,7 +24552,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 752.85
+        "total_damage": 910.85
       },
       "vayne": {
         "breakdown_keys": [
@@ -24270,9 +24560,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Spirit Visage": {
@@ -24284,7 +24575,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24292,9 +24583,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Staff of Flowing Water": {
@@ -24306,7 +24598,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 863.93
+        "total_damage": 1021.93
       },
       "vayne": {
         "breakdown_keys": [
@@ -24314,9 +24606,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 250.43
+        "total_damage": 813.1
       }
     },
     "Stat Bonus (ARAM: Mayhem)": {
@@ -24328,7 +24621,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24336,9 +24629,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Statikk Shiv": {
@@ -24348,9 +24642,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_once_Statikk Shiv"
         ],
-        "total_damage": 782.07
+        "total_damage": 1155.6
       },
       "vayne": {
         "breakdown_keys": [
@@ -24358,9 +24653,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "on_hit_once_Statikk Shiv"
         ],
-        "total_damage": 312.43
+        "total_damage": 1208.62
       }
     },
     "Stealth Ward": {
@@ -24372,7 +24669,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24380,9 +24677,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Steel Sigil": {
@@ -24394,7 +24692,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 847.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24402,9 +24700,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 249.43
+        "total_damage": 852.1
       }
     },
     "Sterak's Gage": {
@@ -24416,7 +24715,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 889.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24424,9 +24723,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 283.03
+        "total_damage": 941.7
       }
     },
     "Stormrazor": {
@@ -24436,9 +24736,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_once_Stormrazor"
         ],
-        "total_damage": 659.29
+        "total_damage": 1160.71
       },
       "vayne": {
         "breakdown_keys": [
@@ -24446,9 +24747,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "on_hit_once_Stormrazor"
         ],
-        "total_damage": 305.43
+        "total_damage": 1193.53
       }
     },
     "Stormsurge": {
@@ -24461,7 +24764,7 @@
           "auto_attacks",
           "proc_Stormsurge"
         ],
-        "total_damage": 1099.04
+        "total_damage": 1257.04
       },
       "vayne": {
         "breakdown_keys": [
@@ -24470,9 +24773,10 @@
           "R",
           "W",
           "auto_attacks",
+          "on_hit_ability_W",
           "proc_Stormsurge"
         ],
-        "total_damage": 362.63
+        "total_damage": 925.3
       }
     },
     "Stridebreaker": {
@@ -24485,7 +24789,7 @@
           "active_Stridebreaker",
           "auto_attacks"
         ],
-        "total_damage": 722.75
+        "total_damage": 1040.09
       },
       "vayne": {
         "breakdown_keys": [
@@ -24494,9 +24798,10 @@
           "R",
           "W",
           "active_Stridebreaker",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 380.63
+        "total_damage": 1217.3
       }
     },
     "Sundered Sky": {
@@ -24506,9 +24811,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "sundered_sky"
         ],
-        "total_damage": 659.29
+        "total_damage": 956.89
       },
       "vayne": {
         "breakdown_keys": [
@@ -24516,9 +24822,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "sundered_sky"
         ],
-        "total_damage": 297.43
+        "total_damage": 1050.5
       }
     },
     "Sunfire Aegis": {
@@ -24531,7 +24839,7 @@
           "auto_attacks",
           "immolate_Sunfire Aegis"
         ],
-        "total_damage": 743.21
+        "total_damage": 901.21
       },
       "vayne": {
         "breakdown_keys": [
@@ -24540,9 +24848,10 @@
           "R",
           "W",
           "auto_attacks",
-          "immolate_Sunfire Aegis"
+          "immolate_Sunfire Aegis",
+          "on_hit_ability_W"
         ],
-        "total_damage": 309.36
+        "total_damage": 872.03
       }
     },
     "Super Mech Armor": {
@@ -24554,7 +24863,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24562,9 +24871,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Super Mech Power Field": {
@@ -24576,7 +24886,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24584,9 +24894,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Swiftmarch": {
@@ -24598,7 +24909,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24606,9 +24917,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Sword of Blossoming Dawn": {
@@ -24620,7 +24932,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 782.07
+        "total_damage": 940.07
       },
       "vayne": {
         "breakdown_keys": [
@@ -24628,9 +24940,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 240.43
+        "total_damage": 803.1
       }
     },
     "Sword of the Divine": {
@@ -24642,7 +24955,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 896.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24650,9 +24963,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 962.77
       }
     },
     "Talisman of Ascension": {
@@ -24664,7 +24978,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24672,9 +24986,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Tear of the Goddess": {
@@ -24686,7 +25001,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24694,9 +25009,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Terminus": {
@@ -24709,7 +25025,7 @@
           "auto_attacks",
           "on_hit_Terminus"
         ],
-        "total_damage": 659.29
+        "total_damage": 1148.7
       },
       "vayne": {
         "breakdown_keys": [
@@ -24718,9 +25034,10 @@
           "R",
           "W",
           "auto_attacks",
-          "on_hit_Terminus"
+          "on_hit_Terminus",
+          "on_hit_ability_W"
         ],
-        "total_damage": 273.43
+        "total_damage": 1210.07
       }
     },
     "The Brutalizer": {
@@ -24732,7 +25049,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 873.31
       },
       "vayne": {
         "breakdown_keys": [
@@ -24740,9 +25057,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 273.12
+        "total_damage": 914.5
       }
     },
     "The Collector": {
@@ -24755,7 +25073,7 @@
           "auto_attacks",
           "execute"
         ],
-        "total_damage": 659.29
+        "total_damage": 1001.02
       },
       "vayne": {
         "breakdown_keys": [
@@ -24764,9 +25082,10 @@
           "R",
           "W",
           "auto_attacks",
-          "execute"
+          "execute",
+          "on_hit_ability_W"
         ],
-        "total_damage": 323.65
+        "total_damage": 1176.31
       }
     },
     "The Golden Spatula": {
@@ -24778,7 +25097,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 1000.36
+        "total_damage": 1704.52
       },
       "vayne": {
         "breakdown_keys": [
@@ -24786,9 +25105,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 411.1
+        "total_damage": 1836.1
       }
     },
     "Thornmail": {
@@ -24800,7 +25120,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24808,9 +25128,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Tiamat": {
@@ -24822,7 +25143,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 857.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24830,9 +25151,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 257.43
+        "total_damage": 873.43
       }
     },
     "Titanic Hydra": {
@@ -24842,10 +25164,11 @@
           "Q",
           "R",
           "W",
+          "active_Titanic Hydra",
           "auto_attacks",
           "on_hit_Titanic Hydra"
         ],
-        "total_damage": 659.29
+        "total_damage": 946.36
       },
       "vayne": {
         "breakdown_keys": [
@@ -24853,10 +25176,12 @@
           "Q",
           "R",
           "W",
+          "active_Titanic Hydra",
           "auto_attacks",
-          "on_hit_Titanic Hydra"
+          "on_hit_Titanic Hydra",
+          "on_hit_ability_W"
         ],
-        "total_damage": 289.43
+        "total_damage": 1013.54
       }
     },
     "Total Biscuit of Everlasting Will": {
@@ -24868,7 +25193,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24876,9 +25201,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Trinity Force": {
@@ -24888,9 +25214,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "spellblade_Trinity Force"
         ],
-        "total_damage": 659.29
+        "total_damage": 1176.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -24898,9 +25225,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "spellblade_Trinity Force"
         ],
-        "total_damage": 283.03
+        "total_damage": 1322.37
       }
     },
     "Tunneler": {
@@ -24912,7 +25241,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 847.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24920,9 +25249,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 249.43
+        "total_damage": 852.1
       }
     },
     "Turbo Chemtank": {
@@ -24934,7 +25264,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24942,9 +25272,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Turret Plating": {
@@ -24956,7 +25287,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -24964,9 +25295,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Twilight's Edge": {
@@ -24978,7 +25310,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 932.14
+        "total_damage": 1230.14
       },
       "vayne": {
         "breakdown_keys": [
@@ -24986,9 +25318,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 370.77
+        "total_damage": 1120.1
       }
     },
     "Twin Mask": {
@@ -25000,7 +25333,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25008,9 +25341,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Umbral Glaive": {
@@ -25022,7 +25356,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 968.63
       },
       "vayne": {
         "breakdown_keys": [
@@ -25030,9 +25364,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 357.68
+        "total_damage": 1137.78
       }
     },
     "Unending Despair": {
@@ -25045,7 +25380,7 @@
           "auto_attacks",
           "periodic_Unending Despair"
         ],
-        "total_damage": 667.86
+        "total_damage": 825.86
       },
       "vayne": {
         "breakdown_keys": [
@@ -25054,9 +25389,10 @@
           "R",
           "W",
           "auto_attacks",
+          "on_hit_ability_W",
           "periodic_Unending Despair"
         ],
-        "total_damage": 234.0
+        "total_damage": 796.67
       }
     },
     "Vampiric Scepter": {
@@ -25068,7 +25404,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 847.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25076,9 +25412,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 249.43
+        "total_damage": 852.1
       }
     },
     "Verdant Barrier": {
@@ -25090,7 +25427,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 768.43
+        "total_damage": 926.43
       },
       "vayne": {
         "breakdown_keys": [
@@ -25098,9 +25435,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 238.77
+        "total_damage": 801.43
       }
     },
     "Void Immolation": {
@@ -25112,7 +25450,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25120,9 +25458,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Void Staff": {
@@ -25134,7 +25473,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 1013.47
+        "total_damage": 1171.47
       },
       "vayne": {
         "breakdown_keys": [
@@ -25142,9 +25481,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 257.1
+        "total_damage": 819.77
       }
     },
     "Voltaic Cyclosword": {
@@ -25154,9 +25494,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_once_Voltaic Cyclosword"
         ],
-        "total_damage": 659.29
+        "total_damage": 1042.17
       },
       "vayne": {
         "breakdown_keys": [
@@ -25164,9 +25505,11 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W",
+          "on_hit_once_Voltaic Cyclosword"
         ],
-        "total_damage": 332.13
+        "total_damage": 1169.95
       }
     },
     "Warden's Eye": {
@@ -25178,7 +25521,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25186,9 +25529,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Warden's Mail": {
@@ -25200,7 +25544,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25208,9 +25552,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Warmog's Armor": {
@@ -25222,7 +25567,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25230,9 +25575,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Whispering Circlet": {
@@ -25244,7 +25590,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25252,9 +25598,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Winged Moonplate": {
@@ -25266,7 +25613,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25274,9 +25621,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Winter's Approach": {
@@ -25288,7 +25636,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25296,9 +25644,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Wit's End": {
@@ -25311,7 +25660,7 @@
           "auto_attacks",
           "on_hit_Wit's End"
         ],
-        "total_damage": 659.29
+        "total_damage": 1083.33
       },
       "vayne": {
         "breakdown_keys": [
@@ -25320,9 +25669,10 @@
           "R",
           "W",
           "auto_attacks",
-          "on_hit_Wit's End"
+          "on_hit_Wit's End",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 1089.48
       }
     },
     "Wooglet's Witchcap": {
@@ -25334,7 +25684,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 1477.86
+        "total_damage": 1635.86
       },
       "vayne": {
         "breakdown_keys": [
@@ -25342,9 +25692,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 325.43
+        "total_damage": 888.1
       }
     },
     "Wordless Promise": {
@@ -25356,7 +25707,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 795.71
+        "total_damage": 953.71
       },
       "vayne": {
         "breakdown_keys": [
@@ -25364,9 +25715,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 242.1
+        "total_damage": 804.77
       }
     },
     "World Atlas": {
@@ -25378,7 +25730,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25386,9 +25738,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Youmuu's Ghostblade": {
@@ -25400,7 +25753,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 957.51
       },
       "vayne": {
         "breakdown_keys": [
@@ -25408,9 +25761,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 348.78
+        "total_damage": 1114.04
       }
     },
     "Your Cut": {
@@ -25422,7 +25776,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25430,9 +25784,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Yun Tal Wildarrows": {
@@ -25444,7 +25799,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 1175.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25452,9 +25807,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 305.43
+        "total_damage": 1349.43
       }
     },
     "Zaz'Zak's Realmspike": {
@@ -25467,7 +25823,7 @@
           "auto_attacks",
           "proc_Zaz'Zak's Realmspike"
         ],
-        "total_damage": 709.29
+        "total_damage": 867.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25476,9 +25832,10 @@
           "R",
           "W",
           "auto_attacks",
+          "on_hit_ability_W",
           "proc_Zaz'Zak's Realmspike"
         ],
-        "total_damage": 275.43
+        "total_damage": 838.1
       }
     },
     "Zeal": {
@@ -25490,7 +25847,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 901.55
       },
       "vayne": {
         "breakdown_keys": [
@@ -25498,9 +25855,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 840.5
       }
     },
     "Zeke's Convergence": {
@@ -25512,7 +25870,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 817.29
       },
       "vayne": {
         "breakdown_keys": [
@@ -25520,9 +25878,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 788.1
       }
     },
     "Zephyr": {
@@ -25534,7 +25893,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 659.29
+        "total_damage": 922.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -25542,9 +25901,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 225.43
+        "total_damage": 928.77
       }
     },
     "Zhonya's Hourglass": {
@@ -25556,7 +25916,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 945.79
+        "total_damage": 1103.79
       },
       "vayne": {
         "breakdown_keys": [
@@ -25564,9 +25924,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_ability_W"
         ],
-        "total_damage": 260.43
+        "total_damage": 823.1
       }
     }
   },
@@ -25579,7 +25940,7 @@
     ],
     "champion_count": 173,
     "champions_fetched_at": 1783743759.197702,
-    "git_head": "79c64a1088ed87db8f90494606bd7c7581c35b3f",
+    "git_head": "2ff3f68b45b98aa826efd5818f021daf7ce8fed9",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1783743782.0325496,
@@ -25616,6 +25977,41 @@
             "auto_attacks": 0.0
           },
           "total_damage": 2126.32
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "Q": 838.6,
+              "R": 0.0,
+              "W": 138.77,
+              "auto_attacks": 270.4,
+              "on_hit_ability_passive": 361.44,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 103.36
+            },
+            "total_damage": 1867.93
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "Q": 838.6,
+              "R": 0.0,
+              "W": 138.77,
+              "auto_attacks": 270.4,
+              "on_hit_ability_passive": 322.71
+            },
+            "total_damage": 1570.49
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "Q": 1847.55,
+              "R": 0.0,
+              "W": 278.76,
+              "auto_attacks": 2096.43,
+              "on_hit_Kraken Slayer": 173.73,
+              "on_hit_ability_passive": 537.86
+            },
+            "total_damage": 4934.34
+          }
         }
       },
       "18": {
@@ -25647,6 +26043,41 @@
             "auto_attacks": 0.0
           },
           "total_damage": 2578.11
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "Q": 1105.56,
+              "R": 0.0,
+              "W": 201.6,
+              "auto_attacks": 541.33,
+              "on_hit_ability_passive": 640.0,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 159.07
+            },
+            "total_damage": 2802.93
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "Q": 1105.56,
+              "R": 0.0,
+              "W": 201.6,
+              "auto_attacks": 541.33,
+              "on_hit_ability_passive": 571.43
+            },
+            "total_damage": 2419.92
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "Q": 2218.87,
+              "R": 0.0,
+              "W": 359.25,
+              "auto_attacks": 2615.09,
+              "on_hit_Kraken Slayer": 226.33,
+              "on_hit_ability_passive": 714.29
+            },
+            "total_damage": 6133.82
+          }
         }
       }
     },
@@ -25683,6 +26114,41 @@
             "auto_attacks": 0.0
           },
           "total_damage": 659.29
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 364.56,
+              "Q": 640.8,
+              "R": 671.28,
+              "W": 369.79,
+              "auto_attacks": 158.0,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 165.33
+            },
+            "total_damage": 2525.12
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 57.14,
+              "Q": 231.43,
+              "R": 267.86,
+              "W": 102.86,
+              "auto_attacks": 158.0
+            },
+            "total_damage": 817.29
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 57.14,
+              "Q": 231.43,
+              "R": 267.86,
+              "W": 102.86,
+              "auto_attacks": 1456.98,
+              "on_hit_Kraken Slayer": 121.39
+            },
+            "total_damage": 2237.66
+          }
         }
       },
       "18": {
@@ -25717,6 +26183,41 @@
             "auto_attacks": 0.0
           },
           "total_damage": 932.14
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 492.56,
+              "Q": 640.8,
+              "R": 791.28,
+              "W": 854.78,
+              "auto_attacks": 277.33,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 287.84
+            },
+            "total_damage": 3499.96
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 171.43,
+              "Q": 231.43,
+              "R": 375.0,
+              "W": 308.57,
+              "auto_attacks": 277.33
+            },
+            "total_damage": 1363.76
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 171.43,
+              "Q": 231.43,
+              "R": 375.0,
+              "W": 308.57,
+              "auto_attacks": 1612.64,
+              "on_hit_Kraken Slayer": 149.96
+            },
+            "total_damage": 2849.03
+          }
         }
       }
     },
@@ -25753,6 +26254,41 @@
             "passive": 520.0
           },
           "total_damage": 1341.6
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 517.76,
+              "Q": 1501.92,
+              "R": 936.32,
+              "auto_attacks": 242.67,
+              "passive": 1062.72,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 534.43
+            },
+            "total_damage": 4951.18
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 115.0,
+              "Q": 583.29,
+              "R": 342.69,
+              "auto_attacks": 242.67,
+              "passive": 254.29
+            },
+            "total_damage": 1537.92
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 225.71,
+              "Q": 871.14,
+              "R": 443.44,
+              "auto_attacks": 1531.7,
+              "on_hit_Kraken Slayer": 153.14,
+              "passive": 520.0
+            },
+            "total_damage": 3745.13
+          }
         }
       },
       "18": {
@@ -25787,6 +26323,41 @@
             "passive": 785.71
           },
           "total_damage": 2047.07
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 763.36,
+              "Q": 1558.08,
+              "R": 1192.32,
+              "auto_attacks": 314.67,
+              "passive": 1360.32,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 694.27
+            },
+            "total_damage": 6038.38
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 334.29,
+              "Q": 633.43,
+              "R": 566.23,
+              "auto_attacks": 314.67,
+              "passive": 520.0
+            },
+            "total_damage": 2368.61
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 445.0,
+              "Q": 921.29,
+              "R": 689.68,
+              "auto_attacks": 2039.77,
+              "on_hit_Kraken Slayer": 447.31,
+              "passive": 785.71
+            },
+            "total_damage": 5328.76
+          }
         }
       }
     },
@@ -25823,6 +26394,44 @@
             "passive": 171.43
           },
           "total_damage": 1463.68
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 91.67,
+              "Q": 440.0,
+              "R": 286.12,
+              "auto_attacks": 156.0,
+              "double_shot": 78.0,
+              "passive": 828.48,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 2066.69
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 91.67,
+              "Q": 440.0,
+              "R": 286.12,
+              "auto_attacks": 156.0,
+              "double_shot": 78.0,
+              "passive": 171.43
+            },
+            "total_damage": 1223.21
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 250.0,
+              "Q": 825.66,
+              "R": 785.68,
+              "auto_attacks": 1160.6,
+              "double_shot": 580.3,
+              "on_hit_Kraken Slayer": 235.89,
+              "passive": 171.43
+            },
+            "total_damage": 4009.57
+          }
         }
       },
       "18": {
@@ -25857,6 +26466,44 @@
             "passive": 321.43
           },
           "total_damage": 2083.53
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 219.17,
+              "Q": 440.0,
+              "R": 468.05,
+              "auto_attacks": 274.67,
+              "double_shot": 137.33,
+              "passive": 996.48,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 230.37
+            },
+            "total_damage": 2921.43
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 219.17,
+              "Q": 440.0,
+              "R": 468.05,
+              "auto_attacks": 274.67,
+              "double_shot": 137.33,
+              "passive": 321.43
+            },
+            "total_damage": 1860.65
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 394.34,
+              "Q": 825.66,
+              "R": 1173.08,
+              "auto_attacks": 1606.42,
+              "double_shot": 803.21,
+              "on_hit_Kraken Slayer": 483.42,
+              "passive": 321.43
+            },
+            "total_damage": 5607.56
+          }
         }
       }
     },
@@ -25890,6 +26537,38 @@
             "auto_attacks": 0.0
           },
           "total_damage": 453.57
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 447.52,
+              "Q": 458.88,
+              "W": 485.6,
+              "auto_attacks": 190.0,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 1768.43
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 178.57,
+              "Q": 157.14,
+              "W": 117.86,
+              "auto_attacks": 190.0
+            },
+            "total_damage": 643.57
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 178.57,
+              "Q": 157.14,
+              "W": 117.86,
+              "auto_attacks": 1245.28,
+              "on_hit_Kraken Slayer": 153.6
+            },
+            "total_damage": 1852.46
+          }
         }
       },
       "18": {
@@ -25921,6 +26600,38 @@
             "auto_attacks": 0.0
           },
           "total_damage": 692.86
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 627.52,
+              "Q": 458.88,
+              "W": 573.6,
+              "auto_attacks": 336.0,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 2182.43
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 339.29,
+              "Q": 157.14,
+              "W": 196.43,
+              "auto_attacks": 336.0
+            },
+            "total_damage": 1028.86
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 339.29,
+              "Q": 157.14,
+              "W": 196.43,
+              "auto_attacks": 1749.62,
+              "on_hit_Kraken Slayer": 190.56
+            },
+            "total_damage": 2633.04
+          }
         }
       }
     },
@@ -25962,6 +26673,46 @@
             "passive": 190.89
           },
           "total_damage": 1688.64
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 57.14,
+              "Q": 171.43,
+              "Q2": 192.86,
+              "R": 178.57,
+              "W": 107.14,
+              "auto_attacks": 190.71,
+              "passive": 56.31,
+              "proc_Luden's Echo": 155.36
+            },
+            "total_damage": 1109.53
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 57.14,
+              "Q": 171.43,
+              "Q2": 192.86,
+              "R": 178.57,
+              "W": 107.14,
+              "auto_attacks": 190.71,
+              "passive": 56.31
+            },
+            "total_damage": 954.17
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 191.84,
+              "Q": 347.76,
+              "Q2": 435.51,
+              "R": 305.31,
+              "W": 217.35,
+              "auto_attacks": 1643.27,
+              "on_hit_Kraken Slayer": 167.89,
+              "passive": 190.89
+            },
+            "total_damage": 3499.8
+          }
         }
       },
       "18": {
@@ -26002,6 +26753,47 @@
             "passive": 234.04
           },
           "total_damage": 2080.64
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 177.78,
+              "Q": 177.78,
+              "Q2": 200.0,
+              "R": 259.26,
+              "W": 166.67,
+              "auto_attacks": 337.78,
+              "passive": 88.89,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 1594.58
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 177.78,
+              "Q": 177.78,
+              "Q2": 200.0,
+              "R": 259.26,
+              "W": 166.67,
+              "auto_attacks": 337.78,
+              "passive": 88.89
+            },
+            "total_damage": 1408.15
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 336.17,
+              "Q": 362.55,
+              "Q2": 454.04,
+              "R": 403.4,
+              "W": 290.43,
+              "auto_attacks": 1888.72,
+              "on_hit_Kraken Slayer": 218.44,
+              "passive": 234.04
+            },
+            "total_damage": 4187.8
+          }
         }
       }
     },
@@ -26038,6 +26830,41 @@
             "auto_attacks": 0.0
           },
           "total_damage": 517.07
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 257.4,
+              "Q": 446.13,
+              "R": 588.24,
+              "W": 254.34,
+              "auto_attacks": 240.0,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 44.14
+            },
+            "total_damage": 1985.61
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 52.93,
+              "Q": 97.71,
+              "R": 244.29,
+              "W": 122.14,
+              "auto_attacks": 240.0
+            },
+            "total_damage": 757.07
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 52.93,
+              "Q": 97.71,
+              "R": 244.29,
+              "W": 122.14,
+              "auto_attacks": 1525.47,
+              "on_hit_Kraken Slayer": 153.02
+            },
+            "total_damage": 2195.57
+          }
         }
       },
       "18": {
@@ -26072,6 +26899,41 @@
             "auto_attacks": 0.0
           },
           "total_damage": 736.93
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 730.8,
+              "Q": 491.13,
+              "R": 678.24,
+              "W": 254.34,
+              "auto_attacks": 325.33,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 182.96
+            },
+            "total_damage": 2818.16
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 301.29,
+              "Q": 138.43,
+              "R": 325.71,
+              "W": 122.14,
+              "auto_attacks": 325.33
+            },
+            "total_damage": 1212.9
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 301.29,
+              "Q": 138.43,
+              "R": 325.71,
+              "W": 122.14,
+              "auto_attacks": 2069.66,
+              "on_hit_Kraken Slayer": 449.32
+            },
+            "total_damage": 3406.55
+          }
         }
       }
     },
@@ -26105,6 +26967,38 @@
             "auto_attacks": 0.0
           },
           "total_damage": 771.43
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 1113.92,
+              "Q": 511.52,
+              "R": 962.4,
+              "auto_attacks": 158.0,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 223.55
+            },
+            "total_damage": 3124.75
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 300.0,
+              "Q": 235.71,
+              "R": 385.71,
+              "auto_attacks": 158.0
+            },
+            "total_damage": 1079.43
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 300.0,
+              "Q": 235.71,
+              "R": 385.71,
+              "auto_attacks": 1456.98,
+              "on_hit_Kraken Slayer": 121.39
+            },
+            "total_damage": 2499.8
+          }
         }
       },
       "18": {
@@ -26136,6 +27030,38 @@
             "auto_attacks": 0.0
           },
           "total_damage": 971.43
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 1273.92,
+              "Q": 511.52,
+              "R": 1106.4,
+              "auto_attacks": 280.0,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 252.35
+            },
+            "total_damage": 3579.55
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 442.86,
+              "Q": 235.71,
+              "R": 514.29,
+              "auto_attacks": 280.0
+            },
+            "total_damage": 1472.86
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 442.86,
+              "Q": 235.71,
+              "R": 514.29,
+              "auto_attacks": 1618.87,
+              "on_hit_Kraken Slayer": 150.08
+            },
+            "total_damage": 2961.8
+          }
         }
       }
     },
@@ -26172,6 +27098,41 @@
             "auto_attacks": 0.0
           },
           "total_damage": 555.97
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 0.0,
+              "Q": 1031.26,
+              "R": 634.37,
+              "W": 423.19,
+              "auto_attacks": 146.0,
+              "proc_Luden's Echo": 163.19,
+              "shadowflame_Shadowflame": 159.51
+            },
+            "total_damage": 2557.53
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 0.0,
+              "Q": 388.06,
+              "R": 250.0,
+              "W": 111.94,
+              "auto_attacks": 146.0
+            },
+            "total_damage": 896.0
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 0.0,
+              "Q": 388.06,
+              "R": 250.0,
+              "W": 111.94,
+              "auto_attacks": 1135.7,
+              "on_hit_Kraken Slayer": 120.84
+            },
+            "total_damage": 2006.53
+          }
         }
       },
       "18": {
@@ -26206,6 +27167,41 @@
             "auto_attacks": 0.0
           },
           "total_damage": 734.85
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 0.0,
+              "Q": 1048.89,
+              "R": 769.15,
+              "W": 498.8,
+              "auto_attacks": 190.0,
+              "proc_Luden's Echo": 165.98,
+              "shadowflame_Shadowflame": 187.03
+            },
+            "total_damage": 2859.85
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 0.0,
+              "Q": 393.94,
+              "R": 363.64,
+              "W": 174.24,
+              "auto_attacks": 190.0
+            },
+            "total_damage": 1121.82
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 0.0,
+              "Q": 393.94,
+              "R": 363.64,
+              "W": 174.24,
+              "auto_attacks": 1556.6,
+              "on_hit_Kraken Slayer": 148.95
+            },
+            "total_damage": 2637.37
+          }
         }
       }
     },
@@ -26238,6 +27234,38 @@
             "auto_attacks": 0.0
           },
           "total_damage": 500.81
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "Q": 0.0,
+              "R": 744.32,
+              "W": 86.67,
+              "auto_attacks": 468.0,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 1485.42
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "Q": 0.0,
+              "R": 285.71,
+              "W": 86.67,
+              "auto_attacks": 468.0
+            },
+            "total_damage": 840.38
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "Q": 0.0,
+              "R": 285.71,
+              "W": 215.09,
+              "auto_attacks": 2776.36,
+              "on_hit_Kraken Slayer": 303.6
+            },
+            "total_damage": 3580.76
+          }
         }
       },
       "18": {
@@ -26268,6 +27296,38 @@
             "auto_attacks": 0.0
           },
           "total_damage": 696.5
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "Q": 0.0,
+              "R": 904.32,
+              "W": 266.67,
+              "auto_attacks": 613.6,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 1971.02
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "Q": 0.0,
+              "R": 428.57,
+              "W": 266.67,
+              "auto_attacks": 613.6
+            },
+            "total_damage": 1308.84
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "Q": 0.0,
+              "R": 428.57,
+              "W": 535.85,
+              "auto_attacks": 3548.56,
+              "on_hit_Kraken Slayer": 372.25
+            },
+            "total_damage": 4885.23
+          }
         }
       }
     },
@@ -26303,6 +27363,44 @@
             "auto_attacks": 0.0
           },
           "total_damage": 385.96
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 309.62,
+              "Q": 454.24,
+              "R": 361.9,
+              "W": 0.0,
+              "auto_attacks": 255.07,
+              "on_hit_ability_W": 875.56,
+              "proc_Luden's Echo": 168.28,
+              "shadowflame_Shadowflame": 208.77
+            },
+            "total_damage": 2633.45
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 53.68,
+              "Q": 121.43,
+              "R": 115.2,
+              "W": 0.0,
+              "auto_attacks": 255.07,
+              "on_hit_ability_W": 368.1
+            },
+            "total_damage": 913.48
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 53.68,
+              "Q": 121.43,
+              "R": 210.85,
+              "W": 0.0,
+              "auto_attacks": 1607.66,
+              "on_hit_Kraken Slayer": 138.69,
+              "on_hit_ability_W": 460.12
+            },
+            "total_damage": 2592.43
+          }
         }
       },
       "18": {
@@ -26337,6 +27435,44 @@
             "auto_attacks": 0.0
           },
           "total_damage": 635.0
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 461.05,
+              "Q": 526.24,
+              "R": 476.62,
+              "W": 0.0,
+              "auto_attacks": 425.37,
+              "on_hit_ability_W": 1125.67,
+              "proc_Luden's Echo": 173.08,
+              "shadowflame_Shadowflame": 259.75
+            },
+            "total_damage": 3447.79
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 180.82,
+              "Q": 185.71,
+              "R": 163.12,
+              "W": 0.0,
+              "auto_attacks": 425.37,
+              "on_hit_ability_W": 471.7
+            },
+            "total_damage": 1426.72
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 180.82,
+              "Q": 185.71,
+              "R": 268.47,
+              "W": 0.0,
+              "auto_attacks": 2181.08,
+              "on_hit_Kraken Slayer": 405.36,
+              "on_hit_ability_W": 566.04
+            },
+            "total_damage": 3787.48
+          }
         }
       }
     },
@@ -26372,6 +27508,44 @@
             "auto_attacks": 0.0
           },
           "total_damage": 535.96
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 125.0,
+              "Q": 1238.83,
+              "R": 0.0,
+              "W": 0.0,
+              "auto_attacks": 349.33,
+              "on_hit_ability_W": 213.33,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 73.74
+            },
+            "total_damage": 2155.6
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 125.0,
+              "Q": 502.17,
+              "R": 0.0,
+              "W": 0.0,
+              "auto_attacks": 349.33,
+              "on_hit_ability_W": 213.33
+            },
+            "total_damage": 1189.83
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 287.74,
+              "Q": 1241.13,
+              "R": 0.0,
+              "W": 0.0,
+              "auto_attacks": 1780.75,
+              "on_hit_Kraken Slayer": 130.22,
+              "on_hit_ability_W": 266.67
+            },
+            "total_damage": 3706.51
+          }
         }
       },
       "18": {
@@ -26405,6 +27579,44 @@
             "auto_attacks": 0.0
           },
           "total_damage": 843.77
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 370.83,
+              "Q": 1643.0,
+              "R": 0.0,
+              "W": 0.0,
+              "auto_attacks": 550.0,
+              "on_hit_ability_W": 333.33,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 97.74
+            },
+            "total_damage": 3150.27
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 370.83,
+              "Q": 759.0,
+              "R": 0.0,
+              "W": 0.0,
+              "auto_attacks": 550.0,
+              "on_hit_ability_W": 333.33
+            },
+            "total_damage": 2013.17
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 566.04,
+              "Q": 1666.42,
+              "R": 0.0,
+              "W": 0.0,
+              "auto_attacks": 2390.94,
+              "on_hit_Kraken Slayer": 374.2,
+              "on_hit_ability_W": 400.0
+            },
+            "total_damage": 5397.6
+          }
         }
       }
     }

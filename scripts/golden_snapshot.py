@@ -5,7 +5,12 @@ ability parsing -> fight damage) across every champion and item, so later
 refactor phases can prove numeric equivalence.  Call patterns mirror
 src/app.py:api_calculate and src/calculator/optimizer.py:_evaluate_build,
 including passing a copy of champion_stats to calculate_fight_damage
-(which mutates it) and deterministic=True.
+(which mutates it) and deterministic=True.  Fights cover both a
+one-rotation burst (no autos) and, for registered champions, a sustained
+scenario with auto_attack_uptime=1.0 so auto-attack and on-hit item paths
+(Statikk, Voltaic, BorK, Kraken, Rageblade phantom hits, spellblade,
+energized procs, Vayne W) are locked too; the item sweep runs with
+auto_attack_uptime=1.0 for the same reason.
 
 Compare contract: every float is rounded to 2 decimals before writing, and
 ``compare`` recomputes the snapshot with identical rounding — so "equal to
@@ -89,8 +94,14 @@ def _parse_abilities_fresh(champion_data, level, items):
     return stats, abilities
 
 
-def _run_fight(champion_data, level, items):
-    """One-rotation fight at default target stats, mirroring _evaluate_build."""
+def _run_fight(champion_data, level, items, auto_attack_uptime=0.0,
+               one_rotation=True):
+    """Fight at default target stats over 5s, mirroring _evaluate_build.
+
+    Default is a one-rotation burst with no autos. Pass
+    auto_attack_uptime=1.0 (and one_rotation=False for the sustained
+    scenario) to exercise auto-attack and on-hit item paths.
+    """
     items = copy.deepcopy(items)
     stats, abilities = _parse_abilities_fresh(champion_data, level, items)
     # calculate_fight_damage mutates champion_stats — pass a copy.
@@ -98,9 +109,9 @@ def _run_fight(champion_data, level, items):
         champion_stats=dict(stats), ability_damages=abilities,
         target_health=TARGET_HEALTH, target_bonus_health=0.0,
         target_armor=TARGET_ARMOR, target_magic_resistance=TARGET_MR,
-        fight_duration_seconds=5.0, auto_attack_uptime=0.0,
+        fight_duration_seconds=5.0, auto_attack_uptime=auto_attack_uptime,
         ability_haste=stats.get("ability_haste", 0.0), items=items,
-        one_rotation=True, include_actives=True, cast_order=None,
+        one_rotation=one_rotation, include_actives=True, cast_order=None,
         auto_attacks_only=False, deterministic=True,
     )
 
@@ -154,7 +165,12 @@ def _resolve_build(requested_names, items_by_name, substitutions):
 
 
 def snapshot_registered_fights(champions, items_by_name, substitutions):
-    """Section 2: full fights for the 12 registered champions, 3 builds x 2 levels."""
+    """Section 2: fights for the 12 registered champions, 3 builds x 2 levels.
+
+    Each level holds the original one-rotation entries under the build keys,
+    plus a "sustained" sibling (auto_attack_uptime=1.0, one_rotation=False,
+    5s) that exercises auto-attack and on-hit item paths.
+    """
     builds = {
         "no_items": [],
         "physical_build": _resolve_build(PHYSICAL_BUILD, items_by_name, substitutions),
@@ -165,20 +181,32 @@ def snapshot_registered_fights(champions, items_by_name, substitutions):
     for display_name in sorted(_CHAMPION_MODULES):
         levels = {}
         for level in FIGHT_LEVELS:
-            fights = {}
+            fights = {"sustained": {}}
             for build_name, build_items in builds.items():
+                champion_data = by_display_name[display_name]
                 try:
                     fights[build_name] = _fight_summary(
-                        _run_fight(by_display_name[display_name], level, build_items))
+                        _run_fight(champion_data, level, build_items))
                 except Exception as exc:
                     fights[build_name] = _error_entry(exc)
+                try:
+                    fights["sustained"][build_name] = _fight_summary(_run_fight(
+                        champion_data, level, build_items,
+                        auto_attack_uptime=1.0, one_rotation=False))
+                except Exception as exc:
+                    fights["sustained"][build_name] = _error_entry(exc)
             levels[str(level)] = fights
         out[display_name] = levels
     return out
 
 
 def snapshot_item_sweep(champions, items):
-    """Section 3: every item, alone, at level 11, on Vayne and Ahri."""
+    """Section 3: every item, alone, at level 11, on Vayne and Ahri.
+
+    Runs one-rotation with auto_attack_uptime=1.0 — most item effects
+    (on-hit, energized, spellblade) only fire with autos, and this sweep
+    exists to lock per-item behavior.
+    """
     by_display_name = {data.get("name"): data for data in champions.values()}
     sweep_champions = [("ahri", by_display_name["Ahri"]),
                        ("vayne", by_display_name["Vayne"])]
@@ -187,7 +215,8 @@ def snapshot_item_sweep(champions, items):
         entry = {}
         for label, champion_data in sweep_champions:
             try:
-                result = _run_fight(champion_data, ABILITY_LEVEL, [item])
+                result = _run_fight(champion_data, ABILITY_LEVEL, [item],
+                                    auto_attack_uptime=1.0)
                 entry[label] = {
                     "total_damage": round(float(result.get("total_damage", 0.0)), 2),
                     "breakdown_keys": sorted(result.get("breakdown", {})),
