@@ -36,10 +36,12 @@ Branch: `feature/build-optimizer`. Baseline commit: `a5627bd` (WIP), data update
   `lethality_to_flat_pen()` in resistance.py (dedupe stats.py:286 / damage.py:686);
   `refresh_item_effects()` mutate-in-place + wired into `api_update_data`.
 - **Phase 2** — cross-boundary SSOT: exclusivity groups served from Python; unified target-stat
-  defaults; damage-attribution split moved from app.py route into damage.py; champion option
-  metadata served from champion modules instead of app.js `championOptionsDefs`.
-- **Phase 3** — champion layer redesign: generic parser with per-champion override specs;
-  dedupe common.py/generic_parser.py extraction logic. Design reviewed before implementation.
+  defaults; damage-attribution split moved from app.py route into damage.py.
+  (Champion-option metadata moved to Phase 3 — it lands naturally with the slot specs.)
+- **Phase 3** — champion layer redesign: slot-archetype engine per
+  docs/refactors/champion-layer-redesign.md (design approved after a 3-way bake-off).
+  Includes serving champion option/assumption metadata from the specs, replacing
+  app.js championOptionsDefs.
 - **Phase 4** — decompose `calculate_fight_damage` (damage.py:504-2114) into named step functions.
 - **Phase 5** — test suite reorg: split test_damage.py; test_ahri.py; conftest fixture adoption;
   Known_Good.txt reconciliation; Kog'Maw/KogMaw naming.
