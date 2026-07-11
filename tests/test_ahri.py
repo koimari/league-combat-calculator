@@ -14,13 +14,10 @@ from src.calculator.damage import calculate_fight_damage
 
 
 class TestParseAhriAbilities:
-    """Tests for Ahri ability parsing with specific AP values."""
+    """Tests for Ahri ability parsing with specific AP values.
 
-    @pytest.fixture
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import get_champion
-
-        return get_champion("Ahri")
+    The ahri_data fixture comes from tests/conftest.py.
+    """
 
     def test_q_rank3_with_60ap(self, ahri_data: dict) -> None:
         # JSON (16.13.1): Q "Damage Per Pass" rank 3 = 85 + 50% AP.
@@ -76,12 +73,6 @@ class TestParseAhriAbilities:
 
 class TestActualizerFightDamage:
     """Test Actualizer Q damage in a full fight calculation."""
-
-    @pytest.fixture
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import get_champion
-
-        return get_champion("Ahri")
 
     @pytest.fixture
     def actualizer(self) -> dict:

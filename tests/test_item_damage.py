@@ -25,12 +25,6 @@ class TestBastionbreakerShapedCharge:
     """Tests for Bastionbreaker Shaped Charge passive."""
 
     @pytest.fixture
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import get_champion
-
-        return get_champion("Ahri")
-
-    @pytest.fixture
     def bastionbreaker(self) -> dict:
         from src.calculator.data_fetcher import get_item_by_name
 
@@ -198,12 +192,6 @@ class TestOverlordBloodmailTyranny:
 
 class TestBloodlettersCurseVileDecay:
     """Tests for Bloodletter's Curse stacking MR reduction passive."""
-
-    @pytest.fixture
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import get_champion
-
-        return get_champion("Ahri")
 
     @pytest.fixture
     def bloodletters(self) -> dict:
@@ -382,12 +370,6 @@ class TestBloodlettersCurseVileDecay:
 
 class TestShadowflameCinderbloom:
     """Tests for Shadowflame Cinderbloom passive (magic/true crit below 40% HP)."""
-
-    @pytest.fixture
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import get_champion
-
-        return get_champion("Ahri")
 
     @pytest.fixture
     def shadowflame(self) -> dict:
@@ -606,12 +588,6 @@ class TestBloodsongSpellbladeAndExposeWeakness:
     """Tests for Bloodsong's Spellblade and Expose Weakness passives."""
 
     @pytest.fixture
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import get_champion
-
-        return get_champion("Ahri")
-
-    @pytest.fixture
     def bloodsong(self) -> dict:
         from src.calculator.data_fetcher import get_item_by_name
 
@@ -816,12 +792,6 @@ class TestBloodsongSpellbladeAndExposeWeakness:
 
 class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     """Tests for Dusk and Dawn's Spellblade and Double On-Hit passives."""
-
-    @pytest.fixture
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import get_champion
-
-        return get_champion("Ahri")
 
     @pytest.fixture
     def dusk_and_dawn(self) -> dict:
@@ -1107,12 +1077,6 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
 
 class TestEclipseEverRisingMoon:
     """Tests for Eclipse's Ever Rising Moon passive (% max HP physical proc)."""
-
-    @pytest.fixture
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import get_champion
-
-        return get_champion("Ahri")
 
     @pytest.fixture
     def eclipse(self) -> dict:

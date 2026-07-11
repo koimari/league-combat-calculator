@@ -7,10 +7,9 @@ test files can focus on champion-specific assertions.
 
 import pytest
 
-from src.calculator.data_fetcher import get_champion
+from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions import parse_abilities as _dispatch_parse
-
 
 # ---------------------------------------------------------------------------
 # Champion data fixtures
@@ -21,6 +20,12 @@ from src.calculator.champions import parse_abilities as _dispatch_parse
 def aatrox_data() -> dict:
     """Load Aatrox champion data from the cached JSON."""
     return get_champion("Aatrox")
+
+
+@pytest.fixture
+def ahri_data() -> dict:
+    """Load Ahri champion data from the cached JSON."""
+    return get_champion("Ahri")
 
 
 @pytest.fixture
@@ -73,7 +78,14 @@ def ashe_data() -> dict:
 
 @pytest.fixture
 def kogmaw_data() -> dict:
-    """Load Kog'Maw champion data from the cached JSON."""
+    """Load Kog'Maw champion data from the cached JSON.
+
+    NOTE: "KogMaw" is the DATA key (champions.json), while the champion
+    module registry and the data's own ``name`` field use the display name
+    "Kog'Maw".  get_champion wants the data key; dispatch (and parse_at)
+    reads ``champion_data["name"]`` and gets the display name -- so this
+    one champion is loaded and dispatched under different spellings.
+    """
     return get_champion("KogMaw")
 
 
@@ -81,6 +93,47 @@ def kogmaw_data() -> dict:
 def vayne_data() -> dict:
     """Load Vayne champion data from the cached JSON."""
     return get_champion("Vayne")
+
+
+# ---------------------------------------------------------------------------
+# Item fixtures (the recurring Ahri mage build used across test files)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def liandrys() -> dict:
+    """Liandry's Torment item data."""
+    return get_item_by_name("Liandry's Torment")
+
+
+@pytest.fixture
+def malignance() -> dict:
+    """Malignance item data."""
+    return get_item_by_name("Malignance")
+
+
+@pytest.fixture
+def rylais() -> dict:
+    """Rylai's Crystal Scepter item data."""
+    return get_item_by_name("Rylai's Crystal Scepter")
+
+
+@pytest.fixture
+def sorc_shoes() -> dict:
+    """Sorcerer's Shoes item data."""
+    return get_item_by_name("Sorcerer's Shoes")
+
+
+@pytest.fixture
+def void_staff() -> dict:
+    """Void Staff item data."""
+    return get_item_by_name("Void Staff")
+
+
+@pytest.fixture
+def rabadons() -> dict:
+    """Rabadon's Deathcap item data."""
+    return get_item_by_name("Rabadon's Deathcap")
 
 
 # ---------------------------------------------------------------------------

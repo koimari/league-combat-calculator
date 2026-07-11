@@ -64,37 +64,10 @@ class TestCalculateAttackSpeed:
 
 
 class TestCalculateTotalStats:
-    """Tests for total stats with items applied using Ahri data."""
+    """Tests for total stats with items applied using Ahri data.
 
-    @pytest.fixture
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import get_champion
-
-        return get_champion("Ahri")
-
-    @pytest.fixture
-    def liandrys(self) -> dict:
-        from src.calculator.data_fetcher import get_item_by_name
-
-        return get_item_by_name("Liandry's Torment")
-
-    @pytest.fixture
-    def malignance(self) -> dict:
-        from src.calculator.data_fetcher import get_item_by_name
-
-        return get_item_by_name("Malignance")
-
-    @pytest.fixture
-    def rylais(self) -> dict:
-        from src.calculator.data_fetcher import get_item_by_name
-
-        return get_item_by_name("Rylai's Crystal Scepter")
-
-    @pytest.fixture
-    def rabadons(self) -> dict:
-        from src.calculator.data_fetcher import get_item_by_name
-
-        return get_item_by_name("Rabadon's Deathcap")
+    Champion/item data fixtures come from tests/conftest.py.
+    """
 
     def test_level_6_liandrys_hp(self, ahri_data: dict, liandrys: dict) -> None:
         stats = calculate_total_stats(ahri_data, 6, [liandrys])
@@ -133,11 +106,9 @@ class TestCalculateTotalStats:
         malignance: dict,
         rylais: dict,
         rabadons: dict,
+        sorc_shoes: dict,
+        void_staff: dict,
     ) -> None:
-        from src.calculator.data_fetcher import get_item_by_name
-
-        sorc_shoes = get_item_by_name("Sorcerer's Shoes")
-        void_staff = get_item_by_name("Void Staff")
         items = [liandrys, malignance, rylais, sorc_shoes, void_staff, rabadons]
         stats = calculate_total_stats(ahri_data, 18, items)
         assert stats["ability_power"] == 572
@@ -246,13 +217,6 @@ class TestCalculateTotalStats:
 class TestStatsUsesItemEffectsRegistry:
     """Verify stats.py reads values from ITEM_EFFECTS, not hardcoded."""
 
-    @pytest.fixture()
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import fetch_champion_data
-
-        champions = fetch_champion_data()
-        return champions["Ahri"]
-
     def test_rabadons_reads_from_registry(
         self, ahri_data: dict, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -317,13 +281,6 @@ class TestStatsUsesItemEffectsRegistry:
 
 class TestNewItemStats:
     """Tests for the 6 newly implemented items."""
-
-    @pytest.fixture()
-    def ahri_data(self) -> dict:
-        from src.calculator.data_fetcher import fetch_champion_data
-
-        champions = fetch_champion_data()
-        return champions["Ahri"]
 
     # ── Staff of Flowing Water ──
 
