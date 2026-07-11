@@ -1,21 +1,41 @@
-"""Tests validating calculations against known-good test cases from Known_Good.txt.
+"""Known-good regression anchors: three Ahri builds vs a fixed target dummy.
 
-Stats must be completely accurate (exact match).
-Total damage must be within ±5% of expected values.
+Three scenarios (Ahri level 6 / 11 / 18 with a growing mage build) against
+the same dummy: 1000 HP, 100 armor, 100 MR.
+
+What each case asserts, and how strictly:
+
+- **Stats (exact match):** health/AD/AP/armor/MR were hand-validated against
+  the live game client, so they must reproduce exactly (one documented
+  exception: the level-18 HP ±1 game-client rounding, noted at TestCase3Stats).
+- **Total damage (±5%):** one full ability rotation (``one_rotation=True``),
+  NO auto attacks (``auto_attack_uptime=0.0``), 5s fight window for DoT/burn
+  expiry, ability haste 0 / 15 / 15 per case. The expected totals anchor the
+  calculator's validated output for that scenario; they are patch-sensitive
+  (ability/item numbers get rebalanced) and are re-derived from the wiki JSON
+  when a data refresh moves them -- see the "Stale test constants" tables in
+  docs/refactors/campaign-2026-07.md. Last reconciled at patch 16.13.1.
+
+These tests are the authority on the known-good scenarios. A previous
+companion file, tests/Known_Good.txt, described a DIFFERENT scenario (8s
+fight including auto attacks; totals 663/1402/3083) from the original
+in-game validation session and had silently diverged from what this module
+runs -- it was deleted in the July 2026 refactor campaign (Phase 5) rather
+than left as misleading documentation.
+
+Champion/item data fixtures (ahri_data, liandrys, malignance, rylais,
+sorc_shoes, void_staff, rabadons) come from tests/conftest.py.
 """
 
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.ahri import parse_abilities as parse_ahri_abilities
 from src.calculator.damage import calculate_fight_damage
 
-# Champion/item data fixtures (ahri_data, liandrys, malignance, rylais,
-# sorc_shoes, void_staff, rabadons) come from tests/conftest.py.
-
-
 # ──────────────────────────────────────────────────────────────────────
 # TEST CASE 1: Ahri Level 6, Items: Liandry's Torment
 # Enemy: 1000 HP, 100 Armor, 100 MR
-# Expected Total Damage: 498 (one rotation, no auto attacks)
+# Fight: one rotation, no autos, 5s window, 0 ability haste
+# Expected Total Damage: 498 ±5%
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -76,7 +96,8 @@ class TestCase1Damage:
 # ──────────────────────────────────────────────────────────────────────
 # TEST CASE 2: Ahri Level 11, Items: Liandry's, Malignance, Rylai's
 # Enemy: 1000 HP, 100 Armor, 100 MR
-# Expected Total Damage: 1221 (one rotation, no auto attacks)
+# Fight: one rotation, no autos, 5s window, 15 ability haste
+# Expected Total Damage: 1221 ±5%
 # Malignance Hatefog: 15% AP total over 3s base, extended by R dashes.
 # ──────────────────────────────────────────────────────────────────────
 
@@ -149,7 +170,8 @@ class TestCase2Damage:
 # TEST CASE 3: Ahri Level 18, Full Build
 # Items: Liandry's, Malignance, Rylai's, Sorc Shoes, Void Staff, Rabadon's
 # Enemy: 1000 HP, 100 Armor, 100 MR
-# Expected Total Damage: 2955 (one rotation, no auto attacks)
+# Fight: one rotation, no autos, 5s window, 15 ability haste
+# Expected Total Damage: 2955 ±5%
 # ──────────────────────────────────────────────────────────────────────
 
 
