@@ -1273,118 +1273,41 @@ def _add_shaped_charge_damage(state: FightState) -> None:
         state.total_damage += shaped_charge
 
 
-def calculate_fight_damage(
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    target_health: float,
-    target_armor: float,
-    target_magic_resistance: float,
-    fight_duration_seconds: float,
-    auto_attack_uptime: float = 0.0,
-    ability_haste: float = 0.0,
-    items: list[dict[str, Any]] | None = None,
-    one_rotation: bool = False,
-    include_actives: bool = True,
-    cast_order: list[str] | None = None,
-    auto_attacks_only: bool = False,
-    target_bonus_health: float = 0.0,
-    deterministic: bool = False,
-) -> dict[str, Any]:
-    """Calculate total damage dealt over a fight duration.
+@dataclass
+class AutoAttackResult:
+    """Values produced by the auto-attack simulation for later steps."""
 
-    In time-based mode, abilities recast when their cooldown expires within
-    the fight duration. In one-rotation mode, each ability is cast exactly
-    once (fight_duration still matters for burns/DoTs/procs).
+    auto_damage_per_hit: float = 0.0
+    double_shot_info: dict[str, Any] | None = None
 
-    Args:
-        champion_stats: Calculated champion stats dictionary.
-        ability_damages: Parsed ability damage dictionary.
-        target_health: Target's total maximum health (base + bonus).
-        target_armor: Target's armor.
-        target_magic_resistance: Target's magic resistance.
-        fight_duration_seconds: Duration of the fight in seconds.
-        auto_attack_uptime: Fraction of time spent auto-attacking (0.0-1.0).
-        ability_haste: Total ability haste from items.
-        items: List of item data for checking passives.
-        one_rotation: If True, each basic ability is cast exactly once.
-        include_actives: Whether to include item active damage.
-        cast_order: Ability cast order (e.g., ["E", "Q", "W", "R"]).
-            Defaults to ["Q", "W", "E", "R"].
-        auto_attacks_only: If True, skip all cast abilities (Q/W/E/R casts
-            = 0) but still process ability on-hit effects (passives that
-            augment auto attacks, e.g. Vayne W, Viego passive).
-        target_bonus_health: Target's bonus health from items (used for
-            Lord Dominik's Regards Giant Slayer amp).
 
-    Returns:
-        Dictionary with damage breakdown and total.
+def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
+    """Simulate each auto attack individually, rolling (or expecting) crits.
+
+    Handles champion auto-attack overrides (Ashe: crit chance converts to
+    bonus damage on every auto), Fiendhunter Bolts empowered autos
+    (guaranteed-crit true damage / reduced non-crits), Sundered Sky's
+    forced first-auto crit, double-shot passives (Akshan), and the basic
+    damage amplifier (Hexoptics). In deterministic mode crits are blended
+    at expected value instead of rolled.
     """
-    if cast_order is None:
-        cast_order = ["Q", "Q2", "W", "E", "R"]
-    if items is None:
-        items = []
-
-    # ── Step 1: Resolve resistances, pen, amps, attack timing ───────────
-    state = _resolve_combat_state(
-        champion_stats=champion_stats,
-        ability_damages=ability_damages,
-        target_health=target_health,
-        target_armor=target_armor,
-        target_magic_resistance=target_magic_resistance,
-        fight_duration_seconds=fight_duration_seconds,
-        auto_attack_uptime=auto_attack_uptime,
-        ability_haste=ability_haste,
-        items=items,
-        one_rotation=one_rotation,
-        include_actives=include_actives,
-        cast_order=cast_order,
-        auto_attacks_only=auto_attacks_only,
-        target_bonus_health=target_bonus_health,
-        deterministic=deterministic,
-    )
-
-    # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
-    _apply_stat_buff_ultimates(state)
-
-    # ── Step 2: Ability rotation, precomputed procs, Shaped Charge ──────
-    rotation = _compute_ability_rotation(state)
-    _add_precomputed_proc_damage(state)
-    _add_shaped_charge_damage(state)
-
-    # ── Transitional unpack ── deleted as later Phase 4 groups extract the
-    # remaining inline steps below into functions that read the state.
     resists = state.resists
-    is_melee = state.is_melee
-    level = state.level
-    item_name_list = state.item_name_list
-    has_hexplate = state.has_hexplate
-    has_fiendhunter = state.has_fiendhunter
-    empowered_autos = state.empowered_autos
+    breakdown = state.breakdown
     num_auto_attacks = state.num_auto_attacks
-    magic_amp = state.magic_amp
-    ability_amp = state.ability_amp
-    basic_amp = state.basic_amp
-    hypershot_amp = state.hypershot_amp
+    empowered_autos = state.empowered_autos
+    has_fiendhunter = state.has_fiendhunter
     crit_chance = state.crit_chance
     crit_multiplier = state.crit_multiplier
+    basic_amp = state.basic_amp
+    deterministic = state.deterministic
     effective_armor = resists.effective_armor
-    effective_mr = resists.effective_mr
-    breakdown = state.breakdown
-    total_damage = state.total_damage
-    total_ability_casts = rotation.total_ability_casts
-    total_muramana_procs = rotation.total_muramana_procs
-    first_ability_damage = rotation.first_ability_damage
-    has_navori = rotation.has_navori
-    navori_refund = rotation.navori_refund
-    autos_per_second = rotation.autos_per_second
 
-    # ── Step 3: Auto attacks (per-auto crit simulation) ───────────────────
-    attack_damage = champion_stats["attack_damage"]
+    attack_damage = state.champion_stats["attack_damage"]
 
     # Detect auto_attack_override (e.g. Ashe passive — crit chance converts
     # to bonus damage instead of crit strikes; Q changes AD ratio).
     auto_attack_override: dict[str, Any] | None = None
-    for _ov_key, _ov_info in ability_damages.items():
+    for _ov_key, _ov_info in state.ability_damages.items():
         if "auto_attack_override" in _ov_info:
             auto_attack_override = _ov_info["auto_attack_override"]
             break
@@ -1392,7 +1315,7 @@ def calculate_fight_damage(
     # Detect champion double-shot passive (e.g. Akshan — second auto per
     # attack at reduced AD ratio, applies on-hits and can crit).
     double_shot_info: dict[str, Any] | None = None
-    for _ds_key, _ds_info in ability_damages.items():
+    for _ds_key, _ds_info in state.ability_damages.items():
         if "double_shot" in _ds_info:
             double_shot_info = _ds_info["double_shot"]
             break
@@ -1409,7 +1332,7 @@ def calculate_fight_damage(
     fh_true_ratio = fh_effect["natural_crit_true_damage_ratio"] if fh_effect else 0.0
 
     # Sundered Sky: first auto crits at reduced crit ratio, overrides natural crit
-    has_sundered_sky = "Sundered Sky" in item_name_list
+    has_sundered_sky = "Sundered Sky" in state.item_name_list
     ss_effect = item_effects.ITEM_EFFECTS.get("Sundered Sky")
     ss_reduced_crit = ss_effect["reduced_crit_ratio"] if ss_effect else 0.0
 
@@ -1561,7 +1484,7 @@ def calculate_fight_damage(
     if basic_amp > 1.0:
         basic_amp_items = [
             i.get("name", "")
-            for i in items
+            for i in state.items
             if item_effects.ITEM_EFFECTS.get(i.get("name", ""), {}).get("type")
             == "basic_damage_amp"
         ]
@@ -1605,26 +1528,54 @@ def calculate_fight_damage(
             "damage_type": "physical",
         }
 
-    total_damage += auto_total + fiendhunter_true_total + double_shot_total
+    state.total_damage += auto_total + fiendhunter_true_total + double_shot_total
 
-    # ── Step 4: On-hit item damage ────────────────────────────────────────
+    return AutoAttackResult(
+        auto_damage_per_hit=auto_damage_per_hit,
+        double_shot_info=double_shot_info,
+    )
+
+
+@dataclass
+class OnHitResult:
+    """Values produced by on-hit layering and consumed by later steps."""
+
+    phantom_hit_count: int = 0
+    phantom_hit_autos: set[int] = field(default_factory=set)
+    non_bork_on_hit_per_hit: float = 0.0  # mitigated, for HP simulations
+    avg_bork_per_hit: float = 0.0
+    has_bork: bool = False
+
+
+def _layer_on_hit_effects(state: FightState, autos: AutoAttackResult) -> OnHitResult:
+    """Layer per-hit on-hit damage (items and abilities) onto the autos.
+
+    Computes Guinsoo's Rageblade phantom hits centrally — they apply ALL
+    on-hit effects an additional time — and counts double-shot extra
+    applications. Constant-damage on-hit items and ability on-hits
+    (e.g. Vayne W stacks, Viego passive) multiply per-hit damage by the
+    total application count; BoRK is simulated per-auto against the
+    target's decreasing current HP.
+    """
+    resists = state.resists
+    breakdown = state.breakdown
+    num_auto_attacks = state.num_auto_attacks
+    magic_amp = state.magic_amp
+
     on_hit_total = 0.0
-    item_names = item_effects.get_item_effect_names(items)
-    has_bork = "Blade of the Ruined King" in item_names
+    item_names = state.item_effect_names
+    result = OnHitResult(has_bork="Blade of the Ruined King" in item_names)
 
     # Calculate Guinsoo's Rageblade phantom hits centrally — these apply
     # ALL on-hit effects (items AND abilities) an additional time.
-    phantom_hit_count, phantom_hit_autos = _calculate_phantom_hits(
+    result.phantom_hit_count, result.phantom_hit_autos = _calculate_phantom_hits(
         num_auto_attacks, item_names
     )
     # Double shot applies on-hit effects an additional time per auto
-    double_shot_extra = num_auto_attacks if double_shot_info else 0
-    on_hit_hits = num_auto_attacks + phantom_hit_count + double_shot_extra
+    double_shot_extra = num_auto_attacks if autos.double_shot_info else 0
+    on_hit_hits = num_auto_attacks + result.phantom_hit_count + double_shot_extra
 
     # Process non-BoRK on-hit items (constant damage per hit)
-    non_bork_on_hit_per_hit = 0.0  # Track for BoRK HP simulation
-    avg_bork_per_hit = 0.0  # Set later if BoRK is present
-
     for name in item_names:
         effect = item_effects.ITEM_EFFECTS.get(name, {})
         if effect.get("type") != "on_hit":
@@ -1633,16 +1584,16 @@ def calculate_fight_damage(
             continue  # Handled separately below
 
         raw_per_hit = item_effects.get_on_hit_damage(
-            name, champion_stats, target_health, is_melee
+            name, state.champion_stats, state.target_health, state.is_melee
         )
         if raw_per_hit <= 0:
             continue
 
         dmg_type = effect.get("damage_type", "magic")
         if dmg_type == "magic":
-            per_hit = apply_resistance(raw_per_hit, effective_mr) * magic_amp
+            per_hit = apply_resistance(raw_per_hit, resists.effective_mr) * magic_amp
         elif dmg_type == "physical":
-            per_hit = apply_resistance(raw_per_hit, effective_armor)
+            per_hit = apply_resistance(raw_per_hit, resists.effective_armor)
         else:
             per_hit = raw_per_hit
 
@@ -1651,7 +1602,7 @@ def calculate_fight_damage(
 
         item_damage = per_hit * hits
         on_hit_total += item_damage
-        non_bork_on_hit_per_hit += per_hit
+        result.non_bork_on_hit_per_hit += per_hit
 
         breakdown[f"on_hit_{name}"] = {
             "name": f"{name} (on-hit)",
@@ -1665,7 +1616,7 @@ def calculate_fight_damage(
     # auto attack, e.g. Viego passive % health on-hit). These are passed in
     # ability_damages with an "on_hit" key containing per-hit damage info.
     # Phantom hits also apply these an additional time.
-    for ability_key, ability_info in ability_damages.items():
+    for ability_key, ability_info in state.ability_damages.items():
         on_hit_data = ability_info.get("on_hit")
         if not on_hit_data or num_auto_attacks == 0:
             continue
@@ -1676,16 +1627,16 @@ def calculate_fight_damage(
 
         dmg_type = on_hit_data.get("damage_type", "magic")
         if dmg_type == "magic":
-            per_hit = apply_resistance(raw_per_hit, effective_mr) * magic_amp
+            per_hit = apply_resistance(raw_per_hit, resists.effective_mr) * magic_amp
         elif dmg_type == "physical":
-            per_hit = apply_resistance(raw_per_hit, effective_armor)
+            per_hit = apply_resistance(raw_per_hit, resists.effective_armor)
         else:
             per_hit = raw_per_hit
 
         hits = on_hit_hits
         ability_on_hit_damage = per_hit * hits
         on_hit_total += ability_on_hit_damage
-        non_bork_on_hit_per_hit += per_hit
+        result.non_bork_on_hit_per_hit += per_hit
 
         ability_name = on_hit_data.get("name", f"{ability_key} (on-hit)")
         stacks_required = on_hit_data.get("stacks_required", 0)
@@ -1713,29 +1664,145 @@ def calculate_fight_damage(
     # BoRK: simulate with decreasing target current HP per auto attack.
     # Phantom hit autos cause BoRK to proc twice (at different current HP).
     # Double shot (e.g. Akshan) also procs BoRK an extra time per auto.
-    if has_bork and num_auto_attacks > 0:
+    if result.has_bork and num_auto_attacks > 0:
         bork_total, bork_hits = _simulate_bork_damage(
-            target_health=target_health,
+            target_health=state.target_health,
             num_auto_attacks=num_auto_attacks,
-            auto_damage_per_hit=auto_damage_per_hit,
-            other_on_hit_per_hit=non_bork_on_hit_per_hit,
-            effective_armor=effective_armor,
-            is_melee=is_melee,
-            phantom_hit_autos=phantom_hit_autos,
-            double_hit_all=double_shot_info is not None,
+            auto_damage_per_hit=autos.auto_damage_per_hit,
+            other_on_hit_per_hit=result.non_bork_on_hit_per_hit,
+            effective_armor=resists.effective_armor,
+            is_melee=state.is_melee,
+            phantom_hit_autos=result.phantom_hit_autos,
+            double_hit_all=autos.double_shot_info is not None,
         )
-        avg_bork_per_hit = bork_total / bork_hits if bork_hits > 0 else 0.0
+        result.avg_bork_per_hit = bork_total / bork_hits if bork_hits > 0 else 0.0
         on_hit_total += bork_total
 
         breakdown["on_hit_Blade of the Ruined King"] = {
             "name": "Blade of the Ruined King (on-hit)",
             "count": bork_hits,
-            "damage_per_hit": avg_bork_per_hit,
+            "damage_per_hit": result.avg_bork_per_hit,
             "total_damage": bork_total,
             "damage_type": "physical",
         }
 
-    total_damage += on_hit_total
+    state.total_damage += on_hit_total
+    return result
+
+
+def calculate_fight_damage(
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    target_health: float,
+    target_armor: float,
+    target_magic_resistance: float,
+    fight_duration_seconds: float,
+    auto_attack_uptime: float = 0.0,
+    ability_haste: float = 0.0,
+    items: list[dict[str, Any]] | None = None,
+    one_rotation: bool = False,
+    include_actives: bool = True,
+    cast_order: list[str] | None = None,
+    auto_attacks_only: bool = False,
+    target_bonus_health: float = 0.0,
+    deterministic: bool = False,
+) -> dict[str, Any]:
+    """Calculate total damage dealt over a fight duration.
+
+    In time-based mode, abilities recast when their cooldown expires within
+    the fight duration. In one-rotation mode, each ability is cast exactly
+    once (fight_duration still matters for burns/DoTs/procs).
+
+    Args:
+        champion_stats: Calculated champion stats dictionary.
+        ability_damages: Parsed ability damage dictionary.
+        target_health: Target's total maximum health (base + bonus).
+        target_armor: Target's armor.
+        target_magic_resistance: Target's magic resistance.
+        fight_duration_seconds: Duration of the fight in seconds.
+        auto_attack_uptime: Fraction of time spent auto-attacking (0.0-1.0).
+        ability_haste: Total ability haste from items.
+        items: List of item data for checking passives.
+        one_rotation: If True, each basic ability is cast exactly once.
+        include_actives: Whether to include item active damage.
+        cast_order: Ability cast order (e.g., ["E", "Q", "W", "R"]).
+            Defaults to ["Q", "W", "E", "R"].
+        auto_attacks_only: If True, skip all cast abilities (Q/W/E/R casts
+            = 0) but still process ability on-hit effects (passives that
+            augment auto attacks, e.g. Vayne W, Viego passive).
+        target_bonus_health: Target's bonus health from items (used for
+            Lord Dominik's Regards Giant Slayer amp).
+
+    Returns:
+        Dictionary with damage breakdown and total.
+    """
+    if cast_order is None:
+        cast_order = ["Q", "Q2", "W", "E", "R"]
+    if items is None:
+        items = []
+
+    # ── Step 1: Resolve resistances, pen, amps, attack timing ───────────
+    state = _resolve_combat_state(
+        champion_stats=champion_stats,
+        ability_damages=ability_damages,
+        target_health=target_health,
+        target_armor=target_armor,
+        target_magic_resistance=target_magic_resistance,
+        fight_duration_seconds=fight_duration_seconds,
+        auto_attack_uptime=auto_attack_uptime,
+        ability_haste=ability_haste,
+        items=items,
+        one_rotation=one_rotation,
+        include_actives=include_actives,
+        cast_order=cast_order,
+        auto_attacks_only=auto_attacks_only,
+        target_bonus_health=target_bonus_health,
+        deterministic=deterministic,
+    )
+
+    # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
+    _apply_stat_buff_ultimates(state)
+
+    # ── Step 2: Ability rotation, precomputed procs, Shaped Charge ──────
+    rotation = _compute_ability_rotation(state)
+    _add_precomputed_proc_damage(state)
+    _add_shaped_charge_damage(state)
+
+    # ── Step 3: Auto attacks (per-auto crit simulation) ─────────────────
+    autos = _simulate_auto_attacks(state)
+
+    # ── Step 4: On-hit damage layered onto the autos ────────────────────
+    on_hits = _layer_on_hit_effects(state, autos)
+
+    # ── Transitional unpack ── deleted as later Phase 4 groups extract the
+    # remaining inline steps below into functions that read the state.
+    resists = state.resists
+    is_melee = state.is_melee
+    level = state.level
+    item_names = state.item_effect_names
+    has_hexplate = state.has_hexplate
+    has_fiendhunter = state.has_fiendhunter
+    num_auto_attacks = state.num_auto_attacks
+    magic_amp = state.magic_amp
+    ability_amp = state.ability_amp
+    hypershot_amp = state.hypershot_amp
+    effective_armor = resists.effective_armor
+    effective_mr = resists.effective_mr
+    breakdown = state.breakdown
+    total_damage = state.total_damage
+    total_ability_casts = rotation.total_ability_casts
+    total_muramana_procs = rotation.total_muramana_procs
+    first_ability_damage = rotation.first_ability_damage
+    has_navori = rotation.has_navori
+    navori_refund = rotation.navori_refund
+    autos_per_second = rotation.autos_per_second
+    auto_damage_per_hit = autos.auto_damage_per_hit
+    double_shot_info = autos.double_shot_info
+    phantom_hit_count = on_hits.phantom_hit_count
+    phantom_hit_autos = on_hits.phantom_hit_autos
+    non_bork_on_hit_per_hit = on_hits.non_bork_on_hit_per_hit
+    avg_bork_per_hit = on_hits.avg_bork_per_hit
+    has_bork = on_hits.has_bork
 
     # ── Step 5: Spellblade damage ─────────────────────────────────────────
     spellblade_item = None
