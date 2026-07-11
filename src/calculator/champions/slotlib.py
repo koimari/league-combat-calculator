@@ -9,6 +9,7 @@ Extraction core:
     ``extract_named``        — damage for an exact attribute name
     ``extract_auto``         — classifier-driven primary-damage detection
     ``extract_cooldown``     — base cooldown at rank
+    ``pct_health_per_hit``   — %maxHP on-hit math (AP ratio/floor/stacks)
     ``build_stats_context``  — champion stats + current AP for scaling
 
 Archetype factories return slot parsers (``SlotCtx -> entry | None``)
@@ -152,6 +153,34 @@ def extract_auto(
     return _sum_modifiers(leveling, rank, stats, target), damage_type
 
 
+def _find_named_leveling(
+    ability: dict[str, Any],
+    attribute: str,
+) -> dict[str, Any] | None:
+    """Return the first leveling entry with this exact attribute name."""
+    for effect in ability.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute", "") == attribute:
+                return leveling
+    return None
+
+
+def _modifier_value(
+    leveling: dict[str, Any],
+    modifier_index: int,
+    rank: int,
+) -> float:
+    """Raw value of one modifier at a rank (0.0 when absent/empty)."""
+    modifiers = leveling.get("modifiers", [])
+    if modifier_index >= len(modifiers):
+        return 0.0
+    values = modifiers[modifier_index].get("values", [])
+    if not values:
+        return 0.0
+    idx = min(rank - 1, len(values) - 1)
+    return float(values[idx])
+
+
 def extract_value(
     ability: dict[str, Any],
     attribute: str,
@@ -173,22 +202,58 @@ def extract_value(
     Returns:
         The flat numeric value at the given rank, or 0.0 if not found.
     """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute:
-                continue
+    leveling = _find_named_leveling(ability, attribute)
+    if leveling is None:
+        return 0.0
+    return _modifier_value(leveling, modifier_index, rank)
 
-            modifiers = leveling.get("modifiers", [])
-            if modifier_index >= len(modifiers):
-                return 0.0
 
-            values = modifiers[modifier_index].get("values", [])
-            if not values:
-                return 0.0
+def pct_health_per_hit(
+    ability: dict[str, Any],
+    attr: str,
+    rank: int,
+    target: dict[str, float] | None,
+    ap: float = 0.0,
+    ap_ratio_per_100: bool = False,
+    floor_attr: str | None = None,
+    stacks_required: int = 1,
+) -> float | None:
+    """Per-hit on-hit damage as a percentage of the target's max health.
 
-            idx = min(rank - 1, len(values) - 1)
-            return float(values[idx])
-    return 0.0
+    The shared math behind %maxHP on-hit mechanics (Kog'Maw W, Vayne W,
+    Aatrox P): modifier 0 of *attr* holds the base percentage; with
+    ``ap_ratio_per_100``, modifier 1 holds extra percentage per 100 AP
+    (Kog'Maw W). The per-PROC damage is floored at *floor_attr*'s value
+    when given (Vayne W's minimum bonus damage), then spread evenly
+    across ``stacks_required`` hits (Vayne W procs every 3rd hit).
+
+    Args:
+        ability: Single ability dict from champion JSON.
+        attr: Exact attribute name holding the %maxHP value.
+        rank: Ability rank, or champion level for per-level passives.
+        target: Target stats (``target_max_health``); None -> 0 damage.
+        ap: Current total AP (only read with ``ap_ratio_per_100``).
+        ap_ratio_per_100: Modifier 1 is bonus % per 100 AP.
+        floor_attr: Attribute holding the minimum per-proc damage.
+        stacks_required: Hits needed per proc; divides the proc damage.
+
+    Returns:
+        Damage per hit, or None when *attr* is absent from the ability
+        (not this mechanic — the caller drops the slot).
+    """
+    leveling = _find_named_leveling(ability, attr)
+    if leveling is None:
+        return None
+
+    percent = _modifier_value(leveling, 0, rank)
+    if ap_ratio_per_100:
+        percent += ap * _modifier_value(leveling, 1, rank) / 100.0
+
+    max_health = (target or {}).get("target_max_health", 0.0)
+    per_proc = (percent / 100.0) * max_health
+    if floor_attr:
+        per_proc = max(per_proc, extract_value(ability, floor_attr, rank))
+    return per_proc / stacks_required
 
 
 def extract_cooldown(ability: dict[str, Any], rank: int) -> float:

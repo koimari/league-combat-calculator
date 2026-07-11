@@ -27,6 +27,7 @@ from src.calculator.champions.slotlib import (
     extract_value,
     multi_cast,
     on_hit_auto,
+    pct_health_per_hit,
     proc_damage,
     simple_damage,
     toggle_dot,
@@ -773,6 +774,108 @@ class TestExtractValue:
     def test_missing_attribute_returns_zero(self) -> None:
         ability = self._ability_with_two_modifiers()
         assert extract_value(ability, "No Such Attribute", 3) == 0.0
+
+
+class TestPctHealthPerHit:
+    """Shared %max-health on-hit math (Kog'Maw W / Vayne W / Aatrox P)."""
+
+    def _on_hit_ability(
+        self,
+        ap_modifier: bool = False,
+        floor: bool = False,
+    ) -> dict:
+        """W-shaped ability: %maxHP base, optional per-100-AP and floor."""
+        modifiers = [
+            {
+                "values": [3, 3.75, 4.5, 5.25, 6],
+                "units": ["% of target's maximum health"] * 5,
+            },
+        ]
+        if ap_modifier:
+            modifiers.append(
+                {"values": [1.5] * 5, "units": ["% per 100 AP"] * 5},
+            )
+        leveling = [{"attribute": "Bonus Magic Damage", "modifiers": modifiers}]
+        if floor:
+            leveling.append(
+                _leveling("Minimum Bonus Damage", [50, 65, 80, 95, 110]),
+            )
+        return {"name": "W", "effects": [{"leveling": leveling}]}
+
+    def test_base_percent_of_target_max_health(self) -> None:
+        """Rank 3: 4.5% of 2000 = 90 per hit."""
+        damage = pct_health_per_hit(
+            self._on_hit_ability(),
+            "Bonus Magic Damage",
+            3,
+            _default_target(target_max_health=2000.0),
+        )
+        assert damage == pytest.approx(90.0)
+
+    def test_ap_ratio_per_100_adds_percent(self) -> None:
+        """Kog'Maw W: rank 3 + 80 AP at 1.5%/100AP = (4.5 + 1.2)% of 2000."""
+        damage = pct_health_per_hit(
+            self._on_hit_ability(ap_modifier=True),
+            "Bonus Magic Damage",
+            3,
+            _default_target(target_max_health=2000.0),
+            ap=80.0,
+            ap_ratio_per_100=True,
+        )
+        assert damage == pytest.approx(114.0)
+
+    def test_floor_attr_applies_minimum(self) -> None:
+        """Vayne-W floor: 3% of 500 = 15 < 50 minimum -> 50."""
+        damage = pct_health_per_hit(
+            self._on_hit_ability(floor=True),
+            "Bonus Magic Damage",
+            1,
+            _default_target(target_max_health=500.0),
+            floor_attr="Minimum Bonus Damage",
+        )
+        assert damage == pytest.approx(50.0)
+
+    def test_floor_not_hit_when_percent_higher(self) -> None:
+        """Rank 5: 6% of 2000 = 120 > 110 minimum -> 120."""
+        damage = pct_health_per_hit(
+            self._on_hit_ability(floor=True),
+            "Bonus Magic Damage",
+            5,
+            _default_target(target_max_health=2000.0),
+            floor_attr="Minimum Bonus Damage",
+        )
+        assert damage == pytest.approx(120.0)
+
+    def test_stacks_required_divides_per_proc(self) -> None:
+        """Vayne-W stacks: one 120-damage proc across 3 hits = 40/hit."""
+        damage = pct_health_per_hit(
+            self._on_hit_ability(),
+            "Bonus Magic Damage",
+            5,
+            _default_target(target_max_health=2000.0),
+            stacks_required=3,
+        )
+        assert damage == pytest.approx(40.0)
+
+    def test_missing_attribute_returns_none(self) -> None:
+        """An absent attribute means "not this mechanic" — caller drops."""
+        damage = pct_health_per_hit(
+            self._on_hit_ability(),
+            "No Such Attribute",
+            3,
+            _default_target(),
+        )
+        assert damage is None
+
+    def test_no_target_gives_zero_damage(self) -> None:
+        """Attribute present but no target stats -> 0.0 (entry still emitted)."""
+        damage = pct_health_per_hit(
+            self._on_hit_ability(),
+            "Bonus Magic Damage",
+            3,
+            None,
+        )
+        assert damage == 0.0
 
 
 # ---------------------------------------------------------------------------
