@@ -75,8 +75,8 @@ def _calculate_phantom_hits(
         return 0, set()
 
     effect = item_effects.ITEM_EFFECTS["Guinsoo's Rageblade"]
-    stacking_autos = effect.get("stacking_autos", 5)
-    interval = effect.get("phantom_interval", 3)
+    stacking_autos = effect["stacking_autos"]
+    interval = effect["phantom_interval"]
 
     phantom_autos: set[int] = set()
     # First phantom hit at auto index = stacking_autos (0-indexed, so 6th auto)
@@ -238,7 +238,7 @@ def _simulate_kraken_damage(
 
     # Base damage: flat from levels 1-8, then +5 (melee) or +4 (ranged)
     # per level from level 9 onward.
-    scaling_start = effect.get("scaling_start_level", 9)
+    scaling_start = effect["scaling_start_level"]
     if is_melee:
         base = effect["base_melee"]
         per_level = effect["per_level_melee"]
@@ -249,7 +249,7 @@ def _simulate_kraken_damage(
     if level >= scaling_start:
         base += per_level * (level - scaling_start + 1)
 
-    missing_hp_bonus_max = effect.get("missing_hp_bonus_max", 0.75)
+    missing_hp_bonus_max = effect["missing_hp_bonus_max"]
 
     # Convert proc list to a counter: how many procs fire on each auto
     proc_counts: dict[int, int] = Counter(kraken_proc_autos)
@@ -320,7 +320,7 @@ def _simulate_bork_damage(
         if is_melee
         else bork_effect["current_hp_ratio_ranged"]
     )
-    min_damage = bork_effect.get("min_damage", 5.0)
+    min_damage = bork_effect["min_damage"]
 
     current_hp = target_health
     total_bork_damage = 0.0
@@ -569,7 +569,7 @@ def calculate_fight_damage(
     for item in items:
         effect = item_effects.ITEM_EFFECTS.get(item.get("name", ""), {})
         if effect.get("type") == "ult_proc" and "R" in ability_damages:
-            malignance_mr_reduction += effect.get("mr_reduction", 0)
+            malignance_mr_reduction += effect["mr_reduction"]
 
     base_mr = max(target_magic_resistance, 0)
     reduced_mr = max(target_magic_resistance - malignance_mr_reduction, 0)
@@ -643,9 +643,9 @@ def calculate_fight_damage(
     if has_terminus:
         terminus_avg_pen = item_effects.get_terminus_pen_stacks(num_auto_attacks)
         terminus_effect = item_effects.ITEM_EFFECTS.get("Terminus", {})
-        terminus_stat_pen = terminus_effect.get(
-            "dark_pen_per_stack", 0.10
-        ) * terminus_effect.get("dark_max_stacks", 3)
+        terminus_stat_pen = (
+            terminus_effect["dark_pen_per_stack"] * terminus_effect["dark_max_stacks"]
+        )
         # Strip max-stack pen for abilities (Terminus pen doesn't apply)
         ability_armor_pen_percent = max(0.0, armor_pen_percent - terminus_stat_pen)
         ability_magic_pen_percent = max(0.0, magic_pen_percent - terminus_stat_pen)
@@ -793,9 +793,7 @@ def calculate_fight_damage(
     navori_effect = item_effects.ITEM_EFFECTS.get("Navori Flickerblade")
     has_navori = "Navori Flickerblade" in [i.get("name", "") for i in items]
     navori_refund = (
-        navori_effect.get("cd_refund_percent", 0.15)
-        if has_navori and navori_effect
-        else 0.0
+        navori_effect["cd_refund_percent"] if has_navori and navori_effect else 0.0
     )
     autos_per_second = attack_speed * auto_attack_uptime if navori_refund > 0 else 0.0
 
@@ -1473,8 +1471,8 @@ def calculate_fight_damage(
         raw_sb = item_effects.get_spellblade_damage(spellblade_item, champion_stats)
         sb_type = item_effects.get_spellblade_damage_type(spellblade_item)
         sb_effect = item_effects.ITEM_EFFECTS[spellblade_item]
-        sb_cd = sb_effect.get("cooldown", 1.5)
-        weave_delay = sb_effect.get("weave_delay", 0.0)
+        sb_cd = sb_effect["cooldown"]
+        weave_delay = sb_effect["weave_delay"]
         effective_sb_cd = sb_cd + weave_delay
 
         if sb_type == "magic":
@@ -1536,7 +1534,7 @@ def calculate_fight_damage(
             raw_burn = item_effects.calculate_burn_damage(
                 name, champion_stats, target_health
             )
-            burn_duration = effect.get("duration", 3.0)
+            burn_duration = effect["duration"]
             # Burn refreshes on each ability hit (including R dashes).
             r_info = ability_damages.get("R")
             r_extra = 0
@@ -1557,7 +1555,7 @@ def calculate_fight_damage(
                 if other_eff.get("type") == "ult_proc" and "R" in ability_damages:
                     # R1 is cast at (cast_spread - r_extra) into the fight
                     r_start = cast_spread - r_extra
-                    hatefog_end = r_start + other_eff.get("duration", 3.0)
+                    hatefog_end = r_start + other_eff["duration"]
                     dot_refresh_end = max(dot_refresh_end, hatefog_end)
 
             if one_rotation:
@@ -1650,11 +1648,11 @@ def calculate_fight_damage(
         if r_info is None:
             continue
         ap = champion_stats.get("ability_power", 0)
-        raw = effect.get("base", 0) + effect.get("ap_ratio", 0) * ap
+        raw = effect["base"] + effect["ap_ratio"] * ap
 
         # Hatefog zone refreshes on each R dash.  Effective duration is
         # the time from R1 to R_last plus the base zone duration.
-        hatefog_duration = effect.get("duration", 3.0)
+        hatefog_duration = effect["duration"]
         r_total_casts = r_info.get("total_casts", 1)
         r_dash_spread = (r_total_casts - 1) * 0.5  # ~0.5s between dashes
         effective_hatefog = r_dash_spread + hatefog_duration
@@ -1722,7 +1720,7 @@ def calculate_fight_damage(
     # Rapid Firecannon: one energized proc on first auto
     if "Rapid Firecannon" in item_names and num_auto_attacks > 0:
         rfc_effect = item_effects.ITEM_EFFECTS.get("Rapid Firecannon", {})
-        raw_rfc = rfc_effect.get("base", 40.0)
+        raw_rfc = rfc_effect["base"]
         rfc_mitigated = apply_resistance(raw_rfc, effective_mr)
         breakdown["on_hit_once_Rapid Firecannon"] = {
             "name": "Rapid Firecannon (Sharpshooter)",
@@ -1734,7 +1732,7 @@ def calculate_fight_damage(
     # Stormrazor: one energized proc on first auto
     if "Stormrazor" in item_names and num_auto_attacks > 0:
         sr_effect = item_effects.ITEM_EFFECTS.get("Stormrazor", {})
-        raw_sr = sr_effect.get("base", 100.0)
+        raw_sr = sr_effect["base"]
         sr_mitigated = apply_resistance(raw_sr, effective_mr)
         breakdown["on_hit_once_Stormrazor"] = {
             "name": "Stormrazor (Bolt)",
@@ -1750,11 +1748,11 @@ def calculate_fight_damage(
     if "Voltaic Cyclosword" in item_names and num_auto_attacks > 0:
         vc_effect = item_effects.ITEM_EFFECTS.get("Voltaic Cyclosword", {})
         vc_ratio = (
-            vc_effect.get("current_hp_ratio_melee", 0.09)
+            vc_effect["current_hp_ratio_melee"]
             if is_melee
-            else vc_effect.get("current_hp_ratio_ranged", 0.07)
+            else vc_effect["current_hp_ratio_ranged"]
         )
-        vc_cap = vc_effect.get("damage_cap", 200.0)
+        vc_cap = vc_effect["damage_cap"]
         raw_vc = min(vc_ratio * target_health, vc_cap)
         vc_mitigated = apply_resistance(raw_vc, effective_armor)
         breakdown["on_hit_once_Voltaic Cyclosword"] = {
@@ -1770,10 +1768,10 @@ def calculate_fight_damage(
     if "Statikk Shiv" in item_names and num_auto_attacks > 0:
         ss_effect = item_effects.ITEM_EFFECTS.get("Statikk Shiv", {})
         ss_count = min(
-            int(ss_effect.get("empowered_auto_count", 1)),
+            int(ss_effect["empowered_auto_count"]),
             num_auto_attacks,
         )
-        raw_ss = ss_effect.get("base", 60.0) * ss_count
+        raw_ss = ss_effect["base"] * ss_count
         ss_mitigated = apply_resistance(raw_ss, effective_mr)
         breakdown["on_hit_once_Statikk Shiv"] = {
             "name": "Statikk Shiv (Electrospark)",
@@ -1787,12 +1785,12 @@ def calculate_fight_damage(
     if "Titanic Hydra" in item_names and num_auto_attacks > 0:
         th_effect = item_effects.ITEM_EFFECTS.get("Titanic Hydra", {})
         th_active_ratio = (
-            th_effect.get("active_max_hp_ratio_melee", 0.04)
+            th_effect["active_max_hp_ratio_melee"]
             if is_melee
-            else th_effect.get("active_max_hp_ratio_ranged", 0.02)
+            else th_effect["active_max_hp_ratio_ranged"]
         )
         if th_active_ratio > 0:
-            th_cd = th_effect.get("active_cooldown", 10.0)
+            th_cd = th_effect["active_cooldown"]
             th_procs = 1 + int(fight_duration_seconds / th_cd) if th_cd > 0 else 1
             th_procs = min(th_procs, num_auto_attacks)
             champion_hp = champion_stats.get("health", 0)
@@ -1846,7 +1844,7 @@ def calculate_fight_damage(
     # Damage is constant per proc (base AD ratio + champion max HP ratio).
     if "Hullbreaker" in item_names and num_auto_attacks > 0:
         hb_effect = item_effects.ITEM_EFFECTS.get("Hullbreaker", {})
-        hb_hits = hb_effect.get("hits_required", 5)
+        hb_hits = hb_effect["hits_required"]
         hb_procs, _ = _calculate_hullbreaker_procs(
             num_auto_attacks,
             phantom_hit_autos,
@@ -1919,6 +1917,9 @@ def calculate_fight_damage(
     # ── Step 9.6: Expose Weakness (Bloodsong) ──────────────────────────────
     if spellblade_item and sb_procs > 0:
         sb_ew_effect = item_effects.ITEM_EFFECTS.get(spellblade_item, {})
+        # Polymorphic lookup across all spellblades: only Bloodsong has the
+        # expose_weakness keys, so 0 here means "no such passive" — it is
+        # NOT a stale duplicate of a registry value.
         expose_rate = (
             sb_ew_effect.get("expose_weakness_melee", 0)
             if is_melee

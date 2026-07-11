@@ -583,15 +583,249 @@ def refresh_item_effects() -> None:
 
     Call this after the data updater has fetched fresh item data so
     that ``ITEM_EFFECTS`` reflects the newest balance values.
+
+    Mutates ``ITEM_EFFECTS`` in place (clear + update) rather than
+    rebinding the module global, so modules that imported it via
+    ``from .item_effects import ITEM_EFFECTS`` (e.g. ``calculator/__init__.py``)
+    keep seeing the refreshed values through their existing binding.
     """
-    global ITEM_EFFECTS  # noqa: PLW0603
-    ITEM_EFFECTS = _build_item_effects(_DEFAULT_ITEM_EFFECTS)
+    ITEM_EFFECTS.clear()
+    ITEM_EFFECTS.update(_build_item_effects(_DEFAULT_ITEM_EFFECTS))
 
 
 # Build the live registry at import time.
 ITEM_EFFECTS: dict[str, dict[str, Any]] = _build_item_effects(
     _DEFAULT_ITEM_EFFECTS,
 )
+
+
+def _required_effect_value(item_name: str, key: str) -> Any:
+    """Read a required key from an item's effect entry, failing loudly.
+
+    ``ITEM_EFFECTS`` merges parsed wiki values over ``_DEFAULT_ITEM_EFFECTS``,
+    so every registered item is guaranteed to carry its default keys.  A
+    missing key therefore means a parser/defaults bug — raise a KeyError
+    naming the item and key instead of silently substituting a stale
+    literal (the failure mode behind the Statikk Shiv bug).
+    """
+    effect = ITEM_EFFECTS.get(item_name, {})
+    if key not in effect:
+        raise KeyError(
+            f"ITEM_EFFECTS[{item_name!r}] is missing {key!r} — "
+            "parser/defaults bug; check _DEFAULT_ITEM_EFFECTS and "
+            "passive_parser"
+        )
+    return effect[key]
+
+
+def _item_names(items: list[dict[str, Any]]) -> set[str]:
+    """Return the set of item names in a build."""
+    return {item.get("name", "") for item in items}
+
+
+# ---------------------------------------------------------------------------
+# Stat-modifying passives (consumed by stats.py)
+# ---------------------------------------------------------------------------
+# These accessors own both the ITEM_EFFECTS lookup and the numeric
+# semantics of each stat-granting passive; stats.py only orchestrates
+# when to apply them.  Each passive applies once per build regardless of
+# duplicate copies (legendary items are unique).
+
+
+def get_ap_multiplier(items: list[dict[str, Any]]) -> float:
+    """Additive AP multiplier from item passives.
+
+    Rabadon's Deathcap (+30% AP) and Blackfire Torch (+4% AP per burning
+    champion, assumed 1 target) stack additively: 30% + 4% = ×1.34.
+
+    Args:
+        items: List of item data dicts.
+
+    Returns:
+        Multiplier applied to total AP (e.g. 1.30 with Rabadon's).
+    """
+    names = _item_names(items)
+    bonus = 0.0
+    if "Rabadon's Deathcap" in names:
+        bonus += _required_effect_value("Rabadon's Deathcap", "ap_percent_increase")
+    if "Blackfire Torch" in names:
+        bonus += _required_effect_value("Blackfire Torch", "ap_amp_per_target")
+    return 1.0 + bonus
+
+
+def get_mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
+    """Awe passives (Archangel's Staff, Seraph's Embrace): bonus mana → AP.
+
+    Args:
+        items: List of item data dicts.
+        bonus_mana: Total bonus mana from items.
+
+    Returns:
+        Flat bonus AP from mana conversion.
+    """
+    names = _item_names(items)
+    total = 0.0
+    for name in ("Archangel's Staff", "Seraph's Embrace"):
+        if name in names:
+            total += _required_effect_value(name, "bonus_mana_to_ap_ratio") * bonus_mana
+    return total
+
+
+def get_dawncore_bonus_ap(
+    items: list[dict[str, Any]],
+    bonus_mana_regen_percent: float,
+) -> float:
+    """Dawncore First Light: AP per 100% additional base mana regen.
+
+    Args:
+        items: List of item data dicts.
+        bonus_mana_regen_percent: Total bonus base mana regen (percent).
+
+    Returns:
+        Flat bonus AP from mana regen conversion.
+    """
+    if "Dawncore" not in _item_names(items):
+        return 0.0
+    ap_per_unit = _required_effect_value("Dawncore", "ap_per_mana_regen_unit")
+    threshold = _required_effect_value("Dawncore", "mana_regen_threshold_percent")
+    return (bonus_mana_regen_percent / threshold) * ap_per_unit
+
+
+def get_flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
+    """Staff of Flowing Water Rapids: flat bonus AP (assumed always active).
+
+    Args:
+        items: List of item data dicts.
+
+    Returns:
+        Flat bonus AP from Rapids.
+    """
+    if "Staff of Flowing Water" not in _item_names(items):
+        return 0.0
+    return _required_effect_value("Staff of Flowing Water", "rapids_bonus_ap")
+
+
+def get_passive_attack_speed_bonus(
+    items: list[dict[str, Any]],
+    is_melee: bool,
+) -> float:
+    """Flat bonus attack speed (percent) from assumed-active item passives.
+
+    Bandlepipes Fanfare (melee/ranged split), Experimental Hexplate
+    Overdrive (active from R cast at fight start), and Yun Tal Wildarrows
+    Flurry (active while attacking a champion).
+
+    Args:
+        items: List of item data dicts.
+        is_melee: Whether the champion is melee.
+
+    Returns:
+        Bonus attack speed percentage (e.g. 50.0 for 50%).
+    """
+    names = _item_names(items)
+    bonus = 0.0
+    if "Bandlepipes" in names:
+        key = "bonus_attack_speed_melee" if is_melee else "bonus_attack_speed_ranged"
+        bonus += _required_effect_value("Bandlepipes", key)
+    for name in ("Experimental Hexplate", "Yun Tal Wildarrows"):
+        if name in names:
+            bonus += _required_effect_value(name, "bonus_attack_speed_percent")
+    return bonus
+
+
+def get_muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
+    """Muramana Awe passive: % of maximum mana as bonus AD.
+
+    Args:
+        items: List of item data dicts.
+        max_mana: Champion's total maximum mana (base + items).
+
+    Returns:
+        Flat bonus AD from Awe.
+    """
+    if "Muramana" not in _item_names(items):
+        return 0.0
+    return _required_effect_value("Muramana", "max_mana_to_ad_ratio") * max_mana
+
+
+def get_bloodmail_bonus_ad(
+    items: list[dict[str, Any]],
+    bonus_health: float,
+) -> float:
+    """Overlord's Bloodmail Tyranny passive: % of bonus health as bonus AD.
+
+    Args:
+        items: List of item data dicts.
+        bonus_health: Total bonus health from items.
+
+    Returns:
+        Flat bonus AD from Tyranny.
+    """
+    if "Overlord's Bloodmail" not in _item_names(items):
+        return 0.0
+    ratio = _required_effect_value("Overlord's Bloodmail", "bonus_health_to_ad_ratio")
+    return ratio * bonus_health
+
+
+def get_steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
+    """Sterak's Gage The Claws that Catch: % of base AD as bonus AD.
+
+    Args:
+        items: List of item data dicts.
+        base_ad: Champion's base attack damage at the current level.
+
+    Returns:
+        Flat bonus AD from the passive.
+    """
+    if "Sterak's Gage" not in _item_names(items):
+        return 0.0
+    return (
+        _required_effect_value("Sterak's Gage", "base_ad_to_bonus_ad_ratio") * base_ad
+    )
+
+
+def get_terminus_max_stack_bonuses(
+    items: list[dict[str, Any]],
+    level: int,
+) -> tuple[float, float]:
+    """Terminus Juxtaposition at max stacks: (bonus armor/MR, pen percent).
+
+    Light hits grant level-scaled bonus armor + MR per stack; dark hits
+    grant % armor and magic penetration per stack.  Both are assumed at
+    max stacks for the stat display; the fight engine later replaces the
+    max-stack pen with a ramping per-auto average
+    (``get_terminus_pen_stacks``).
+
+    Args:
+        items: List of item data dicts.
+        level: Champion level (1-18).
+
+    Returns:
+        Tuple of (bonus armor and MR, penetration as a percentage such
+        as 30.0).  ``(0.0, 0.0)`` when Terminus is not in the build.
+    """
+    if "Terminus" not in _item_names(items):
+        return 0.0, 0.0
+    max_stacks = _required_effect_value("Terminus", "dark_max_stacks")
+    bonus_resist = get_terminus_light_resist_per_stack(level) * max_stacks
+    pen_percent = (
+        _required_effect_value("Terminus", "dark_pen_per_stack") * max_stacks * 100.0
+    )
+    return bonus_resist, pen_percent
+
+
+def get_basic_ability_haste(items: list[dict[str, Any]]) -> float:
+    """Spear of Shojin Dragonforce: basic ability haste (Q, W, E only).
+
+    Args:
+        items: List of item data dicts.
+
+    Returns:
+        Total basic ability haste.
+    """
+    if "Spear of Shojin" not in _item_names(items):
+        return 0.0
+    return _required_effect_value("Spear of Shojin", "basic_ability_haste")
 
 
 # ---------------------------------------------------------------------------
@@ -944,7 +1178,7 @@ def get_magic_damage_amplifier(items: list[dict[str, Any]]) -> float:
         name = item.get("name", "")
         effect = ITEM_EFFECTS.get(name)
         if effect and effect.get("type") == "magic_damage_amp":
-            amp += effect.get("magic_amp", 0)
+            amp += effect["magic_amp"]
     return 1.0 + amp
 
 
@@ -972,8 +1206,8 @@ def get_ability_damage_amplifier(
         if not include_actives:
             continue
         bonus_mana = champion_stats.get("bonus_mana", 0.0)
-        base_amp = effect.get("base_amp", 0.0)
-        per_100 = effect.get("amp_per_100_bonus_mana", 0.0)
+        base_amp = effect["base_amp"]
+        per_100 = effect["amp_per_100_bonus_mana"]
         amp += base_amp + per_100 * (bonus_mana / 100.0)
     return 1.0 + amp
 
@@ -996,7 +1230,7 @@ def get_hypershot_amplifier(items: list[dict[str, Any]]) -> float:
         name = item.get("name", "")
         effect = ITEM_EFFECTS.get(name)
         if effect and effect.get("type") == "hypershot_amp":
-            amp += effect.get("amp", 0.0)
+            amp += effect["amp"]
     return 1.0 + amp
 
 
@@ -1021,7 +1255,7 @@ def get_basic_damage_amplifier(
         effect = ITEM_EFFECTS.get(name)
         if not effect or effect.get("type") != "basic_damage_amp":
             continue
-        amp += effect.get("max_amp", 0.0)
+        amp += effect["max_amp"]
     return 1.0 + amp
 
 
@@ -1172,11 +1406,11 @@ def calculate_hullbreaker_proc_damage(
     max_hp = champion_stats.get("health", 0.0)
 
     if is_melee:
-        ad_ratio = effect.get("base_ad_ratio_melee", 1.20)
-        hp_ratio = effect.get("max_hp_ratio_melee", 0.05)
+        ad_ratio = effect["base_ad_ratio_melee"]
+        hp_ratio = effect["max_hp_ratio_melee"]
     else:
-        ad_ratio = effect.get("base_ad_ratio_ranged", 0.84)
-        hp_ratio = effect.get("max_hp_ratio_ranged", 0.035)
+        ad_ratio = effect["base_ad_ratio_ranged"]
+        hp_ratio = effect["max_hp_ratio_ranged"]
 
     return ad_ratio * base_ad + hp_ratio * max_hp
 
@@ -1197,6 +1431,9 @@ def get_crit_multiplier(items: list[dict[str, Any]]) -> float:
         name = item.get("name", "")
         effect = ITEM_EFFECTS.get(name)
         if effect and effect.get("type") == "crit_modifier":
+            # Polymorphic across crit_modifier items: Navori Flickerblade
+            # has no bonus_crit_damage key, so 0 means "no crit damage
+            # modifier" — NOT a stale duplicate of a registry value.
             base_crit += effect.get("bonus_crit_damage", 0)
     return base_crit
 
@@ -1320,9 +1557,9 @@ def calculate_unending_despair_damage(
     if not effect:
         return 0.0
 
-    interval = effect.get("interval", 4.0)
+    interval = effect["interval"]
     bonus_hp = champion_stats.get("bonus_health", 0)
-    ratio = effect.get("bonus_hp_ratio", 0.03)
+    ratio = effect["bonus_hp_ratio"]
     per_proc = ratio * bonus_hp
 
     # First proc at interval seconds, then every interval thereafter
@@ -1356,8 +1593,8 @@ def get_terminus_pen_stacks(
     if not effect:
         return 0.0
 
-    pen_per_stack = effect.get("dark_pen_per_stack", 0.10)
-    max_stacks = effect.get("dark_max_stacks", 3)
+    pen_per_stack = effect["dark_pen_per_stack"]
+    max_stacks = effect["dark_max_stacks"]
 
     if num_auto_attacks == 0:
         return 0.0
@@ -1390,8 +1627,8 @@ def get_terminus_light_resist_per_stack(level: int) -> float:
     effect = ITEM_EFFECTS.get("Terminus")
     if not effect:
         return 0.0
-    low = effect.get("light_resist_min", 6.0)
-    high = effect.get("light_resist_max", 8.0)
+    low = effect["light_resist_min"]
+    high = effect["light_resist_max"]
     clamped = max(1, min(level, 18))
     return low + (high - low) * (clamped - 1) / 17.0
 
@@ -1414,5 +1651,5 @@ def get_collector_execution_threshold(
         name = item.get("name", "")
         effect = ITEM_EFFECTS.get(name)
         if effect and effect.get("type") == "execute":
-            return target_health * effect.get("threshold", 0.05)
+            return target_health * effect["threshold"]
     return None

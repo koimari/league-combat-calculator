@@ -2,7 +2,19 @@
 
 from typing import Any
 
-from .item_effects import ITEM_EFFECTS, get_terminus_light_resist_per_stack
+from .item_effects import (
+    get_ap_multiplier,
+    get_basic_ability_haste,
+    get_bloodmail_bonus_ad,
+    get_dawncore_bonus_ap,
+    get_flowing_water_bonus_ap,
+    get_mana_to_ap_bonus,
+    get_muramana_bonus_ad,
+    get_passive_attack_speed_bonus,
+    get_steraks_bonus_ad,
+    get_terminus_max_stack_bonuses,
+)
+from .resistance import lethality_to_flat_pen
 
 
 def growth_stat(base: float, growth: float, level: int) -> float:
@@ -45,7 +57,9 @@ def calculate_attack_speed(
     return base_attack_speed + attack_speed_ratio * (bonus_percent / 100.0)
 
 
-def get_champion_base_stats(champion_data: dict[str, Any], level: int) -> dict[str, float]:
+def get_champion_base_stats(
+    champion_data: dict[str, Any], level: int
+) -> dict[str, float]:
     """Calculate a champion's base stats at a given level (no items).
 
     Args:
@@ -60,16 +74,20 @@ def get_champion_base_stats(champion_data: dict[str, Any], level: int) -> dict[s
     health = growth_stat(stats["health"]["flat"], stats["health"]["perLevel"], level)
     attack_damage = growth_stat(
         stats["attackDamage"]["flat"],
-        stats["attackDamage"]["perLevel"], level,
+        stats["attackDamage"]["perLevel"],
+        level,
     )
     armor = growth_stat(stats["armor"]["flat"], stats["armor"]["perLevel"], level)
     magic_resistance = growth_stat(
         stats["magicResistance"]["flat"],
-        stats["magicResistance"]["perLevel"], level,
+        stats["magicResistance"]["perLevel"],
+        level,
     )
 
     # Attack speed uses percentage growth with separate AS ratio
-    as_ratio = stats.get("attackSpeedRatio", {}).get("flat", stats["attackSpeed"]["flat"])
+    as_ratio = stats.get("attackSpeedRatio", {}).get(
+        "flat", stats["attackSpeed"]["flat"]
+    )
     attack_speed_bonus_percent = growth_stat(0, stats["attackSpeed"]["perLevel"], level)
     attack_speed = calculate_attack_speed(
         stats["attackSpeed"]["flat"], as_ratio, attack_speed_bonus_percent
@@ -131,31 +149,6 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
     }
 
 
-def check_item_passives(item_data: dict[str, Any]) -> dict[str, Any]:
-    """Check for relevant item passives that affect stats or damage.
-
-    Args:
-        item_data: Item data dictionary from the CDN.
-
-    Returns:
-        Dictionary of passive effects found.
-    """
-    passives = {}
-    item_name = item_data.get("name", "")
-    effect = ITEM_EFFECTS.get(item_name, {})
-
-    if item_name == "Rabadon's Deathcap":
-        ap_increase = effect.get("ap_percent_increase", 0.30)
-        passives["ability_power_multiplier"] = 1.0 + ap_increase
-
-    if item_name == "Blackfire Torch":
-        # Assume 1 burning target for single-target calc
-        ap_amp = effect.get("ap_amp_per_target", 0.04)
-        passives["ability_power_multiplier"] = 1.0 + ap_amp
-
-    return passives
-
-
 def calculate_total_stats(
     champion_data: dict[str, Any],
     level: int,
@@ -190,100 +183,39 @@ def calculate_total_stats(
         "mana_regen_percent": 0.0,
     }
 
-    item_passives: list[dict[str, Any]] = []
-
     for item in items:
         item_stats = get_item_stats(item)
         for key in total_item_stats:
             total_item_stats[key] += item_stats.get(key, 0.0)
-        passives = check_item_passives(item)
-        if passives:
-            item_passives.append(passives)
 
-    # Aggregate ability power before multiplier
+    # Ability power: base + items + stat-converting passives, then the
+    # additive %AP multiplier (Rabadon's, Blackfire Torch).
     raw_ability_power = base_stats["ability_power"] + total_item_stats["ability_power"]
+    raw_ability_power += get_mana_to_ap_bonus(items, total_item_stats["mana"])
+    raw_ability_power += get_dawncore_bonus_ap(
+        items, total_item_stats["mana_regen_percent"]
+    )
+    raw_ability_power += get_flowing_water_bonus_ap(items)
 
-    # Archangel's Staff Awe passive: bonus mana as AP
-    for item in items:
-        if item.get("name") == "Archangel's Staff":
-            effect = ITEM_EFFECTS.get("Archangel's Staff", {})
-            ratio = effect.get("bonus_mana_to_ap_ratio", 0.01)
-            raw_ability_power += ratio * total_item_stats["mana"]
-            break
-
-    # Seraph's Embrace Awe passive: bonus mana as AP
-    for item in items:
-        if item.get("name") == "Seraph's Embrace":
-            effect = ITEM_EFFECTS.get("Seraph's Embrace", {})
-            ratio = effect.get("bonus_mana_to_ap_ratio", 0.02)
-            raw_ability_power += ratio * total_item_stats["mana"]
-            break
-
-    # Dawncore First Light passive: AP per additional base mana regen
-    for item in items:
-        if item.get("name") == "Dawncore":
-            effect = ITEM_EFFECTS.get("Dawncore", {})
-            ap_per_unit = effect.get("ap_per_mana_regen_unit", 10.0)
-            threshold = effect.get("mana_regen_threshold_percent", 100.0)
-            bonus_mana_regen = total_item_stats["mana_regen_percent"]
-            raw_ability_power += (bonus_mana_regen / threshold) * ap_per_unit
-            break
-
-    # Staff of Flowing Water Rapids: bonus AP (assumed always active)
-    for item in items:
-        if item.get("name") == "Staff of Flowing Water":
-            effect = ITEM_EFFECTS.get("Staff of Flowing Water", {})
-            raw_ability_power += effect.get("rapids_bonus_ap", 45.0)
-            break
-
-    # Apply AP multipliers (Rabadon's, Blackfire Torch, etc.) additively
-    # In LoL, %AP increases stack additively: 30% + 4% = 34%, not 1.30 × 1.04
-    ap_bonus_percent = 0.0
-    for passive in item_passives:
-        if "ability_power_multiplier" in passive:
-            ap_bonus_percent += passive["ability_power_multiplier"] - 1.0
-    ap_multiplier = 1.0 + ap_bonus_percent
-
-    final_ability_power = raw_ability_power * ap_multiplier
+    final_ability_power = raw_ability_power * get_ap_multiplier(items)
 
     # Attack speed: base AS + (AS ratio × total bonus%)
     base_as = champion_data["stats"]["attackSpeed"]["flat"]
     as_ratio = champion_data["stats"].get("attackSpeedRatio", {}).get("flat", base_as)
-    level_as_bonus = growth_stat(0, champion_data["stats"]["attackSpeed"]["perLevel"], level)
+    level_as_bonus = growth_stat(
+        0, champion_data["stats"]["attackSpeed"]["perLevel"], level
+    )
     total_as_bonus = level_as_bonus + total_item_stats["attack_speed_percent"]
 
-    # Bandlepipes Fanfare passive: bonus AS (melee/ranged)
+    # Assumed-active AS passives (Bandlepipes, Hexplate, Yun Tal)
     is_melee = champion_data.get("attackType", "MELEE") == "MELEE"
-    for item in items:
-        if item.get("name") == "Bandlepipes":
-            effect = ITEM_EFFECTS.get("Bandlepipes", {})
-            if is_melee:
-                total_as_bonus += effect.get("bonus_attack_speed_melee", 30.0)
-            else:
-                total_as_bonus += effect.get("bonus_attack_speed_ranged", 20.0)
-            break
-
-    # Experimental Hexplate Overdrive: bonus AS on R cast
-    # Assumed always active since R is cast at fight start
-    for item in items:
-        if item.get("name") == "Experimental Hexplate":
-            effect = ITEM_EFFECTS.get("Experimental Hexplate", {})
-            total_as_bonus += effect.get("bonus_attack_speed_percent", 50.0)
-            break
-
-    # Yun Tal Wildarrows Flurry: bonus AS after attacking a champion
-    # Assumed always active since the champion is auto-attacking
-    for item in items:
-        if item.get("name") == "Yun Tal Wildarrows":
-            effect = ITEM_EFFECTS.get("Yun Tal Wildarrows", {})
-            total_as_bonus += effect.get("bonus_attack_speed_percent", 30.0)
-            break
+    total_as_bonus += get_passive_attack_speed_bonus(items, is_melee)
 
     final_attack_speed = calculate_attack_speed(base_as, as_ratio, total_as_bonus)
 
     # Lethality converts to flat armor pen based on level
     lethality = total_item_stats["lethality"]
-    flat_armor_pen = lethality * (0.6 + 0.4 * min(level, 18) / 18)
+    flat_armor_pen = lethality_to_flat_pen(lethality, level)
 
     # Mana: base + growth + items
     cdm = champion_data["stats"]
@@ -294,32 +226,10 @@ def calculate_total_stats(
     )
     total_mana = base_mana + total_item_stats["mana"]
 
-    # Muramana Awe passive: max mana as bonus AD
-    muramana_bonus_ad = 0.0
-    for item in items:
-        if item.get("name") == "Muramana":
-            effect = ITEM_EFFECTS.get("Muramana", {})
-            ratio = effect.get("max_mana_to_ad_ratio", 0.02)
-            muramana_bonus_ad = ratio * total_mana
-            break
-
-    # Overlord's Bloodmail Tyranny passive: bonus health as bonus AD
-    bloodmail_bonus_ad = 0.0
-    for item in items:
-        if item.get("name") == "Overlord's Bloodmail":
-            effect = ITEM_EFFECTS.get("Overlord's Bloodmail", {})
-            ratio = effect.get("bonus_health_to_ad_ratio", 0.025)
-            bloodmail_bonus_ad = ratio * total_item_stats["health"]
-            break
-
-    # Sterak's Gage The Claws that Catch: base AD as bonus AD
-    steraks_bonus_ad = 0.0
-    for item in items:
-        if item.get("name") == "Sterak's Gage":
-            effect = ITEM_EFFECTS.get("Sterak's Gage", {})
-            ratio = effect.get("base_ad_to_bonus_ad_ratio", 0.45)
-            steraks_bonus_ad = ratio * base_stats["attack_damage"]
-            break
+    # Stat-to-AD conversion passives (Muramana, Bloodmail, Sterak's)
+    muramana_bonus_ad = get_muramana_bonus_ad(items, total_mana)
+    bloodmail_bonus_ad = get_bloodmail_bonus_ad(items, total_item_stats["health"])
+    steraks_bonus_ad = get_steraks_bonus_ad(items, base_stats["attack_damage"])
 
     total_ad = (
         base_stats["attack_damage"]
@@ -330,20 +240,9 @@ def calculate_total_stats(
     )
     total_health = base_stats["health"] + total_item_stats["health"]
 
-    # Terminus Juxtaposition: light hits grant bonus armor + MR (max stacks),
-    # dark hits grant % armor + magic pen (max stacks).
-    # Assumed at max stacks since the champion is auto-attacking.
-    terminus_bonus_resist = 0.0
-    terminus_pen = 0.0
-    for item in items:
-        if item.get("name") == "Terminus":
-            effect = ITEM_EFFECTS.get("Terminus", {})
-            resist_per_stack = get_terminus_light_resist_per_stack(level)
-            max_stacks = effect.get("dark_max_stacks", 3)
-            terminus_bonus_resist = resist_per_stack * max_stacks
-            pen_per_stack = effect.get("dark_pen_per_stack", 0.10)
-            terminus_pen = pen_per_stack * max_stacks * 100.0  # as percentage
-            break
+    # Terminus Juxtaposition: light hits grant bonus armor + MR, dark hits
+    # grant % armor + magic pen. Assumed at max stacks while auto-attacking.
+    terminus_bonus_resist, terminus_pen = get_terminus_max_stack_bonuses(items, level)
 
     final_armor = round(
         base_stats["armor"] + total_item_stats["armor"] + terminus_bonus_resist
@@ -386,24 +285,7 @@ def calculate_total_stats(
         "max_mana": round(total_mana),
         "bonus_mana": round(total_item_stats["mana"]),
         "ability_haste": total_item_stats["ability_haste"],
-        "basic_ability_haste": _get_basic_ability_haste(items),
+        "basic_ability_haste": get_basic_ability_haste(items),
         "level": level,
         "is_melee": is_melee,
     }
-
-
-def _get_basic_ability_haste(items: list[dict[str, Any]]) -> float:
-    """Sum basic ability haste from items (applies to Q, W, E only).
-
-    Args:
-        items: List of item data dictionaries.
-
-    Returns:
-        Total basic ability haste.
-    """
-    total = 0.0
-    for item in items:
-        if item.get("name") == "Spear of Shojin":
-            effect = ITEM_EFFECTS.get("Spear of Shojin", {})
-            total += effect.get("basic_ability_haste", 25.0)
-    return total

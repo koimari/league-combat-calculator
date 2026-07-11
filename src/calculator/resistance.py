@@ -46,6 +46,25 @@ def apply_magic_penetration(
     return max(0.0, effective)
 
 
+def lethality_to_flat_pen(lethality: float, level: int) -> float:
+    """Convert lethality to flat armor penetration at a given level.
+
+    Domain rule (see CLAUDE.md):
+        flat pen = lethality × (0.6 + 0.4 × min(level, 18) / 18)
+
+    Lethality grants 60% of its value as flat armor penetration at
+    level 1, scaling linearly to 100% at level 18.
+
+    Args:
+        lethality: Total lethality from items.
+        level: Champion level (values above 18 are treated as 18).
+
+    Returns:
+        Flat armor penetration, suitable for ``apply_armor_penetration``.
+    """
+    return lethality * (0.6 + 0.4 * min(level, 18) / 18)
+
+
 def apply_armor_penetration(
     target_armor: float,
     flat_penetration: float,

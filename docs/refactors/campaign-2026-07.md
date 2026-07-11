@@ -124,3 +124,72 @@ red flag): every snapshot fight runs with `auto_attack_uptime=0.0`, so on-hit-on
 (Statikk/Voltaic) never fire in any snapshot scenario, and Opportunity was never in
 items.json. Known blind spot: the golden harness does not exercise auto-attack/on-hit
 item paths; consider an uptime>0 section if Phase 4 touches them.
+
+## Phase 1 (completed)
+
+SSOT correctness. Suite: **686 passed, 0 failed** (656 baseline + 30 new tests).
+Golden compare: **identical** to `scripts/golden_baseline.json`.
+
+### Part A — stats.py behind item_effects accessors
+
+New "Stat-modifying passives" section in `item_effects.py` (10 accessors), each owning
+the lookup AND numeric semantics via `_required_effect_value(item, key)` — raises a
+KeyError naming the item and key on a broken registry entry (no literal fallbacks
+anywhere in the chain):
+
+- `get_ap_multiplier` (Rabadon's + Blackfire, additive — replaces `check_item_passives`,
+  now deleted), `get_mana_to_ap_bonus` (Archangel's + Seraph's, shared key shape),
+  `get_dawncore_bonus_ap`, `get_flowing_water_bonus_ap`
+- `get_passive_attack_speed_bonus` (Bandlepipes melee/ranged + Hexplate + Yun Tal,
+  one table-shaped accessor)
+- `get_muramana_bonus_ad`, `get_bloodmail_bonus_ad`, `get_steraks_bonus_ad`
+  (kept separate — different source stats)
+- `get_terminus_max_stack_bonuses` → (bonus armor/MR, pen %), `get_basic_ability_haste`
+  (Shojin — replaces stats.py `_get_basic_ability_haste`)
+
+stats.py now contains zero `ITEM_EFFECTS` references and zero item-paired magic numbers.
+`.claude/skills/add-item-effect/SKILL.md` updated: Step 4 now teaches the accessor
+pattern instead of the `.get(key, fallback)` anti-pattern it used to prescribe.
+
+### Part B — duplicate literal fallbacks removed
+
+**60 literal numeric fallbacks removed** total: 27 in damage.py, 17 absorbed from
+stats.py into accessors, 16 inside item_effects.py's own helpers (Terminus, Hullbreaker,
+Unending Despair, Collector, the four amp helpers — same bug class, swept while there).
+Item-effect lookups now use hard indexing; registry-merge over `_DEFAULT_ITEM_EFFECTS`
+guarantees the keys (verified: `passive_parser` never emits `type` keys, so type-driven
+loops only ever match default-registered items).
+
+**Disagreeing fallbacks found (Statikk-class, all DEAD code — never fired because the
+defaults merge guarantees the keys; clean golden compare confirms):**
+- damage.py spellblade `weave_delay` fallback `0.0` vs registry `1.5` — had it ever
+  fired, effective spellblade CD would drop 3.0s→1.5s (overstated proc counts).
+- damage.py Malignance `mr_reduction` fallback `0` vs `10.0`, `base` `0` vs `180.0`,
+  `ap_ratio` `0` vs `0.15` — would have zeroed Hatefog.
+
+**Deliberately retained `.get(key, 0)` (feature-absent markers, NOT stale duplicates,
+now comment-guarded in code):** Bloodsong `expose_weakness_*` (polymorphic across all
+spellblades), Navori `bonus_crit_damage` (polymorphic across crit_modifiers), and
+`_level_scaled_base`'s structural defaults. String `damage_type` fallbacks untouched.
+
+### Part C — refresh + lethality home
+
+- `refresh_item_effects()` now truly mutates in place (`clear()` + `update()`), docstring
+  notes why (from-import bindings in `calculator/__init__.py` stay live). Wired into
+  `app.py::api_update_data` — refresh runs after the `update_data()` SSE stream completes,
+  so "Update to latest patch" refreshes in-memory effects (`fetch_item_data` reads disk
+  per call; no memoization to invalidate).
+- `lethality_to_flat_pen(lethality, level)` added to `resistance.py` (penetration-math
+  home) with the CLAUDE.md domain rule cited; stats.py's inline copy replaced with the
+  call. Sole owner per Phase 0b (damage.py's copy died with Opportunity).
+
+### Tests + verification
+
+- New `tests/test_item_effects.py` (25 tests): every accessor (registry-patched so tests
+  don't depend on patch numbers), KeyError-names-item-and-key, refresh in-place semantics
+  (from-import binding identity + content, stale-entry eviction; `_build_item_effects`
+  monkeypatched, registry snapshot/restored).
+- `tests/test_damage.py`: `TestLethalityToFlatPen` (5 tests).
+- black clean on all touched files; pylint 9.45/10 on touched src (was 9.33; remaining
+  findings pre-existing — damage.py complexity is Phase 4, app.py E0401s are pylint
+  running outside the venv).

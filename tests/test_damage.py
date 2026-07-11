@@ -2,7 +2,11 @@
 
 import pytest
 
-from src.calculator.resistance import apply_resistance, apply_magic_penetration
+from src.calculator.resistance import (
+    apply_resistance,
+    apply_magic_penetration,
+    lethality_to_flat_pen,
+)
 from src.calculator.champions.common import calculate_ability_damage, effective_cooldown
 from src.calculator.champions.ahri import (
     parse_abilities as parse_ahri_abilities,
@@ -61,6 +65,28 @@ class TestApplyMagicPenetration:
     def test_cannot_go_below_zero(self) -> None:
         result = apply_magic_penetration(10, 50, 0)
         assert result == 0.0
+
+
+class TestLethalityToFlatPen:
+    """Tests for the lethality → flat armor pen conversion."""
+
+    def test_level_1_gives_60_percent(self) -> None:
+        # 0.6 + 0.4 * 1/18 = 0.6222...
+        result = lethality_to_flat_pen(18, 1)
+        assert abs(result - 18 * (0.6 + 0.4 / 18)) < 1e-9
+
+    def test_level_18_gives_full_value(self) -> None:
+        assert lethality_to_flat_pen(30, 18) == 30.0
+
+    def test_level_above_18_clamps(self) -> None:
+        assert lethality_to_flat_pen(30, 20) == lethality_to_flat_pen(30, 18)
+
+    def test_level_9_midpoint(self) -> None:
+        # 0.6 + 0.4 * 9/18 = 0.8
+        assert abs(lethality_to_flat_pen(10, 9) - 8.0) < 1e-9
+
+    def test_zero_lethality(self) -> None:
+        assert lethality_to_flat_pen(0, 12) == 0.0
 
 
 class TestCalculateAbilityDamage:

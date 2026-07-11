@@ -123,12 +123,12 @@ Items that modify stats beyond their flat values (AP multipliers, mana→AP, hea
 
 **Data flow:** `passive_parser.py` → `ITEM_EFFECTS` registry → `stats.py` looks up values at calculation time.
 
-**Important:** `stats.py` must **never hardcode** numeric item values. All values come from `ITEM_EFFECTS` with a fallback default in the `.get()` call.
+**Important:** `stats.py` must **never hardcode** numeric item values — and neither `stats.py` nor the accessors use literal fallbacks in `.get()` calls. Since `ITEM_EFFECTS` merges parsed values over `_DEFAULT_ITEM_EFFECTS`, every registered item is guaranteed its default keys; a missing key is a parser/defaults bug that must fail loudly (see `_required_effect_value()` in `item_effects.py`), not silently fall back to a stale literal.
 
-### Where stat passives are applied in `stats.py`
+### Where stat passives live
 
-- **`check_item_passives()`** — AP multipliers (Rabadon's, Blackfire Torch). Returns `ability_power_multiplier` flags that `calculate_total_stats()` aggregates additively.
-- **`calculate_total_stats()`** — Stat conversions (mana→AP, health→AD, mana regen→AP, conditional AS bonuses). Each block looks up the item in `ITEM_EFFECTS` and reads the parsed ratio/value.
+- **`item_effects.py` stat-passive accessors** (section "Stat-modifying passives") — own the lookup and numeric semantics: `get_ap_multiplier()` (Rabadon's, Blackfire — additive), `get_mana_to_ap_bonus()`, `get_dawncore_bonus_ap()`, `get_flowing_water_bonus_ap()`, `get_passive_attack_speed_bonus()`, `get_muramana_bonus_ad()`, `get_bloodmail_bonus_ad()`, `get_steraks_bonus_ad()`, `get_terminus_max_stack_bonuses()`, `get_basic_ability_haste()`.
+- **`calculate_total_stats()` in `stats.py`** — orchestration only: decides when to apply each accessor's result and how it interacts with other stats. No item names paired with magic numbers.
 
 ### Step-by-Step: Adding a Stat-Granting Passive
 
@@ -201,31 +201,27 @@ Add an entry to `_DEFAULT_ITEM_EFFECTS` under the `# ── Stat Conversion ─�
 
 For items that already have damage entries (e.g. Muramana has on-hit damage AND a stat conversion), add the stat-conversion key to the **existing** entry rather than creating a new one.
 
-#### Step 4: Add the stat application in `stats.py`
+#### Step 4: Add an accessor in `item_effects.py`, call it from `stats.py`
 
-In `calculate_total_stats()`, add a block that reads from `ITEM_EFFECTS`:
-
-```python
-# My Item passive: bonus mana as AP
-for item in items:
-    if item.get("name") == "My Item":
-        effect = ITEM_EFFECTS.get("My Item", {})
-        ratio = effect.get("bonus_mana_to_ap_ratio", 0.02)
-        raw_ability_power += ratio * total_item_stats["mana"]
-        break
-```
-
-For AP multipliers, add to `check_item_passives()` instead:
+Add (or extend) an accessor in the "Stat-modifying passives" section of `item_effects.py` using `_required_effect_value()`, then call it from `calculate_total_stats()`:
 
 ```python
-if item_name == "My Item":
-    ap_increase = effect.get("ap_percent_increase", 0.30)
-    passives["ability_power_multiplier"] = 1.0 + ap_increase
+# item_effects.py
+def get_my_item_bonus_ap(items: list[dict[str, Any]], bonus_mana: float) -> float:
+    """My Item passive: bonus mana as AP."""
+    if "My Item" not in _item_names(items):
+        return 0.0
+    return _required_effect_value("My Item", "bonus_mana_to_ap_ratio") * bonus_mana
+
+# stats.py — orchestration only
+raw_ability_power += get_my_item_bonus_ap(items, total_item_stats["mana"])
 ```
+
+For AP multipliers, extend `get_ap_multiplier()` instead.
 
 **Key rules:**
-- Always use `ITEM_EFFECTS.get(item_name, {}).get(key, fallback)` — never hardcode the value directly
-- The fallback in `.get()` should match the default in `_DEFAULT_ITEM_EFFECTS` (safety net if registry fails)
+- The accessor owns the `ITEM_EFFECTS` lookup and the numeric semantics; `stats.py` never touches `ITEM_EFFECTS` directly
+- **No literal fallbacks** — `_required_effect_value()` raises a KeyError naming the item and key if the registry entry is broken. The single source of a default value is `_DEFAULT_ITEM_EFFECTS`
 - AP multipliers stack **additively** (Rabadon's 30% + Blackfire 4% = 34% total, not 1.30 × 1.04)
 
 #### Step 5: Test
@@ -263,7 +259,7 @@ def test_my_item_reads_from_registry(self, champion_data: dict, monkeypatch) -> 
 ## Common Pitfalls
 
 - **Parser first**: Always check if values can be parsed from JSON before hardcoding. Only hardcode values that truly aren't in the data.
-- **No hardcoded values in stats.py**: All item-specific numeric values in `stats.py` must come from `ITEM_EFFECTS.get()` lookups. This ensures values auto-update when wiki data is refreshed.
+- **No hardcoded values in stats.py**: All item-specific numeric values come from `ITEM_EFFECTS` via the stat-passive accessors, with no literal fallbacks anywhere. This ensures values auto-update when wiki data is refreshed and that parser failures surface loudly instead of silently using stale numbers (the Statikk Shiv bug class).
 - **Penetration order**: Percent penetration applies before flat penetration
 - **True damage**: Ignores all resistances — never pass through `apply_resistance()`
 - **BoRK simulation**: Must be iterative (decreasing target HP per auto), not flat

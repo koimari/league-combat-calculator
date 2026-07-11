@@ -9,8 +9,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from flask import Flask, Response, jsonify, render_template, request
 
-from calculator.data_fetcher import fetch_champion_data, fetch_item_data, get_champion, get_item_by_name
+from calculator.data_fetcher import (
+    fetch_champion_data,
+    fetch_item_data,
+    get_champion,
+    get_item_by_name,
+)
 from calculator.data_updater import update_data
+from calculator.item_effects import refresh_item_effects
 from calculator.stats import calculate_total_stats
 from calculator.champions import parse_abilities
 from calculator.damage import calculate_fight_damage
@@ -140,7 +146,10 @@ def api_calculate():
     # Validate cast order if provided
     if cast_order is not None:
         if sorted(cast_order) != ["E", "Q", "R", "W"]:
-            return jsonify({"error": "Cast order must be a permutation of Q, W, E, R"}), 400
+            return (
+                jsonify({"error": "Cast order must be a permutation of Q, W, E, R"}),
+                400,
+            )
 
     # Validate ability ranks if provided
     if ability_ranks:
@@ -187,7 +196,10 @@ def api_calculate():
     # Use display name from data (e.g. "Kog'Maw") not the data key ("KogMaw")
     display_name = champion_data.get("name", champion_name)
     ability_damages = parse_abilities(
-        display_name, champion_data, level, champion_stats["ability_power"],
+        display_name,
+        champion_data,
+        level,
+        champion_stats["ability_power"],
         ability_ranks=ability_ranks,
         champion_stats=champion_stats,
         target_stats=target_stats,
@@ -234,8 +246,11 @@ def api_calculate():
         # in other breakdown rows (e.g. Actualizer, basic damage amp).
         if "note" in entry and "included in" in entry.get("note", ""):
             continue
-        if (key == "auto_attacks" or key == "fiendhunter_true_damage"
-                or key.startswith(on_hit_prefixes)):
+        if (
+            key == "auto_attacks"
+            or key == "fiendhunter_true_damage"
+            or key.startswith(on_hit_prefixes)
+        ):
             auto_attack_damage += dmg
         elif key in ("damage_amplification", "execute", "sundered_sky"):
             # Split amp/execute proportionally between auto and ability;
@@ -274,39 +289,43 @@ def api_calculate():
             "casts": entry.get("casts", None),
             "count": entry.get("count", None),
             "damage_per_hit": (
-                round(entry["damage_per_hit"], 1)
-                if "damage_per_hit" in entry else None
+                round(entry["damage_per_hit"], 1) if "damage_per_hit" in entry else None
             ),
             "num_crits": entry.get("num_crits", None),
             "num_non_crits": entry.get("num_non_crits", None),
             "crit_damage_per_hit": (
                 round(entry["crit_damage_per_hit"], 1)
-                if entry.get("crit_damage_per_hit") is not None else None
+                if entry.get("crit_damage_per_hit") is not None
+                else None
             ),
             "non_crit_damage_per_hit": (
                 round(entry["non_crit_damage_per_hit"], 1)
-                if entry.get("non_crit_damage_per_hit") is not None else None
+                if entry.get("non_crit_damage_per_hit") is not None
+                else None
             ),
         }
         if "note" in entry:
             row["note"] = entry["note"]
         if "execution_threshold_hp" in entry:
             row["execution_threshold_hp"] = round(
-                entry["execution_threshold_hp"], 1,
+                entry["execution_threshold_hp"],
+                1,
             )
         if "sundered_sky_note" in entry:
             row["sundered_sky_note"] = entry["sundered_sky_note"]
         api_breakdown[key] = row
 
-    return jsonify({
-        "champion_stats": champion_stats,
-        "total_damage": round(total_damage, 1),
-        "ability_damage": round(ability_damage, 1),
-        "auto_attack_damage": round(auto_attack_damage, 1),
-        "breakdown": api_breakdown,
-        "effective_mr": round(result.get("effective_mr", 0.0), 1),
-        "effective_armor": round(result.get("effective_armor", 0.0), 1),
-    })
+    return jsonify(
+        {
+            "champion_stats": champion_stats,
+            "total_damage": round(total_damage, 1),
+            "ability_damage": round(ability_damage, 1),
+            "auto_attack_damage": round(auto_attack_damage, 1),
+            "breakdown": api_breakdown,
+            "effective_mr": round(result.get("effective_mr", 0.0), 1),
+            "effective_armor": round(result.get("effective_armor", 0.0), 1),
+        }
+    )
 
 
 @app.route("/api/optimize", methods=["POST"])
@@ -384,9 +403,13 @@ def api_optimize():
 @app.route("/api/update-data")
 def api_update_data():
     """Stream data update progress via Server-Sent Events."""
+
     def generate():
         for event in update_data():
             yield f"data: {json.dumps(event)}\n\n"
+        # Fresh item JSON is now on disk — re-parse ITEM_EFFECTS in place
+        # so in-memory effects reflect the newly fetched patch data.
+        refresh_item_effects()
 
     return Response(generate(), mimetype="text/event-stream")
 
