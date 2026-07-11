@@ -23,7 +23,11 @@ from src.calculator.champions.engine import (
 from src.calculator.champions.generic_parser import (
     parse_abilities as legacy_generic_parse,
 )
-from src.calculator.champions.slotlib import on_hit_auto, simple_damage
+from src.calculator.champions.slotlib import (
+    on_hit_auto,
+    simple_damage,
+    toggle_dot,
+)
 
 # ---------------------------------------------------------------------------
 # Fixtures and helpers
@@ -463,6 +467,90 @@ class TestSimpleDamageParams:
         results = parse(champ, 9, 0.0)
         assert results["Q"]["magic_damage"] == 50.0
         assert results["Q"]["true_damage"] == 50.0
+
+
+# ---------------------------------------------------------------------------
+# toggle_dot archetype
+# ---------------------------------------------------------------------------
+
+
+class TestToggleDot:
+    """Phase-structured toggle/channel DoT summed into a damage entry."""
+
+    def _dot_champ(self) -> dict:
+        """R with initial and empowered per-tick attrs (Anivia shape)."""
+        return _champion(
+            R=[
+                _ability(
+                    name="Storm",
+                    cooldowns=[6, 6, 6],
+                    leveling=[
+                        _leveling("Magic Damage per Tick", [30, 45, 60]),
+                        _leveling("Empowered Damage per Tick", [90, 135, 180]),
+                    ],
+                )
+            ],
+        )
+
+    def _parse_storm(self, options: dict | None = None, **params) -> dict:
+        defaults = {
+            "phases": [
+                ("Magic Damage per Tick", 3),
+                ("Empowered Damage per Tick", None),
+            ],
+            "duration_option": ("r_duration", 5.0),
+            "min_duration": 1.5,
+            "cooldown": 999.0,
+            "dmg_type": "magic",
+        }
+        defaults.update(params)
+        parse = build_parser({"R": toggle_dot(**defaults)}, "TestChamp")
+        # Level 16 -> R rank 3.
+        return parse(self._dot_champ(), 16, 0.0, champion_options=options)
+
+    def test_phases_split_ticks_in_order(self) -> None:
+        """5s at 0.5s/tick = 3 initial + 7 empowered ticks."""
+        results = self._parse_storm()
+        assert results["R"]["total_raw"] == pytest.approx(3 * 60 + 7 * 180)
+        assert results["R"]["magic_damage"] == results["R"]["total_raw"]
+
+    def test_duration_option_overrides_default(self) -> None:
+        """10s = 3 initial + 17 empowered ticks."""
+        results = self._parse_storm(options={"r_duration": 10.0})
+        assert results["R"]["total_raw"] == pytest.approx(3 * 60 + 17 * 180)
+
+    def test_min_duration_clamp(self) -> None:
+        """Durations below the floor are clamped (3 initial ticks only)."""
+        results = self._parse_storm(options={"r_duration": 0.5})
+        assert results["R"]["total_raw"] == pytest.approx(3 * 60)
+
+    def test_cooldown_is_pinned_by_caller(self) -> None:
+        """The cooldown param is used verbatim (999 = cast-once)."""
+        results = self._parse_storm()
+        assert results["R"]["cooldown"] == 999.0
+
+    def test_single_phase_consumes_all_ticks(self) -> None:
+        """A single uncapped phase gets every tick."""
+        results = self._parse_storm(
+            phases=[("Magic Damage per Tick", None)],
+            cooldown=0.0,
+        )
+        assert results["R"]["total_raw"] == pytest.approx(10 * 60)
+        assert results["R"]["cooldown"] == 0.0
+
+    def test_rank_gate(self) -> None:
+        """Unranked slot emits nothing."""
+        parse = build_parser(
+            {
+                "R": toggle_dot(
+                    phases=[("Magic Damage per Tick", None)],
+                    duration_option=("r_duration", 5.0),
+                )
+            },
+            "TestChamp",
+        )
+        results = parse(self._dot_champ(), 16, 0.0, ability_ranks={"R": 0})
+        assert "R" not in results
 
 
 # ---------------------------------------------------------------------------

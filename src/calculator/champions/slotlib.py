@@ -355,6 +355,76 @@ def simple_damage(
     return parse
 
 
+def toggle_dot(
+    phases: list[tuple[str, int | None]],
+    duration_option: tuple[str, float],
+    interval: float = 0.5,
+    min_duration: float = 0.0,
+    cooldown: float = 0.0,
+    dmg_type: str = "auto",
+    source: tuple[str, int] | None = None,
+) -> SlotParser:
+    """Toggle/channel DoT summed over its ticks into a damage entry.
+
+    The active duration comes from a champion option; total tick count is
+    ``int(duration / interval)``. Ticks are consumed by ``phases`` in
+    order — e.g. Anivia R deals 3 initial-damage ticks, then empowered
+    ticks for the rest — and the phase damages are summed into ONE
+    standard damage entry (same shape as ``simple_damage``).
+
+    Args:
+        phases: Ordered ``(leveling_attribute, tick_cap)`` pairs. A cap
+            of None means "all remaining ticks" (use it last).
+        duration_option: ``(option_key, default_seconds)`` — the champion
+            option holding the active duration.
+        interval: Seconds per tick.
+        min_duration: Floor for the duration option (e.g. Anivia R's
+            first phase always completes).
+        cooldown: Emitted verbatim — toggles have no base cooldown, so
+            the caller pins it (0.0 = free toggle, 999.0 = model the
+            ability as cast exactly once per fight).
+        dmg_type: "magic"/"physical"/"true"/"mixed", or "auto" to
+            classify from the ability JSON.
+        source: (slot, index) of the JSON entry to read; defaults to
+            entry 0 of the parser's own slot.
+
+    Returns:
+        A DAMAGE-phase slot parser.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability, src_slot = _resolve_source(ctx, source)
+        if ability is None:
+            return None
+
+        rank = ctx.rank_for(src_slot)
+        if rank < 1:
+            return None
+
+        option_key, default_seconds = duration_option
+        duration = float(ctx.options.get(option_key, default_seconds))
+        duration = max(duration, min_duration)
+
+        ticks_remaining = int(duration / interval)
+        total = 0.0
+        for attr, tick_cap in phases:
+            ticks = (
+                ticks_remaining
+                if tick_cap is None
+                else min(tick_cap, ticks_remaining)
+            )
+            per_tick = extract_named(ability, attr, rank, ctx.stats, ctx.target)
+            total += ticks * per_tick
+            ticks_remaining -= ticks
+
+        resolved_type = classify_damage_type(ability) if dmg_type == "auto" else dmg_type
+        name = ability.get("name", f"Ability {ctx.slot}")
+        return damage_entry(name, rank, cooldown, total, resolved_type)
+
+    parse.phase = DAMAGE
+    return parse
+
+
 def _slot_passive_on_hit(
     ctx: SlotCtx,
     ability: dict[str, Any],
