@@ -17,91 +17,14 @@ All numeric values are read from the champion JSON data.
 import re
 from typing import Any
 
+from .common import (
+    build_stats_context,
+    extract_leveling_damage,
+    extract_leveling_value,
+    make_rank_fn,
+)
 from .generic_parser import extract_cooldown
 from .scaling import is_flat_unit, resolve_scaling
-from .skill_orders import get_ability_rank
-
-
-# ---------------------------------------------------------------------------
-# JSON extraction helpers
-# ---------------------------------------------------------------------------
-
-
-def _extract_leveling_damage(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-    stats_context: dict[str, float] | None = None,
-) -> float:
-    """Extract damage for a specific attribute name from ability JSON.
-
-    Searches all effects/leveling entries for a matching attribute and
-    sums the flat base + scaling contributions at the given rank.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute_name: Exact attribute name to look for.
-        rank: Ability rank (1-indexed).
-        stats_context: Champion stats for scaling resolution.
-
-    Returns:
-        Total raw damage for this attribute at the given rank.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
-
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                if is_flat_unit(unit):
-                    total += value
-                else:
-                    total += resolve_scaling(
-                        unit, value, stats_context, None,
-                    )
-            return total
-
-    return 0.0
-
-
-def _extract_leveling_value(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-) -> float:
-    """Extract a single flat value from ability leveling data.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute_name: Exact attribute name to look for.
-        rank: Ability rank (1-indexed).
-
-    Returns:
-        The flat value at the given rank, or 0.0 if not found.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-            modifiers = leveling.get("modifiers", [])
-            if not modifiers:
-                continue
-            values = modifiers[0].get("values", [])
-            if not values:
-                continue
-            idx = min(rank - 1, len(values) - 1)
-            return float(values[idx])
-    return 0.0
 
 
 def _extract_e_per_shot(
@@ -277,16 +200,8 @@ def parse_abilities(
         if "e_shots" in champion_options:
             e_shots = int(champion_options["e_shots"])
 
-    # Build stats context for scaling
-    stats_context: dict[str, float] = {}
-    if champion_stats:
-        stats_context = dict(champion_stats)
-    stats_context["ability_power"] = total_ability_power
-
-    def rank_for(key: str) -> int:
-        if ability_ranks and key in ability_ranks:
-            return ability_ranks[key]
-        return get_ability_rank(key, level, "Akshan")
+    stats_context = build_stats_context(champion_stats, total_ability_power)
+    rank_for = make_rank_fn("Akshan", ability_ranks, level)
 
     # ── Q: Avengerang (both passes — Total Physical Damage) ──────────
     q_rank = rank_for("Q")
@@ -294,7 +209,7 @@ def parse_abilities(
         q_ability_list = abilities_data.get("Q", [])
         if q_ability_list:
             q_ability = q_ability_list[0]
-            q_damage = _extract_leveling_damage(
+            q_damage = extract_leveling_damage(
                 q_ability, "Total Physical Damage", q_rank, stats_context,
             )
             q_cooldown = extract_cooldown(q_ability, q_rank)
@@ -344,11 +259,11 @@ def parse_abilities(
             # actual base per bullet (no missing HP scaling).  The JSON's
             # "Maximum Physical Damage per Bullet" already has the 3×
             # missing-HP multiplier baked in.
-            min_per_bullet = _extract_leveling_damage(
+            min_per_bullet = extract_leveling_damage(
                 r_ability, "Minimum Physical Damage per Bullet",
                 r_rank, stats_context,
             )
-            num_bullets = int(_extract_leveling_value(
+            num_bullets = int(extract_leveling_value(
                 r_ability, "Maximum Bullets Stored", r_rank,
             ))
             r_base = min_per_bullet * num_bullets

@@ -4,10 +4,9 @@ import pytest
 
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions.common import extract_leveling_damage, extract_leveling_value
 from src.calculator.champions.ambessa import (
     parse_abilities,
-    _extract_leveling_damage,
-    _extract_leveling_value,
     _parse_passive_damage,
 )
 from src.calculator.damage import calculate_fight_damage

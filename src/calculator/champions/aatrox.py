@@ -14,62 +14,8 @@ hardcoded.
 
 from typing import Any
 
-from .generic_parser import extract_cooldown, extract_damage
-from .scaling import is_flat_unit, resolve_scaling
-from .skill_orders import get_ability_rank
-
-
-# ---------------------------------------------------------------------------
-# JSON extraction helpers
-# ---------------------------------------------------------------------------
-
-
-def _extract_leveling_damage(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-    stats_context: dict[str, float] | None = None,
-) -> float:
-    """Extract damage for a specific attribute name from ability JSON.
-
-    Searches all effects/leveling entries for a matching attribute and
-    sums the flat base + scaling contributions at the given rank.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute_name: Exact attribute name to look for (e.g.
-            ``"First Cast Damage"``).
-        rank: Ability rank (1-indexed).
-        stats_context: Champion stats for scaling resolution.
-
-    Returns:
-        Total raw damage for this attribute at the given rank.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
-
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                if is_flat_unit(unit):
-                    total += value
-                else:
-                    total += resolve_scaling(
-                        unit, value, stats_context, None,
-                    )
-            return total
-
-    return 0.0
+from .common import build_stats_context, extract_leveling_damage, make_rank_fn
+from .generic_parser import extract_cooldown
 
 
 def _extract_r_bonus_ad_percent(
@@ -88,19 +34,9 @@ def _extract_r_bonus_ad_percent(
     Returns:
         Bonus AD as a fraction (e.g. 0.20 for 20%).
     """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != "Bonus Attack Damage":
-                continue
-
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                if not values:
-                    continue
-                idx = min(rank - 1, len(values) - 1)
-                return float(values[idx]) / 100.0
-
-    return 0.0
+    from .common import extract_leveling_value
+    value = extract_leveling_value(ability, "Bonus Attack Damage", rank)
+    return value / 100.0 if value else 0.0
 
 
 def _parse_passive_on_hit(
@@ -196,16 +132,8 @@ def parse_abilities(
     if champion_options and "sweetspot" in champion_options:
         sweetspot = bool(champion_options["sweetspot"])
 
-    # Build stats context for scaling
-    stats_context: dict[str, float] = {}
-    if champion_stats:
-        stats_context = dict(champion_stats)
-    stats_context["ability_power"] = total_ability_power
-
-    def rank_for(key: str) -> int:
-        if ability_ranks and key in ability_ranks:
-            return ability_ranks[key]
-        return get_ability_rank(key, level, "Aatrox")
+    stats_context = build_stats_context(champion_stats, total_ability_power)
+    rank_for = make_rank_fn("Aatrox", ability_ranks, level)
 
     # ── R: World Ender (stat buff, no damage) ──────────────────────────
     r_rank = rank_for("R")
@@ -261,7 +189,7 @@ def parse_abilities(
 
             total_q_damage = 0.0
             for attr_name in attr_names:
-                total_q_damage += _extract_leveling_damage(
+                total_q_damage += extract_leveling_damage(
                     q_ability, attr_name, q_rank, stats_context,
                 )
 
@@ -284,7 +212,7 @@ def parse_abilities(
             w_ability = w_ability_list[0]
             # Use "Total Damage" attribute (initial + pull-back combined)
             # rather than "Physical Damage" (single hit only).
-            w_damage = _extract_leveling_damage(
+            w_damage = extract_leveling_damage(
                 w_ability, "Total Damage", w_rank, stats_context,
             )
             w_cooldown = extract_cooldown(w_ability, w_rank)

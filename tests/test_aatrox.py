@@ -3,10 +3,8 @@
 import pytest
 
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.aatrox import (
-    _extract_leveling_damage,
-    _extract_r_bonus_ad_percent,
-)
+from src.calculator.champions.common import extract_leveling_damage
+from src.calculator.champions.aatrox import _extract_r_bonus_ad_percent
 from src.calculator.damage import calculate_fight_damage
 
 
@@ -64,13 +62,13 @@ class TestQThreeCasts:
         rank = 3  # Q rank 3 at level 5
         stats_ctx = dict(stats)
 
-        first = _extract_leveling_damage(
+        first = extract_leveling_damage(
             q_ability, "First Cast Damage", rank, stats_ctx,
         )
-        second = _extract_leveling_damage(
+        second = extract_leveling_damage(
             q_ability, "Second Cast Damage", rank, stats_ctx,
         )
-        third = _extract_leveling_damage(
+        third = extract_leveling_damage(
             q_ability, "Third Cast Damage", rank, stats_ctx,
         )
 

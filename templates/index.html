@@ -359,6 +359,38 @@
                     <svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                 </span>
             </button>
+
+            <!-- Build Optimizer -->
+            <div class="config-group optimizer-group">
+                <div class="section-header">
+                    <h3>Build Optimizer</h3>
+                </div>
+                <div class="optimizer-controls">
+                    <div class="optimizer-row">
+                        <label for="optimize-objective">Maximize</label>
+                        <select id="optimize-objective" class="optimizer-select">
+                            <option value="total_damage">Total Damage</option>
+                            <option value="physical_damage">Physical Damage</option>
+                            <option value="magic_damage">Magic Damage</option>
+                        </select>
+                    </div>
+                    <div class="optimizer-row">
+                        <label for="optimize-slots">Legendary Items</label>
+                        <select id="optimize-slots" class="optimizer-select">
+                            <option value="5" selected>5 (Standard)</option>
+                            <option value="6">6 (Bot Lane)</option>
+                        </select>
+                    </div>
+                    <p class="optimizer-hint">Pre-selected items will be kept. Empty slots will be filled.</p>
+                </div>
+                <button id="optimize-btn" class="btn-optimize">
+                    <span class="btn-text">Optimize Build</span>
+                    <span class="btn-loading hidden">
+                        <svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    </span>
+                </button>
+                <p id="optimize-status" class="optimizer-status hidden"></p>
+            </div>
         </section>
 
         <!-- Right Column: Results -->

@@ -14,87 +14,13 @@ hardcoded.
 
 from typing import Any
 
+from .common import (
+    build_stats_context,
+    extract_leveling_damage,
+    extract_leveling_value,
+    make_rank_fn,
+)
 from .generic_parser import extract_cooldown
-from .scaling import is_flat_unit, resolve_scaling
-from .skill_orders import get_ability_rank
-
-
-# ---------------------------------------------------------------------------
-# JSON extraction helpers
-# ---------------------------------------------------------------------------
-
-
-def _extract_leveling_damage(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-    stats_context: dict[str, float] | None = None,
-) -> float:
-    """Extract damage for a specific attribute name from ability JSON."""
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
-
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                if is_flat_unit(unit):
-                    total += value
-                else:
-                    total += resolve_scaling(
-                        unit, value, stats_context, None,
-                    )
-            return total
-
-    return 0.0
-
-
-def _extract_leveling_raw_value(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-    modifier_index: int = 0,
-) -> float:
-    """Extract a raw numeric value from a specific leveling attribute.
-
-    Unlike ``_extract_leveling_damage``, this does NOT resolve scaling —
-    it returns the raw value from the JSON (e.g. 110 for "110% AD").
-
-    Args:
-        ability: Ability dict from champion JSON.
-        attribute_name: Exact attribute name to find.
-        rank: Ability rank (1-indexed).
-        modifier_index: Which modifier to read (default 0 = first).
-
-    Returns:
-        Raw numeric value at the given rank, or 0.0 if not found.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-
-            modifiers = leveling.get("modifiers", [])
-            if modifier_index >= len(modifiers):
-                return 0.0
-
-            values = modifiers[modifier_index].get("values", [])
-            if not values:
-                return 0.0
-
-            idx = min(rank - 1, len(values) - 1)
-            return float(values[idx])
-
-    return 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -134,16 +60,8 @@ def parse_abilities(
     if champion_options and "q_active" in champion_options:
         q_active = bool(champion_options["q_active"])
 
-    # Build stats context for scaling
-    stats_context: dict[str, float] = {}
-    if champion_stats:
-        stats_context = dict(champion_stats)
-    stats_context["ability_power"] = total_ability_power
-
-    def rank_for(key: str) -> int:
-        if ability_ranks and key in ability_ranks:
-            return ability_ranks[key]
-        return get_ability_rank(key, level, "Ashe")
+    stats_context = build_stats_context(champion_stats, total_ability_power)
+    rank_for = make_rank_fn("Ashe", ability_ranks, level)
 
     # ── Q: Ranger's Focus (stat buff + auto modifier, no direct damage) ──
     q_rank = rank_for("Q")
@@ -153,12 +71,12 @@ def parse_abilities(
             q_ability = q_ability_list[0]
 
             # Extract bonus attack speed from JSON
-            bonus_as_pct = _extract_leveling_raw_value(
+            bonus_as_pct = extract_leveling_value(
                 q_ability, "Bonus Attack Speed", q_rank,
             )
 
             # Extract flurry AD ratio (e.g. 110 = 110% AD -> 1.10 ratio)
-            flurry_pct = _extract_leveling_raw_value(
+            flurry_pct = extract_leveling_value(
                 q_ability, "Total Damage Per Flurry", q_rank,
             )
             flurry_ratio = flurry_pct / 100.0  # Convert 110% -> 1.10
@@ -222,7 +140,7 @@ def parse_abilities(
         w_ability_list = abilities_data.get("W", [])
         if w_ability_list:
             w_ability = w_ability_list[0]
-            w_damage = _extract_leveling_damage(
+            w_damage = extract_leveling_damage(
                 w_ability, "Physical Damage", w_rank, stats_context,
             )
             w_cooldown = extract_cooldown(w_ability, w_rank)
@@ -244,7 +162,7 @@ def parse_abilities(
         r_ability_list = abilities_data.get("R", [])
         if r_ability_list:
             r_ability = r_ability_list[0]
-            r_damage = _extract_leveling_damage(
+            r_damage = extract_leveling_damage(
                 r_ability, "Magic Damage", r_rank, stats_context,
             )
             r_cooldown = extract_cooldown(r_ability, r_rank)

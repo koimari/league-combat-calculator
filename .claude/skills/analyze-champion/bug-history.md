@@ -53,6 +53,16 @@ When a user reports a bug or incorrect behavior after a champion is implemented,
 - **Root cause:** Passive Frost Shot says bonus damage is "X% of the attack's damage." With Q active, each arrow individually applies Frost Shot, so the crit bonus multiplies the flurry damage. Formula was `AD * (flurry_ratio + crit_bonus)` (additive) instead of `AD * flurry_ratio * (1 + crit_bonus)` (multiplicative). Both give the same result when ad_ratio=1.0 (no Q), but diverge when Q is active.
 - **Pattern to watch for:** When a passive says bonus damage is "% of the attack's damage" and another ability modifies the base attack ratio, the bonus must be multiplicative with the modified ratio, not additive.
 
+### Kog'Maw — Q damage inflated by own resistance shred
+- **What happened:** Q showed 248 damage instead of 211 against 100 MR target. Q's 32% MR/armor shred was being applied before Q's own damage.
+- **Root cause:** `target_debuff` processing ran in a pre-loop block before all ability damage calculations, so Q's shred reduced MR globally before Q itself was evaluated. In-game, Q's shred only applies after Q hits.
+- **Pattern to watch for:** Abilities that apply resistance shred/reduction must NOT benefit from their own debuff. Process the debuff AFTER calculating the source ability's damage, inside the cast order loop, so only subsequent abilities benefit.
+
+### Kog'Maw / General — Terminus pen applied to ability damage
+- **What happened:** With Terminus equipped, all ability damage was calculated with Terminus's average armor/magic penetration, inflating ability damage and showing reduced effective MR (70 instead of 100).
+- **Root cause:** Terminus pen was computed as a weighted average across autos and applied to the global `armor_pen_percent` / `magic_pen_percent` variables, which were then used for both ability and auto-attack damage. Terminus pen stacks only build from auto attacks, so abilities should get zero Terminus pen.
+- **Pattern to watch for:** Item penetration that stacks via auto attacks (Terminus Juxtaposition) must use separate pen variables for abilities vs autos. Split into `ability_*_pen_percent` (no item-stacking pen) and `auto_*_pen_percent` (with weighted average). Switch from ability pen to auto pen after the ability damage loop.
+
 ### Amumu — Q damage doubled by fight engine
 - **What happened:** Q showed ~265 damage instead of ~110 for a single cast with Liandry's at level 18 against 100 MR.
 - **Root cause:** Two compounding issues: (1) Q result had both `damage_per_cast`/`total_casts` AND pre-multiplied `magic_damage`, causing fight engine double-counting. (2) Module pre-baked `q_casts=2` into `magic_damage`, but fight engine already determines cast count from cooldown. In one-rotation mode the engine casts once, but `magic_damage` already had 2 casts of damage.

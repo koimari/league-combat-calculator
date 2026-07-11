@@ -71,6 +71,18 @@ def ashe_data() -> dict:
     return get_champion("Ashe")
 
 
+@pytest.fixture
+def kogmaw_data() -> dict:
+    """Load Kog'Maw champion data from the cached JSON."""
+    return get_champion("KogMaw")
+
+
+@pytest.fixture
+def vayne_data() -> dict:
+    """Load Vayne champion data from the cached JSON."""
+    return get_champion("Vayne")
+
+
 # ---------------------------------------------------------------------------
 # Shared helper fixture
 # ---------------------------------------------------------------------------
@@ -100,15 +112,17 @@ def parse_at():
         level: int,
         *,
         items: list | None = None,
-        ap: float = 0.0,
+        ap: float | None = None,
         **kwargs,
     ) -> tuple[dict, dict]:
         stats = calculate_total_stats(champion_data, level, items or [])
+        # Use calculated AP from stats when not explicitly overridden
+        effective_ap = ap if ap is not None else stats.get("ability_power", 0.0)
         abilities = _dispatch_parse(
             champion_data["name"],
             champion_data,
             level,
-            ap,
+            effective_ap,
             champion_stats=stats,
             **kwargs,
         )

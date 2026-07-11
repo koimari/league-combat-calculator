@@ -26,6 +26,8 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Anivia": "anivia",
     "Annie": "annie",
     "Ashe": "ashe",
+    "Kog'Maw": "kogmaw",
+    "Vayne": "vayne",
 }
 
 
@@ -76,6 +78,7 @@ def parse_abilities(
         ability_ranks=ability_ranks,
         champion_stats=champion_stats,
         target_stats=target_stats,
+        champion_options=champion_options,
     )
 
 

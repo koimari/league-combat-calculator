@@ -1,0 +1,15 @@
+Umbral Glaive - Damage
+Hexoptics - Ranged vs Melee split
+Muramana - On champs with no mana
+Actualizer - On non mana champs
+
+Clear all items button
+Commit changes
+Have another claude review the optimizer for any issues
+
+
+
+Future:
+Kog Maw
+Vayne
+Optimizer for 1,2,3,4 items

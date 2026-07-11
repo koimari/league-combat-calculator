@@ -3,10 +3,10 @@
 import pytest
 
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions.common import extract_leveling_damage
 from src.calculator.champions.akshan import (
     parse_abilities,
     _extract_e_per_shot,
-    _extract_leveling_damage,
     _parse_passive_proc_damage,
     _extract_double_shot_ratio,
 )

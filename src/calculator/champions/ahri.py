@@ -12,62 +12,8 @@ hardcoded.
 
 from typing import Any
 
+from .common import build_stats_context, extract_leveling_damage, make_rank_fn
 from .generic_parser import extract_cooldown, extract_damage
-from .scaling import is_flat_unit, resolve_scaling
-from .skill_orders import get_ability_rank
-
-
-# ---------------------------------------------------------------------------
-# JSON extraction helpers
-# ---------------------------------------------------------------------------
-
-
-def _extract_leveling_damage(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-    stats_context: dict[str, float] | None = None,
-) -> float:
-    """Extract damage for a specific attribute name from ability JSON.
-
-    Searches all effects/leveling entries for a matching attribute and
-    sums the flat base + scaling contributions at the given rank.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute_name: Exact attribute name to look for (e.g.
-            ``"Damage Per Pass"``).
-        rank: Ability rank (1-indexed).
-        stats_context: Champion stats for scaling resolution.
-
-    Returns:
-        Total raw damage for this attribute at the given rank.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
-
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                if is_flat_unit(unit):
-                    total += value
-                else:
-                    total += resolve_scaling(
-                        unit, value, stats_context, None,
-                    )
-            return total
-
-    return 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -101,22 +47,17 @@ def parse_abilities(
     abilities_data = champion_data.get("abilities", {})
     results: dict[str, dict[str, Any]] = {}
 
-    # Build stats context for scaling resolution
-    stats_context: dict[str, float] = {}
-    if champion_stats:
-        stats_context = dict(champion_stats)
-    stats_context["ability_power"] = total_ability_power
-
-    def rank_for(key: str) -> int:
-        if ability_ranks and key in ability_ranks:
-            return ability_ranks[key]
-        return get_ability_rank(key, level, "Ahri")
+    stats_context = build_stats_context(champion_stats, total_ability_power)
+    rank_for = make_rank_fn("Ahri", ability_ranks, level)
 
     # Q - Orb of Deception: magic outgoing, true returning
     q_rank = rank_for("Q")
     if q_rank > 0:
-        q_ability = abilities_data["Q"][0]
-        q_damage_per_pass = _extract_leveling_damage(
+        q_ability_list = abilities_data.get("Q", [])
+        if not q_ability_list:
+            return results
+        q_ability = q_ability_list[0]
+        q_damage_per_pass = extract_leveling_damage(
             q_ability, "Damage Per Pass", q_rank, stats_context,
         )
         q_cooldown = extract_cooldown(q_ability, q_rank)
@@ -133,11 +74,14 @@ def parse_abilities(
     # W - Fox-Fire: 3 flames, subsequent deal reduced damage
     w_rank = rank_for("W")
     if w_rank > 0:
-        w_ability = abilities_data["W"][0]
-        w_initial = _extract_leveling_damage(
+        w_ability_list = abilities_data.get("W", [])
+        if not w_ability_list:
+            return results
+        w_ability = w_ability_list[0]
+        w_initial = extract_leveling_damage(
             w_ability, "Primary Magic Damage", w_rank, stats_context,
         )
-        w_subsequent = _extract_leveling_damage(
+        w_subsequent = extract_leveling_damage(
             w_ability, "Subsequent Magic Damage", w_rank, stats_context,
         )
         w_cooldown = extract_cooldown(w_ability, w_rank)
@@ -154,7 +98,10 @@ def parse_abilities(
     # E - Charm
     e_rank = rank_for("E")
     if e_rank > 0:
-        e_ability = abilities_data["E"][0]
+        e_ability_list = abilities_data.get("E", [])
+        if not e_ability_list:
+            return results
+        e_ability = e_ability_list[0]
         e_damage, _ = extract_damage(
             e_ability, e_rank, stats_context, target_stats,
         )
@@ -171,7 +118,10 @@ def parse_abilities(
     # R - Spirit Rush: 3 dashes per activation
     r_rank = rank_for("R")
     if r_rank > 0:
-        r_ability = abilities_data["R"][0]
+        r_ability_list = abilities_data.get("R", [])
+        if not r_ability_list:
+            return results
+        r_ability = r_ability_list[0]
         r_damage_per_cast, _ = extract_damage(
             r_ability, r_rank, stats_context, target_stats,
         )

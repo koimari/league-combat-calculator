@@ -20,101 +20,14 @@ hardcoded.
 import re
 from typing import Any
 
+from .common import (
+    build_stats_context,
+    extract_leveling_damage,
+    extract_leveling_value,
+    make_rank_fn,
+)
 from .generic_parser import extract_cooldown
 from .scaling import is_flat_unit, resolve_scaling
-from .skill_orders import get_ability_rank
-
-
-# ---------------------------------------------------------------------------
-# JSON extraction helpers
-# ---------------------------------------------------------------------------
-
-
-def _extract_leveling_damage(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-    stats_context: dict[str, float] | None = None,
-    target_stats: dict[str, float] | None = None,
-) -> float:
-    """Extract damage for a specific attribute name from ability JSON.
-
-    Searches all effects/leveling entries for a matching attribute and
-    sums the flat base + scaling contributions at the given rank.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute_name: Exact attribute name to look for.
-        rank: Ability rank (1-indexed).
-        stats_context: Champion stats for scaling resolution.
-        target_stats: Target stats for %HP scaling resolution.
-
-    Returns:
-        Total raw damage for this attribute at the given rank.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
-
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                if is_flat_unit(unit):
-                    total += value
-                else:
-                    total += resolve_scaling(
-                        unit, value, stats_context, target_stats,
-                    )
-            return total
-
-    return 0.0
-
-
-def _extract_leveling_value(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-) -> float:
-    """Extract a simple numeric value from ability JSON leveling data.
-
-    Unlike ``_extract_leveling_damage``, this returns only the first
-    modifier's flat value without resolving scaling. Used for values
-    like armor penetration percentages.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute_name: Exact attribute name to look for.
-        rank: Ability rank (1-indexed).
-
-    Returns:
-        The flat numeric value at the given rank, or 0.0 if not found.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-
-            modifiers = leveling.get("modifiers", [])
-            if not modifiers:
-                continue
-
-            values = modifiers[0].get("values", [])
-            if not values:
-                continue
-
-            idx = min(rank - 1, len(values) - 1)
-            return float(values[idx])
-
-    return 0.0
 
 
 def _parse_passive_damage(
@@ -237,16 +150,8 @@ def parse_abilities(
     if champion_options and "passive_procs" in champion_options:
         passive_procs = int(champion_options["passive_procs"])
 
-    # Build stats context for scaling
-    stats_context: dict[str, float] = {}
-    if champion_stats:
-        stats_context = dict(champion_stats)
-    stats_context["ability_power"] = total_ability_power
-
-    def rank_for(key: str) -> int:
-        if ability_ranks and key in ability_ranks:
-            return ability_ranks[key]
-        return get_ability_rank(key, level, "Ambessa")
+    stats_context = build_stats_context(champion_stats, total_ability_power)
+    rank_for = make_rank_fn("Ambessa", ability_ranks, level)
 
     # ── R: Public Execution (stat buff + damage) ─────────────────────
     r_rank = rank_for("R")
@@ -256,12 +161,12 @@ def parse_abilities(
             r_ability = r_ability_list[0]
 
             # Passive: armor penetration per rank
-            armor_pen = _extract_leveling_value(
+            armor_pen = extract_leveling_value(
                 r_ability, "Armor Penetration", r_rank,
             )
 
             # Active: physical damage
-            r_damage = _extract_leveling_damage(
+            r_damage = extract_leveling_damage(
                 r_ability, "Physical Damage", r_rank, stats_context,
                 target_stats,
             )
@@ -293,7 +198,7 @@ def parse_abilities(
                 "Increased Physical Damage" if sweetspot
                 else "Physical Damage"
             )
-            q1_damage = _extract_leveling_damage(
+            q1_damage = extract_leveling_damage(
                 q1_ability, attr_name, q_rank, stats_context, target_stats,
             )
             q1_cooldown = extract_cooldown(q1_ability, q_rank)
@@ -312,7 +217,7 @@ def parse_abilities(
                 "Increased Physical Damage" if sweetspot
                 else "Physical Damage"
             )
-            q2_damage = _extract_leveling_damage(
+            q2_damage = extract_leveling_damage(
                 q2_ability, attr_name, q_rank, stats_context, target_stats,
             )
             # Q2 shares Q1's cooldown (recast follows every Q1)
@@ -334,7 +239,7 @@ def parse_abilities(
         w_ability_list = abilities_data.get("W", [])
         if w_ability_list:
             w_ability = w_ability_list[0]
-            w_damage = _extract_leveling_damage(
+            w_damage = extract_leveling_damage(
                 w_ability, "Increased Physical Damage", w_rank,
                 stats_context, target_stats,
             )
@@ -356,7 +261,7 @@ def parse_abilities(
         e_ability_list = abilities_data.get("E", [])
         if e_ability_list:
             e_ability = e_ability_list[0]
-            e_damage = _extract_leveling_damage(
+            e_damage = extract_leveling_damage(
                 e_ability, "Total Physical Damage", e_rank,
                 stats_context, target_stats,
             )

@@ -173,9 +173,13 @@ def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str
         KeyError: If the champion is not found.
     """
     champions = fetch_champion_data(data_directory=data_directory)
-    if name not in champions:
-        raise KeyError(f"Champion '{name}' not found in data")
-    return champions[name]
+    if name in champions:
+        return champions[name]
+    # Fallback: search by display name (e.g. "Kog'Maw" vs data key "KogMaw")
+    for champ_data in champions.values():
+        if champ_data.get("name") == name:
+            return champ_data
+    raise KeyError(f"Champion '{name}' not found in data")
 
 
 def get_item_by_name(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:

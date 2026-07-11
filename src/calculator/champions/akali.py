@@ -15,58 +15,9 @@ All numeric values are read from the champion JSON data.
 
 from typing import Any
 
+from .common import build_stats_context, extract_leveling_damage, make_rank_fn
 from .generic_parser import extract_cooldown, extract_damage
 from .scaling import is_flat_unit, resolve_scaling
-from .skill_orders import get_ability_rank
-
-
-# ---------------------------------------------------------------------------
-# Leveling extraction helper
-# ---------------------------------------------------------------------------
-
-
-def _extract_leveling_damage(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-    stats_context: dict[str, float] | None = None,
-) -> float:
-    """Extract damage for a specific attribute from ability JSON.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute_name: Exact attribute name to look for.
-        rank: Ability rank (1-indexed).
-        stats_context: Champion stats for scaling resolution.
-
-    Returns:
-        Total raw damage for this attribute at the given rank.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
-
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                if is_flat_unit(unit):
-                    total += value
-                else:
-                    total += resolve_scaling(
-                        unit, value, stats_context, None,
-                    )
-            return total
-
-    return 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -175,16 +126,8 @@ def parse_abilities(
     if champion_options and "passive_procs" in champion_options:
         passive_procs = int(champion_options["passive_procs"])
 
-    # Build stats context for scaling
-    stats_context: dict[str, float] = {}
-    if champion_stats:
-        stats_context = dict(champion_stats)
-    stats_context["ability_power"] = total_ability_power
-
-    def rank_for(key: str) -> int:
-        if ability_ranks and key in ability_ranks:
-            return ability_ranks[key]
-        return get_ability_rank(key, level, "Akali")
+    stats_context = build_stats_context(champion_stats, total_ability_power)
+    rank_for = make_rank_fn("Akali", ability_ranks, level)
 
     # ── Q: Five Point Strike (standard magic damage) ──────────────────
     q_rank = rank_for("Q")
@@ -215,7 +158,7 @@ def parse_abilities(
         e_ability_list = abilities_data.get("E", [])
         if e_ability_list:
             e_ability = e_ability_list[0]
-            e_damage = _extract_leveling_damage(
+            e_damage = extract_leveling_damage(
                 e_ability, "Total Magic Damage", e_rank, stats_context,
             )
             e_cooldown = extract_cooldown(e_ability, e_rank)
@@ -236,13 +179,13 @@ def parse_abilities(
         r_ability_list = abilities_data.get("R", [])
         if r_ability_list:
             r_ability = r_ability_list[0]
-            r1_damage = _extract_leveling_damage(
+            r1_damage = extract_leveling_damage(
                 r_ability, "Magic Damage", r_rank, stats_context,
             )
-            r2_min = _extract_leveling_damage(
+            r2_min = extract_leveling_damage(
                 r_ability, "Minimum Magic Damage", r_rank, stats_context,
             )
-            r2_max = _extract_leveling_damage(
+            r2_max = extract_leveling_damage(
                 r_ability, "Maximum Magic Damage", r_rank, stats_context,
             )
             r_cooldown = extract_cooldown(r_ability, r_rank)

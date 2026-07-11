@@ -3,10 +3,10 @@
 import pytest
 
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions.common import extract_leveling_damage
 from src.calculator.champions.alistar import (
     parse_abilities,
     _extract_e_on_hit_damage,
-    _extract_e_total_damage,
 )
 from src.calculator.damage import calculate_fight_damage
 
@@ -86,20 +86,20 @@ class TestETrample:
     def test_e_total_damage_rank1_matches_json(self, alistar_data) -> None:
         """E rank 1: Total Magic Damage = 80 + 70% AP."""
         e_ability = alistar_data["abilities"]["E"][0]
-        total = _extract_e_total_damage(e_ability, 1, {"ability_power": 100.0})
+        total = extract_leveling_damage(e_ability, "Total Magic Damage", 1, {"ability_power": 100.0})
         expected = 80 + 0.70 * 100
         assert abs(total - expected) < 0.5
 
     def test_e_total_damage_rank5_matches_json(self, alistar_data) -> None:
         """E rank 5: Total Magic Damage = 200 + 70% AP."""
         e_ability = alistar_data["abilities"]["E"][0]
-        total = _extract_e_total_damage(e_ability, 5, {"ability_power": 0.0})
+        total = extract_leveling_damage(e_ability, "Total Magic Damage", 5, {"ability_power": 0.0})
         assert abs(total - 200.0) < 0.5
 
     def test_e_includes_empowered_auto(self, alistar_data, parse_at) -> None:
         """E total should include empowered auto damage (once per cast)."""
         e_ability = alistar_data["abilities"]["E"][0]
-        tick_only = _extract_e_total_damage(e_ability, 1, {"ability_power": 0.0})
+        tick_only = extract_leveling_damage(e_ability, "Total Magic Damage", 1, {"ability_power": 0.0})
         empowered = _extract_e_on_hit_damage(e_ability, 1)
         _, abilities = parse_at(
             alistar_data, 1,

@@ -516,6 +516,7 @@ def calculate_fight_damage(
     cast_order: list[str] | None = None,
     auto_attacks_only: bool = False,
     target_bonus_health: float = 0.0,
+    deterministic: bool = False,
 ) -> dict[str, Any]:
     """Calculate total damage dealt over a fight duration.
 
@@ -630,8 +631,16 @@ def calculate_fight_damage(
     # The pen is displayed in champion stats at max stacks, but in the fight
     # engine we compute a weighted average pen across all autos (like Black
     # Cleaver) since stacks ramp up: 0%, 10%, 10%, 20%, 20%, 30%, 30%...
-    # We strip the max-stack pen from stats and replace with the average.
+    # Terminus pen only applies to auto attacks, NOT abilities.
+    # We strip the max-stack pen from stats for ability calculations, and
+    # compute separate auto-attack pen values with the weighted average.
     has_terminus = "Terminus" in item_name_list
+    # Pen values for abilities (no Terminus pen)
+    ability_armor_pen_percent = armor_pen_percent
+    ability_magic_pen_percent = magic_pen_percent
+    # Pen values for auto attacks (with Terminus average pen)
+    auto_armor_pen_percent = armor_pen_percent
+    auto_magic_pen_percent = magic_pen_percent
     if has_terminus:
         terminus_avg_pen = item_effects.get_terminus_pen_stacks(num_auto_attacks)
         terminus_effect = item_effects.ITEM_EFFECTS.get("Terminus", {})
@@ -639,28 +648,33 @@ def calculate_fight_damage(
             terminus_effect.get("dark_pen_per_stack", 0.10)
             * terminus_effect.get("dark_max_stacks", 3)
         )
-        # Strip max-stack pen (from stats.py), add weighted average instead
-        armor_pen_percent = max(0.0, armor_pen_percent - terminus_stat_pen)
-        magic_pen_percent = max(0.0, magic_pen_percent - terminus_stat_pen)
+        # Strip max-stack pen for abilities (Terminus pen doesn't apply)
+        ability_armor_pen_percent = max(0.0, armor_pen_percent - terminus_stat_pen)
+        ability_magic_pen_percent = max(0.0, magic_pen_percent - terminus_stat_pen)
+        # Strip max-stack pen, then add weighted average for autos
+        auto_armor_pen_percent = max(0.0, armor_pen_percent - terminus_stat_pen)
+        auto_magic_pen_percent = max(0.0, magic_pen_percent - terminus_stat_pen)
         if terminus_avg_pen > 0:
-            armor_pen_percent = 1.0 - (1.0 - armor_pen_percent) * (1.0 - terminus_avg_pen)
-            magic_pen_percent = 1.0 - (1.0 - magic_pen_percent) * (1.0 - terminus_avg_pen)
-            # Recompute effective MR with average Terminus pen
-            effective_mr_pre_ult = apply_magic_penetration(
-                base_mr, magic_pen_flat, magic_pen_percent
-            )
-            effective_mr_post_ult = apply_magic_penetration(
-                reduced_mr, magic_pen_flat, magic_pen_percent
-            )
-            effective_mr = effective_mr_post_ult
+            auto_armor_pen_percent = 1.0 - (1.0 - auto_armor_pen_percent) * (1.0 - terminus_avg_pen)
+            auto_magic_pen_percent = 1.0 - (1.0 - auto_magic_pen_percent) * (1.0 - terminus_avg_pen)
+    # Recompute effective MR for abilities (without Terminus pen)
+    effective_mr_pre_ult = apply_magic_penetration(
+        base_mr, magic_pen_flat, ability_magic_pen_percent
+    )
+    effective_mr_post_ult = apply_magic_penetration(
+        reduced_mr, magic_pen_flat, ability_magic_pen_percent
+    )
+    effective_mr = effective_mr_post_ult
 
     bc_reduction = item_effects.get_armor_reduction(
         items, fight_duration_seconds, num_auto_attacks
     )
     reduced_armor = target_armor * (1.0 - bc_reduction)
 
+    # Use ability-specific armor pen (no Terminus) for ability damage.
+    # Auto-attack armor pen (with Terminus average) is applied after Step 2.
     effective_armor = apply_armor_penetration(
-        reduced_armor, flat_armor_pen, armor_pen_percent
+        reduced_armor, flat_armor_pen, ability_armor_pen_percent
     )
 
     # Opportunity Preparation: bonus lethality for the first N seconds
@@ -672,7 +686,7 @@ def calculate_fight_damage(
             0.6 + 0.4 * min(level, 18) / 18
         )
         effective_armor_prep = apply_armor_penetration(
-            reduced_armor, prep_flat_pen, armor_pen_percent
+            reduced_armor, prep_flat_pen, ability_armor_pen_percent
         )
     else:
         effective_armor_prep = effective_armor
@@ -711,11 +725,19 @@ def calculate_fight_damage(
                     champion_stats.get("magic_penetration_percent", 0.0)
                     / 100.0
                 )
+                # Recompute ability/auto pen variants with new base
+                ability_magic_pen_percent = magic_pen_percent
+                auto_magic_pen_percent = magic_pen_percent
+                if has_terminus:
+                    ability_magic_pen_percent = max(0.0, magic_pen_percent - terminus_stat_pen)
+                    auto_magic_pen_percent = max(0.0, magic_pen_percent - terminus_stat_pen)
+                    if terminus_avg_pen > 0:
+                        auto_magic_pen_percent = 1.0 - (1.0 - auto_magic_pen_percent) * (1.0 - terminus_avg_pen)
                 effective_mr_pre_ult = apply_magic_penetration(
-                    base_mr, magic_pen_flat, magic_pen_percent
+                    base_mr, magic_pen_flat, ability_magic_pen_percent
                 )
                 effective_mr_post_ult = apply_magic_penetration(
-                    reduced_mr, magic_pen_flat, magic_pen_percent
+                    reduced_mr, magic_pen_flat, ability_magic_pen_percent
                 )
                 effective_mr = effective_mr_post_ult
             # Recalculate armor penetration if it was buffed
@@ -724,13 +746,20 @@ def calculate_fight_damage(
                     champion_stats.get("armor_penetration_percent", 0.0)
                     / 100.0
                 )
+                ability_armor_pen_percent = armor_pen_percent
+                auto_armor_pen_percent = armor_pen_percent
+                if has_terminus:
+                    ability_armor_pen_percent = max(0.0, armor_pen_percent - terminus_stat_pen)
+                    auto_armor_pen_percent = max(0.0, armor_pen_percent - terminus_stat_pen)
+                    if terminus_avg_pen > 0:
+                        auto_armor_pen_percent = 1.0 - (1.0 - auto_armor_pen_percent) * (1.0 - terminus_avg_pen)
                 reduced_armor = target_armor * (1.0 - bc_reduction)
                 effective_armor = apply_armor_penetration(
-                    reduced_armor, flat_armor_pen, armor_pen_percent
+                    reduced_armor, flat_armor_pen, ability_armor_pen_percent
                 )
                 if prep_lethality > 0:
                     effective_armor_prep = apply_armor_penetration(
-                        reduced_armor, prep_flat_pen, armor_pen_percent
+                        reduced_armor, prep_flat_pen, ability_armor_pen_percent
                     )
                 else:
                     effective_armor_prep = effective_armor
@@ -829,7 +858,7 @@ def calculate_fight_damage(
             )
             mr_reduced = max(mr_reduced, 0)
             ability_mr = apply_magic_penetration(
-                mr_reduced, magic_pen_flat, magic_pen_percent
+                mr_reduced, magic_pen_flat, ability_magic_pen_percent
             )
         else:
             ability_mr = (
@@ -863,25 +892,63 @@ def calculate_fight_damage(
                     per_dash * ability_info["total_casts"] * num_casts
                 )
             elif ability_info.get("missing_hp_scaling"):
-                # Two-part ability with missing-HP scaling on the second
-                # cast (e.g. Akali R: R1 flat + R2 scales 0-200% with
-                # target missing HP). Compute R2 based on damage dealt
-                # so far in the rotation.
-                r1_raw = ability_info.get("magic_damage", 0)
-                r2_min = ability_info.get("r2_min", 0)
-                r2_max = ability_info.get("r2_max", 0)
-                r1_mit = apply_resistance(r1_raw, ability_mr) * magic_amp
-                # After R1, estimate target HP to scale R2
-                hp_after_r1 = max(
-                    0.0,
-                    target_health - mitigated_damage_dealt - r1_mit,
-                )
-                missing_ratio = 1.0 - (hp_after_r1 / target_health) \
-                    if target_health > 0 else 1.0
-                # R2 damage linearly interpolates min→max by missing %
-                r2_raw = r2_min + (r2_max - r2_min) * missing_ratio
-                r2_mit = apply_resistance(r2_raw, ability_mr) * magic_amp
-                ability_total = (r1_mit + r2_mit) * num_casts
+                if "r_base_damage" in ability_info:
+                    # Single-damage ability with missing-HP multiplier
+                    # (e.g. Kog'Maw R: 0-50% bonus scaling linearly
+                    # with missing HP up to 60% missing, then 100%
+                    # bonus below 40% max HP).
+                    r_base = ability_info["r_base_damage"]
+                    ability_total = 0.0
+                    running_dmg = mitigated_damage_dealt
+                    for _ in range(num_casts):
+                        hp_now = max(
+                            0.0, target_health - running_dmg,
+                        )
+                        if target_health > 0:
+                            missing_pct = 1.0 - (hp_now / target_health)
+                        else:
+                            missing_pct = 1.0
+                        if missing_pct >= 0.6:
+                            multiplier = 2.0
+                        else:
+                            multiplier = 1.0 + 0.5 * (
+                                missing_pct / 0.6
+                            )
+                        raw = r_base * multiplier
+                        mit = (
+                            apply_resistance(raw, ability_mr)
+                            * magic_amp
+                        )
+                        ability_total += mit
+                        running_dmg += mit
+                else:
+                    # Two-part ability with missing-HP scaling on the
+                    # second cast (e.g. Akali R: R1 flat + R2 scales
+                    # 0-200% with target missing HP). Compute R2 based
+                    # on damage dealt so far in the rotation.
+                    r1_raw = ability_info.get("magic_damage", 0)
+                    r2_min = ability_info.get("r2_min", 0)
+                    r2_max = ability_info.get("r2_max", 0)
+                    r1_mit = (
+                        apply_resistance(r1_raw, ability_mr) * magic_amp
+                    )
+                    # After R1, estimate target HP to scale R2
+                    hp_after_r1 = max(
+                        0.0,
+                        target_health - mitigated_damage_dealt - r1_mit,
+                    )
+                    missing_ratio = 1.0 - (
+                        hp_after_r1 / target_health
+                    ) if target_health > 0 else 1.0
+                    # R2 damage linearly interpolates min→max by
+                    # missing %
+                    r2_raw = (
+                        r2_min + (r2_max - r2_min) * missing_ratio
+                    )
+                    r2_mit = (
+                        apply_resistance(r2_raw, ability_mr) * magic_amp
+                    )
+                    ability_total = (r1_mit + r2_mit) * num_casts
             else:
                 raw = ability_info.get(
                     "magic_damage", ability_info.get("total_raw", 0)
@@ -978,6 +1045,42 @@ def calculate_fight_damage(
         total_damage += ability_total
         mitigated_damage_dealt += ability_total
 
+        # Apply target debuffs (e.g. Kog'Maw Q resistance shred) AFTER
+        # computing this ability's own damage, so subsequent abilities
+        # benefit from the shred but the source ability does not.
+        target_debuff = ability_info.get("target_debuff")
+        if target_debuff:
+            armor_reduction_pct = target_debuff.get(
+                "armor_reduction_percent", 0.0
+            )
+            if armor_reduction_pct > 0:
+                target_armor *= (1.0 - armor_reduction_pct / 100.0)
+                reduced_armor = target_armor * (1.0 - bc_reduction)
+                effective_armor = apply_armor_penetration(
+                    reduced_armor, flat_armor_pen, ability_armor_pen_percent
+                )
+                if prep_lethality > 0:
+                    effective_armor_prep = apply_armor_penetration(
+                        reduced_armor, prep_flat_pen, ability_armor_pen_percent
+                    )
+                else:
+                    effective_armor_prep = effective_armor
+
+            mr_reduction_pct = target_debuff.get(
+                "mr_reduction_percent", 0.0
+            )
+            if mr_reduction_pct > 0:
+                base_mr *= (1.0 - mr_reduction_pct / 100.0)
+                reduced_mr = base_mr - malignance_mr_reduction
+                reduced_mr = max(reduced_mr, 0)
+                effective_mr_pre_ult = apply_magic_penetration(
+                    base_mr, magic_pen_flat, ability_magic_pen_percent
+                )
+                effective_mr_post_ult = apply_magic_penetration(
+                    reduced_mr, magic_pen_flat, ability_magic_pen_percent
+                )
+                effective_mr = effective_mr_post_ult
+
     # Update effective MR for non-ability damage using final Vile Decay stacks.
     # Non-ability damage occurs during/after the full rotation, so use
     # post-ult MR (Malignance reduction active).
@@ -988,8 +1091,29 @@ def calculate_fight_damage(
         )
         mr_with_stacks = max(mr_with_stacks, 0)
         effective_mr = apply_magic_penetration(
-            mr_with_stacks, magic_pen_flat, magic_pen_percent
+            mr_with_stacks, magic_pen_flat, auto_magic_pen_percent
         )
+
+    # ── Switch to auto-attack pen values (with Terminus average) ──────────
+    # Abilities are done; remaining damage (autos, on-hit, item procs) should
+    # use Terminus average penetration for auto attacks.
+    if has_terminus and terminus_avg_pen > 0:
+        effective_armor = apply_armor_penetration(
+            reduced_armor, flat_armor_pen, auto_armor_pen_percent
+        )
+        if prep_lethality > 0:
+            effective_armor_prep = apply_armor_penetration(
+                reduced_armor, prep_flat_pen, auto_armor_pen_percent
+            )
+        else:
+            effective_armor_prep = effective_armor
+        effective_mr_pre_ult = apply_magic_penetration(
+            base_mr, magic_pen_flat, auto_magic_pen_percent
+        )
+        effective_mr_post_ult = apply_magic_penetration(
+            reduced_mr, magic_pen_flat, auto_magic_pen_percent
+        )
+        effective_mr = effective_mr_post_ult
 
     # ── Step 2a: Pre-calculated proc damage (e.g. Akali passive) ─────────
     # Ability entries with a proc_count field represent damage that occurs
@@ -1095,7 +1219,10 @@ def calculate_fight_damage(
     for i in range(num_auto_attacks):
         is_empowered = has_fiendhunter and i < empowered_autos
         is_sundered = has_sundered_sky and i == 0
-        natural_crit = random.random() < crit_chance
+        if deterministic:
+            natural_crit = False
+        else:
+            natural_crit = random.random() < crit_chance
 
         if natural_crit:
             num_crits += 1
@@ -1112,7 +1239,14 @@ def calculate_fight_damage(
             raw_phys = attack_damage * override_ad_ratio * (1 + crit_chance * bonus_crit_ratio)
             raw_true = 0.0
         elif is_empowered:
-            if natural_crit:
+            if deterministic:
+                # Expected-value for empowered autos
+                raw_phys_crit = attack_damage * crit_multiplier
+                raw_true_crit = raw_phys_crit * fh_true_ratio
+                raw_phys_no = attack_damage * crit_multiplier * fh_reduced_crit
+                raw_phys = crit_chance * raw_phys_crit + (1 - crit_chance) * raw_phys_no
+                raw_true = crit_chance * raw_true_crit
+            elif natural_crit:
                 # Full crit + bonus true damage
                 raw_phys = attack_damage * crit_multiplier
                 raw_true = raw_phys * fh_true_ratio
@@ -1125,14 +1259,23 @@ def calculate_fight_damage(
             # Sundered Sky: forced crit at reduced ratio, overrides natural crit
             raw_phys = attack_damage * crit_multiplier * ss_reduced_crit
             # Calculate what the auto would have dealt without Sundered Sky
-            if natural_crit:
+            if deterministic:
+                normal_raw = attack_damage * (
+                    crit_chance * crit_multiplier + (1 - crit_chance)
+                )
+            elif natural_crit:
                 normal_raw = attack_damage * crit_multiplier
             else:
                 normal_raw = attack_damage
             sundered_sky_damage_diff = raw_phys - normal_raw
             raw_true = 0.0
         else:
-            if natural_crit:
+            if deterministic:
+                # Expected-value: blend crit and non-crit damage
+                raw_phys = attack_damage * (
+                    crit_chance * crit_multiplier + (1 - crit_chance)
+                )
+            elif natural_crit:
                 raw_phys = attack_damage * crit_multiplier
             else:
                 raw_phys = attack_damage
@@ -1144,7 +1287,9 @@ def calculate_fight_damage(
 
         # Track per-hit damage for crits vs non-crits (last value wins;
         # all crits deal the same and all non-crits deal the same)
-        if natural_crit:
+        if deterministic:
+            non_crit_damage_per_hit = mitigated
+        elif natural_crit:
             crit_damage_per_hit = mitigated
         else:
             non_crit_damage_per_hit = mitigated
@@ -1224,12 +1369,18 @@ def calculate_fight_damage(
         ds_crits = 0
         for i in range(num_auto_attacks):
             ds_ad = attack_damage * ds_ratio
-            ds_crit = random.random() < crit_chance
-            if ds_crit:
-                ds_crits += 1
-                raw_ds = ds_ad * crit_multiplier
+            if deterministic:
+                ds_crit = False
+                raw_ds = ds_ad * (
+                    crit_chance * crit_multiplier + (1 - crit_chance)
+                )
             else:
-                raw_ds = ds_ad
+                ds_crit = random.random() < crit_chance
+                if ds_crit:
+                    ds_crits += 1
+                    raw_ds = ds_ad * crit_multiplier
+                else:
+                    raw_ds = ds_ad
             auto_armor = (
                 effective_armor_prep if i < prep_autos else effective_armor
             )
@@ -1330,13 +1481,27 @@ def calculate_fight_damage(
         non_bork_on_hit_per_hit += per_hit
 
         ability_name = on_hit_data.get("name", f"{ability_key} (on-hit)")
-        breakdown[f"on_hit_ability_{ability_key}"] = {
-            "name": ability_name,
-            "count": hits,
-            "damage_per_hit": per_hit,
-            "total_damage": ability_on_hit_damage,
-            "damage_type": dmg_type,
-        }
+        stacks_required = on_hit_data.get("stacks_required", 0)
+        if stacks_required > 1:
+            # Stack-based on-hit (e.g. Vayne W): display as procs
+            proc_count = hits // stacks_required
+            damage_per_proc = per_hit * stacks_required
+            breakdown[f"on_hit_ability_{ability_key}"] = {
+                "name": ability_name,
+                "count": proc_count,
+                "damage_per_hit": damage_per_proc,
+                "total_damage": ability_on_hit_damage,
+                "damage_type": dmg_type,
+                "unit": "procs",
+            }
+        else:
+            breakdown[f"on_hit_ability_{ability_key}"] = {
+                "name": ability_name,
+                "count": hits,
+                "damage_per_hit": per_hit,
+                "total_damage": ability_on_hit_damage,
+                "damage_type": dmg_type,
+            }
 
     # BoRK: simulate with decreasing target current HP per auto attack.
     # Phantom hit autos cause BoRK to proc twice (at different current HP).

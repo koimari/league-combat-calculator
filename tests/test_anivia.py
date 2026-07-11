@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.calculator.champions.anivia import _extract_leveling_damage
+from src.calculator.champions.common import extract_leveling_damage
 
 
 # ---------------------------------------------------------------------------

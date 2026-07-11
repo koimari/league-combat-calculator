@@ -144,6 +144,7 @@ def parse_abilities(
     ability_ranks: dict[str, int] | None = None,
     champion_stats: dict[str, float] | None = None,
     target_stats: dict[str, float] | None = None,
+    champion_options: dict[str, Any] | None = None,  # pylint: disable=unused-argument
 ) -> dict[str, dict[str, Any]]:
     """Parse abilities for any champion from JSON data.
 
@@ -158,6 +159,7 @@ def parse_abilities(
         ability_ranks: Optional rank overrides per ability key.
         champion_stats: Champion's calculated stats (for AD/HP scaling).
         target_stats: Target stats (for %HP abilities).
+        champion_options: Champion-specific options (reserved for future use).
 
     Returns:
         Ability damage dictionary keyed by Q/W/E/R.

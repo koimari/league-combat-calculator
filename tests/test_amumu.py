@@ -3,10 +3,8 @@
 import pytest
 
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.amumu import (
-    _extract_leveling_damage,
-    _CURSE_BONUS_FRACTION,
-)
+from src.calculator.champions.common import extract_leveling_damage
+from src.calculator.champions.amumu import _CURSE_BONUS_FRACTION
 from src.calculator.damage import calculate_fight_damage
 
 

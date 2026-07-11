@@ -14,6 +14,7 @@ from calculator.data_updater import update_data
 from calculator.stats import calculate_total_stats
 from calculator.champions import parse_abilities
 from calculator.damage import calculate_fight_damage
+from calculator.optimizer import optimize_build, ITEM_BLOCKLIST
 
 app = Flask(
     __name__,
@@ -22,21 +23,7 @@ app = Flask(
 )
 app.json.sort_keys = False
 
-# Items that appear in the data but aren't available on Summoner's Rift
-ITEM_BLOCKLIST = {
-    "Anathema's Chains",
-    "Atma's Reckoning",
-    "Bandleglass Mirror",
-    "Bounty of Worlds",
-    "Ghostcrawlers",
-    "Hellfire Hatchet",
-    "Perplexity",
-    "Rite of Ruin",
-    "Spectral Cutlass",
-    "Sword of Blossoming Dawn",
-    "Wordless Promise",
-    "Zephyr",
-}
+# ITEM_BLOCKLIST is imported from calculator.optimizer
 
 
 @app.route("/")
@@ -197,8 +184,10 @@ def api_calculate():
     }
 
     # Parse abilities via the champion registry
+    # Use display name from data (e.g. "Kog'Maw") not the data key ("KogMaw")
+    display_name = champion_data.get("name", champion_name)
     ability_damages = parse_abilities(
-        champion_name, champion_data, level, champion_stats["ability_power"],
+        display_name, champion_data, level, champion_stats["ability_power"],
         ability_ranks=ability_ranks,
         champion_stats=champion_stats,
         target_stats=target_stats,
@@ -241,6 +230,10 @@ def api_calculate():
 
     for key, entry in breakdown.items():
         dmg = entry.get("total_damage", 0.0)
+        # Skip informational-only entries whose damage is already counted
+        # in other breakdown rows (e.g. Actualizer, basic damage amp).
+        if "note" in entry and "included in" in entry.get("note", ""):
+            continue
         if (key == "auto_attacks" or key == "fiendhunter_true_damage"
                 or key.startswith(on_hit_prefixes)):
             auto_attack_damage += dmg
@@ -314,6 +307,78 @@ def api_calculate():
         "effective_mr": round(result.get("effective_mr", 0.0), 1),
         "effective_armor": round(result.get("effective_armor", 0.0), 1),
     })
+
+
+@app.route("/api/optimize", methods=["POST"])
+def api_optimize():
+    """Find the optimal item build for a champion."""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No JSON body provided"}), 400
+
+    champion_name = data.get("champion", "")
+    if not champion_name:
+        return jsonify({"error": "No champion selected"}), 400
+
+    level = int(data.get("level", 1))
+    if level < 1 or level > 20:
+        return jsonify({"error": "Level must be between 1 and 20"}), 400
+
+    try:
+        champion_data = get_champion(champion_name)
+    except KeyError:
+        return jsonify({"error": f"Champion '{champion_name}' not found"}), 404
+
+    # Read all fight parameters (same as /api/calculate)
+    target_health = float(data.get("target_health", 2000))
+    target_bonus_health = float(data.get("target_bonus_health", 0))
+    target_armor = float(data.get("target_armor", 50))
+    target_mr = float(data.get("target_mr", 40))
+    fight_mode = data.get("fight_mode", "one_rotation")
+    fight_duration = float(data.get("fight_duration", 8))
+    include_auto_attacks = data.get("include_auto_attacks", False)
+    auto_attack_uptime = float(data.get("auto_attack_uptime", 0.8))
+    auto_attacks_only = data.get("auto_attacks_only", False)
+    ability_ranks = data.get("ability_ranks", None)
+    include_actives = data.get("include_actives", True)
+    cast_order = data.get("cast_order", None)
+    champion_options = data.get("champion_options", None)
+
+    # Optimizer-specific parameters
+    objective = data.get("objective", "total_damage")
+    locked_items = data.get("locked_items", [])
+    locked_boots = data.get("locked_boots", "")
+    max_legendary_slots = int(data.get("max_legendary_slots", 5))
+
+    if objective not in ("total_damage", "physical_damage", "magic_damage"):
+        return jsonify({"error": "Invalid objective"}), 400
+    if max_legendary_slots not in (5, 6):
+        return jsonify({"error": "max_legendary_slots must be 5 or 6"}), 400
+
+    result = optimize_build(
+        champion_name=champion_name,
+        champion_data=champion_data,
+        level=level,
+        target_health=target_health,
+        target_bonus_health=target_bonus_health,
+        target_armor=target_armor,
+        target_mr=target_mr,
+        fight_mode=fight_mode,
+        fight_duration=fight_duration,
+        include_auto_attacks=include_auto_attacks,
+        auto_attack_uptime=auto_attack_uptime,
+        auto_attacks_only=auto_attacks_only,
+        ability_ranks=ability_ranks,
+        include_actives=include_actives,
+        cast_order=cast_order,
+        champion_options=champion_options,
+        objective=objective,
+        locked_items=locked_items if locked_items else None,
+        locked_boots=locked_boots if locked_boots else None,
+        max_legendary_slots=max_legendary_slots,
+    )
+
+    return jsonify(result)
 
 
 @app.route("/api/update-data")

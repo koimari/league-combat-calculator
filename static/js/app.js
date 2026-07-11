@@ -393,6 +393,59 @@ document.addEventListener("DOMContentLoaded", () => {
         ],
     };
 
+    championOptionsDefs["Vayne"] = {
+        render(container) {
+            container.innerHTML = `
+                <label class="toggle-label compact">
+                    <input type="checkbox" id="opt-vayne-condemn-wall" checked>
+                    <span class="toggle-text">E Condemn into wall</span>
+                </label>`;
+            document.getElementById("opt-vayne-condemn-wall")
+                .addEventListener("change", scheduleRecalc);
+        },
+        getValues() {
+            return {
+                condemn_wall: document.getElementById("opt-vayne-condemn-wall")?.checked ?? true,
+            };
+        },
+        assumptions: [
+            "R (Final Hour) always active if ranked — bonus AD applied",
+            "W (Silver Bolts) procs every 3rd hit (on-hit model)",
+            "Q empowered auto applies once per cast",
+            "Passive (Night Hunter) is utility only — not modeled",
+        ],
+    };
+
+    championOptionsDefs["Kog'Maw"] = {
+        render(container) {
+            container.innerHTML = `
+                <label class="toggle-label compact">
+                    <input type="checkbox" id="opt-kogmaw-q-shred" checked>
+                    <span class="toggle-text">Apply Q Resistance Shred</span>
+                </label>
+                <label class="toggle-label compact" style="margin-top:6px;">
+                    <input type="checkbox" id="opt-kogmaw-w-active" checked>
+                    <span class="toggle-text">W Active (Bio-Arcane Barrage)</span>
+                </label>`;
+            document.getElementById("opt-kogmaw-q-shred")
+                .addEventListener("change", scheduleRecalc);
+            document.getElementById("opt-kogmaw-w-active")
+                .addEventListener("change", scheduleRecalc);
+        },
+        getValues() {
+            return {
+                q_shred: document.getElementById("opt-kogmaw-q-shred")?.checked ?? true,
+                w_active: document.getElementById("opt-kogmaw-w-active")?.checked ?? true,
+            };
+        },
+        assumptions: [
+            "Q resistance shred applied before all other damage",
+            "W (Bio-Arcane Barrage) assumed always active during the fight",
+            "R damage scales dynamically with target's decreasing HP",
+            "Passive (Icathian Surprise) is not modeled",
+        ],
+    };
+
     function selectChampion(name, icon) {
         championSelect.value = name;
         championNameText.textContent = name || "Select Champion";
@@ -614,6 +667,42 @@ document.addEventListener("DOMContentLoaded", () => {
         return names;
     }
 
+    // Item exclusivity groups — only one item per group allowed in a build
+    const ITEM_EXCLUSIVITY_GROUPS = {
+        Hydra: ["Tiamat", "Profane Hydra", "Ravenous Hydra", "Stridebreaker", "Titanic Hydra"],
+        Blight: ["Blighting Jewel", "Bloodletter's Curse", "Cryptbloom", "Terminus", "Void Staff"],
+        Fatality: ["Last Whisper", "Black Cleaver", "Lord Dominik's Regards", "Mortal Reminder", "Serylda's Grudge", "Terminus"],
+    };
+
+    // Build a reverse lookup: item name -> list of group names it belongs to
+    const itemToGroups = {};
+    for (const [group, members] of Object.entries(ITEM_EXCLUSIVITY_GROUPS)) {
+        for (const name of members) {
+            if (!itemToGroups[name]) itemToGroups[name] = [];
+            itemToGroups[name].push(group);
+        }
+    }
+
+    // Returns the exclusivity reason if an item is blocked, or null if allowed.
+    // currentSlot is the slot being picked for (its current item is allowed).
+    function getExclusivityBlock(itemName, currentSlot) {
+        const groups = itemToGroups[itemName];
+        if (!groups) return null;
+
+        for (const [slotKey, slotItem] of Object.entries(selectedItems)) {
+            if (!slotItem || slotKey === currentSlot) continue;
+            if (slotItem === itemName) continue; // duplicate check handled elsewhere
+            const slotGroups = itemToGroups[slotItem];
+            if (!slotGroups) continue;
+            for (const g of groups) {
+                if (slotGroups.includes(g)) {
+                    return `${g} group (have ${slotItem})`;
+                }
+            }
+        }
+        return null;
+    }
+
     function openItemPicker(slotKey) {
         activePickerSlot = slotKey;
         const isBoot = slotKey === "boots";
@@ -643,9 +732,14 @@ document.addEventListener("DOMContentLoaded", () => {
         items.forEach((item) => {
             const el = document.createElement("div");
             const isUsed = selected.has(item.name) && item.name !== currentInSlot;
-            el.className = "picker-item" + (isUsed ? " picker-item-used" : "");
-            el.innerHTML = `<img src="${item.icon}" alt="${item.name}" loading="lazy"><div class="picker-tooltip">${item.name}${isUsed ? " (already selected)" : ""}</div>`;
-            if (!isUsed) {
+            const exclusivityBlock = !isUsed ? getExclusivityBlock(item.name, activePickerSlot) : null;
+            const isBlocked = isUsed || exclusivityBlock;
+            el.className = "picker-item" + (isBlocked ? " picker-item-used" : "");
+            let tooltip = item.name;
+            if (isUsed) tooltip += " (already selected)";
+            else if (exclusivityBlock) tooltip += ` (${exclusivityBlock})`;
+            el.innerHTML = `<img src="${item.icon}" alt="${item.name}" loading="lazy"><div class="picker-tooltip">${tooltip}</div>`;
+            if (!isBlocked) {
                 el.addEventListener("click", () => {
                     selectItem(activePickerSlot, item.name, item.icon);
                     closePicker();
@@ -1065,7 +1159,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     detail = entry.count + " crit" + (entry.count !== 1 ? "s" : "")
                         + " @ " + Math.round(entry.crit_damage_per_hit) + " each";
                 } else {
-                    detail = entry.count + " hits";
+                    const unit = entry.unit || "hits";
+                    detail = entry.count + " " + unit;
                     if (entry.damage_per_hit != null) {
                         detail += " @ " + Math.round(entry.damage_per_hit) + " each";
                     }
@@ -1135,4 +1230,132 @@ document.addEventListener("DOMContentLoaded", () => {
 
         requestAnimationFrame(update);
     }
+
+    // =============== BUILD OPTIMIZER ===============
+    const optimizeBtn = document.getElementById("optimize-btn");
+    const optimizeBtnText = optimizeBtn.querySelector(".btn-text");
+    const optimizeBtnLoading = optimizeBtn.querySelector(".btn-loading");
+    const optimizeStatus = document.getElementById("optimize-status");
+    const optimizeObjective = document.getElementById("optimize-objective");
+    const optimizeSlots = document.getElementById("optimize-slots");
+
+    let isOptimizing = false;
+
+    optimizeBtn.addEventListener("click", () => {
+        const champion = championSelect.value;
+        if (!champion) {
+            showError("Please select a champion first.");
+            return;
+        }
+        if (isOptimizing) return;
+        isOptimizing = true;
+
+        const fightMode = document.querySelector('input[name="fight-mode"]:checked').value;
+        const maxSlots = parseInt(optimizeSlots.value, 10);
+
+        // Collect locked items (non-empty slots)
+        const lockedItems = [];
+        for (let i = 1; i <= 6; i++) {
+            if (selectedItems[i]) lockedItems.push(selectedItems[i]);
+        }
+        const lockedBoots = selectedItems.boots || "";
+
+        const payload = {
+            champion: champion,
+            level: parseInt(levelSlider.value, 10),
+            target_health: (parseFloat(targetBaseHealth.value) || 1000) + (parseFloat(targetBonusHealth.value) || 0),
+            target_bonus_health: parseFloat(targetBonusHealth.value) || 0,
+            target_armor: targetArmor.value !== "" ? parseFloat(targetArmor.value) : 100,
+            target_mr: targetMr.value !== "" ? parseFloat(targetMr.value) : 100,
+            fight_mode: fightMode,
+            fight_duration: parseInt(fightDuration.value, 10),
+            include_auto_attacks: fightMode === "time_based" && includeAutos.checked,
+            auto_attack_uptime: parseFloat(autoUptime.value) / 100,
+            auto_attacks_only: fightMode === "time_based" && autoAttacksOnly.checked,
+            include_actives: includeActives.checked,
+            objective: optimizeObjective.value,
+            locked_items: lockedItems,
+            locked_boots: lockedBoots,
+            max_legendary_slots: maxSlots,
+        };
+
+        // Ability ranks
+        if (!autoRankCheckbox.checked) {
+            payload.ability_ranks = {
+                Q: parseInt(document.getElementById("rank-Q").value, 10),
+                W: parseInt(document.getElementById("rank-W").value, 10),
+                E: parseInt(document.getElementById("rank-E").value, 10),
+                R: parseInt(document.getElementById("rank-R").value, 10),
+            };
+        }
+
+        // Cast order
+        if (!autoCastOrderCheckbox.checked) {
+            payload.cast_order = castOrderSelects.map((sel) => sel.value);
+        }
+
+        // Champion-specific options
+        const optDef = championOptionsDefs[champion];
+        if (optDef && optDef.getValues) {
+            payload.champion_options = optDef.getValues();
+        }
+
+        // Show loading
+        optimizeBtnText.textContent = "Optimizing...";
+        optimizeBtnLoading.classList.remove("hidden");
+        optimizeBtn.disabled = true;
+        optimizeStatus.classList.add("hidden");
+
+        fetch("/api/optimize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                // Fill empty legendary slots with optimized items
+                const optimizedItems = data.items || [];
+                // Figure out which items are new (not already locked)
+                const lockedSet = new Set(lockedItems);
+                const newItems = optimizedItems.filter((n) => !lockedSet.has(n));
+
+                let newIdx = 0;
+                for (let i = 1; i <= 6 && newIdx < newItems.length; i++) {
+                    if (!selectedItems[i]) {
+                        const name = newItems[newIdx];
+                        const icon = itemIconMap[name] || "";
+                        selectItem(String(i), name, icon);
+                        newIdx++;
+                    }
+                }
+
+                // Fill boots if it was empty
+                if (!selectedItems.boots && data.boots) {
+                    const icon = itemIconMap[data.boots] || "";
+                    selectItem("boots", data.boots, icon);
+                }
+
+                // Show status
+                optimizeStatus.textContent =
+                    `Found in ${data.optimization_time_ms}ms (${data.evaluations} builds evaluated)`;
+                optimizeStatus.classList.remove("hidden");
+
+                // Trigger a full calculate to show the damage breakdown
+                doCalculate();
+            })
+            .catch((err) => {
+                showError("Optimization failed: " + err.message);
+            })
+            .finally(() => {
+                isOptimizing = false;
+                optimizeBtn.disabled = false;
+                optimizeBtnText.textContent = "Optimize Build";
+                optimizeBtnLoading.classList.add("hidden");
+            });
+    });
 });

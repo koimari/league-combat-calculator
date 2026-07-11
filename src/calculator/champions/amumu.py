@@ -25,9 +25,8 @@ hardcoded.
 
 from typing import Any
 
+from .common import build_stats_context, extract_leveling_damage, make_rank_fn
 from .generic_parser import extract_cooldown
-from .scaling import is_flat_unit, resolve_scaling
-from .skill_orders import get_ability_rank
 
 
 # ---------------------------------------------------------------------------
@@ -35,48 +34,6 @@ from .skill_orders import get_ability_rank
 # ---------------------------------------------------------------------------
 
 _CURSE_BONUS_FRACTION = 0.10  # 10% bonus true damage on magic damage
-
-
-def _extract_leveling_damage(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-    stats_context: dict[str, float] | None = None,
-    target_stats: dict[str, float] | None = None,
-) -> float:
-    """Extract damage for a specific attribute name from ability JSON.
-
-    Searches all effects/leveling entries for a matching attribute and
-    sums the flat base + scaling contributions at the given rank.
-
-    Unlike the Aatrox/Ahri version, this forwards *target_stats* to
-    ``resolve_scaling`` so compound %HP unit strings resolve correctly.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
-
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                if is_flat_unit(unit):
-                    total += value
-                else:
-                    total += resolve_scaling(
-                        unit, value, stats_context, target_stats,
-                    )
-            return total
-
-    return 0.0
 
 
 def _apply_curse(result: dict[str, Any], target_cursed: bool) -> None:
@@ -138,16 +95,8 @@ def parse_abilities(
     target_cursed = champion_options.get("target_cursed", True)
     w_seconds = max(0.5, float(champion_options.get("w_seconds", 3.0)))
 
-    # Build stats context for scaling resolution
-    stats_context: dict[str, float] = {}
-    if champion_stats:
-        stats_context = dict(champion_stats)
-    stats_context["ability_power"] = total_ability_power
-
-    def rank_for(key: str) -> int:
-        if ability_ranks and key in ability_ranks:
-            return ability_ranks[key]
-        return get_ability_rank(key, level, "Amumu")
+    stats_context = build_stats_context(champion_stats, total_ability_power)
+    rank_for = make_rank_fn("Amumu", ability_ranks, level)
 
     # ── P: Cursed Touch (damage amplifier, no direct damage) ─────────
     passive_list = abilities_data.get("P", [])
@@ -170,7 +119,7 @@ def parse_abilities(
     q_rank = rank_for("Q")
     if q_rank > 0:
         q_ability = abilities_data["Q"][0]
-        q_damage = _extract_leveling_damage(
+        q_damage = extract_leveling_damage(
             q_ability, "Magic Damage", q_rank, stats_context, target_stats,
         )
 
@@ -197,7 +146,7 @@ def parse_abilities(
     w_rank = rank_for("W")
     if w_rank > 0:
         w_ability = abilities_data["W"][0]
-        w_per_tick = _extract_leveling_damage(
+        w_per_tick = extract_leveling_damage(
             w_ability, "Magic Damage Per Tick", w_rank,
             stats_context, target_stats,
         )
@@ -223,7 +172,7 @@ def parse_abilities(
         e_ability = abilities_data["E"][0]
         # effect[0] is passive damage reduction — skip.
         # effect[1] has the "Magic Damage" active component.
-        e_damage = _extract_leveling_damage(
+        e_damage = extract_leveling_damage(
             e_ability, "Magic Damage", e_rank, stats_context, target_stats,
         )
         e_cooldown = extract_cooldown(e_ability, e_rank)
@@ -243,7 +192,7 @@ def parse_abilities(
     r_rank = rank_for("R")
     if r_rank > 0:
         r_ability = abilities_data["R"][0]
-        r_damage = _extract_leveling_damage(
+        r_damage = extract_leveling_damage(
             r_ability, "Magic Damage", r_rank, stats_context, target_stats,
         )
         r_cooldown = extract_cooldown(r_ability, r_rank)
