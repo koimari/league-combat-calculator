@@ -319,12 +319,28 @@ def _resolve_casts(
     return float(casts)
 
 
+def _extract_recharge(ability: dict[str, Any], rank: int) -> float:
+    """Cooldown for a charge ability: rechargeRate at rank.
+
+    The JSON ``cooldown`` field of a charge ability stores the short
+    inter-cast timer; the limiter for sustained use is how fast charges
+    come back. Falls back to the plain cooldown when the ability has no
+    rechargeRate data.
+    """
+    rates = ability.get("rechargeRate") or []
+    if not rates:
+        return extract_cooldown(ability, rank)
+    idx = min(rank - 1, len(rates) - 1)
+    return float(rates[idx])
+
+
 def simple_damage(
     attr: str | None = None,
     dmg_type: str = "auto",
     casts: int | str = 1,
     source: tuple[str, int] | None = None,
     cooldown_from: tuple[str, int] | None = None,
+    cooldown: str = "standard",
     ranks: str = "rank",
 ) -> SlotParser:
     """Standard castable damage slot.
@@ -345,12 +361,21 @@ def simple_damage(
             entry 0 of the parser's own slot.
         cooldown_from: (slot, index) to read cooldown from instead of
             the damage source (subspell/recast containers).
+        cooldown: "standard" (the ability's cooldown field) or
+            "recharge" (charge abilities — rechargeRate at rank, e.g.
+            Amumu Q).
         ranks: "rank" (skill order / overrides, slot skipped below
             rank 1) or "level" (rank pinned to champion level).
 
     Returns:
         A DAMAGE-phase slot parser.
     """
+    if cooldown not in ("standard", "recharge"):
+        raise ValueError(
+            f"simple_damage: unknown cooldown mode {cooldown!r} "
+            "(must be 'standard' or 'recharge')"
+        )
+    extract_cd = _extract_recharge if cooldown == "recharge" else extract_cooldown
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, src_slot = _resolve_source(ctx, source)
@@ -367,7 +392,7 @@ def simple_damage(
             return None
 
         cd_ability = ctx.ability(*cooldown_from) if cooldown_from else ability
-        cooldown = extract_cooldown(cd_ability, rank) if cd_ability else 0.0
+        cd_value = extract_cd(cd_ability, rank) if cd_ability else 0.0
 
         if attr is None:
             total, resolved_type = extract_auto(
@@ -388,7 +413,7 @@ def simple_damage(
 
         total *= _resolve_casts(casts, ability, rank)
         name = ability.get("name", f"Ability {ctx.slot}")
-        return damage_entry(name, rank, cooldown, total, resolved_type)
+        return damage_entry(name, rank, cd_value, total, resolved_type)
 
     parse.phase = DAMAGE
     return parse

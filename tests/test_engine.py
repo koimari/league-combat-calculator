@@ -414,6 +414,44 @@ class TestSimpleDamageParams:
         results = parse(champ, 9, 0.0)
         assert results["Q"]["total_raw"] == 100.0
 
+    def test_cooldown_recharge_reads_recharge_rate(self) -> None:
+        """Charge abilities: rechargeRate is the sustained-use limiter."""
+        ability = _ability(
+            name="Charge Q",
+            cooldowns=[3, 3, 3, 3, 3],  # inter-cast timer, NOT the limiter
+            leveling=[_leveling("Magic Damage", [70, 95, 120, 145, 170])],
+        )
+        ability["rechargeRate"] = [16, 15, 14, 13, 12]
+        champ = _champion(Q=[ability])
+        parse = build_parser(
+            {"Q": simple_damage(cooldown="recharge")},
+            "TestChamp",
+        )
+        results = parse(champ, 9, 0.0)  # Q rank 5
+        assert results["Q"]["cooldown"] == 12.0
+
+    def test_cooldown_recharge_falls_back_to_cooldown(self) -> None:
+        """Without rechargeRate data, recharge mode uses the cooldown."""
+        champ = _champion(
+            Q=[
+                _ability(
+                    name="Q",
+                    cooldowns=[10, 9, 8, 7, 6],
+                    leveling=[_leveling("Magic Damage", [70, 95, 120, 145, 170])],
+                )
+            ],
+        )
+        parse = build_parser(
+            {"Q": simple_damage(cooldown="recharge")},
+            "TestChamp",
+        )
+        results = parse(champ, 9, 0.0)
+        assert results["Q"]["cooldown"] == 6.0
+
+    def test_unknown_cooldown_mode_rejected_at_factory_time(self) -> None:
+        with pytest.raises(ValueError, match="sideways"):
+            simple_damage(cooldown="sideways")
+
     def test_ranks_level_pins_rank_to_champion_level(self) -> None:
         """Aphelios pattern: per-level values with rank pinned to level."""
         per_level = [float(10 * (i + 1)) for i in range(18)]
