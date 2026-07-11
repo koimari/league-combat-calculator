@@ -37,6 +37,7 @@ on-hit system via two mechanisms:
 import math
 import random
 from collections import Counter
+from dataclasses import dataclass, field
 from typing import Any
 
 from . import item_effects
@@ -57,6 +58,188 @@ DEFAULT_TARGET: dict[str, float] = {
     "armor": 100.0,
     "mr": 100.0,
 }
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Fight-model state
+# ─────────────────────────────────────────────────────────────────────────
+
+
+@dataclass
+class Resists:
+    """Target resistances and the attacker's penetration, resolved together.
+
+    Owns the penetration math that fight setup resolves and that later
+    steps re-resolve when something changes mid-fight: stat-buff ultimates
+    that grant pen (Ambessa R), target shreds (Kog'Maw Q), and the
+    ability→auto switch for Terminus' auto-only stacking pen.
+
+    Two penetration variants are tracked (the Terminus split):
+
+    - ``ability_*_pen_percent`` — pen for ability damage (Terminus'
+      max-stack pen stripped; it never applies to abilities).
+    - ``auto_*_pen_percent`` — pen for auto attacks, folding in Terminus'
+      weighted-average stacking pen across the fight's autos.
+
+    The ``effective_*`` fields hold the currently-resolved resistances
+    that damage math applies. During the ability rotation they reflect
+    ability pen; ``use_auto_pen`` switches them to auto pen once the
+    rotation is done. ``effective_mr`` pre/post ult variants exist because
+    Malignance's Hatefog MR reduction only activates once R is cast.
+    """
+
+    # Attacker penetration
+    magic_pen_flat: float
+    magic_pen_percent: float
+    armor_pen_percent: float
+    flat_armor_pen: float
+    # Terminus Juxtaposition: auto-only stacking pen (weighted average)
+    has_terminus: bool
+    terminus_stat_pen: float
+    terminus_avg_pen: float
+    # Target resistances (mutated by shreds)
+    target_armor: float
+    base_mr: float
+    reduced_mr: float  # base MR minus Malignance Hatefog reduction
+    malignance_mr_reduction: float
+    bc_reduction: float  # Black Cleaver % armor reduction
+    mr_reduction_effect: dict[str, Any] | None  # Bloodletter's Vile Decay
+    # Resolved values (recomputed by the resolve/shred methods below)
+    ability_armor_pen_percent: float = 0.0
+    ability_magic_pen_percent: float = 0.0
+    auto_armor_pen_percent: float = 0.0
+    auto_magic_pen_percent: float = 0.0
+    reduced_armor: float = 0.0
+    effective_armor: float = 0.0
+    effective_mr_pre_ult: float = 0.0
+    effective_mr_post_ult: float = 0.0
+    effective_mr: float = 0.0
+
+    def resolve_magic(self) -> None:
+        """Recompute magic pen variants and effective MR (ability pen)."""
+        self.ability_magic_pen_percent = self.magic_pen_percent
+        self.auto_magic_pen_percent = self.magic_pen_percent
+        if self.has_terminus:
+            stripped = max(0.0, self.magic_pen_percent - self.terminus_stat_pen)
+            self.ability_magic_pen_percent = stripped
+            self.auto_magic_pen_percent = stripped
+            if self.terminus_avg_pen > 0:
+                self.auto_magic_pen_percent = 1.0 - (1.0 - stripped) * (
+                    1.0 - self.terminus_avg_pen
+                )
+        self.effective_mr_pre_ult = apply_magic_penetration(
+            self.base_mr, self.magic_pen_flat, self.ability_magic_pen_percent
+        )
+        self.effective_mr_post_ult = apply_magic_penetration(
+            self.reduced_mr, self.magic_pen_flat, self.ability_magic_pen_percent
+        )
+        self.effective_mr = self.effective_mr_post_ult
+
+    def resolve_armor(self) -> None:
+        """Recompute armor pen variants and effective armor (ability pen)."""
+        self.ability_armor_pen_percent = self.armor_pen_percent
+        self.auto_armor_pen_percent = self.armor_pen_percent
+        if self.has_terminus:
+            stripped = max(0.0, self.armor_pen_percent - self.terminus_stat_pen)
+            self.ability_armor_pen_percent = stripped
+            self.auto_armor_pen_percent = stripped
+            if self.terminus_avg_pen > 0:
+                self.auto_armor_pen_percent = 1.0 - (1.0 - stripped) * (
+                    1.0 - self.terminus_avg_pen
+                )
+        self.reduced_armor = self.target_armor * (1.0 - self.bc_reduction)
+        self.effective_armor = apply_armor_penetration(
+            self.reduced_armor, self.flat_armor_pen, self.ability_armor_pen_percent
+        )
+
+    def shred_armor(self, reduction_percent: float) -> None:
+        """Apply a % armor shred (e.g. Kog'Maw Q) and re-resolve armor."""
+        self.target_armor *= 1.0 - reduction_percent / 100.0
+        self.reduced_armor = self.target_armor * (1.0 - self.bc_reduction)
+        self.effective_armor = apply_armor_penetration(
+            self.reduced_armor, self.flat_armor_pen, self.ability_armor_pen_percent
+        )
+
+    def shred_mr(self, reduction_percent: float) -> None:
+        """Apply a % MR shred (e.g. Kog'Maw Q) and re-resolve MR."""
+        self.base_mr *= 1.0 - reduction_percent / 100.0
+        self.reduced_mr = max(self.base_mr - self.malignance_mr_reduction, 0)
+        self.effective_mr_pre_ult = apply_magic_penetration(
+            self.base_mr, self.magic_pen_flat, self.ability_magic_pen_percent
+        )
+        self.effective_mr_post_ult = apply_magic_penetration(
+            self.reduced_mr, self.magic_pen_flat, self.ability_magic_pen_percent
+        )
+        self.effective_mr = self.effective_mr_post_ult
+
+    def use_auto_pen(self) -> None:
+        """Switch effective resistances to auto-attack pen (Terminus avg).
+
+        Called once the ability rotation is done: remaining damage (autos,
+        on-hits, item procs) uses the auto-attack pen variants.
+        """
+        self.effective_armor = apply_armor_penetration(
+            self.reduced_armor, self.flat_armor_pen, self.auto_armor_pen_percent
+        )
+        self.effective_mr_pre_ult = apply_magic_penetration(
+            self.base_mr, self.magic_pen_flat, self.auto_magic_pen_percent
+        )
+        self.effective_mr_post_ult = apply_magic_penetration(
+            self.reduced_mr, self.magic_pen_flat, self.auto_magic_pen_percent
+        )
+        self.effective_mr = self.effective_mr_post_ult
+
+
+@dataclass
+class FightState:
+    """Shared mutable state threaded through the fight-model step functions.
+
+    Holds the fight configuration (inputs, read-only once built), the
+    resolved combat numbers (resistances, amplifiers, crit, attack
+    timing — some mutated mid-fight by stat buffs and shreds), and the
+    damage accumulators every step writes into. Values produced by one
+    step and consumed by the next travel as step-function results
+    instead of living here.
+    """
+
+    # ── Fight configuration (read-only after setup) ──────────────────────
+    champion_stats: dict[str, float]
+    ability_damages: dict[str, dict[str, Any]]
+    items: list[dict[str, Any]]
+    cast_order: list[str]
+    target_health: float
+    target_bonus_health: float
+    fight_duration_seconds: float
+    auto_attack_uptime: float
+    ability_haste: float
+    one_rotation: bool
+    include_actives: bool
+    auto_attacks_only: bool
+    deterministic: bool
+    is_melee: bool
+    level: int
+    item_name_list: list[str]  # raw item names, order preserved
+    item_effect_names: list[str]  # names with registered item effects
+    # ── Resolved combat numbers ───────────────────────────────────────────
+    resists: Resists
+    magic_amp: float  # Abyssal Mask
+    ability_amp: float  # Actualizer
+    basic_amp: float  # Hexoptics C44
+    hypershot_amp: float  # Horizon Focus
+    # ── Attack timing ─────────────────────────────────────────────────────
+    attack_speed: float
+    attack_speed_ratio: float
+    num_auto_attacks: int
+    has_fiendhunter: bool
+    has_hexplate: bool
+    empowered_autos: int  # Fiendhunter empowered autos at buffed AS
+    # ── Crit (resolved after stat-buff ultimates) ─────────────────────────
+    crit_chance: float = 0.0
+    crit_multiplier: float = 2.0
+    # ── Accumulators ──────────────────────────────────────────────────────
+    breakdown: dict[str, Any] = field(default_factory=dict)
+    total_damage: float = 0.0
+    notes: list[str] = field(default_factory=list)
 
 
 def _calculate_phantom_hits(
@@ -515,6 +698,223 @@ def _navori_effective_cd(
     return elapsed
 
 
+def _resolve_combat_state(
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    target_health: float,
+    target_armor: float,
+    target_magic_resistance: float,
+    fight_duration_seconds: float,
+    auto_attack_uptime: float,
+    ability_haste: float,
+    items: list[dict[str, Any]],
+    one_rotation: bool,
+    include_actives: bool,
+    cast_order: list[str],
+    auto_attacks_only: bool,
+    target_bonus_health: float,
+    deterministic: bool,
+) -> FightState:
+    """Resolve resistances, penetration, amplifiers and attack timing.
+
+    Builds the ``FightState`` every later step operates on: effective
+    armor/MR after penetration (with the Terminus ability/auto split and
+    Malignance's pre/post-ult MR), Black Cleaver armor reduction, the
+    fight's auto-attack count (including Fiendhunter Bolts' empowered-auto
+    window), and the fight-wide damage amplifiers.
+    """
+    is_melee = champion_stats.get("is_melee", True)
+    level = int(champion_stats.get("level", 1))
+
+    magic_pen_flat = champion_stats.get("magic_penetration_flat", 0.0)
+    magic_pen_percent = champion_stats.get("magic_penetration_percent", 0.0) / 100.0
+
+    # Malignance MR reduction only activates on R cast, so abilities before
+    # R in the cast_order use base MR.  Both effective values are resolved
+    # and the rotation tracks which one to use per-ability.
+    malignance_mr_reduction = 0.0
+    for item in items:
+        effect = item_effects.ITEM_EFFECTS.get(item.get("name", ""), {})
+        if effect.get("type") == "ult_proc" and "R" in ability_damages:
+            malignance_mr_reduction += effect["mr_reduction"]
+
+    base_mr = max(target_magic_resistance, 0)
+    reduced_mr = max(target_magic_resistance - malignance_mr_reduction, 0)
+
+    # Stacking MR reduction (Bloodletter's Curse Vile Decay)
+    mr_reduction_effect = item_effects.get_stacking_mr_reduction(items)
+
+    # Armor penetration: percent pen + lethality (flat)
+    armor_pen_percent = champion_stats.get("armor_penetration_percent", 0.0) / 100.0
+    flat_armor_pen = champion_stats.get("flat_armor_penetration", 0.0)
+
+    attack_speed = champion_stats["attack_speed"]
+    as_ratio = champion_stats.get("attack_speed_ratio", 0.625)
+
+    # ── Ultimate-triggered AS buffs (Fiendhunter Bolts) ──────
+    # NOTE: Hexplate 50% bonus AS is now baked into champion stats (stats.py)
+    item_name_list = [i.get("name", "") for i in items]
+    has_hexplate = "Experimental Hexplate" in item_name_list
+    has_fiendhunter = "Fiendhunter Bolts" in item_name_list
+    empowered_autos = 0  # Fiendhunter: count of empowered auto attacks
+
+    if has_fiendhunter and auto_attack_uptime > 0:
+        buff_effect = item_effects.ITEM_EFFECTS.get("Fiendhunter Bolts")
+        bonus_as_pct = buff_effect["bonus_attack_speed_percent"]
+        buffed_as = attack_speed + as_ratio * (bonus_as_pct / 100.0)
+
+        # Fiendhunter: 3 empowered autos at buffed AS, then normal AS
+        max_empowered = buff_effect["empowered_auto_count"]
+        buff_dur = min(buff_effect["duration"], fight_duration_seconds)
+        possible_in_window = math.floor(buffed_as * buff_dur * auto_attack_uptime)
+        empowered_autos = min(max_empowered, possible_in_window)
+        if empowered_autos > 0 and buffed_as > 0:
+            time_for_empowered = empowered_autos / (buffed_as * auto_attack_uptime)
+        else:
+            time_for_empowered = 0.0
+        remaining_dur = fight_duration_seconds - time_for_empowered
+        normal_autos = math.floor(
+            attack_speed * max(0, remaining_dur) * auto_attack_uptime
+        )
+        num_auto_attacks = empowered_autos + normal_autos
+    else:
+        num_auto_attacks = math.floor(
+            attack_speed * fight_duration_seconds * auto_attack_uptime
+        )
+
+    # Terminus Juxtaposition: stacking armor/magic pen every other auto.
+    # The pen is displayed in champion stats at max stacks, but the fight
+    # engine computes a weighted average pen across all autos (like Black
+    # Cleaver) since stacks ramp up: 0%, 10%, 10%, 20%, 20%, 30%, 30%...
+    # Terminus pen only applies to auto attacks, NOT abilities — see the
+    # Resists docstring for the ability/auto pen split.
+    has_terminus = "Terminus" in item_name_list
+    terminus_avg_pen = 0.0
+    terminus_stat_pen = 0.0
+    if has_terminus:
+        terminus_avg_pen = item_effects.get_terminus_pen_stacks(num_auto_attacks)
+        terminus_effect = item_effects.ITEM_EFFECTS.get("Terminus", {})
+        terminus_stat_pen = (
+            terminus_effect["dark_pen_per_stack"] * terminus_effect["dark_max_stacks"]
+        )
+
+    # Black Cleaver armor reduction (applied before penetration)
+    bc_reduction = item_effects.get_armor_reduction(
+        items, fight_duration_seconds, num_auto_attacks
+    )
+
+    resists = Resists(
+        magic_pen_flat=magic_pen_flat,
+        magic_pen_percent=magic_pen_percent,
+        armor_pen_percent=armor_pen_percent,
+        flat_armor_pen=flat_armor_pen,
+        has_terminus=has_terminus,
+        terminus_stat_pen=terminus_stat_pen,
+        terminus_avg_pen=terminus_avg_pen,
+        target_armor=target_armor,
+        base_mr=base_mr,
+        reduced_mr=reduced_mr,
+        malignance_mr_reduction=malignance_mr_reduction,
+        bc_reduction=bc_reduction,
+        mr_reduction_effect=mr_reduction_effect,
+    )
+    resists.resolve_magic()
+    resists.resolve_armor()
+
+    return FightState(
+        champion_stats=champion_stats,
+        ability_damages=ability_damages,
+        items=items,
+        cast_order=cast_order,
+        target_health=target_health,
+        target_bonus_health=target_bonus_health,
+        fight_duration_seconds=fight_duration_seconds,
+        auto_attack_uptime=auto_attack_uptime,
+        ability_haste=ability_haste,
+        one_rotation=one_rotation,
+        include_actives=include_actives,
+        auto_attacks_only=auto_attacks_only,
+        deterministic=deterministic,
+        is_melee=is_melee,
+        level=level,
+        item_name_list=item_name_list,
+        item_effect_names=item_effects.get_item_effect_names(items),
+        resists=resists,
+        # Abyssal Mask magic damage amplifier
+        magic_amp=item_effects.get_magic_damage_amplifier(items),
+        # Ability-specific damage amplifier (Actualizer)
+        ability_amp=item_effects.get_ability_damage_amplifier(
+            items, champion_stats, include_actives
+        ),
+        # Basic (auto attack) damage amplifier (Hexoptics C44 Magnification)
+        basic_amp=item_effects.get_basic_damage_amplifier(items),
+        # Horizon Focus Hypershot: damage amp after first ability triggers it
+        hypershot_amp=item_effects.get_hypershot_amplifier(items),
+        attack_speed=attack_speed,
+        attack_speed_ratio=as_ratio,
+        num_auto_attacks=num_auto_attacks,
+        has_fiendhunter=has_fiendhunter,
+        has_hexplate=has_hexplate,
+        empowered_autos=empowered_autos,
+    )
+
+
+def _apply_stat_buff_ultimates(state: FightState) -> None:
+    """Apply ability stat buffs (e.g. Aatrox R bonus AD) and resolve crit.
+
+    Mutates ``champion_stats`` in place (callers observe the buffed stats,
+    as before this refactor) and re-resolves anything derived from a
+    buffed stat: attack damage, magic/armor penetration, and attack speed
+    (which changes the fight's auto-attack count — note the Fiendhunter
+    empowered/normal split is NOT recomputed here, matching the original
+    behavior). Crit chance/multiplier are resolved afterwards so ability
+    crit scaling and the auto-attack simulation both see buffed values.
+    """
+    stats = state.champion_stats
+    resists = state.resists
+
+    for ability_info in state.ability_damages.values():
+        stat_buff = ability_info.get("stat_buff")
+        if not stat_buff:
+            continue
+        for stat_key, buff_value in stat_buff.items():
+            stats[stat_key] = stats.get(stat_key, 0.0) + buff_value
+        # Recalculate attack_damage if bonus_attack_damage was buffed
+        if "bonus_attack_damage" in stat_buff:
+            stats["attack_damage"] = stats.get("base_attack_damage", 0.0) + stats.get(
+                "bonus_attack_damage", 0.0
+            )
+        # Recalculate magic penetration if it was buffed
+        if "magic_penetration_percent" in stat_buff:
+            resists.magic_pen_percent = (
+                stats.get("magic_penetration_percent", 0.0) / 100.0
+            )
+            resists.resolve_magic()
+        # Recalculate armor penetration if it was buffed
+        if "armor_penetration_percent" in stat_buff:
+            resists.armor_pen_percent = (
+                stats.get("armor_penetration_percent", 0.0) / 100.0
+            )
+            resists.resolve_armor()
+        # Recalculate attack speed and auto count if AS was buffed
+        if "bonus_attack_speed" in stat_buff:
+            bonus_as_pct = stat_buff["bonus_attack_speed"]
+            state.attack_speed = state.attack_speed + state.attack_speed_ratio * (
+                bonus_as_pct / 100.0
+            )
+            stats["attack_speed"] = state.attack_speed
+            state.num_auto_attacks = math.floor(
+                state.attack_speed
+                * state.fight_duration_seconds
+                * state.auto_attack_uptime
+            )
+
+    # Crit stats — needed by both ability crit scaling (rotation) and the
+    # auto-attack simulation.
+    state.crit_chance = min(stats.get("critical_strike_chance", 0) / 100.0, 1.0)
+    state.crit_multiplier = item_effects.get_crit_multiplier(state.items)
+
+
 def calculate_fight_damage(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
@@ -566,221 +966,64 @@ def calculate_fight_damage(
     if items is None:
         items = []
 
-    is_melee = champion_stats.get("is_melee", True)
-    level = int(champion_stats.get("level", 1))
-
-    # ── Step 1: Calculate effective resistances ───────────────────────────
-    magic_pen_flat = champion_stats.get("magic_penetration_flat", 0.0)
-    magic_pen_percent = champion_stats.get("magic_penetration_percent", 0.0) / 100.0
-
-    # Malignance MR reduction only activates on R cast, so abilities before
-    # R in the cast_order use base MR.  We compute both effective values and
-    # track which one to use per-ability in the cast loop.
-    malignance_mr_reduction = 0.0
-    for item in items:
-        effect = item_effects.ITEM_EFFECTS.get(item.get("name", ""), {})
-        if effect.get("type") == "ult_proc" and "R" in ability_damages:
-            malignance_mr_reduction += effect["mr_reduction"]
-
-    base_mr = max(target_magic_resistance, 0)
-    reduced_mr = max(target_magic_resistance - malignance_mr_reduction, 0)
-
-    # Stacking MR reduction (Bloodletter's Curse Vile Decay)
-    mr_reduction_effect = item_effects.get_stacking_mr_reduction(items)
-
-    effective_mr_pre_ult = apply_magic_penetration(
-        base_mr, magic_pen_flat, magic_pen_percent
-    )
-    effective_mr_post_ult = apply_magic_penetration(
-        reduced_mr, magic_pen_flat, magic_pen_percent
-    )
-    # For non-ability damage (items, burns) that occurs throughout the fight,
-    # use the post-ult MR since most of the fight has Hatefog active.
-    effective_mr = effective_mr_post_ult
-
-    # Armor penetration: percent pen + lethality (flat)
-    armor_pen_percent = champion_stats.get("armor_penetration_percent", 0.0) / 100.0
-    flat_armor_pen = champion_stats.get("flat_armor_penetration", 0.0)
-
-    # Black Cleaver armor reduction (applied before penetration)
-    attack_speed = champion_stats["attack_speed"]
-    as_ratio = champion_stats.get("attack_speed_ratio", 0.625)
-
-    # ── Ultimate-triggered AS buffs (Fiendhunter Bolts) ──────
-    # NOTE: Hexplate 50% bonus AS is now baked into champion stats (stats.py)
-    item_name_list = [i.get("name", "") for i in items]
-    has_hexplate = "Experimental Hexplate" in item_name_list
-    has_fiendhunter = "Fiendhunter Bolts" in item_name_list
-    empowered_autos = 0  # Fiendhunter: count of empowered auto attacks
-    normal_autos = 0  # Non-empowered auto attacks
-
-    if has_fiendhunter and auto_attack_uptime > 0:
-        buff_effect = item_effects.ITEM_EFFECTS.get("Fiendhunter Bolts")
-        bonus_as_pct = buff_effect["bonus_attack_speed_percent"]
-        buffed_as = attack_speed + as_ratio * (bonus_as_pct / 100.0)
-
-        # Fiendhunter: 3 empowered autos at buffed AS, then normal AS
-        max_empowered = buff_effect["empowered_auto_count"]
-        buff_dur = min(buff_effect["duration"], fight_duration_seconds)
-        possible_in_window = math.floor(buffed_as * buff_dur * auto_attack_uptime)
-        empowered_autos = min(max_empowered, possible_in_window)
-        if empowered_autos > 0 and buffed_as > 0:
-            time_for_empowered = empowered_autos / (buffed_as * auto_attack_uptime)
-        else:
-            time_for_empowered = 0.0
-        remaining_dur = fight_duration_seconds - time_for_empowered
-        normal_autos = math.floor(
-            attack_speed * max(0, remaining_dur) * auto_attack_uptime
-        )
-        num_auto_attacks = empowered_autos + normal_autos
-    else:
-        num_auto_attacks = math.floor(
-            attack_speed * fight_duration_seconds * auto_attack_uptime
-        )
-    # Terminus Juxtaposition: stacking armor/magic pen every other auto.
-    # The pen is displayed in champion stats at max stacks, but in the fight
-    # engine we compute a weighted average pen across all autos (like Black
-    # Cleaver) since stacks ramp up: 0%, 10%, 10%, 20%, 20%, 30%, 30%...
-    # Terminus pen only applies to auto attacks, NOT abilities.
-    # We strip the max-stack pen from stats for ability calculations, and
-    # compute separate auto-attack pen values with the weighted average.
-    has_terminus = "Terminus" in item_name_list
-    # Pen values for abilities (no Terminus pen)
-    ability_armor_pen_percent = armor_pen_percent
-    ability_magic_pen_percent = magic_pen_percent
-    # Pen values for auto attacks (with Terminus average pen)
-    auto_armor_pen_percent = armor_pen_percent
-    auto_magic_pen_percent = magic_pen_percent
-    if has_terminus:
-        terminus_avg_pen = item_effects.get_terminus_pen_stacks(num_auto_attacks)
-        terminus_effect = item_effects.ITEM_EFFECTS.get("Terminus", {})
-        terminus_stat_pen = (
-            terminus_effect["dark_pen_per_stack"] * terminus_effect["dark_max_stacks"]
-        )
-        # Strip max-stack pen for abilities (Terminus pen doesn't apply)
-        ability_armor_pen_percent = max(0.0, armor_pen_percent - terminus_stat_pen)
-        ability_magic_pen_percent = max(0.0, magic_pen_percent - terminus_stat_pen)
-        # Strip max-stack pen, then add weighted average for autos
-        auto_armor_pen_percent = max(0.0, armor_pen_percent - terminus_stat_pen)
-        auto_magic_pen_percent = max(0.0, magic_pen_percent - terminus_stat_pen)
-        if terminus_avg_pen > 0:
-            auto_armor_pen_percent = 1.0 - (1.0 - auto_armor_pen_percent) * (
-                1.0 - terminus_avg_pen
-            )
-            auto_magic_pen_percent = 1.0 - (1.0 - auto_magic_pen_percent) * (
-                1.0 - terminus_avg_pen
-            )
-    # Recompute effective MR for abilities (without Terminus pen)
-    effective_mr_pre_ult = apply_magic_penetration(
-        base_mr, magic_pen_flat, ability_magic_pen_percent
-    )
-    effective_mr_post_ult = apply_magic_penetration(
-        reduced_mr, magic_pen_flat, ability_magic_pen_percent
-    )
-    effective_mr = effective_mr_post_ult
-
-    bc_reduction = item_effects.get_armor_reduction(
-        items, fight_duration_seconds, num_auto_attacks
-    )
-    reduced_armor = target_armor * (1.0 - bc_reduction)
-
-    # Use ability-specific armor pen (no Terminus) for ability damage.
-    # Auto-attack armor pen (with Terminus average) is applied after Step 2.
-    effective_armor = apply_armor_penetration(
-        reduced_armor, flat_armor_pen, ability_armor_pen_percent
+    # ── Step 1: Resolve resistances, pen, amps, attack timing ───────────
+    state = _resolve_combat_state(
+        champion_stats=champion_stats,
+        ability_damages=ability_damages,
+        target_health=target_health,
+        target_armor=target_armor,
+        target_magic_resistance=target_magic_resistance,
+        fight_duration_seconds=fight_duration_seconds,
+        auto_attack_uptime=auto_attack_uptime,
+        ability_haste=ability_haste,
+        items=items,
+        one_rotation=one_rotation,
+        include_actives=include_actives,
+        cast_order=cast_order,
+        auto_attacks_only=auto_attacks_only,
+        target_bonus_health=target_bonus_health,
+        deterministic=deterministic,
     )
 
-    # Abyssal Mask magic damage amplifier
-    magic_amp = item_effects.get_magic_damage_amplifier(items)
+    # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
+    _apply_stat_buff_ultimates(state)
 
-    # Ability-specific damage amplifier (Actualizer)
-    ability_amp = item_effects.get_ability_damage_amplifier(
-        items, champion_stats, include_actives
-    )
-
-    # Basic (auto attack) damage amplifier (Hexoptics C44 Magnification)
-    basic_amp = item_effects.get_basic_damage_amplifier(items)
-
-    # Horizon Focus Hypershot: 10% damage amp after first ability triggers it
-    hypershot_amp = item_effects.get_hypershot_amplifier(items)
-
-    # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ───────────────
-    for ability_info in ability_damages.values():
-        stat_buff = ability_info.get("stat_buff")
-        if stat_buff:
-            for stat_key, buff_value in stat_buff.items():
-                champion_stats[stat_key] = (
-                    champion_stats.get(stat_key, 0.0) + buff_value
-                )
-            # Recalculate attack_damage if bonus_attack_damage was buffed
-            if "bonus_attack_damage" in stat_buff:
-                champion_stats["attack_damage"] = champion_stats.get(
-                    "base_attack_damage", 0.0
-                ) + champion_stats.get("bonus_attack_damage", 0.0)
-            # Recalculate magic penetration if it was buffed
-            if "magic_penetration_percent" in stat_buff:
-                magic_pen_percent = (
-                    champion_stats.get("magic_penetration_percent", 0.0) / 100.0
-                )
-                # Recompute ability/auto pen variants with new base
-                ability_magic_pen_percent = magic_pen_percent
-                auto_magic_pen_percent = magic_pen_percent
-                if has_terminus:
-                    ability_magic_pen_percent = max(
-                        0.0, magic_pen_percent - terminus_stat_pen
-                    )
-                    auto_magic_pen_percent = max(
-                        0.0, magic_pen_percent - terminus_stat_pen
-                    )
-                    if terminus_avg_pen > 0:
-                        auto_magic_pen_percent = 1.0 - (
-                            1.0 - auto_magic_pen_percent
-                        ) * (1.0 - terminus_avg_pen)
-                effective_mr_pre_ult = apply_magic_penetration(
-                    base_mr, magic_pen_flat, ability_magic_pen_percent
-                )
-                effective_mr_post_ult = apply_magic_penetration(
-                    reduced_mr, magic_pen_flat, ability_magic_pen_percent
-                )
-                effective_mr = effective_mr_post_ult
-            # Recalculate armor penetration if it was buffed
-            if "armor_penetration_percent" in stat_buff:
-                armor_pen_percent = (
-                    champion_stats.get("armor_penetration_percent", 0.0) / 100.0
-                )
-                ability_armor_pen_percent = armor_pen_percent
-                auto_armor_pen_percent = armor_pen_percent
-                if has_terminus:
-                    ability_armor_pen_percent = max(
-                        0.0, armor_pen_percent - terminus_stat_pen
-                    )
-                    auto_armor_pen_percent = max(
-                        0.0, armor_pen_percent - terminus_stat_pen
-                    )
-                    if terminus_avg_pen > 0:
-                        auto_armor_pen_percent = 1.0 - (
-                            1.0 - auto_armor_pen_percent
-                        ) * (1.0 - terminus_avg_pen)
-                reduced_armor = target_armor * (1.0 - bc_reduction)
-                effective_armor = apply_armor_penetration(
-                    reduced_armor, flat_armor_pen, ability_armor_pen_percent
-                )
-            # Recalculate attack speed and auto count if AS was buffed
-            if "bonus_attack_speed" in stat_buff:
-                bonus_as_pct = stat_buff["bonus_attack_speed"]
-                attack_speed = attack_speed + as_ratio * (bonus_as_pct / 100.0)
-                champion_stats["attack_speed"] = attack_speed
-                num_auto_attacks = math.floor(
-                    attack_speed * fight_duration_seconds * auto_attack_uptime
-                )
-
-    # Compute crit stats early — needed by both ability crit scaling (Step 2)
-    # and auto-attack simulation (Step 3).
-    crit_chance = min(
-        champion_stats.get("critical_strike_chance", 0) / 100.0,
-        1.0,
-    )
-    crit_multiplier = item_effects.get_crit_multiplier(items)
+    # ── Transitional unpack ── deleted as later Phase 4 groups extract the
+    # remaining inline steps below into functions that read the state.
+    resists = state.resists
+    is_melee = state.is_melee
+    level = state.level
+    item_name_list = state.item_name_list
+    has_hexplate = state.has_hexplate
+    has_fiendhunter = state.has_fiendhunter
+    empowered_autos = state.empowered_autos
+    num_auto_attacks = state.num_auto_attacks
+    attack_speed = state.attack_speed
+    magic_amp = state.magic_amp
+    ability_amp = state.ability_amp
+    basic_amp = state.basic_amp
+    hypershot_amp = state.hypershot_amp
+    crit_chance = state.crit_chance
+    crit_multiplier = state.crit_multiplier
+    magic_pen_flat = resists.magic_pen_flat
+    base_mr = resists.base_mr
+    reduced_mr = resists.reduced_mr
+    malignance_mr_reduction = resists.malignance_mr_reduction
+    mr_reduction_effect = resists.mr_reduction_effect
+    ability_magic_pen_percent = resists.ability_magic_pen_percent
+    ability_armor_pen_percent = resists.ability_armor_pen_percent
+    auto_magic_pen_percent = resists.auto_magic_pen_percent
+    auto_armor_pen_percent = resists.auto_armor_pen_percent
+    flat_armor_pen = resists.flat_armor_pen
+    bc_reduction = resists.bc_reduction
+    has_terminus = resists.has_terminus
+    terminus_avg_pen = resists.terminus_avg_pen
+    target_armor = resists.target_armor
+    reduced_armor = resists.reduced_armor
+    effective_armor = resists.effective_armor
+    effective_mr_pre_ult = resists.effective_mr_pre_ult
+    effective_mr_post_ult = resists.effective_mr_post_ult
+    effective_mr = resists.effective_mr
 
     # ── Step 2: Ability damage ────────────────────────────────────────────
     breakdown: dict[str, Any] = {}
