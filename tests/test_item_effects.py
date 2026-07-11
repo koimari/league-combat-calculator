@@ -13,6 +13,7 @@ import pytest
 from src.calculator import item_effects
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
+    get_ability_damage_amplifier,
     get_ap_multiplier,
     get_basic_ability_haste,
     get_bloodmail_bonus_ad,
@@ -343,3 +344,33 @@ class TestRefreshItemEffects:
         item_effects.ITEM_EFFECTS["Removed Item"] = {"type": "on_hit"}
         refresh_item_effects()
         assert "Removed Item" not in ITEM_EFFECTS
+
+
+class TestActualizerAbilityDamageAmp:
+    """Tests for Actualizer ability damage amplification."""
+
+    def test_amp_no_bonus_mana(self) -> None:
+        items = [{"name": "Actualizer"}]
+        stats = {"bonus_mana": 0.0}
+        # 15% base amp, no bonus mana
+        result = get_ability_damage_amplifier(items, stats)
+        assert abs(result - 1.15) < 0.001
+
+    def test_amp_with_300_bonus_mana(self) -> None:
+        items = [{"name": "Actualizer"}]
+        stats = {"bonus_mana": 300.0}
+        # 15% + 0.5% * 3 = 16.5%
+        result = get_ability_damage_amplifier(items, stats)
+        assert abs(result - 1.165) < 0.001
+
+    def test_amp_disabled_when_actives_off(self) -> None:
+        items = [{"name": "Actualizer"}]
+        stats = {"bonus_mana": 300.0}
+        result = get_ability_damage_amplifier(items, stats, include_actives=False)
+        assert result == 1.0
+
+    def test_no_actualizer(self) -> None:
+        items = [{"name": "Liandry's Torment"}]
+        stats = {"bonus_mana": 300.0}
+        result = get_ability_damage_amplifier(items, stats)
+        assert result == 1.0
