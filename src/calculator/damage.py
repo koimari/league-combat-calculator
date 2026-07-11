@@ -915,126 +915,45 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
     state.crit_multiplier = item_effects.get_crit_multiplier(state.items)
 
 
-def calculate_fight_damage(
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    target_health: float,
-    target_armor: float,
-    target_magic_resistance: float,
-    fight_duration_seconds: float,
-    auto_attack_uptime: float = 0.0,
-    ability_haste: float = 0.0,
-    items: list[dict[str, Any]] | None = None,
-    one_rotation: bool = False,
-    include_actives: bool = True,
-    cast_order: list[str] | None = None,
-    auto_attacks_only: bool = False,
-    target_bonus_health: float = 0.0,
-    deterministic: bool = False,
-) -> dict[str, Any]:
-    """Calculate total damage dealt over a fight duration.
+@dataclass
+class RotationResult:
+    """Values produced by the ability rotation and consumed by later steps."""
 
-    In time-based mode, abilities recast when their cooldown expires within
-    the fight duration. In one-rotation mode, each ability is cast exactly
-    once (fight_duration still matters for burns/DoTs/procs).
+    total_ability_casts: int = 0
+    total_muramana_procs: int = 0  # one per cast; multi-cast R counts each
+    first_ability_damage: float = 0.0  # Horizon Focus trigger (not amped)
+    has_navori: bool = False
+    navori_refund: float = 0.0
+    autos_per_second: float = 0.0
 
-    Args:
-        champion_stats: Calculated champion stats dictionary.
-        ability_damages: Parsed ability damage dictionary.
-        target_health: Target's total maximum health (base + bonus).
-        target_armor: Target's armor.
-        target_magic_resistance: Target's magic resistance.
-        fight_duration_seconds: Duration of the fight in seconds.
-        auto_attack_uptime: Fraction of time spent auto-attacking (0.0-1.0).
-        ability_haste: Total ability haste from items.
-        items: List of item data for checking passives.
-        one_rotation: If True, each basic ability is cast exactly once.
-        include_actives: Whether to include item active damage.
-        cast_order: Ability cast order (e.g., ["E", "Q", "W", "R"]).
-            Defaults to ["Q", "W", "E", "R"].
-        auto_attacks_only: If True, skip all cast abilities (Q/W/E/R casts
-            = 0) but still process ability on-hit effects (passives that
-            augment auto attacks, e.g. Vayne W, Viego passive).
-        target_bonus_health: Target's bonus health from items (used for
-            Lord Dominik's Regards Giant Slayer amp).
 
-    Returns:
-        Dictionary with damage breakdown and total.
+def _compute_ability_rotation(state: FightState) -> RotationResult:
+    """Cast the ability rotation and accumulate mitigated ability damage.
+
+    In time-based mode abilities recast when their cooldown expires within
+    the fight duration (with ability haste, Spear of Shojin basic-ability
+    haste, and Navori auto-attack CD refunds); in one-rotation mode each
+    ability is cast exactly once. Handles per-ability damage-type math
+    (mixed/magic/physical, multi-part, multi-cast, missing-HP scaling,
+    reduced-effectiveness crit scaling), Malignance's pre/post-ult MR,
+    Bloodletter's Vile Decay stacking, and target shreds applied AFTER the
+    shredding ability's own damage.
+
+    On return the resists are switched to auto-attack penetration
+    (Terminus average) and Vile Decay stacks are folded into
+    ``effective_mr`` — remaining damage sources occur during/after the
+    full rotation.
     """
-    if cast_order is None:
-        cast_order = ["Q", "Q2", "W", "E", "R"]
-    if items is None:
-        items = []
-
-    # ── Step 1: Resolve resistances, pen, amps, attack timing ───────────
-    state = _resolve_combat_state(
-        champion_stats=champion_stats,
-        ability_damages=ability_damages,
-        target_health=target_health,
-        target_armor=target_armor,
-        target_magic_resistance=target_magic_resistance,
-        fight_duration_seconds=fight_duration_seconds,
-        auto_attack_uptime=auto_attack_uptime,
-        ability_haste=ability_haste,
-        items=items,
-        one_rotation=one_rotation,
-        include_actives=include_actives,
-        cast_order=cast_order,
-        auto_attacks_only=auto_attacks_only,
-        target_bonus_health=target_bonus_health,
-        deterministic=deterministic,
-    )
-
-    # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
-    _apply_stat_buff_ultimates(state)
-
-    # ── Transitional unpack ── deleted as later Phase 4 groups extract the
-    # remaining inline steps below into functions that read the state.
     resists = state.resists
-    is_melee = state.is_melee
-    level = state.level
-    item_name_list = state.item_name_list
-    has_hexplate = state.has_hexplate
-    has_fiendhunter = state.has_fiendhunter
-    empowered_autos = state.empowered_autos
-    num_auto_attacks = state.num_auto_attacks
-    attack_speed = state.attack_speed
+    breakdown = state.breakdown
+    ability_damages = state.ability_damages
+    target_health = state.target_health
     magic_amp = state.magic_amp
-    ability_amp = state.ability_amp
-    basic_amp = state.basic_amp
-    hypershot_amp = state.hypershot_amp
-    crit_chance = state.crit_chance
-    crit_multiplier = state.crit_multiplier
-    magic_pen_flat = resists.magic_pen_flat
-    base_mr = resists.base_mr
-    reduced_mr = resists.reduced_mr
-    malignance_mr_reduction = resists.malignance_mr_reduction
-    mr_reduction_effect = resists.mr_reduction_effect
-    ability_magic_pen_percent = resists.ability_magic_pen_percent
-    ability_armor_pen_percent = resists.ability_armor_pen_percent
-    auto_magic_pen_percent = resists.auto_magic_pen_percent
-    auto_armor_pen_percent = resists.auto_armor_pen_percent
-    flat_armor_pen = resists.flat_armor_pen
-    bc_reduction = resists.bc_reduction
-    has_terminus = resists.has_terminus
-    terminus_avg_pen = resists.terminus_avg_pen
-    target_armor = resists.target_armor
-    reduced_armor = resists.reduced_armor
-    effective_armor = resists.effective_armor
-    effective_mr_pre_ult = resists.effective_mr_pre_ult
-    effective_mr_post_ult = resists.effective_mr_post_ult
-    effective_mr = resists.effective_mr
 
-    # ── Step 2: Ability damage ────────────────────────────────────────────
-    breakdown: dict[str, Any] = {}
-    total_damage = 0.0
-    total_ability_casts = 0
-    total_ability_hits = 0  # Individual damage instances (for burn refresh)
-    total_muramana_procs = 0  # One proc per cast, but multi-cast R counts each
+    result = RotationResult()
     vile_decay_stacks = 0  # Bloodletter's Curse MR reduction stacks
     ult_cast = False  # Tracks if R has been reached in cast_order
     mitigated_damage_dealt = 0.0  # Running total for missing-HP scaling
-    first_ability_damage = 0.0  # Track for Horizon Focus (trigger, not amped)
     first_ability_key: str | None = None
 
     # NOTE: Blackfire Torch's 4% AP amp is baked into champion_stats, but
@@ -1045,24 +964,30 @@ def calculate_fight_damage(
 
     # Navori Flickerblade: auto attacks reduce basic ability CDs
     navori_effect = item_effects.ITEM_EFFECTS.get("Navori Flickerblade")
-    has_navori = "Navori Flickerblade" in [i.get("name", "") for i in items]
-    navori_refund = (
-        navori_effect["cd_refund_percent"] if has_navori and navori_effect else 0.0
+    result.has_navori = "Navori Flickerblade" in state.item_name_list
+    result.navori_refund = (
+        navori_effect["cd_refund_percent"]
+        if result.has_navori and navori_effect
+        else 0.0
     )
-    autos_per_second = attack_speed * auto_attack_uptime if navori_refund > 0 else 0.0
+    result.autos_per_second = (
+        state.attack_speed * state.auto_attack_uptime
+        if result.navori_refund > 0
+        else 0.0
+    )
 
-    basic_ability_haste = champion_stats.get("basic_ability_haste", 0.0)
+    basic_ability_haste = state.champion_stats.get("basic_ability_haste", 0.0)
 
     recast_counts: dict[str, int] = {}  # Track casts for recast pairing
 
-    for ability_key in cast_order:
+    for ability_key in state.cast_order:
         if ability_key not in ability_damages:
             continue
         ability_info = ability_damages[ability_key]
 
-        if auto_attacks_only:
+        if state.auto_attacks_only:
             num_casts = 0
-        elif one_rotation or ability_key == "R":
+        elif state.one_rotation or ability_key == "R":
             num_casts = 1
         else:
             # Recasts (e.g. Q2) always match their parent ability's casts
@@ -1072,14 +997,20 @@ def calculate_fight_damage(
             else:
                 base_cd = ability_info.get("cooldown", 0.0)
                 # Basic ability haste (e.g. Spear of Shojin) applies to Q, W, E
-                total_haste = ability_haste
+                total_haste = state.ability_haste
                 if ability_key in ("Q", "W", "E"):
                     total_haste += basic_ability_haste
                 cd = effective_cooldown(base_cd, total_haste)
                 # Navori reduces basic ability CDs (Q, W, E) via auto attacks
-                if navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
-                    cd = _navori_effective_cd(cd, autos_per_second, navori_refund)
-                num_casts = 1 + int(fight_duration_seconds / cd) if cd > 0 else 1
+                if (
+                    result.navori_refund > 0
+                    and cd > 0
+                    and ability_key in ("Q", "W", "E")
+                ):
+                    cd = _navori_effective_cd(
+                        cd, result.autos_per_second, result.navori_refund
+                    )
+                num_casts = 1 + int(state.fight_duration_seconds / cd) if cd > 0 else 1
 
         recast_counts[ability_key] = num_casts
 
@@ -1087,28 +1018,34 @@ def calculate_fight_damage(
         if ability_key == "R":
             ult_cast = True
 
-        total_ability_casts += num_casts
+        result.total_ability_casts += num_casts
         damage_type = ability_info["damage_type"]
 
         # Determine base MR for this ability: pre-ult or post-ult
-        current_base_mr = reduced_mr if ult_cast else base_mr
+        current_base_mr = resists.reduced_mr if ult_cast else resists.base_mr
 
         # Bloodletter's Curse: magic damage abilities apply a Vile Decay
         # stack. The ability's own damage benefits from its stack.
-        if mr_reduction_effect and damage_type in ("magic", "mixed"):
+        if resists.mr_reduction_effect and damage_type in ("magic", "mixed"):
             vile_decay_stacks = min(
                 vile_decay_stacks + 1,
-                mr_reduction_effect["max_stacks"],
+                resists.mr_reduction_effect["max_stacks"],
             )
             mr_reduced = current_base_mr * (
-                1 - mr_reduction_effect["mr_reduction_per_stack"] * vile_decay_stacks
+                1
+                - resists.mr_reduction_effect["mr_reduction_per_stack"]
+                * vile_decay_stacks
             )
             mr_reduced = max(mr_reduced, 0)
             ability_mr = apply_magic_penetration(
-                mr_reduced, magic_pen_flat, ability_magic_pen_percent
+                mr_reduced, resists.magic_pen_flat, resists.ability_magic_pen_percent
             )
         else:
-            ability_mr = effective_mr_post_ult if ult_cast else effective_mr_pre_ult
+            ability_mr = (
+                resists.effective_mr_post_ult
+                if ult_cast
+                else resists.effective_mr_pre_ult
+            )
 
         if damage_type == "mixed":
             magic_per_cast = (
@@ -1195,8 +1132,10 @@ def calculate_fight_damage(
             # Crit scaling at reduced effectiveness (e.g. Akshan R)
             if "crit_effectiveness" in ability_info:
                 eff = ability_info["crit_effectiveness"]
-                bonus_crit = crit_multiplier - 2.0
-                raw *= 1 + eff * crit_chance + eff * bonus_crit * crit_chance
+                bonus_crit = state.crit_multiplier - 2.0
+                raw *= (
+                    1 + eff * state.crit_chance + eff * bonus_crit * state.crit_chance
+                )
             # Missing HP scaling (e.g. Akshan R: 0-200% bonus)
             if "missing_hp_max_bonus" in ability_info:
                 max_bonus = ability_info["missing_hp_max_bonus"]
@@ -1208,25 +1147,17 @@ def calculate_fight_damage(
                     1.0 - (hp_remaining / target_health) if target_health > 0 else 1.0
                 )
                 raw *= 1 + max_bonus * missing_ratio
-            ability_total = apply_resistance(raw, effective_armor) * num_casts
+            ability_total = apply_resistance(raw, resists.effective_armor) * num_casts
         else:
             ability_total = ability_info.get("total_raw", 0) * num_casts
 
         # Apply ability-specific damage amplifiers (e.g., Actualizer)
-        ability_total *= ability_amp
-
-        # Count individual hits for burn refresh tracking.
-        # Use field-based detection: multi-cast abilities have total_casts,
-        # multi-part abilities have initial_damage.
-        total_casts_per_use = ability_info.get("total_casts", 1)
-        if "initial_damage" in ability_info:
-            total_ability_hits += 3 * num_casts  # 3 hits per multi-part
-        else:
-            total_ability_hits += total_casts_per_use * num_casts
+        ability_total *= state.ability_amp
 
         # Muramana procs once per ability cast. Multi-cast abilities
         # (e.g. Ahri R with 3 dashes) proc once per sub-cast.
-        total_muramana_procs += total_casts_per_use * num_casts
+        total_casts_per_use = ability_info.get("total_casts", 1)
+        result.total_muramana_procs += total_casts_per_use * num_casts
 
         # Track the first ability hit for Horizon Focus (trigger, not amped).
         # For mixed-type abilities (e.g. Ahri Q: magic outgoing + true return),
@@ -1234,9 +1165,9 @@ def calculate_fight_damage(
         if first_ability_key is None and num_casts > 0:
             first_ability_key = ability_key
             if damage_type == "mixed":
-                first_ability_damage = magic_per_cast
+                result.first_ability_damage = magic_per_cast
             else:
-                first_ability_damage = ability_total / num_casts
+                result.first_ability_damage = ability_total / num_casts
 
         breakdown[ability_key] = {
             "name": ability_info["name"],
@@ -1244,7 +1175,7 @@ def calculate_fight_damage(
             "total_damage": ability_total,
             "damage_type": damage_type,
         }
-        total_damage += ability_total
+        state.total_damage += ability_total
         mitigated_damage_dealt += ability_total
 
         # Apply target debuffs (e.g. Kog'Maw Q resistance shred) AFTER
@@ -1254,57 +1185,42 @@ def calculate_fight_damage(
         if target_debuff:
             armor_reduction_pct = target_debuff.get("armor_reduction_percent", 0.0)
             if armor_reduction_pct > 0:
-                target_armor *= 1.0 - armor_reduction_pct / 100.0
-                reduced_armor = target_armor * (1.0 - bc_reduction)
-                effective_armor = apply_armor_penetration(
-                    reduced_armor, flat_armor_pen, ability_armor_pen_percent
-                )
+                resists.shred_armor(armor_reduction_pct)
 
             mr_reduction_pct = target_debuff.get("mr_reduction_percent", 0.0)
             if mr_reduction_pct > 0:
-                base_mr *= 1.0 - mr_reduction_pct / 100.0
-                reduced_mr = base_mr - malignance_mr_reduction
-                reduced_mr = max(reduced_mr, 0)
-                effective_mr_pre_ult = apply_magic_penetration(
-                    base_mr, magic_pen_flat, ability_magic_pen_percent
-                )
-                effective_mr_post_ult = apply_magic_penetration(
-                    reduced_mr, magic_pen_flat, ability_magic_pen_percent
-                )
-                effective_mr = effective_mr_post_ult
+                resists.shred_mr(mr_reduction_pct)
 
     # Update effective MR for non-ability damage using final Vile Decay stacks.
     # Non-ability damage occurs during/after the full rotation, so use
     # post-ult MR (Malignance reduction active).
-    if mr_reduction_effect and vile_decay_stacks > 0:
-        mr_with_stacks = reduced_mr * (
-            1 - mr_reduction_effect["mr_reduction_per_stack"] * vile_decay_stacks
+    if resists.mr_reduction_effect and vile_decay_stacks > 0:
+        mr_with_stacks = resists.reduced_mr * (
+            1
+            - resists.mr_reduction_effect["mr_reduction_per_stack"] * vile_decay_stacks
         )
         mr_with_stacks = max(mr_with_stacks, 0)
-        effective_mr = apply_magic_penetration(
-            mr_with_stacks, magic_pen_flat, auto_magic_pen_percent
+        resists.effective_mr = apply_magic_penetration(
+            mr_with_stacks, resists.magic_pen_flat, resists.auto_magic_pen_percent
         )
 
-    # ── Switch to auto-attack pen values (with Terminus average) ──────────
-    # Abilities are done; remaining damage (autos, on-hit, item procs) should
-    # use Terminus average penetration for auto attacks.
-    if has_terminus and terminus_avg_pen > 0:
-        effective_armor = apply_armor_penetration(
-            reduced_armor, flat_armor_pen, auto_armor_pen_percent
-        )
-        effective_mr_pre_ult = apply_magic_penetration(
-            base_mr, magic_pen_flat, auto_magic_pen_percent
-        )
-        effective_mr_post_ult = apply_magic_penetration(
-            reduced_mr, magic_pen_flat, auto_magic_pen_percent
-        )
-        effective_mr = effective_mr_post_ult
+    # Abilities are done; remaining damage (autos, on-hit, item procs)
+    # switches to the auto-attack pen variants (Terminus average).
+    if resists.has_terminus and resists.terminus_avg_pen > 0:
+        resists.use_auto_pen()
 
-    # ── Step 2a: Pre-calculated proc damage (e.g. Akali passive) ─────────
-    # Ability entries with a proc_count field represent damage that occurs
-    # a fixed number of times (not tied to cooldowns or auto attacks).
-    for key, info in ability_damages.items():
-        if key in cast_order or "on_hit" in info or "stat_buff" in info:
+    return result
+
+
+def _add_precomputed_proc_damage(state: FightState) -> None:
+    """Add fixed-count ability proc damage (e.g. Akali passive).
+
+    Ability entries with a ``proc_count`` field represent damage that
+    occurs a fixed number of times, not tied to cooldowns or auto attacks.
+    """
+    resists = state.resists
+    for key, info in state.ability_damages.items():
+        if key in state.cast_order or "on_hit" in info or "stat_buff" in info:
             continue
         proc_count = info.get("proc_count", 0)
         if proc_count <= 0:
@@ -1322,34 +1238,145 @@ def calculate_fight_damage(
 
         dtype = info.get("damage_type", "magic")
         if dtype == "magic":
-            per_proc = apply_resistance(raw_per_proc, effective_mr) * magic_amp
+            per_proc = (
+                apply_resistance(raw_per_proc, resists.effective_mr) * state.magic_amp
+            )
         elif dtype == "physical":
-            per_proc = apply_resistance(raw_per_proc, effective_armor)
+            per_proc = apply_resistance(raw_per_proc, resists.effective_armor)
         else:
             per_proc = raw_per_proc
 
         proc_total = per_proc * proc_count
-        breakdown[key] = {
+        state.breakdown[key] = {
             "name": info.get("name", key),
             "count": proc_count,
             "damage_per_hit": per_proc,
             "total_damage": proc_total,
             "damage_type": dtype,
         }
-        total_damage += proc_total
+        state.total_damage += proc_total
 
-    # ── Step 2b: Bastionbreaker Shaped Charge ─────────────────────────────
-    if "Bastionbreaker" in [i.get("name", "") for i in items]:
-        shaped_charge = item_effects.calculate_shaped_charge_damage(
-            champion_stats, is_melee, fight_duration_seconds
-        )
-        if shaped_charge > 0:
-            breakdown["shaped_charge_Bastionbreaker"] = {
-                "name": "Bastionbreaker (Shaped Charge)",
-                "total_damage": shaped_charge,
-                "damage_type": "true",
-            }
-            total_damage += shaped_charge
+
+def _add_shaped_charge_damage(state: FightState) -> None:
+    """Add Bastionbreaker's Shaped Charge damage over the fight duration."""
+    if "Bastionbreaker" not in state.item_name_list:
+        return
+    shaped_charge = item_effects.calculate_shaped_charge_damage(
+        state.champion_stats, state.is_melee, state.fight_duration_seconds
+    )
+    if shaped_charge > 0:
+        state.breakdown["shaped_charge_Bastionbreaker"] = {
+            "name": "Bastionbreaker (Shaped Charge)",
+            "total_damage": shaped_charge,
+            "damage_type": "true",
+        }
+        state.total_damage += shaped_charge
+
+
+def calculate_fight_damage(
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    target_health: float,
+    target_armor: float,
+    target_magic_resistance: float,
+    fight_duration_seconds: float,
+    auto_attack_uptime: float = 0.0,
+    ability_haste: float = 0.0,
+    items: list[dict[str, Any]] | None = None,
+    one_rotation: bool = False,
+    include_actives: bool = True,
+    cast_order: list[str] | None = None,
+    auto_attacks_only: bool = False,
+    target_bonus_health: float = 0.0,
+    deterministic: bool = False,
+) -> dict[str, Any]:
+    """Calculate total damage dealt over a fight duration.
+
+    In time-based mode, abilities recast when their cooldown expires within
+    the fight duration. In one-rotation mode, each ability is cast exactly
+    once (fight_duration still matters for burns/DoTs/procs).
+
+    Args:
+        champion_stats: Calculated champion stats dictionary.
+        ability_damages: Parsed ability damage dictionary.
+        target_health: Target's total maximum health (base + bonus).
+        target_armor: Target's armor.
+        target_magic_resistance: Target's magic resistance.
+        fight_duration_seconds: Duration of the fight in seconds.
+        auto_attack_uptime: Fraction of time spent auto-attacking (0.0-1.0).
+        ability_haste: Total ability haste from items.
+        items: List of item data for checking passives.
+        one_rotation: If True, each basic ability is cast exactly once.
+        include_actives: Whether to include item active damage.
+        cast_order: Ability cast order (e.g., ["E", "Q", "W", "R"]).
+            Defaults to ["Q", "W", "E", "R"].
+        auto_attacks_only: If True, skip all cast abilities (Q/W/E/R casts
+            = 0) but still process ability on-hit effects (passives that
+            augment auto attacks, e.g. Vayne W, Viego passive).
+        target_bonus_health: Target's bonus health from items (used for
+            Lord Dominik's Regards Giant Slayer amp).
+
+    Returns:
+        Dictionary with damage breakdown and total.
+    """
+    if cast_order is None:
+        cast_order = ["Q", "Q2", "W", "E", "R"]
+    if items is None:
+        items = []
+
+    # ── Step 1: Resolve resistances, pen, amps, attack timing ───────────
+    state = _resolve_combat_state(
+        champion_stats=champion_stats,
+        ability_damages=ability_damages,
+        target_health=target_health,
+        target_armor=target_armor,
+        target_magic_resistance=target_magic_resistance,
+        fight_duration_seconds=fight_duration_seconds,
+        auto_attack_uptime=auto_attack_uptime,
+        ability_haste=ability_haste,
+        items=items,
+        one_rotation=one_rotation,
+        include_actives=include_actives,
+        cast_order=cast_order,
+        auto_attacks_only=auto_attacks_only,
+        target_bonus_health=target_bonus_health,
+        deterministic=deterministic,
+    )
+
+    # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
+    _apply_stat_buff_ultimates(state)
+
+    # ── Step 2: Ability rotation, precomputed procs, Shaped Charge ──────
+    rotation = _compute_ability_rotation(state)
+    _add_precomputed_proc_damage(state)
+    _add_shaped_charge_damage(state)
+
+    # ── Transitional unpack ── deleted as later Phase 4 groups extract the
+    # remaining inline steps below into functions that read the state.
+    resists = state.resists
+    is_melee = state.is_melee
+    level = state.level
+    item_name_list = state.item_name_list
+    has_hexplate = state.has_hexplate
+    has_fiendhunter = state.has_fiendhunter
+    empowered_autos = state.empowered_autos
+    num_auto_attacks = state.num_auto_attacks
+    magic_amp = state.magic_amp
+    ability_amp = state.ability_amp
+    basic_amp = state.basic_amp
+    hypershot_amp = state.hypershot_amp
+    crit_chance = state.crit_chance
+    crit_multiplier = state.crit_multiplier
+    effective_armor = resists.effective_armor
+    effective_mr = resists.effective_mr
+    breakdown = state.breakdown
+    total_damage = state.total_damage
+    total_ability_casts = rotation.total_ability_casts
+    total_muramana_procs = rotation.total_muramana_procs
+    first_ability_damage = rotation.first_ability_damage
+    has_navori = rotation.has_navori
+    navori_refund = rotation.navori_refund
+    autos_per_second = rotation.autos_per_second
 
     # ── Step 3: Auto attacks (per-auto crit simulation) ───────────────────
     attack_damage = champion_stats["attack_damage"]
