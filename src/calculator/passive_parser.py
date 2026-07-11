@@ -42,10 +42,10 @@ def _find_template_end(text: str, start: int) -> int:
     depth = 0
     pos = start
     while pos < len(text) - 1:
-        if text[pos:pos + 2] == "{{":
+        if text[pos : pos + 2] == "{{":
             depth += 1
             pos += 2
-        elif text[pos:pos + 2] == "}}":
+        elif text[pos : pos + 2] == "}}":
             depth -= 1
             pos += 2
             if depth == 0:
@@ -71,16 +71,16 @@ def _split_template_args(text: str, start: int) -> list[str]:
     """
     end = _find_template_end(text, start)
     # inner = everything between {{ and }}
-    inner = text[start + 2:end - 2]
+    inner = text[start + 2 : end - 2]
 
     # Split by | at depth 0
     args: list[str] = []
     current_start = 0
     depth = 0
     for i, ch in enumerate(inner):
-        if inner[i:i + 2] == "{{":
+        if inner[i : i + 2] == "{{":
             depth += 1
-        elif inner[i:i + 2] == "}}":
+        elif inner[i : i + 2] == "}}":
             depth -= 1
         elif ch == "|" and depth == 0:
             args.append(inner[current_start:i])
@@ -105,6 +105,7 @@ def _resolve_simple_templates(text: str) -> str:
     )
     # Resolve {{fd|N}}
     text = re.sub(r"\{\{fd\|(\d+(?:\.\d+)?)\}\}", r"\1", text)
+
     # Resolve {{ap|VALUE}} — only resolve plain numbers, NOT expressions.
     # On the LoL wiki, {{ap|...}} is a color-formatting template.
     # Expressions like {{ap|5*3}} or {{ap|60/4}} are DISPLAY calculations
@@ -115,6 +116,7 @@ def _resolve_simple_templates(text: str) -> str:
         if re.match(r"^\d+(?:\.\d+)?$", val):
             return val  # Plain number — keep as-is
         return match.group(0)  # Expression — leave the template intact
+
     text = re.sub(r"\{\{ap\|([^}]+)\}\}", _resolve_ap, text)
     return text
 
@@ -190,8 +192,7 @@ def _extract_rd_percentages(text: str) -> tuple[float, float] | None:
         m_match = re.search(r"(\d+(?:\.\d+)?)%", pair[0])
         r_match = re.search(r"(\d+(?:\.\d+)?)%", pair[1])
         if m_match and r_match:
-            return (float(m_match.group(1)) / 100.0,
-                    float(r_match.group(1)) / 100.0)
+            return (float(m_match.group(1)) / 100.0, float(r_match.group(1)) / 100.0)
     return None
 
 
@@ -224,7 +225,8 @@ def _extract_ft_parts(text: str) -> tuple[str, str] | None:
 
 
 def _find_passive_by_name(
-    item_data: dict[str, Any], name: str,
+    item_data: dict[str, Any],
+    name: str,
 ) -> dict[str, Any] | None:
     """Find a passive entry by its name field."""
     for passive in item_data.get("passives", []):
@@ -234,7 +236,8 @@ def _find_passive_by_name(
 
 
 def _find_active_by_name(
-    item_data: dict[str, Any], name: str,
+    item_data: dict[str, Any],
+    name: str,
 ) -> dict[str, Any] | None:
     """Find an active entry by its name field."""
     for active in item_data.get("active", []):
@@ -244,7 +247,9 @@ def _find_active_by_name(
 
 
 def _get_effect_text(
-    item_data: dict[str, Any], source: str, name: str,
+    item_data: dict[str, Any],
+    source: str,
+    name: str,
 ) -> str | None:
     """Get effects text from a passive or active by name."""
     if source == "passive":
@@ -257,7 +262,9 @@ def _get_effect_text(
 
 
 def _get_cooldown_field(
-    item_data: dict[str, Any], source: str, name: str,
+    item_data: dict[str, Any],
+    source: str,
+    name: str,
 ) -> float | None:
     """Get the cooldown from a passive/active's cooldown field."""
     if source == "passive":
@@ -393,7 +400,9 @@ def _parse_bloodsong_spellblade(text: str) -> dict[str, Any]:
 def _parse_dusk_dawn_spellblade(text: str) -> dict[str, Any]:
     """Parse Dusk and Dawn's spellblade with double on-hit."""
     result = _parse_spellblade(text)
-    if "on-hit" in text.lower() and ("again" in text.lower() or "delay" in text.lower()):
+    if "on-hit" in text.lower() and (
+        "again" in text.lower() or "delay" in text.lower()
+    ):
         result["double_on_hit"] = True
     return result
 
@@ -488,13 +497,16 @@ def _parse_immolate(text: str) -> dict[str, Any]:
 
 
 def _parse_luden(
-    text: str, cooldown_field: float | None = None,
+    text: str,
+    cooldown_field: float | None = None,
 ) -> dict[str, Any]:
     """Parse Luden's Companion/Echo proc damage."""
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {"damage_type": "magic"}
 
-    base_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)\|?(?:magic )?damage\}", text_resolved)
+    base_match = re.search(
+        r"\{\{as\|(\d+(?:\.\d+)?)\|?(?:magic )?damage\}", text_resolved
+    )
     if not base_match:
         base_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
     if base_match:
@@ -517,16 +529,22 @@ def _parse_luden(
 
 
 def _parse_statikk_shiv(text: str) -> dict[str, Any]:
-    """Parse Statikk Shiv empowered auto attacks with magic damage.
+    """Parse Statikk Shiv Electrospark chain-lightning attack.
 
-    Wiki markup: ``Your next 3 basic attacks...deal {{as|60 '''bonus'''
-    magic damage}}...``
+    Wiki markup: ``your next basic attack on-hit is empowered to form chain
+    lightning, dealing {{as|60 '''bonus''' magic damage}}...to strike up to
+    {{pp|4 to 8 by 1|...}} targets``.
+
+    Extracts the single empowered attack's damage plus the level-scaled
+    bounce-target count (chain_targets_min/max). Older ``next N basic
+    attacks`` wording is still recognized as a fallback.
     """
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {"damage_type": "magic"}
 
     base_match = re.search(
-        r"\{\{as\|(\d+(?:\.\d+)?)\s+'''bonus'''\s+magic\s+damage", text_resolved,
+        r"\{\{as\|(\d+(?:\.\d+)?)\s+'''bonus'''\s+magic\s+damage",
+        text_resolved,
     )
     if base_match:
         result["base"] = float(base_match.group(1))
@@ -534,6 +552,17 @@ def _parse_statikk_shiv(text: str) -> dict[str, Any]:
     count_match = re.search(r"next\s+(\d+)\s+basic\s+attacks", text_resolved)
     if count_match:
         result["empowered_auto_count"] = int(count_match.group(1))
+    elif re.search(r"next\s+basic\s+attack", text_resolved):
+        result["empowered_auto_count"] = 1
+
+    # Bounce targets: "strike up to {{pp|4 to 8 by 1|...}} targets"
+    chain_match = re.search(
+        r"strike\s+up\s+to\s+\{\{pp\|(\d+)\s+to\s+(\d+)",
+        text_resolved,
+    )
+    if chain_match:
+        result["chain_targets_min"] = int(chain_match.group(1))
+        result["chain_targets_max"] = int(chain_match.group(2))
 
     return result
 
@@ -543,7 +572,9 @@ def _parse_proc_flat_ap(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {"damage_type": "magic"}
 
-    base_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)\|?(?:magic )?damage\}", text_resolved)
+    base_match = re.search(
+        r"\{\{as\|(\d+(?:\.\d+)?)\|?(?:magic )?damage\}", text_resolved
+    )
     if not base_match:
         base_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
     if base_match:
@@ -579,7 +610,8 @@ def _parse_terminus_pen(text: str) -> dict[str, Any]:
     pen_match = re.search(r"(\d+(?:\.\d+)?)%\s+\{\{as\|armor\s+penetration", text)
     if not pen_match:
         pen_match = re.search(
-            r"''Dark''\s+hits\s+grant\s+(\d+(?:\.\d+)?)%", text,
+            r"''Dark''\s+hits\s+grant\s+(\d+(?:\.\d+)?)%",
+            text,
         )
     if pen_match:
         result["dark_pen_per_stack"] = float(pen_match.group(1)) / 100.0
@@ -601,13 +633,16 @@ def _parse_terminus_pen(text: str) -> dict[str, Any]:
 
 
 def _parse_zazzak(
-    text: str, cooldown_field: float | None = None,
+    text: str,
+    cooldown_field: float | None = None,
 ) -> dict[str, Any]:
     """Parse Zaz'Zak's Realmspike proc damage."""
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {"damage_type": "magic"}
 
-    base_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)\|?(?:magic )?damage\}", text_resolved)
+    base_match = re.search(
+        r"\{\{as\|(\d+(?:\.\d+)?)\|?(?:magic )?damage\}", text_resolved
+    )
     if not base_match:
         base_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
     if base_match:
@@ -707,7 +742,8 @@ def _parse_gunblade_active(text: str) -> dict[str, Any]:
         num_points = int(pp_match.group(4))
         result["base_min"] = min_val
         result["base_max"] = round(
-            min_val + (max_at_denom - min_val) / denom * (num_points - 1), 1,
+            min_val + (max_at_denom - min_val) / denom * (num_points - 1),
+            1,
         )
 
     ap_match = re.search(r"\+\s*(\d+(?:\.\d+)?)%\s*AP", text)
@@ -800,8 +836,7 @@ def _parse_horizon_focus(text: str) -> dict[str, Any]:
     """
     result: dict[str, Any] = {}
     amp_match = re.search(
-        r"increasing\s+your\s+damage\s+dealt\s+to\s+them\s+by\s+"
-        r"(\d+(?:\.\d+)?)%",
+        r"increasing\s+your\s+damage\s+dealt\s+to\s+them\s+by\s+" r"(\d+(?:\.\d+)?)%",
         text,
     )
     if amp_match:
@@ -838,9 +873,7 @@ def _parse_hullbreaker(text: str) -> dict[str, Any]:
         elif not r_match:
             r_plain = re.search(r"(\d+(?:\.\d+)?)%", ranged_ad)
             if r_plain:
-                result["base_ad_ratio_ranged"] = (
-                    float(r_plain.group(1)) / 100.0
-                )
+                result["base_ad_ratio_ranged"] = float(r_plain.group(1)) / 100.0
 
     if len(rd_pairs) >= 2:
         melee_hp, ranged_hp = rd_pairs[1]
@@ -858,9 +891,7 @@ def _parse_hullbreaker(text: str) -> dict[str, Any]:
         elif not r_match:
             r_plain = re.search(r"(\d+(?:\.\d+)?)%", ranged_hp)
             if r_plain:
-                result["max_hp_ratio_ranged"] = (
-                    float(r_plain.group(1)) / 100.0
-                )
+                result["max_hp_ratio_ranged"] = float(r_plain.group(1)) / 100.0
 
     # Hits required: "stacking up to N times"
     stacks_match = re.search(r"stacking\s+up\s+to\s+(\d+)\s+times", text)
@@ -918,7 +949,8 @@ def _parse_actualizer(text: str) -> dict[str, Any]:
 
 
 def _parse_eclipse(
-    text: str, cooldown_field: float | None = None,
+    text: str,
+    cooldown_field: float | None = None,
 ) -> dict[str, Any]:
     """Parse Eclipse Ever Rising Moon proc."""
     result: dict[str, Any] = {"damage_type": "physical"}
@@ -932,7 +964,8 @@ def _parse_eclipse(
 
 
 def _parse_bastionbreaker(
-    text: str, cooldown_field: float | None = None,
+    text: str,
+    cooldown_field: float | None = None,
 ) -> dict[str, Any]:
     """Parse Bastionbreaker Shaped Charge true damage."""
     result: dict[str, Any] = {}
@@ -963,7 +996,8 @@ def _parse_overlord_tyranny(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {}
     ratio_match = re.search(
-        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+health", text_resolved,
+        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+health",
+        text_resolved,
     )
     if ratio_match:
         result["bonus_health_to_ad_ratio"] = float(ratio_match.group(1)) / 100.0
@@ -979,7 +1013,8 @@ def _parse_mana_to_ap_awe(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {}
     ratio_match = re.search(
-        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+mana", text_resolved,
+        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+mana",
+        text_resolved,
     )
     if ratio_match:
         result["bonus_mana_to_ap_ratio"] = float(ratio_match.group(1)) / 100.0
@@ -1011,7 +1046,8 @@ def _parse_dawncore_first_light(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {}
     ap_match = re.search(
-        r"(\d+(?:\.\d+)?)\s+ability\s+power", text_resolved,
+        r"(\d+(?:\.\d+)?)\s+ability\s+power",
+        text_resolved,
     )
     if ap_match:
         result["ap_per_mana_regen_unit"] = float(ap_match.group(1))
@@ -1052,7 +1088,8 @@ def _parse_muramana_awe(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {}
     ratio_match = re.search(
-        r"(\d+(?:\.\d+)?)%\s+'''maximum'''\s+mana", text_resolved,
+        r"(\d+(?:\.\d+)?)%\s+'''maximum'''\s+mana",
+        text_resolved,
     )
     if ratio_match:
         result["max_mana_to_ad_ratio"] = float(ratio_match.group(1)) / 100.0
@@ -1067,7 +1104,9 @@ def _parse_shojin_dragonforce(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {}
     haste_match = re.search(
-        r"(\d+)\s+.*?basic\s+ability\s+haste", text_resolved, re.IGNORECASE,
+        r"(\d+)\s+.*?basic\s+ability\s+haste",
+        text_resolved,
+        re.IGNORECASE,
     )
     if haste_match:
         result["basic_ability_haste"] = float(haste_match.group(1))
@@ -1096,7 +1135,8 @@ def _parse_steraks_claws(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {}
     ratio_match = re.search(
-        r"(\d+(?:\.\d+)?)%\s+'''base'''\s+AD", text_resolved,
+        r"(\d+(?:\.\d+)?)%\s+'''base'''\s+AD",
+        text_resolved,
     )
     if ratio_match:
         result["base_ad_to_bonus_ad_ratio"] = float(ratio_match.group(1)) / 100.0
@@ -1111,7 +1151,8 @@ def _parse_stormrazor_bolt(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {"damage_type": "magic"}
     dmg_match = re.search(
-        r"(\d+)\s+'''bonus'''\s+magic\s+damage", text_resolved,
+        r"(\d+)\s+'''bonus'''\s+magic\s+damage",
+        text_resolved,
     )
     if dmg_match:
         result["base"] = float(dmg_match.group(1))
@@ -1135,26 +1176,6 @@ def _parse_titanic_active(text: str) -> dict[str, Any]:
     return result
 
 
-def _parse_opportunity_preparation(text: str) -> dict[str, Any]:
-    """Parse Opportunity's Preparation bonus lethality passive.
-
-    Extracts the melee/ranged bonus lethality values and the duration
-    the bonus persists after dealing damage.
-    """
-    result: dict[str, Any] = {}
-    rd_pair = _extract_rd_numbers(text)
-    if rd_pair:
-        result["bonus_lethality_melee"] = rd_pair[0]
-        result["bonus_lethality_ranged"] = rd_pair[1]
-
-    duration_match = re.search(
-        r"remains\s+for\s+(\d+(?:\.\d+)?)\s+seconds", text,
-    )
-    if duration_match:
-        result["duration"] = float(duration_match.group(1))
-    return result
-
-
 def _parse_armor_reduction(text: str) -> dict[str, Any]:
     """Parse Black Cleaver armor reduction stacking."""
     text_resolved = _resolve_simple_templates(text)
@@ -1174,7 +1195,8 @@ def _parse_mr_reduction(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {}
     red_match = re.search(
-        r"(\d+(?:\.\d+)?)%\s+magic\s+resistance\s+reduction", text_resolved,
+        r"(\d+(?:\.\d+)?)%\s+magic\s+resistance\s+reduction",
+        text_resolved,
     )
     if red_match:
         result["mr_reduction_per_stack"] = float(red_match.group(1)) / 100.0
@@ -1222,7 +1244,8 @@ def _parse_shadowflame(text: str) -> dict[str, Any]:
         result["crit_multiplier"] = float(crit_match.group(1)) / 100.0
 
     thresh_match = re.search(
-        r"below\s+(\d+(?:\.\d+)?)%\s+'''maximum'''\s+health", text_resolved,
+        r"below\s+(\d+(?:\.\d+)?)%\s+'''maximum'''\s+health",
+        text_resolved,
     )
     if thresh_match:
         result["health_threshold"] = float(thresh_match.group(1)) / 100.0
@@ -1257,7 +1280,8 @@ def _parse_heartsteel(text: str) -> dict[str, Any]:
     result: dict[str, Any] = {"damage_type": "physical"}
 
     base_match = re.search(
-        r"\{\{as\|(\d+(?:\.\d+)?)\|physical\s+damage\}\}", text,
+        r"\{\{as\|(\d+(?:\.\d+)?)\|physical\s+damage\}\}",
+        text,
     )
     if base_match:
         result["base"] = float(base_match.group(1))
@@ -1345,7 +1369,8 @@ def _parse_hexplate(text: str) -> dict[str, Any]:
     result: dict[str, Any] = {}
 
     as_match = re.search(
-        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+attack\s+speed", text_resolved,
+        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+attack\s+speed",
+        text_resolved,
     )
     if as_match:
         result["bonus_attack_speed_percent"] = float(as_match.group(1))
@@ -1355,7 +1380,8 @@ def _parse_hexplate(text: str) -> dict[str, Any]:
         result["duration"] = float(dur_match.group(1))
 
     cd_match = re.search(
-        r"(\d+(?:\.\d+)?)\s+second\s+cooldown", text_resolved,
+        r"(\d+(?:\.\d+)?)\s+second\s+cooldown",
+        text_resolved,
     )
     if cd_match:
         result["cooldown"] = float(cd_match.group(1))
@@ -1369,7 +1395,8 @@ def _parse_fiendhunter(text: str) -> dict[str, Any]:
     result: dict[str, Any] = {}
 
     as_match = re.search(
-        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+attack\s+speed", text_resolved,
+        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+attack\s+speed",
+        text_resolved,
     )
     if as_match:
         result["bonus_attack_speed_percent"] = float(as_match.group(1))
@@ -1381,7 +1408,8 @@ def _parse_fiendhunter(text: str) -> dict[str, Any]:
     # Reduced crit ratio: find first 'N% '''total''' critical damage'
     # This appears inside nested {{ft|...|{{sti|{{as|80% ...}}}}}} templates
     crit_matches = re.findall(
-        r"(\d+(?:\.\d+)?)%\s+'''total'''\s+critical\s+damage", text,
+        r"(\d+(?:\.\d+)?)%\s+'''total'''\s+critical\s+damage",
+        text,
     )
     if crit_matches:
         result["reduced_crit_ratio"] = float(crit_matches[0]) / 100.0
@@ -1407,7 +1435,8 @@ def _parse_guinsoo_phantom(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
 
     stack_match = re.search(
-        r"stacking\s+up\s+to\s+(\d+)\s+times", text_resolved,
+        r"stacking\s+up\s+to\s+(\d+)\s+times",
+        text_resolved,
     )
     if stack_match:
         max_stacks = int(stack_match.group(1))
@@ -1436,14 +1465,16 @@ def _parse_sundered_sky(text: str) -> dict[str, Any]:
 
     # Reduced crit ratio from tooltip: "80% '''total''' critical damage"
     crit_match = re.search(
-        r"(\d+(?:\.\d+)?)%\s+'''total'''\s+critical\s+damage", text,
+        r"(\d+(?:\.\d+)?)%\s+'''total'''\s+critical\s+damage",
+        text,
     )
     if crit_match:
         result["reduced_crit_ratio"] = float(crit_match.group(1)) / 100.0
 
     # Cooldown: "10 second cooldown"
     cd_match = re.search(
-        r"(\d+(?:\.\d+)?)\s+second\s+cooldown", text,
+        r"(\d+(?:\.\d+)?)\s+second\s+cooldown",
+        text,
     )
     if cd_match:
         result["cooldown"] = float(cd_match.group(1))
@@ -1452,18 +1483,29 @@ def _parse_sundered_sky(text: str) -> dict[str, Any]:
 
 
 def _parse_voltaic_firmament(text: str) -> dict[str, Any]:
-    """Parse Voltaic Cyclosword Firmament energized damage.
+    """Parse Voltaic Cyclosword Firmament energized current-HP damage.
 
-    Wiki markup: ``...deals {{as|100 '''bonus''' physical damage}} [[on-hit]]...``
+    Wiki markup: ``...dealing {{as|'''bonus''' physical damage}} equal to
+    {{as|{{rd|9%|7%}} of the target's '''current''' health}}, capped at 200
+    against non-champions.``
+
+    The text contains two ``{{rd|...}}`` pairs (a flat lethality one and the
+    percentage pair), so we take the first pair where both sides are
+    percentages.
     """
-    text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {"damage_type": "physical"}
 
-    dmg_match = re.search(
-        r"(\d+)\s+'''bonus'''\s+physical\s+damage", text_resolved,
-    )
-    if dmg_match:
-        result["base"] = float(dmg_match.group(1))
+    for melee_txt, ranged_txt in _extract_all_rd_values(text):
+        m_match = re.search(r"(\d+(?:\.\d+)?)%", melee_txt)
+        r_match = re.search(r"(\d+(?:\.\d+)?)%", ranged_txt)
+        if m_match and r_match:
+            result["current_hp_ratio_melee"] = float(m_match.group(1)) / 100.0
+            result["current_hp_ratio_ranged"] = float(r_match.group(1)) / 100.0
+            break
+
+    cap_match = re.search(r"capped\s+at\s+(\d+(?:\.\d+)?)", text)
+    if cap_match:
+        result["damage_cap"] = float(cap_match.group(1))
 
     return result
 
@@ -1479,7 +1521,8 @@ def _parse_unending_despair(text: str) -> dict[str, Any]:
 
     # Interval: "Every N seconds"
     interval_match = re.search(
-        r"[Ee]very\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved,
+        r"[Ee]very\s+(\d+(?:\.\d+)?)\s+seconds",
+        text_resolved,
     )
     if interval_match:
         result["interval"] = float(interval_match.group(1))
@@ -1521,13 +1564,15 @@ def _parse_yun_tal_flurry(text: str) -> dict[str, Any]:
         result["bonus_attack_speed_percent"] = float(as_match.group(1))
 
     dur_match = re.search(
-        r"for\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved,
+        r"for\s+(\d+(?:\.\d+)?)\s+seconds",
+        text_resolved,
     )
     if dur_match:
         result["duration"] = float(dur_match.group(1))
 
     cd_match = re.search(
-        r"(\d+(?:\.\d+)?)\s+second\s+cooldown", text_resolved,
+        r"(\d+(?:\.\d+)?)\s+second\s+cooldown",
+        text_resolved,
     )
     if cd_match:
         result["cooldown"] = float(cd_match.group(1))
@@ -1555,7 +1600,9 @@ def _json_name(code_name: str) -> str:
 _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     # ── On-Hit ──
     "Nashor's Tooth": [("passive", "Icathian Bite", _parse_simple_on_hit, {})],
-    "Blade of the Ruined King": [("passive", "Mist's Edge", _parse_current_hp_on_hit, {})],
+    "Blade of the Ruined King": [
+        ("passive", "Mist's Edge", _parse_current_hp_on_hit, {})
+    ],
     "Wit's End": [("passive", "Fray", _parse_simple_on_hit, {})],
     "Terminus": [
         ("passive", "Shadow", _parse_simple_on_hit, {}),
@@ -1573,7 +1620,6 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
         ("passive", "Shock", _parse_mana_on_hit, {}),
         ("passive", "Awe", _parse_muramana_awe, {}),
     ],
-
     # ── Spellblade ──
     "Trinity Force": [("passive", "Spellblade", _parse_spellblade, {})],
     "Lich Bane": [("passive", "Spellblade", _parse_spellblade, {})],
@@ -1581,11 +1627,15 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Iceborn Gauntlet": [("passive", "Spellblade", _parse_spellblade, {})],
     "Bloodsong": [("passive", "Spellblade", _parse_bloodsong_spellblade, {})],
     "Dusk and Dawn": [("passive", "Spellblade", _parse_dusk_dawn_spellblade, {})],
-
     # ── Burn / DoT ──
     "Liandry's Torment": [
         ("passive", "Torment", _parse_burn_max_hp, {}),
-        ("passive", "Suffering", _parse_damage_amp_per_second, {"key_prefix": "damage_"}),
+        (
+            "passive",
+            "Suffering",
+            _parse_damage_amp_per_second,
+            {"key_prefix": "damage_"},
+        ),
     ],
     "Blackfire Torch": [
         ("passive", "Baleful Blaze", _parse_burn_flat_ap, {}),
@@ -1593,7 +1643,6 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     ],
     "Sunfire Aegis": [("passive", "Immolate", _parse_immolate, {})],
     "Hollow Radiance": [("passive", "Immolate", _parse_immolate, {})],
-
     # ── Proc ──
     "Luden's Echo": [("passive", "Echo", _parse_luden, {"use_cooldown_field": True})],
     "Statikk Shiv": [("passive", "Electrospark", _parse_statikk_shiv, {})],
@@ -1601,18 +1650,17 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
         ("passive", "Squall", _parse_proc_flat_ap, {}),
         ("passive", "Stormraider", _parse_stormsurge_trigger, {}),
     ],
-    "Zaz'Zak's Realmspike": [("passive", "Void Explosion", _parse_zazzak, {"use_cooldown_field": True})],
-
+    "Zaz'Zak's Realmspike": [
+        ("passive", "Void Explosion", _parse_zazzak, {"use_cooldown_field": True})
+    ],
     # ── Ult Proc ──
     "Malignance": [("passive", "Hatefog", _parse_malignance, {})],
-
     # ── Active Items ──
     "Hextech Rocketbelt": [("active", "Supersonic", _parse_active_flat_ap, {})],
     "Hextech Gunblade": [("active", "Lightning Bolt", _parse_gunblade_active, {})],
     "Profane Hydra": [("active", "Heretical Cleave", _parse_hydra_active, {})],
     "Ravenous Hydra": [("active", "Ravenous Crescent", _parse_hydra_active, {})],
     "Stridebreaker": [("active", "Breaking Shockwave", _parse_hydra_active, {})],
-
     # ── Damage Amplification ──
     "Riftmaker": [("passive", "Void Corruption", _parse_damage_amp_per_second, {})],
     "Lord Dominik's Regards": [("passive", "Giant Slayer", _parse_lord_dominik, {})],
@@ -1624,34 +1672,34 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Actualizer": [("active", "Mana Made Real", _parse_actualizer, {})],
     "Hexoptics C44": [("passive", "Magnification", _parse_hexoptics_magnification, {})],
     "Horizon Focus": [("passive", "Hypershot", _parse_horizon_focus, {})],
-
     # ── Ult Attack Speed Buffs ──
     "Experimental Hexplate": [("passive", "Overdrive", _parse_hexplate, {})],
     "Fiendhunter Bolts": [("passive", "Opening Barrage", _parse_fiendhunter, {})],
-
     # ── Max HP Proc ──
-    "Eclipse": [("passive", "Ever Rising Moon", _parse_eclipse, {"use_cooldown_field": True})],
-
+    "Eclipse": [
+        ("passive", "Ever Rising Moon", _parse_eclipse, {"use_cooldown_field": True})
+    ],
     # ── Lethality Proc ──
-    "Bastionbreaker": [("passive", "Shaped Charge", _parse_bastionbreaker, {"use_cooldown_field": True})],
-
+    "Bastionbreaker": [
+        (
+            "passive",
+            "Shaped Charge",
+            _parse_bastionbreaker,
+            {"use_cooldown_field": True},
+        )
+    ],
     # ── Bonus Lethality ──
-    "Opportunity": [("passive", "Preparation", _parse_opportunity_preparation, {})],
-
     # ── Resistance Reduction ──
     "Black Cleaver": [("passive", "Carve", _parse_armor_reduction, {})],
     "Bloodletter's Curse": [("passive", "Vile Decay", _parse_mr_reduction, {})],
-
     # ── Execute ──
     "The Collector": [("passive", "Death", _parse_execute, {})],
-
     # ── Critical Strike ──
     # Infinity Edge has no passives — bonus_crit_damage comes from stats section
     # (handled automatically by parse_item_effect's stats check)
     "Infinity Edge": [],
     "Navori Flickerblade": [("passive", "Transcendence", _parse_navori, {})],
     "Shadowflame": [("passive", "Cinderbloom", _parse_shadowflame, {})],
-
     # ── Stat Conversion ──
     "Overlord's Bloodmail": [("passive", "Tyranny", _parse_overlord_tyranny, {})],
     "Seraph's Embrace": [("passive", "Awe", _parse_mana_to_ap_awe, {})],
@@ -1661,21 +1709,16 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Bandlepipes": [("passive", "Fanfare", _parse_bandlepipes_fanfare, {})],
     "Staff of Flowing Water": [("passive", "Rapids", _parse_flowing_water_rapids, {})],
     "Sterak's Gage": [("passive", "The Claws that Catch", _parse_steraks_claws, {})],
-
     # ── Energized ──
     "Rapid Firecannon": [("passive", "Sharpshooter", _parse_simple_on_hit, {})],
     "Stormrazor": [("passive", "Bolt", _parse_stormrazor_bolt, {})],
     "Voltaic Cyclosword": [("passive", "Firmament", _parse_voltaic_firmament, {})],
-
     # ── Crit Modifier (first-auto) ──
     "Sundered Sky": [("passive", "Lightshield Strike", _parse_sundered_sky, {})],
-
     # ── Periodic AoE ──
     "Unending Despair": [("passive", "Anguish", _parse_unending_despair, {})],
-
     # ── Conditional AS ──
     "Yun Tal Wildarrows": [("passive", "Flurry", _parse_yun_tal_flurry, {})],
-
     # ── Single-proc / Special ──
     "Dead Man's Plate": [("passive", "Shipwrecker", _parse_dead_mans_plate, {})],
     "Heartsteel": [("passive", "Colossal Consumption", _parse_heartsteel, {})],
@@ -1690,7 +1733,8 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
 
 
 def _find_item_data_by_name(
-    items_data: dict[str, Any], item_name: str,
+    items_data: dict[str, Any],
+    item_name: str,
 ) -> dict[str, Any] | None:
     """Find an item entry in JSON data by name (case-insensitive)."""
     json_name = _json_name(item_name)
@@ -1701,7 +1745,8 @@ def _find_item_data_by_name(
 
 
 def parse_item_effect(
-    item_name: str, items_data: dict[str, Any],
+    item_name: str,
+    items_data: dict[str, Any],
 ) -> dict[str, Any] | None:
     """Parse a single item's effect values from JSON data.
 
@@ -1728,7 +1773,9 @@ def parse_item_effect(
         if text is None:
             logger.debug(
                 "No %s '%s' found for item '%s'",
-                source, entry_name, item_name,
+                source,
+                entry_name,
+                item_name,
             )
             continue
 
@@ -1736,7 +1783,9 @@ def parse_item_effect(
         kwargs: dict[str, Any] = {}
         if extra.get("use_cooldown_field"):
             kwargs["cooldown_field"] = _get_cooldown_field(
-                item_data, source, entry_name,
+                item_data,
+                source,
+                entry_name,
             )
         if "key_prefix" in extra:
             kwargs["key_prefix"] = extra["key_prefix"]

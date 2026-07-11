@@ -53,8 +53,8 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "dark_pen_per_stack": 0.10,
         "dark_max_stacks": 3,
         # Light hits (1st, 3rd, 5th auto): bonus armor + MR per stack (level-scaled)
-        "light_resist_min": 6.0,   # per stack at level 1
-        "light_resist_max": 8.0,   # per stack at max level
+        "light_resist_min": 6.0,  # per stack at level 1
+        "light_resist_max": 8.0,  # per stack at max level
     },
     "Titanic Hydra": {
         "type": "on_hit",
@@ -90,7 +90,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Awe passive: 2% max mana as bonus AD (stat conversion)
         "max_mana_to_ad_ratio": 0.02,
     },
-
     # ── Spellblade (after ability, next auto, mutually exclusive) ─────────
     "Trinity Force": {
         "type": "spellblade",
@@ -141,7 +140,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "weave_delay": 1.5,  # CD starts after empowered attack
         "double_on_hit": True,  # Applies all on-hit effects again
     },
-
     # ── Burn / DoT ────────────────────────────────────────────────────────
     "Liandry's Torment": {
         "type": "burn",
@@ -177,7 +175,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "base_per_second": 15.0,
         "bonus_hp_ratio_per_second": 0.01,
     },
-
     # ── Proc Damage (cooldown-gated) ──────────────────────────────────────
     "Luden's Echo": {
         "type": "proc",
@@ -192,9 +189,12 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Statikk Shiv": {
         "type": "on_hit_once",
         "damage_type": "magic",
-        # First 3 autos deal 60 bonus magic damage each
+        # Electrospark: ONE empowered attack deals 60 bonus magic damage,
+        # chain-lightning to up to 4-8 targets by level (single-target: 1 proc)
         "base": 60.0,
-        "empowered_auto_count": 3,
+        "empowered_auto_count": 1,
+        "chain_targets_min": 4,
+        "chain_targets_max": 8,
     },
     "Stormsurge": {
         "type": "proc",
@@ -215,7 +215,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "cooldown": 10.0,
         "is_ability_damage": True,  # Amplified by Actualizer
     },
-
     # ── Ultimate Proc ─────────────────────────────────────────────────────
     "Malignance": {
         "type": "ult_proc",
@@ -229,7 +228,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Also reduces target MR by 10 for 3s
         "mr_reduction": 10.0,
     },
-
     # ── Active Items (used once per fight) ────────────────────────────────
     "Hextech Rocketbelt": {
         "type": "active",
@@ -271,7 +269,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     # Note: Goredrinker, Everfrost, Galeforce, Prowler's Claw are
     # DISTRIBUTED items (Arena only) — not available on Summoner's Rift.
-
     # ── Damage Amplification ──────────────────────────────────────────────
     # Liandry's amp is handled in its burn entry above.
     "Riftmaker": {
@@ -321,7 +318,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "base_amp": 0.15,
         "amp_per_100_bonus_mana": 0.005,
     },
-
     # ── Ultimate-Triggered Attack Speed Buffs ──────────────────────────────
     "Experimental Hexplate": {
         "type": "ult_attack_speed_buff",
@@ -341,7 +337,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "natural_crit_true_damage_ratio": 0.15,
         "duration": 8.0,
     },
-
     # ── Max HP Proc (cooldown-gated, %max HP physical) ────────────────────
     "Eclipse": {
         "type": "max_hp_proc",
@@ -352,17 +347,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "target_max_hp_ratio_ranged": 0.04,
         "cooldown": 6.0,
     },
-
-    # ── Bonus Lethality (time-limited) ─────────────────────────────────
-    "Opportunity": {
-        "type": "preparation",
-        # Preparation: bonus lethality for the first N seconds of combat
-        # Melee: 11 lethality, Ranged: 5 lethality, lasts 3s
-        "bonus_lethality_melee": 11.0,
-        "bonus_lethality_ranged": 5.0,
-        "duration": 3.0,
-    },
-
     # ── Lethality Proc (ability damage trigger) ──────────────────────────
     "Bastionbreaker": {
         "type": "shaped_charge",
@@ -374,7 +358,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "lethality_ratio_ranged": 0.75,
         "cooldown": 45.0,
     },
-
     # ── Resistance Reduction ──────────────────────────────────────────────
     "Black Cleaver": {
         "type": "armor_reduction",
@@ -390,14 +373,12 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "mr_reduction_per_stack": 0.075,
         "max_stacks": 4,
     },
-
     # ── Execute ───────────────────────────────────────────────────────────
     "The Collector": {
         "type": "execute",
         # Execute below 5% max HP
         "threshold": 0.05,
     },
-
     # ── Critical Strike ───────────────────────────────────────────────────
     "Infinity Edge": {
         "type": "crit_modifier",
@@ -409,7 +390,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Basic attacks reduce basic ability remaining CDs by 15%
         "cd_refund_percent": 0.15,
     },
-
     # ── Magic/True Critical Strike ──────────────────────────────────────
     "Shadowflame": {
         "type": "magic_true_crit",
@@ -418,7 +398,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "crit_multiplier": 1.20,
         "health_threshold": 0.40,
     },
-
     # ── Energized ──────────────────────────────────────────────────────────
     "Rapid Firecannon": {
         "type": "on_hit_once",
@@ -426,7 +405,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Sharpshooter: 40 bonus magic damage on first energized auto
         "base": 40.0,
     },
-
     # ── Other single-proc items ───────────────────────────────────────────
     "Dead Man's Plate": {
         "type": "on_hit_once",
@@ -473,7 +451,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "missing_hp_bonus_max": 0.75,
         "hits_required": 3,
     },
-
     # ── Stat Conversion (passives that modify champion stats) ──────────────
     "Rabadon's Deathcap": {
         "type": "stat_conversion",
@@ -514,7 +491,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_type": "magic",
         "base": 100.0,
     },
-
     # ── Sundered Sky (first-auto crit modifier) ─────────────────────────────
     "Sundered Sky": {
         "type": "first_auto_crit",
@@ -523,14 +499,16 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "reduced_crit_ratio": 0.80,
         "cooldown": 10.0,
     },
-
     # ── Voltaic Cyclosword (energized first-auto) ───────────────────────────
     "Voltaic Cyclosword": {
         "type": "on_hit_once",
         "damage_type": "physical",
-        "base": 100.0,
+        # Firmament: % of target's CURRENT health (melee 9% / ranged 7%),
+        # capped at 200
+        "current_hp_ratio_melee": 0.09,
+        "current_hp_ratio_ranged": 0.07,
+        "damage_cap": 200.0,
     },
-
     # ── Unending Despair (periodic AoE damage) ──────────────────────────────
     "Unending Despair": {
         "type": "periodic_aoe",
@@ -539,7 +517,6 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "interval": 4.0,
         "bonus_hp_ratio": 0.03,
     },
-
     # ── Yun Tal Wildarrows (conditional AS on attack) ───────────────────────
     "Yun Tal Wildarrows": {
         "type": "conditional_attack_speed",
@@ -571,10 +548,12 @@ def _build_item_effects(
         Merged dict suitable for use as ``ITEM_EFFECTS``.
     """
     import copy
+
     result = copy.deepcopy(defaults)
 
     try:
         from .data_fetcher import DEFAULT_DATA_DIR, fetch_item_data
+
         items_data = fetch_item_data(data_directory=DEFAULT_DATA_DIR)
     except Exception as exc:
         logger.debug("Could not load item JSON for parsing: %s", exc)
@@ -582,6 +561,7 @@ def _build_item_effects(
 
     try:
         from .passive_parser import parse_all_item_effects
+
         parsed = parse_all_item_effects(items_data)
     except Exception as exc:
         logger.warning("Item passive parsing failed: %s", exc)
@@ -620,7 +600,10 @@ ITEM_EFFECTS: dict[str, dict[str, Any]] = _build_item_effects(
 
 
 def _lerp_by_level(
-    min_val: float, max_val: float, level: int, max_level: int = 18,
+    min_val: float,
+    max_val: float,
+    level: int,
+    max_level: int = 18,
 ) -> float:
     """Linearly interpolate a value between level 1 and max_level."""
     clamped = max(1, min(level, max_level))
@@ -649,10 +632,16 @@ def get_on_hit_damage(
         return 0.0
 
     if item_name == "Nashor's Tooth":
-        return effect["base"] + effect["ap_ratio"] * champion_stats.get("ability_power", 0)
+        return effect["base"] + effect["ap_ratio"] * champion_stats.get(
+            "ability_power", 0
+        )
 
     if item_name == "Blade of the Ruined King":
-        ratio = effect["current_hp_ratio_melee"] if is_melee else effect["current_hp_ratio_ranged"]
+        ratio = (
+            effect["current_hp_ratio_melee"]
+            if is_melee
+            else effect["current_hp_ratio_ranged"]
+        )
         return ratio * target_health
 
     if item_name == "Wit's End":
@@ -662,7 +651,9 @@ def get_on_hit_damage(
         return effect["base"]
 
     if item_name == "Titanic Hydra":
-        ratio = effect["max_hp_ratio_melee"] if is_melee else effect["max_hp_ratio_ranged"]
+        ratio = (
+            effect["max_hp_ratio_melee"] if is_melee else effect["max_hp_ratio_ranged"]
+        )
         return ratio * champion_stats.get("health", 0)
 
     if item_name == "Guinsoo's Rageblade":
@@ -816,7 +807,11 @@ def calculate_proc_damage(
         return effect["base"] + effect["ap_ratio"] * ap
 
     if item_name == "Zaz'Zak's Realmspike":
-        per_proc = effect["base"] + effect["ap_ratio"] * ap + effect["target_max_hp_ratio"] * target_health
+        per_proc = (
+            effect["base"]
+            + effect["ap_ratio"] * ap
+            + effect["target_max_hp_ratio"] * target_health
+        )
         num_procs = 1 + int(fight_duration / effect["cooldown"])
         return per_proc * num_procs
 
@@ -868,7 +863,6 @@ def calculate_active_damage(
     return 0.0
 
 
-
 def get_damage_amplifier(
     items: list[dict[str, Any]],
     fight_duration: float,
@@ -885,7 +879,9 @@ def get_damage_amplifier(
         Total multiplier (e.g., 1.06 for 6% amp).
     """
     _, total = get_damage_amplifier_breakdown(
-        items, fight_duration, target_bonus_health,
+        items,
+        fight_duration,
+        target_bonus_health,
     )
     return total
 
@@ -1094,33 +1090,6 @@ def calculate_shaped_charge_damage(
     return per_proc * num_procs
 
 
-def get_opportunity_bonus_lethality(
-    items: list[dict[str, Any]],
-    is_melee: bool,
-) -> tuple[float, float]:
-    """Return (bonus_lethality, duration) from Opportunity's Preparation passive.
-
-    Args:
-        items: List of item data dicts.
-        is_melee: Whether the champion is melee.
-
-    Returns:
-        Tuple of (bonus_lethality, duration_seconds). Returns (0, 0) if
-        Opportunity is not in the build.
-    """
-    for item in items:
-        if item.get("name", "") == "Opportunity":
-            effect = ITEM_EFFECTS.get("Opportunity", {})
-            lethality = (
-                effect.get("bonus_lethality_melee", 11.0)
-                if is_melee
-                else effect.get("bonus_lethality_ranged", 5.0)
-            )
-            duration = effect.get("duration", 3.0)
-            return (lethality, duration)
-    return (0.0, 0.0)
-
-
 def get_armor_reduction(
     items: list[dict[str, Any]],
     fight_duration: float,
@@ -1300,9 +1269,7 @@ def get_item_effect_names(items: list[dict[str, Any]]) -> list[str]:
         List of item names that have effects in the registry.
     """
     return [
-        item.get("name", "")
-        for item in items
-        if item.get("name", "") in ITEM_EFFECTS
+        item.get("name", "") for item in items if item.get("name", "") in ITEM_EFFECTS
     ]
 
 
@@ -1326,7 +1293,11 @@ def get_muramana_ability_damage(
         return 0.0
 
     max_mana = champion_stats.get("max_mana", 0)
-    ratio = effect["max_mana_ratio_ability_melee"] if is_melee else effect["max_mana_ratio_ability_ranged"]
+    ratio = (
+        effect["max_mana_ratio_ability_melee"]
+        if is_melee
+        else effect["max_mana_ratio_ability_ranged"]
+    )
     return ratio * max_mana * num_ability_hits
 
 
@@ -1423,7 +1394,6 @@ def get_terminus_light_resist_per_stack(level: int) -> float:
     high = effect.get("light_resist_max", 8.0)
     clamped = max(1, min(level, 18))
     return low + (high - low) * (clamped - 1) / 17.0
-
 
 
 def get_collector_execution_threshold(

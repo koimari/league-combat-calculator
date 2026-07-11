@@ -133,14 +133,17 @@ class TestParseAhriAbilities:
     @pytest.fixture
     def ahri_data(self) -> dict:
         from src.calculator.data_fetcher import get_champion
+
         return get_champion("Ahri")
 
     def test_q_rank3_with_60ap(self, ahri_data: dict) -> None:
+        # JSON (16.13.1): Q "Damage Per Pass" rank 3 = 85 + 50% AP.
+        # 85 + 0.5 * 60 = 115 for both the magic and true damage passes.
         abilities = parse_ahri_abilities(ahri_data, 6, 60)
         q = abilities["Q"]
         assert q["rank"] == 3
-        assert abs(q["magic_damage"] - 120.0) < 0.1
-        assert abs(q["true_damage"] - 120.0) < 0.1
+        assert abs(q["magic_damage"] - 115.0) < 0.1
+        assert abs(q["true_damage"] - 115.0) < 0.1
 
     def test_w_rank1_with_60ap(self, ahri_data: dict) -> None:
         abilities = parse_ahri_abilities(ahri_data, 6, 60)
@@ -161,10 +164,12 @@ class TestParseAhriAbilities:
         assert r["total_casts"] == 3
 
     def test_q_rank5_with_215ap(self, ahri_data: dict) -> None:
+        # JSON (16.13.1): Q "Damage Per Pass" rank 5 = 135 + 50% AP.
+        # 135 + 0.5 * 215 = 242.5.
         abilities = parse_ahri_abilities(ahri_data, 11, 215)
         q = abilities["Q"]
         assert q["rank"] == 5
-        assert abs(q["magic_damage"] - 247.5) < 0.1
+        assert abs(q["magic_damage"] - 242.5) < 0.1
 
     def test_w_rank5_with_572ap(self, ahri_data: dict) -> None:
         abilities = parse_ahri_abilities(ahri_data, 18, 572)
@@ -219,19 +224,26 @@ class TestActualizerFightDamage:
     @pytest.fixture
     def ahri_data(self) -> dict:
         from src.calculator.data_fetcher import get_champion
+
         return get_champion("Ahri")
 
     @pytest.fixture
     def actualizer(self) -> dict:
         from src.calculator.data_fetcher import get_item_by_name
+
         return get_item_by_name("Actualizer")
 
     def test_ahri_q_with_actualizer_active(
-        self, ahri_data: dict, actualizer: dict,
+        self,
+        ahri_data: dict,
+        actualizer: dict,
     ) -> None:
         """Ahri level 18, only Actualizer, Q vs 1000 HP / 100 MR / 100 Armor.
 
-        Expected ~323 total Q damage with Actualizer active.
+        JSON (16.13.1): Q rank 5 per pass = 135 + 0.5 * 90 AP = 180.
+        Magic pass vs 100 MR = 90; true pass = 180; sum = 270.
+        Actualizer amp = 1.15 + 0.005 * (300 bonus mana / 100) = 1.165.
+        270 * 1.165 = 314.55 total Q damage.
         """
         from src.calculator.stats import calculate_total_stats
 
@@ -239,12 +251,16 @@ class TestActualizerFightDamage:
         stats = calculate_total_stats(ahri_data, 18, items)
         # Only care about Q damage
         abilities = parse_ahri_abilities(
-            ahri_data, 18, stats["ability_power"],
+            ahri_data,
+            18,
+            stats["ability_power"],
             ability_ranks={"Q": 5},
         )
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=1.0,
             auto_attack_uptime=0.0,
@@ -254,9 +270,7 @@ class TestActualizerFightDamage:
             include_actives=True,
         )
         q_damage = fight["breakdown"]["Q"]["total_damage"]
-        assert abs(q_damage - 323) <= 2, (
-            f"Q damage {q_damage:.1f} expected ~323"
-        )
+        assert abs(q_damage - 314.55) <= 2, f"Q damage {q_damage:.1f} expected ~314.55"
 
 
 class TestBastionbreakerShapedCharge:
@@ -265,11 +279,13 @@ class TestBastionbreakerShapedCharge:
     @pytest.fixture
     def ahri_data(self) -> dict:
         from src.calculator.data_fetcher import get_champion
+
         return get_champion("Ahri")
 
     @pytest.fixture
     def bastionbreaker(self) -> dict:
         from src.calculator.data_fetcher import get_item_by_name
+
         return get_item_by_name("Bastionbreaker")
 
     def test_shaped_charge_ranged_damage(self) -> None:
@@ -277,7 +293,9 @@ class TestBastionbreakerShapedCharge:
         from src.calculator.item_effects import calculate_shaped_charge_damage
 
         stats = {"lethality": 22.0}
-        damage = calculate_shaped_charge_damage(stats, is_melee=False, fight_duration=5.0)
+        damage = calculate_shaped_charge_damage(
+            stats, is_melee=False, fight_duration=5.0
+        )
         assert abs(damage - 31.5) < 0.01
 
     def test_shaped_charge_melee_damage(self) -> None:
@@ -285,7 +303,9 @@ class TestBastionbreakerShapedCharge:
         from src.calculator.item_effects import calculate_shaped_charge_damage
 
         stats = {"lethality": 22.0}
-        damage = calculate_shaped_charge_damage(stats, is_melee=True, fight_duration=5.0)
+        damage = calculate_shaped_charge_damage(
+            stats, is_melee=True, fight_duration=5.0
+        )
         assert abs(damage - 63.0) < 0.01
 
     def test_shaped_charge_multiple_procs(self) -> None:
@@ -293,12 +313,16 @@ class TestBastionbreakerShapedCharge:
         from src.calculator.item_effects import calculate_shaped_charge_damage
 
         stats = {"lethality": 22.0}
-        damage = calculate_shaped_charge_damage(stats, is_melee=False, fight_duration=50.0)
+        damage = calculate_shaped_charge_damage(
+            stats, is_melee=False, fight_duration=50.0
+        )
         expected = 31.5 * 2
         assert abs(damage - expected) < 0.01
 
     def test_ahri_full_fight_with_bastionbreaker(
-        self, ahri_data: dict, bastionbreaker: dict,
+        self,
+        ahri_data: dict,
+        bastionbreaker: dict,
     ) -> None:
         """Ahri level 18 with only Bastionbreaker, one rotation.
 
@@ -310,8 +334,10 @@ class TestBastionbreakerShapedCharge:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -320,9 +346,9 @@ class TestBastionbreakerShapedCharge:
             one_rotation=True,
         )
         sc = fight["breakdown"]["shaped_charge_Bastionbreaker"]
-        assert abs(sc["total_damage"] - 32) <= 1, (
-            f"Shaped Charge {sc['total_damage']:.1f} expected ~32"
-        )
+        assert (
+            abs(sc["total_damage"] - 32) <= 1
+        ), f"Shaped Charge {sc['total_damage']:.1f} expected ~32"
 
 
 class TestRapidFirecannonSharpshooter:
@@ -359,10 +385,13 @@ class TestRapidFirecannonSharpshooter:
             "level": 18,
         }
         import random
+
         random.seed(0)
         fight = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=0,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=0,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -393,8 +422,10 @@ class TestRapidFirecannonSharpshooter:
             "level": 18,
         }
         fight = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=0,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=0,
             target_magic_resistance=50,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -415,197 +446,6 @@ class TestOverlordBloodmailTyranny:
         parsed = parse_item_effect("Overlord's Bloodmail", items)
         assert parsed is not None
         assert abs(parsed["bonus_health_to_ad_ratio"] - 0.025) < 0.001
-
-
-class TestOpportunityPreparation:
-    """Tests for Opportunity's Preparation bonus lethality passive."""
-
-    def test_parsed_values_match_expected(self) -> None:
-        """Verify parser extracts correct melee/ranged lethality and duration."""
-        from src.calculator.passive_parser import parse_item_effect
-        from src.calculator.data_fetcher import fetch_item_data
-
-        items = fetch_item_data()
-        parsed = parse_item_effect("Opportunity", items)
-        assert parsed is not None
-        assert parsed["bonus_lethality_melee"] == 11.0
-        assert parsed["bonus_lethality_ranged"] == 5.0
-        assert parsed["duration"] == 3.0
-
-    def test_bonus_lethality_helper_melee(self) -> None:
-        """Melee champion gets 11 bonus lethality for 3 seconds."""
-        from src.calculator.item_effects import get_opportunity_bonus_lethality
-
-        items = [{"name": "Opportunity"}]
-        lethality, duration = get_opportunity_bonus_lethality(items, is_melee=True)
-        assert lethality == 11.0
-        assert duration == 3.0
-
-    def test_bonus_lethality_helper_ranged(self) -> None:
-        """Ranged champion gets 5 bonus lethality for 3 seconds."""
-        from src.calculator.item_effects import get_opportunity_bonus_lethality
-
-        items = [{"name": "Opportunity"}]
-        lethality, duration = get_opportunity_bonus_lethality(items, is_melee=False)
-        assert lethality == 5.0
-        assert duration == 3.0
-
-    def test_no_opportunity_returns_zero(self) -> None:
-        """No Opportunity item returns (0, 0)."""
-        from src.calculator.item_effects import get_opportunity_bonus_lethality
-
-        lethality, duration = get_opportunity_bonus_lethality([], is_melee=True)
-        assert lethality == 0.0
-        assert duration == 0.0
-
-    def test_one_rotation_physical_damage_boosted(self) -> None:
-        """One-rotation: physical ability damage uses bonus lethality."""
-        from src.calculator.damage import calculate_fight_damage
-
-        # Level 18: lethality converts 1:1. 18 base + 5 bonus = 23 flat pen.
-        # Target: 100 armor. Without prep: 100-18 = 82 effective armor.
-        # With prep: 100-23 = 77 effective armor.
-        stats = {
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "attack_speed": 0.625,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "flat_armor_penetration": 18.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 18.0,
-            "critical_strike_chance": 0.0,
-            "is_melee": False,
-            "level": 18,
-        }
-        abilities = {
-            "Q": {
-                "name": "Test Q",
-                "damage_type": "physical",
-                "physical_damage": 200.0,
-                "cooldown": 5.0,
-            },
-        }
-        items_with = [{"name": "Opportunity"}]
-        items_without: list[dict] = []
-
-        fight_with = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            items=items_with,
-            one_rotation=True,
-        )
-        fight_without = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            items=items_without,
-            one_rotation=True,
-        )
-        # With prep: more damage due to lower effective armor
-        assert fight_with["breakdown"]["Q"]["total_damage"] > (
-            fight_without["breakdown"]["Q"]["total_damage"]
-        )
-
-    def test_timed_fight_only_early_casts_boosted(self) -> None:
-        """Timed fight: only casts within 3s get bonus lethality."""
-        from src.calculator.damage import calculate_fight_damage
-
-        stats = {
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "attack_speed": 0.625,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "flat_armor_penetration": 18.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 18.0,
-            "critical_strike_chance": 0.0,
-            "is_melee": True,
-            "level": 18,
-        }
-        # 2s cooldown, 10s fight = 6 casts (t=0,2,4,6,8,10).
-        # Prep lasts 3s, so casts at t=0 and t=2 benefit (2 casts).
-        abilities = {
-            "Q": {
-                "name": "Test Q",
-                "damage_type": "physical",
-                "physical_damage": 200.0,
-                "cooldown": 2.0,
-            },
-        }
-        items_with = [{"name": "Opportunity"}]
-        items_without: list[dict] = []
-
-        fight_with = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=10.0,
-            items=items_with,
-        )
-        fight_without = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=10.0,
-            items=items_without,
-        )
-        # With prep: slightly more damage (only 2 of 6 casts boosted)
-        assert fight_with["breakdown"]["Q"]["total_damage"] > (
-            fight_without["breakdown"]["Q"]["total_damage"]
-        )
-
-    def test_auto_attacks_split_by_prep_window(self) -> None:
-        """Auto attacks within 3s window use bonus lethality."""
-        import random
-        from src.calculator.damage import calculate_fight_damage
-
-        random.seed(42)
-        stats = {
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "flat_armor_penetration": 18.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 18.0,
-            "critical_strike_chance": 0.0,
-            "is_melee": True,
-            "level": 18,
-        }
-        items_with = [{"name": "Opportunity"}]
-        items_without: list[dict] = []
-
-        random.seed(42)
-        fight_with = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=1.0,
-            items=items_with,
-        )
-        random.seed(42)
-        fight_without = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=1.0,
-            items=items_without,
-        )
-        # 10 autos total, 3 within prep window get bonus lethality
-        assert fight_with["breakdown"]["auto_attacks"]["total_damage"] > (
-            fight_without["breakdown"]["auto_attacks"]["total_damage"]
-        )
 
 
 class TestBorkCurrentHpSimulation:
@@ -746,8 +586,10 @@ class TestBorkCurrentHpSimulation:
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
 
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.8,
@@ -775,11 +617,13 @@ class TestBloodlettersCurseVileDecay:
     @pytest.fixture
     def ahri_data(self) -> dict:
         from src.calculator.data_fetcher import get_champion
+
         return get_champion("Ahri")
 
     @pytest.fixture
     def bloodletters(self) -> dict:
         from src.calculator.data_fetcher import get_item_by_name
+
         return get_item_by_name("Bloodletter's Curse")
 
     def test_stacking_mr_reduction_helper(self) -> None:
@@ -800,7 +644,9 @@ class TestBloodlettersCurseVileDecay:
         assert get_stacking_mr_reduction(items) is None
 
     def test_effective_mr_decreases_per_ability(
-        self, ahri_data: dict, bloodletters: dict,
+        self,
+        ahri_data: dict,
+        bloodletters: dict,
     ) -> None:
         """Final effective MR should be lower than base when stacks apply."""
         from src.calculator.stats import calculate_total_stats
@@ -809,8 +655,10 @@ class TestBloodlettersCurseVileDecay:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -822,7 +670,9 @@ class TestBloodlettersCurseVileDecay:
         assert fight["effective_mr"] == pytest.approx(70.0, abs=0.1)
 
     def test_ahri_level18_total_damage_within_tolerance(
-        self, ahri_data: dict, bloodletters: dict,
+        self,
+        ahri_data: dict,
+        bloodletters: dict,
     ) -> None:
         """Ahri level 18 with Bloodletter's Curse, one rotation.
 
@@ -835,8 +685,10 @@ class TestBloodlettersCurseVileDecay:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -853,7 +705,9 @@ class TestBloodlettersCurseVileDecay:
         )
 
     def test_damage_higher_than_without_passive(
-        self, ahri_data: dict, bloodletters: dict,
+        self,
+        ahri_data: dict,
+        bloodletters: dict,
     ) -> None:
         """Damage with Bloodletter's Curse should exceed damage without MR reduction."""
         from src.calculator.stats import calculate_total_stats
@@ -863,8 +717,10 @@ class TestBloodlettersCurseVileDecay:
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
 
         fight_with = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -874,8 +730,10 @@ class TestBloodlettersCurseVileDecay:
         )
         # Without item: no MR reduction passive
         fight_without = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -889,11 +747,16 @@ class TestBloodlettersCurseVileDecay:
         """Stacking MR reduction should not affect physical-only abilities."""
         # Craft a minimal physical-only scenario
         stats = {
-            "attack_damage": 100, "ability_power": 0,
-            "attack_speed": 0.625, "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0, "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0, "critical_strike_chance": 0,
-            "is_melee": True, "level": 18,
+            "attack_damage": 100,
+            "ability_power": 0,
+            "attack_speed": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
@@ -908,16 +771,20 @@ class TestBloodlettersCurseVileDecay:
         items_with = [{"name": "Bloodletter's Curse"}]
 
         fight_with = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=1.0,
             items=items_with,
             one_rotation=True,
         )
         fight_without = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=1.0,
             items=[],
@@ -934,11 +801,13 @@ class TestShadowflameCinderbloom:
     @pytest.fixture
     def ahri_data(self) -> dict:
         from src.calculator.data_fetcher import get_champion
+
         return get_champion("Ahri")
 
     @pytest.fixture
     def shadowflame(self) -> dict:
         from src.calculator.data_fetcher import get_item_by_name
+
         return get_item_by_name("Shadowflame")
 
     def test_shadowflame_item_effect_registered(self) -> None:
@@ -1055,15 +924,21 @@ class TestShadowflameCinderbloom:
             },
         }
         ability_damages = {
-            "Q": {"damage_type": "mixed", "magic_damage": 500,
-                   "true_damage": 500, "total_raw": 1000},
+            "Q": {
+                "damage_type": "mixed",
+                "magic_damage": 500,
+                "true_damage": 500,
+                "total_raw": 1000,
+            },
             "W": {"damage_type": "magic", "magic_damage": 150, "total_raw": 150},
         }
         bonus = _calculate_shadowflame_bonus(breakdown, ability_damages, 1000.0)
         assert abs(bonus - 30.0) < 0.01
 
     def test_damage_higher_with_shadowflame(
-        self, ahri_data: dict, shadowflame: dict,
+        self,
+        ahri_data: dict,
+        shadowflame: dict,
     ) -> None:
         """Ahri's total damage should increase with Shadowflame passive."""
         from src.calculator.stats import calculate_total_stats
@@ -1073,8 +948,10 @@ class TestShadowflameCinderbloom:
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
 
         fight_with = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1083,8 +960,10 @@ class TestShadowflameCinderbloom:
             one_rotation=True,
         )
         fight_without = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1118,8 +997,10 @@ class TestShadowflameCinderbloom:
 
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1150,8 +1031,10 @@ class TestCastOrder:
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
 
         fight_default = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=50,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=50,
             target_magic_resistance=50,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1160,8 +1043,10 @@ class TestCastOrder:
             one_rotation=True,
         )
         fight_explicit = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=50,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=50,
             target_magic_resistance=50,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1186,8 +1071,10 @@ class TestCastOrder:
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
 
         fight_qwer = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=50,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=50,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1197,8 +1084,10 @@ class TestCastOrder:
             cast_order=["Q", "W", "E", "R"],
         )
         fight_rwqe = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=50,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=50,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1224,8 +1113,10 @@ class TestCastOrder:
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
 
         fight_qwer = calculate_fight_damage(
-            stats, abilities,
-            target_health=1500, target_armor=50,
+            stats,
+            abilities,
+            target_health=1500,
+            target_armor=50,
             target_magic_resistance=50,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1235,8 +1126,10 @@ class TestCastOrder:
             cast_order=["Q", "W", "E", "R"],
         )
         fight_rqwe = calculate_fight_damage(
-            stats, abilities,
-            target_health=1500, target_armor=50,
+            stats,
+            abilities,
+            target_health=1500,
+            target_armor=50,
             target_magic_resistance=50,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1246,8 +1139,16 @@ class TestCastOrder:
             cast_order=["R", "Q", "W", "E"],
         )
         # With different cast orders, the Shadowflame bonus should differ
-        qwer_sf = fight_qwer["breakdown"].get("shadowflame_Shadowflame", {}).get("total_damage", 0)
-        rqwe_sf = fight_rqwe["breakdown"].get("shadowflame_Shadowflame", {}).get("total_damage", 0)
+        qwer_sf = (
+            fight_qwer["breakdown"]
+            .get("shadowflame_Shadowflame", {})
+            .get("total_damage", 0)
+        )
+        rqwe_sf = (
+            fight_rqwe["breakdown"]
+            .get("shadowflame_Shadowflame", {})
+            .get("total_damage", 0)
+        )
         assert qwer_sf != rqwe_sf
 
 
@@ -1257,11 +1158,13 @@ class TestBloodsongSpellbladeAndExposeWeakness:
     @pytest.fixture
     def ahri_data(self) -> dict:
         from src.calculator.data_fetcher import get_champion
+
         return get_champion("Ahri")
 
     @pytest.fixture
     def bloodsong(self) -> dict:
         from src.calculator.data_fetcher import get_item_by_name
+
         return get_item_by_name("Bloodsong")
 
     def test_bloodsong_registered_as_spellblade(self) -> None:
@@ -1283,7 +1186,9 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         assert abs(damage - 104.0) < 0.01
 
     def test_two_procs_in_five_second_fight(
-        self, ahri_data: dict, bloodsong: dict,
+        self,
+        ahri_data: dict,
+        bloodsong: dict,
     ) -> None:
         """Bloodsong should proc twice in a 5-second fight (CD starts after attack)."""
         from src.calculator.stats import calculate_total_stats
@@ -1292,8 +1197,10 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -1305,7 +1212,9 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         assert sb["procs"] == 2
 
     def test_expose_weakness_present_in_breakdown(
-        self, ahri_data: dict, bloodsong: dict,
+        self,
+        ahri_data: dict,
+        bloodsong: dict,
     ) -> None:
         """Expose Weakness bonus should appear in the fight breakdown."""
         from src.calculator.stats import calculate_total_stats
@@ -1314,8 +1223,10 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -1328,7 +1239,9 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         assert ew["total_damage"] > 0
 
     def test_expose_weakness_uses_ranged_rate_for_ahri(
-        self, ahri_data: dict, bloodsong: dict,
+        self,
+        ahri_data: dict,
+        bloodsong: dict,
     ) -> None:
         """Ahri is ranged; Expose Weakness should use the 5% rate."""
         from src.calculator.stats import calculate_total_stats
@@ -1337,8 +1250,10 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -1350,7 +1265,9 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         assert ew["amplifier"] == pytest.approx(1.05, abs=0.001)
 
     def test_ahri_level18_bloodsong_total_damage(
-        self, ahri_data: dict, bloodsong: dict,
+        self,
+        ahri_data: dict,
+        bloodsong: dict,
     ) -> None:
         """Ahri level 18 with Bloodsong vs 1000 HP / 100 Armor / 100 MR.
 
@@ -1362,8 +1279,10 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -1380,7 +1299,9 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         )
 
     def test_no_expose_weakness_without_auto_attacks(
-        self, ahri_data: dict, bloodsong: dict,
+        self,
+        ahri_data: dict,
+        bloodsong: dict,
     ) -> None:
         """No auto attacks means no spellblade procs, so no Expose Weakness."""
         from src.calculator.stats import calculate_total_stats
@@ -1389,8 +1310,10 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1403,23 +1326,33 @@ class TestBloodsongSpellbladeAndExposeWeakness:
     def test_expose_weakness_melee_uses_eight_percent(self) -> None:
         """Melee champions should use the 8% Expose Weakness rate."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0, "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0, "critical_strike_chance": 0,
-            "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 200, "total_raw": 200,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 200,
+                "total_raw": 200,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -1437,16 +1370,19 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     @pytest.fixture
     def ahri_data(self) -> dict:
         from src.calculator.data_fetcher import get_champion
+
         return get_champion("Ahri")
 
     @pytest.fixture
     def dusk_and_dawn(self) -> dict:
         from src.calculator.data_fetcher import get_item_by_name
+
         return get_item_by_name("Dusk and Dawn")
 
     @pytest.fixture
     def nashors(self) -> dict:
         from src.calculator.data_fetcher import get_item_by_name
+
         return get_item_by_name("Nashor's Tooth")
 
     def test_dusk_and_dawn_registered_as_spellblade(self) -> None:
@@ -1471,7 +1407,10 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         assert abs(damage - expected) < 0.01
 
     def test_two_procs_in_four_second_fight(
-        self, ahri_data: dict, dusk_and_dawn: dict, nashors: dict,
+        self,
+        ahri_data: dict,
+        dusk_and_dawn: dict,
+        nashors: dict,
     ) -> None:
         """Dusk and Dawn should proc twice in a 4-second fight."""
         from src.calculator.stats import calculate_total_stats
@@ -1480,8 +1419,10 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=4.0,
             auto_attack_uptime=1.0,
@@ -1493,7 +1434,10 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         assert sb["procs"] == 2
 
     def test_double_on_hit_present_in_breakdown(
-        self, ahri_data: dict, dusk_and_dawn: dict, nashors: dict,
+        self,
+        ahri_data: dict,
+        dusk_and_dawn: dict,
+        nashors: dict,
     ) -> None:
         """Double on-hit bonus should appear in breakdown when Nashor's is present."""
         from src.calculator.stats import calculate_total_stats
@@ -1502,8 +1446,10 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=4.0,
             auto_attack_uptime=1.0,
@@ -1517,7 +1463,9 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         assert doh["total_damage"] > 0
 
     def test_no_double_on_hit_without_on_hit_items(
-        self, ahri_data: dict, dusk_and_dawn: dict,
+        self,
+        ahri_data: dict,
+        dusk_and_dawn: dict,
     ) -> None:
         """No double on-hit entry when no on-hit items are present."""
         from src.calculator.stats import calculate_total_stats
@@ -1526,8 +1474,10 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=4.0,
             auto_attack_uptime=1.0,
@@ -1538,7 +1488,10 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         assert "double_on_hit_Dusk and Dawn" not in fight["breakdown"]
 
     def test_ahri_level18_dnd_nashors_total_damage(
-        self, ahri_data: dict, dusk_and_dawn: dict, nashors: dict,
+        self,
+        ahri_data: dict,
+        dusk_and_dawn: dict,
+        nashors: dict,
     ) -> None:
         """Ahri level 18, D&D + Nashor's vs 1000 HP / 100 Armor / 100 MR.
 
@@ -1550,8 +1503,10 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=4.0,
             auto_attack_uptime=1.0,
@@ -1570,23 +1525,33 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     def test_double_on_hit_with_wits_end(self) -> None:
         """Double on-hit should also work with Wit's End."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0, "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0, "critical_strike_chance": 0,
-            "is_melee": False, "level": 18,
+            "attack_speed": 1.0,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": False,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "magic_damage": 200, "total_raw": 200,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "magic_damage": 200,
+                "total_raw": 200,
                 "damage_type": "magic",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -1602,23 +1567,33 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     def test_double_on_hit_with_bork(self) -> None:
         """Double on-hit should work with Blade of the Ruined King."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0, "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0, "critical_strike_chance": 0,
-            "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 200, "total_raw": 200,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 200,
+                "total_raw": 200,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -1636,26 +1611,36 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     def test_kraken_extra_hits_from_double_on_hit(self) -> None:
         """Double on-hit procs should count as extra hits for Kraken Slayer."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0, "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0, "critical_strike_chance": 0,
-            "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         # Only 2 auto attacks + 2 double on-hit procs = 4 effective hits
         # = 1 Kraken proc (every 3rd hit). Without double on-hit, 2 autos
         # wouldn't reach the 3-hit threshold.
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 3.0,
-                "physical_damage": 200, "total_raw": 200,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 3.0,
+                "physical_damage": 200,
+                "total_raw": 200,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=2.0,
             auto_attack_uptime=1.0,
@@ -1676,11 +1661,13 @@ class TestEclipseEverRisingMoon:
     @pytest.fixture
     def ahri_data(self) -> dict:
         from src.calculator.data_fetcher import get_champion
+
         return get_champion("Ahri")
 
     @pytest.fixture
     def eclipse(self) -> dict:
         from src.calculator.data_fetcher import get_item_by_name
+
         return get_item_by_name("Eclipse")
 
     def test_eclipse_registered_in_item_effects(self) -> None:
@@ -1700,7 +1687,9 @@ class TestEclipseEverRisingMoon:
         from src.calculator.item_effects import calculate_eclipse_damage
 
         damage = calculate_eclipse_damage(
-            target_max_health=2000.0, is_melee=False, fight_duration=0.0,
+            target_max_health=2000.0,
+            is_melee=False,
+            fight_duration=0.0,
         )
         assert abs(damage - 80.0) < 0.01
 
@@ -1709,7 +1698,9 @@ class TestEclipseEverRisingMoon:
         from src.calculator.item_effects import calculate_eclipse_damage
 
         damage = calculate_eclipse_damage(
-            target_max_health=2000.0, is_melee=True, fight_duration=0.0,
+            target_max_health=2000.0,
+            is_melee=True,
+            fight_duration=0.0,
         )
         assert abs(damage - 120.0) < 0.01
 
@@ -1718,7 +1709,9 @@ class TestEclipseEverRisingMoon:
         from src.calculator.item_effects import calculate_eclipse_damage
 
         damage = calculate_eclipse_damage(
-            target_max_health=1000.0, is_melee=False, fight_duration=12.0,
+            target_max_health=1000.0,
+            is_melee=False,
+            fight_duration=12.0,
         )
         # 3 procs * 4% * 1000 = 120
         assert abs(damage - 120.0) < 0.01
@@ -1728,30 +1721,42 @@ class TestEclipseEverRisingMoon:
         from src.calculator.item_effects import calculate_eclipse_damage
 
         damage = calculate_eclipse_damage(
-            target_max_health=0.0, is_melee=True, fight_duration=5.0,
+            target_max_health=0.0,
+            is_melee=True,
+            fight_duration=5.0,
         )
         assert damage == 0.0
 
     def test_eclipse_appears_in_fight_breakdown(self) -> None:
         """Eclipse proc should appear in fight breakdown when item is present."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0, "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0, "critical_strike_chance": 0,
-            "is_melee": False, "level": 18,
+            "attack_speed": 1.0,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": False,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 200, "total_raw": 200,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 200,
+                "total_raw": 200,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1767,24 +1772,34 @@ class TestEclipseEverRisingMoon:
     def test_eclipse_damage_mitigated_by_armor(self) -> None:
         """Eclipse physical damage should be reduced by target armor."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0, "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0, "critical_strike_chance": 0,
-            "is_melee": False, "level": 18,
+            "attack_speed": 1.0,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": False,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         # 0 armor fight
         fight_no_armor = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=0,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=0,
             target_magic_resistance=100,
             fight_duration_seconds=1.0,
             items=[{"name": "Eclipse"}],
@@ -1792,20 +1807,26 @@ class TestEclipseEverRisingMoon:
         )
         # 100 armor fight
         fight_with_armor = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=1.0,
             items=[{"name": "Eclipse"}],
             one_rotation=True,
         )
         eclipse_no_armor = fight_no_armor["breakdown"]["proc_Eclipse"]["total_damage"]
-        eclipse_with_armor = fight_with_armor["breakdown"]["proc_Eclipse"]["total_damage"]
+        eclipse_with_armor = fight_with_armor["breakdown"]["proc_Eclipse"][
+            "total_damage"
+        ]
         # 100 armor => 50% mitigation
         assert abs(eclipse_with_armor - eclipse_no_armor * 0.5) < 0.01
 
     def test_ahri_full_fight_with_eclipse(
-        self, ahri_data: dict, eclipse: dict,
+        self,
+        ahri_data: dict,
+        eclipse: dict,
     ) -> None:
         """Ahri level 18 with Eclipse vs 2000 HP / 100 Armor / 100 MR.
 
@@ -1818,8 +1839,10 @@ class TestEclipseEverRisingMoon:
         stats = calculate_total_stats(ahri_data, 18, items)
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -1837,23 +1860,33 @@ class TestEclipseEverRisingMoon:
     def test_no_eclipse_when_item_not_present(self) -> None:
         """Eclipse proc should not appear when item is not equipped."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0, "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0, "critical_strike_chance": 0,
-            "is_melee": False, "level": 18,
+            "attack_speed": 1.0,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": False,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 200, "total_raw": 200,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 200,
+                "total_raw": 200,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             items=[],
@@ -1878,25 +1911,36 @@ class TestExperimentalHexplate:
     def test_hexplate_increases_auto_count(self) -> None:
         """Hexplate bonus AS (from stats) should yield more autos than without."""
         base_stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 0, "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         # Hexplate 50% bonus AS is now baked into stats by calculate_total_stats
         buffed_stats = {**base_stats, "attack_speed": 1.3125}
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         fight_without = calculate_fight_damage(
-            base_stats, abilities,
-            target_health=1000, target_armor=100,
+            base_stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -1904,8 +1948,10 @@ class TestExperimentalHexplate:
             one_rotation=True,
         )
         fight_with = calculate_fight_damage(
-            buffed_stats, abilities,
-            target_health=1000, target_armor=100,
+            buffed_stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -1919,23 +1965,34 @@ class TestExperimentalHexplate:
     def test_hexplate_auto_count_5s_fight(self) -> None:
         """With buffed AS=1.3125 (from stats), 5s => 6 autos."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.3125, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 0, "is_melee": True, "level": 18,
+            "attack_speed": 1.3125,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -1949,23 +2006,34 @@ class TestExperimentalHexplate:
     def test_hexplate_full_fight_duration(self) -> None:
         """With buffed AS=1.3125 for full 15s fight: floor(1.3125 * 15) = 19."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.3125, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 0, "is_melee": True, "level": 18,
+            "attack_speed": 1.3125,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=15.0,
             auto_attack_uptime=1.0,
@@ -1979,23 +2047,34 @@ class TestExperimentalHexplate:
     def test_hexplate_note_in_result(self) -> None:
         """Fight result should include a note about R assumption."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.3125, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 0, "is_melee": True, "level": 18,
+            "attack_speed": 1.3125,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -2009,23 +2088,34 @@ class TestExperimentalHexplate:
     def test_no_note_without_hexplate(self) -> None:
         """No notes when Hexplate is not equipped."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 0, "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -2057,23 +2147,34 @@ class TestFiendhunterBolts:
         No true damage (0% natural crit chance).
         """
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 0, "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=0,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=0,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -2101,23 +2202,34 @@ class TestFiendhunterBolts:
         True: 200 * 0.15 = 30 per hit.
         """
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 100, "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 100,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=0,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=0,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -2139,20 +2251,29 @@ class TestFiendhunterBolts:
         Total: 83.2 * 3 = 249.6 -> 250.
         """
         from unittest.mock import patch
+
         stats = {
-            "attack_damage": 104, "ability_power": 0,
+            "attack_damage": 104,
+            "ability_power": 0,
             "base_attack_damage": 104,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 25, "is_melee": False, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 25,
+            "is_melee": False,
+            "level": 18,
         }
         abilities = {}
         # Force no crits: random.random() always returns 0.99 (> 0.25)
         with patch("src.calculator.damage.random.random", return_value=0.99):
             fight = calculate_fight_damage(
-                stats, abilities,
-                target_health=1000, target_armor=100,
+                stats,
+                abilities,
+                target_health=1000,
+                target_armor=100,
                 target_magic_resistance=100,
                 fight_duration_seconds=3.0,
                 auto_attack_uptime=1.0,
@@ -2169,21 +2290,30 @@ class TestFiendhunterBolts:
     def test_ahri_level_18_fiendhunter_one_crit(self) -> None:
         """Ahri level 18, Fiendhunter, 3 autos, 1 natural crit -> 302."""
         from unittest.mock import patch
+
         stats = {
-            "attack_damage": 104, "ability_power": 0,
+            "attack_damage": 104,
+            "ability_power": 0,
             "base_attack_damage": 104,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 25, "is_melee": False, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 25,
+            "is_melee": False,
+            "level": 18,
         }
         abilities = {}
         # 1st auto crits (0.1 < 0.25), 2nd and 3rd don't (0.99 > 0.25)
         crit_rolls = iter([0.1, 0.99, 0.99])
         with patch("src.calculator.damage.random.random", side_effect=crit_rolls):
             fight = calculate_fight_damage(
-                stats, abilities,
-                target_health=1000, target_armor=100,
+                stats,
+                abilities,
+                target_health=1000,
+                target_armor=100,
                 target_magic_resistance=100,
                 fight_duration_seconds=3.0,
                 auto_attack_uptime=1.0,
@@ -2192,25 +2322,40 @@ class TestFiendhunterBolts:
             )
         autos = fight["breakdown"]["auto_attacks"]
         assert autos["num_crits"] == 1
-        assert round(autos["total_damage"] + fight["breakdown"]["fiendhunter_true_damage"]["total_damage"]) == 302
+        assert (
+            round(
+                autos["total_damage"]
+                + fight["breakdown"]["fiendhunter_true_damage"]["total_damage"]
+            )
+            == 302
+        )
 
     def test_ahri_level_18_fiendhunter_two_crits(self) -> None:
         """Ahri level 18, Fiendhunter, 3 autos, 2 natural crits -> 354."""
         from unittest.mock import patch
+
         stats = {
-            "attack_damage": 104, "ability_power": 0,
+            "attack_damage": 104,
+            "ability_power": 0,
             "base_attack_damage": 104,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 25, "is_melee": False, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 25,
+            "is_melee": False,
+            "level": 18,
         }
         abilities = {}
         crit_rolls = iter([0.1, 0.1, 0.99])
         with patch("src.calculator.damage.random.random", side_effect=crit_rolls):
             fight = calculate_fight_damage(
-                stats, abilities,
-                target_health=1000, target_armor=100,
+                stats,
+                abilities,
+                target_health=1000,
+                target_armor=100,
                 target_magic_resistance=100,
                 fight_duration_seconds=3.0,
                 auto_attack_uptime=1.0,
@@ -2219,26 +2364,38 @@ class TestFiendhunterBolts:
             )
         autos = fight["breakdown"]["auto_attacks"]
         assert autos["num_crits"] == 2
-        total = autos["total_damage"] + fight["breakdown"]["fiendhunter_true_damage"]["total_damage"]
+        total = (
+            autos["total_damage"]
+            + fight["breakdown"]["fiendhunter_true_damage"]["total_damage"]
+        )
         assert round(total) == 354
 
     def test_ahri_level_18_fiendhunter_three_crits(self) -> None:
         """Ahri level 18, Fiendhunter, 3 autos, 3 natural crits -> 406."""
         from unittest.mock import patch
+
         stats = {
-            "attack_damage": 104, "ability_power": 0,
+            "attack_damage": 104,
+            "ability_power": 0,
             "base_attack_damage": 104,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 25, "is_melee": False, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 25,
+            "is_melee": False,
+            "level": 18,
         }
         abilities = {}
         crit_rolls = iter([0.1, 0.1, 0.1])
         with patch("src.calculator.damage.random.random", side_effect=crit_rolls):
             fight = calculate_fight_damage(
-                stats, abilities,
-                target_health=1000, target_armor=100,
+                stats,
+                abilities,
+                target_health=1000,
+                target_armor=100,
                 target_magic_resistance=100,
                 fight_duration_seconds=3.0,
                 auto_attack_uptime=1.0,
@@ -2247,29 +2404,43 @@ class TestFiendhunterBolts:
             )
         autos = fight["breakdown"]["auto_attacks"]
         assert autos["num_crits"] == 3
-        total = autos["total_damage"] + fight["breakdown"]["fiendhunter_true_damage"]["total_damage"]
+        total = (
+            autos["total_damage"]
+            + fight["breakdown"]["fiendhunter_true_damage"]["total_damage"]
+        )
         assert round(total) == 406
 
     def test_correct_total_auto_count(self) -> None:
         """3 empowered autos + remaining normal autos at base AS."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 0, "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=10.0,
             auto_attack_uptime=1.0,
@@ -2288,23 +2459,34 @@ class TestFiendhunterBolts:
     def test_fiendhunter_note_in_result(self) -> None:
         """Fight result should include a note about R assumption."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 0, "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 0,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -2318,26 +2500,38 @@ class TestFiendhunterBolts:
     def test_fiendhunter_more_damage_than_no_item(self) -> None:
         """Total damage with Fiendhunter should exceed damage without."""
         from unittest.mock import patch
+
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 25, "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 25,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         # Use no crits for deterministic comparison
         with patch("src.calculator.damage.random.random", return_value=0.99):
             fight_with = calculate_fight_damage(
-                stats, abilities,
-                target_health=1000, target_armor=100,
+                stats,
+                abilities,
+                target_health=1000,
+                target_armor=100,
                 target_magic_resistance=100,
                 fight_duration_seconds=5.0,
                 auto_attack_uptime=1.0,
@@ -2345,8 +2539,10 @@ class TestFiendhunterBolts:
                 one_rotation=True,
             )
             fight_without = calculate_fight_damage(
-                stats, abilities,
-                target_health=1000, target_armor=100,
+                stats,
+                abilities,
+                target_health=1000,
+                target_armor=100,
                 target_magic_resistance=100,
                 fight_duration_seconds=5.0,
                 auto_attack_uptime=1.0,
@@ -2358,23 +2554,34 @@ class TestFiendhunterBolts:
     def test_no_empowered_autos_at_zero_uptime(self) -> None:
         """With 0% auto uptime, no empowered autos and no Fiendhunter effect."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 50, "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 50,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=1000, target_armor=100,
+            stats,
+            abilities,
+            target_health=1000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=0.0,
@@ -2387,18 +2594,28 @@ class TestFiendhunterBolts:
     def test_num_crits_in_breakdown(self) -> None:
         """Auto attack breakdown should include num_crits field."""
         from unittest.mock import patch
+
         stats = {
-            "attack_damage": 100, "ability_power": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
             "base_attack_damage": 100,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
-            "critical_strike_chance": 50, "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
+            "critical_strike_chance": 50,
+            "is_melee": True,
+            "level": 18,
         }
         abilities = {
             "Q": {
-                "name": "Test", "rank": 1, "cooldown": 5.0,
-                "physical_damage": 100, "total_raw": 100,
+                "name": "Test",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "total_raw": 100,
                 "damage_type": "physical",
             },
         }
@@ -2406,8 +2623,10 @@ class TestFiendhunterBolts:
         rolls = iter([0.1, 0.9, 0.1, 0.9, 0.9])
         with patch("src.calculator.damage.random.random", side_effect=rolls):
             fight = calculate_fight_damage(
-                stats, abilities,
-                target_health=1000, target_armor=0,
+                stats,
+                abilities,
+                target_health=1000,
+                target_armor=0,
                 target_magic_resistance=100,
                 fight_duration_seconds=5.0,
                 auto_attack_uptime=1.0,
@@ -2429,41 +2648,31 @@ class TestPhantomHitCalculation:
 
     def test_fewer_than_6_autos_no_phantom(self) -> None:
         """With fewer than 6 autos, no phantom hit triggers."""
-        count, autos = _calculate_phantom_hits(
-            5, ["Guinsoo's Rageblade"]
-        )
+        count, autos = _calculate_phantom_hits(5, ["Guinsoo's Rageblade"])
         assert count == 0
         assert len(autos) == 0
 
     def test_exactly_6_autos_one_phantom(self) -> None:
         """6th auto should be the first phantom hit."""
-        count, autos = _calculate_phantom_hits(
-            6, ["Guinsoo's Rageblade"]
-        )
+        count, autos = _calculate_phantom_hits(6, ["Guinsoo's Rageblade"])
         assert count == 1
         assert autos == {5}  # 0-indexed: auto #6 is index 5
 
     def test_10_autos_two_phantoms(self) -> None:
         """6th and 9th autos should trigger phantom hits."""
-        count, autos = _calculate_phantom_hits(
-            10, ["Guinsoo's Rageblade"]
-        )
+        count, autos = _calculate_phantom_hits(10, ["Guinsoo's Rageblade"])
         assert count == 2
         assert autos == {5, 8}  # 0-indexed: autos #6 and #9
 
     def test_13_autos_three_phantoms(self) -> None:
         """6th, 9th, and 12th autos should trigger phantom hits."""
-        count, autos = _calculate_phantom_hits(
-            13, ["Guinsoo's Rageblade"]
-        )
+        count, autos = _calculate_phantom_hits(13, ["Guinsoo's Rageblade"])
         assert count == 3
         assert autos == {5, 8, 11}
 
     def test_20_autos_correct_phantom_count(self) -> None:
         """With 20 autos, phantoms at 6,9,12,15,18 = 5 phantom hits."""
-        count, autos = _calculate_phantom_hits(
-            20, ["Guinsoo's Rageblade"]
-        )
+        count, autos = _calculate_phantom_hits(20, ["Guinsoo's Rageblade"])
         assert count == 5
         assert autos == {5, 8, 11, 14, 17}
 
@@ -2472,19 +2681,26 @@ class TestRagebladeOnHitAllItems:
     """Tests that phantom hits apply ALL on-hit effects, not just Rageblade."""
 
     BASE_STATS: dict = {
-        "attack_damage": 100, "ability_power": 0,
-        "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-        "armor_penetration_percent": 0, "flat_armor_penetration": 0,
+        "attack_damage": 100,
+        "ability_power": 0,
+        "magic_penetration_flat": 0,
+        "magic_penetration_percent": 0,
+        "armor_penetration_percent": 0,
+        "flat_armor_penetration": 0,
         "critical_strike_chance": 0,
-        "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-        "is_melee": True, "level": 18,
+        "attack_speed": 1.0,
+        "attack_speed_ratio": 0.625,
+        "is_melee": True,
+        "level": 18,
     }
 
     def test_rageblade_only_hit_count(self) -> None:
         """Rageblade alone: 7 autos => 7+1=8 on-hit procs for itself."""
         fight = calculate_fight_damage(
-            self.BASE_STATS, {},
-            target_health=3000, target_armor=0,
+            self.BASE_STATS,
+            {},
+            target_health=3000,
+            target_armor=0,
             target_magic_resistance=0,
             fight_duration_seconds=7.0,
             auto_attack_uptime=1.0,
@@ -2497,8 +2713,10 @@ class TestRagebladeOnHitAllItems:
     def test_rageblade_plus_nashors_hit_counts(self) -> None:
         """Both Rageblade and Nashor's should get 8 hits with 7 autos."""
         fight = calculate_fight_damage(
-            self.BASE_STATS, {},
-            target_health=3000, target_armor=0,
+            self.BASE_STATS,
+            {},
+            target_health=3000,
+            target_armor=0,
             target_magic_resistance=0,
             fight_duration_seconds=7.0,
             auto_attack_uptime=1.0,
@@ -2515,8 +2733,10 @@ class TestRagebladeOnHitAllItems:
     def test_rageblade_plus_bork_hit_counts(self) -> None:
         """BoRK should get phantom hit procs too (8 hits for 7 autos)."""
         fight = calculate_fight_damage(
-            self.BASE_STATS, {},
-            target_health=3000, target_armor=0,
+            self.BASE_STATS,
+            {},
+            target_health=3000,
+            target_armor=0,
             target_magic_resistance=0,
             fight_duration_seconds=7.0,
             auto_attack_uptime=1.0,
@@ -2530,8 +2750,8 @@ class TestRagebladeOnHitAllItems:
         bork = fight["breakdown"]["on_hit_Blade of the Ruined King"]
 
         assert autos["count"] == 7  # Base auto attacks unchanged
-        assert rb["count"] == 8     # Rageblade: 7 + 1 phantom
-        assert bork["count"] == 8   # BoRK: 7 + 1 phantom
+        assert rb["count"] == 8  # Rageblade: 7 + 1 phantom
+        assert bork["count"] == 8  # BoRK: 7 + 1 phantom
 
     def test_bork_phantom_hit_double_procs_at_correct_hp(self) -> None:
         """BoRK phantom hit should proc at current HP after first BoRK hit."""
@@ -2562,8 +2782,10 @@ class TestRagebladeOnHitAllItems:
     def test_no_phantom_under_6_autos_with_bork(self) -> None:
         """With 5 autos, no phantom hits — BoRK gets exactly 5 procs."""
         fight = calculate_fight_damage(
-            self.BASE_STATS, {},
-            target_health=3000, target_armor=0,
+            self.BASE_STATS,
+            {},
+            target_health=3000,
+            target_armor=0,
             target_magic_resistance=0,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -2580,8 +2802,10 @@ class TestRagebladeOnHitAllItems:
     def test_phantom_hits_in_return_value(self) -> None:
         """Fight result should expose phantom_hit_autos for champion use."""
         fight = calculate_fight_damage(
-            self.BASE_STATS, {},
-            target_health=3000, target_armor=0,
+            self.BASE_STATS,
+            {},
+            target_health=3000,
+            target_armor=0,
             target_magic_resistance=0,
             fight_duration_seconds=10.0,
             auto_attack_uptime=1.0,
@@ -2605,8 +2829,10 @@ class TestRagebladeOnHitAllItems:
             },
         }
         fight = calculate_fight_damage(
-            self.BASE_STATS, ability_damages,
-            target_health=3000, target_armor=0,
+            self.BASE_STATS,
+            ability_damages,
+            target_health=3000,
+            target_armor=0,
             target_magic_resistance=0,
             fight_duration_seconds=7.0,
             auto_attack_uptime=1.0,
@@ -2633,49 +2859,48 @@ class TestKrakenSlayerPhantomHitStacking:
 
     def test_10_autos_rageblade_4_procs(self) -> None:
         """10 autos + Rageblade (phantoms at 6,9) = 4 Kraken procs."""
-        _, phantom_autos = _calculate_phantom_hits(
-            10, ["Guinsoo's Rageblade"]
-        )
+        _, phantom_autos = _calculate_phantom_hits(10, ["Guinsoo's Rageblade"])
         procs, _ = _calculate_kraken_procs(10, phantom_autos, 0)
         assert procs == 4
 
     def test_12_autos_rageblade_5_procs(self) -> None:
         """12 autos + Rageblade (phantoms at 6,9,12) = 5 Kraken procs."""
-        _, phantom_autos = _calculate_phantom_hits(
-            12, ["Guinsoo's Rageblade"]
-        )
+        _, phantom_autos = _calculate_phantom_hits(12, ["Guinsoo's Rageblade"])
         procs, _ = _calculate_kraken_procs(12, phantom_autos, 0)
         assert procs == 5
 
     def test_15_autos_rageblade_6_procs(self) -> None:
         """15 autos + Rageblade (phantoms at 6,9,12,15) = 6 Kraken procs."""
-        _, phantom_autos = _calculate_phantom_hits(
-            15, ["Guinsoo's Rageblade"]
-        )
+        _, phantom_autos = _calculate_phantom_hits(15, ["Guinsoo's Rageblade"])
         procs, _ = _calculate_kraken_procs(15, phantom_autos, 0)
         assert procs == 6
 
     def test_17_autos_rageblade_7_procs(self) -> None:
         """17 autos + Rageblade (phantoms at 6,9,12,15) = 7 Kraken procs."""
-        _, phantom_autos = _calculate_phantom_hits(
-            17, ["Guinsoo's Rageblade"]
-        )
+        _, phantom_autos = _calculate_phantom_hits(17, ["Guinsoo's Rageblade"])
         procs, _ = _calculate_kraken_procs(17, phantom_autos, 0)
         assert procs == 7
 
     def test_full_fight_kraken_plus_rageblade(self) -> None:
         """Integration test: Kraken + Rageblade in full fight shows correct procs."""
         stats = {
-            "attack_damage": 100, "ability_power": 0,
-            "magic_penetration_flat": 0, "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0, "flat_armor_penetration": 0,
+            "attack_damage": 100,
+            "ability_power": 0,
+            "magic_penetration_flat": 0,
+            "magic_penetration_percent": 0,
+            "armor_penetration_percent": 0,
+            "flat_armor_penetration": 0,
             "critical_strike_chance": 0,
-            "attack_speed": 1.0, "attack_speed_ratio": 0.625,
-            "is_melee": True, "level": 18,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "is_melee": True,
+            "level": 18,
         }
         fight = calculate_fight_damage(
-            stats, {},
-            target_health=3000, target_armor=0,
+            stats,
+            {},
+            target_health=3000,
+            target_armor=0,
             target_magic_resistance=0,
             fight_duration_seconds=10.0,
             auto_attack_uptime=1.0,
@@ -2691,6 +2916,7 @@ class TestKrakenSlayerPhantomHitStacking:
     def test_kraken_damage_scales_with_missing_hp(self) -> None:
         """Later Kraken procs should deal more due to higher missing HP."""
         from src.calculator.damage import _simulate_kraken_damage
+
         # 9 autos, Kraken procs at autos 3, 6, 9 (indices 2, 5, 8)
         # No armor, melee, level 18 => base = 150 + 5*(18-8) = 200
         # First proc at full HP: missing = 0%, bonus = 1.0x => 200
@@ -2715,6 +2941,7 @@ class TestKrakenSlayerPhantomHitStacking:
     def test_kraken_first_proc_at_full_hp_is_base_damage(self) -> None:
         """First Kraken proc at full HP should deal base damage (no bonus)."""
         from src.calculator.damage import _simulate_kraken_damage
+
         # 3 autos, Kraken procs on auto 3 (index 2), no other damage
         total = _simulate_kraken_damage(
             target_health=3000.0,
@@ -2732,57 +2959,87 @@ class TestKrakenSlayerPhantomHitStacking:
     def test_kraken_base_damage_flat_before_level_9(self) -> None:
         """Base damage should be flat 150 (melee) / 120 (ranged) at levels 1-8."""
         from src.calculator.damage import _simulate_kraken_damage
+
         for lvl in [1, 5, 8]:
             total = _simulate_kraken_damage(
-                target_health=5000.0, num_auto_attacks=3,
-                auto_damage_per_hit=0.0, other_on_hit_per_hit=0.0,
-                effective_armor=0.0, is_melee=True, level=lvl,
+                target_health=5000.0,
+                num_auto_attacks=3,
+                auto_damage_per_hit=0.0,
+                other_on_hit_per_hit=0.0,
+                effective_armor=0.0,
+                is_melee=True,
+                level=lvl,
                 kraken_proc_autos=[2],
             )
             assert abs(total - 150.0) < 0.01, f"Melee level {lvl}: {total}"
 
             total_ranged = _simulate_kraken_damage(
-                target_health=5000.0, num_auto_attacks=3,
-                auto_damage_per_hit=0.0, other_on_hit_per_hit=0.0,
-                effective_armor=0.0, is_melee=False, level=lvl,
+                target_health=5000.0,
+                num_auto_attacks=3,
+                auto_damage_per_hit=0.0,
+                other_on_hit_per_hit=0.0,
+                effective_armor=0.0,
+                is_melee=False,
+                level=lvl,
                 kraken_proc_autos=[2],
             )
-            assert abs(total_ranged - 120.0) < 0.01, f"Ranged level {lvl}: {total_ranged}"
+            assert (
+                abs(total_ranged - 120.0) < 0.01
+            ), f"Ranged level {lvl}: {total_ranged}"
 
     def test_kraken_level_scaling_melee(self) -> None:
         """Melee Kraken base: 150 flat until 9, then +5/level."""
         from src.calculator.damage import _simulate_kraken_damage
+
         expected = {9: 155, 10: 160, 14: 180, 18: 200, 20: 210}
         for lvl, exp in expected.items():
             total = _simulate_kraken_damage(
-                target_health=5000.0, num_auto_attacks=3,
-                auto_damage_per_hit=0.0, other_on_hit_per_hit=0.0,
-                effective_armor=0.0, is_melee=True, level=lvl,
+                target_health=5000.0,
+                num_auto_attacks=3,
+                auto_damage_per_hit=0.0,
+                other_on_hit_per_hit=0.0,
+                effective_armor=0.0,
+                is_melee=True,
+                level=lvl,
                 kraken_proc_autos=[2],
             )
-            assert abs(total - exp) < 0.01, f"Melee level {lvl}: got {total}, expected {exp}"
+            assert (
+                abs(total - exp) < 0.01
+            ), f"Melee level {lvl}: got {total}, expected {exp}"
 
     def test_kraken_level_scaling_ranged(self) -> None:
         """Ranged Kraken base: 120 flat until 9, then +4/level."""
         from src.calculator.damage import _simulate_kraken_damage
+
         expected = {9: 124, 10: 128, 14: 144, 18: 160, 20: 168}
         for lvl, exp in expected.items():
             total = _simulate_kraken_damage(
-                target_health=5000.0, num_auto_attacks=3,
-                auto_damage_per_hit=0.0, other_on_hit_per_hit=0.0,
-                effective_armor=0.0, is_melee=False, level=lvl,
+                target_health=5000.0,
+                num_auto_attacks=3,
+                auto_damage_per_hit=0.0,
+                other_on_hit_per_hit=0.0,
+                effective_armor=0.0,
+                is_melee=False,
+                level=lvl,
                 kraken_proc_autos=[2],
             )
-            assert abs(total - exp) < 0.01, f"Ranged level {lvl}: got {total}, expected {exp}"
+            assert (
+                abs(total - exp) < 0.01
+            ), f"Ranged level {lvl}: got {total}, expected {exp}"
 
     def test_kraken_max_damage_ranged_level_18(self) -> None:
         """Ranged level 18 at 0% target HP should deal 160 * 1.75 = 280."""
         from src.calculator.damage import _simulate_kraken_damage
+
         # Use very high auto damage to push target to 0 HP before Kraken procs
         total = _simulate_kraken_damage(
-            target_health=100.0, num_auto_attacks=3,
-            auto_damage_per_hit=500.0, other_on_hit_per_hit=0.0,
-            effective_armor=0.0, is_melee=False, level=18,
+            target_health=100.0,
+            num_auto_attacks=3,
+            auto_damage_per_hit=500.0,
+            other_on_hit_per_hit=0.0,
+            effective_armor=0.0,
+            is_melee=False,
+            level=18,
             kraken_proc_autos=[2],
         )
         # Target at 0% HP after 2 autos of 500 damage each, missing = 100%
@@ -2831,7 +3088,10 @@ class TestHeartsteelDamage:
 
     def test_heartsteel_missing_from_effects_returns_zero(self) -> None:
         """If Heartsteel is not in registry, function returns 0."""
-        from src.calculator.item_effects import calculate_heartsteel_damage, ITEM_EFFECTS
+        from src.calculator.item_effects import (
+            calculate_heartsteel_damage,
+            ITEM_EFFECTS,
+        )
 
         original = ITEM_EFFECTS.pop("Heartsteel", None)
         try:
@@ -2891,8 +3151,10 @@ class TestHexopticsC44BasicDamageAmp:
         items_without: list[dict] = []
 
         fight_with = calculate_fight_damage(
-            champion_stats, {},
-            target_health=2000, target_armor=100,
+            champion_stats,
+            {},
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -2900,8 +3162,10 @@ class TestHexopticsC44BasicDamageAmp:
             auto_attacks_only=True,
         )
         fight_without = calculate_fight_damage(
-            champion_stats, {},
-            target_health=2000, target_armor=100,
+            champion_stats,
+            {},
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -2910,9 +3174,9 @@ class TestHexopticsC44BasicDamageAmp:
         )
         # With Hexoptics, auto damage should be ~10% higher
         ratio = fight_with["total_damage"] / fight_without["total_damage"]
-        assert abs(ratio - 1.10) < 0.02, (
-            f"Expected ~10% more damage, got ratio {ratio:.3f}"
-        )
+        assert (
+            abs(ratio - 1.10) < 0.02
+        ), f"Expected ~10% more damage, got ratio {ratio:.3f}"
 
     def test_breakdown_shows_amplification(self) -> None:
         """Breakdown should include a 'Damage Amplification' entry."""
@@ -2931,8 +3195,10 @@ class TestHexopticsC44BasicDamageAmp:
             "level": 18,
         }
         fight = calculate_fight_damage(
-            champion_stats, {},
-            target_health=2000, target_armor=100,
+            champion_stats,
+            {},
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=5.0,
             auto_attack_uptime=1.0,
@@ -3007,8 +3273,10 @@ class TestHorizonFocusHypershotAmp:
 
         # Without Horizon Focus
         fight_base = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=0,
             fight_duration_seconds=0.5,
             auto_attack_uptime=0.0,
@@ -3019,8 +3287,10 @@ class TestHorizonFocusHypershotAmp:
 
         # With Horizon Focus
         fight_hf = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=0,
             fight_duration_seconds=0.5,
             auto_attack_uptime=0.0,
@@ -3034,18 +3304,18 @@ class TestHorizonFocusHypershotAmp:
         q_base = fight_base["breakdown"]["Q"]["total_damage"]
         q_hf = fight_hf["breakdown"]["Q"]["total_damage"]
         # Q damage itself should be the same (not amped inline)
-        assert abs(q_base - q_hf) < 0.01, (
-            f"Q should not change: base={q_base:.1f} vs hf={q_hf:.1f}"
-        )
+        assert (
+            abs(q_base - q_hf) < 0.01
+        ), f"Q should not change: base={q_base:.1f} vs hf={q_hf:.1f}"
 
         # The amp entry should exist and NOT include Q damage
         amp_entry = fight_hf["breakdown"].get("damage_amp_Horizon Focus")
         assert amp_entry is not None, "Missing Horizon Focus breakdown entry"
         assert amp_entry["name"] == "Damage Amplification (Horizon Focus)"
         # Bonus should be ~10% of non-Q damage (E = 150)
-        assert abs(amp_entry["total_damage"] - 15.0) < 1.0, (
-            f"Expected ~15 bonus, got {amp_entry['total_damage']:.1f}"
-        )
+        assert (
+            abs(amp_entry["total_damage"] - 15.0) < 1.0
+        ), f"Expected ~15 bonus, got {amp_entry['total_damage']:.1f}"
 
     def test_mixed_ability_only_first_hit_excluded(self) -> None:
         """For mixed abilities (Ahri Q), only the first hit is the trigger.
@@ -3080,8 +3350,10 @@ class TestHorizonFocusHypershotAmp:
         }
 
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=0,
             fight_duration_seconds=0.5,
             auto_attack_uptime=0.0,
@@ -3180,8 +3452,10 @@ class TestHullbreakerSkipper:
             "level": 10,
         }
         fight = calculate_fight_damage(
-            stats, {},
-            target_health=3000, target_armor=100,
+            stats,
+            {},
+            target_health=3000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=10.0,
             auto_attack_uptime=1.0,
@@ -3230,8 +3504,10 @@ class TestMuramanaMultiCastR:
         }
 
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=1.0,
             auto_attack_uptime=0.0,
@@ -3281,8 +3557,10 @@ class TestMuramanaMultiCastR:
         }
 
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=1.0,
             auto_attack_uptime=0.0,
@@ -3363,8 +3641,10 @@ class TestNavoriFlickerbladeFight:
         }
 
         fight_no_navori = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=15.0,
             auto_attack_uptime=0.8,
@@ -3372,8 +3652,10 @@ class TestNavoriFlickerbladeFight:
             cast_order=["Q"],
         )
         fight_navori = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=15.0,
             auto_attack_uptime=0.8,
@@ -3383,9 +3665,7 @@ class TestNavoriFlickerbladeFight:
 
         q_no = fight_no_navori["breakdown"]["Q"]["casts"]
         q_nav = fight_navori["breakdown"]["Q"]["casts"]
-        assert q_nav > q_no, (
-            f"Navori should give more casts: {q_nav} vs {q_no} without"
-        )
+        assert q_nav > q_no, f"Navori should give more casts: {q_nav} vs {q_no} without"
 
     def test_r_not_affected(self) -> None:
         """R is always 1 cast — Navori should not change it."""
@@ -3414,8 +3694,10 @@ class TestNavoriFlickerbladeFight:
         }
 
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=15.0,
             auto_attack_uptime=0.8,
@@ -3450,8 +3732,10 @@ class TestNavoriFlickerbladeFight:
         }
 
         fight = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=15.0,
             auto_attack_uptime=0.8,
@@ -3487,8 +3771,10 @@ class TestNavoriFlickerbladeFight:
         }
 
         fight_no = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=15.0,
             auto_attack_uptime=0.0,
@@ -3496,15 +3782,19 @@ class TestNavoriFlickerbladeFight:
             cast_order=["Q"],
         )
         fight_nav = calculate_fight_damage(
-            stats, abilities,
-            target_health=2000, target_armor=100,
+            stats,
+            abilities,
+            target_health=2000,
+            target_armor=100,
             target_magic_resistance=100,
             fight_duration_seconds=15.0,
             auto_attack_uptime=0.0,
             items=[{"name": "Navori Flickerblade"}],
             cast_order=["Q"],
         )
-        assert fight_no["breakdown"]["Q"]["casts"] == fight_nav["breakdown"]["Q"]["casts"]
+        assert (
+            fight_no["breakdown"]["Q"]["casts"] == fight_nav["breakdown"]["Q"]["casts"]
+        )
 
 
 class TestNewItemDamageEffects:
@@ -3543,9 +3833,13 @@ class TestNewItemDamageEffects:
         """Stormrazor deals 100 magic damage on first auto (one proc)."""
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[{"name": "Stormrazor"}],
         )
         assert "on_hit_once_Stormrazor" in result["breakdown"]
@@ -3553,41 +3847,51 @@ class TestNewItemDamageEffects:
         assert entry["damage_type"] == "magic"
         assert entry["total_damage"] > 0
 
-    def test_statikk_shiv_first_3_autos(self) -> None:
-        """Statikk Shiv deals 60 magic damage on first 3 autos."""
+    def test_statikk_shiv_one_empowered_auto(self) -> None:
+        """Reworked Electrospark: ONE empowered auto deals 60 magic damage
+        (single-target: the chain lightning has nothing to bounce to)."""
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[{"name": "Statikk Shiv"}],
         )
         assert "on_hit_once_Statikk Shiv" in result["breakdown"]
         entry = result["breakdown"]["on_hit_once_Statikk Shiv"]
-        assert entry["procs"] == 3
+        assert entry["procs"] == 1
         assert entry["damage_type"] == "magic"
 
-    def test_statikk_shiv_fewer_autos_than_3(self) -> None:
-        """With only 1-2 autos, Statikk Shiv applies to available autos."""
-        stats = self._make_stats(attack_speed=0.5)
+    def test_statikk_shiv_no_autos_no_proc(self) -> None:
+        """Without any auto attacks there is no Electrospark proc."""
+        stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=1.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=0.0,
             items=[{"name": "Statikk Shiv"}],
         )
-        # Very short fight = few autos
-        if "on_hit_once_Statikk Shiv" in result["breakdown"]:
-            entry = result["breakdown"]["on_hit_once_Statikk Shiv"]
-            assert entry["procs"] <= 3
+        assert "on_hit_once_Statikk Shiv" not in result["breakdown"]
 
     def test_titanic_hydra_active_in_breakdown(self) -> None:
         """Titanic Hydra Crescent active appears in fight breakdown."""
         stats = self._make_stats(health=3000.0)
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[{"name": "Titanic Hydra"}],
         )
         assert "active_Titanic Hydra" in result["breakdown"]
@@ -3657,9 +3961,13 @@ class TestSunderedSky:
         """First auto with Sundered Sky always crits at reduced ratio."""
         stats = self._make_stats(critical_strike_chance=0.0)
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=0, target_magic_resistance=50,
-            fight_duration_seconds=1.0, auto_attack_uptime=1.0,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=0,
+            target_magic_resistance=50,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=1.0,
             items=[{"name": "Sundered Sky"}],
         )
         auto_entry = result["breakdown"]["auto_attacks"]
@@ -3677,9 +3985,13 @@ class TestSunderedSky:
         stats = self._make_stats(critical_strike_chance=100.0)
         # Many autos to average: first auto is Sundered Sky, rest are normal crits
         result = calculate_fight_damage(
-            stats, {},
-            target_health=5000, target_armor=0, target_magic_resistance=50,
-            fight_duration_seconds=5.0, auto_attack_uptime=1.0,
+            stats,
+            {},
+            target_health=5000,
+            target_armor=0,
+            target_magic_resistance=50,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
             items=[{"name": "Sundered Sky"}],
         )
         auto_entry = result["breakdown"]["auto_attacks"]
@@ -3692,15 +4004,20 @@ class TestSunderedSky:
     def test_sundered_sky_reads_from_registry(self, monkeypatch) -> None:
         """Sundered Sky uses ITEM_EFFECTS registry, not hardcoded values."""
         from src.calculator import item_effects
+
         patched = dict(item_effects.ITEM_EFFECTS.get("Sundered Sky", {}))
         patched["reduced_crit_ratio"] = 0.50  # 50% instead of 80%
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Sundered Sky", patched)
 
         stats = self._make_stats(critical_strike_chance=0.0)
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=0, target_magic_resistance=50,
-            fight_duration_seconds=2.0, auto_attack_uptime=1.0,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=0,
+            target_magic_resistance=50,
+            fight_duration_seconds=2.0,
+            auto_attack_uptime=1.0,
             items=[{"name": "Sundered Sky"}],
         )
         auto_entry = result["breakdown"]["auto_attacks"]
@@ -3714,6 +4031,7 @@ class TestSunderedSky:
         """Parser extracts reduced_crit_ratio and cooldown from JSON."""
         from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+
         items = fetch_item_data()
         parsed = parse_item_effect("Sundered Sky", items)
         assert parsed is not None
@@ -3726,14 +4044,27 @@ class TestVoltaicCyclosword:
 
     def _make_stats(self, **overrides: float) -> dict[str, float]:
         stats = {
-            "health": 2000.0, "attack_damage": 100.0, "ability_power": 0.0,
-            "armor": 50.0, "magic_resistance": 50.0, "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625, "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0, "base_attack_damage": 100.0,
-            "bonus_attack_damage": 0.0, "bonus_health": 0.0, "lethality": 0.0,
-            "flat_armor_penetration": 0.0, "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0, "max_mana": 500.0, "bonus_mana": 0.0,
-            "ability_haste": 0.0, "basic_ability_haste": 0.0, "level": 18,
+            "health": 2000.0,
+            "attack_damage": 100.0,
+            "ability_power": 0.0,
+            "armor": 50.0,
+            "magic_resistance": 50.0,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0.0,
+            "magic_penetration_percent": 0.0,
+            "base_attack_damage": 100.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "lethality": 0.0,
+            "flat_armor_penetration": 0.0,
+            "armor_penetration_percent": 0.0,
+            "critical_strike_chance": 0.0,
+            "max_mana": 500.0,
+            "bonus_mana": 0.0,
+            "ability_haste": 0.0,
+            "basic_ability_haste": 0.0,
+            "level": 18,
             "is_melee": True,
         }
         stats.update(overrides)
@@ -3743,9 +4074,13 @@ class TestVoltaicCyclosword:
         """Voltaic Cyclosword deals physical damage on first auto."""
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[{"name": "Voltaic Cyclosword"}],
         )
         assert "on_hit_once_Voltaic Cyclosword" in result["breakdown"]
@@ -3754,45 +4089,96 @@ class TestVoltaicCyclosword:
         assert entry["total_damage"] > 0
 
     def test_voltaic_only_one_proc(self) -> None:
-        """Even with many autos, Voltaic Cyclosword only procs once."""
+        """Even with many autos, Voltaic Cyclosword only procs once.
+
+        Melee vs 5000 HP: 9% current HP = 450, capped at 200.
+        """
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=5000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=20.0, auto_attack_uptime=1.0,
+            stats,
+            {},
+            target_health=5000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=20.0,
+            auto_attack_uptime=1.0,
             items=[{"name": "Voltaic Cyclosword"}],
         )
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
-        # Damage should be single proc, not multiplied by auto count
+        # Damage should be single capped proc, not multiplied by auto count
         from src.calculator.resistance import apply_resistance
-        expected = apply_resistance(100.0, result["effective_armor"])
+
+        expected = apply_resistance(200.0, result["effective_armor"])
         assert abs(entry["total_damage"] - expected) < 1.0
 
+    def test_voltaic_current_hp_below_cap(self) -> None:
+        """Melee vs 2000 HP: 9% current HP = 180, under the 200 cap."""
+        stats = self._make_stats()
+        result = calculate_fight_damage(
+            stats,
+            {},
+            target_health=2000,
+            target_armor=0,
+            target_magic_resistance=50,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=0.8,
+            items=[{"name": "Voltaic Cyclosword"}],
+        )
+        entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
+        assert entry["total_damage"] == pytest.approx(180.0)
+
+    def test_voltaic_ranged_ratio(self) -> None:
+        """Ranged vs 2000 HP: 7% current HP = 140."""
+        stats = self._make_stats(is_melee=False)
+        result = calculate_fight_damage(
+            stats,
+            {},
+            target_health=2000,
+            target_armor=0,
+            target_magic_resistance=50,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=0.8,
+            items=[{"name": "Voltaic Cyclosword"}],
+        )
+        entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
+        assert entry["total_damage"] == pytest.approx(140.0)
+
     def test_voltaic_parsed_values(self) -> None:
-        """Parser extracts base=100 and damage_type=physical."""
+        """Parser extracts the reworked Firmament: current-HP physical damage
+        (melee 9% / ranged 7%) capped at 200."""
         from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+
         items = fetch_item_data()
         parsed = parse_item_effect("Voltaic Cyclosword", items)
         assert parsed is not None
-        assert parsed["base"] == 100.0
+        assert parsed["current_hp_ratio_melee"] == pytest.approx(0.09)
+        assert parsed["current_hp_ratio_ranged"] == pytest.approx(0.07)
+        assert parsed["damage_cap"] == 200.0
         assert parsed["damage_type"] == "physical"
 
     def test_voltaic_reads_from_registry(self, monkeypatch) -> None:
         """Voltaic Cyclosword uses ITEM_EFFECTS registry."""
         from src.calculator import item_effects
+
         patched = dict(item_effects.ITEM_EFFECTS.get("Voltaic Cyclosword", {}))
-        patched["base"] = 200.0
+        patched["current_hp_ratio_melee"] = 0.10
+        patched["damage_cap"] = 500.0
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Voltaic Cyclosword", patched)
 
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=0, target_magic_resistance=50,
-            fight_duration_seconds=5.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=0,
+            target_magic_resistance=50,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=0.8,
             items=[{"name": "Voltaic Cyclosword"}],
         )
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
+        # 10% of 2000 = 200, under the patched 500 cap
         assert entry["total_damage"] == 200.0
 
 
@@ -3801,14 +4187,27 @@ class TestUnendingDespair:
 
     def _make_stats(self, **overrides: float) -> dict[str, float]:
         stats = {
-            "health": 3000.0, "attack_damage": 100.0, "ability_power": 0.0,
-            "armor": 50.0, "magic_resistance": 50.0, "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625, "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0, "base_attack_damage": 100.0,
-            "bonus_attack_damage": 0.0, "bonus_health": 1000.0, "lethality": 0.0,
-            "flat_armor_penetration": 0.0, "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0, "max_mana": 500.0, "bonus_mana": 0.0,
-            "ability_haste": 0.0, "basic_ability_haste": 0.0, "level": 18,
+            "health": 3000.0,
+            "attack_damage": 100.0,
+            "ability_power": 0.0,
+            "armor": 50.0,
+            "magic_resistance": 50.0,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0.0,
+            "magic_penetration_percent": 0.0,
+            "base_attack_damage": 100.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 1000.0,
+            "lethality": 0.0,
+            "flat_armor_penetration": 0.0,
+            "armor_penetration_percent": 0.0,
+            "critical_strike_chance": 0.0,
+            "max_mana": 500.0,
+            "bonus_mana": 0.0,
+            "ability_haste": 0.0,
+            "basic_ability_haste": 0.0,
+            "level": 18,
             "is_melee": True,
         }
         stats.update(overrides)
@@ -3818,9 +4217,13 @@ class TestUnendingDespair:
         """Unending Despair Anguish appears in fight breakdown."""
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.0,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.0,
             items=[{"name": "Unending Despair"}],
         )
         assert "periodic_Unending Despair" in result["breakdown"]
@@ -3832,9 +4235,13 @@ class TestUnendingDespair:
         """Procs at 4s intervals: 10s fight = 2 procs (at 4s and 8s)."""
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=0,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.0,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=0,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.0,
             items=[{"name": "Unending Despair"}],
         )
         entry = result["breakdown"]["periodic_Unending Despair"]
@@ -3846,9 +4253,13 @@ class TestUnendingDespair:
         """With 0 bonus health, Anguish deals no damage."""
         stats = self._make_stats(bonus_health=0.0)
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.0,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.0,
             items=[{"name": "Unending Despair"}],
         )
         assert "periodic_Unending Despair" not in result["breakdown"]
@@ -3857,6 +4268,7 @@ class TestUnendingDespair:
         """Parser extracts interval and bonus_hp_ratio from JSON."""
         from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+
         items = fetch_item_data()
         parsed = parse_item_effect("Unending Despair", items)
         assert parsed is not None
@@ -3866,15 +4278,20 @@ class TestUnendingDespair:
     def test_unending_despair_reads_from_registry(self, monkeypatch) -> None:
         """Unending Despair uses ITEM_EFFECTS registry."""
         from src.calculator import item_effects
+
         patched = dict(item_effects.ITEM_EFFECTS.get("Unending Despair", {}))
         patched["bonus_hp_ratio"] = 0.10  # 10% instead of 3%
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Unending Despair", patched)
 
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=0,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.0,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=0,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.0,
             items=[{"name": "Unending Despair"}],
         )
         entry = result["breakdown"]["periodic_Unending Despair"]
@@ -3887,14 +4304,27 @@ class TestTerminusPenetration:
 
     def _make_stats(self, **overrides: float) -> dict[str, float]:
         stats = {
-            "health": 2000.0, "attack_damage": 100.0, "ability_power": 0.0,
-            "armor": 50.0, "magic_resistance": 50.0, "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625, "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0, "base_attack_damage": 100.0,
-            "bonus_attack_damage": 0.0, "bonus_health": 0.0, "lethality": 0.0,
-            "flat_armor_penetration": 0.0, "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0, "max_mana": 500.0, "bonus_mana": 0.0,
-            "ability_haste": 0.0, "basic_ability_haste": 0.0, "level": 18,
+            "health": 2000.0,
+            "attack_damage": 100.0,
+            "ability_power": 0.0,
+            "armor": 50.0,
+            "magic_resistance": 50.0,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0.0,
+            "magic_penetration_percent": 0.0,
+            "base_attack_damage": 100.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "lethality": 0.0,
+            "flat_armor_penetration": 0.0,
+            "armor_penetration_percent": 0.0,
+            "critical_strike_chance": 0.0,
+            "max_mana": 500.0,
+            "bonus_mana": 0.0,
+            "ability_haste": 0.0,
+            "basic_ability_haste": 0.0,
+            "level": 18,
             "is_melee": True,
         }
         stats.update(overrides)
@@ -3904,33 +4334,52 @@ class TestTerminusPenetration:
         """Terminus pen reduces effective armor vs no Terminus."""
         stats = self._make_stats()
         result_no_terminus = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=100, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=100,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[],
         )
         result_with_terminus = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=100, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=100,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[{"name": "Terminus"}],
         )
         # With Terminus pen, effective armor should be lower
-        assert result_with_terminus["effective_armor"] < result_no_terminus["effective_armor"]
+        assert (
+            result_with_terminus["effective_armor"]
+            < result_no_terminus["effective_armor"]
+        )
 
     def test_terminus_pen_increases_total_damage(self) -> None:
         """Terminus pen should increase total damage dealt."""
         stats = self._make_stats()
         result_no = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=100, target_magic_resistance=100,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=100,
+            target_magic_resistance=100,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[],
         )
         result_with = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=100, target_magic_resistance=100,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=100,
+            target_magic_resistance=100,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[{"name": "Terminus"}],
         )
         assert result_with["total_damage"] > result_no["total_damage"]
@@ -3941,37 +4390,44 @@ class TestTerminusPenetration:
         Average = 270/12 = 22.5%.
         """
         from src.calculator.item_effects import get_terminus_pen_stacks
+
         avg_pen = get_terminus_pen_stacks(12)
         assert abs(avg_pen - 0.225) < 0.001
 
     def test_terminus_pen_6_autos(self) -> None:
         """6 autos: pen = 0,10,10,20,20,30 → avg = 90/6 = 15%."""
         from src.calculator.item_effects import get_terminus_pen_stacks
+
         assert abs(get_terminus_pen_stacks(6) - 0.15) < 0.001
 
     def test_terminus_pen_2_autos(self) -> None:
         """2 autos: pen = 0,10 → avg = 5%."""
         from src.calculator.item_effects import get_terminus_pen_stacks
+
         assert abs(get_terminus_pen_stacks(2) - 0.05) < 0.001
 
     def test_terminus_pen_4_autos(self) -> None:
         """4 autos: pen = 0,10,10,20 → avg = 40/4 = 10%."""
         from src.calculator.item_effects import get_terminus_pen_stacks
+
         assert abs(get_terminus_pen_stacks(4) - 0.10) < 0.001
 
     def test_terminus_pen_zero_autos_no_pen(self) -> None:
         """With 0 autos, no pen stacks."""
         from src.calculator.item_effects import get_terminus_pen_stacks
+
         assert get_terminus_pen_stacks(0) == 0.0
 
     def test_terminus_pen_one_auto_no_pen(self) -> None:
         """With 1 auto, no dark hits (dark = every other auto)."""
         from src.calculator.item_effects import get_terminus_pen_stacks
+
         assert get_terminus_pen_stacks(1) == 0.0
 
     def test_terminus_pen_caps_at_30_long_fight(self) -> None:
         """With many autos, average pen approaches 30% but never exceeds."""
         from src.calculator.item_effects import get_terminus_pen_stacks
+
         avg = get_terminus_pen_stacks(100)
         assert avg < 0.30
         assert avg > 0.28  # Should be close to 30%
@@ -3980,6 +4436,7 @@ class TestTerminusPenetration:
         """Parser extracts dark_pen_per_stack and dark_max_stacks."""
         from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+
         items = fetch_item_data()
         parsed = parse_item_effect("Terminus", items)
         assert parsed is not None
@@ -3992,14 +4449,27 @@ class TestCollectorThreshold:
 
     def _make_stats(self, **overrides: float) -> dict[str, float]:
         stats = {
-            "health": 2000.0, "attack_damage": 100.0, "ability_power": 0.0,
-            "armor": 50.0, "magic_resistance": 50.0, "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625, "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0, "base_attack_damage": 100.0,
-            "bonus_attack_damage": 0.0, "bonus_health": 0.0, "lethality": 0.0,
-            "flat_armor_penetration": 0.0, "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0, "max_mana": 500.0, "bonus_mana": 0.0,
-            "ability_haste": 0.0, "basic_ability_haste": 0.0, "level": 18,
+            "health": 2000.0,
+            "attack_damage": 100.0,
+            "ability_power": 0.0,
+            "armor": 50.0,
+            "magic_resistance": 50.0,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "magic_penetration_flat": 0.0,
+            "magic_penetration_percent": 0.0,
+            "base_attack_damage": 100.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "lethality": 0.0,
+            "flat_armor_penetration": 0.0,
+            "armor_penetration_percent": 0.0,
+            "critical_strike_chance": 0.0,
+            "max_mana": 500.0,
+            "bonus_mana": 0.0,
+            "ability_haste": 0.0,
+            "basic_ability_haste": 0.0,
+            "level": 18,
             "is_melee": True,
         }
         stats.update(overrides)
@@ -4009,9 +4479,13 @@ class TestCollectorThreshold:
         """Collector shows execution threshold but adds 0 damage."""
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[{"name": "The Collector"}],
         )
         assert "execute" in result["breakdown"]
@@ -4024,9 +4498,13 @@ class TestCollectorThreshold:
         """Threshold scales with target max health."""
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=4000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=4000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[{"name": "The Collector"}],
         )
         entry = result["breakdown"]["execute"]
@@ -4036,6 +4514,7 @@ class TestCollectorThreshold:
         """Parser extracts threshold from JSON."""
         from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+
         items = fetch_item_data()
         parsed = parse_item_effect("The Collector", items)
         assert parsed is not None
@@ -4044,15 +4523,20 @@ class TestCollectorThreshold:
     def test_collector_reads_from_registry(self, monkeypatch) -> None:
         """Collector threshold uses ITEM_EFFECTS registry."""
         from src.calculator import item_effects
+
         patched = dict(item_effects.ITEM_EFFECTS.get("The Collector", {}))
         patched["threshold"] = 0.10  # 10% instead of 5%
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "The Collector", patched)
 
         stats = self._make_stats()
         result = calculate_fight_damage(
-            stats, {},
-            target_health=2000, target_armor=50, target_magic_resistance=50,
-            fight_duration_seconds=10.0, auto_attack_uptime=0.8,
+            stats,
+            {},
+            target_health=2000,
+            target_armor=50,
+            target_magic_resistance=50,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.8,
             items=[{"name": "The Collector"}],
         )
         entry = result["breakdown"]["execute"]

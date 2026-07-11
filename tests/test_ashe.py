@@ -24,7 +24,9 @@ class TestPassiveFrostShot:
     def test_auto_damage_with_crit_chance(self, ashe_data, parse_at) -> None:
         """Auto with 200 AD and 50% crit: 200 * (1 + 0.5) = 300."""
         stats, abilities = parse_at(
-            ashe_data, 3, champion_options={"q_active": False},
+            ashe_data,
+            3,
+            champion_options={"q_active": False},
         )
         # Override stats for verification
         stats["attack_damage"] = 200.0
@@ -49,7 +51,9 @@ class TestPassiveFrostShot:
         bonus_crit_ratio = (2.30 - 1.0) = 1.30
         200 * (1.0 + 0.50 * 1.30) = 200 * 1.65 = 330."""
         stats, abilities = parse_at(
-            ashe_data, 3, champion_options={"q_active": False},
+            ashe_data,
+            3,
+            champion_options={"q_active": False},
         )
         stats["attack_damage"] = 200.0
         stats["attack_speed"] = 1.0
@@ -73,7 +77,9 @@ class TestPassiveFrostShot:
     def test_auto_damage_zero_crit(self, ashe_data, parse_at) -> None:
         """With 0% crit, auto damage is normal (1.0 * AD)."""
         stats, abilities = parse_at(
-            ashe_data, 3, champion_options={"q_active": False},
+            ashe_data,
+            3,
+            champion_options={"q_active": False},
         )
         stats["attack_damage"] = 200.0
         stats["attack_speed"] = 1.0
@@ -121,31 +127,45 @@ class TestQRangersFocus:
 
     def test_q_flurry_ratio_rank1(self, ashe_data, parse_at) -> None:
         """Q rank 1 flurry = 110% AD -> ratio 1.10."""
-        _, abilities = parse_at(ashe_data, 1, ability_ranks={"Q": 1, "W": 0, "E": 0, "R": 0})
+        _, abilities = parse_at(
+            ashe_data, 1, ability_ranks={"Q": 1, "W": 0, "E": 0, "R": 0}
+        )
         override = abilities["Q"]["auto_attack_override"]
         assert override["ad_ratio"] == pytest.approx(1.10)
 
     def test_q_flurry_ratio_rank5(self, ashe_data, parse_at) -> None:
-        """Q rank 5 flurry = 140% AD -> ratio 1.40."""
-        _, abilities = parse_at(ashe_data, 9, ability_ranks={"Q": 5, "W": 1, "E": 0, "R": 0})
+        """Q rank 5 flurry = 130% AD -> ratio 1.30.
+
+        JSON (16.13.1): "Total Damage Per Flurry" is 110/115/120/125/130
+        (+5 per rank, not +10).
+        """
+        _, abilities = parse_at(
+            ashe_data, 9, ability_ranks={"Q": 5, "W": 1, "E": 0, "R": 0}
+        )
         override = abilities["Q"]["auto_attack_override"]
-        assert override["ad_ratio"] == pytest.approx(1.40)
+        assert override["ad_ratio"] == pytest.approx(1.30)
 
     def test_q_bonus_as_rank1(self, ashe_data, parse_at) -> None:
         """Q rank 1 grants 20% bonus AS."""
-        _, abilities = parse_at(ashe_data, 1, ability_ranks={"Q": 1, "W": 0, "E": 0, "R": 0})
+        _, abilities = parse_at(
+            ashe_data, 1, ability_ranks={"Q": 1, "W": 0, "E": 0, "R": 0}
+        )
         assert abilities["Q"]["stat_buff"]["bonus_attack_speed"] == pytest.approx(20.0)
 
     def test_q_bonus_as_rank5(self, ashe_data, parse_at) -> None:
         """Q rank 5 grants 60% bonus AS."""
-        _, abilities = parse_at(ashe_data, 9, ability_ranks={"Q": 5, "W": 1, "E": 0, "R": 0})
+        _, abilities = parse_at(
+            ashe_data, 9, ability_ranks={"Q": 5, "W": 1, "E": 0, "R": 0}
+        )
         assert abilities["Q"]["stat_buff"]["bonus_attack_speed"] == pytest.approx(60.0)
 
     def test_q_active_auto_damage(self, ashe_data, parse_at) -> None:
-        """Q rank 5 auto with 200 AD, 50% crit: 200 * 1.40 * (1 + 0.50) = 420.
+        """Q rank 5 auto with 200 AD, 50% crit: 200 * 1.30 * (1 + 0.50) = 390.
+        JSON (16.13.1): flurry rank 5 = 130% AD (see test_q_flurry_ratio_rank5).
         Passive is multiplicative with Q flurry (each arrow applies Frost Shot)."""
         stats, abilities = parse_at(
-            ashe_data, 9,
+            ashe_data,
+            9,
             ability_ranks={"Q": 5, "W": 1, "E": 0, "R": 0},
             champion_options={"q_active": True},
         )
@@ -163,7 +183,7 @@ class TestQRangersFocus:
             auto_attacks_only=True,
         )
         auto = result["breakdown"]["auto_attacks"]
-        assert auto["damage_per_hit"] == pytest.approx(420.0, rel=0.01)
+        assert auto["damage_per_hit"] == pytest.approx(390.0, rel=0.01)
 
     def test_q_inactive_no_override_from_q(self, ashe_data, parse_at) -> None:
         """When Q is off, Q entry absent, passive provides override."""
@@ -188,7 +208,8 @@ class TestWVolley:
         """W rank 5 with 200 total AD (100 base + 100 bonus):
         200 + 100% * 100 bonus AD = 300 physical damage."""
         stats, abilities = parse_at(
-            ashe_data, 9,
+            ashe_data,
+            9,
             ability_ranks={"Q": 1, "W": 5, "E": 0, "R": 0},
             champion_options={"q_active": False},
         )
@@ -196,8 +217,12 @@ class TestWVolley:
         stats["bonus_attack_damage"] = 100.0
         # Re-parse with correct stats
         from src.calculator.champions import parse_abilities as dispatch
+
         abilities = dispatch(
-            "Ashe", ashe_data, 9, 0.0,
+            "Ashe",
+            ashe_data,
+            9,
+            0.0,
             ability_ranks={"Q": 1, "W": 5, "E": 0, "R": 0},
             champion_stats=stats,
             champion_options={"q_active": False},
@@ -231,7 +256,8 @@ class TestREnchantedCrystalArrow:
     def test_r_damage_rank3_zero_ap(self, ashe_data, parse_at) -> None:
         """R rank 3 with 0 AP: 600 magic damage."""
         _, abilities = parse_at(
-            ashe_data, 16,
+            ashe_data,
+            16,
             ability_ranks={"Q": 5, "W": 5, "E": 1, "R": 3},
         )
         assert abilities["R"]["total_raw"] == pytest.approx(600.0, rel=0.01)
