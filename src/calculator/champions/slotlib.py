@@ -1,8 +1,8 @@
 """Archetype factories and the single JSON extraction core.
 
-One home for the ``effects[].leveling[].modifiers[]`` walk that was
-previously duplicated between ``common.py`` and ``generic_parser.py``
-(both are kept alive until the Phase 3 ports finish, then deleted).
+The one home for the ``effects[].leveling[].modifiers[]`` walk (it was
+once duplicated between the legacy ``common.py`` and
+``generic_parser.py``, both retired at the end of Phase 3).
 
 Extraction core:
     ``_sum_modifiers``       — flat-vs-scaling dispatch over one leveling entry

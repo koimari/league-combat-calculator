@@ -1,9 +1,11 @@
 """Tests for the slot-archetype engine (engine.py) and slotlib archetypes.
 
 Two layers:
-- Equivalence: the engine running GENERIC_SLOTS must produce output
-  identical to the legacy generic parser for every champion in the data.
-  This is the Phase 3 step-1 contract and survives golden-baseline churn.
+- Dispatch: unregistered champions route to the engine running
+  GENERIC_SLOTS. (The Phase 3a byte-for-byte equivalence tests against
+  the legacy generic parser retired with generic_parser.py itself —
+  the generic path's behavior is locked by tests/test_generic_path.py
+  and the golden snapshot.)
 - Engine unit tests on synthetic slot maps / champion JSON: phase
   ordering, insertion order within a phase, zero-damage entry emission,
   and the shared factory params (source / cooldown_from / casts / ranks).
@@ -19,9 +21,6 @@ from src.calculator.champions.engine import (
     BUFF,
     PHASE_ORDER,
     build_parser,
-)
-from src.calculator.champions.generic_parser import (
-    parse_abilities as legacy_generic_parse,
 )
 from src.calculator.champions.slotlib import (
     by_option,
@@ -127,85 +126,22 @@ def _champion(name: str = "TestChamp", **slots: list) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Equivalence with the legacy generic parser (the step-1 contract)
+# Dispatcher fallback
 # ---------------------------------------------------------------------------
 
 
-class TestGenericEquivalence:
-    """Engine + GENERIC_SLOTS must match generic_parser exactly."""
-
-    @pytest.mark.parametrize("level", [4, 13, 18])
-    def test_all_champions_match_legacy(
-        self,
-        champions_data: dict,
-        level: int,
-    ) -> None:
-        """Every champion, identical output at low/mid/max level."""
-        stats = _default_stats()
-        target = _default_target()
-        for cid, champ in champions_data.items():
-            legacy = legacy_generic_parse(
-                champ,
-                level,
-                200.0,
-                champion_stats=stats,
-                target_stats=target,
-            )
-            engine = _engine_parse(
-                champ,
-                level,
-                200.0,
-                champion_stats=stats,
-                target_stats=target,
-            )
-            assert engine == legacy, f"Mismatch for {champ.get('name', cid)}"
-
-    def test_all_champions_match_without_stats(
-        self,
-        champions_data: dict,
-    ) -> None:
-        """Identical output when champion/target stats are omitted."""
-        for cid, champ in champions_data.items():
-            legacy = legacy_generic_parse(champ, 13, 150.0)
-            engine = _engine_parse(champ, 13, 150.0)
-            assert engine == legacy, f"Mismatch for {champ.get('name', cid)}"
-
-    def test_all_champions_match_with_rank_overrides(
-        self,
-        champions_data: dict,
-    ) -> None:
-        """Identical output under explicit ability_ranks."""
-        stats = _default_stats()
-        target = _default_target()
-        ranks = {"Q": 1, "W": 2, "E": 3, "R": 1}
-        for cid, champ in champions_data.items():
-            legacy = legacy_generic_parse(
-                champ,
-                18,
-                200.0,
-                ability_ranks=ranks,
-                champion_stats=stats,
-                target_stats=target,
-            )
-            engine = _engine_parse(
-                champ,
-                18,
-                200.0,
-                ability_ranks=ranks,
-                champion_stats=stats,
-                target_stats=target,
-            )
-            assert engine == legacy, f"Mismatch for {champ.get('name', cid)}"
+class TestGenericDispatch:
+    """Unregistered champions route to the engine's generic slot map."""
 
     def test_dispatcher_fallback_uses_engine(
         self,
         champions_data: dict,
     ) -> None:
-        """Unregistered champions dispatched normally match the legacy path."""
+        """Dispatching an unregistered champion == engine + GENERIC_SLOTS."""
         champ = next(c for c in champions_data.values() if c.get("name") == "Garen")
         stats = _default_stats()
         target = _default_target()
-        legacy = legacy_generic_parse(
+        engine = _engine_parse(
             champ,
             13,
             200.0,
@@ -220,7 +156,8 @@ class TestGenericEquivalence:
             champion_stats=stats,
             target_stats=target,
         )
-        assert dispatched == legacy
+        assert dispatched == engine
+        assert dispatched["Q"]["total_raw"] > 0
 
 
 # ---------------------------------------------------------------------------

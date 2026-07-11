@@ -3,8 +3,7 @@
 import pytest
 
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.common import extract_leveling_damage
-from src.calculator.champions.aatrox import _extract_r_bonus_ad_percent
+from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import calculate_fight_damage
 
 
@@ -13,24 +12,32 @@ class TestQThreeCasts:
 
     def test_q_returns_physical_damage(self, aatrox_data, parse_at) -> None:
         _, abilities = parse_at(
-            aatrox_data, 9, champion_options={"sweetspot": False},
+            aatrox_data,
+            9,
+            champion_options={"sweetspot": False},
         )
         assert "Q" in abilities
         assert abilities["Q"]["damage_type"] == "physical"
 
     def test_q_sweetspot_deals_more_damage(self, aatrox_data, parse_at) -> None:
         _, normal = parse_at(
-            aatrox_data, 9, champion_options={"sweetspot": False},
+            aatrox_data,
+            9,
+            champion_options={"sweetspot": False},
         )
         _, sweetspot = parse_at(
-            aatrox_data, 9, champion_options={"sweetspot": True},
+            aatrox_data,
+            9,
+            champion_options={"sweetspot": True},
         )
         assert sweetspot["Q"]["total_raw"] > normal["Q"]["total_raw"]
 
     def test_q_sweetspot_is_default(self, aatrox_data, parse_at) -> None:
         _, default = parse_at(aatrox_data, 9)
         _, sweetspot = parse_at(
-            aatrox_data, 9, champion_options={"sweetspot": True},
+            aatrox_data,
+            9,
+            champion_options={"sweetspot": True},
         )
         assert abs(default["Q"]["total_raw"] - sweetspot["Q"]["total_raw"]) < 0.1
 
@@ -41,7 +48,9 @@ class TestQThreeCasts:
     def test_q_rank1_normal_damage_matches_json(self, aatrox_data, parse_at) -> None:
         """Verify Q rank 1 normal damage = sum of 3 casts at base AD."""
         stats, abilities = parse_at(
-            aatrox_data, 1, champion_options={"sweetspot": False},
+            aatrox_data,
+            1,
+            champion_options={"sweetspot": False},
         )
         q = abilities["Q"]
         ad = stats["attack_damage"]
@@ -62,18 +71,14 @@ class TestQThreeCasts:
         rank = 3  # Q rank 3 at level 5
         stats_ctx = dict(stats)
 
-        first = extract_leveling_damage(
-            q_ability, "First Cast Damage", rank, stats_ctx,
-        )
-        second = extract_leveling_damage(
-            q_ability, "Second Cast Damage", rank, stats_ctx,
-        )
-        third = extract_leveling_damage(
-            q_ability, "Third Cast Damage", rank, stats_ctx,
-        )
+        first = extract_named(q_ability, "First Cast Damage", rank, stats_ctx)
+        second = extract_named(q_ability, "Second Cast Damage", rank, stats_ctx)
+        third = extract_named(q_ability, "Third Cast Damage", rank, stats_ctx)
 
         _, abilities = parse_at(
-            aatrox_data, 5, champion_options={"sweetspot": False},
+            aatrox_data,
+            5,
+            champion_options={"sweetspot": False},
         )
         assert abs(abilities["Q"]["total_raw"] - (first + second + third)) < 0.5
 
@@ -83,14 +88,18 @@ class TestPassiveOnHit:
 
     def test_passive_returns_on_hit(self, aatrox_data, parse_at) -> None:
         _, abilities = parse_at(
-            aatrox_data, 9, target_stats={"target_max_health": 2000.0},
+            aatrox_data,
+            9,
+            target_stats={"target_max_health": 2000.0},
         )
         assert "passive" in abilities
         assert "on_hit" in abilities["passive"]
 
     def test_passive_damage_type_is_magic(self, aatrox_data, parse_at) -> None:
         _, abilities = parse_at(
-            aatrox_data, 9, target_stats={"target_max_health": 2000.0},
+            aatrox_data,
+            9,
+            target_stats={"target_max_health": 2000.0},
         )
         assert abilities["passive"]["on_hit"]["damage_type"] == "magic"
 
@@ -105,7 +114,9 @@ class TestPassiveOnHit:
     def test_passive_level1_percent(self, aatrox_data, parse_at) -> None:
         """Level 1 passive should deal ~4% of target max health."""
         _, abilities = parse_at(
-            aatrox_data, 1, target_stats={"target_max_health": 2000.0},
+            aatrox_data,
+            1,
+            target_stats={"target_max_health": 2000.0},
         )
         damage = abilities["passive"]["on_hit"]["damage_per_hit"]
         # 4% of 2000 = 80
@@ -114,7 +125,9 @@ class TestPassiveOnHit:
     def test_passive_level18_percent(self, aatrox_data, parse_at) -> None:
         """Level 18 passive should deal 10% of target max health."""
         _, abilities = parse_at(
-            aatrox_data, 18, target_stats={"target_max_health": 2000.0},
+            aatrox_data,
+            18,
+            target_stats={"target_max_health": 2000.0},
         )
         damage = abilities["passive"]["on_hit"]["damage_per_hit"]
         assert abs(damage - 200.0) < 1.0
@@ -122,7 +135,9 @@ class TestPassiveOnHit:
     def test_passive_level20_percent(self, aatrox_data, parse_at) -> None:
         """Level 20 passive should deal ~10.71% of target max health."""
         _, abilities = parse_at(
-            aatrox_data, 20, target_stats={"target_max_health": 2000.0},
+            aatrox_data,
+            20,
+            target_stats={"target_max_health": 2000.0},
         )
         damage = abilities["passive"]["on_hit"]["damage_per_hit"]
         assert abs(damage - 214.2) < 1.0
@@ -147,13 +162,15 @@ class TestRWorldEnder:
         assert with_r["Q"]["total_raw"] > no_r["Q"]["total_raw"]
 
     def test_r_bonus_ad_percent_rank1(self, aatrox_data) -> None:
+        """R rank 1 grants 20% bonus AD (the stat_buff percent_of read)."""
         r_ability = aatrox_data["abilities"]["R"][0]
-        bonus = _extract_r_bonus_ad_percent(r_ability, 1)
+        bonus = extract_value(r_ability, "Bonus Attack Damage", 1) / 100.0
         assert abs(bonus - 0.20) < 0.01
 
     def test_r_bonus_ad_percent_rank3(self, aatrox_data) -> None:
+        """R rank 3 grants 40% bonus AD."""
         r_ability = aatrox_data["abilities"]["R"][0]
-        bonus = _extract_r_bonus_ad_percent(r_ability, 3)
+        bonus = extract_value(r_ability, "Bonus Attack Damage", 3) / 100.0
         assert abs(bonus - 0.40) < 0.01
 
 
@@ -163,7 +180,9 @@ class TestRStatBuffInFightEngine:
     def test_stat_buff_applied_to_champion_stats(self, aatrox_data, parse_at) -> None:
         """The fight engine should apply R's bonus AD to champion stats."""
         stats, abilities = parse_at(
-            aatrox_data, 11, target_stats={"target_max_health": 2000.0},
+            aatrox_data,
+            11,
+            target_stats={"target_max_health": 2000.0},
         )
         original_ad = stats["attack_damage"]
 
@@ -181,7 +200,9 @@ class TestRStatBuffInFightEngine:
     def test_r_zero_damage_in_breakdown(self, aatrox_data, parse_at) -> None:
         """R should appear in fight engine but contribute 0 damage."""
         stats, abilities = parse_at(
-            aatrox_data, 11, target_stats={"target_max_health": 2000.0},
+            aatrox_data,
+            11,
+            target_stats={"target_max_health": 2000.0},
         )
         result = calculate_fight_damage(
             champion_stats=stats,

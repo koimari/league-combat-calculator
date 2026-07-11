@@ -21,12 +21,9 @@ All numeric values are read from the champion JSON data; nothing is
 hardcoded.
 """
 
-from typing import Any
-
 from .engine import build_parser
 from .slotlib import (
     by_option,
-    extract_value,
     multi_hit_sum,
     on_hit_pct_health,
     simple_damage,
@@ -43,16 +40,6 @@ _Q_NORMAL_ATTRS = [
     "Second Cast Damage",
     "Third Cast Damage",
 ]
-
-
-def _extract_r_bonus_ad_percent(ability: dict[str, Any], rank: int) -> float:
-    """R bonus AD as a fraction (0.20 for 20%).
-
-    Test seam mirroring the stat_buff archetype's percent_of
-    extraction; tests/test_aatrox.py validates the JSON values here.
-    """
-    return extract_value(ability, "Bonus Attack Damage", rank) / 100.0
-
 
 OPTIONS = [
     {"key": "sweetspot", "type": "bool", "default": True, "label": "Q Sweetspot hits"},

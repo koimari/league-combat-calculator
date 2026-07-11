@@ -3,10 +3,8 @@
 import pytest
 
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.common import extract_leveling_damage
 from src.calculator.champions.amumu import _CURSE_BONUS_FRACTION
 from src.calculator.damage import calculate_fight_damage
-
 
 # Default target stats used when W's %maxHP damage needs resolving.
 _TARGET = {"target_max_health": 2000.0}
@@ -33,7 +31,9 @@ class TestQBandageToss:
 
     def test_q_damage_type_is_magic_without_curse(self, amumu_data, parse_at) -> None:
         _, abilities = parse_at(
-            amumu_data, 9, target_stats=_TARGET,
+            amumu_data,
+            9,
+            target_stats=_TARGET,
             champion_options={"target_cursed": False},
         )
         assert abilities["Q"]["damage_type"] == "magic"
@@ -47,7 +47,8 @@ class TestQBandageToss:
     def test_q_rank1_damage_matches_json(self, amumu_data, parse_at) -> None:
         """Q rank 1 single cast = 70 + 85% AP, with 0 AP = 70."""
         _, abilities = parse_at(
-            amumu_data, 1,
+            amumu_data,
+            1,
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
@@ -56,7 +57,9 @@ class TestQBandageToss:
     def test_q_with_ap_scaling(self, amumu_data, parse_at) -> None:
         """Q with 200 AP: 70 + 85%*200 = 70 + 170 = 240 per cast."""
         _, abilities = parse_at(
-            amumu_data, 1, ap=200.0,
+            amumu_data,
+            1,
+            ap=200.0,
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
@@ -65,7 +68,8 @@ class TestQBandageToss:
     def test_q_curse_adds_true_damage(self, amumu_data, parse_at) -> None:
         """With curse, Q should have bonus true damage = 10% of magic."""
         _, abilities = parse_at(
-            amumu_data, 1,
+            amumu_data,
+            1,
             champion_options={"target_cursed": True},
             target_stats=_TARGET,
         )
@@ -76,7 +80,8 @@ class TestQBandageToss:
     def test_q_reports_single_cast_damage(self, amumu_data, parse_at) -> None:
         """Q should report damage for one cast only (fight engine handles repetition)."""
         _, abilities = parse_at(
-            amumu_data, 1,
+            amumu_data,
+            1,
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
@@ -98,7 +103,9 @@ class TestWDespair:
 
     def test_w_seconds_configurable(self, amumu_data, parse_at) -> None:
         _, ab5 = parse_at(
-            amumu_data, 9, target_stats=_TARGET,
+            amumu_data,
+            9,
+            target_stats=_TARGET,
             champion_options={"w_seconds": 5.0, "target_cursed": False},
         )
         assert ab5["W"]["total_ticks"] == 10
@@ -111,12 +118,14 @@ class TestWDespair:
     def test_w_scales_with_target_max_hp(self, amumu_data, parse_at) -> None:
         """W damage should increase with higher target max HP."""
         _, ab_low = parse_at(
-            amumu_data, 9,
+            amumu_data,
+            9,
             target_stats={"target_max_health": 1000.0},
             champion_options={"target_cursed": False},
         )
         _, ab_high = parse_at(
-            amumu_data, 9,
+            amumu_data,
+            9,
             target_stats={"target_max_health": 4000.0},
             champion_options={"target_cursed": False},
         )
@@ -125,7 +134,8 @@ class TestWDespair:
     def test_w_rank1_per_tick_no_ap(self, amumu_data, parse_at) -> None:
         """W rank 1: 5 flat + 0.5% of 2000 max HP = 5 + 10 = 15 per tick."""
         _, abilities = parse_at(
-            amumu_data, 3,  # level 3: W rank 1 (Q→W→E skill order)
+            amumu_data,
+            3,  # level 3: W rank 1 (Q→W→E skill order)
             champion_options={"w_seconds": 0.5, "target_cursed": False},
             target_stats=_TARGET,
         )
@@ -135,7 +145,9 @@ class TestWDespair:
     def test_w_rank5_per_tick_with_ap(self, amumu_data, parse_at) -> None:
         """W rank 5 with 200 AP: 5 + (1% + 0.5%) * 2000 = 5 + 30 = 35."""
         _, abilities = parse_at(
-            amumu_data, 13, ap=200.0,  # level 13: W rank 5
+            amumu_data,
+            13,
+            ap=200.0,  # level 13: W rank 5
             champion_options={"w_seconds": 0.5, "target_cursed": False},
             target_stats=_TARGET,
         )
@@ -158,7 +170,8 @@ class TestETantrum:
     def test_e_rank1_damage_no_ap(self, amumu_data, parse_at) -> None:
         """E rank 1 = 65 + 50%*0 = 65 magic damage."""
         _, abilities = parse_at(
-            amumu_data, 5,  # level 5: E rank 1
+            amumu_data,
+            5,  # level 5: E rank 1
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
@@ -167,7 +180,9 @@ class TestETantrum:
     def test_e_with_200_ap(self, amumu_data, parse_at) -> None:
         """E rank 1 with 200 AP: 65 + 100 = 165."""
         _, abilities = parse_at(
-            amumu_data, 5, ap=200.0,
+            amumu_data,
+            5,
+            ap=200.0,
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
@@ -188,7 +203,8 @@ class TestRCurseOfTheSadMummy:
     def test_r_rank1_damage_no_ap(self, amumu_data, parse_at) -> None:
         """R rank 1: 200 + 80%*0 = 200 magic damage."""
         _, abilities = parse_at(
-            amumu_data, 6,
+            amumu_data,
+            6,
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
@@ -197,7 +213,9 @@ class TestRCurseOfTheSadMummy:
     def test_r_rank3_with_200_ap(self, amumu_data, parse_at) -> None:
         """R rank 3 with 200 AP: 400 + 160 = 560 magic damage."""
         _, abilities = parse_at(
-            amumu_data, 16, ap=200.0,
+            amumu_data,
+            16,
+            ap=200.0,
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
@@ -210,7 +228,9 @@ class TestCurseIntegration:
     def test_all_magic_abilities_get_curse_bonus(self, amumu_data, parse_at) -> None:
         """Every magic-damage ability should have bonus true damage."""
         _, abilities = parse_at(
-            amumu_data, 9, target_stats=_TARGET,
+            amumu_data,
+            9,
+            target_stats=_TARGET,
             champion_options={"target_cursed": True},
         )
         for key in ("Q", "W", "E"):
@@ -220,7 +240,9 @@ class TestCurseIntegration:
     def test_curse_off_no_true_damage(self, amumu_data, parse_at) -> None:
         """With curse off, abilities should have no true_damage key."""
         _, abilities = parse_at(
-            amumu_data, 9, target_stats=_TARGET,
+            amumu_data,
+            9,
+            target_stats=_TARGET,
             champion_options={"target_cursed": False},
         )
         for key in ("Q", "W", "E"):
@@ -229,15 +251,18 @@ class TestCurseIntegration:
     def test_curse_bonus_is_10_percent(self, amumu_data, parse_at) -> None:
         """Curse bonus true damage should be exactly 10% of magic damage."""
         _, abilities = parse_at(
-            amumu_data, 9, ap=100.0, target_stats=_TARGET,
+            amumu_data,
+            9,
+            ap=100.0,
+            target_stats=_TARGET,
             champion_options={"target_cursed": True},
         )
         for key in ("Q", "W", "E"):
             magic = abilities[key]["magic_damage"]
             true_dmg = abilities[key]["true_damage"]
-            assert true_dmg == pytest.approx(magic * 0.10, rel=0.01), (
-                f"{key}: true={true_dmg}, expected 10% of magic={magic}"
-            )
+            assert true_dmg == pytest.approx(
+                magic * 0.10, rel=0.01
+            ), f"{key}: true={true_dmg}, expected 10% of magic={magic}"
 
 
 class TestFightEngineIntegration:

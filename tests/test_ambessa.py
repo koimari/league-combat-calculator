@@ -4,7 +4,6 @@ import pytest
 
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.common import extract_leveling_damage, extract_leveling_value
 from src.calculator.champions.ambessa import (
     parse_abilities,
     _parse_passive_damage,
@@ -17,28 +16,34 @@ class TestQ1CunningSweep:
 
     def test_q1_returns_physical_damage(self, ambessa_data, parse_at) -> None:
         _, abilities = parse_at(
-            ambessa_data, 9, champion_options={"sweetspot": False},
+            ambessa_data,
+            9,
+            champion_options={"sweetspot": False},
         )
         assert "Q" in abilities
         assert abilities["Q"]["damage_type"] == "physical"
 
     def test_q1_sweetspot_deals_more_damage(self, ambessa_data, parse_at) -> None:
         _, normal = parse_at(
-            ambessa_data, 9, champion_options={"sweetspot": False},
+            ambessa_data,
+            9,
+            champion_options={"sweetspot": False},
         )
         _, sweetspot = parse_at(
-            ambessa_data, 9, champion_options={"sweetspot": True},
+            ambessa_data,
+            9,
+            champion_options={"sweetspot": True},
         )
         assert sweetspot["Q"]["total_raw"] > normal["Q"]["total_raw"]
 
     def test_q1_sweetspot_is_default(self, ambessa_data, parse_at) -> None:
         _, default = parse_at(ambessa_data, 9)
         _, sweetspot = parse_at(
-            ambessa_data, 9, champion_options={"sweetspot": True},
+            ambessa_data,
+            9,
+            champion_options={"sweetspot": True},
         )
-        assert abs(
-            default["Q"]["total_raw"] - sweetspot["Q"]["total_raw"]
-        ) < 0.1
+        assert abs(default["Q"]["total_raw"] - sweetspot["Q"]["total_raw"]) < 0.1
 
     def test_q1_has_cooldown(self, ambessa_data, parse_at) -> None:
         _, abilities = parse_at(ambessa_data, 9)
@@ -47,7 +52,9 @@ class TestQ1CunningSweep:
     def test_q1_rank1_normal_damage(self, ambessa_data, parse_at) -> None:
         """Verify Q1 rank 1 normal damage = base + bonus AD scaling."""
         _, abilities = parse_at(
-            ambessa_data, 1, champion_options={"sweetspot": False},
+            ambessa_data,
+            1,
+            champion_options={"sweetspot": False},
         )
         assert abilities["Q"]["total_raw"] > 0
 
@@ -70,10 +77,14 @@ class TestQ2SunderingSlam:
 
     def test_q2_sweetspot_deals_more_damage(self, ambessa_data, parse_at) -> None:
         _, normal = parse_at(
-            ambessa_data, 9, champion_options={"sweetspot": False},
+            ambessa_data,
+            9,
+            champion_options={"sweetspot": False},
         )
         _, sweetspot = parse_at(
-            ambessa_data, 9, champion_options={"sweetspot": True},
+            ambessa_data,
+            9,
+            champion_options={"sweetspot": True},
         )
         assert sweetspot["Q2"]["total_raw"] > normal["Q2"]["total_raw"]
 
@@ -246,7 +257,9 @@ class TestPassiveDrakehoundsStep:
     def test_passive_proc_count_custom(self, ambessa_data, parse_at) -> None:
         """Custom passive proc count should be respected."""
         _, abilities = parse_at(
-            ambessa_data, 9, champion_options={"passive_procs": 6},
+            ambessa_data,
+            9,
+            champion_options={"passive_procs": 6},
         )
         assert abilities["passive"]["proc_count"] == 6
         per_proc = abilities["passive"]["physical_damage"]
@@ -255,7 +268,9 @@ class TestPassiveDrakehoundsStep:
     def test_passive_zero_procs_excluded(self, ambessa_data, parse_at) -> None:
         """Setting passive_procs to 0 should exclude passive."""
         _, abilities = parse_at(
-            ambessa_data, 9, champion_options={"passive_procs": 0},
+            ambessa_data,
+            9,
+            champion_options={"passive_procs": 0},
         )
         assert "passive" not in abilities
 

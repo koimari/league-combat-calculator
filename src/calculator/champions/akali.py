@@ -19,29 +19,11 @@ from typing import Any
 
 from .engine import SlotCtx, build_parser
 from .slotlib import (
-    build_stats_context,
     extract_cooldown,
     extract_named,
     proc_damage,
     simple_damage,
 )
-
-
-def _parse_passive_damage(
-    passive: dict[str, Any],
-    level: int,
-    champion_stats: dict[str, float] | None = None,
-    total_ability_power: float = 0.0,
-) -> float:
-    """Per-proc passive damage at a champion level.
-
-    Thin seam over the same extraction the P slot's proc_damage
-    archetype performs ("Bonus Magic Damage" holds per-level base values
-    plus bonus-AD/AP scaling modifiers); kept because tests exercise the
-    passive numbers directly against the wiki.
-    """
-    stats = build_stats_context(champion_stats, total_ability_power)
-    return extract_named(passive, "Bonus Magic Damage", level, stats)
 
 
 def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:

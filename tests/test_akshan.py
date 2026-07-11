@@ -3,7 +3,6 @@
 import pytest
 
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.common import extract_leveling_damage
 from src.calculator.champions.akshan import (
     parse_abilities,
     _extract_e_per_shot,
@@ -54,13 +53,17 @@ class TestEHeroicSwing:
 
     def test_e_is_physical_damage(self, akshan_data, parse_at) -> None:
         _, abilities = parse_at(
-            akshan_data, 5, champion_options={"e_shots": 5},
+            akshan_data,
+            5,
+            champion_options={"e_shots": 5},
         )
         assert abilities["E"]["damage_type"] == "physical"
 
     def test_e_has_cooldown(self, akshan_data, parse_at) -> None:
         _, abilities = parse_at(
-            akshan_data, 5, champion_options={"e_shots": 5},
+            akshan_data,
+            5,
+            champion_options={"e_shots": 5},
         )
         assert abilities["E"]["cooldown"] > 0
 
@@ -76,17 +79,23 @@ class TestEHeroicSwing:
     def test_e_total_scales_with_shots(self, akshan_data, parse_at) -> None:
         """E total damage should scale linearly with shot count."""
         _, three = parse_at(
-            akshan_data, 5, champion_options={"e_shots": 3},
+            akshan_data,
+            5,
+            champion_options={"e_shots": 3},
         )
         _, six = parse_at(
-            akshan_data, 5, champion_options={"e_shots": 6},
+            akshan_data,
+            5,
+            champion_options={"e_shots": 6},
         )
         assert abs(six["E"]["total_raw"] - three["E"]["total_raw"] * 2) < 0.1
 
     def test_e_zero_shots_excluded(self, akshan_data, parse_at) -> None:
         """E with 0 shots should not appear in results."""
         _, abilities = parse_at(
-            akshan_data, 5, champion_options={"e_shots": 0},
+            akshan_data,
+            5,
+            champion_options={"e_shots": 0},
         )
         assert "E" not in abilities
 
@@ -155,19 +164,27 @@ class TestPassiveDirtyFighting:
 
     def test_passive_in_results_with_procs(self, akshan_data, parse_at) -> None:
         _, abilities = parse_at(
-            akshan_data, 5, champion_options={"passive_procs": 3},
+            akshan_data,
+            5,
+            champion_options={"passive_procs": 3},
         )
         assert "passive" in abilities
 
-    def test_passive_not_in_results_with_zero_procs(self, akshan_data, parse_at) -> None:
+    def test_passive_not_in_results_with_zero_procs(
+        self, akshan_data, parse_at
+    ) -> None:
         _, abilities = parse_at(
-            akshan_data, 5, champion_options={"passive_procs": 0},
+            akshan_data,
+            5,
+            champion_options={"passive_procs": 0},
         )
         assert "passive" not in abilities
 
     def test_passive_is_magic_damage(self, akshan_data, parse_at) -> None:
         _, abilities = parse_at(
-            akshan_data, 5, champion_options={"passive_procs": 3},
+            akshan_data,
+            5,
+            champion_options={"passive_procs": 3},
         )
         assert abilities["passive"]["damage_type"] == "magic"
 
@@ -200,25 +217,33 @@ class TestPassiveDirtyFighting:
         passive = akshan_data["abilities"]["P"][0]
         no_ap = _parse_passive_proc_damage(passive, 11)
         with_ap = _parse_passive_proc_damage(
-            passive, 11, {"ability_power": 200.0},
+            passive,
+            11,
+            {"ability_power": 200.0},
         )
         expected_bonus = 0.60 * 200.0
         assert abs((with_ap - no_ap) - expected_bonus) < 0.1
 
     def test_passive_proc_count_multiplies_total(self, akshan_data, parse_at) -> None:
         _, one = parse_at(
-            akshan_data, 5, champion_options={"passive_procs": 1},
+            akshan_data,
+            5,
+            champion_options={"passive_procs": 1},
         )
         _, three = parse_at(
-            akshan_data, 5, champion_options={"passive_procs": 3},
+            akshan_data,
+            5,
+            champion_options={"passive_procs": 3},
         )
-        assert abs(
-            three["passive"]["total_raw"] - one["passive"]["total_raw"] * 3
-        ) < 0.1
+        assert (
+            abs(three["passive"]["total_raw"] - one["passive"]["total_raw"] * 3) < 0.1
+        )
 
     def test_passive_has_proc_count_field(self, akshan_data, parse_at) -> None:
         _, abilities = parse_at(
-            akshan_data, 5, champion_options={"passive_procs": 5},
+            akshan_data,
+            5,
+            champion_options={"passive_procs": 5},
         )
         assert abilities["passive"]["proc_count"] == 5
 
@@ -229,7 +254,9 @@ class TestFightEngineIntegration:
     def test_double_shot_in_breakdown(self, akshan_data, parse_at) -> None:
         """Double shot should appear in the fight breakdown."""
         stats, abilities = parse_at(
-            akshan_data, 9, champion_options={"passive_procs": 0},
+            akshan_data,
+            9,
+            champion_options={"passive_procs": 0},
         )
         result = calculate_fight_damage(
             champion_stats=dict(stats),
@@ -246,7 +273,9 @@ class TestFightEngineIntegration:
     def test_passive_proc_in_breakdown(self, akshan_data, parse_at) -> None:
         """Passive procs should appear in the fight breakdown."""
         stats, abilities = parse_at(
-            akshan_data, 9, champion_options={"passive_procs": 3},
+            akshan_data,
+            9,
+            champion_options={"passive_procs": 3},
         )
         result = calculate_fight_damage(
             champion_stats=dict(stats),
@@ -299,7 +328,8 @@ class TestFightEngineIntegration:
     def test_r_missing_hp_scaling(self, akshan_data, parse_at) -> None:
         """R damage should be higher when Q/E deal damage first (more missing HP)."""
         stats, abilities_full = parse_at(
-            akshan_data, 11,
+            akshan_data,
+            11,
             champion_options={"passive_procs": 0, "e_shots": 5},
         )
         stats["critical_strike_chance"] = 0.0
@@ -356,7 +386,8 @@ class TestFightEngineIntegration:
     def test_all_abilities_present(self, akshan_data, parse_at) -> None:
         """All expected abilities should be present at level 9."""
         _, abilities = parse_at(
-            akshan_data, 9,
+            akshan_data,
+            9,
             champion_options={"passive_procs": 3, "e_shots": 5},
         )
         assert "Q" in abilities
