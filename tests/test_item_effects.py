@@ -17,12 +17,22 @@ from src.calculator.item_effects import (
     get_basic_ability_haste,
     get_bloodmail_bonus_ad,
     get_dawncore_bonus_ap,
+    get_energized_proc_damage,
+    get_fiendhunter_crit_ratios,
+    get_fiendhunter_empowerment,
     get_flowing_water_bonus_ap,
+    get_hullbreaker_hits_required,
     get_mana_to_ap_bonus,
     get_muramana_bonus_ad,
     get_passive_attack_speed_bonus,
+    get_statikk_empowered_auto_count,
     get_steraks_bonus_ad,
+    get_sundered_sky_crit_ratio,
     get_terminus_max_stack_bonuses,
+    get_terminus_max_stack_pen,
+    get_titanic_crescent,
+    get_ult_proc_mr_reduction,
+    get_voltaic_firmament,
     refresh_item_effects,
 )
 
@@ -182,6 +192,109 @@ class TestBasicAbilityHaste:
     def test_shojin(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(monkeypatch, "Spear of Shojin", basic_ability_haste=25.0)
         assert get_basic_ability_haste(_build("Spear of Shojin")) == 25.0
+
+
+class TestFightEngineValueAccessors:
+    """Accessors that hand the fight engine its per-item numeric values.
+
+    Phase 4 moved these reads out of damage.py's step functions; each
+    accessor owns the registry lookup, the fight-model logic (proc
+    counts, mitigation, HP simulation) stays in the engine.
+    """
+
+    def test_ult_proc_mr_reduction_sums_ult_proc_items(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _patch_effect(monkeypatch, "Malignance", type="ult_proc", mr_reduction=10.0)
+        build = _build("Malignance", "Liandry's Torment")
+        assert get_ult_proc_mr_reduction(build) == 10.0
+
+    def test_ult_proc_mr_reduction_zero_without_ult_proc_items(self) -> None:
+        assert get_ult_proc_mr_reduction(_build("Liandry's Torment")) == 0.0
+
+    def test_fiendhunter_empowerment(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _patch_effect(
+            monkeypatch,
+            "Fiendhunter Bolts",
+            bonus_attack_speed_percent=50.0,
+            empowered_auto_count=3,
+            duration=6.0,
+        )
+        assert get_fiendhunter_empowerment() == (50.0, 3, 6.0)
+
+    def test_fiendhunter_crit_ratios(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _patch_effect(
+            monkeypatch,
+            "Fiendhunter Bolts",
+            reduced_crit_ratio=0.8,
+            natural_crit_true_damage_ratio=0.4,
+        )
+        assert get_fiendhunter_crit_ratios() == (0.8, 0.4)
+
+    def test_sundered_sky_crit_ratio(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _patch_effect(monkeypatch, "Sundered Sky", reduced_crit_ratio=0.6)
+        assert get_sundered_sky_crit_ratio() == 0.6
+
+    def test_terminus_max_stack_pen_is_a_fraction(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _patch_effect(
+            monkeypatch, "Terminus", dark_pen_per_stack=0.10, dark_max_stacks=3
+        )
+        assert abs(get_terminus_max_stack_pen() - 0.30) < 1e-9
+
+    def test_energized_proc_damage(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _patch_effect(monkeypatch, "Rapid Firecannon", base=120.0)
+        _patch_effect(monkeypatch, "Stormrazor", base=90.0)
+        assert get_energized_proc_damage("Rapid Firecannon") == 120.0
+        assert get_energized_proc_damage("Stormrazor") == 90.0
+
+    def test_statikk_empowered_auto_count_is_int(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _patch_effect(monkeypatch, "Statikk Shiv", empowered_auto_count=1.0)
+        count = get_statikk_empowered_auto_count()
+        assert count == 1
+        assert isinstance(count, int)
+
+    def test_voltaic_firmament_melee_vs_ranged(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _patch_effect(
+            monkeypatch,
+            "Voltaic Cyclosword",
+            current_hp_ratio_melee=0.09,
+            current_hp_ratio_ranged=0.07,
+            damage_cap=200.0,
+        )
+        assert get_voltaic_firmament(is_melee=True) == (0.09, 200.0)
+        assert get_voltaic_firmament(is_melee=False) == (0.07, 200.0)
+
+    def test_titanic_crescent_melee_vs_ranged(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _patch_effect(
+            monkeypatch,
+            "Titanic Hydra",
+            active_max_hp_ratio_melee=0.08,
+            active_max_hp_ratio_ranged=0.04,
+            active_cooldown=10.0,
+        )
+        assert get_titanic_crescent(is_melee=True) == (0.08, 10.0)
+        assert get_titanic_crescent(is_melee=False) == (0.04, 10.0)
+
+    def test_hullbreaker_hits_required(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _patch_effect(monkeypatch, "Hullbreaker", hits_required=5)
+        assert get_hullbreaker_hits_required() == 5
+
+    def test_missing_key_raises_keyerror_naming_item(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(item_effects.ITEM_EFFECTS.get("Stormrazor", {}))
+        broken.pop("base", None)
+        monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Stormrazor", broken)
+        with pytest.raises(KeyError, match="Stormrazor"):
+            get_energized_proc_damage("Stormrazor")
 
 
 class TestMissingKeyFailsLoudly:

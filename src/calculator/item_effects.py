@@ -829,6 +829,136 @@ def get_basic_ability_haste(items: list[dict[str, Any]]) -> float:
 
 
 # ---------------------------------------------------------------------------
+# Fight-engine value accessors (consumed by damage.py)
+# ---------------------------------------------------------------------------
+# Per-item numeric values the fight engine reads while modeling a fight.
+# Each accessor owns the registry lookup; the fight-model logic (proc
+# counts, mitigation, HP simulation) stays in damage.py's step functions.
+
+
+def get_ult_proc_mr_reduction(items: list[dict[str, Any]]) -> float:
+    """Total MR reduction from ult-triggered proc items (Malignance Hatefog).
+
+    Args:
+        items: List of item data dicts.
+
+    Returns:
+        Summed MR reduction across ult_proc items (0.0 with none).
+    """
+    total = 0.0
+    for item in items:
+        name = item.get("name", "")
+        if ITEM_EFFECTS.get(name, {}).get("type") == "ult_proc":
+            total += _required_effect_value(name, "mr_reduction")
+    return total
+
+
+def get_fiendhunter_empowerment() -> tuple[float, int, float]:
+    """Fiendhunter Bolts ult buff values.
+
+    Returns:
+        Tuple of (bonus attack speed percent, empowered auto count,
+        buff duration in seconds).
+    """
+    return (
+        _required_effect_value("Fiendhunter Bolts", "bonus_attack_speed_percent"),
+        _required_effect_value("Fiendhunter Bolts", "empowered_auto_count"),
+        _required_effect_value("Fiendhunter Bolts", "duration"),
+    )
+
+
+def get_fiendhunter_crit_ratios() -> tuple[float, float]:
+    """Fiendhunter Bolts empowered-auto crit ratios.
+
+    Returns:
+        Tuple of (non-crit damage as a fraction of full crit damage,
+        bonus true damage as a fraction of a natural crit's damage).
+    """
+    return (
+        _required_effect_value("Fiendhunter Bolts", "reduced_crit_ratio"),
+        _required_effect_value("Fiendhunter Bolts", "natural_crit_true_damage_ratio"),
+    )
+
+
+def get_sundered_sky_crit_ratio() -> float:
+    """Sundered Sky Lightshield Strike forced-crit ratio.
+
+    Returns:
+        The first auto's forced crit damage as a fraction of a full crit.
+    """
+    return _required_effect_value("Sundered Sky", "reduced_crit_ratio")
+
+
+def get_terminus_max_stack_pen() -> float:
+    """Terminus Juxtaposition max-stack pen as a fraction (e.g. 0.30).
+
+    The fraction counterpart of ``get_terminus_max_stack_bonuses``'
+    display percentage — the fight engine strips this from champion-stat
+    pen before applying the ramping per-auto average.
+    """
+    return _required_effect_value(
+        "Terminus", "dark_pen_per_stack"
+    ) * _required_effect_value("Terminus", "dark_max_stacks")
+
+
+def get_energized_proc_damage(item_name: str) -> float:
+    """Base damage of a one-shot energized proc.
+
+    Users: Rapid Firecannon (Sharpshooter), Stormrazor (Bolt), and
+    Statikk Shiv (Electrospark, per empowered auto).
+
+    Args:
+        item_name: The energized item's name.
+
+    Returns:
+        Raw base damage per proc.
+    """
+    return _required_effect_value(item_name, "base")
+
+
+def get_statikk_empowered_auto_count() -> int:
+    """Statikk Shiv Electrospark: number of empowered autos per energize."""
+    return int(_required_effect_value("Statikk Shiv", "empowered_auto_count"))
+
+
+def get_voltaic_firmament(is_melee: bool) -> tuple[float, float]:
+    """Voltaic Cyclosword Firmament values.
+
+    Args:
+        is_melee: Whether the champion is melee.
+
+    Returns:
+        Tuple of (current-HP damage ratio for the range class, damage cap).
+    """
+    key = "current_hp_ratio_melee" if is_melee else "current_hp_ratio_ranged"
+    return (
+        _required_effect_value("Voltaic Cyclosword", key),
+        _required_effect_value("Voltaic Cyclosword", "damage_cap"),
+    )
+
+
+def get_titanic_crescent(is_melee: bool) -> tuple[float, float]:
+    """Titanic Hydra Crescent active values.
+
+    Args:
+        is_melee: Whether the champion is melee.
+
+    Returns:
+        Tuple of (max-HP damage ratio for the range class, active cooldown).
+    """
+    key = "active_max_hp_ratio_melee" if is_melee else "active_max_hp_ratio_ranged"
+    return (
+        _required_effect_value("Titanic Hydra", key),
+        _required_effect_value("Titanic Hydra", "active_cooldown"),
+    )
+
+
+def get_hullbreaker_hits_required() -> int:
+    """Hullbreaker Skipper: on-hit applications required per proc."""
+    return _required_effect_value("Hullbreaker", "hits_required")
+
+
+# ---------------------------------------------------------------------------
 # Calculation helpers
 # ---------------------------------------------------------------------------
 

@@ -732,11 +732,9 @@ def _resolve_combat_state(
     # Malignance MR reduction only activates on R cast, so abilities before
     # R in the cast_order use base MR.  Both effective values are resolved
     # and the rotation tracks which one to use per-ability.
-    malignance_mr_reduction = 0.0
-    for item in items:
-        effect = item_effects.ITEM_EFFECTS.get(item.get("name", ""), {})
-        if effect.get("type") == "ult_proc" and "R" in ability_damages:
-            malignance_mr_reduction += effect["mr_reduction"]
+    malignance_mr_reduction = (
+        item_effects.get_ult_proc_mr_reduction(items) if "R" in ability_damages else 0.0
+    )
 
     base_mr = max(target_magic_resistance, 0)
     reduced_mr = max(target_magic_resistance - malignance_mr_reduction, 0)
@@ -759,13 +757,13 @@ def _resolve_combat_state(
     empowered_autos = 0  # Fiendhunter: count of empowered auto attacks
 
     if has_fiendhunter and auto_attack_uptime > 0:
-        buff_effect = item_effects.ITEM_EFFECTS.get("Fiendhunter Bolts")
-        bonus_as_pct = buff_effect["bonus_attack_speed_percent"]
+        bonus_as_pct, max_empowered, fh_duration = (
+            item_effects.get_fiendhunter_empowerment()
+        )
         buffed_as = attack_speed + as_ratio * (bonus_as_pct / 100.0)
 
         # Fiendhunter: 3 empowered autos at buffed AS, then normal AS
-        max_empowered = buff_effect["empowered_auto_count"]
-        buff_dur = min(buff_effect["duration"], fight_duration_seconds)
+        buff_dur = min(fh_duration, fight_duration_seconds)
         possible_in_window = math.floor(buffed_as * buff_dur * auto_attack_uptime)
         empowered_autos = min(max_empowered, possible_in_window)
         if empowered_autos > 0 and buffed_as > 0:
@@ -793,10 +791,7 @@ def _resolve_combat_state(
     terminus_stat_pen = 0.0
     if has_terminus:
         terminus_avg_pen = item_effects.get_terminus_pen_stacks(num_auto_attacks)
-        terminus_effect = item_effects.ITEM_EFFECTS.get("Terminus", {})
-        terminus_stat_pen = (
-            terminus_effect["dark_pen_per_stack"] * terminus_effect["dark_max_stacks"]
-        )
+        terminus_stat_pen = item_effects.get_terminus_max_stack_pen()
 
     # Black Cleaver armor reduction (applied before penetration)
     bc_reduction = item_effects.get_armor_reduction(
@@ -1327,14 +1322,11 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     crit_damage_per_hit = 0.0
     non_crit_damage_per_hit = 0.0
 
-    fh_effect = item_effects.ITEM_EFFECTS.get("Fiendhunter Bolts")
-    fh_reduced_crit = fh_effect["reduced_crit_ratio"] if fh_effect else 0.0
-    fh_true_ratio = fh_effect["natural_crit_true_damage_ratio"] if fh_effect else 0.0
+    fh_reduced_crit, fh_true_ratio = item_effects.get_fiendhunter_crit_ratios()
 
     # Sundered Sky: first auto crits at reduced crit ratio, overrides natural crit
     has_sundered_sky = "Sundered Sky" in state.item_name_list
-    ss_effect = item_effects.ITEM_EFFECTS.get("Sundered Sky")
-    ss_reduced_crit = ss_effect["reduced_crit_ratio"] if ss_effect else 0.0
+    ss_reduced_crit = item_effects.get_sundered_sky_crit_ratio()
 
     sundered_sky_damage_diff = 0.0  # + = bonus damage, - = lost damage
 
@@ -2029,8 +2021,7 @@ def _add_single_proc_on_hits(
 
     # Rapid Firecannon: one energized proc on first auto
     if "Rapid Firecannon" in item_names and num_auto_attacks > 0:
-        rfc_effect = item_effects.ITEM_EFFECTS.get("Rapid Firecannon", {})
-        raw_rfc = rfc_effect["base"]
+        raw_rfc = item_effects.get_energized_proc_damage("Rapid Firecannon")
         rfc_mitigated = apply_resistance(raw_rfc, effective_mr)
         breakdown["on_hit_once_Rapid Firecannon"] = {
             "name": "Rapid Firecannon (Sharpshooter)",
@@ -2041,8 +2032,7 @@ def _add_single_proc_on_hits(
 
     # Stormrazor: one energized proc on first auto
     if "Stormrazor" in item_names and num_auto_attacks > 0:
-        sr_effect = item_effects.ITEM_EFFECTS.get("Stormrazor", {})
-        raw_sr = sr_effect["base"]
+        raw_sr = item_effects.get_energized_proc_damage("Stormrazor")
         sr_mitigated = apply_resistance(raw_sr, effective_mr)
         breakdown["on_hit_once_Stormrazor"] = {
             "name": "Stormrazor (Bolt)",
@@ -2056,13 +2046,7 @@ def _add_single_proc_on_hits(
     # split), capped. The proc lands on the first auto, when the target is
     # still at full health (same convention as BoRK's simulation start).
     if "Voltaic Cyclosword" in item_names and num_auto_attacks > 0:
-        vc_effect = item_effects.ITEM_EFFECTS.get("Voltaic Cyclosword", {})
-        vc_ratio = (
-            vc_effect["current_hp_ratio_melee"]
-            if is_melee
-            else vc_effect["current_hp_ratio_ranged"]
-        )
-        vc_cap = vc_effect["damage_cap"]
+        vc_ratio, vc_cap = item_effects.get_voltaic_firmament(is_melee)
         raw_vc = min(vc_ratio * state.target_health, vc_cap)
         vc_mitigated = apply_resistance(raw_vc, effective_armor)
         breakdown["on_hit_once_Voltaic Cyclosword"] = {
@@ -2076,12 +2060,11 @@ def _add_single_proc_on_hits(
     # Single-target model: the chain (chain_targets_min/max) has nothing to
     # bounce to, so damage is one base-damage proc.
     if "Statikk Shiv" in item_names and num_auto_attacks > 0:
-        ss_effect = item_effects.ITEM_EFFECTS.get("Statikk Shiv", {})
         ss_count = min(
-            int(ss_effect["empowered_auto_count"]),
+            item_effects.get_statikk_empowered_auto_count(),
             num_auto_attacks,
         )
-        raw_ss = ss_effect["base"] * ss_count
+        raw_ss = item_effects.get_energized_proc_damage("Statikk Shiv") * ss_count
         ss_mitigated = apply_resistance(raw_ss, effective_mr)
         breakdown["on_hit_once_Statikk Shiv"] = {
             "name": "Statikk Shiv (Electrospark)",
@@ -2093,14 +2076,8 @@ def _add_single_proc_on_hits(
 
     # Titanic Hydra Crescent active: empowered Cleave on next auto (10s CD)
     if "Titanic Hydra" in item_names and num_auto_attacks > 0:
-        th_effect = item_effects.ITEM_EFFECTS.get("Titanic Hydra", {})
-        th_active_ratio = (
-            th_effect["active_max_hp_ratio_melee"]
-            if is_melee
-            else th_effect["active_max_hp_ratio_ranged"]
-        )
+        th_active_ratio, th_cd = item_effects.get_titanic_crescent(is_melee)
         if th_active_ratio > 0:
-            th_cd = th_effect["active_cooldown"]
             th_procs = 1 + int(state.fight_duration_seconds / th_cd) if th_cd > 0 else 1
             th_procs = min(th_procs, num_auto_attacks)
             champion_hp = state.champion_stats.get("health", 0)
@@ -2153,8 +2130,7 @@ def _add_single_proc_on_hits(
     # double on-hit procs each grant an extra stack (not extra damage).
     # Damage is constant per proc (base AD ratio + champion max HP ratio).
     if "Hullbreaker" in item_names and num_auto_attacks > 0:
-        hb_effect = item_effects.ITEM_EFFECTS.get("Hullbreaker", {})
-        hb_hits = hb_effect["hits_required"]
+        hb_hits = item_effects.get_hullbreaker_hits_required()
         hb_procs, _ = _calculate_hullbreaker_procs(
             num_auto_attacks,
             on_hits.phantom_hit_autos,
