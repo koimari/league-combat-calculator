@@ -532,3 +532,167 @@ factory signatures (`simple_damage` 7, `stat_buff` 8,
 R0801 duplicate-code on the 5-line ability/rank gate preamble shared
 by custom slot fns. Full suite `773 passed` and golden compare
 `OK: snapshot identical` re-run at wrap-up.
+
+## Phase 3d (completed)
+
+Final step: options metadata as data, dead-code deletion, skill rewrite.
+Four commits: `bd52e3f` (options), `0ee25cb` (dead code), `630b03a`
+(skills), plus this doc commit. Suite after each commit green; golden
+compare identical after each.
+
+### Options/assumptions served from the modules — `bd52e3f`
+
+Suite: **782 passed** (777 target had not landed yet — 773 + 9 new in
+`tests/test_champion_options.py`).
+
+- Every registered module declares `OPTIONS` (plain JSON-ready dicts:
+  key/type("bool"|"int"|"float")/default/label + min/max/step for
+  numbers) and `ASSUMPTIONS` (prose strings) beside its `SLOTS` — both
+  mandatory (empty lists allowed; the dispatcher reads them
+  unconditionally so a typo'd name fails loudly).
+- `champions/__init__.py`: `get_champion_options_meta(name)` (empty
+  meta for unregistered champions — the generic path has no options)
+  and `champion_options_meta_map()` (only champions with something to
+  show).
+- **Endpoint shape chosen:** the map rides the existing one-shot
+  **GET /api/config** bootstrap fetch (`"champion_options"` key) rather
+  than a per-champion endpoint — app.js reads
+  `championOptionsMeta[name]` synchronously inside `selectChampion`,
+  exactly as it read the old literal registry; a per-champion fetch
+  would have forced that flow async for no benefit at 12 champions.
+- app.js: the **315-line `championOptionsDefs`** registry deleted
+  (whole-file delta −439/+124); controls render generically (bool ->
+  checkbox on `change`, int/float -> number input with min/max/step on
+  `input`), the payload builder and assumptions panel read the same
+  metadata. Functional equivalence checked control-by-control against
+  the old defs (labels, defaults, bounds, Alistar's "no configurable
+  options" panel, auto-open behavior). One deliberate hardening: a
+  cleared number input now falls back to the option default instead of
+  sending `parseInt("") = NaN` (old code would have crashed the API).
+- **Python-vs-JS default audit: all 15 option defaults agreed — zero
+  discrepancies.** Akali's P slot now passes `count_option=
+  "passive_procs"` explicitly so every OPTIONS key is greppable in its
+  own module; `tests/test_champion_options.py` locks that invariant
+  (plus shape validation and with/without-module meta).
+- Live smoke: /api/config metadata correct for Vayne (`condemn_wall`
+  bool) and Akshan (`passive_procs` int 3, [0,20]); Aatrox
+  /api/calculate with options built from served defaults returned 200
+  and total_damage **980.4**, equal to the value captured live BEFORE
+  the change. `node --check` clean; `grep championOptionsDefs` -> 0.
+
+### Dead-code deletion — `0ee25cb`
+
+Suite: **777 passed**. Count reconciliation: 782 − 5 retired
+engine-vs-legacy equivalence instances = 777; every other test moved or
+was repointed, none dropped.
+
+- **generic_parser.py deleted** (304 non-blank lines).
+  `tests/test_generic_parser.py` retargeted as
+  `tests/test_generic_path.py`: a 5-line local `parse_abilities` shim
+  runs `build_parser(GENERIC_SLOTS, ...)`, so the Annie/Garen/Vayne
+  per-champion generic tests and both mass-coverage tests (all 173
+  parse without error; >=95% with damage) survive as engine tests.
+- **Dropped tests (the full list):**
+  `test_engine.py::TestGenericEquivalence::test_all_champions_match_legacy`
+  (3 level-parametrized instances), `...match_without_stats`,
+  `...match_with_rank_overrides` — all compared the engine against
+  `generic_parser.parse_abilities`, which no longer exists; the
+  contract they enforced is held going forward by test_generic_path.py
+  + the golden snapshot. The class's dispatcher-fallback test survives
+  as `TestGenericDispatch`, asserting dispatch == engine+GENERIC_SLOTS.
+  (Two imports of generic_parser's `extract_cooldown`/`extract_damage`
+  in the old test file were dead — nothing tested those internals
+  directly.)
+- **common.py slimmed 149 -> 33** non-blank lines: keeps only
+  `calculate_ability_damage` (imported by `calculator.__init__`) and
+  `effective_cooldown` (imported by damage.py). Deleted
+  `extract_leveling_damage` / `extract_leveling_value` /
+  `build_stats_context` / `make_rank_fn`; the only remaining importers
+  were tests — test_aatrox/test_alistar repointed to
+  `slotlib.extract_named`, and test_anivia/test_amumu/test_akshan/
+  test_ambessa merely carried unused imports (removed).
+- **Pure test-seam wrappers deleted** from champion modules:
+  `aatrox._extract_r_bonus_ad_percent` (tests now do
+  `extract_value(...)/100.0`, the stat_buff percent_of read) and
+  `akali._parse_passive_damage` (tests now use a local helper over
+  `extract_named` + `build_stats_context`). **Deliberately kept:** the
+  Phase 3c "seams" in Alistar (`_extract_e_on_hit_damage`), Ambessa
+  (`_parse_passive_damage`), and Akshan (`_extract_e_per_shot` /
+  `_parse_passive_proc_damage` / `_extract_double_shot_ratio`) are
+  load-bearing parse-path code, not wrappers — tests importing real
+  implementation functions is fine; there was nothing to repoint them
+  TO without duplicating the regex logic into the tests.
+
+### Skill rewrite — `630b03a`
+
+`/add-champion` rewritten around the three-tier triage (nothing ->
+archetype slot map -> custom slot fns), with the archetype table, the
+phase system, OPTIONS/ASSUMPTIONS declarations, conftest fixtures, and
+the pytest + golden gates; all generic_parser / hybrid-module /
+championOptionsDefs anatomy removed. `/analyze-champion` updated where
+it prescribed the old anatomy (stat buffs -> BUFF-phase `stat_buff`;
+prompts now state the expected triage tier and describe options as
+module declarations). bug-history.md needed no changes (its entries are
+historical records, deliberately kept as-is).
+
+## Phase 3 TOTAL
+
+All four steps (3a engine, 3b/3c twelve ports, 3d options + deletion).
+Suite across Phase 3: 700 -> **777** (+82 new engine/slotlib/options
+tests, −5 retired legacy-equivalence instances); golden compare
+identical after every Phase 3 code commit (16 of them, 3a through 3d);
+zero hand-validated expected values changed.
+
+### Champion layer LOC (non-blank), Phase 2 end (`a80e8d2`) -> Phase 3 end
+
+| File | Before | After |
+|---|---|---|
+| __init__.py (dispatcher + options meta) | 76 | 124 |
+| engine.py | — | 135 |
+| slotlib.py | — | 826 |
+| common.py | 149 | 33 |
+| generic_parser.py | 304 | deleted |
+| aatrox.py | 201 | 65 |
+| ahri.py | 121 | 46 |
+| akali.py | 192 | 70 |
+| akshan.py | 266 | 249 |
+| alistar.py | 115 | 85 |
+| ambessa.py | 256 | 169 |
+| amumu.py | 180 | 114 |
+| anivia.py | 121 | 51 |
+| annie.py | 178 | 122 |
+| ashe.py | 154 | 94 |
+| kogmaw.py | 185 | 129 |
+| vayne.py | 183 | 101 |
+| **Total** | **2,681** | **2,413** |
+
+Honest accounting: net −268 in the layer, but the twelve champion
+modules dropped 2,152 -> 1,295 (−857, and that "after" now INCLUDES the
+options/assumptions metadata absorbed from the frontend), while shared
+infrastructure grew 529 -> 1,118 — slotlib is one deeply-documented
+home for ten archetypes plus the extraction core, priced once for the
+full 173-champion roster instead of per module. app.js shed a further
+**315 lines** of hand-copied UI registry. The design doc's ~1,050
+projection undercounted slotlib's docstring-heavy final size; the
+structural goals (one extraction core, per-champion files that are
+mostly declarations, adding a champion = 0-2 file touch) all landed.
+Unchanged support files (scaling.py, attribute_classifier.py,
+skill_orders.py) excluded from both columns.
+
+### Phase 3d verification detail
+
+- `black --check` on every file touched in 3d: **clean** (the only
+  files black would still reformat in the package are scaling.py /
+  attribute_classifier.py / skill_orders.py — untouched pre-campaign
+  formatting, left alone deliberately).
+- pylint on `src/calculator/champions/` + `src/app.py`: **9.29/10**
+  (up from 9.04 pre-3d). Remaining findings are the established
+  classes only: the fixed 8-arg `parse_abilities` dispatcher signature,
+  R0913/R0917 on design-mandated factory signatures, R0801 on the
+  5-line slot-fn preamble, slotlib C0302 (1,004 raw lines vs the
+  1,000 default), app.py E0401/C0413 (pylint outside the venv;
+  path-setup-then-import layout) and api_calculate complexity
+  (= Phase 4 scope).
+- Final wrap-up runs: `.venv/Scripts/python.exe -m pytest -q` ->
+  **777 passed**; `golden_snapshot.py compare` ->
+  `OK: snapshot identical`.
