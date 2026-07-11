@@ -152,6 +152,45 @@ def extract_auto(
     return _sum_modifiers(leveling, rank, stats, target), damage_type
 
 
+def extract_value(
+    ability: dict[str, Any],
+    attribute: str,
+    rank: int,
+    modifier_index: int = 0,
+) -> float:
+    """Extract a raw numeric leveling value without resolving scaling.
+
+    For non-damage numbers like penetration percentages, attack-speed
+    bonuses, or flurry ratios, where the unit is descriptive rather than
+    a stat scaling to resolve.
+
+    Args:
+        ability: Single ability dict from champion JSON.
+        attribute: Exact attribute name to look for.
+        rank: Ability rank (1-indexed).
+        modifier_index: Which modifier to read (default 0 = first).
+
+    Returns:
+        The flat numeric value at the given rank, or 0.0 if not found.
+    """
+    for effect in ability.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute", "") != attribute:
+                continue
+
+            modifiers = leveling.get("modifiers", [])
+            if modifier_index >= len(modifiers):
+                return 0.0
+
+            values = modifiers[modifier_index].get("values", [])
+            if not values:
+                return 0.0
+
+            idx = min(rank - 1, len(values) - 1)
+            return float(values[idx])
+    return 0.0
+
+
 def extract_cooldown(ability: dict[str, Any], rank: int) -> float:
     """Extract the base cooldown for an ability at a given rank.
 
@@ -420,6 +459,37 @@ def toggle_dot(
         resolved_type = classify_damage_type(ability) if dmg_type == "auto" else dmg_type
         name = ability.get("name", f"Ability {ctx.slot}")
         return damage_entry(name, rank, cooldown, total, resolved_type)
+
+    parse.phase = DAMAGE
+    return parse
+
+
+def utility(dmg_type: str = "magic") -> SlotParser:
+    """Zero-damage display placeholder for a ranked utility ability.
+
+    Shields, walls, and other non-damaging-but-castable slots that the
+    UI should still list: emits a standard damage entry with 0.0 damage
+    and the real cooldown, gated on the slot being ranked.
+
+    Args:
+        dmg_type: Damage type to label the placeholder with (drives
+            which zero-valued damage key is emitted).
+
+    Returns:
+        A DAMAGE-phase slot parser.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability = ctx.ability()
+        if ability is None:
+            return None
+
+        rank = ctx.rank_for()
+        if rank < 1:
+            return None
+
+        name = ability.get("name", f"Ability {ctx.slot}")
+        return damage_entry(name, rank, extract_cooldown(ability, rank), 0.0, dmg_type)
 
     parse.phase = DAMAGE
     return parse

@@ -24,9 +24,11 @@ from src.calculator.champions.generic_parser import (
     parse_abilities as legacy_generic_parse,
 )
 from src.calculator.champions.slotlib import (
+    extract_value,
     on_hit_auto,
     simple_damage,
     toggle_dot,
+    utility,
 )
 
 # ---------------------------------------------------------------------------
@@ -551,6 +553,78 @@ class TestToggleDot:
         )
         results = parse(self._dot_champ(), 16, 0.0, ability_ranks={"R": 0})
         assert "R" not in results
+
+
+# ---------------------------------------------------------------------------
+# utility archetype and extract_value
+# ---------------------------------------------------------------------------
+
+
+class TestUtility:
+    """Zero-damage display placeholder for ranked utility abilities."""
+
+    def _shield_champ(self) -> dict:
+        return _champion(
+            E=[
+                _ability(
+                    name="Shield",
+                    damage_type=None,
+                    cooldowns=[14, 13, 12, 11, 10],
+                    leveling=[_leveling("Shield Strength", [60, 90, 120, 150, 180])],
+                )
+            ],
+        )
+
+    def test_emits_zero_damage_entry_with_real_cooldown(self) -> None:
+        parse = build_parser({"E": utility(dmg_type="magic")}, "TestChamp")
+        results = parse(self._shield_champ(), 9, 0.0, ability_ranks={"E": 5})
+        assert results["E"] == {
+            "name": "Shield",
+            "rank": 5,
+            "cooldown": 10.0,
+            "damage_type": "magic",
+            "magic_damage": 0.0,
+            "total_raw": 0.0,
+        }
+
+    def test_rank_gate(self) -> None:
+        parse = build_parser({"E": utility()}, "TestChamp")
+        results = parse(self._shield_champ(), 9, 0.0, ability_ranks={"E": 0})
+        assert "E" not in results
+
+
+class TestExtractValue:
+    """Raw leveling value extraction (no scaling resolution)."""
+
+    def _ability_with_two_modifiers(self) -> dict:
+        return {
+            "name": "Buff",
+            "effects": [
+                {
+                    "leveling": [
+                        {
+                            "attribute": "Bonus Attack Speed",
+                            "modifiers": [
+                                {"values": [20, 30, 40, 50, 60], "units": ["%"] * 5},
+                                {"values": [5, 5, 5, 5, 5], "units": ["%"] * 5},
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+
+    def test_reads_first_modifier_at_rank(self) -> None:
+        ability = self._ability_with_two_modifiers()
+        assert extract_value(ability, "Bonus Attack Speed", 3) == 40.0
+
+    def test_modifier_index_selects_modifier(self) -> None:
+        ability = self._ability_with_two_modifiers()
+        assert extract_value(ability, "Bonus Attack Speed", 3, modifier_index=1) == 5.0
+
+    def test_missing_attribute_returns_zero(self) -> None:
+        ability = self._ability_with_two_modifiers()
+        assert extract_value(ability, "No Such Attribute", 3) == 0.0
 
 
 # ---------------------------------------------------------------------------
