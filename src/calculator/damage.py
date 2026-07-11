@@ -625,7 +625,10 @@ def _calculate_shadowflame_bonus(
         events.append((auto["total_damage"], False))
 
     # 3. Item effect damage (burns, procs, on-hits, etc.)
-    skip_keys = {"Q", "W", "E", "R", "auto_attacks", "damage_amplification", "execute"}
+    # No damage_amp_* rows can exist here: this runs (step 9.5) before
+    # _apply_damage_amplifiers (step 10). "execute" is likewise created
+    # later (step 11) and is a zero-damage display row regardless.
+    skip_keys = {"Q", "W", "E", "R", "auto_attacks", "execute"}
     for key, entry in breakdown.items():
         if key in skip_keys:
             continue
@@ -2288,11 +2291,7 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
             v.get("total_damage", 0)
             for k, v in breakdown.items()
             if isinstance(v, dict)
-            and k
-            not in (
-                "auto_attacks",
-                "damage_amplification",
-            )
+            and k != "auto_attacks"
             and not k.startswith("damage_amp_")
         )
         # The amplified damage = base * amp, so the amp contribution is

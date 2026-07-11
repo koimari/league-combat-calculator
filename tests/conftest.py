@@ -3,6 +3,26 @@
 Centralizes champion data loading and the common three-step test setup
 pattern (load data → calculate stats → parse abilities) so individual
 test files can focus on champion-specific assertions.
+
+Full-roster test strategy
+-------------------------
+The roster has 170+ champions but only ~12 registered custom modules; the
+rest run through the generic slot-archetype path. Coverage is sized
+accordingly:
+
+- **Generic champions (160+):** the primary net is the golden snapshot
+  (``scripts/golden_snapshot.py`` — all-champion stats/abilities, fights,
+  item sweep) plus the generic-path coverage tests in
+  ``test_generic_path.py`` (all champions parse without error; ≥95% with
+  damage) and the engine/archetype unit tests in ``test_engine.py``.
+  There are deliberately NO per-champion test files for these.
+- **Registered champions:** a per-champion test file (``test_ahri.py``,
+  ``test_kogmaw.py``, ...) exists only for champions with a custom slot
+  map, asserting hand-derived ability values and any custom slot-fn
+  behavior.
+- **Adding a champion:** no new tests are needed while it rides the
+  generic path; write a test file only when the champion gets a custom
+  module (see the /add-champion skill).
 """
 
 import pytest

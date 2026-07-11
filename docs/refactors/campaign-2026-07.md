@@ -825,3 +825,127 @@ ratio only; zero new finding kinds).
   never-matching entries, left verbatim; Phase 5 could sweep them.
 - Wrap-up runs: `pytest -q` → **790 passed**; `golden_snapshot.py
   compare` → `OK: snapshot identical`.
+
+## Phase 5 (completed)
+
+Test-suite reorganization. Four commits: `b7c9b45` (test_damage.py split),
+`596fe48` (fixture consolidation), `f6509b9` (Known_Good retirement), plus
+this cleanup/doc commit. Suite after every commit: **790 passed, 0 failed**
+— the phase moved tests, it did not add or drop any. Golden compare
+**identical** after every commit. Every hand-validated expected value
+survived verbatim (classes were extracted byte-for-byte by script; only
+module docstrings and import blocks are new text).
+
+### File inventory (non-blank lines, Phase 4 end `59bbc9f` → Phase 5 end)
+
+| File | Before | After | Tests before → after |
+|---|---|---|---|
+| test_damage.py | 4,226 | 481 | 225 → 35 |
+| test_item_damage.py | — | 3,529 | — → 147 |
+| test_resistance.py | — | 54 | — → 15 |
+| test_champion_primitives.py | — | 52 | — → 15 |
+| test_ahri.py | — | 99 | — → 9 |
+| test_item_effects.py | 279 | 304 | 37 → 41 |
+| conftest.py | 93 | 148 | (fixtures only) |
+| test_known_good.py | 184 | 249 | 18 → 18 |
+| test_stats.py | 401 | 372 | unchanged |
+| test_kogmaw.py | 362 | 427 | unchanged |
+| Known_Good.txt | 73 | deleted | — |
+
+(test_known_good/test_kogmaw line growth is black formatting of
+previously non-black files; test counts unchanged.)
+
+### Commit 1 — test_damage.py split (`b7c9b45`)
+
+38 classes redistributed by subject. **Reconciliation: 225 = 35 kept
++ 147 item-damage + 15 resistance + 15 champion-primitives + 9 Ahri
++ 4 Actualizer-accessor. Moved 190, renamed 0, dropped 0.**
+
+- `test_item_damage.py` — 24 per-item fight classes. The name pair is
+  split by altitude and both module docstrings say so:
+  test_item_effects.py = registry-patched ACCESSOR unit tests,
+  test_item_damage.py = fight-engine behavior with live parsed data.
+- `test_resistance.py` — apply_resistance / apply_magic_penetration /
+  lethality_to_flat_pen (the resistance.py primitives, incl. the Phase 1
+  class).
+- `test_champion_primitives.py` — calculate_ability_damage /
+  effective_cooldown (common.py) + get_ability_rank (skill_orders).
+- `test_ahri.py` — TestParseAhriAbilities + TestActualizerFightDamage
+  (its one test is an Ahri fight case). test_stats.py audited for Ahri
+  champion tests: all its Ahri usage is vehicle-only stats math — nothing
+  pulled.
+- TestActualizerAbilityDamageAmp → test_item_effects.py (pure accessor
+  test; unlike its neighbors it reads live registry values).
+- Kept in test_damage.py: TestCastOrder, TestSplitAutoVsAbility,
+  TestPhantomHitCalculation, TestNavoriEffectiveCd,
+  TestBorkCurrentHpSimulation (mostly direct `_simulate_bork_damage`
+  unit tests). **Judgment call:** the task listed Kraken under both
+  "move" and "stays"; TestKrakenSlayerPhantomHitStacking and
+  TestHullbreakerSkipper went to the item file per the explicit class
+  listing — they assert item behavior; their direct sim-helper calls
+  (which moved with them, imports preserved) only derive expected values.
+
+### Commit 2 — fixtures: one home (`596fe48`)
+
+- conftest.py gained `ahri_data` + the six mage-build item fixtures
+  (liandrys, malignance, rylais, sorc_shoes, void_staff, rabadons).
+  Named fixtures over a `get_item` factory: every use site already
+  spoke these names, so adoption was pure deletion.
+- **Dedup stats:** 12 local `ahri_data` copies deleted (test_known_good 1,
+  test_stats 3, test_ahri 2, test_item_damage 6); 10 local item-fixture
+  copies deleted (test_known_good 6, test_stats 4) plus 2 inline
+  `get_item_by_name` lookups became fixture params; test_kogmaw.py's 18
+  copies of `{"Q": 5, "W": 3, "E": 3, "R": 1}` collapsed into a
+  `STANDARD_RANKS` module constant. test_akshan.py needed nothing — it
+  already used conftest fixtures + parse_at throughout.
+- Kog'Maw naming trap documented on the fixture: `"KogMaw"` is the
+  champions.json DATA key; the module registry and
+  `champion_data["name"]` use display name `"Kog'Maw"`. Comment only —
+  no behavior change (smallest honest fix).
+
+### Commit 3 — Known_Good.txt reconciliation (`f6509b9`)
+
+**Decision: deleted the txt; the test now documents itself.** The two
+files described different scenarios from the initial commit onward (txt:
+8s fight WITH autos, totals 663/1402/3083; test: one_rotation without
+autos, 498/1221/2955 ±5%) — `git log -S` shows neither value set ever
+changed, so this was divergence at birth, not drift, and a parallel
+prose copy has no mechanism to stay truthful. test_known_good.py's
+module docstring now carries the scenario definitions (fight settings
+per case), the exact-match contract for hand-validated stats, the ±5%
+damage-anchor contract with its patch-drift caveat (last reconciled at
+16.13.1), and a note recording what the deleted txt was.
+
+### Commit 4 — dead skip-keys, strategy note, this section
+
+- Both never-matching `damage_amplification` skip-key literals deleted
+  (engine emits only `damage_amp_<source>` since Phase 4). Investigated
+  before deleting, per task: in `_calculate_shadowflame_bonus` no amp
+  row can even exist yet — Shadowflame is step 9.5, amps are step 10 —
+  so the prefix form would be equally dead (comment added in code); in
+  the Actualizer row sum the prefix exclusion `damage_amp_*` was already
+  present and doing the real work. Golden identical after both.
+- Full-roster test strategy written into tests/conftest.py's module
+  docstring: golden snapshot + test_generic_path.py are the primary net
+  for the 160+ generic champions; per-champion files exist only for
+  custom slot maps; new champions need tests only when they get a
+  custom module.
+
+### Asides flagged during the phase (not fixed — out of scope)
+
+- `_calculate_shadowflame_bonus`: step 1 walks `cast_order` (default
+  includes `"Q2"`) but step 3's skip set only lists Q/W/E/R — a
+  synthetic-slot breakdown row (Ambessa/Akshan Q2) would be counted
+  twice when Shadowflame is equipped. Pre-existing; fixing could move
+  golden values, so left for a triaged fix with user sign-off.
+- The Actualizer informational row sums ALL non-auto, non-amp rows as
+  "amplified base", including on-hit/spellblade/burn rows the ability
+  amp never touched — overstates the display-only row. Pre-existing.
+
+### Verification
+
+black clean on all touched files (3 pre-black test files formatted when
+touched: test_known_good.py, test_kogmaw.py, conftest.py). pylint
+damage.py **9.64/10** — unchanged from Phase 4 (the two deletions
+removed no finding class). Wrap-up runs: `pytest -q` → **790 passed**;
+`golden_snapshot.py compare` → `OK: snapshot identical`.
