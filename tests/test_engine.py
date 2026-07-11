@@ -27,7 +27,9 @@ from src.calculator.champions.slotlib import (
     by_option,
     extract_value,
     multi_cast,
+    multi_hit_sum,
     on_hit_auto,
+    on_hit_pct_health,
     pct_health_per_hit,
     proc_damage,
     simple_damage,
@@ -1015,6 +1017,175 @@ class TestByOption:
             default=True,
         )
         assert buffed.phase == BUFF
+
+
+class TestMultiHitSum:
+    """Several named attributes summed into one entry (Aatrox Q triad)."""
+
+    def _triple_hit_champ(self) -> dict:
+        return _champion(
+            Q=[
+                _ability(
+                    name="Triple Q",
+                    damage_type="PHYSICAL_DAMAGE",
+                    cooldowns=[14, 12, 10, 8, 6],
+                    leveling=[
+                        _leveling("First Cast Damage", [10, 20, 30, 40, 50]),
+                        _leveling("Second Cast Damage", [15, 25, 35, 45, 55]),
+                        _leveling("Third Cast Damage", [20, 30, 40, 50, 60]),
+                    ],
+                )
+            ],
+        )
+
+    def test_sums_attrs_into_standard_entry(self) -> None:
+        parse = build_parser(
+            {
+                "Q": multi_hit_sum(
+                    [
+                        "First Cast Damage",
+                        "Second Cast Damage",
+                        "Third Cast Damage",
+                    ],
+                    dmg_type="physical",
+                )
+            },
+            "TestChamp",
+        )
+        results = parse(self._triple_hit_champ(), 9, 0.0)  # Q rank 5
+        assert results["Q"] == {
+            "name": "Triple Q",
+            "rank": 5,
+            "cooldown": 6.0,
+            "damage_type": "physical",
+            "total_raw": 165.0,
+            "physical_damage": 165.0,
+        }
+
+    def test_auto_dmg_type_classifies_from_json(self) -> None:
+        parse = build_parser(
+            {"Q": multi_hit_sum(["First Cast Damage", "Second Cast Damage"])},
+            "TestChamp",
+        )
+        results = parse(self._triple_hit_champ(), 9, 0.0)
+        assert results["Q"]["damage_type"] == "physical"
+        assert results["Q"]["total_raw"] == 105.0
+
+    def test_rank_gate(self) -> None:
+        parse = build_parser(
+            {"Q": multi_hit_sum(["First Cast Damage"], dmg_type="physical")},
+            "TestChamp",
+        )
+        results = parse(self._triple_hit_champ(), 9, 0.0, ability_ranks={"Q": 0})
+        assert "Q" not in results
+
+
+class TestOnHitPctHealth:
+    """ONHIT-phase %maxHP archetype in the minimal on-hit shell."""
+
+    def _passive_champ(self) -> dict:
+        """Aatrox-P shape: per-level %maxHP values on the passive."""
+        per_level = [float(4 + 0.5 * i) for i in range(18)]
+        return _champion(
+            P=[
+                _ability(
+                    name="Stance",
+                    leveling=[_leveling("Max Health Damage", per_level, ["%"] * 18)],
+                )
+            ],
+        )
+
+    def _ranked_champ(self) -> dict:
+        return _champion(
+            W=[
+                _ability(
+                    name="Bolts",
+                    damage_type="TRUE_DAMAGE",
+                    leveling=[
+                        _leveling("Bonus True Damage", [6, 7, 8, 9, 10], ["%"] * 5),
+                        _leveling("Minimum Bonus Damage", [50, 65, 80, 95, 110]),
+                    ],
+                )
+            ],
+        )
+
+    def test_level_scale_minimal_shell(self) -> None:
+        """scale='level': per-level percent, exact on-hit shell."""
+        parse = build_parser(
+            {"P": on_hit_pct_health("Max Health Damage", "magic", scale="level")},
+            "TestChamp",
+        )
+        results = parse(
+            self._passive_champ(),
+            9,
+            0.0,
+            target_stats=_default_target(target_max_health=2000.0),
+        )
+        # Level 9 -> 8% of 2000 = 160.
+        assert results["passive"] == {
+            "name": "Stance",
+            "on_hit": {
+                "name": "Stance (on-hit)",
+                "damage_per_hit": 160.0,
+                "damage_type": "magic",
+            },
+        }
+
+    def test_rank_scale_with_floor_and_stacks(self) -> None:
+        """scale='rank' + floor + stacks: per-hit is proc/stacks."""
+        parse = build_parser(
+            {
+                "W": on_hit_pct_health(
+                    "Bonus True Damage",
+                    "true",
+                    floor_attr="Minimum Bonus Damage",
+                    stacks_required=3,
+                )
+            },
+            "TestChamp",
+        )
+        results = parse(
+            self._ranked_champ(),
+            9,
+            0.0,
+            ability_ranks={"W": 5},
+            target_stats=_default_target(target_max_health=500.0),
+        )
+        # W rank 5: 10% of 500 = 50 < 110 floor -> 110 / 3 per hit.
+        on_hit = results["W"]["on_hit"]
+        assert on_hit["damage_per_hit"] == pytest.approx(110.0 / 3)
+        assert on_hit["stacks_required"] == 3
+
+    def test_rank_gate(self) -> None:
+        parse = build_parser(
+            {"W": on_hit_pct_health("Bonus True Damage", "true")},
+            "TestChamp",
+        )
+        results = parse(
+            self._ranked_champ(),
+            9,
+            0.0,
+            ability_ranks={"W": 0},
+            target_stats=_default_target(),
+        )
+        assert "W" not in results
+
+    def test_missing_attribute_emits_nothing(self) -> None:
+        parse = build_parser(
+            {"W": on_hit_pct_health("No Such Attribute", "true")},
+            "TestChamp",
+        )
+        results = parse(self._ranked_champ(), 9, 0.0)
+        assert results == {}
+
+    def test_zero_damage_without_target_still_emits(self) -> None:
+        """Attribute present, no target: a 0.0 on-hit entry (Aatrox P)."""
+        parse = build_parser(
+            {"P": on_hit_pct_health("Max Health Damage", "magic", scale="level")},
+            "TestChamp",
+        )
+        results = parse(self._passive_champ(), 9, 0.0)
+        assert results["passive"]["on_hit"]["damage_per_hit"] == 0.0
 
 
 class TestPctHealthPerHit:

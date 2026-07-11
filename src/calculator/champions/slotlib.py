@@ -605,6 +605,125 @@ def by_option(
     return parse
 
 
+def multi_hit_sum(
+    attrs: list[str],
+    dmg_type: str = "auto",
+    source: tuple[str, int] | None = None,
+    cooldown_from: tuple[str, int] | None = None,
+) -> SlotParser:
+    """Several named leveling attributes summed into ONE damage entry.
+
+    The Aatrox-Q pattern: an ability that lands as a fixed sequence of
+    hits with individually-named damage attributes (First/Second/Third
+    Cast Damage), reported to the fight engine as a single cast.
+
+    Args:
+        attrs: Leveling attribute names summed at the slot's rank.
+        dmg_type: "magic"/"physical"/"true"/"mixed", or "auto" to
+            classify from the ability JSON.
+        source: (slot, index) of the JSON entry to read; defaults to
+            entry 0 of the parser's own slot.
+        cooldown_from: (slot, index) to read cooldown from instead of
+            the damage source.
+
+    Returns:
+        A DAMAGE-phase slot parser.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability, src_slot = _resolve_source(ctx, source)
+        if ability is None:
+            return None
+        rank = ctx.rank_for(src_slot)
+        if rank < 1:
+            return None
+
+        total = sum(
+            extract_named(ability, attr, rank, ctx.stats, ctx.target) for attr in attrs
+        )
+        resolved_type = (
+            classify_damage_type(ability) if dmg_type == "auto" else dmg_type
+        )
+
+        cd_ability = ctx.ability(*cooldown_from) if cooldown_from else ability
+        cd_value = extract_cooldown(cd_ability, rank) if cd_ability else 0.0
+        name = ability.get("name", f"Ability {ctx.slot}")
+        return damage_entry(name, rank, cd_value, total, resolved_type)
+
+    parse.phase = DAMAGE
+    return parse
+
+
+def on_hit_pct_health(
+    attr: str,
+    dmg_type: str,
+    scale: str = "rank",
+    ap_ratio_per_100: bool = False,
+    floor_attr: str | None = None,
+    stacks_required: int | None = None,
+    source: tuple[str, int] | None = None,
+) -> SlotParser:
+    """%-of-target-max-health on-hit damage (Aatrox P pattern).
+
+    Wraps the shared ``pct_health_per_hit`` math in the minimal on-hit
+    shell (``{name, on_hit}``). Kog'Maw W and Vayne W use the same math
+    but keep their legacy entry shells (castable / cooldown-less) as
+    custom fns in their own modules — the shells differ in which
+    fight-engine keys they carry, which an archetype flag may not
+    change.
+
+    Args:
+        attr: Leveling attribute holding the %maxHP value.
+        dmg_type: On-hit damage type ("magic"/"physical"/"true").
+        scale: "rank" (skill order / overrides, rank-gated) or "level"
+            (per-level passives — rank pinned to champion level).
+        ap_ratio_per_100: Modifier 1 of *attr* is bonus % per 100 AP.
+        floor_attr: Attribute holding the minimum per-proc damage.
+        stacks_required: Hits per proc; divides the per-hit damage and
+            is emitted inside the on-hit dict for the fight engine's
+            proc grouping. None = every hit procs.
+        source: (slot, index) of the JSON entry to read; defaults to
+            entry 0 of the parser's own slot.
+
+    Returns:
+        An ONHIT-phase slot parser; emits nothing when *attr* is absent
+        from the ability.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability, src_slot = _resolve_source(ctx, source)
+        if ability is None:
+            return None
+
+        if scale == "level":
+            rank = ctx.level
+        else:
+            rank = ctx.rank_for(src_slot)
+            if rank < 1:
+                return None
+
+        per_hit = pct_health_per_hit(
+            ability,
+            attr,
+            rank,
+            ctx.target,
+            ap=ctx.stats.get("ability_power", 0.0),
+            ap_ratio_per_100=ap_ratio_per_100,
+            floor_attr=floor_attr,
+            stacks_required=stacks_required or 1,
+        )
+        if per_hit is None:
+            return None
+
+        entry = on_hit_entry(ability.get("name", "Passive"), per_hit, dmg_type)
+        if stacks_required:
+            entry["on_hit"]["stacks_required"] = stacks_required
+        return entry
+
+    parse.phase = ONHIT
+    return parse
+
+
 def toggle_dot(
     phases: list[tuple[str, int | None]],
     duration_option: tuple[str, float],
