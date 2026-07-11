@@ -19,8 +19,12 @@ from calculator.data_updater import update_data
 from calculator.item_effects import refresh_item_effects
 from calculator.stats import calculate_total_stats
 from calculator.champions import parse_abilities
-from calculator.damage import calculate_fight_damage
-from calculator.optimizer import optimize_build, ITEM_BLOCKLIST
+from calculator.damage import (
+    DEFAULT_TARGET,
+    calculate_fight_damage,
+    split_auto_vs_ability,
+)
+from calculator.optimizer import exclusivity_groups, optimize_build, ITEM_BLOCKLIST
 
 app = Flask(
     __name__,
@@ -88,6 +92,22 @@ def api_boots():
     return jsonify(result)
 
 
+@app.route("/api/config")
+def api_config():
+    """Serve calculator config the frontend must share with the backend.
+
+    Single source of truth for domain facts that would otherwise be
+    hand-copied into app.js: item exclusivity groups (optimizer.py) and
+    default target stats (damage.py).
+    """
+    return jsonify(
+        {
+            "exclusivity_groups": exclusivity_groups(),
+            "default_target": DEFAULT_TARGET,
+        }
+    )
+
+
 @app.route("/api/abilities/<champion_name>")
 def api_abilities(champion_name: str):
     """Return ability names and icons for a champion keyed by Q, W, E, R."""
@@ -123,10 +143,12 @@ def api_calculate():
     level = int(data.get("level", 1))
     item_names = data.get("items", [])
     boots_name = data.get("boots", "")
-    target_health = float(data.get("target_health", 2000))
-    target_bonus_health = float(data.get("target_bonus_health", 0))
-    target_armor = float(data.get("target_armor", 50))
-    target_mr = float(data.get("target_mr", 40))
+    target_health = float(data.get("target_health", DEFAULT_TARGET["health"]))
+    target_bonus_health = float(
+        data.get("target_bonus_health", DEFAULT_TARGET["bonus_health"])
+    )
+    target_armor = float(data.get("target_armor", DEFAULT_TARGET["armor"]))
+    target_mr = float(data.get("target_mr", DEFAULT_TARGET["mr"]))
     fight_mode = data.get("fight_mode", "one_rotation")
     fight_duration = float(data.get("fight_duration", 8))
     include_auto_attacks = data.get("include_auto_attacks", False)
@@ -235,41 +257,7 @@ def api_calculate():
 
     # Separate ability damage from auto-attack damage
     breakdown = result.get("breakdown", {})
-    auto_attack_damage = 0.0
-    ability_damage = 0.0
-
-    on_hit_prefixes = ("on_hit_", "spellblade_")
-
-    for key, entry in breakdown.items():
-        dmg = entry.get("total_damage", 0.0)
-        # Skip informational-only entries whose damage is already counted
-        # in other breakdown rows (e.g. Actualizer, basic damage amp).
-        if "note" in entry and "included in" in entry.get("note", ""):
-            continue
-        if (
-            key == "auto_attacks"
-            or key == "fiendhunter_true_damage"
-            or key.startswith(on_hit_prefixes)
-        ):
-            auto_attack_damage += dmg
-        elif key in ("damage_amplification", "execute", "sundered_sky"):
-            # Split amp/execute proportionally between auto and ability;
-            # sundered_sky is display-only (0 damage)
-            pass
-        else:
-            ability_damage += dmg
-
-    # Handle damage amplification — split proportionally
-    amp_entry = breakdown.get("damage_amplification", {})
-    amp_dmg = amp_entry.get("total_damage", 0.0)
-    exec_entry = breakdown.get("execute", {})
-    exec_dmg = exec_entry.get("total_damage", 0.0)
-
-    pre_amp_total = auto_attack_damage + ability_damage
-    if pre_amp_total > 0:
-        auto_ratio = auto_attack_damage / pre_amp_total
-        auto_attack_damage += (amp_dmg + exec_dmg) * auto_ratio
-        ability_damage += (amp_dmg + exec_dmg) * (1 - auto_ratio)
+    auto_attack_damage, ability_damage = split_auto_vs_ability(breakdown)
 
     total_damage = result.get("total_damage", 0.0)
 
@@ -349,10 +337,12 @@ def api_optimize():
         return jsonify({"error": f"Champion '{champion_name}' not found"}), 404
 
     # Read all fight parameters (same as /api/calculate)
-    target_health = float(data.get("target_health", 2000))
-    target_bonus_health = float(data.get("target_bonus_health", 0))
-    target_armor = float(data.get("target_armor", 50))
-    target_mr = float(data.get("target_mr", 40))
+    target_health = float(data.get("target_health", DEFAULT_TARGET["health"]))
+    target_bonus_health = float(
+        data.get("target_bonus_health", DEFAULT_TARGET["bonus_health"])
+    )
+    target_armor = float(data.get("target_armor", DEFAULT_TARGET["armor"]))
+    target_mr = float(data.get("target_mr", DEFAULT_TARGET["mr"]))
     fight_mode = data.get("fight_mode", "one_rotation")
     fight_duration = float(data.get("fight_duration", 8))
     include_auto_attacks = data.get("include_auto_attacks", False)

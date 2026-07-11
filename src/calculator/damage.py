@@ -47,6 +47,17 @@ from .resistance import (
 )
 from .champions.common import effective_cooldown
 
+# Default target stats when a calculation request omits them. Single source
+# of truth: app.py applies these for absent fields, and the frontend fetches
+# them via /api/config so its empty-input fallbacks match (the UI's inputs
+# start at these values).
+DEFAULT_TARGET: dict[str, float] = {
+    "health": 1000.0,
+    "bonus_health": 0.0,
+    "armor": 100.0,
+    "mr": 100.0,
+}
+
 
 def _calculate_phantom_hits(
     num_auto_attacks: int,
@@ -2073,3 +2084,58 @@ def calculate_fight_damage(
         "phantom_hit_autos": phantom_hit_autos,
         "phantom_hit_count": phantom_hit_count,
     }
+
+
+def split_auto_vs_ability(
+    breakdown: dict[str, dict[str, Any]],
+) -> tuple[float, float]:
+    """Split a fight breakdown into (auto_attack_damage, ability_damage).
+
+    Attribution rules, keyed off the breakdown key names this module emits:
+
+    - ``auto_attacks``, ``fiendhunter_true_damage``, and keys prefixed
+      ``on_hit_`` or ``spellblade_`` count as auto-attack damage.
+    - Entries whose ``note`` contains "included in" are informational only
+      (e.g. Actualizer's amp row) — their damage is already counted in
+      other rows, so they are skipped.
+    - ``damage_amplification`` and ``execute`` rows amplify both buckets,
+      so their damage is redistributed proportionally to the pre-amp
+      auto/ability ratio (dropped entirely if that total is zero).
+    - ``sundered_sky`` is a display-only row and is excluded outright.
+    - Everything else counts as ability damage.
+    """
+    auto_attack_damage = 0.0
+    ability_damage = 0.0
+
+    on_hit_prefixes = ("on_hit_", "spellblade_")
+
+    for key, entry in breakdown.items():
+        dmg = entry.get("total_damage", 0.0)
+        # Skip informational-only entries whose damage is already counted
+        # in other breakdown rows (e.g. Actualizer, basic damage amp).
+        if "note" in entry and "included in" in entry.get("note", ""):
+            continue
+        if (
+            key == "auto_attacks"
+            or key == "fiendhunter_true_damage"
+            or key.startswith(on_hit_prefixes)
+        ):
+            auto_attack_damage += dmg
+        elif key in ("damage_amplification", "execute", "sundered_sky"):
+            # Handled below (amp/execute redistribution); sundered_sky is
+            # display-only (0 damage).
+            pass
+        else:
+            ability_damage += dmg
+
+    # Damage amplification and execute — split proportionally.
+    amp_dmg = breakdown.get("damage_amplification", {}).get("total_damage", 0.0)
+    exec_dmg = breakdown.get("execute", {}).get("total_damage", 0.0)
+
+    pre_amp_total = auto_attack_damage + ability_damage
+    if pre_amp_total > 0:
+        auto_ratio = auto_attack_damage / pre_amp_total
+        auto_attack_damage += (amp_dmg + exec_dmg) * auto_ratio
+        ability_damage += (amp_dmg + exec_dmg) * (1 - auto_ratio)
+
+    return auto_attack_damage, ability_damage

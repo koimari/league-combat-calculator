@@ -4,16 +4,13 @@ Finds the item build that maximizes a chosen damage objective (total,
 physical, or magic damage) for a given champion/level/target configuration.
 """
 
-import copy
 import time
 from typing import Any
 
-from . import item_effects
 from .damage import calculate_fight_damage
 from .data_fetcher import fetch_item_data, get_item_by_name
 from .champions import parse_abilities
 from .stats import calculate_total_stats
-
 
 # Items unavailable on Summoner's Rift.
 ITEM_BLOCKLIST = {
@@ -31,25 +28,40 @@ ITEM_BLOCKLIST = {
     "Zephyr",
 }
 
-# Spellblade items are mutually exclusive in-game.
-# Item exclusivity groups — at most one item from each group per build.
-# Mirrors ITEM_EXCLUSIVITY_GROUPS in app.js.
+# Item exclusivity groups — at most one item from each group per build
+# (e.g. Spellblade items are mutually exclusive in-game). This table is
+# the single source of truth: the frontend fetches it via /api/config
+# (see exclusivity_groups() below) instead of keeping its own copy.
 _EXCLUSIVITY_GROUPS: dict[str, set[str]] = {
     "Spellblade": {
-        "Trinity Force", "Lich Bane", "Essence Reaver",
-        "Iceborn Gauntlet", "Bloodsong", "Dusk and Dawn",
+        "Trinity Force",
+        "Lich Bane",
+        "Essence Reaver",
+        "Iceborn Gauntlet",
+        "Bloodsong",
+        "Dusk and Dawn",
     },
     "Hydra": {
-        "Tiamat", "Profane Hydra", "Ravenous Hydra",
-        "Stridebreaker", "Titanic Hydra",
+        "Tiamat",
+        "Profane Hydra",
+        "Ravenous Hydra",
+        "Stridebreaker",
+        "Titanic Hydra",
     },
     "Blight": {
-        "Blighting Jewel", "Bloodletter's Curse", "Cryptbloom",
-        "Terminus", "Void Staff",
+        "Blighting Jewel",
+        "Bloodletter's Curse",
+        "Cryptbloom",
+        "Terminus",
+        "Void Staff",
     },
     "Fatality": {
-        "Last Whisper", "Black Cleaver", "Lord Dominik's Regards",
-        "Mortal Reminder", "Serylda's Grudge", "Terminus",
+        "Last Whisper",
+        "Black Cleaver",
+        "Lord Dominik's Regards",
+        "Mortal Reminder",
+        "Serylda's Grudge",
+        "Terminus",
     },
 }
 
@@ -61,6 +73,15 @@ for _group, _members in _EXCLUSIVITY_GROUPS.items():
 
 # Keep the old name for test imports.
 _SPELLBLADE_ITEMS = _EXCLUSIVITY_GROUPS["Spellblade"]
+
+
+def exclusivity_groups() -> dict[str, list[str]]:
+    """Return the item exclusivity groups as JSON-safe sorted lists.
+
+    Served to the frontend (via /api/config) so the manual item picker
+    enforces the same groups the optimizer does.
+    """
+    return {group: sorted(members) for group, members in _EXCLUSIVITY_GROUPS.items()}
 
 
 def get_eligible_legendaries() -> list[dict[str, Any]]:
@@ -100,7 +121,8 @@ def _get_occupied_groups(items: list[dict[str, Any]]) -> set[str]:
 
 
 def _conflicts_with_build(
-    candidate_name: str, occupied_groups: set[str],
+    candidate_name: str,
+    occupied_groups: set[str],
 ) -> bool:
     """Return True if *candidate_name* would violate an exclusivity group."""
     groups = _ITEM_TO_GROUPS.get(candidate_name)
@@ -143,7 +165,9 @@ def _evaluate_build(
 
     display_name = champion_data.get("name", champion_name)
     ability_damages = parse_abilities(
-        display_name, champion_data, level,
+        display_name,
+        champion_data,
+        level,
         champion_stats["ability_power"],
         ability_ranks=ability_ranks,
         champion_stats=champion_stats,
@@ -236,7 +260,10 @@ def _greedy_fill(
                 trial_items = [boots] + trial_items
 
             score = _evaluate_build(
-                champion_name, champion_data, level, trial_items,
+                champion_name,
+                champion_data,
+                level,
+                trial_items,
                 **eval_kwargs,
             )
             if score > best_score:
@@ -258,7 +285,10 @@ def _greedy_fill(
         for candidate in boots_pool:
             trial_items = [candidate] + current
             score = _evaluate_build(
-                champion_name, champion_data, level, trial_items,
+                champion_name,
+                champion_data,
+                level,
+                trial_items,
                 **eval_kwargs,
             )
             if score > best_score:
@@ -269,7 +299,11 @@ def _greedy_fill(
     # Final score
     final_items = ([boots] if boots else []) + current
     final_score = _evaluate_build(
-        champion_name, champion_data, level, final_items, **eval_kwargs,
+        champion_name,
+        champion_data,
+        level,
+        final_items,
+        **eval_kwargs,
     )
     return current, boots, final_score
 
@@ -294,7 +328,11 @@ def _hill_climb(
 
     all_items = ([current_boots] if current_boots else []) + current
     best_score = _evaluate_build(
-        champion_name, champion_data, level, all_items, **eval_kwargs,
+        champion_name,
+        champion_data,
+        level,
+        all_items,
+        **eval_kwargs,
     )
     evals += 1
 
@@ -306,9 +344,7 @@ def _hill_climb(
             if current[slot_idx]["name"] in locked_legendary_names:
                 continue
 
-            current_names = {
-                i["name"] for j, i in enumerate(current) if j != slot_idx
-            }
+            current_names = {i["name"] for j, i in enumerate(current) if j != slot_idx}
             other_items = [i for j, i in enumerate(current) if j != slot_idx]
             other_groups = _get_occupied_groups(other_items)
 
@@ -326,7 +362,10 @@ def _hill_climb(
                 trial_items = ([current_boots] if current_boots else []) + trial
 
                 score = _evaluate_build(
-                    champion_name, champion_data, level, trial_items,
+                    champion_name,
+                    champion_data,
+                    level,
+                    trial_items,
                     **eval_kwargs,
                 )
                 evals += 1
@@ -347,7 +386,10 @@ def _hill_climb(
                     continue
                 trial_items = [candidate] + current
                 score = _evaluate_build(
-                    champion_name, champion_data, level, trial_items,
+                    champion_name,
+                    champion_data,
+                    level,
+                    trial_items,
                     **eval_kwargs,
                 )
                 evals += 1
@@ -508,20 +550,32 @@ def optimize_build(
 
     for seed in seeds:
         legendaries, boots, greedy_score = _greedy_fill(
-            champion_name, champion_data, level,
-            resolved_locked, resolved_locked_boots,
-            slots_to_fill, fill_boots,
-            pool, boots_pool, eval_kwargs,
+            champion_name,
+            champion_data,
+            level,
+            resolved_locked,
+            resolved_locked_boots,
+            slots_to_fill,
+            fill_boots,
+            pool,
+            boots_pool,
+            eval_kwargs,
             seed_item=seed,
         )
         # Rough eval count estimate for greedy phase
         total_evals += len(pool) * slots_to_fill + len(boots_pool)
 
         legendaries, boots, hc_score, hc_evals = _hill_climb(
-            champion_name, champion_data, level,
-            legendaries, boots,
-            locked_names, boots_locked,
-            pool, boots_pool, eval_kwargs,
+            champion_name,
+            champion_data,
+            level,
+            legendaries,
+            boots,
+            locked_names,
+            boots_locked,
+            pool,
+            boots_pool,
+            eval_kwargs,
         )
         total_evals += hc_evals
 

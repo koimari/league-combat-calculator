@@ -193,3 +193,66 @@ spellblades), Navori `bonus_crit_damage` (polymorphic across crit_modifiers), an
 - black clean on all touched files; pylint 9.45/10 on touched src (was 9.33; remaining
   findings pre-existing — damage.py complexity is Phase 4, app.py E0401s are pylint
   running outside the venv).
+
+## Phase 2 (completed)
+
+Cross-boundary SSOT. Suite: **700 passed, 0 failed** (686 + 14 new tests).
+Golden compare: **identical** to `scripts/golden_baseline.json`. Live smoke test
+(Flask on :5000): /api/config, minimal + full /api/calculate, /api/optimize — all pass.
+
+### Part A — exclusivity groups served from Python
+
+`optimizer.py::_EXCLUSIVITY_GROUPS` is now the single source of truth, exposed via
+`exclusivity_groups()` (JSON-safe sorted lists) and served by a new **GET /api/config**
+endpoint (app.js had no existing bootstrap fetch — its three init fetches are
+champions/items/boots — so one new endpoint carries both Parts A and B in a single
+round-trip). app.js: `ITEM_EXCLUSIVITY_GROUPS` literal deleted; `itemToGroups` is now
+populated from the fetch; `getExclusivityBlock()` enforcement logic unchanged.
+
+**Intended behavior fix:** the hand-copied app.js table had drifted — it was missing
+the **Spellblade** group (Trinity Force, Lich Bane, Essence Reaver, Iceborn Gauntlet,
+Bloodsong, Dusk and Dawn). The manual item builder now greys out a second spellblade
+just like the optimizer already refused to pick one.
+
+### Part B — unified default target stats
+
+**Which defaults actually fired (confirmed by trace):** index.html's inputs carry hard
+`value=` attributes — base HP **1000**, bonus **0**, armor **100**, MR **100** — and
+app.js always sent all four fields, so app.py's old 2000/50/40 defaults were dead for
+UI users (reachable only by direct API callers omitting fields). app.js's own literals
+(1000/100/100) fired only when a user cleared an input. Effective default target:
+**1000 HP / 0 bonus / 100 armor / 100 MR** — unchanged for a default-input user.
+
+- New `DEFAULT_TARGET` dict at `damage.py` module level (health 1000, bonus_health 0,
+  armor 100, mr 100); app.py's api_calculate AND api_optimize use it for absent fields;
+  served to the frontend in /api/config.
+- **Behavior change (API-only):** direct API callers omitting target fields now get
+  1000/100/100 instead of the old 2000/50/40 — the absent-field and empty-input
+  defaults now agree.
+- app.js: literal fallbacks removed at both payload sites; new `buildTargetPayload()`
+  uses the served `defaultTarget`. The wider ~40-line duplication between the calculate
+  and optimize payload builders (target stats, fight params, ability ranks, cast order,
+  champion options) collapsed into a shared `buildFightPayload(champion)`.
+
+### Part C — damage attribution moved into the calculator
+
+app.py's untested auto-vs-ability classification block moved verbatim into
+`damage.py::split_auto_vs_ability(breakdown) -> (auto, ability)`, next to the code that
+emits the breakdown keys; docstring documents the attribution rules (on_hit_/spellblade_
+prefixes and fiendhunter → auto; "included in" notes skipped; damage_amplification/
+execute redistributed by pre-amp ratio, dropped on zero total; sundered_sky excluded).
+app.py calls it. TDD: 11 tests written first from current behavior
+(`tests/test_damage.py::TestSplitAutoVsAbility`), red before implementation.
+*Quirk preserved, noted for Phase 4:* damage.py no longer emits a literal
+`damage_amplification` key (amps are `damage_amp_<source>`), so those rows classify as
+ability damage even when they amplified autos — replicated exactly, not fixed.
+
+### Tests + verification
+
+- 14 new tests: `TestSplitAutoVsAbility` (11) and
+  `tests/test_optimizer.py::TestExclusivityGroupsAccessor` (3, incl. Spellblade-present).
+- `node --check static/js/app.js` clean; grep confirms `ITEM_EXCLUSIVITY_GROUPS` and the
+  1000/100/100 literals are gone (championOptionsDefs untouched — Phase 3 scope).
+- black clean; pylint 9.28/10 on touched src (findings pre-existing: venv E0401s,
+  damage.py complexity = Phase 4). Swept while there: two dead imports in optimizer.py
+  (`copy`, `item_effects`) removed.

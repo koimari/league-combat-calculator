@@ -14,6 +14,7 @@ from src.calculator.champions.ahri import (
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.damage import (
     calculate_fight_damage,
+    split_auto_vs_ability,
     _simulate_bork_damage,
     _calculate_phantom_hits,
     _calculate_kraken_procs,
@@ -4567,3 +4568,119 @@ class TestCollectorThreshold:
         )
         entry = result["breakdown"]["execute"]
         assert entry["execution_threshold_hp"] == 200.0  # 10% of 2000
+
+
+class TestSplitAutoVsAbility:
+    """Tests for split_auto_vs_ability — auto vs ability damage attribution.
+
+    Expected values replicate the attribution rules that previously lived
+    in app.py's /api/calculate route.
+    """
+
+    def test_pure_ability_damage(self) -> None:
+        breakdown = {
+            "Q": {"name": "Q", "total_damage": 100.0},
+            "R": {"name": "R", "total_damage": 250.0},
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == 0.0
+        assert ability == 350.0
+
+    def test_pure_auto_damage(self) -> None:
+        breakdown = {
+            "auto_attacks": {"name": "Auto Attacks", "total_damage": 400.0},
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == 400.0
+        assert ability == 0.0
+
+    def test_on_hit_prefix_counts_as_auto(self) -> None:
+        breakdown = {
+            "auto_attacks": {"name": "Auto Attacks", "total_damage": 300.0},
+            "on_hit_Kraken Slayer": {"name": "Kraken", "total_damage": 90.0},
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == 390.0
+        assert ability == 0.0
+
+    def test_spellblade_prefix_counts_as_auto(self) -> None:
+        breakdown = {
+            "Q": {"name": "Q", "total_damage": 100.0},
+            "spellblade_Lich Bane": {"name": "Lich Bane", "total_damage": 60.0},
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == 60.0
+        assert ability == 100.0
+
+    def test_fiendhunter_true_damage_counts_as_auto(self) -> None:
+        breakdown = {
+            "fiendhunter_true_damage": {"name": "Fiendhunter", "total_damage": 75.0},
+            "W": {"name": "W", "total_damage": 25.0},
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == 75.0
+        assert ability == 25.0
+
+    def test_included_in_note_entries_skipped(self) -> None:
+        # Informational entries (e.g. Actualizer) whose damage is already
+        # counted in other rows must not be double-counted.
+        breakdown = {
+            "Q": {"name": "Q", "total_damage": 100.0},
+            "ability_amp_Actualizer": {
+                "name": "Damage Amplification (Actualizer)",
+                "total_damage": 15.0,
+                "note": "included in ability/proc totals above",
+            },
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == 0.0
+        assert ability == 100.0
+
+    def test_amp_and_execute_split_proportionally(self) -> None:
+        # auto 100 / ability 300 -> auto ratio 0.25; amp 40 + execute 20
+        # redistribute 60 as 15 auto / 45 ability.
+        breakdown = {
+            "auto_attacks": {"name": "Auto Attacks", "total_damage": 100.0},
+            "Q": {"name": "Q", "total_damage": 300.0},
+            "damage_amplification": {"name": "Amp", "total_damage": 40.0},
+            "execute": {"name": "Execute", "total_damage": 20.0},
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == pytest.approx(115.0)
+        assert ability == pytest.approx(345.0)
+
+    def test_sundered_sky_excluded_and_not_redistributed(self) -> None:
+        # sundered_sky is a display-only row: excluded from both buckets
+        # and (unlike amp/execute) never redistributed.
+        breakdown = {
+            "Q": {"name": "Q", "total_damage": 200.0},
+            "sundered_sky": {"name": "Sundered Sky", "total_damage": 50.0},
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == 0.0
+        assert ability == 200.0
+
+    def test_zero_total_drops_amp(self) -> None:
+        # With no attributable damage there is no ratio to split by;
+        # amp/execute damage is dropped entirely.
+        breakdown = {
+            "damage_amplification": {"name": "Amp", "total_damage": 40.0},
+            "execute": {"name": "Execute", "total_damage": 20.0},
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == 0.0
+        assert ability == 0.0
+
+    def test_empty_breakdown(self) -> None:
+        auto, ability = split_auto_vs_ability({})
+        assert auto == 0.0
+        assert ability == 0.0
+
+    def test_missing_total_damage_treated_as_zero(self) -> None:
+        breakdown = {
+            "Q": {"name": "Q"},
+            "auto_attacks": {"name": "Auto Attacks", "total_damage": 50.0},
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == 50.0
+        assert ability == 0.0

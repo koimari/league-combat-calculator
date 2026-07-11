@@ -68,6 +68,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let itemsData = [];
     let bootsData = [];
     let itemIconMap = {};
+    // Server-provided config (see /api/config) — single source of truth
+    // shared with the Python backend, populated by the fetch below.
+    let itemToGroups = {};   // item name -> list of exclusivity group names
+    let defaultTarget = {};  // default target stats for empty inputs
     let hasCalculated = false;
     let isCalculating = false;
     let recalcTimer = null;
@@ -108,6 +112,21 @@ document.addEventListener("DOMContentLoaded", () => {
             data.forEach((item) => {
                 itemIconMap[item.name] = item.icon;
             });
+        });
+
+    // Config shared with the backend: item exclusivity groups (from
+    // optimizer.py) and default target stats (from damage.py).
+    fetch("/api/config")
+        .then((res) => res.json())
+        .then((data) => {
+            defaultTarget = data.default_target;
+            // Reverse lookup: item name -> list of group names it belongs to
+            for (const [group, members] of Object.entries(data.exclusivity_groups)) {
+                for (const name of members) {
+                    if (!itemToGroups[name]) itemToGroups[name] = [];
+                    itemToGroups[name].push(group);
+                }
+            }
         });
 
     // === Champion selection ===
@@ -667,21 +686,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return names;
     }
 
-    // Item exclusivity groups — only one item per group allowed in a build
-    const ITEM_EXCLUSIVITY_GROUPS = {
-        Hydra: ["Tiamat", "Profane Hydra", "Ravenous Hydra", "Stridebreaker", "Titanic Hydra"],
-        Blight: ["Blighting Jewel", "Bloodletter's Curse", "Cryptbloom", "Terminus", "Void Staff"],
-        Fatality: ["Last Whisper", "Black Cleaver", "Lord Dominik's Regards", "Mortal Reminder", "Serylda's Grudge", "Terminus"],
-    };
-
-    // Build a reverse lookup: item name -> list of group names it belongs to
-    const itemToGroups = {};
-    for (const [group, members] of Object.entries(ITEM_EXCLUSIVITY_GROUPS)) {
-        for (const name of members) {
-            if (!itemToGroups[name]) itemToGroups[name] = [];
-            itemToGroups[name].push(group);
-        }
-    }
+    // Item exclusivity groups — only one item per group allowed in a build.
+    // The groups themselves come from the backend (/api/config -> itemToGroups),
+    // so the manual builder and the optimizer enforce the same table.
 
     // Returns the exclusivity reason if an item is blocked, or null if allowed.
     // currentSlot is the slot being picked for (its current item is allowed).
@@ -911,33 +918,28 @@ document.addEventListener("DOMContentLoaded", () => {
         doCalculate();
     });
 
-    function doCalculate() {
-        const champion = championSelect.value;
-        if (!champion) {
-            showError("Please select a champion.");
-            return;
-        }
+    // Target stat payload fields. Empty inputs fall back to the
+    // server-provided defaults (defaultTarget, fetched from /api/config).
+    function buildTargetPayload() {
+        const bonusHealth = parseFloat(targetBonusHealth.value) || 0;
+        return {
+            target_health: (parseFloat(targetBaseHealth.value) || defaultTarget.health) + bonusHealth,
+            target_bonus_health: bonusHealth,
+            target_armor: targetArmor.value !== "" ? parseFloat(targetArmor.value) : defaultTarget.armor,
+            target_mr: targetMr.value !== "" ? parseFloat(targetMr.value) : defaultTarget.mr,
+        };
+    }
 
-        if (isCalculating) return;
-        isCalculating = true;
-
+    // Payload fields shared by /api/calculate and /api/optimize: champion,
+    // level, target stats, fight parameters, and the optional ability-rank /
+    // cast-order / champion-option blocks.
+    function buildFightPayload(champion) {
         const fightMode = document.querySelector('input[name="fight-mode"]:checked').value;
-
-        // Collect items from slots
-        const items = [];
-        for (let i = 1; i <= 6; i++) {
-            if (selectedItems[i]) items.push(selectedItems[i]);
-        }
 
         const payload = {
             champion: champion,
             level: parseInt(levelSlider.value, 10),
-            boots: selectedItems.boots,
-            items: items,
-            target_health: (parseFloat(targetBaseHealth.value) || 1000) + (parseFloat(targetBonusHealth.value) || 0),
-            target_bonus_health: parseFloat(targetBonusHealth.value) || 0,
-            target_armor: targetArmor.value !== "" ? parseFloat(targetArmor.value) : 100,
-            target_mr: targetMr.value !== "" ? parseFloat(targetMr.value) : 100,
+            ...buildTargetPayload(),
             fight_mode: fightMode,
             fight_duration: parseInt(fightDuration.value, 10),
             include_auto_attacks: fightMode === "time_based" && includeAutos.checked,
@@ -966,6 +968,29 @@ document.addEventListener("DOMContentLoaded", () => {
         if (optDef && optDef.getValues) {
             payload.champion_options = optDef.getValues();
         }
+
+        return payload;
+    }
+
+    function doCalculate() {
+        const champion = championSelect.value;
+        if (!champion) {
+            showError("Please select a champion.");
+            return;
+        }
+
+        if (isCalculating) return;
+        isCalculating = true;
+
+        // Collect items from slots
+        const items = [];
+        for (let i = 1; i <= 6; i++) {
+            if (selectedItems[i]) items.push(selectedItems[i]);
+        }
+
+        const payload = buildFightPayload(champion);
+        payload.boots = selectedItems.boots;
+        payload.items = items;
 
         // Show loading state
         if (!hasCalculated) {
@@ -1250,7 +1275,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isOptimizing) return;
         isOptimizing = true;
 
-        const fightMode = document.querySelector('input[name="fight-mode"]:checked').value;
         const maxSlots = parseInt(optimizeSlots.value, 10);
 
         // Collect locked items (non-empty slots)
@@ -1260,45 +1284,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const lockedBoots = selectedItems.boots || "";
 
-        const payload = {
-            champion: champion,
-            level: parseInt(levelSlider.value, 10),
-            target_health: (parseFloat(targetBaseHealth.value) || 1000) + (parseFloat(targetBonusHealth.value) || 0),
-            target_bonus_health: parseFloat(targetBonusHealth.value) || 0,
-            target_armor: targetArmor.value !== "" ? parseFloat(targetArmor.value) : 100,
-            target_mr: targetMr.value !== "" ? parseFloat(targetMr.value) : 100,
-            fight_mode: fightMode,
-            fight_duration: parseInt(fightDuration.value, 10),
-            include_auto_attacks: fightMode === "time_based" && includeAutos.checked,
-            auto_attack_uptime: parseFloat(autoUptime.value) / 100,
-            auto_attacks_only: fightMode === "time_based" && autoAttacksOnly.checked,
-            include_actives: includeActives.checked,
-            objective: optimizeObjective.value,
-            locked_items: lockedItems,
-            locked_boots: lockedBoots,
-            max_legendary_slots: maxSlots,
-        };
-
-        // Ability ranks
-        if (!autoRankCheckbox.checked) {
-            payload.ability_ranks = {
-                Q: parseInt(document.getElementById("rank-Q").value, 10),
-                W: parseInt(document.getElementById("rank-W").value, 10),
-                E: parseInt(document.getElementById("rank-E").value, 10),
-                R: parseInt(document.getElementById("rank-R").value, 10),
-            };
-        }
-
-        // Cast order
-        if (!autoCastOrderCheckbox.checked) {
-            payload.cast_order = castOrderSelects.map((sel) => sel.value);
-        }
-
-        // Champion-specific options
-        const optDef = championOptionsDefs[champion];
-        if (optDef && optDef.getValues) {
-            payload.champion_options = optDef.getValues();
-        }
+        const payload = buildFightPayload(champion);
+        payload.objective = optimizeObjective.value;
+        payload.locked_items = lockedItems;
+        payload.locked_boots = lockedBoots;
+        payload.max_legendary_slots = maxSlots;
 
         // Show loading
         optimizeBtnText.textContent = "Optimizing...";
