@@ -696,3 +696,132 @@ skill_orders.py) excluded from both columns.
 - Final wrap-up runs: `.venv/Scripts/python.exe -m pytest -q` ->
   **777 passed**; `golden_snapshot.py compare` ->
   `OK: snapshot identical`.
+
+## Phase 4 (completed)
+
+`calculate_fight_damage` decomposed into a named-step pipeline. Seven
+commits, each gated on the full suite + golden compare:
+`a25d685` (amp-attribution fix), `8c0ba44` (setup/stat-buffs),
+`eb725a1` (rotation), `3682694` (autos/on-hits), `5a0ff42`
+(spellblade→single-procs), `e914873` (amplifiers/execute/notes),
+`9468797` (item-value accessors). Suite: **790 passed, 0 failed**
+(777 → 778 amp-fix test, → 790 with 12 accessor tests). Golden compare
+**identical** after every commit. Every hand-validated expected value
+unchanged.
+
+### Before → after
+
+- `calculate_fight_damage`: **1,569 lines → 122** (47 of them
+  signature+docstring). The body is now the fight model: resolve combat
+  state → apply stat-buff ultimates → ability rotation (+ precomputed
+  procs, Shaped Charge) → auto-attack simulation → on-hit layering →
+  spellblade → burns → item procs → actives → single-proc on-hits →
+  Shadowflame → Expose Weakness → amplifiers → execute display → notes.
+- damage.py module: 2,141 → 2,566 raw lines (dataclasses + docstrings;
+  zero logic added).
+- Test-imported privates (`_simulate_bork_damage`,
+  `_calculate_phantom_hits`, `_calculate_kraken_procs`,
+  `_calculate_hullbreaker_procs`, `_navori_effective_cd`) stayed in
+  damage.py under their names — no re-exports needed.
+
+### State design
+
+**`Resists`** (22 fields) — target resistances + attacker penetration
+resolved together: pen inputs, Terminus ability/auto split
+(`terminus_stat_pen`/`terminus_avg_pen`), Malignance pre/post-ult MR,
+Black Cleaver reduction, Bloodletter effect, and the resolved
+`effective_*` values. Methods own the recompute math previously
+duplicated across five inline sites: `resolve_magic`, `resolve_armor`,
+`shred_armor`, `shred_mr`, `use_auto_pen`.
+
+**`FightState`** (33 fields) — fight configuration (the 15 call args +
+`is_melee`/`level`/`item_name_list`/`item_effect_names`), resolved
+combat numbers (`resists`, four amps, crit pair, attack timing:
+`attack_speed`, `attack_speed_ratio`, `num_auto_attacks`,
+Fiendhunter/Hexplate flags, `empowered_autos`), and the accumulators
+(`breakdown`, `total_damage`, `notes`). Values produced by one step and
+consumed by later ones travel as small step-result dataclasses instead:
+`RotationResult` (casts, Muramana procs, first-ability damage, Navori
+info), `AutoAttackResult` (per-hit damage, double-shot info),
+`OnHitResult` (phantom hits, non-BoRK per-hit, BoRK average),
+`SpellbladeResult` (item, procs, per-proc damage, double-on-hit count).
+
+### Step function inventory
+
+| Function | Intent |
+|---|---|
+| `_resolve_combat_state` | Step 1: resistances/pen (Terminus split, Malignance pre/post-ult), BC, Fiendhunter auto window, fight-wide amps |
+| `_apply_stat_buff_ultimates` | Ability stat buffs mutating champion_stats + derived re-resolution; crit resolution |
+| `_compute_ability_rotation` | Step 2: cast loop (haste/Navori CDs, damage-type dispatch, Vile Decay, shreds), post-loop MR fold + auto-pen switch |
+| `_add_precomputed_proc_damage` | Step 2a: fixed-count ability procs (Akali P) |
+| `_add_shaped_charge_damage` | Step 2b: Bastionbreaker |
+| `_simulate_auto_attacks` | Step 3: per-auto crit sim (Ashe override, Fiendhunter, Sundered Sky, double shot, basic amp) |
+| `_layer_on_hit_effects` | Step 4: phantom hits, item/ability on-hits, BoRK current-HP sim |
+| `_add_spellblade_damage` | Step 5+5b: spellblade procs, Dusk and Dawn double on-hit, extra-stack count |
+| `_add_burn_damage` | Step 6+6b: burns w/ rotation-spread refresh, Immolate, Unending Despair |
+| `_add_item_proc_damage` | Step 7+7b: proc items, ult-triggered Malignance Hatefog |
+| `_add_item_active_damage` | Step 8: item actives |
+| `_add_single_proc_on_hits` | Step 9: first-hit/energized procs, Titanic Crescent, Kraken/Hullbreaker stack sims, Eclipse, Muramana |
+| `_add_shadowflame_cinderbloom` | Step 9.5: Cinderbloom HP-ordered bonus |
+| `_add_expose_weakness` | Step 9.6: Bloodsong amp after first proc |
+| `_apply_damage_amplifiers` | Step 10: per-source damage_amp rows, Actualizer info row, Horizon Focus |
+| `_add_execute_display` | Step 11: Collector threshold row |
+| `_collect_fight_notes` | Conditional item-assumption notes |
+
+### Amp-attribution investigation (resolved) — `a25d685`
+
+Confirmed: the engine emits only per-source `damage_amp_<source>` keys
+(general amps + Horizon Focus) plus note-skipped informational
+`basic_amp_*`/`ability_amp_*` rows; the literal `damage_amplification`
+key `split_auto_vs_ability` special-cased is written **nowhere** —
+dead branch, so amp rows classified as ABILITY damage. Since amps scale
+both buckets, `damage_amp_*` rows now redistribute proportionally to
+the pre-amp auto/ability ratio, exactly like `execute`; the dead
+literal branch was deleted. **User-visible:** the auto-vs-ability
+split display shifts slightly for amp builds (LDR / Horizon Focus /
+Riftmaker-class); totals unchanged; golden unaffected (it does not
+capture the split). Phase 2's `TestSplitAutoVsAbility` updated to the
+emitted keys + 1 new multi-source test.
+
+### Item-value accessors — `9468797`
+
+New "Fight-engine value accessors" section in item_effects.py
+(11 accessors, `_required_effect_value` pattern, 12 registry-patched
+tests): `get_ult_proc_mr_reduction`, `get_fiendhunter_empowerment`,
+`get_fiendhunter_crit_ratios`, `get_sundered_sky_crit_ratio`,
+`get_terminus_max_stack_pen`, `get_energized_proc_damage`,
+`get_statikk_empowered_auto_count`, `get_voltaic_firmament`,
+`get_titanic_crescent`, `get_hullbreaker_hits_required`. Type-driven
+loops whose reads are inherently generic (burn durations, spellblade
+cd/weave, Hatefog damage values) deliberately left in the engine.
+
+### Verification (black/pylint before → after)
+
+black clean on all touched files. pylint damage.py 9.78 → **9.64**;
+honest accounting: the monster warnings on `calculate_fight_damage`
+are gone —
+
+- before: `R0914 too-many-locals (301/15)`, `R0912 too-many-branches
+  (191/12)`, `R0915 too-many-statements (707/50)`, `R1702
+  too-many-nested-blocks (6/5)`;
+- after: `calculate_fight_damage` triggers only `R0913/R0917 (15 args)`
+  (its public API signature) and `R0914 (20/15)`.
+
+The slight score dip is message-count arithmetic: the extracted steps
+each carry moderate R0914/R0912/R0915 findings (worst:
+`_compute_ability_rotation` 56 locals/37 branches/134 statements,
+`_simulate_auto_attacks` 57/38/131 — verbatim-moved domain logic, each
+a coherent single step), plus design-mandated `R0902` on `Resists`
+(22 attrs) and `FightState` (33 attrs) — same finding class Phase 3
+documented for `SlotCtx`. item_effects.py 9.80 → 9.74 (line-count
+ratio only; zero new finding kinds).
+
+### Asides / cleanups
+
+- Dropped dead `total_ability_hits` accumulator (written per cast,
+  never read; burn refresh actually uses `total_ability_casts`).
+- `damage_amplification` still appears in two skip-key literals
+  (`_calculate_shadowflame_bonus`, Actualizer row summing) — harmless
+  never-matching entries, left verbatim; Phase 5 could sweep them.
+- Wrap-up runs: `pytest -q` → **790 passed**; `golden_snapshot.py
+  compare` → `OK: snapshot identical`.
