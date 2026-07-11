@@ -1,0 +1,320 @@
+"""Golden snapshot harness for the July 2026 refactor campaign (Phase 0).
+
+Captures the numeric behavior of the full calculation pipeline (stats ->
+ability parsing -> fight damage) across every champion and item, so later
+refactor phases can prove numeric equivalence.  Call patterns mirror
+src/app.py:api_calculate and src/calculator/optimizer.py:_evaluate_build,
+including passing a copy of champion_stats to calculate_fight_damage
+(which mutates it) and deterministic=True.
+
+Compare contract: every float is rounded to 2 decimals before writing, and
+``compare`` recomputes the snapshot with identical rounding — so "equal to
+2 decimals" is plain equality.  ``compare`` prints each differing path as
+``path: old -> new`` and exits 1 on any difference, 0 when identical.
+``metadata/git_head`` is excluded from comparison (it changes per commit).
+Exceptions raised by the pipeline are captured as {"error": "Type: msg"}
+snapshot values — a refactor turning a crash into a number (or vice versa)
+shows up as a diff.
+
+Usage:
+    python scripts/golden_snapshot.py capture <outfile.json>
+    python scripts/golden_snapshot.py compare <baseline.json>
+"""
+
+import argparse
+import copy
+import json
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
+from src.calculator.champions import _CHAMPION_MODULES, parse_abilities
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
+from src.calculator.stats import calculate_total_stats
+
+STAT_LEVELS = (1, 11, 18)
+ABILITY_LEVEL = 11
+FIGHT_LEVELS = (11, 18)
+PHYSICAL_BUILD = ["Kraken Slayer", "Infinity Edge", "Lord Dominik's Regards"]
+MAGIC_BUILD = ["Luden's Companion", "Shadowflame", "Rabadon's Deathcap"]
+BUILD_SUBSTITUTES = {"Luden's Companion": "Luden's Echo"}  # data uses wiki name
+TARGET_HEALTH, TARGET_ARMOR, TARGET_MR = 2000.0, 50.0, 40.0
+
+
+def _rounded(value):
+    """Recursively round floats to 2 decimals and normalize containers."""
+    if isinstance(value, bool) or value is None or isinstance(value, (int, str)):
+        return value
+    if isinstance(value, float):
+        return round(value, 2)
+    if isinstance(value, dict):
+        return {str(k): _rounded(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_rounded(v) for v in value]
+    if isinstance(value, (set, frozenset)):
+        return sorted((_rounded(v) for v in value), key=str)
+    return repr(value)
+
+
+def _error_entry(exc):
+    return {"error": f"{type(exc).__name__}: {exc}"}
+
+
+def _default_target_stats():
+    return {
+        "target_max_health": TARGET_HEALTH,
+        "target_current_health": TARGET_HEALTH,
+        "target_missing_health": 0.0,
+    }
+
+
+def _parse_abilities_fresh(champion_data, level, items):
+    """Mirror the app/optimizer pipeline up through parse_abilities.
+
+    Deep-copies inputs (each web request re-reads data from disk, so every
+    call sees fresh dicts) and returns (stats, ability_damages).
+    """
+    data = copy.deepcopy(champion_data)
+    stats = calculate_total_stats(data, level, items)
+    abilities = parse_abilities(
+        data.get("name", ""), data, level, stats["ability_power"],
+        ability_ranks=None, champion_stats=stats,
+        target_stats=_default_target_stats(), champion_options=None,
+    )
+    return stats, abilities
+
+
+def _run_fight(champion_data, level, items):
+    """One-rotation fight at default target stats, mirroring _evaluate_build."""
+    items = copy.deepcopy(items)
+    stats, abilities = _parse_abilities_fresh(champion_data, level, items)
+    # calculate_fight_damage mutates champion_stats — pass a copy.
+    return calculate_fight_damage(
+        champion_stats=dict(stats), ability_damages=abilities,
+        target_health=TARGET_HEALTH, target_bonus_health=0.0,
+        target_armor=TARGET_ARMOR, target_magic_resistance=TARGET_MR,
+        fight_duration_seconds=5.0, auto_attack_uptime=0.0,
+        ability_haste=stats.get("ability_haste", 0.0), items=items,
+        one_rotation=True, include_actives=True, cast_order=None,
+        auto_attacks_only=False, deterministic=True,
+    )
+
+
+def _fight_summary(result):
+    summary = {
+        "total_damage": round(float(result.get("total_damage", 0.0)), 2),
+        "breakdown_totals": {
+            key: round(float(entry.get("total_damage", 0.0)), 2)
+            for key, entry in result.get("breakdown", {}).items()
+        },
+    }
+    if "dps" in result:
+        summary["dps"] = round(float(result["dps"]), 2)
+    return summary
+
+
+def snapshot_champion_baselines(champions):
+    """Section 1: stats at levels 1/11/18 and level-11 abilities, all champions."""
+    out = {}
+    for key in sorted(champions):
+        data = champions[key]
+        entry = {"stats": {}}
+        for level in STAT_LEVELS:
+            try:
+                entry["stats"][str(level)] = _rounded(
+                    calculate_total_stats(copy.deepcopy(data), level, []))
+            except Exception as exc:
+                entry["stats"][str(level)] = _error_entry(exc)
+        try:
+            _, abilities = _parse_abilities_fresh(data, ABILITY_LEVEL, [])
+            entry[f"abilities_level_{ABILITY_LEVEL}"] = _rounded(abilities)
+        except Exception as exc:
+            entry[f"abilities_level_{ABILITY_LEVEL}"] = _error_entry(exc)
+        out[key] = entry
+    return out
+
+
+def _resolve_build(requested_names, items_by_name, substitutions):
+    """Resolve build item names against data, logging any substitutions."""
+    build = []
+    for name in requested_names:
+        used = name if name in items_by_name else BUILD_SUBSTITUTES.get(name)
+        if used not in items_by_name:
+            used = None
+        if used != name:
+            substitutions.append({"requested": name, "used": used})
+        if used is not None:
+            build.append(items_by_name[used])
+    return build
+
+
+def snapshot_registered_fights(champions, items_by_name, substitutions):
+    """Section 2: full fights for the 12 registered champions, 3 builds x 2 levels."""
+    builds = {
+        "no_items": [],
+        "physical_build": _resolve_build(PHYSICAL_BUILD, items_by_name, substitutions),
+        "magic_build": _resolve_build(MAGIC_BUILD, items_by_name, substitutions),
+    }
+    by_display_name = {data.get("name"): data for data in champions.values()}
+    out = {}
+    for display_name in sorted(_CHAMPION_MODULES):
+        levels = {}
+        for level in FIGHT_LEVELS:
+            fights = {}
+            for build_name, build_items in builds.items():
+                try:
+                    fights[build_name] = _fight_summary(
+                        _run_fight(by_display_name[display_name], level, build_items))
+                except Exception as exc:
+                    fights[build_name] = _error_entry(exc)
+            levels[str(level)] = fights
+        out[display_name] = levels
+    return out
+
+
+def snapshot_item_sweep(champions, items):
+    """Section 3: every item, alone, at level 11, on Vayne and Ahri."""
+    by_display_name = {data.get("name"): data for data in champions.values()}
+    sweep_champions = [("ahri", by_display_name["Ahri"]),
+                       ("vayne", by_display_name["Vayne"])]
+    out = {}
+    for item in sorted(items.values(), key=lambda i: i.get("name", "")):
+        entry = {}
+        for label, champion_data in sweep_champions:
+            try:
+                result = _run_fight(champion_data, ABILITY_LEVEL, [item])
+                entry[label] = {
+                    "total_damage": round(float(result.get("total_damage", 0.0)), 2),
+                    "breakdown_keys": sorted(result.get("breakdown", {})),
+                }
+            except Exception as exc:
+                entry[label] = _error_entry(exc)
+        out[item.get("name", "")] = entry
+    return out
+
+
+def snapshot_metadata(champions, items, substitutions, sweep_error_count):
+    """Section 4: patch, git HEAD, data-fetch timestamps, counts."""
+    def meta_fetched_at(filename):
+        meta_path = REPO_ROOT / "data" / f".{filename}.meta"
+        return json.loads(meta_path.read_text(encoding="utf-8")).get("fetched_at")
+
+    patches = {c.get("patchLastChanged") for c in champions.values()}
+    patch = max(
+        (p for p in patches if p),
+        key=lambda p: [int(x) if x.isdigit() else -1 for x in p.split(".")],
+        default=None,
+    )
+    git_head = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT,
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    return {
+        "patch_last_changed_max": patch,
+        "git_head": git_head,
+        "champions_fetched_at": meta_fetched_at("champions.json"),
+        "items_fetched_at": meta_fetched_at("items.json"),
+        "champion_count": len(champions),
+        "registered_champion_count": len(_CHAMPION_MODULES),
+        "item_count": len(items),
+        "item_sweep_error_count": sweep_error_count,
+        "build_substitutions": substitutions,
+    }
+
+
+def build_snapshot():
+    """Compute the full golden snapshot as a plain-JSON-serializable dict."""
+    champions = fetch_champion_data()
+    items = fetch_item_data()
+    items_by_name = {data["name"]: data for data in items.values()}
+    substitutions = []
+    item_sweep = snapshot_item_sweep(champions, items)
+    sweep_errors = sum(
+        1 for entry in item_sweep.values()
+        for side in entry.values() if "error" in side)
+    return {
+        "champion_baselines": snapshot_champion_baselines(champions),
+        "registered_champion_fights": snapshot_registered_fights(
+            champions, items_by_name, substitutions),
+        "item_sweep": item_sweep,
+        "metadata": snapshot_metadata(champions, items, substitutions, sweep_errors),
+    }
+
+
+def _format_value(value):
+    text = json.dumps(value, sort_keys=True, default=repr)
+    return text if len(text) <= 120 else text[:117] + "..."
+
+
+def diff_snapshots(path, old, new, diffs):
+    """Recursively collect 'path: old -> new' strings for every difference."""
+    if isinstance(old, dict) and isinstance(new, dict):
+        for key in sorted(set(old) | set(new)):
+            if key not in old:
+                diffs.append(f"{path}/{key}: <absent> -> {_format_value(new[key])}")
+            elif key not in new:
+                diffs.append(f"{path}/{key}: {_format_value(old[key])} -> <absent>")
+            else:
+                diff_snapshots(f"{path}/{key}", old[key], new[key], diffs)
+    elif isinstance(old, list) and isinstance(new, list):
+        for index in range(max(len(old), len(new))):
+            if index >= len(old):
+                diffs.append(f"{path}[{index}]: <absent> -> {_format_value(new[index])}")
+            elif index >= len(new):
+                diffs.append(f"{path}[{index}]: {_format_value(old[index])} -> <absent>")
+            else:
+                diff_snapshots(f"{path}[{index}]", old[index], new[index], diffs)
+    elif old != new:
+        diffs.append(f"{path}: {_format_value(old)} -> {_format_value(new)}")
+
+
+def capture(outfile):
+    started = time.perf_counter()
+    snapshot = build_snapshot()
+    Path(outfile).write_text(
+        json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    meta = snapshot["metadata"]
+    print(f"Captured snapshot -> {outfile}")
+    print(f"  champions: {meta['champion_count']}  "
+          f"registered: {meta['registered_champion_count']}  "
+          f"items swept: {meta['item_count']}  "
+          f"sweep errors: {meta['item_sweep_error_count']}")
+    print(f"  elapsed: {time.perf_counter() - started:.1f}s")
+    return 0
+
+
+def compare(baseline_path):
+    baseline = json.loads(Path(baseline_path).read_text(encoding="utf-8"))
+    current = build_snapshot()
+    # git HEAD legitimately changes between commits; everything else must not.
+    baseline.get("metadata", {}).pop("git_head", None)
+    current.get("metadata", {}).pop("git_head", None)
+    diffs = []
+    diff_snapshots("", baseline, current, diffs)
+    for line in diffs:
+        print(line)
+    if diffs:
+        print(f"FAIL: {len(diffs)} difference(s) vs {baseline_path}")
+        return 1
+    print(f"OK: snapshot identical to {baseline_path}")
+    return 0
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("capture").add_argument("outfile")
+    commands.add_parser("compare").add_argument("baseline")
+    args = parser.parse_args()
+    if args.command == "capture":
+        sys.exit(capture(args.outfile))
+    sys.exit(compare(args.baseline))
+
+
+if __name__ == "__main__":
+    main()
