@@ -1,12 +1,14 @@
 # League of Legends Calculator
 
+Module map and pipeline: see `architecture.md`.
+
 ## Important Rules
 
 1. **lolstaticdata/ is external code** — Don't refactor or restructure it. Minimal, targeted bug fixes are OK when they block functionality (e.g., parser crashes on specific champions).
 2. **Always use the caching layer** — `data_fetcher.py` reads from `data/`. Never bypass it or add network calls to it. Data updates go through `data_updater.py`.
 3. **All calculation functions must have corresponding tests.**
 4. **Run tests before considering any task complete.**
-5. **No hardcoded item values in stats.py** — All numeric item values must come from `ITEM_EFFECTS.get()` lookups so they auto-update when wiki data refreshes.
+5. **No item numbers outside `item_effects.py`** — All numeric item values come from `item_effects` typed accessors, with NO literal fallbacks at call sites (a `.get(key, stale_literal)` silently wins when the parser breaks — that exact failure hid a 3× Statikk Shiv overstatement). Missing keys must raise, naming the item and key.
 
 ## Domain Knowledge
 
@@ -28,6 +30,7 @@ pytest                # Run all tests
 pytest --cov=src      # Run tests with coverage
 black src/ tests/     # Format code
 pylint src/           # Lint code
+python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
 ```
 
 ## Verification Steps
@@ -35,8 +38,12 @@ pylint src/           # Lint code
 After completing any task:
 1. Run the test suite: `pytest`
 2. Verify all tests pass
-3. Run linter if code was modified: `pylint src/`
-4. Show output of verification steps
+3. If calculation code changed, run the golden gate:
+   `python scripts/golden_snapshot.py compare scripts/golden_baseline.json`
+   — a pure refactor must show zero diffs; a behavior fix re-captures the baseline
+   with every diff explained in the commit.
+4. Run linter if code was modified: `pylint src/`
+5. Show output of verification steps
 
 ## Known Quirks
 
