@@ -121,6 +121,28 @@ def _living_artillery(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+OPTIONS = [
+    {
+        "key": "q_shred",
+        "type": "bool",
+        "default": True,
+        "label": "Apply Q Resistance Shred",
+    },
+    {
+        "key": "w_active",
+        "type": "bool",
+        "default": True,
+        "label": "W Active (Bio-Arcane Barrage)",
+    },
+]
+
+ASSUMPTIONS = [
+    "Q resistance shred applied before all other damage",
+    "W (Bio-Arcane Barrage) assumed always active during the fight",
+    "R damage scales dynamically with target's decreasing HP",
+    "Passive (Icathian Surprise) is not modeled",
+]
+
 SLOTS = {
     "Q": _caustic_spittle,
     "W": _bio_arcane_barrage,

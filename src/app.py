@@ -18,7 +18,7 @@ from calculator.data_fetcher import (
 from calculator.data_updater import update_data
 from calculator.item_effects import refresh_item_effects
 from calculator.stats import calculate_total_stats
-from calculator.champions import parse_abilities
+from calculator.champions import champion_options_meta_map, parse_abilities
 from calculator.damage import (
     DEFAULT_TARGET,
     calculate_fight_damage,
@@ -97,13 +97,18 @@ def api_config():
     """Serve calculator config the frontend must share with the backend.
 
     Single source of truth for domain facts that would otherwise be
-    hand-copied into app.js: item exclusivity groups (optimizer.py) and
-    default target stats (damage.py).
+    hand-copied into app.js: item exclusivity groups (optimizer.py),
+    default target stats (damage.py), and champion option/assumption
+    metadata (each champion module's OPTIONS/ASSUMPTIONS declarations).
+    Champion options ride the existing one-shot bootstrap fetch rather
+    than a per-champion endpoint so app.js can keep reading the map
+    synchronously on champion select.
     """
     return jsonify(
         {
             "exclusivity_groups": exclusivity_groups(),
             "default_target": DEFAULT_TARGET,
+            "champion_options": champion_options_meta_map(),
         }
     )
 

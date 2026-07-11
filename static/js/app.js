@@ -72,6 +72,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // shared with the Python backend, populated by the fetch below.
     let itemToGroups = {};   // item name -> list of exclusivity group names
     let defaultTarget = {};  // default target stats for empty inputs
+    // Champion option/assumption metadata, declared as OPTIONS/ASSUMPTIONS
+    // beside each champion module's SLOTS (src/calculator/champions/).
+    // Shape: { "<champion>": { options: [{key, type, default, label,
+    // min?, max?, step?}], assumptions: ["..."] } } — champions absent
+    // from the map have no special options (the generic path).
+    let championOptionsMeta = {};
     let hasCalculated = false;
     let isCalculating = false;
     let recalcTimer = null;
@@ -115,11 +121,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
     // Config shared with the backend: item exclusivity groups (from
-    // optimizer.py) and default target stats (from damage.py).
+    // optimizer.py), default target stats (from damage.py), and champion
+    // option/assumption metadata (from the champion modules).
     fetch("/api/config")
         .then((res) => res.json())
         .then((data) => {
             defaultTarget = data.default_target;
+            championOptionsMeta = data.champion_options || {};
             // Reverse lookup: item name -> list of group names it belongs to
             for (const [group, members] of Object.entries(data.exclusivity_groups)) {
                 for (const name of members) {
@@ -131,339 +139,76 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // === Champion selection ===
 
-    // Registry of champion-specific options.
-    // To add options for a champion, add an entry keyed by champion name.
-    // Each entry has a `render(container)` function that populates the panel
-    // and optionally a `getValues()` function that returns current settings.
-    // Example:
-    //   championOptionsDefs["Viego"] = {
-    //       render(container) {
-    //           container.innerHTML = `
-    //               <label class="toggle-label compact">
-    //                   <input type="checkbox" id="opt-viego-passive">
-    //                   <span class="toggle-text">Possessing enemy champion</span>
-    //               </label>`;
-    //       },
-    //       getValues() {
-    //           return { possessing: document.getElementById("opt-viego-passive")?.checked };
-    //       }
-    //   };
-    const championOptionsDefs = {};
+    // Champion options UI, rendered generically from championOptionsMeta.
+    // Adding an option to a champion is a Python-side change: declare it
+    // in the module's OPTIONS list — no frontend edit needed.
 
-    championOptionsDefs["Aatrox"] = {
-        render(container) {
-            container.innerHTML = `
-                <label class="toggle-label compact">
-                    <input type="checkbox" id="opt-aatrox-sweetspot" checked>
-                    <span class="toggle-text">Q Sweetspot hits</span>
-                </label>`;
-            document.getElementById("opt-aatrox-sweetspot")
-                .addEventListener("change", scheduleRecalc);
-        },
-        getValues() {
-            return {
-                sweetspot: document.getElementById("opt-aatrox-sweetspot")?.checked ?? true,
-            };
-        },
-        assumptions: [
-            "Assumed R is always active",
-            "W always hits both initial and pull-back damage",
-        ],
-    };
+    const OPTION_NUMBER_STYLE =
+        "width:56px; margin-left:8px; background:var(--bg-dark); " +
+        "color:var(--text-light); border:1px solid var(--border-subtle); " +
+        "border-radius:4px; padding:2px 6px; font-size:0.85rem;";
 
-    championOptionsDefs["Akshan"] = {
-        render(container) {
-            container.innerHTML = `
-                <label class="toggle-label compact">
-                    <span class="toggle-text">Passive procs (3-stack)</span>
-                    <input type="number" id="opt-akshan-passive-procs" value="3"
-                           min="0" max="20" style="width:48px; margin-left:8px;
-                           background:var(--bg-dark); color:var(--text-light);
-                           border:1px solid var(--border-subtle); border-radius:4px;
-                           padding:2px 6px; font-size:0.85rem;">
-                </label>
-                <label class="toggle-label compact" style="margin-top:6px;">
-                    <span class="toggle-text">E shots fired</span>
-                    <input type="number" id="opt-akshan-e-shots" value="5"
-                           min="0" max="20" style="width:48px; margin-left:8px;
-                           background:var(--bg-dark); color:var(--text-light);
-                           border:1px solid var(--border-subtle); border-radius:4px;
-                           padding:2px 6px; font-size:0.85rem;">
-                </label>`;
-            document.getElementById("opt-akshan-passive-procs")
-                .addEventListener("input", scheduleRecalc);
-            document.getElementById("opt-akshan-e-shots")
-                .addEventListener("input", scheduleRecalc);
-        },
-        getValues() {
-            return {
-                passive_procs: parseInt(
-                    document.getElementById("opt-akshan-passive-procs")?.value ?? "3", 10
-                ),
-                e_shots: parseInt(
-                    document.getElementById("opt-akshan-e-shots")?.value ?? "5", 10
-                ),
-            };
-        },
-        assumptions: [
-            "Q always hits both passes (outgoing and return)",
-            "R assumes full channel (max bullets at max damage)",
-            "R crit scaling at 30% effectiveness applied",
-            "Double shot applies on-hit effects and can crit",
-            "W is utility only (no damage)",
-        ],
-    };
+    function championOptionInputId(key) {
+        return "champ-opt-" + key;
+    }
 
-    championOptionsDefs["Akali"] = {
-        render(container) {
-            container.innerHTML = `
-                <label class="toggle-label compact">
-                    <span class="toggle-text">Passive procs</span>
-                    <input type="number" id="opt-akali-passive-procs" value="4"
-                           min="0" max="20" style="width:48px; margin-left:8px;
-                           background:var(--bg-dark); color:var(--text-light);
-                           border:1px solid var(--border-subtle); border-radius:4px;
-                           padding:2px 6px; font-size:0.85rem;">
-                </label>`;
-            document.getElementById("opt-akali-passive-procs")
-                .addEventListener("input", scheduleRecalc);
-        },
-        getValues() {
-            return {
-                passive_procs: parseInt(
-                    document.getElementById("opt-akali-passive-procs")?.value ?? "4", 10
-                ),
-            };
-        },
-        assumptions: [
-            "E always hits both shuriken and recast dash",
-            "R always hits both R1 dash and R2 execute",
-            "R2 damage scales with target missing HP from prior abilities",
-        ],
-    };
+    // Build the option controls: bool -> checkbox (recalc on change),
+    // int/float -> number input with min/max/step (recalc on input).
+    function renderChampionOptions(container, options) {
+        container.innerHTML = "";
+        options.forEach((opt, index) => {
+            const label = document.createElement("label");
+            label.className = "toggle-label compact";
+            if (index > 0) label.style.marginTop = "6px";
 
-    championOptionsDefs["Alistar"] = {
-        render(container) {
-            container.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">
-                No configurable options for Alistar.</p>`;
-        },
-        getValues() {
-            return {};
-        },
-        assumptions: [
-            "E Trample deals full duration damage (10 ticks over 5 seconds)",
-            "E empowered auto always procs once per cast (5 stacks reached)",
-            "Passive (Triumphant Roar) healing is ignored",
-            "R (Unbreakable Will) damage reduction is ignored",
-        ],
-    };
+            const text = document.createElement("span");
+            text.className = "toggle-text";
+            text.textContent = opt.label;
 
-    championOptionsDefs["Ambessa"] = {
-        render(container) {
-            container.innerHTML = `
-                <label class="toggle-label compact">
-                    <input type="checkbox" id="opt-ambessa-sweetspot" checked>
-                    <span class="toggle-text">Q/Q2 Sweetspot (doubled damage)</span>
-                </label>
-                <label class="toggle-label compact" style="margin-top:6px;">
-                    <span class="toggle-text">Passive procs</span>
-                    <input type="number" id="opt-ambessa-passive-procs" value="4"
-                           min="0" max="20" style="width:48px; margin-left:8px;
-                           background:var(--bg-dark); color:var(--text-light);
-                           border:1px solid var(--border-subtle); border-radius:4px;
-                           padding:2px 6px; font-size:0.85rem;">
-                </label>`;
-            document.getElementById("opt-ambessa-sweetspot")
-                .addEventListener("change", scheduleRecalc);
-            document.getElementById("opt-ambessa-passive-procs")
-                .addEventListener("input", scheduleRecalc);
-        },
-        getValues() {
-            return {
-                sweetspot: document.getElementById("opt-ambessa-sweetspot")?.checked ?? true,
-                passive_procs: parseInt(
-                    document.getElementById("opt-ambessa-passive-procs")?.value ?? "4", 10
-                ),
-            };
-        },
-        assumptions: [
-            "R passive (armor penetration) is always active when R is skilled",
-            "W always uses increased (empowered) damage",
-            "E always hits twice (both passes)",
-            "Q2 (Sundering Slam) shown separately from Q1 (Cunning Sweep)",
-        ],
-    };
+            const input = document.createElement("input");
+            input.id = championOptionInputId(opt.key);
+            if (opt.type === "bool") {
+                input.type = "checkbox";
+                input.checked = !!opt.default;
+                input.addEventListener("change", scheduleRecalc);
+                label.appendChild(input);
+                label.appendChild(text);
+            } else {
+                input.type = "number";
+                input.value = opt.default;
+                if (opt.min !== undefined) input.min = opt.min;
+                if (opt.max !== undefined) input.max = opt.max;
+                if (opt.step !== undefined) input.step = opt.step;
+                input.style.cssText = OPTION_NUMBER_STYLE;
+                input.addEventListener("input", scheduleRecalc);
+                label.appendChild(text);
+                label.appendChild(input);
+            }
+            container.appendChild(label);
+        });
+    }
 
-    championOptionsDefs["Anivia"] = {
-        render(container) {
-            container.innerHTML = `
-                <label class="toggle-label compact">
-                    <span class="toggle-text">R duration (seconds)</span>
-                    <input type="number" id="opt-anivia-r-duration" value="5"
-                           min="1.5" max="30" step="0.5" style="width:56px; margin-left:8px;
-                           background:var(--bg-dark); color:var(--text-light);
-                           border:1px solid var(--border-subtle); border-radius:4px;
-                           padding:2px 6px; font-size:0.85rem;">
-                </label>`;
-            document.getElementById("opt-anivia-r-duration")
-                .addEventListener("input", scheduleRecalc);
-        },
-        getValues() {
-            return {
-                r_duration: parseFloat(
-                    document.getElementById("opt-anivia-r-duration")?.value ?? "5"
-                ),
-            };
-        },
-        assumptions: [
-            "Q hits both pass-through and detonation (total damage used)",
-            "E target is always Chilled (empowered damage used)",
-            "R first 1.5s uses initial tick damage, remaining uses fully-formed tick damage",
-            "W skipped (utility wall, no damage)",
-            "Passive skipped (resurrection only, no damage)",
-        ],
-    };
-
-    championOptionsDefs["Annie"] = {
-        render(container) {
-            container.innerHTML = `
-                <label class="toggle-label compact">
-                    <span class="toggle-text">Tibbers aura duration (seconds)</span>
-                    <input type="number" id="opt-annie-tibbers-aura" value="5"
-                           min="0" max="45" step="0.5" style="width:56px; margin-left:8px;
-                           background:var(--bg-dark); color:var(--text-light);
-                           border:1px solid var(--border-subtle); border-radius:4px;
-                           padding:2px 6px; font-size:0.85rem;">
-                </label>`;
-            document.getElementById("opt-annie-tibbers-aura")
-                .addEventListener("input", scheduleRecalc);
-        },
-        getValues() {
-            return {
-                tibbers_aura_seconds: parseFloat(
-                    document.getElementById("opt-annie-tibbers-aura")?.value ?? "5"
-                ),
-            };
-        },
-        assumptions: [
-            "R magic penetration passive is always active",
-            "Tibbers auto-attack damage is not modeled (positioning-dependent)",
-            "E retaliation damage is not modeled (requires enemies to hit Annie)",
-            "Tibbers aura defaults to 5 seconds of damage",
-        ],
-    };
-
-    championOptionsDefs["Amumu"] = {
-        render(container) {
-            container.innerHTML = `
-                <label class="toggle-label compact">
-                    <input type="checkbox" id="opt-amumu-cursed" checked>
-                    <span class="toggle-text">Target already Cursed (10% bonus true damage)</span>
-                </label>
-                <label class="toggle-label compact" style="margin-top:6px;">
-                    <span class="toggle-text">W seconds active</span>
-                    <input type="number" id="opt-amumu-w-seconds" value="3"
-                           min="0.5" max="30" step="0.5" style="width:48px; margin-left:8px;
-                           background:var(--bg-dark); color:var(--text-light);
-                           border:1px solid var(--border-subtle); border-radius:4px;
-                           padding:2px 6px; font-size:0.85rem;">
-                </label>`;
-            document.getElementById("opt-amumu-cursed")
-                .addEventListener("change", scheduleRecalc);
-            document.getElementById("opt-amumu-w-seconds")
-                .addEventListener("input", scheduleRecalc);
-        },
-        getValues() {
-            return {
-                target_cursed: document.getElementById("opt-amumu-cursed")?.checked ?? true,
-                w_seconds: parseFloat(
-                    document.getElementById("opt-amumu-w-seconds")?.value ?? "3"
-                ),
-            };
-        },
-        assumptions: [
-            "Target is assumed already Cursed (Passive) — all magic damage gets 10% bonus true damage",
-            "Q uses recharge timer as cooldown (fight engine determines cast count)",
-            "W defaults to 3 seconds active (6 ticks at 0.5s intervals)",
-            "E passive (damage reduction) is not modeled — defensive only",
-        ],
-    };
-
-    championOptionsDefs["Ashe"] = {
-        render(container) {
-            container.innerHTML = `
-                <label class="toggle-label compact">
-                    <input type="checkbox" id="opt-ashe-q-active" checked>
-                    <span class="toggle-text">Ranger's Focus active</span>
-                </label>`;
-            document.getElementById("opt-ashe-q-active")
-                .addEventListener("change", scheduleRecalc);
-        },
-        getValues() {
-            return {
-                q_active: document.getElementById("opt-ashe-q-active")?.checked ?? true,
-            };
-        },
-        assumptions: [
-            "Q (Ranger's Focus) assumed active by default",
-            "Passive bonus damage from crit chance applied to all auto attacks",
-            "W hits a single target (one arrow per enemy)",
-            "E (Hawkshot) is utility only and deals no damage",
-        ],
-    };
-
-    championOptionsDefs["Vayne"] = {
-        render(container) {
-            container.innerHTML = `
-                <label class="toggle-label compact">
-                    <input type="checkbox" id="opt-vayne-condemn-wall" checked>
-                    <span class="toggle-text">E Condemn into wall</span>
-                </label>`;
-            document.getElementById("opt-vayne-condemn-wall")
-                .addEventListener("change", scheduleRecalc);
-        },
-        getValues() {
-            return {
-                condemn_wall: document.getElementById("opt-vayne-condemn-wall")?.checked ?? true,
-            };
-        },
-        assumptions: [
-            "R (Final Hour) always active if ranked — bonus AD applied",
-            "W (Silver Bolts) procs every 3rd hit (on-hit model)",
-            "Q empowered auto applies once per cast",
-            "Passive (Night Hunter) is utility only — not modeled",
-        ],
-    };
-
-    championOptionsDefs["Kog'Maw"] = {
-        render(container) {
-            container.innerHTML = `
-                <label class="toggle-label compact">
-                    <input type="checkbox" id="opt-kogmaw-q-shred" checked>
-                    <span class="toggle-text">Apply Q Resistance Shred</span>
-                </label>
-                <label class="toggle-label compact" style="margin-top:6px;">
-                    <input type="checkbox" id="opt-kogmaw-w-active" checked>
-                    <span class="toggle-text">W Active (Bio-Arcane Barrage)</span>
-                </label>`;
-            document.getElementById("opt-kogmaw-q-shred")
-                .addEventListener("change", scheduleRecalc);
-            document.getElementById("opt-kogmaw-w-active")
-                .addEventListener("change", scheduleRecalc);
-        },
-        getValues() {
-            return {
-                q_shred: document.getElementById("opt-kogmaw-q-shred")?.checked ?? true,
-                w_active: document.getElementById("opt-kogmaw-w-active")?.checked ?? true,
-            };
-        },
-        assumptions: [
-            "Q resistance shred applied before all other damage",
-            "W (Bio-Arcane Barrage) assumed always active during the fight",
-            "R damage scales dynamically with target's decreasing HP",
-            "Passive (Icathian Surprise) is not modeled",
-        ],
-    };
+    // Read the current option values for the champion_options payload.
+    // Returns null for champions without metadata; a cleared/invalid
+    // number input falls back to the option's default.
+    function collectChampionOptions(champion) {
+        const meta = championOptionsMeta[champion];
+        if (!meta) return null;
+        const values = {};
+        meta.options.forEach((opt) => {
+            const el = document.getElementById(championOptionInputId(opt.key));
+            if (opt.type === "bool") {
+                values[opt.key] = el ? el.checked : !!opt.default;
+            } else {
+                const parsed =
+                    opt.type === "int"
+                        ? parseInt(el?.value, 10)
+                        : parseFloat(el?.value);
+                values[opt.key] = Number.isNaN(parsed) ? opt.default : parsed;
+            }
+        });
+        return values;
+    }
 
     function selectChampion(name, icon) {
         championSelect.value = name;
@@ -483,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Auto-open the panel when the champion has custom options defined.
         if (name) {
             championOptionsBtn.classList.remove("hidden");
-            if (championOptionsDefs[name]) {
+            if (championOptionsMeta[name]) {
                 championOptionsPanel.classList.remove("hidden");
             } else {
                 championOptionsPanel.classList.add("hidden");
@@ -518,10 +263,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateChampionOptionsContent(championName) {
-        const def = championOptionsDefs[championName];
-        if (def && def.render) {
+        const meta = championOptionsMeta[championName];
+        if (meta && meta.options.length > 0) {
+            renderChampionOptions(championOptionsContent, meta.options);
+        } else if (meta) {
+            // Registered champion with assumptions but no knobs (Alistar).
             championOptionsContent.innerHTML = "";
-            def.render(championOptionsContent);
+            const p = document.createElement("p");
+            p.style.cssText = "color:var(--text-muted); font-size:0.85rem;";
+            p.textContent = "No configurable options for " + championName + ".";
+            championOptionsContent.appendChild(p);
         } else {
             championOptionsContent.innerHTML =
                 '<p class="champion-options-empty">No special options for this champion.</p>';
@@ -964,9 +715,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Champion-specific options
-        const optDef = championOptionsDefs[champion];
-        if (optDef && optDef.getValues) {
-            payload.champion_options = optDef.getValues();
+        const championOptions = collectChampionOptions(champion);
+        if (championOptions) {
+            payload.champion_options = championOptions;
         }
 
         return payload;
@@ -1213,10 +964,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const assumptionsPanel = document.getElementById("champion-assumptions");
         const assumptionsList = document.getElementById("champion-assumptions-list");
         const champion = championSelect.value;
-        const optDef = championOptionsDefs[champion];
-        if (optDef && optDef.assumptions && optDef.assumptions.length > 0) {
+        const meta = championOptionsMeta[champion];
+        if (meta && meta.assumptions && meta.assumptions.length > 0) {
             assumptionsList.innerHTML = "";
-            optDef.assumptions.forEach((text) => {
+            meta.assumptions.forEach((text) => {
                 const li = document.createElement("li");
                 li.textContent = text;
                 assumptionsList.appendChild(li);

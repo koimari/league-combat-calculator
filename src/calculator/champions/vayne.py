@@ -80,6 +80,22 @@ def _silver_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+OPTIONS = [
+    {
+        "key": "condemn_wall",
+        "type": "bool",
+        "default": True,
+        "label": "E Condemn into wall",
+    },
+]
+
+ASSUMPTIONS = [
+    "R (Final Hour) always active if ranked — bonus AD applied",
+    "W (Silver Bolts) procs every 3rd hit (on-hit model)",
+    "Q empowered auto applies once per cast",
+    "Passive (Night Hunter) is utility only — not modeled",
+]
+
 SLOTS = {
     "R": stat_buff(
         "Bonus Attack Damage",

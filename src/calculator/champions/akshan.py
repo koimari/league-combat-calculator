@@ -258,6 +258,33 @@ def _dirty_fighting_procs(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+OPTIONS = [
+    {
+        "key": "passive_procs",
+        "type": "int",
+        "default": 3,
+        "label": "Passive procs (3-stack)",
+        "min": 0,
+        "max": 20,
+    },
+    {
+        "key": "e_shots",
+        "type": "int",
+        "default": 5,
+        "label": "E shots fired",
+        "min": 0,
+        "max": 20,
+    },
+]
+
+ASSUMPTIONS = [
+    "Q always hits both passes (outgoing and return)",
+    "R assumes full channel (max bullets at max damage)",
+    "R crit scaling at 30% effectiveness applied",
+    "Double shot applies on-hit effects and can crit",
+    "W is utility only (no damage)",
+]
+
 SLOTS = {
     "Q": simple_damage(attr="Total Physical Damage", dmg_type="physical"),
     "E": _heroic_swing,

@@ -103,6 +103,41 @@ def parse_abilities(
     )
 
 
+def get_champion_options_meta(champion_name: str) -> dict[str, list]:
+    """Return a champion's option/assumption metadata for the frontend.
+
+    Registered modules declare ``OPTIONS`` (a list of option dicts:
+    ``key``, ``type`` ("bool"/"int"/"float"), ``default``, ``label``,
+    plus ``min``/``max``/``step`` for numeric inputs) and
+    ``ASSUMPTIONS`` (prose strings shown in the UI) beside their
+    ``SLOTS``. Champions without a module have neither — the generic
+    path takes no options.
+
+    Returns:
+        ``{"options": [...], "assumptions": [...]}`` (JSON-safe).
+    """
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return {"options": [], "assumptions": []}
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    return {"options": list(module.OPTIONS), "assumptions": list(module.ASSUMPTIONS)}
+
+
+def champion_options_meta_map() -> dict[str, dict[str, list]]:
+    """Option/assumption metadata for every champion that has any.
+
+    The shape /api/config serves: champions absent from the map have no
+    options and no assumptions (the frontend shows its generic "no
+    special options" placeholder).
+    """
+    result = {}
+    for name in _CHAMPION_MODULES:
+        meta = get_champion_options_meta(name)
+        if meta["options"] or meta["assumptions"]:
+            result[name] = meta
+    return result
+
+
 def is_champion_supported(champion_name: str) -> bool:  # noqa: ARG001
     """Check whether a champion has ability damage implemented.
 

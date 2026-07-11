@@ -89,6 +89,15 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
     return damage_entry(name, rank, extract_cooldown(ability, rank), total, "magic")
 
 
+OPTIONS: list[dict[str, Any]] = []
+
+ASSUMPTIONS = [
+    "E Trample deals full duration damage (10 ticks over 5 seconds)",
+    "E empowered auto always procs once per cast (5 stacks reached)",
+    "Passive (Triumphant Roar) healing is ignored",
+    "R (Unbreakable Will) damage reduction is ignored",
+]
+
 SLOTS = {
     "Q": simple_damage(),
     "W": simple_damage(),

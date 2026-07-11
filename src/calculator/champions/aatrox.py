@@ -54,6 +54,15 @@ def _extract_r_bonus_ad_percent(ability: dict[str, Any], rank: int) -> float:
     return extract_value(ability, "Bonus Attack Damage", rank) / 100.0
 
 
+OPTIONS = [
+    {"key": "sweetspot", "type": "bool", "default": True, "label": "Q Sweetspot hits"},
+]
+
+ASSUMPTIONS = [
+    "Assumed R is always active",
+    "W always hits both initial and pull-back damage",
+]
+
 SLOTS = {
     "R": stat_buff(
         "Bonus Attack Damage",

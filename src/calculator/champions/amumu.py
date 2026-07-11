@@ -100,6 +100,31 @@ def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+OPTIONS = [
+    {
+        "key": "target_cursed",
+        "type": "bool",
+        "default": True,
+        "label": "Target already Cursed (10% bonus true damage)",
+    },
+    {
+        "key": "w_seconds",
+        "type": "float",
+        "default": 3.0,
+        "label": "W seconds active",
+        "min": 0.5,
+        "max": 30,
+        "step": 0.5,
+    },
+]
+
+ASSUMPTIONS = [
+    "Target is assumed already Cursed (Passive) — all magic damage gets 10% bonus true damage",
+    "Q uses recharge timer as cooldown (fight engine determines cast count)",
+    "W defaults to 3 seconds active (6 ticks at 0.5s intervals)",
+    "E passive (damage reduction) is not modeled — defensive only",
+]
+
 SLOTS = {
     "P": _cursed_touch_display,
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic", cooldown="recharge"),

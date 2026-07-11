@@ -161,6 +161,30 @@ def _sundering_slam(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+OPTIONS = [
+    {
+        "key": "sweetspot",
+        "type": "bool",
+        "default": True,
+        "label": "Q/Q2 Sweetspot (doubled damage)",
+    },
+    {
+        "key": "passive_procs",
+        "type": "int",
+        "default": 4,
+        "label": "Passive procs",
+        "min": 0,
+        "max": 20,
+    },
+]
+
+ASSUMPTIONS = [
+    "R passive (armor penetration) is always active when R is skilled",
+    "W always uses increased (empowered) damage",
+    "E always hits twice (both passes)",
+    "Q2 (Sundering Slam) shown separately from Q1 (Cunning Sweep)",
+]
+
 SLOTS = {
     "R": stat_buff(
         "Armor Penetration",

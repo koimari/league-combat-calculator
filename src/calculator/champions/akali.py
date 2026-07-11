@@ -72,11 +72,30 @@ def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+OPTIONS = [
+    {
+        "key": "passive_procs",
+        "type": "int",
+        "default": 4,
+        "label": "Passive procs",
+        "min": 0,
+        "max": 20,
+    },
+]
+
+ASSUMPTIONS = [
+    "E always hits both shuriken and recast dash",
+    "R always hits both R1 dash and R2 execute",
+    "R2 damage scales with target missing HP from prior abilities",
+]
+
 SLOTS = {
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "E": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "R": _perfect_execution,
-    "P": proc_damage(attr="Bonus Magic Damage", dmg_type="magic"),
+    "P": proc_damage(
+        attr="Bonus Magic Damage", dmg_type="magic", count_option="passive_procs"
+    ),
 }
 
 parse_abilities = build_parser(SLOTS, "Akali")

@@ -20,6 +20,26 @@ hardcoded.
 from .engine import build_parser
 from .slotlib import simple_damage, toggle_dot
 
+OPTIONS = [
+    {
+        "key": "r_duration",
+        "type": "float",
+        "default": 5.0,
+        "label": "R duration (seconds)",
+        "min": 1.5,
+        "max": 30,
+        "step": 0.5,
+    },
+]
+
+ASSUMPTIONS = [
+    "Q hits both pass-through and detonation (total damage used)",
+    "E target is always Chilled (empowered damage used)",
+    "R first 1.5s uses initial tick damage, remaining uses fully-formed tick damage",
+    "W skipped (utility wall, no damage)",
+    "Passive skipped (resurrection only, no damage)",
+]
+
 SLOTS = {
     "Q": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "E": simple_damage(attr="Enhanced Damage", dmg_type="magic"),

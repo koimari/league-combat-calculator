@@ -114,6 +114,25 @@ def _pyromania_placeholder(ctx: SlotCtx) -> None:
         )
 
 
+OPTIONS = [
+    {
+        "key": "tibbers_aura_seconds",
+        "type": "float",
+        "default": 5.0,
+        "label": "Tibbers aura duration (seconds)",
+        "min": 0,
+        "max": 45,
+        "step": 0.5,
+    },
+]
+
+ASSUMPTIONS = [
+    "R magic penetration passive is always active",
+    "Tibbers auto-attack damage is not modeled (positioning-dependent)",
+    "E retaliation damage is not modeled (requires enemies to hit Annie)",
+    "Tibbers aura defaults to 5 seconds of damage",
+]
+
 SLOTS = {
     "R": _summon_tibbers,
     "P": _pyromania_placeholder,

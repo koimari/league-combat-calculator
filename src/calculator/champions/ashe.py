@@ -87,6 +87,22 @@ def _frost_shot(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+OPTIONS = [
+    {
+        "key": "q_active",
+        "type": "bool",
+        "default": True,
+        "label": "Ranger's Focus active",
+    },
+]
+
+ASSUMPTIONS = [
+    "Q (Ranger's Focus) assumed active by default",
+    "Passive bonus damage from crit chance applied to all auto attacks",
+    "W hits a single target (one arrow per enemy)",
+    "E (Hawkshot) is utility only and deals no damage",
+]
+
 SLOTS = {
     "Q": _rangers_focus,
     "P": _frost_shot,

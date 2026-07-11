@@ -45,6 +45,10 @@ def _fox_fire(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+OPTIONS: list[dict[str, Any]] = []
+
+ASSUMPTIONS: list[str] = []
+
 SLOTS = {
     "Q": simple_damage(attr="Damage Per Pass", dmg_type="mixed", casts=2),
     "W": _fox_fire,
