@@ -3609,7 +3609,8 @@ class TestVoltaicCyclosword:
     def test_voltaic_only_one_proc(self) -> None:
         """Even with many autos, Voltaic Cyclosword only procs once.
 
-        Melee vs 5000 HP: 9% current HP = 450, capped at 200.
+        Melee vs 5000 HP: 9% current HP = 450. The wiki's 200 cap applies
+        to non-champions only; the calculator targets champions, so no cap.
         """
         stats = self._make_stats()
         result = calculate_fight_damage(
@@ -3623,10 +3624,10 @@ class TestVoltaicCyclosword:
             items=[{"name": "Voltaic Cyclosword"}],
         )
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
-        # Damage should be single capped proc, not multiplied by auto count
+        # Damage should be a single uncapped proc, not multiplied by autos
         from src.calculator.resistance import apply_resistance
 
-        expected = apply_resistance(200.0, result["effective_armor"])
+        expected = apply_resistance(450.0, result["effective_armor"])
         assert abs(entry["total_damage"] - expected) < 1.0
 
     def test_voltaic_current_hp_below_cap(self) -> None:
@@ -3681,7 +3682,6 @@ class TestVoltaicCyclosword:
 
         patched = dict(item_effects.ITEM_EFFECTS.get("Voltaic Cyclosword", {}))
         patched["current_hp_ratio_melee"] = 0.10
-        patched["damage_cap"] = 500.0
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Voltaic Cyclosword", patched)
 
         stats = self._make_stats()
@@ -3696,7 +3696,7 @@ class TestVoltaicCyclosword:
             items=[{"name": "Voltaic Cyclosword"}],
         )
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
-        # 10% of 2000 = 200, under the patched 500 cap
+        # 10% of 2000 = 200 (patched ratio, zero armor)
         assert entry["total_damage"] == 200.0
 
 

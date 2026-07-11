@@ -88,6 +88,10 @@ cap)` mitigated by armor, following the BoRK current-HP convention (proc lands o
 auto at full target health) and the Titanic Hydra melee/ranged-key pattern.
 *Modeling note for review:* the wiki scopes the 200 cap to non-champions; we apply it
 unconditionally (conservative vs high-HP champion targets).
+**RESOLVED post-campaign (user decision): cap removed vs champions** — the fight engine
+now uses the uncapped ratio; ``damage_cap`` stays in the registry as item data but is
+deliberately unconsumed (see ``get_voltaic_firmament``). Golden unchanged: no snapshot
+scenario exceeds the cap (2000 HP target → melee 180 / ranged 140).
 
 ### Stale test constants (parser correct; balance drift at 16.13.1)
 

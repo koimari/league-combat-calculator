@@ -921,20 +921,21 @@ def get_statikk_empowered_auto_count() -> int:
     return int(_required_effect_value("Statikk Shiv", "empowered_auto_count"))
 
 
-def get_voltaic_firmament(is_melee: bool) -> tuple[float, float]:
-    """Voltaic Cyclosword Firmament values.
+def get_voltaic_firmament(is_melee: bool) -> float:
+    """Voltaic Cyclosword Firmament current-HP damage ratio.
+
+    The registry also carries ``damage_cap`` (200), but the wiki scopes
+    that cap to NON-champions — the calculator targets champions, so the
+    fight engine deliberately does not consume it.
 
     Args:
         is_melee: Whether the champion is melee.
 
     Returns:
-        Tuple of (current-HP damage ratio for the range class, damage cap).
+        Current-HP damage ratio for the range class.
     """
     key = "current_hp_ratio_melee" if is_melee else "current_hp_ratio_ranged"
-    return (
-        _required_effect_value("Voltaic Cyclosword", key),
-        _required_effect_value("Voltaic Cyclosword", "damage_cap"),
-    )
+    return _required_effect_value("Voltaic Cyclosword", key)
 
 
 def get_titanic_crescent(is_melee: bool) -> tuple[float, float]:

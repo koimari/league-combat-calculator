@@ -2049,11 +2049,13 @@ def _add_single_proc_on_hits(
 
     # Voltaic Cyclosword: one energized proc on first auto (physical).
     # Firmament deals a % of the target's CURRENT health (melee/ranged
-    # split), capped. The proc lands on the first auto, when the target is
-    # still at full health (same convention as BoRK's simulation start).
+    # split). The wiki's 200 cap applies to non-champions only, and the
+    # calculator targets champions — no cap here. The proc lands on the
+    # first auto, when the target is still at full health (same
+    # convention as BoRK's simulation start).
     if "Voltaic Cyclosword" in item_names and num_auto_attacks > 0:
-        vc_ratio, vc_cap = item_effects.get_voltaic_firmament(is_melee)
-        raw_vc = min(vc_ratio * state.target_health, vc_cap)
+        vc_ratio = item_effects.get_voltaic_firmament(is_melee)
+        raw_vc = vc_ratio * state.target_health
         vc_mitigated = apply_resistance(raw_vc, effective_armor)
         breakdown["on_hit_once_Voltaic Cyclosword"] = {
             "name": "Voltaic Cyclosword (Firmament)",

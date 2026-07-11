@@ -266,10 +266,9 @@ class TestFightEngineValueAccessors:
             "Voltaic Cyclosword",
             current_hp_ratio_melee=0.09,
             current_hp_ratio_ranged=0.07,
-            damage_cap=200.0,
         )
-        assert get_voltaic_firmament(is_melee=True) == (0.09, 200.0)
-        assert get_voltaic_firmament(is_melee=False) == (0.07, 200.0)
+        assert get_voltaic_firmament(is_melee=True) == 0.09
+        assert get_voltaic_firmament(is_melee=False) == 0.07
 
     def test_titanic_crescent_melee_vs_ranged(
         self, monkeypatch: pytest.MonkeyPatch
