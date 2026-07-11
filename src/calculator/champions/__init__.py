@@ -4,12 +4,27 @@ To add a new champion, use /add-champion or see the add-champion skill.
 In short: create a module in this package, implement ``parse_abilities()``,
 and register the champion name below.
 
-Champions NOT in ``_CHAMPION_MODULES`` fall through to the generic parser,
-which reads ability data directly from the JSON.
+Champions NOT in ``_CHAMPION_MODULES`` fall through to the slot-archetype
+engine running ``GENERIC_SLOTS``, which reads ability data directly from
+the JSON with classifier-driven auto-detection.
 """
 
 import importlib
 from typing import Any
+
+from .engine import build_parser
+from .slotlib import on_hit_auto, simple_damage
+
+# Slot map for champions without a registered module: classifier-driven
+# damage detection on Q/W/E/R (including in-slot on-hit passives) and
+# on-hit auto-detection for the champion passive.
+GENERIC_SLOTS = {
+    "Q": simple_damage(),
+    "W": simple_damage(),
+    "E": simple_damage(),
+    "R": simple_damage(),
+    "P": on_hit_auto(),
+}
 
 
 # Map display name -> module name within this package.
@@ -64,21 +79,27 @@ def parse_abilities(
     if module_name is not None:
         module = importlib.import_module(f".{module_name}", package=__name__)
         return module.parse_abilities(
-            champion_data, level, total_ability_power, ability_ranks,
+            champion_data,
+            level,
+            total_ability_power,
+            ability_ranks,
             champion_options=champion_options,
             champion_stats=champion_stats,
             target_stats=target_stats,
         )
 
-    # Fall through to generic parser
-    from .generic_parser import parse_abilities as generic_parse
-
+    # Fall through to the slot-archetype engine with the generic slot map.
+    # Skill-order lookup uses the data's own name (matching the old
+    # generic parser exactly — e.g. Singed's custom order).
+    generic_parse = build_parser(GENERIC_SLOTS, champion_data.get("name", ""))
     return generic_parse(
-        champion_data, level, total_ability_power,
+        champion_data,
+        level,
+        total_ability_power,
         ability_ranks=ability_ranks,
+        champion_options=champion_options,
         champion_stats=champion_stats,
         target_stats=target_stats,
-        champion_options=champion_options,
     )
 
 

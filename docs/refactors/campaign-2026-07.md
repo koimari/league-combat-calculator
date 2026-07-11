@@ -256,3 +256,78 @@ ability damage even when they amplified autos — replicated exactly, not fixed.
 - black clean; pylint 9.28/10 on touched src (findings pre-existing: venv E0401s,
   damage.py complexity = Phase 4). Swept while there: two dead imports in optimizer.py
   (`copy`, `item_effects`) removed.
+
+## Phase 3a (completed)
+
+Slot-archetype engine landed; GENERIC path routed through it. Suite: **723 passed,
+0 failed** (700 + 23 new tests in `tests/test_engine.py`). Golden compare:
+**identical** to `scripts/golden_baseline.json` (all 173 champions; ~161
+unregistered ones now exercise the engine). The 12 registered modules untouched.
+
+### What landed
+
+- `src/calculator/champions/engine.py` — **135 lines** (design projected ~130).
+  Phase constants BUFF/DEBUFF/DAMAGE/ONHIT/AMP + `PHASE_ORDER`; `SlotCtx`
+  (shared mutable `stats`/`target`, readable `results`, `ability()` /
+  `rank_for()` helpers); `build_parser(slot_map, champion_name)` returning the
+  standard `parse_abilities` signature. Evaluation order (phase, then slot-map
+  insertion order) is fixed once at build time; unknown `.phase` values raise
+  ValueError at build time; parsers without `.phase` default to DAMAGE. Engine
+  emits every non-None entry — zero-damage entries included (the stat_buff trap).
+  Slot key "P" maps to results key `"passive"` (engine-level convention).
+- `src/calculator/champions/slotlib.py` — **340 lines** (~350 projected at full
+  archetype count; holds the 2 step-1 archetypes). ONE extraction core:
+  `_sum_modifiers` (absorbs the walk duplicated at common.py:83-107 /
+  generic_parser.py:113-132), `extract_named`, `extract_auto` (classifier +
+  tiered primary/fallback detection), `extract_cooldown`, `build_stats_context`.
+  Entry builders `damage_entry` (incl. the damage-type→result-key mapping with
+  mixed split) and `on_hit_entry`. Archetypes: `simple_damage(attr=None,
+  dmg_type="auto", casts, source, cooldown_from, ranks)` — auto mode = the old
+  generic behavior including in-slot `targeting: "Passive"` on-hit detection —
+  and `on_hit_auto()` (P-slot keyword/damageType detection, per-level scaling).
+  All four amendment params implemented and unit-tested; later archetypes
+  (stat_buff, on_hit_pct_health, toggle_dot, ...) slot in with zero engine changes.
+- `champions/__init__.py` — unregistered fallback is now
+  `build_parser(GENERIC_SLOTS, ...)`; `GENERIC_SLOTS = {Q/W/E/R: simple_damage(),
+  P: on_hit_auto()}`. Registered-module dispatch unchanged. generic_parser.py and
+  common.py untouched (deleted at Phase 3 end).
+
+### Equivalence gates
+
+- Golden compare identical (primary gate).
+- Direct equivalence tests (survive future baseline churn): ALL champions,
+  new engine vs `generic_parser.parse_abilities`, at levels 4/13/18 with
+  stats+target, with stats omitted, and under `ability_ranks` overrides;
+  plus a dispatcher-level fallback check. Full new-file runtime: 0.09s.
+- Engine unit tests: BUFF slot mutating stats before a DAMAGE slot despite
+  insertion order; within-phase `ctx.results` dependency (Illaoi pattern);
+  zero-damage emission (engine and explicit-attr archetype); `source` /
+  `cooldown_from` / `casts` int-and-attribute / `ranks="level"` /
+  `dmg_type` override / mixed split / P→"passive" keying.
+
+### Deviations from the design doc (for orchestrator review)
+
+1. **engine↔slotlib import cycle**: slotlib imports the phase constants from
+   engine, and the task pins `build_stats_context`'s single home to slotlib —
+   so engine uses one deferred (function-level) import of `build_stats_context`,
+   commented and pylint-tagged. Alternative was a third constants module;
+   rejected as ceremony.
+2. **Fallback skill-order name**: `build_parser(GENERIC_SLOTS,
+   champion_data.get("name", ""))` — the data's own name, not the dispatcher
+   arg — replicating the old generic parser byte-for-byte (matters for Singed,
+   the only unregistered champion with a custom skill order).
+3. **Defined semantics beyond the old code** (documented in docstrings, tested):
+   explicit-`attr` mode always emits (even zero damage) and skips in-slot
+   passive auto-detection — the generic drop rule applies only in auto mode;
+   a missing/zero `casts` attribute falls back to ×1 (never silently zeroes a
+   slot); engine copies `target_stats` into a mutable dict so future DEBUFF
+   parsers never mutate the caller's dict (None vs {} is behavior-identical
+   in `resolve_scaling`).
+
+### Verification
+
+black clean (engine.py, slotlib.py, __init__.py, test_engine.py). pylint
+9.59/10 on touched src — remaining findings are the established pattern (the
+fixed 7-arg `parse_abilities` signature; legacy generic_parser/anivia score
+9.51 with the same classes) plus two design-mandated shapes: `SlotCtx`'s 9
+attributes and `simple_damage`'s 6 params (the design table's signature).
