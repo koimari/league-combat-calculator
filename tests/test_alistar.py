@@ -8,7 +8,7 @@ from src.calculator.champions.alistar import (
     parse_abilities,
     _extract_e_on_hit_damage,
 )
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 
 class TestQPulverize:
@@ -161,13 +161,16 @@ class TestFightEngineIntegration:
         """Alistar abilities should work in the fight engine."""
         stats, abilities = parse_at(alistar_data, 9)
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         assert result["total_damage"] > 0
 
@@ -175,12 +178,15 @@ class TestFightEngineIntegration:
         """E on-hit should add damage to auto attacks."""
         stats, abilities = parse_at(alistar_data, 9)
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=10.0,
-            one_rotation=False,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=10.0,
+                one_rotation=False,
+            ),
         )
         assert result["total_damage"] > 0

@@ -10,7 +10,7 @@ from src.calculator.champions.ambessa import (
     parse_abilities,
     _parse_passive_damage,
 )
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 
 class TestQ1CunningSweep:
@@ -193,13 +193,16 @@ class TestRStatBuffInFightEngine:
         original_pen = stats.get("armor_penetration_percent", 0.0)
 
         calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         assert stats["armor_penetration_percent"] > original_pen
 
@@ -207,13 +210,16 @@ class TestRStatBuffInFightEngine:
         """R's armor pen should reduce effective armor in fight results."""
         stats, abilities = parse_at(ambessa_data, 16)
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         effective_armor = result.get("effective_armor", 100)
         assert effective_armor < 100
@@ -223,13 +229,16 @@ class TestRStatBuffInFightEngine:
         """Q2 (Sundering Slam) should appear in fight damage breakdown."""
         stats, abilities = parse_at(ambessa_data, 9)
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         assert "Q2" in result["breakdown"]
         assert result["breakdown"]["Q2"]["total_damage"] > 0

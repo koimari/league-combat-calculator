@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Mapping
 
 from .champions import parse_champion_abilities
-from .damage import calculate_fight_damage, split_auto_vs_ability
+from .damage import FightConfig, calculate_fight_damage, split_auto_vs_ability
 from .stats import calculate_total_stats
 
 DEFAULT_TARGET: dict[str, float] = {
@@ -25,22 +25,15 @@ ONE_ROTATION_DURATION = 5.0
 
 
 @dataclass(frozen=True)
-class FightParams:
-    """Resolved configuration shared by every complete fight-pipeline caller."""
+class FightParams(FightConfig):
+    """FightConfig plus the parse-layer inputs the engine never sees.
 
-    target_health: float
-    target_bonus_health: float
-    target_armor: float
-    target_magic_resistance: float
-    fight_duration_seconds: float
-    auto_attack_uptime: float
-    one_rotation: bool
-    include_actives: bool
-    cast_order: list[str] | None
-    auto_attacks_only: bool
-    ability_ranks: dict[str, int] | None
-    champion_options: dict[str, Any] | None
-    deterministic: bool = False
+    The engine's typed contract is :class:`FightConfig`; ``run_fight``
+    passes a ``FightParams`` straight through because it IS one.
+    """
+
+    ability_ranks: dict[str, int] | None = None
+    champion_options: dict[str, Any] | None = None
 
     @classmethod
     def from_request(
@@ -134,21 +127,7 @@ def run_fight(
     )
 
     result = calculate_fight_damage(
-        champion_stats=dict(champion_stats),
-        ability_damages=ability_damages,
-        target_health=params.target_health,
-        target_bonus_health=params.target_bonus_health,
-        target_armor=params.target_armor,
-        target_magic_resistance=params.target_magic_resistance,
-        fight_duration_seconds=params.fight_duration_seconds,
-        auto_attack_uptime=params.auto_attack_uptime,
-        ability_haste=champion_stats.get("ability_haste", 0.0),
-        items=items,
-        one_rotation=params.one_rotation,
-        include_actives=params.include_actives,
-        cast_order=params.cast_order,
-        auto_attacks_only=params.auto_attacks_only,
-        deterministic=params.deterministic,
+        dict(champion_stats), ability_damages, items, params
     )
     result["champion_stats"] = champion_stats
     auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])

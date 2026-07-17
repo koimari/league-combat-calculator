@@ -1,6 +1,9 @@
 # FightConfig — collapsing the 15-parameter fight bundle
 
-**Status: DESIGN — approved shape, not yet implemented.**
+**Status: IMPLEMENTED (2026-07-17).** Landed as designed: `FightConfig` in
+`damage.py`, `FightParams` rebased onto it, `ability_haste` parameter deleted
+(engine reads `champion_stats`), all direct test call sites migrated by
+scripted sweep. Gate: pytest green, golden snapshot zero diffs.
 
 ## Problem
 
@@ -127,7 +130,10 @@ Honest wart of the chosen shape: the engine receives an object that
 physically carries `ability_ranks`/`champion_options`. The *typed*
 contract is `FightConfig` — the parse fields are invisible at the
 interface — and the alternative (composition) costs real churn for
-purity. Accepted, documented here.
+purity. Accepted, documented here. A second, smaller wart: inheritance
+gives `FightParams` the `FightConfig` defaults, so a future direct
+constructor can silently accept engine defaults where the old dataclass
+forced every field to be spelled out.
 
 ## Migration sketch (for the future implementation plan)
 

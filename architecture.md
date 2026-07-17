@@ -78,9 +78,14 @@ wiki (lolstaticdata, external)
 
 **Fight engine**
 - `src/calculator/pipeline.py` — canonical stats → ability parsing → fight orchestration.
-  Owns `FightParams`, request-mode resolution, and every fight/target default.
-- `src/calculator/damage.py` — `calculate_fight_damage` is a pipeline of named
-  step functions over `FightState`/`Resists` (the body reads as the fight model).
+  Owns `FightParams` (a `FightConfig` subclass adding the parse-layer inputs
+  `ability_ranks`/`champion_options`), request-mode resolution, and every
+  fight/target default.
+- `src/calculator/damage.py` — owns `FightConfig`, the one spelling of a fight's
+  configuration; `calculate_fight_damage(champion_stats, ability_damages, items,
+  config)` is a pipeline of named step functions over `FightState`/`Resists`
+  (the body reads as the fight model). Ability haste is a champion stat, read
+  from `champion_stats` like its sibling `basic_ability_haste`.
   `split_auto_vs_ability` owns breakdown-key attribution (exposed to consumers
   via `run_fight`'s `auto_attack_damage`/`ability_damage` result keys); rows
   marked `informational` are display-only. It consumes compiled item specs and

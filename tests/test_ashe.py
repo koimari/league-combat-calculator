@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 
 class TestPassiveFrostShot:
@@ -33,14 +33,17 @@ class TestPassiveFrostShot:
         stats["attack_speed"] = 1.0
         stats["critical_strike_chance"] = 50.0
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000.0,
-            target_armor=0.0,
-            target_magic_resistance=0.0,
-            fight_duration_seconds=1.0,
-            auto_attack_uptime=1.0,
-            auto_attacks_only=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000.0,
+                target_armor=0.0,
+                target_magic_resistance=0.0,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=1.0,
+                auto_attacks_only=True,
+            ),
         )
         auto = result["breakdown"]["auto_attacks"]
         # With 0 armor, every auto should do 300 damage
@@ -61,15 +64,17 @@ class TestPassiveFrostShot:
         # Simulate having Infinity Edge via items
         ie_item = {"name": "Infinity Edge"}
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000.0,
-            target_armor=0.0,
-            target_magic_resistance=0.0,
-            fight_duration_seconds=1.0,
-            auto_attack_uptime=1.0,
-            auto_attacks_only=True,
-            items=[ie_item],
+            stats,
+            abilities,
+            [ie_item],
+            FightConfig(
+                target_health=2000.0,
+                target_armor=0.0,
+                target_magic_resistance=0.0,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=1.0,
+                auto_attacks_only=True,
+            ),
         )
         auto = result["breakdown"]["auto_attacks"]
         assert auto["damage_per_hit"] == pytest.approx(330.0, rel=0.01)
@@ -85,14 +90,17 @@ class TestPassiveFrostShot:
         stats["attack_speed"] = 1.0
         stats["critical_strike_chance"] = 0.0
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000.0,
-            target_armor=0.0,
-            target_magic_resistance=0.0,
-            fight_duration_seconds=1.0,
-            auto_attack_uptime=1.0,
-            auto_attacks_only=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000.0,
+                target_armor=0.0,
+                target_magic_resistance=0.0,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=1.0,
+                auto_attacks_only=True,
+            ),
         )
         auto = result["breakdown"]["auto_attacks"]
         assert auto["damage_per_hit"] == pytest.approx(200.0, rel=0.01)
@@ -173,14 +181,17 @@ class TestQRangersFocus:
         stats["attack_speed"] = 1.0
         stats["critical_strike_chance"] = 50.0
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000.0,
-            target_armor=0.0,
-            target_magic_resistance=0.0,
-            fight_duration_seconds=1.0,
-            auto_attack_uptime=1.0,
-            auto_attacks_only=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000.0,
+                target_armor=0.0,
+                target_magic_resistance=0.0,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=1.0,
+                auto_attacks_only=True,
+            ),
         )
         auto = result["breakdown"]["auto_attacks"]
         assert auto["damage_per_hit"] == pytest.approx(390.0, rel=0.01)
@@ -285,13 +296,16 @@ class TestFightEngineIntegration:
         """R deals magic damage through the fight engine."""
         stats, abilities = parse_at(ashe_data, 9)
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000.0,
-            target_armor=50.0,
-            target_magic_resistance=50.0,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.5,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000.0,
+                target_armor=50.0,
+                target_magic_resistance=50.0,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.5,
+            ),
         )
         assert result["total_damage"] > 0
         assert "R" in result["breakdown"]

@@ -5,7 +5,7 @@ import pytest
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.champions.slotlib import build_stats_context, extract_named
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 
 def _passive_damage(
@@ -114,23 +114,29 @@ class TestRPerfectExecution:
         r_only = {"R": abilities_full["R"]}
 
         result_r_only = calculate_fight_damage(
-            champion_stats=dict(stats),
-            ability_damages=r_only,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            dict(stats),
+            r_only,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         result_full = calculate_fight_damage(
-            champion_stats=dict(stats),
-            ability_damages=abilities_full,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
-            cast_order=["Q", "E", "R"],
+            dict(stats),
+            abilities_full,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+                cast_order=["Q", "E", "R"],
+            ),
         )
         r_dmg_alone = result_r_only["breakdown"]["R"]["total_damage"]
         r_dmg_after = result_full["breakdown"]["R"]["total_damage"]
@@ -233,13 +239,16 @@ class TestPassiveInFightEngine:
             champion_options={"passive_procs": 3},
         )
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         assert "passive" in result["breakdown"]
         assert result["breakdown"]["passive"]["total_damage"] > 0

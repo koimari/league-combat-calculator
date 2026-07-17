@@ -53,6 +53,11 @@ from .resistance import (
 # item bonus from a total multiplier must subtract this same constant.
 BASE_CRIT_MULTIPLIER = 2.0
 
+# Default ability cast order when a fight doesn't specify one. Q2 is
+# skipped harmlessly for champions without a second Q cast. A tuple so a
+# fight can never mutate the shared default; use sites materialize a list.
+DEFAULT_CAST_ORDER = ("Q", "Q2", "W", "E", "R")
+
 
 def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
     """Calculate effective cooldown after ability haste.
@@ -213,6 +218,28 @@ def _mitigate(
     if damage_type == "physical":
         return apply_resistance(raw_damage, resists.effective_armor)
     return raw_damage
+
+
+@dataclass(frozen=True)
+class FightConfig:
+    """Everything configurable about one fight, in one spelling.
+
+    Pure configuration — champion_stats / ability_damages / items are
+    DATA and stay positional arguments to the engine. Defaults mirror
+    the engine's historical keyword defaults.
+    """
+
+    target_health: float
+    target_armor: float
+    target_magic_resistance: float
+    fight_duration_seconds: float
+    target_bonus_health: float = 0.0
+    auto_attack_uptime: float = 0.0
+    one_rotation: bool = False
+    include_actives: bool = True
+    cast_order: list[str] | None = None
+    auto_attacks_only: bool = False
+    deterministic: bool = False
 
 
 @dataclass
@@ -541,7 +568,7 @@ def _calculate_shadowflame_bonus(
         Total bonus damage from Shadowflame crits.
     """
     if cast_order is None:
-        cast_order = ["Q", "Q2", "W", "E", "R"]
+        cast_order = list(DEFAULT_CAST_ORDER)
     threshold_hp = target_health * effect.health_threshold
     crit_bonus = effect.crit_multiplier - 1.0
     current_hp = target_health
@@ -669,19 +696,8 @@ def _navori_effective_cd(
 def _resolve_combat_state(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
-    target_health: float,
-    target_armor: float,
-    target_magic_resistance: float,
-    fight_duration_seconds: float,
-    auto_attack_uptime: float,
-    ability_haste: float,
     items: list[dict[str, Any]],
-    one_rotation: bool,
-    include_actives: bool,
-    cast_order: list[str],
-    auto_attacks_only: bool,
-    target_bonus_health: float,
-    deterministic: bool,
+    config: FightConfig,
 ) -> FightState:
     """Resolve resistances, penetration, amplifiers and attack timing.
 
@@ -691,6 +707,8 @@ def _resolve_combat_state(
     fight's auto-attack count (including Fiendhunter Bolts' empowered-auto
     window), and the fight-wide damage amplifiers.
     """
+    fight_duration_seconds = config.fight_duration_seconds
+    auto_attack_uptime = config.auto_attack_uptime
     is_melee = champion_stats.get("is_melee", True)
     level = int(champion_stats.get("level", 1))
     damage_effects = item_effects.resolve_damage_effects(items)
@@ -707,8 +725,8 @@ def _resolve_combat_state(
         else 0.0
     )
 
-    base_mr = max(target_magic_resistance, 0)
-    reduced_mr = max(target_magic_resistance - malignance_mr_reduction, 0)
+    base_mr = max(config.target_magic_resistance, 0)
+    reduced_mr = max(config.target_magic_resistance - malignance_mr_reduction, 0)
 
     # Stacking MR reduction (Bloodletter's Curse Vile Decay)
     mr_reduction_effect = damage_effects.stacking_mr_reduction
@@ -781,7 +799,7 @@ def _resolve_combat_state(
         has_terminus=has_terminus,
         terminus_stat_pen=terminus_stat_pen,
         terminus_avg_pen=terminus_avg_pen,
-        target_armor=target_armor,
+        target_armor=config.target_armor,
         base_mr=base_mr,
         reduced_mr=reduced_mr,
         malignance_mr_reduction=malignance_mr_reduction,
@@ -796,22 +814,28 @@ def _resolve_combat_state(
         ability_damages=ability_damages,
         items=items,
         damage_effects=damage_effects,
-        cast_order=cast_order,
-        target_health=target_health,
-        target_bonus_health=target_bonus_health,
+        cast_order=(
+            config.cast_order
+            if config.cast_order is not None
+            else list(DEFAULT_CAST_ORDER)
+        ),
+        target_health=config.target_health,
+        target_bonus_health=config.target_bonus_health,
         fight_duration_seconds=fight_duration_seconds,
         auto_attack_uptime=auto_attack_uptime,
-        ability_haste=ability_haste,
-        one_rotation=one_rotation,
-        include_actives=include_actives,
-        auto_attacks_only=auto_attacks_only,
-        deterministic=deterministic,
+        ability_haste=champion_stats.get("ability_haste", 0.0),
+        one_rotation=config.one_rotation,
+        include_actives=config.include_actives,
+        auto_attacks_only=config.auto_attacks_only,
+        deterministic=config.deterministic,
         is_melee=is_melee,
         level=level,
         resists=resists,
         magic_amp=damage_effects.magic_amp,
         ability_amp=(
-            damage_effects.ability_amp.multiplier(champion_stats, include_actives)
+            damage_effects.ability_amp.multiplier(
+                champion_stats, config.include_actives
+            )
             if damage_effects.ability_amp is not None
             else 1.0
         ),
@@ -2191,19 +2215,8 @@ def _collect_fight_notes(
 def calculate_fight_damage(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
-    target_health: float,
-    target_armor: float,
-    target_magic_resistance: float,
-    fight_duration_seconds: float,
-    auto_attack_uptime: float = 0.0,
-    ability_haste: float = 0.0,
-    items: list[dict[str, Any]] | None = None,
-    one_rotation: bool = False,
-    include_actives: bool = True,
-    cast_order: list[str] | None = None,
-    auto_attacks_only: bool = False,
-    target_bonus_health: float = 0.0,
-    deterministic: bool = False,
+    items: list[dict[str, Any]],
+    config: FightConfig,
 ) -> dict[str, Any]:
     """Calculate total damage dealt over a fight duration.
 
@@ -2211,52 +2224,20 @@ def calculate_fight_damage(
     the fight duration. In one-rotation mode, each ability is cast exactly
     once (fight_duration still matters for burns/DoTs/procs).
 
+    Ability haste is read from ``champion_stats`` (keys ``ability_haste``
+    and ``basic_ability_haste``), like every other champion stat.
+
     Args:
         champion_stats: Calculated champion stats dictionary.
         ability_damages: Parsed ability damage dictionary.
-        target_health: Target's total maximum health (base + bonus).
-        target_armor: Target's armor.
-        target_magic_resistance: Target's magic resistance.
-        fight_duration_seconds: Duration of the fight in seconds.
-        auto_attack_uptime: Fraction of time spent auto-attacking (0.0-1.0).
-        ability_haste: Total ability haste from items.
         items: List of item data for checking passives.
-        one_rotation: If True, each basic ability is cast exactly once.
-        include_actives: Whether to include item active damage.
-        cast_order: Ability cast order (e.g., ["E", "Q", "W", "R"]).
-            Defaults to ["Q", "W", "E", "R"].
-        auto_attacks_only: If True, skip all cast abilities (Q/W/E/R casts
-            = 0) but still process ability on-hit effects (passives that
-            augment auto attacks, e.g. Vayne W, Viego passive).
-        target_bonus_health: Target's bonus health from items (used for
-            Lord Dominik's Regards Giant Slayer amp).
+        config: The fight's :class:`FightConfig` (target, duration, mode).
 
     Returns:
         Dictionary with damage breakdown and total.
     """
-    if cast_order is None:
-        cast_order = ["Q", "Q2", "W", "E", "R"]
-    if items is None:
-        items = []
-
     # ── Resolve resistances, penetration, amps, and attack timing ───────
-    state = _resolve_combat_state(
-        champion_stats=champion_stats,
-        ability_damages=ability_damages,
-        target_health=target_health,
-        target_armor=target_armor,
-        target_magic_resistance=target_magic_resistance,
-        fight_duration_seconds=fight_duration_seconds,
-        auto_attack_uptime=auto_attack_uptime,
-        ability_haste=ability_haste,
-        items=items,
-        one_rotation=one_rotation,
-        include_actives=include_actives,
-        cast_order=cast_order,
-        auto_attacks_only=auto_attacks_only,
-        target_bonus_health=target_bonus_health,
-        deterministic=deterministic,
-    )
+    state = _resolve_combat_state(champion_stats, ability_damages, items, config)
 
     # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
     _apply_stat_buff_ultimates(state)

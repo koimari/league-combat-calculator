@@ -10,7 +10,7 @@ Reference damage (level 9, rank 5 Q, rank 3 W, rank 3 E, rank 1 R, 80 AP):
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -419,22 +419,28 @@ class TestFightEngineIntegration:
         result_shred = calculate_fight_damage(
             dict(stats),
             abilities_shred,
-            target_health=2000.0,
-            target_armor=100.0,
-            target_magic_resistance=60.0,
-            fight_duration_seconds=6.0,
-            auto_attack_uptime=0.7,
-            one_rotation=True,
+            [],
+            FightConfig(
+                target_health=2000.0,
+                target_armor=100.0,
+                target_magic_resistance=60.0,
+                fight_duration_seconds=6.0,
+                auto_attack_uptime=0.7,
+                one_rotation=True,
+            ),
         )
         result_no_shred = calculate_fight_damage(
             dict(stats),
             abilities_no_shred,
-            target_health=2000.0,
-            target_armor=100.0,
-            target_magic_resistance=60.0,
-            fight_duration_seconds=6.0,
-            auto_attack_uptime=0.7,
-            one_rotation=True,
+            [],
+            FightConfig(
+                target_health=2000.0,
+                target_armor=100.0,
+                target_magic_resistance=60.0,
+                fight_duration_seconds=6.0,
+                auto_attack_uptime=0.7,
+                one_rotation=True,
+            ),
         )
         assert result_shred["total_damage"] > result_no_shred["total_damage"]
 
@@ -468,19 +474,25 @@ class TestFightEngineIntegration:
         result_w_on = calculate_fight_damage(
             dict(stats),
             abilities_w_on,
-            target_health=2000.0,
-            target_armor=50.0,
-            target_magic_resistance=50.0,
-            fight_duration_seconds=6.0,
-            auto_attack_uptime=0.7,
+            [],
+            FightConfig(
+                target_health=2000.0,
+                target_armor=50.0,
+                target_magic_resistance=50.0,
+                fight_duration_seconds=6.0,
+                auto_attack_uptime=0.7,
+            ),
         )
         result_w_off = calculate_fight_damage(
             dict(stats),
             abilities_w_off,
-            target_health=2000.0,
-            target_armor=50.0,
-            target_magic_resistance=50.0,
-            fight_duration_seconds=6.0,
-            auto_attack_uptime=0.7,
+            [],
+            FightConfig(
+                target_health=2000.0,
+                target_armor=50.0,
+                target_magic_resistance=50.0,
+                fight_duration_seconds=6.0,
+                auto_attack_uptime=0.7,
+            ),
         )
         assert result_w_on["total_damage"] > result_w_off["total_damage"]

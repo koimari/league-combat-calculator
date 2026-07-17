@@ -30,7 +30,7 @@ from src.calculator.stats import calculate_total_stats
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 # ──────────────────────────────────────────────────────────────────────
 # TEST CASE 1: Ahri Level 6, Items: Liandry's Torment
@@ -72,18 +72,22 @@ class TestCase1Damage:
     ) -> None:
         items = [liandrys]
         stats = calculate_total_stats(ahri_data, 6, items)
+        # Hand-validated scenario ran at exactly 0 ability haste (see module
+        # docstring); pin it so a data refresh can't silently shift the anchor.
+        stats["ability_haste"] = 0.0
         abilities = parse_ahri_abilities(ahri_data, 6, stats["ability_power"])
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         expected = 498
         actual = fight["total_damage"]
@@ -145,18 +149,22 @@ class TestCase2Damage:
     ) -> None:
         items = [liandrys, malignance, rylais]
         stats = calculate_total_stats(ahri_data, 11, items)
+        # Hand-validated scenario ran at exactly 15 ability haste (see module
+        # docstring); pin it so a data refresh can't silently shift the anchor.
+        stats["ability_haste"] = 15.0
         abilities = parse_ahri_abilities(ahri_data, 11, stats["ability_power"])
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=15.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         expected = 1221
         actual = fight["total_damage"]
@@ -270,18 +278,22 @@ class TestCase3Damage:
     ) -> None:
         items = [liandrys, malignance, rylais, sorc_shoes, void_staff, rabadons]
         stats = calculate_total_stats(ahri_data, 18, items)
+        # Hand-validated scenario ran at exactly 15 ability haste (see module
+        # docstring); pin it so a data refresh can't silently shift the anchor.
+        stats["ability_haste"] = 15.0
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=15.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         expected = 2955
         actual = fight["total_damage"]

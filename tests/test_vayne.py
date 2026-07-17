@@ -11,7 +11,7 @@ level 18):
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -452,13 +452,16 @@ class TestRStatBuffInFightEngine:
         original_ad = stats["attack_damage"]
 
         calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         assert stats["attack_damage"] > original_ad
 
@@ -466,13 +469,16 @@ class TestRStatBuffInFightEngine:
         """R should appear in fight engine but contribute 0 damage."""
         stats, abilities = parse_at(vayne_data, 11)
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         r_entry = result["breakdown"].get("R", {})
         assert r_entry.get("total_damage", 0.0) == 0.0

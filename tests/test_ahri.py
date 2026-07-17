@@ -9,7 +9,7 @@ import pytest
 
 from src.calculator.ability_spec import parts_raw_total
 
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 
 class TestParseAhriAbilities:
@@ -107,15 +107,16 @@ class TestActualizerFightDamage:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=1.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
-            include_actives=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                include_actives=True,
+            ),
         )
         q_damage = fight["breakdown"]["Q"]["total_damage"]
         assert abs(q_damage - 314.55) <= 2, f"Q damage {q_damage:.1f} expected ~314.55"

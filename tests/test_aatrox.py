@@ -4,7 +4,7 @@ import pytest
 
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.slotlib import extract_named, extract_value
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 
 class TestQThreeCasts:
@@ -187,13 +187,16 @@ class TestRStatBuffInFightEngine:
         original_ad = stats["attack_damage"]
 
         calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         assert stats["attack_damage"] > original_ad
 
@@ -205,13 +208,16 @@ class TestRStatBuffInFightEngine:
             target_stats={"target_max_health": 2000.0},
         )
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         r_entry = result["breakdown"].get("R", {})
         assert r_entry.get("total_damage", 0.0) == 0.0

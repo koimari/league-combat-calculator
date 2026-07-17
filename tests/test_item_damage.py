@@ -17,6 +17,7 @@ from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
+    FightConfig,
     calculate_fight_damage,
     _simulate_current_health_on_hit,
     _simulate_stacking_on_hit_damage,
@@ -160,14 +161,15 @@ class TestBastionbreakerShapedCharge:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         sc = fight["breakdown"]["shaped_charge_Bastionbreaker"]
         assert (
@@ -214,12 +216,14 @@ class TestRapidFirecannonSharpshooter:
         fight = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=0,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Rapid Firecannon"}],
+            [{"name": "Rapid Firecannon"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         rfc = fight["breakdown"]["on_hit_once_Rapid Firecannon"]
         # 100 MR, no magic pen → effective MR = 100
@@ -248,12 +252,14 @@ class TestRapidFirecannonSharpshooter:
         fight = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=0,
-            target_magic_resistance=50,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Rapid Firecannon"}],
+            [{"name": "Rapid Firecannon"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=50,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+            ),
         )
         assert "on_hit_once_Rapid Firecannon" not in fight["breakdown"]
 
@@ -309,14 +315,15 @@ class TestBloodlettersCurseVileDecay:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         # 4 stacks = 30% MR reduction: 100 * 0.70 = 70 effective MR
         assert fight["effective_mr"] == pytest.approx(70.0, abs=0.1)
@@ -339,14 +346,15 @@ class TestBloodlettersCurseVileDecay:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         expected = 919
         actual = fight["total_damage"]
@@ -371,27 +379,29 @@ class TestBloodlettersCurseVileDecay:
         fight_with = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         # Without item: no MR reduction passive
         fight_without = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=[],
-            one_rotation=True,
+            [],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         assert fight_with["total_damage"] > fight_without["total_damage"]
 
@@ -427,22 +437,26 @@ class TestBloodlettersCurseVileDecay:
         fight_with = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=1.0,
-            items=items_with,
-            one_rotation=True,
+            items_with,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=1.0,
+                one_rotation=True,
+            ),
         )
         fight_without = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=1.0,
-            items=[],
-            one_rotation=True,
+            [],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=1.0,
+                one_rotation=True,
+            ),
         )
         assert fight_with["breakdown"]["Q"]["total_damage"] == pytest.approx(
             fight_without["breakdown"]["Q"]["total_damage"], abs=0.01
@@ -635,26 +649,28 @@ class TestShadowflameCinderbloom:
         fight_with = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         fight_without = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=[],
-            one_rotation=True,
+            [],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         assert fight_with["total_damage"] > fight_without["total_damage"]
         assert "shadowflame_Shadowflame" in fight_with["breakdown"]
@@ -684,14 +700,15 @@ class TestShadowflameCinderbloom:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         expected = 3700
         actual = fight["total_damage"]
@@ -787,14 +804,15 @@ class TestShadowflameCinderbloom:
             return calculate_fight_damage(
                 dict(stats),
                 abilities,
-                target_health=target_health,
-                target_armor=100,
-                target_magic_resistance=100,
-                fight_duration_seconds=5.0,
-                auto_attack_uptime=0.0,
-                ability_haste=0.0,
-                items=items,
-                one_rotation=True,
+                items,
+                FightConfig(
+                    target_health=target_health,
+                    target_armor=100,
+                    target_magic_resistance=100,
+                    fight_duration_seconds=5.0,
+                    auto_attack_uptime=0.0,
+                    one_rotation=True,
+                ),
             )
 
         probe = run(100000.0)["breakdown"]
@@ -846,15 +864,16 @@ class TestActualizerAmpRow:
         return calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
-            include_actives=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                include_actives=True,
+            ),
         )
 
     @staticmethod
@@ -924,14 +943,16 @@ class TestBurnRefreshWindow:
         return calculate_fight_damage(
             dict(self._STATS),
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            items=[get_item_by_name(n) for n in item_names],
-            one_rotation=True,
-            cast_order=[k for k in ("Q", "R") if k in abilities],
+            [get_item_by_name(n) for n in item_names],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=[k for k in ("Q", "R") if k in abilities],
+            ),
         )
 
     @staticmethod
@@ -1050,14 +1071,15 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=False,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         sb = fight["breakdown"]["spellblade_Bloodsong"]
         assert sb["procs"] == 2
@@ -1076,14 +1098,15 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=False,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         assert "expose_weakness_Bloodsong" in fight["breakdown"]
         ew = fight["breakdown"]["expose_weakness_Bloodsong"]
@@ -1103,14 +1126,15 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=False,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         ew = fight["breakdown"]["expose_weakness_Bloodsong"]
         assert ew["amplifier"] == pytest.approx(1.05, abs=0.001)
@@ -1132,14 +1156,15 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=False,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         expected = 1161
         actual = fight["total_damage"]
@@ -1163,14 +1188,15 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         assert "expose_weakness_Bloodsong" not in fight["breakdown"]
 
@@ -1204,14 +1230,15 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            ability_haste=0.0,
-            items=[{"name": "Bloodsong"}],
-            one_rotation=False,
+            [{"name": "Bloodsong"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         ew = fight["breakdown"]["expose_weakness_Bloodsong"]
         assert ew["amplifier"] == pytest.approx(1.08, abs=0.001)
@@ -1268,14 +1295,15 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=4.0,
-            auto_attack_uptime=1.0,
-            ability_haste=stats.get("ability_haste", 0.0),
-            items=items,
-            one_rotation=False,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=4.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         sb = fight["breakdown"]["spellblade_Dusk and Dawn"]
         assert sb["procs"] == 2
@@ -1295,14 +1323,15 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=4.0,
-            auto_attack_uptime=1.0,
-            ability_haste=stats.get("ability_haste", 0.0),
-            items=items,
-            one_rotation=False,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=4.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         assert "double_on_hit_Dusk and Dawn" in fight["breakdown"]
         doh = fight["breakdown"]["double_on_hit_Dusk and Dawn"]
@@ -1323,14 +1352,15 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=4.0,
-            auto_attack_uptime=1.0,
-            ability_haste=stats.get("ability_haste", 0.0),
-            items=items,
-            one_rotation=False,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=4.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         assert "double_on_hit_Dusk and Dawn" not in fight["breakdown"]
 
@@ -1352,14 +1382,15 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=4.0,
-            auto_attack_uptime=1.0,
-            ability_haste=stats.get("ability_haste", 0.0),
-            items=items,
-            one_rotation=False,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=4.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         expected = 1656
         actual = fight["total_damage"]
@@ -1399,14 +1430,15 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            ability_haste=0.0,
-            items=[{"name": "Dusk and Dawn"}, {"name": "Wit's End"}],
-            one_rotation=False,
+            [{"name": "Dusk and Dawn"}, {"name": "Wit's End"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         assert "double_on_hit_Dusk and Dawn" in fight["breakdown"]
         doh = fight["breakdown"]["double_on_hit_Dusk and Dawn"]
@@ -1443,17 +1475,18 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            ability_haste=0.0,
-            items=[
+            [
                 {"name": "Dusk and Dawn"},
                 {"name": "Blade of the Ruined King"},
             ],
-            one_rotation=False,
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         assert "double_on_hit_Dusk and Dawn" in fight["breakdown"]
         doh = fight["breakdown"]["double_on_hit_Dusk and Dawn"]
@@ -1492,17 +1525,18 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=2.0,
-            auto_attack_uptime=1.0,
-            ability_haste=0.0,
-            items=[
+            [
                 {"name": "Dusk and Dawn"},
                 {"name": "Kraken Slayer"},
             ],
-            one_rotation=False,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=2.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
         )
         # 2 autos + 2 double on-hit = 4 effective hits >= 3, so Kraken procs
         assert "on_hit_Kraken Slayer" in fight["breakdown"]
@@ -1585,14 +1619,15 @@ class TestEclipseEverRisingMoon:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=[{"name": "Eclipse"}],
-            one_rotation=True,
+            [{"name": "Eclipse"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         assert "proc_Eclipse" in fight["breakdown"]
         proc = fight["breakdown"]["proc_Eclipse"]
@@ -1630,23 +1665,27 @@ class TestEclipseEverRisingMoon:
         fight_no_armor = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=0,
-            target_magic_resistance=100,
-            fight_duration_seconds=1.0,
-            items=[{"name": "Eclipse"}],
-            one_rotation=True,
+            [{"name": "Eclipse"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=100,
+                fight_duration_seconds=1.0,
+                one_rotation=True,
+            ),
         )
         # 100 armor fight
         fight_with_armor = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=1.0,
-            items=[{"name": "Eclipse"}],
-            one_rotation=True,
+            [{"name": "Eclipse"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=1.0,
+                one_rotation=True,
+            ),
         )
         eclipse_no_armor = fight_no_armor["breakdown"]["proc_Eclipse"]["total_damage"]
         eclipse_with_armor = fight_with_armor["breakdown"]["proc_Eclipse"][
@@ -1673,14 +1712,15 @@ class TestEclipseEverRisingMoon:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         proc = fight["breakdown"]["proc_Eclipse"]
         assert proc["name"] == "Eclipse (Ever Rising Moon)"
@@ -1719,12 +1759,14 @@ class TestEclipseEverRisingMoon:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            items=[],
-            one_rotation=True,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         assert "proc_Eclipse" not in fight["breakdown"]
 
@@ -1774,24 +1816,28 @@ class TestExperimentalHexplate:
         fight_without = calculate_fight_damage(
             base_stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[],
-            one_rotation=True,
+            [],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+            ),
         )
         fight_with = calculate_fight_damage(
             buffed_stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Experimental Hexplate"}],
-            one_rotation=True,
+            [{"name": "Experimental Hexplate"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+            ),
         )
         autos_without = fight_without["breakdown"]["auto_attacks"]["count"]
         autos_with = fight_with["breakdown"]["auto_attacks"]["count"]
@@ -1827,13 +1873,15 @@ class TestExperimentalHexplate:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Experimental Hexplate"}],
-            one_rotation=True,
+            [{"name": "Experimental Hexplate"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+            ),
         )
         # AS already includes Hexplate 50% bonus from stats.py
         # floor(1.3125 * 5 * 1.0) = 6
@@ -1869,13 +1917,15 @@ class TestExperimentalHexplate:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=15.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Experimental Hexplate"}],
-            one_rotation=True,
+            [{"name": "Experimental Hexplate"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=15.0,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+            ),
         )
         # AS includes Hexplate bonus from stats.py, applied for full duration
         # floor(1.3125 * 15 * 1.0) = 19
@@ -1911,13 +1961,15 @@ class TestExperimentalHexplate:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Experimental Hexplate"}],
-            one_rotation=True,
+            [{"name": "Experimental Hexplate"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+            ),
         )
         assert len(fight["notes"]) == 1
         assert "Experimental Hexplate" in fight["notes"][0]
@@ -1953,13 +2005,15 @@ class TestExperimentalHexplate:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[],
-            one_rotation=True,
+            [],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+            ),
         )
         assert fight["notes"] == []
 
@@ -2013,13 +2067,15 @@ class TestFiendhunterBolts:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=0,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Fiendhunter Bolts"}],
-            one_rotation=True,
+            [{"name": "Fiendhunter Bolts"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=0,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+            ),
         )
         autos = fight["breakdown"]["auto_attacks"]
         assert autos["empowered_count"] == 3
@@ -2069,13 +2125,15 @@ class TestFiendhunterBolts:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=0,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Fiendhunter Bolts"}],
-            one_rotation=True,
+            [{"name": "Fiendhunter Bolts"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=0,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+            ),
         )
         autos = fight["breakdown"]["auto_attacks"]
         # 3 empowered at full crit = 200 each, 2 normal crits = 200 each
@@ -2113,13 +2171,15 @@ class TestFiendhunterBolts:
             fight = calculate_fight_damage(
                 stats,
                 abilities,
-                target_health=1000,
-                target_armor=100,
-                target_magic_resistance=100,
-                fight_duration_seconds=3.0,
-                auto_attack_uptime=1.0,
-                items=[{"name": "Fiendhunter Bolts"}],
-                one_rotation=True,
+                [{"name": "Fiendhunter Bolts"}],
+                FightConfig(
+                    target_health=1000,
+                    target_armor=100,
+                    target_magic_resistance=100,
+                    fight_duration_seconds=3.0,
+                    auto_attack_uptime=1.0,
+                    one_rotation=True,
+                ),
             )
         autos = fight["breakdown"]["auto_attacks"]
         assert autos["empowered_count"] == 3
@@ -2153,13 +2213,15 @@ class TestFiendhunterBolts:
             fight = calculate_fight_damage(
                 stats,
                 abilities,
-                target_health=1000,
-                target_armor=100,
-                target_magic_resistance=100,
-                fight_duration_seconds=3.0,
-                auto_attack_uptime=1.0,
-                items=[{"name": "Fiendhunter Bolts"}],
-                one_rotation=True,
+                [{"name": "Fiendhunter Bolts"}],
+                FightConfig(
+                    target_health=1000,
+                    target_armor=100,
+                    target_magic_resistance=100,
+                    fight_duration_seconds=3.0,
+                    auto_attack_uptime=1.0,
+                    one_rotation=True,
+                ),
             )
         autos = fight["breakdown"]["auto_attacks"]
         assert autos["num_crits"] == 1
@@ -2195,13 +2257,15 @@ class TestFiendhunterBolts:
             fight = calculate_fight_damage(
                 stats,
                 abilities,
-                target_health=1000,
-                target_armor=100,
-                target_magic_resistance=100,
-                fight_duration_seconds=3.0,
-                auto_attack_uptime=1.0,
-                items=[{"name": "Fiendhunter Bolts"}],
-                one_rotation=True,
+                [{"name": "Fiendhunter Bolts"}],
+                FightConfig(
+                    target_health=1000,
+                    target_armor=100,
+                    target_magic_resistance=100,
+                    fight_duration_seconds=3.0,
+                    auto_attack_uptime=1.0,
+                    one_rotation=True,
+                ),
             )
         autos = fight["breakdown"]["auto_attacks"]
         assert autos["num_crits"] == 2
@@ -2235,13 +2299,15 @@ class TestFiendhunterBolts:
             fight = calculate_fight_damage(
                 stats,
                 abilities,
-                target_health=1000,
-                target_armor=100,
-                target_magic_resistance=100,
-                fight_duration_seconds=3.0,
-                auto_attack_uptime=1.0,
-                items=[{"name": "Fiendhunter Bolts"}],
-                one_rotation=True,
+                [{"name": "Fiendhunter Bolts"}],
+                FightConfig(
+                    target_health=1000,
+                    target_armor=100,
+                    target_magic_resistance=100,
+                    fight_duration_seconds=3.0,
+                    auto_attack_uptime=1.0,
+                    one_rotation=True,
+                ),
             )
         autos = fight["breakdown"]["auto_attacks"]
         assert autos["num_crits"] == 3
@@ -2281,13 +2347,15 @@ class TestFiendhunterBolts:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Fiendhunter Bolts"}],
-            one_rotation=True,
+            [{"name": "Fiendhunter Bolts"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+            ),
         )
         autos = fight["breakdown"]["auto_attacks"]
         # buffed_as = 1.0 + 0.625 * 0.50 = 1.3125
@@ -2328,13 +2396,15 @@ class TestFiendhunterBolts:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Fiendhunter Bolts"}],
-            one_rotation=True,
+            [{"name": "Fiendhunter Bolts"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=True,
+            ),
         )
         assert len(fight["notes"]) == 1
         assert "Fiendhunter Bolts" in fight["notes"][0]
@@ -2374,24 +2444,28 @@ class TestFiendhunterBolts:
             fight_with = calculate_fight_damage(
                 stats,
                 abilities,
-                target_health=1000,
-                target_armor=100,
-                target_magic_resistance=100,
-                fight_duration_seconds=5.0,
-                auto_attack_uptime=1.0,
-                items=[{"name": "Fiendhunter Bolts"}],
-                one_rotation=True,
+                [{"name": "Fiendhunter Bolts"}],
+                FightConfig(
+                    target_health=1000,
+                    target_armor=100,
+                    target_magic_resistance=100,
+                    fight_duration_seconds=5.0,
+                    auto_attack_uptime=1.0,
+                    one_rotation=True,
+                ),
             )
             fight_without = calculate_fight_damage(
                 stats,
                 abilities,
-                target_health=1000,
-                target_armor=100,
-                target_magic_resistance=100,
-                fight_duration_seconds=5.0,
-                auto_attack_uptime=1.0,
-                items=[],
-                one_rotation=True,
+                [],
+                FightConfig(
+                    target_health=1000,
+                    target_armor=100,
+                    target_magic_resistance=100,
+                    fight_duration_seconds=5.0,
+                    auto_attack_uptime=1.0,
+                    one_rotation=True,
+                ),
             )
         assert fight_with["total_damage"] > fight_without["total_damage"]
 
@@ -2425,13 +2499,15 @@ class TestFiendhunterBolts:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Fiendhunter Bolts"}],
-            one_rotation=True,
+            [{"name": "Fiendhunter Bolts"}],
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         assert fight["breakdown"]["auto_attacks"]["count"] == 0
         assert "fiendhunter_true_damage" not in fight["breakdown"]
@@ -2471,13 +2547,15 @@ class TestFiendhunterBolts:
             fight = calculate_fight_damage(
                 stats,
                 abilities,
-                target_health=1000,
-                target_armor=0,
-                target_magic_resistance=100,
-                fight_duration_seconds=5.0,
-                auto_attack_uptime=1.0,
-                items=[],
-                one_rotation=True,
+                [],
+                FightConfig(
+                    target_health=1000,
+                    target_armor=0,
+                    target_magic_resistance=100,
+                    fight_duration_seconds=5.0,
+                    auto_attack_uptime=1.0,
+                    one_rotation=True,
+                ),
             )
         autos = fight["breakdown"]["auto_attacks"]
         assert autos["num_crits"] == 2
@@ -2505,12 +2583,14 @@ class TestRagebladeOnHitAllItems:
         fight = calculate_fight_damage(
             self.BASE_STATS,
             {},
-            target_health=3000,
-            target_armor=0,
-            target_magic_resistance=0,
-            fight_duration_seconds=7.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Guinsoo's Rageblade"}],
+            [{"name": "Guinsoo's Rageblade"}],
+            FightConfig(
+                target_health=3000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=7.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         rb = fight["breakdown"].get("on_hit_Guinsoo's Rageblade")
         assert rb is not None
@@ -2521,15 +2601,17 @@ class TestRagebladeOnHitAllItems:
         fight = calculate_fight_damage(
             self.BASE_STATS,
             {},
-            target_health=3000,
-            target_armor=0,
-            target_magic_resistance=0,
-            fight_duration_seconds=7.0,
-            auto_attack_uptime=1.0,
-            items=[
+            [
                 {"name": "Guinsoo's Rageblade"},
                 {"name": "Nashor's Tooth"},
             ],
+            FightConfig(
+                target_health=3000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=7.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         rb = fight["breakdown"]["on_hit_Guinsoo's Rageblade"]
         nt = fight["breakdown"]["on_hit_Nashor's Tooth"]
@@ -2541,15 +2623,17 @@ class TestRagebladeOnHitAllItems:
         fight = calculate_fight_damage(
             self.BASE_STATS,
             {},
-            target_health=3000,
-            target_armor=0,
-            target_magic_resistance=0,
-            fight_duration_seconds=7.0,
-            auto_attack_uptime=1.0,
-            items=[
+            [
                 {"name": "Guinsoo's Rageblade"},
                 {"name": "Blade of the Ruined King"},
             ],
+            FightConfig(
+                target_health=3000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=7.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         autos = fight["breakdown"]["auto_attacks"]
         rb = fight["breakdown"]["on_hit_Guinsoo's Rageblade"]
@@ -2590,15 +2674,17 @@ class TestRagebladeOnHitAllItems:
         fight = calculate_fight_damage(
             self.BASE_STATS,
             {},
-            target_health=3000,
-            target_armor=0,
-            target_magic_resistance=0,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[
+            [
                 {"name": "Guinsoo's Rageblade"},
                 {"name": "Blade of the Ruined King"},
             ],
+            FightConfig(
+                target_health=3000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         rb = fight["breakdown"]["on_hit_Guinsoo's Rageblade"]
         bork = fight["breakdown"]["on_hit_Blade of the Ruined King"]
@@ -2610,12 +2696,14 @@ class TestRagebladeOnHitAllItems:
         fight = calculate_fight_damage(
             self.BASE_STATS,
             {},
-            target_health=3000,
-            target_armor=0,
-            target_magic_resistance=0,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Guinsoo's Rageblade"}],
+            [{"name": "Guinsoo's Rageblade"}],
+            FightConfig(
+                target_health=3000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         assert fight["phantom_hit_count"] == 2  # 10 autos: phantom at 6,9
         assert fight["phantom_hit_autos"] == {5, 8}
@@ -2637,12 +2725,14 @@ class TestRagebladeOnHitAllItems:
         fight = calculate_fight_damage(
             self.BASE_STATS,
             ability_damages,
-            target_health=3000,
-            target_armor=0,
-            target_magic_resistance=0,
-            fight_duration_seconds=7.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Guinsoo's Rageblade"}],
+            [{"name": "Guinsoo's Rageblade"}],
+            FightConfig(
+                target_health=3000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=7.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         passive_oh = fight["breakdown"].get("on_hit_ability_passive")
         assert passive_oh is not None
@@ -2705,15 +2795,17 @@ class TestKrakenSlayerPhantomHitStacking:
         fight = calculate_fight_damage(
             stats,
             {},
-            target_health=3000,
-            target_armor=0,
-            target_magic_resistance=0,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=1.0,
-            items=[
+            [
                 {"name": "Guinsoo's Rageblade"},
                 {"name": "Kraken Slayer"},
             ],
+            FightConfig(
+                target_health=3000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         kraken = fight["breakdown"].get("on_hit_Kraken Slayer")
         assert kraken is not None
@@ -2926,24 +3018,28 @@ class TestHexopticsC44BasicDamageAmp:
         fight_with = calculate_fight_damage(
             champion_stats,
             {},
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=items_with,
-            auto_attacks_only=True,
+            items_with,
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                auto_attacks_only=True,
+            ),
         )
         fight_without = calculate_fight_damage(
             champion_stats,
             {},
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=items_without,
-            auto_attacks_only=True,
+            items_without,
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                auto_attacks_only=True,
+            ),
         )
         # With Hexoptics, auto damage should be ~10% higher
         ratio = fight_with["total_damage"] / fight_without["total_damage"]
@@ -2971,13 +3067,15 @@ class TestHexopticsC44BasicDamageAmp:
         fight = calculate_fight_damage(
             champion_stats,
             {},
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Hexoptics C44"}],
-            auto_attacks_only=True,
+            [{"name": "Hexoptics C44"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                auto_attacks_only=True,
+            ),
         )
         amp_entry = fight["breakdown"].get("basic_amp_Hexoptics C44")
         assert amp_entry is not None, "Missing basic_amp breakdown entry"
@@ -3048,28 +3146,32 @@ class TestHorizonFocusHypershotAmp:
         fight_base = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=0,
-            fight_duration_seconds=0.5,
-            auto_attack_uptime=0.0,
-            items=[],
-            one_rotation=True,
-            cast_order=["Q", "E"],
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=0,
+                fight_duration_seconds=0.5,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["Q", "E"],
+            ),
         )
 
         # With Horizon Focus
         fight_hf = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=0,
-            fight_duration_seconds=0.5,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Horizon Focus"}],
-            one_rotation=True,
-            cast_order=["Q", "E"],
+            [{"name": "Horizon Focus"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=0,
+                fight_duration_seconds=0.5,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["Q", "E"],
+            ),
         )
 
         # Q does 200, E does 150, both at 0 MR so no mitigation.
@@ -3130,14 +3232,16 @@ class TestHorizonFocusHypershotAmp:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=0,
-            fight_duration_seconds=0.5,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Horizon Focus"}],
-            one_rotation=True,
-            cast_order=["Q"],
+            [{"name": "Horizon Focus"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=0,
+                fight_duration_seconds=0.5,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["Q"],
+            ),
         )
 
         # At 0 MR: magic_damage = 100, true_damage = 100, total Q = 200.
@@ -3231,13 +3335,15 @@ class TestHullbreakerSkipper:
         fight = calculate_fight_damage(
             stats,
             {},
-            target_health=3000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Hullbreaker"}],
-            auto_attacks_only=True,
+            [{"name": "Hullbreaker"}],
+            FightConfig(
+                target_health=3000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=1.0,
+                auto_attacks_only=True,
+            ),
         )
         hb_entry = fight["breakdown"].get("on_hit_Hullbreaker")
         assert hb_entry is not None, "Missing Hullbreaker breakdown entry"
@@ -3282,14 +3388,16 @@ class TestMuramanaMultiCastR:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=1.0,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Muramana"}],
-            one_rotation=True,
-            cast_order=["R"],
+            [{"name": "Muramana"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["R"],
+            ),
         )
 
         mura_entry = fight["breakdown"].get("muramana_ability")
@@ -3338,14 +3446,16 @@ class TestMuramanaMultiCastR:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=1.0,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Muramana"}],
-            one_rotation=True,
-            cast_order=["Q"],
+            [{"name": "Muramana"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["Q"],
+            ),
         )
 
         mura_entry = fight["breakdown"].get("muramana_ability")
@@ -3387,24 +3497,28 @@ class TestNavoriFlickerbladeFight:
         fight_no_navori = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=15.0,
-            auto_attack_uptime=0.8,
-            items=[],
-            cast_order=["Q"],
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=15.0,
+                auto_attack_uptime=0.8,
+                cast_order=["Q"],
+            ),
         )
         fight_navori = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=15.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "Navori Flickerblade"}],
-            cast_order=["Q"],
+            [{"name": "Navori Flickerblade"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=15.0,
+                auto_attack_uptime=0.8,
+                cast_order=["Q"],
+            ),
         )
 
         q_no = fight_no_navori["breakdown"]["Q"]["casts"]
@@ -3441,13 +3555,15 @@ class TestNavoriFlickerbladeFight:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=15.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "Navori Flickerblade"}],
-            cast_order=["R"],
+            [{"name": "Navori Flickerblade"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=15.0,
+                auto_attack_uptime=0.8,
+                cast_order=["R"],
+            ),
         )
         assert fight["breakdown"]["R"]["casts"] == 1
 
@@ -3481,14 +3597,16 @@ class TestNavoriFlickerbladeFight:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=15.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "Navori Flickerblade"}],
-            one_rotation=True,
-            cast_order=["Q"],
+            [{"name": "Navori Flickerblade"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=15.0,
+                auto_attack_uptime=0.8,
+                one_rotation=True,
+                cast_order=["Q"],
+            ),
         )
         assert fight["breakdown"]["Q"]["casts"] == 1
 
@@ -3522,24 +3640,28 @@ class TestNavoriFlickerbladeFight:
         fight_no = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=15.0,
-            auto_attack_uptime=0.0,
-            items=[],
-            cast_order=["Q"],
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=15.0,
+                auto_attack_uptime=0.0,
+                cast_order=["Q"],
+            ),
         )
         fight_nav = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=15.0,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Navori Flickerblade"}],
-            cast_order=["Q"],
+            [{"name": "Navori Flickerblade"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=15.0,
+                auto_attack_uptime=0.0,
+                cast_order=["Q"],
+            ),
         )
         assert (
             fight_no["breakdown"]["Q"]["casts"] == fight_nav["breakdown"]["Q"]["casts"]
@@ -3662,12 +3784,14 @@ class TestSunderedSky(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=0,
-            target_magic_resistance=50,
-            fight_duration_seconds=1.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Sundered Sky"}],
+            [{"name": "Sundered Sky"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=50,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         auto_entry = result["breakdown"]["auto_attacks"]
         # With 0% crit chance and 1 auto attack, the first auto should
@@ -3686,12 +3810,14 @@ class TestSunderedSky(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=5000,
-            target_armor=0,
-            target_magic_resistance=50,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Sundered Sky"}],
+            [{"name": "Sundered Sky"}],
+            FightConfig(
+                target_health=5000,
+                target_armor=0,
+                target_magic_resistance=50,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         auto_entry = result["breakdown"]["auto_attacks"]
         # With 100% crit and 0 armor, normal crit = 200. SS auto = 160.
@@ -3712,12 +3838,14 @@ class TestSunderedSky(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=0,
-            target_magic_resistance=50,
-            fight_duration_seconds=2.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Sundered Sky"}],
+            [{"name": "Sundered Sky"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=50,
+                fight_duration_seconds=2.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         auto_entry = result["breakdown"]["auto_attacks"]
         # First auto: 50% of crit_multiplier(2.0) = 1.0 * 100 AD = 100
@@ -3747,12 +3875,14 @@ class TestVoltaicCyclosword(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "Voltaic Cyclosword"}],
+            [{"name": "Voltaic Cyclosword"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         assert "on_hit_once_Voltaic Cyclosword" in result["breakdown"]
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
@@ -3769,12 +3899,14 @@ class TestVoltaicCyclosword(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=5000,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=20.0,
-            auto_attack_uptime=1.0,
-            items=[{"name": "Voltaic Cyclosword"}],
+            [{"name": "Voltaic Cyclosword"}],
+            FightConfig(
+                target_health=5000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=20.0,
+                auto_attack_uptime=1.0,
+            ),
         )
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
         # Damage should be a single uncapped proc, not multiplied by autos
@@ -3789,12 +3921,14 @@ class TestVoltaicCyclosword(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=0,
-            target_magic_resistance=50,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "Voltaic Cyclosword"}],
+            [{"name": "Voltaic Cyclosword"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=50,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
         assert entry["total_damage"] == pytest.approx(180.0)
@@ -3805,12 +3939,14 @@ class TestVoltaicCyclosword(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=0,
-            target_magic_resistance=50,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "Voltaic Cyclosword"}],
+            [{"name": "Voltaic Cyclosword"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=50,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
         assert entry["total_damage"] == pytest.approx(140.0)
@@ -3841,12 +3977,14 @@ class TestVoltaicCyclosword(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=0,
-            target_magic_resistance=50,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "Voltaic Cyclosword"}],
+            [{"name": "Voltaic Cyclosword"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=50,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
         # 10% of 2000 = 200 (patched ratio, zero armor)
@@ -3862,12 +4000,14 @@ class TestUnendingDespair(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Unending Despair"}],
+            [{"name": "Unending Despair"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.0,
+            ),
         )
         assert "periodic_Unending Despair" in result["breakdown"]
         entry = result["breakdown"]["periodic_Unending Despair"]
@@ -3880,12 +4020,14 @@ class TestUnendingDespair(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=0,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Unending Despair"}],
+            [{"name": "Unending Despair"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=0,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.0,
+            ),
         )
         entry = result["breakdown"]["periodic_Unending Despair"]
         # 2 procs * 3% of 1000 bonus HP = 2 * 30 = 60 raw magic damage
@@ -3898,12 +4040,14 @@ class TestUnendingDespair(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Unending Despair"}],
+            [{"name": "Unending Despair"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.0,
+            ),
         )
         assert "periodic_Unending Despair" not in result["breakdown"]
 
@@ -3930,12 +4074,14 @@ class TestUnendingDespair(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=0,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.0,
-            items=[{"name": "Unending Despair"}],
+            [{"name": "Unending Despair"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=0,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.0,
+            ),
         )
         entry = result["breakdown"]["periodic_Unending Despair"]
         # 2 procs * 10% of 1000 bonus HP = 200 raw
@@ -3951,22 +4097,26 @@ class TestTerminusPenetration(_FightHarness):
         result_no_terminus = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=50,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.8,
-            items=[],
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=50,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         result_with_terminus = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=50,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "Terminus"}],
+            [{"name": "Terminus"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=50,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         # With Terminus pen, effective armor should be lower
         assert (
@@ -3980,22 +4130,26 @@ class TestTerminusPenetration(_FightHarness):
         result_no = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.8,
-            items=[],
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         result_with = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "Terminus"}],
+            [{"name": "Terminus"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         assert result_with["total_damage"] > result_no["total_damage"]
 
@@ -4020,12 +4174,14 @@ class TestCollectorThreshold(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "The Collector"}],
+            [{"name": "The Collector"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         assert "execute" in result["breakdown"]
         entry = result["breakdown"]["execute"]
@@ -4039,12 +4195,14 @@ class TestCollectorThreshold(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=4000,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "The Collector"}],
+            [{"name": "The Collector"}],
+            FightConfig(
+                target_health=4000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         entry = result["breakdown"]["execute"]
         assert entry["execution_threshold_hp"] == 200.0  # 5% of 4000
@@ -4071,12 +4229,14 @@ class TestCollectorThreshold(_FightHarness):
         result = calculate_fight_damage(
             stats,
             {},
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=10.0,
-            auto_attack_uptime=0.8,
-            items=[{"name": "The Collector"}],
+            [{"name": "The Collector"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         entry = result["breakdown"]["execute"]
         assert entry["execution_threshold_hp"] == 200.0  # 10% of 2000

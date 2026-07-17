@@ -30,7 +30,7 @@ import pytest
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 # ---------------------------------------------------------------------------
 # Champion data fixtures
@@ -194,18 +194,19 @@ def fight():
         abilities: dict | None = None,
         **overrides,
     ) -> dict:
-        params = {
+        config = {
             "target_health": 1000.0,
             "target_armor": 100.0,
             "target_magic_resistance": 100.0,
             "fight_duration_seconds": 5.0,
             "auto_attack_uptime": 0.0,
-            "ability_haste": stats.get("ability_haste", 0.0),
-            "items": [],
             "one_rotation": True,
             "deterministic": True,
         }
-        params.update(overrides)
-        return calculate_fight_damage(stats, abilities or {}, **params)
+        config.update(overrides)
+        items = config.pop("items", [])
+        return calculate_fight_damage(
+            stats, abilities or {}, items, FightConfig(**config)
+        )
 
     return _run

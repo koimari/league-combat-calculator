@@ -11,7 +11,7 @@ from src.calculator.champions.akshan import (
     _parse_passive_proc_damage,
     _extract_double_shot_ratio,
 )
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 
 class TestQAvengerang:
@@ -270,13 +270,16 @@ class TestFightEngineIntegration:
             champion_options={"passive_procs": 0},
         )
         result = calculate_fight_damage(
-            champion_stats=dict(stats),
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.8,
+            dict(stats),
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.8,
+            ),
         )
         assert "double_shot" in result["breakdown"]
         assert result["breakdown"]["double_shot"]["total_damage"] > 0
@@ -289,13 +292,16 @@ class TestFightEngineIntegration:
             champion_options={"passive_procs": 3},
         )
         result = calculate_fight_damage(
-            champion_stats=dict(stats),
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            dict(stats),
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         assert "passive" in result["breakdown"]
         assert result["breakdown"]["passive"]["total_damage"] > 0
@@ -312,22 +318,28 @@ class TestFightEngineIntegration:
         _, abilities_with_crit = parse_at(akshan_data, 6)
 
         result_no_crit = calculate_fight_damage(
-            champion_stats=dict(stats_no_crit),
-            ability_damages={"R": abilities_no_crit["R"]},
-            target_health=100000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            dict(stats_no_crit),
+            {"R": abilities_no_crit["R"]},
+            [],
+            FightConfig(
+                target_health=100000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         result_with_crit = calculate_fight_damage(
-            champion_stats=dict(stats_with_crit),
-            ability_damages={"R": abilities_with_crit["R"]},
-            target_health=100000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            dict(stats_with_crit),
+            {"R": abilities_with_crit["R"]},
+            [],
+            FightConfig(
+                target_health=100000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
 
         r_no_crit = result_no_crit["breakdown"]["R"]["total_damage"]
@@ -347,27 +359,33 @@ class TestFightEngineIntegration:
 
         r_only = {"R": abilities_full["R"]}
         result_r_only = calculate_fight_damage(
-            champion_stats=dict(stats),
-            ability_damages=r_only,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            dict(stats),
+            r_only,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
 
         abilities_for_test = {
             k: v for k, v in abilities_full.items() if k != "passive_double_shot"
         }
         result_full = calculate_fight_damage(
-            champion_stats=dict(stats),
-            ability_damages=abilities_for_test,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
-            cast_order=["Q", "Q2", "E", "R", "W"],
+            dict(stats),
+            abilities_for_test,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+                cast_order=["Q", "Q2", "E", "R", "W"],
+            ),
         )
 
         r_alone = result_r_only["breakdown"]["R"]["total_damage"]
@@ -381,13 +399,16 @@ class TestFightEngineIntegration:
         r_base = abilities["R"]["parts"][0].hp_scaled_damage(0.0)
 
         result = calculate_fight_damage(
-            champion_stats=dict(stats),
-            ability_damages={"R": abilities["R"]},
-            target_health=1000000,
-            target_armor=0,
-            target_magic_resistance=0,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            dict(stats),
+            {"R": abilities["R"]},
+            [],
+            FightConfig(
+                target_health=1000000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
 
         r_damage = result["breakdown"]["R"]["total_damage"]

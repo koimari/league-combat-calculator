@@ -6,7 +6,7 @@ from src.calculator.ability_spec import parts_raw_total
 
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.amumu import _CURSE_BONUS_FRACTION
-from src.calculator.damage import calculate_fight_damage
+from src.calculator.damage import FightConfig, calculate_fight_damage
 
 # Default target stats used when W's %maxHP damage needs resolving.
 _TARGET = {"target_max_health": 2000.0}
@@ -292,13 +292,16 @@ class TestFightEngineIntegration:
     def test_fight_engine_returns_result(self, amumu_data, parse_at) -> None:
         stats, abilities = parse_at(amumu_data, 9, target_stats=_TARGET)
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         assert result["total_damage"] > 0
 
@@ -306,13 +309,16 @@ class TestFightEngineIntegration:
         """P should appear but contribute 0 damage in breakdown."""
         stats, abilities = parse_at(amumu_data, 9, target_stats=_TARGET)
         result = calculate_fight_damage(
-            champion_stats=stats,
-            ability_damages=abilities,
-            target_health=2000,
-            target_armor=100,
-            target_magic_resistance=60,
-            fight_duration_seconds=5.0,
-            one_rotation=True,
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
         )
         p_entry = result["breakdown"].get("P", {})
         assert p_entry.get("total_damage", 0.0) == 0.0

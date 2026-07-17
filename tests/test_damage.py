@@ -15,6 +15,7 @@ from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
+    FightConfig,
     calculate_fight_damage,
     split_auto_vs_ability,
     _simulate_current_health_on_hit,
@@ -215,14 +216,15 @@ class TestBorkCurrentHpSimulation:
         fight = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.8,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.8,
+                one_rotation=True,
+            ),
         )
         bork_entry = fight["breakdown"].get("on_hit_Blade of the Ruined King")
         assert bork_entry is not None, "BoRK should appear in breakdown"
@@ -254,27 +256,29 @@ class TestCastOrder:
         fight_default = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
+            items,
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
         )
         fight_explicit = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
-            cast_order=["Q", "W", "E", "R"],
+            items,
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["Q", "W", "E", "R"],
+            ),
         )
         assert fight_default["total_damage"] == fight_explicit["total_damage"]
 
@@ -294,28 +298,30 @@ class TestCastOrder:
         fight_qwer = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
-            cast_order=["Q", "W", "E", "R"],
+            items,
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["Q", "W", "E", "R"],
+            ),
         )
         fight_rwqe = calculate_fight_damage(
             stats,
             abilities,
-            target_health=2000,
-            target_armor=50,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
-            cast_order=["R", "W", "Q", "E"],
+            items,
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["R", "W", "Q", "E"],
+            ),
         )
         # Different order should produce different total damage
         assert fight_qwer["total_damage"] != fight_rwqe["total_damage"]
@@ -336,28 +342,30 @@ class TestCastOrder:
         fight_qwer = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1500,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
-            cast_order=["Q", "W", "E", "R"],
+            items,
+            FightConfig(
+                target_health=1500,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["Q", "W", "E", "R"],
+            ),
         )
         fight_rqwe = calculate_fight_damage(
             stats,
             abilities,
-            target_health=1500,
-            target_armor=50,
-            target_magic_resistance=50,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            ability_haste=0.0,
-            items=items,
-            one_rotation=True,
-            cast_order=["R", "Q", "W", "E"],
+            items,
+            FightConfig(
+                target_health=1500,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["R", "Q", "W", "E"],
+            ),
         )
         # With different cast orders, the Shadowflame bonus should differ
         qwer_sf = (

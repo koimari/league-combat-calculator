@@ -10,7 +10,7 @@ from .resistance import (
     apply_magic_penetration,
     apply_armor_penetration,
 )
-from .damage import calculate_fight_damage
+from .damage import FightConfig, calculate_fight_damage
 from .champions import parse_abilities, is_champion_supported
 from .champions.common import calculate_ability_damage
 from .champions.skill_orders import get_ability_rank
@@ -29,6 +29,7 @@ __all__ = [
     "calculate_ability_damage",
     "parse_abilities",
     "is_champion_supported",
+    "FightConfig",
     "calculate_fight_damage",
     "get_ability_rank",
     "ITEM_EFFECTS",
