@@ -290,8 +290,20 @@ def api_optimize():
 
     if objective not in ("total_damage", "physical_damage", "magic_damage"):
         return jsonify({"error": "Invalid objective"}), 400
-    if max_legendary_slots not in (5, 6):
-        return jsonify({"error": "max_legendary_slots must be 5 or 6"}), 400
+    if not 1 <= max_legendary_slots <= 6:
+        return jsonify({"error": "max_legendary_slots must be between 1 and 6"}), 400
+    if len(locked_items) > max_legendary_slots:
+        return (
+            jsonify(
+                {
+                    "error": (
+                        f"{len(locked_items)} locked items don't fit in "
+                        f"{max_legendary_slots} legendary slots"
+                    )
+                }
+            ),
+            400,
+        )
 
     result = optimize_build(
         champion_data=champion_data,

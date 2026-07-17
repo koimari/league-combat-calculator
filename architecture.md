@@ -58,8 +58,9 @@ wiki (lolstaticdata, external)
 **Champion math**
 - `src/calculator/stats.py` — level scaling + item stat aggregation (via item_effects
   accessors only).
-- `src/calculator/resistance.py` — resistance/penetration/lethality formulas. Dependency-free
-  leaf; the CLAUDE.md domain formulas live here.
+- `src/calculator/resistance.py` — resistance/penetration formulas. Dependency-free
+  leaf; the CLAUDE.md domain formulas live here. (Lethality needs no formula:
+  it is 1:1 flat armor pen, applied in stats.py.)
 
 **Fight engine**
 - `src/calculator/pipeline.py` — canonical stats → ability parsing → fight orchestration.

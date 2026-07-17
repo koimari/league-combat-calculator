@@ -16,7 +16,8 @@ These LoL-specific facts affect calculations and must be correct:
 
 - **Critical strike base damage = 200%** (2.0 multiplier, not the old 175%)
 - **Penetration order:** Percent penetration applies before flat penetration; result cannot go below 0
-- **Lethality → flat armor pen:** `lethality × (0.6 + 0.4 × min(level, 18) / 18)`
+- **Lethality = flat armor pen, 1:1** — no level scaling (since V14.1; the old `0.6 + 0.4 × level/18` formula is retired). Like all penetration, it cannot reduce the target's armor below 0 for damage calculation (only armor *reduction* effects can go negative)
+- **Level cap is 20** (top lane only, as of this season); the stat growth formula below applies unchanged through level 20
 - **Stat growth formula:** `base + growth × (level - 1) × (0.7025 + 0.0175 × (level - 1))`
 - **Attack speed:** `base_AS + AS_ratio × (bonus_percent / 100)` — AS_ratio is separate from base_AS
 - **Ability haste → CDR:** `effective_cd = base_cd × 100 / (100 + ability_haste)`

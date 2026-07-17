@@ -86,7 +86,8 @@ class TestOptimizerBasic:
         assert "optimization_time_ms" in result
         assert "evaluations" in result
 
-    def test_optimizer_fills_correct_slot_count_5(self):
+    @pytest.mark.parametrize("slot_count", [1, 2, 3, 4, 5, 6])
+    def test_optimizer_fills_correct_slot_count(self, slot_count):
         champ_data = get_champion("Ahri")
         result = optimize_build(
             "Ahri",
@@ -95,23 +96,9 @@ class TestOptimizerBasic:
             target_health=2000,
             target_armor=50,
             target_mr=40,
-            max_legendary_slots=5,
+            max_legendary_slots=slot_count,
         )
-        assert len(result["items"]) == 5
-        assert result["boots"] is not None
-
-    def test_optimizer_fills_correct_slot_count_6(self):
-        champ_data = get_champion("Ahri")
-        result = optimize_build(
-            "Ahri",
-            champ_data,
-            level=18,
-            target_health=2000,
-            target_armor=50,
-            target_mr=40,
-            max_legendary_slots=6,
-        )
-        assert len(result["items"]) == 6
+        assert len(result["items"]) == slot_count
         assert result["boots"] is not None
 
     def test_optimizer_no_duplicate_items(self):
@@ -206,6 +193,22 @@ class TestLockedItems:
         assert "Luden's Echo" in result["items"]
         assert "Rabadon's Deathcap" in result["items"]
         assert len(result["items"]) == 5
+
+    def test_locked_items_filling_every_slot_returns_exactly_those_items(self):
+        """Seeding must not push the build past max_legendary_slots."""
+        champ_data = get_champion("Ahri")
+        locked = ["Luden's Echo", "Rabadon's Deathcap"]
+        result = optimize_build(
+            "Ahri",
+            champ_data,
+            level=18,
+            target_health=2000,
+            target_armor=50,
+            target_mr=40,
+            locked_items=locked,
+            max_legendary_slots=2,
+        )
+        assert sorted(result["items"]) == sorted(locked)
 
     def test_all_slots_locked_returns_quickly(self):
         """When all slots are locked, optimizer should evaluate only that build."""

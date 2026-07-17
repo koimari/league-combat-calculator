@@ -179,8 +179,13 @@ def _greedy_fill(
     current = list(locked_legendaries)
     boots = locked_boots
 
-    # If a seed item is provided, add it first (if it doesn't conflict)
-    if seed_item and seed_item["name"] not in {i["name"] for i in current}:
+    # If a seed item is provided and there is room, add it first (if it
+    # doesn't conflict). The seed occupies one of the slots to fill.
+    if (
+        seed_item
+        and slots_to_fill > 0
+        and seed_item["name"] not in {i["name"] for i in current}
+    ):
         occupied = _get_occupied_groups(current)
         if not _conflicts_with_build(seed_item["name"], occupied):
             current.append(seed_item)
@@ -361,7 +366,7 @@ def optimize_build(
         objective: "total_damage", "physical_damage", or "magic_damage".
         locked_items: Item names already selected (optimizer won't change these).
         locked_boots: Boots name already selected (optimizer won't change).
-        max_legendary_slots: 5 or 6 legendary item slots to fill.
+        max_legendary_slots: Number of legendary item slots to fill (1-6).
 
     Returns:
         Dict with optimized build, damage, and metadata.
@@ -398,8 +403,9 @@ def optimize_build(
         resolved_locked_boots = get_item_by_name(locked_boots)
         boots_locked = True
 
-    # How many legendary slots still need filling
-    slots_to_fill = max_legendary_slots - len(resolved_locked)
+    # How many legendary slots still need filling (locked items may already
+    # fill every slot — never negative)
+    slots_to_fill = max(0, max_legendary_slots - len(resolved_locked))
     fill_boots = not boots_locked
 
     # Filter pool to exclude already-locked items
@@ -409,26 +415,28 @@ def optimize_build(
     total_evals = 0
 
     # === Multi-start greedy + hill climbing ===
-    # Seed strategies: no seed, top AD item, top AP item
+    # Seed strategies: no seed, top AD item, top AP item. With no slots to
+    # fill, every seeded start collapses to the unseeded one — skip them.
     seeds: list[dict[str, Any] | None] = [None]
 
-    # Find best raw-AD item as seed
-    ad_items = sorted(
-        pool,
-        key=lambda i: i.get("stats", {}).get("attackDamage", {}).get("flat", 0),
-        reverse=True,
-    )
-    if ad_items:
-        seeds.append(ad_items[0])
+    if slots_to_fill > 0:
+        # Find best raw-AD item as seed
+        ad_items = sorted(
+            pool,
+            key=lambda i: i.get("stats", {}).get("attackDamage", {}).get("flat", 0),
+            reverse=True,
+        )
+        if ad_items:
+            seeds.append(ad_items[0])
 
-    # Find best raw-AP item as seed
-    ap_items = sorted(
-        pool,
-        key=lambda i: i.get("stats", {}).get("abilityPower", {}).get("flat", 0),
-        reverse=True,
-    )
-    if ap_items and (not ad_items or ap_items[0]["name"] != ad_items[0]["name"]):
-        seeds.append(ap_items[0])
+        # Find best raw-AP item as seed
+        ap_items = sorted(
+            pool,
+            key=lambda i: i.get("stats", {}).get("abilityPower", {}).get("flat", 0),
+            reverse=True,
+        )
+        if ap_items and (not ad_items or ap_items[0]["name"] != ad_items[0]["name"]):
+            seeds.append(ap_items[0])
 
     best_legendaries = None
     best_boots = None

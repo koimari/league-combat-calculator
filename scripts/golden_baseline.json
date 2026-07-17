@@ -18645,7 +18645,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 957.51
+        "total_damage": 963.83
       },
       "vayne": {
         "breakdown_keys": [
@@ -18656,7 +18656,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1114.04
+        "total_damage": 1133.14
       }
     },
     "B. F. Sword": {
@@ -18807,7 +18807,7 @@
           "auto_attacks",
           "shaped_charge_Bastionbreaker"
         ],
-        "total_damage": 996.67
+        "total_damage": 1004.85
       },
       "vayne": {
         "breakdown_keys": [
@@ -18819,7 +18819,7 @@
           "on_hit_ability_W",
           "shaped_charge_Bastionbreaker"
         ],
-        "total_damage": 1168.69
+        "total_damage": 1193.39
       }
     },
     "Berserker's Greaves": {
@@ -20132,7 +20132,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 950.02
+        "total_damage": 956.98
       },
       "vayne": {
         "breakdown_keys": [
@@ -20143,7 +20143,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1101.43
+        "total_damage": 1122.68
       }
     },
     "Echoes of Helia": {
@@ -20203,7 +20203,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 941.08
+        "total_damage": 945.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -20214,7 +20214,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1074.12
+        "total_damage": 1089.0
       }
     },
     "Eleisa's Miracle": {
@@ -21150,7 +21150,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 881.02
+        "total_damage": 883.75
       },
       "vayne": {
         "breakdown_keys": [
@@ -21161,7 +21161,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 939.75
+        "total_damage": 948.69
       }
     },
     "Guardian's Hammer": {
@@ -21476,7 +21476,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 903.8
+        "total_damage": 907.11
       },
       "vayne": {
         "breakdown_keys": [
@@ -21487,7 +21487,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 989.89
+        "total_damage": 1000.4
       }
     },
     "Hemomancer's Helm": {
@@ -21716,7 +21716,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 957.51
+        "total_damage": 963.83
       },
       "vayne": {
         "breakdown_keys": [
@@ -21727,7 +21727,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1114.04
+        "total_damage": 1133.14
       }
     },
     "Hullbreaker": {
@@ -22370,7 +22370,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 873.31
+        "total_damage": 874.46
       },
       "vayne": {
         "breakdown_keys": [
@@ -22381,7 +22381,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 914.5
+        "total_damage": 918.26
       }
     },
     "Lightning Rod": {
@@ -23370,7 +23370,7 @@
           "active_Profane Hydra",
           "auto_attacks"
         ],
-        "total_damage": 1037.03
+        "total_damage": 1045.04
       },
       "vayne": {
         "breakdown_keys": [
@@ -23382,7 +23382,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1224.42
+        "total_damage": 1245.87
       }
     },
     "Protoplasm Harness": {
@@ -23417,7 +23417,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 965.17
+        "total_damage": 973.35
       },
       "vayne": {
         "breakdown_keys": [
@@ -23428,7 +23428,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1137.19
+        "total_damage": 1161.89
       }
     },
     "Puppeteer": {
@@ -23789,7 +23789,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 962.93
+        "total_damage": 968.17
       },
       "vayne": {
         "breakdown_keys": [
@@ -23800,7 +23800,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1120.72
+        "total_damage": 1136.41
       }
     },
     "Reinforced Armor (Turret Item)": {
@@ -24228,7 +24228,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 952.0
+        "total_damage": 957.06
       },
       "vayne": {
         "breakdown_keys": [
@@ -24239,7 +24239,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1097.42
+        "total_damage": 1112.7
       }
     },
     "Serrated Dirk": {
@@ -24251,7 +24251,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 869.1
+        "total_damage": 871.43
       },
       "vayne": {
         "breakdown_keys": [
@@ -24262,7 +24262,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 912.81
+        "total_damage": 920.58
       }
     },
     "Serylda's Grudge": {
@@ -24506,7 +24506,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 941.08
+        "total_damage": 945.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -24517,7 +24517,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1074.12
+        "total_damage": 1089.0
       }
     },
     "Spectre's Cowl": {
@@ -25049,7 +25049,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 873.31
+        "total_damage": 874.46
       },
       "vayne": {
         "breakdown_keys": [
@@ -25060,7 +25060,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 914.5
+        "total_damage": 918.26
       }
     },
     "The Collector": {
@@ -25073,7 +25073,7 @@
           "auto_attacks",
           "execute"
         ],
-        "total_damage": 1001.02
+        "total_damage": 1004.82
       },
       "vayne": {
         "breakdown_keys": [
@@ -25085,7 +25085,7 @@
           "execute",
           "on_hit_ability_W"
         ],
-        "total_damage": 1176.31
+        "total_damage": 1187.01
       }
     },
     "The Golden Spatula": {
@@ -25356,7 +25356,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 968.63
+        "total_damage": 975.19
       },
       "vayne": {
         "breakdown_keys": [
@@ -25367,7 +25367,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1137.78
+        "total_damage": 1157.39
       }
     },
     "Unending Despair": {
@@ -25497,7 +25497,7 @@
           "auto_attacks",
           "on_hit_once_Voltaic Cyclosword"
         ],
-        "total_damage": 1042.17
+        "total_damage": 1046.43
       },
       "vayne": {
         "breakdown_keys": [
@@ -25509,7 +25509,7 @@
           "on_hit_ability_W",
           "on_hit_once_Voltaic Cyclosword"
         ],
-        "total_damage": 1169.95
+        "total_damage": 1180.58
       }
     },
     "Warden's Eye": {
@@ -25753,7 +25753,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 957.51
+        "total_damage": 963.83
       },
       "vayne": {
         "breakdown_keys": [
@@ -25764,7 +25764,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 1114.04
+        "total_damage": 1133.14
       }
     },
     "Your Cut": {
@@ -25935,7 +25935,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1783743759.197702,
-    "git_head": "eda50e2c8bfa947331d1804ba2e99ffd016f3888",
+    "git_head": "3f9c2e823723732b6859691a5848c0c96aac4084",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1783743782.0325496,

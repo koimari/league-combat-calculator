@@ -14,7 +14,6 @@ from .item_effects import (
     get_steraks_bonus_ad,
     get_terminus_max_stack_bonuses,
 )
-from .resistance import lethality_to_flat_pen
 
 
 def growth_stat(base: float, growth: float, level: int) -> float:
@@ -213,9 +212,9 @@ def calculate_total_stats(
 
     final_attack_speed = calculate_attack_speed(base_as, as_ratio, total_as_bonus)
 
-    # Lethality converts to flat armor pen based on level
+    # Lethality is 1:1 flat armor penetration (no level scaling since V14.1)
     lethality = total_item_stats["lethality"]
-    flat_armor_pen = lethality_to_flat_pen(lethality, level)
+    flat_armor_pen = lethality
 
     # Mana: base + growth + items
     cdm = champion_data["stats"]

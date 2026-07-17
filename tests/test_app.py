@@ -74,6 +74,47 @@ def test_config_exposes_all_request_defaults():
     }
 
 
+@pytest.mark.parametrize("slot_count", [1, 2, 3, 4, 5, 6])
+def test_optimize_accepts_slot_counts_one_through_six(monkeypatch, slot_count):
+    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+    monkeypatch.setattr(
+        app_module,
+        "optimize_build",
+        lambda **_kwargs: {"items": [], "total_damage": 0.0},
+    )
+
+    payload = {"champion": "Ahri", "level": 18, "max_legendary_slots": slot_count}
+    response = app_module.app.test_client().post("/api/optimize", json=payload)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize("slot_count", [0, 7, -1])
+def test_optimize_rejects_slot_counts_outside_one_through_six(monkeypatch, slot_count):
+    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+
+    payload = {"champion": "Ahri", "level": 18, "max_legendary_slots": slot_count}
+    response = app_module.app.test_client().post("/api/optimize", json=payload)
+
+    assert response.status_code == 400
+    assert "max_legendary_slots" in response.get_json()["error"]
+
+
+def test_optimize_rejects_more_locked_items_than_slots(monkeypatch):
+    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+
+    payload = {
+        "champion": "Ahri",
+        "level": 18,
+        "max_legendary_slots": 2,
+        "locked_items": ["Luden's Echo", "Rabadon's Deathcap", "Shadowflame"],
+    }
+    response = app_module.app.test_client().post("/api/optimize", json=payload)
+
+    assert response.status_code == 400
+    assert "locked" in response.get_json()["error"].lower()
+
+
 @pytest.mark.parametrize(
     "invalid_values",
     [

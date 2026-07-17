@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.stats import (
     growth_stat,
     calculate_attack_speed,
@@ -9,6 +10,22 @@ from src.calculator.stats import (
     get_item_stats,
     calculate_total_stats,
 )
+
+
+class TestLethality:
+    """Lethality grants its full value as flat armor pen at every level.
+
+    Since V14.1 lethality no longer scales with level -- it is 1:1 flat
+    armor penetration (the name survives only to distinguish it from
+    percent penetration).
+    """
+
+    @pytest.mark.parametrize("level", [1, 9, 18, 20])
+    def test_lethality_is_full_flat_armor_pen(self, ahri_data: dict, level: int):
+        ghostblade = get_item_by_name("Youmuu's Ghostblade")
+        stats = calculate_total_stats(ahri_data, level, [ghostblade])
+        assert stats["lethality"] > 0
+        assert stats["flat_armor_penetration"] == stats["lethality"]
 
 
 class TestGrowthStat:
