@@ -8,18 +8,71 @@ primitives in test_champion_primitives.py.
 """
 
 import pytest
+from types import SimpleNamespace
 
 from src.calculator.resistance import apply_resistance
-from src.calculator.champions.ahri import (
-    parse_abilities as parse_ahri_abilities,
+from src.calculator.champions import (
+    parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
     calculate_fight_damage,
     split_auto_vs_ability,
-    _simulate_bork_damage,
-    _calculate_phantom_hits,
+    _simulate_current_health_on_hit,
+    _calculate_phantom_hits as _calculate_phantom_hits_compiled,
     _navori_effective_cd,
+    _mitigate,
 )
+from src.calculator.item_effects import DamageInputs, resolve_damage_effects
+
+
+def _simulate_bork_damage(
+    *,
+    target_health,
+    num_auto_attacks,
+    auto_damage_per_hit,
+    other_on_hit_per_hit,
+    effective_armor,
+    is_melee,
+    phantom_hit_autos=None,
+    double_hit_all=False,
+):
+    """Readable test adapter around the generic current-health simulation."""
+    effect = resolve_damage_effects([{"name": "Blade of the Ruined King"}])
+    return _simulate_current_health_on_hit(
+        effect.per_hits[0],
+        DamageInputs({}, 1, is_melee, target_health, target_health),
+        target_health,
+        num_auto_attacks,
+        auto_damage_per_hit,
+        other_on_hit_per_hit,
+        SimpleNamespace(effective_armor=effective_armor, effective_mr=0.0),
+        1.0,
+        phantom_hit_autos,
+        double_hit_all,
+    )
+
+
+def _calculate_phantom_hits(num_auto_attacks, item_names):
+    """Keep cadence tables readable while production consumes typed rules."""
+    effects = resolve_damage_effects([{"name": name} for name in item_names])
+    return _calculate_phantom_hits_compiled(num_auto_attacks, effects.phantom_hit)
+
+
+class TestMitigate:
+    """One resistance path shared by every damage source."""
+
+    @pytest.fixture
+    def resists(self):
+        return SimpleNamespace(effective_armor=100.0, effective_mr=50.0)
+
+    def test_physical_uses_effective_armor(self, resists) -> None:
+        assert _mitigate(300.0, "physical", resists, 1.2) == 150.0
+
+    def test_magic_uses_effective_mr_and_magic_amp(self, resists) -> None:
+        assert _mitigate(300.0, "magic", resists, 1.2) == pytest.approx(240.0)
+
+    def test_true_damage_ignores_resists_and_magic_amp(self, resists) -> None:
+        assert _mitigate(300.0, "true", resists, 1.2) == 300.0
 
 
 class TestBorkCurrentHpSimulation:

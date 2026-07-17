@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
     // Config shared with the backend: item exclusivity groups (from
-    // optimizer.py), default target stats (from damage.py), and champion
+    // optimizer.py), fight/target defaults (from pipeline.py), and champion
     // option/assumption metadata (from the champion modules).
     fetch("/api/config")
         .then((res) => res.json())
@@ -672,7 +672,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Target stat payload fields. Empty inputs fall back to the
     // server-provided defaults (defaultTarget, fetched from /api/config).
     function buildTargetPayload() {
-        const bonusHealth = parseFloat(targetBonusHealth.value) || 0;
+        const bonusHealth = parseFloat(targetBonusHealth.value) || defaultTarget.bonus_health;
         return {
             target_health: (parseFloat(targetBaseHealth.value) || defaultTarget.health) + bonusHealth,
             target_bonus_health: bonusHealth,

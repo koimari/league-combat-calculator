@@ -26,6 +26,17 @@ from .slotlib import (
 )
 
 
+def _assassins_mark_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
+    """Resolve one Assassin's Mark proc from per-level JSON scaling."""
+    return extract_named(
+        ability,
+        "Bonus Magic Damage",
+        ctx.level,
+        ctx.stats,
+        ctx.target,
+    )
+
+
 def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: R1 dash damage plus R2 execute bounds for missing-HP scaling."""
     ability = ctx.ability()
@@ -76,7 +87,9 @@ SLOTS = {
     "E": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "R": _perfect_execution,
     "P": proc_damage(
-        attr="Bonus Magic Damage", dmg_type="magic", count_option="passive_procs"
+        per_proc=_assassins_mark_damage,
+        dmg_type="magic",
+        count_option="passive_procs",
     ),
 }
 

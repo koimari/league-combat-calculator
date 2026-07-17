@@ -7,18 +7,102 @@ that file unit-tests the ITEM_EFFECTS accessor functions against a patched
 registry; this one asserts fight-engine behavior with live parsed item data.
 """
 
+from types import SimpleNamespace
+
 import pytest
 
-from src.calculator.champions.ahri import (
-    parse_abilities as parse_ahri_abilities,
+from src.calculator.champions import (
+    parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
     calculate_fight_damage,
-    _simulate_bork_damage,
-    _calculate_phantom_hits,
-    _calculate_kraken_procs,
-    _calculate_hullbreaker_procs,
+    _simulate_current_health_on_hit,
+    _simulate_stacking_on_hit_damage,
+    _calculate_phantom_hits as _calculate_phantom_hits_compiled,
+    _calculate_stacking_procs,
 )
+from src.calculator.item_effects import DamageInputs, resolve_damage_effects
+
+
+def _build(*names: str) -> list[dict[str, str]]:
+    """Build the minimal item shape accepted by the typed resolver."""
+    return [{"name": name} for name in names]
+
+
+def _simulate_bork_damage(
+    *,
+    target_health,
+    num_auto_attacks,
+    auto_damage_per_hit,
+    other_on_hit_per_hit,
+    effective_armor,
+    is_melee,
+    phantom_hit_autos=None,
+    double_hit_all=False,
+):
+    """Readable test adapter around the generic current-health simulation."""
+    effect = resolve_damage_effects([{"name": "Blade of the Ruined King"}])
+    return _simulate_current_health_on_hit(
+        effect.per_hits[0],
+        DamageInputs({}, 1, is_melee, target_health, target_health),
+        target_health,
+        num_auto_attacks,
+        auto_damage_per_hit,
+        other_on_hit_per_hit,
+        SimpleNamespace(effective_armor=effective_armor, effective_mr=0.0),
+        1.0,
+        phantom_hit_autos,
+        double_hit_all,
+    )
+
+
+def _calculate_phantom_hits(num_auto_attacks, item_names):
+    """Keep cadence tables readable while production consumes typed rules."""
+    effects = resolve_damage_effects([{"name": name} for name in item_names])
+    return _calculate_phantom_hits_compiled(num_auto_attacks, effects.phantom_hit)
+
+
+def _shadowflame_effect():
+    """Return the live compiled low-health magic/true crit rule."""
+    effect = resolve_damage_effects([{"name": "Shadowflame"}]).magic_true_crit
+    assert effect is not None
+    return effect
+
+
+def _simulate_kraken_damage(
+    *,
+    target_health,
+    num_auto_attacks,
+    auto_damage_per_hit,
+    other_on_hit_per_hit,
+    effective_armor,
+    is_melee,
+    level,
+    kraken_proc_autos,
+):
+    """Readable test adapter around the generic stacking-proc simulation."""
+    effects = resolve_damage_effects([{"name": "Kraken Slayer"}])
+    effect = effects.stacking_on_hits[0]
+    return _simulate_stacking_on_hit_damage(
+        effect,
+        DamageInputs({}, level, is_melee, target_health, target_health),
+        target_health,
+        num_auto_attacks,
+        auto_damage_per_hit,
+        other_on_hit_per_hit,
+        SimpleNamespace(effective_armor=effective_armor, effective_mr=0.0),
+        1.0,
+        kraken_proc_autos,
+    )
+
+
+class _FightHarness:
+    """Install the shared attacker/fight factories on legacy-style classes."""
+
+    @pytest.fixture(autouse=True)
+    def _install_harness(self, attacker_stats, fight) -> None:
+        self._make_stats = attacker_stats
+        self.fight = fight
 
 
 class TestBastionbreakerShapedCharge:
@@ -32,32 +116,28 @@ class TestBastionbreakerShapedCharge:
 
     def test_shaped_charge_ranged_damage(self) -> None:
         """Ranged: 15 + 0.75 * 22 lethality = 31.5 true damage."""
-        from src.calculator.item_effects import calculate_shaped_charge_damage
-
         stats = {"lethality": 22.0}
-        damage = calculate_shaped_charge_damage(
-            stats, is_melee=False, fight_duration=5.0
+        effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
+        damage = effect.source.raw_damage(
+            DamageInputs(stats, 18, False, 1000.0, 1000.0)
         )
         assert abs(damage - 31.5) < 0.01
 
     def test_shaped_charge_melee_damage(self) -> None:
         """Melee: 30 + 1.5 * 22 lethality = 63 true damage."""
-        from src.calculator.item_effects import calculate_shaped_charge_damage
-
         stats = {"lethality": 22.0}
-        damage = calculate_shaped_charge_damage(
-            stats, is_melee=True, fight_duration=5.0
-        )
+        effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
+        damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000.0, 1000.0))
         assert abs(damage - 63.0) < 0.01
 
     def test_shaped_charge_multiple_procs(self) -> None:
         """45s cooldown: 50s fight = 2 procs."""
-        from src.calculator.item_effects import calculate_shaped_charge_damage
-
         stats = {"lethality": 22.0}
-        damage = calculate_shaped_charge_damage(
-            stats, is_melee=False, fight_duration=50.0
+        effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
+        per_proc = effect.source.raw_damage(
+            DamageInputs(stats, 18, False, 1000.0, 1000.0)
         )
+        damage = per_proc * (1 + int(50.0 / effect.cooldown))
         expected = 31.5 * 2
         assert abs(damage - expected) < 0.01
 
@@ -200,21 +280,18 @@ class TestBloodlettersCurseVileDecay:
         return get_item_by_name("Bloodletter's Curse")
 
     def test_stacking_mr_reduction_helper(self) -> None:
-        """get_stacking_mr_reduction returns effect when item is present."""
-        from src.calculator.item_effects import get_stacking_mr_reduction
-
-        items = [{"name": "Bloodletter's Curse"}]
-        effect = get_stacking_mr_reduction(items)
+        """The build projection carries a typed stacking-reduction rule."""
+        effect = resolve_damage_effects(
+            [{"name": "Bloodletter's Curse"}]
+        ).stacking_mr_reduction
         assert effect is not None
-        assert effect["mr_reduction_per_stack"] == 0.075
-        assert effect["max_stacks"] == 4
+        assert effect.reduction_per_stack == 0.075
+        assert effect.max_stacks == 4
 
     def test_no_stacking_mr_reduction_without_item(self) -> None:
-        """get_stacking_mr_reduction returns None without the item."""
-        from src.calculator.item_effects import get_stacking_mr_reduction
-
-        items = [{"name": "Liandry's Torment"}]
-        assert get_stacking_mr_reduction(items) is None
+        """Unrelated builds carry no stacking-reduction rule."""
+        effects = resolve_damage_effects([{"name": "Liandry's Torment"}])
+        assert effects.stacking_mr_reduction is None
 
     def test_effective_mr_decreases_per_ability(
         self,
@@ -403,7 +480,9 @@ class TestShadowflameCinderbloom:
             "Q": {"damage_type": "magic", "magic_damage": 100, "total_raw": 100},
         }
         # Target at 1000 HP, threshold 400 — 100 damage won't cross it
-        bonus = _calculate_shadowflame_bonus(breakdown, ability_damages, 1000.0)
+        bonus = _calculate_shadowflame_bonus(
+            _shadowflame_effect(), breakdown, ability_damages, 1000.0
+        )
         assert bonus == 0.0
 
     def test_bonus_when_target_below_threshold(self) -> None:
@@ -435,7 +514,9 @@ class TestShadowflameCinderbloom:
             "Q": {"damage_type": "magic", "magic_damage": 700, "total_raw": 700},
             "W": {"damage_type": "magic", "magic_damage": 200, "total_raw": 200},
         }
-        bonus = _calculate_shadowflame_bonus(breakdown, ability_damages, 1000.0)
+        bonus = _calculate_shadowflame_bonus(
+            _shadowflame_effect(), breakdown, ability_damages, 1000.0
+        )
         # W (200) dealt below threshold, gets 20% bonus = 40
         assert abs(bonus - 40.0) < 0.01
 
@@ -459,7 +540,9 @@ class TestShadowflameCinderbloom:
         ability_damages = {
             "Q": {"damage_type": "magic", "magic_damage": 700, "total_raw": 700},
         }
-        bonus = _calculate_shadowflame_bonus(breakdown, ability_damages, 1000.0)
+        bonus = _calculate_shadowflame_bonus(
+            _shadowflame_effect(), breakdown, ability_damages, 1000.0
+        )
         # Auto attacks are physical — no crit bonus
         assert bonus == 0.0
 
@@ -499,7 +582,9 @@ class TestShadowflameCinderbloom:
             },
             "W": {"damage_type": "magic", "magic_damage": 150, "total_raw": 150},
         }
-        bonus = _calculate_shadowflame_bonus(breakdown, ability_damages, 1000.0)
+        bonus = _calculate_shadowflame_bonus(
+            _shadowflame_effect(), breakdown, ability_damages, 1000.0
+        )
         assert abs(bonus - 30.0) < 0.01
 
     def test_damage_higher_with_shadowflame(
@@ -624,7 +709,9 @@ class TestShadowflameCinderbloom:
             "W": {"damage_type": "magic", "magic_damage": 300, "total_raw": 300},
         }
         # Default cast_order includes "Q2" — step 1 already consumes it.
-        bonus = _calculate_shadowflame_bonus(breakdown, ability_damages, 1000.0)
+        bonus = _calculate_shadowflame_bonus(
+            _shadowflame_effect(), breakdown, ability_damages, 1000.0
+        )
         assert abs(bonus - 60.0) < 0.01
 
     def test_ambessa_q2_not_double_counted(
@@ -786,10 +873,10 @@ class TestBloodsongSpellbladeAndExposeWeakness:
 
     def test_spellblade_damage_equals_base_ad(self) -> None:
         """Bloodsong spellblade should deal 100% base AD."""
-        from src.calculator.item_effects import get_spellblade_damage
-
         stats = {"base_attack_damage": 104.0}
-        damage = get_spellblade_damage("Bloodsong", stats)
+        effect = resolve_damage_effects(_build("Bloodsong")).spellblade
+        assert effect is not None
+        damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         assert abs(damage - 104.0) < 0.01
 
     def test_two_procs_in_five_second_fight(
@@ -1000,10 +1087,10 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
 
     def test_spellblade_damage_formula(self) -> None:
         """Dusk and Dawn spellblade should deal 75% base AD + 10% AP."""
-        from src.calculator.item_effects import get_spellblade_damage
-
         stats = {"base_attack_damage": 104.0, "ability_power": 160.0}
-        damage = get_spellblade_damage("Dusk and Dawn", stats)
+        effect = resolve_damage_effects(_build("Dusk and Dawn")).spellblade
+        assert effect is not None
+        damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         expected = 0.75 * 104.0 + 0.10 * 160.0  # 78 + 16 = 94
         assert abs(damage - expected) < 0.01
 
@@ -1279,47 +1366,28 @@ class TestEclipseEverRisingMoon:
 
     def test_ranged_single_proc_damage(self) -> None:
         """Ranged: 4% of 2000 max HP = 80 raw physical damage (one proc)."""
-        from src.calculator.item_effects import calculate_eclipse_damage
-
-        damage = calculate_eclipse_damage(
-            target_max_health=2000.0,
-            is_melee=False,
-            fight_duration=0.0,
-        )
+        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        damage = effect.source.raw_damage(DamageInputs({}, 18, False, 2000.0, 2000.0))
         assert abs(damage - 80.0) < 0.01
 
     def test_melee_single_proc_damage(self) -> None:
         """Melee: 6% of 2000 max HP = 120 raw physical damage (one proc)."""
-        from src.calculator.item_effects import calculate_eclipse_damage
-
-        damage = calculate_eclipse_damage(
-            target_max_health=2000.0,
-            is_melee=True,
-            fight_duration=0.0,
-        )
+        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        damage = effect.source.raw_damage(DamageInputs({}, 18, True, 2000.0, 2000.0))
         assert abs(damage - 120.0) < 0.01
 
     def test_multiple_procs_over_duration(self) -> None:
         """6s cooldown: 12s fight = 3 procs (0s, 6s, 12s)."""
-        from src.calculator.item_effects import calculate_eclipse_damage
-
-        damage = calculate_eclipse_damage(
-            target_max_health=1000.0,
-            is_melee=False,
-            fight_duration=12.0,
-        )
+        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        per_proc = effect.source.raw_damage(DamageInputs({}, 18, False, 1000.0, 1000.0))
+        damage = per_proc * (1 + int(12.0 / effect.cooldown))
         # 3 procs * 4% * 1000 = 120
         assert abs(damage - 120.0) < 0.01
 
     def test_zero_target_health_returns_zero(self) -> None:
         """Zero target max HP should result in zero Eclipse damage."""
-        from src.calculator.item_effects import calculate_eclipse_damage
-
-        damage = calculate_eclipse_damage(
-            target_max_health=0.0,
-            is_melee=True,
-            fight_duration=5.0,
-        )
+        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        damage = effect.source.raw_damage(DamageInputs({}, 18, True, 0.0, 0.0))
         assert damage == 0.0
 
     def test_eclipse_appears_in_fight_breakdown(self) -> None:
@@ -2408,32 +2476,32 @@ class TestKrakenSlayerPhantomHitStacking:
 
     def test_kraken_no_rageblade_normal_stacking(self) -> None:
         """Without Rageblade, Kraken procs every 3rd auto normally."""
-        procs, proc_autos = _calculate_kraken_procs(10, set(), 0)
+        procs, proc_autos = _calculate_stacking_procs(10, set(), 0, 3)
         assert procs == 3  # autos 3, 6, 9
         assert proc_autos == [2, 5, 8]  # 0-indexed
 
     def test_10_autos_rageblade_4_procs(self) -> None:
         """10 autos + Rageblade (phantoms at 6,9) = 4 Kraken procs."""
         _, phantom_autos = _calculate_phantom_hits(10, ["Guinsoo's Rageblade"])
-        procs, _ = _calculate_kraken_procs(10, phantom_autos, 0)
+        procs, _ = _calculate_stacking_procs(10, phantom_autos, 0, 3)
         assert procs == 4
 
     def test_12_autos_rageblade_5_procs(self) -> None:
         """12 autos + Rageblade (phantoms at 6,9,12) = 5 Kraken procs."""
         _, phantom_autos = _calculate_phantom_hits(12, ["Guinsoo's Rageblade"])
-        procs, _ = _calculate_kraken_procs(12, phantom_autos, 0)
+        procs, _ = _calculate_stacking_procs(12, phantom_autos, 0, 3)
         assert procs == 5
 
     def test_15_autos_rageblade_6_procs(self) -> None:
         """15 autos + Rageblade (phantoms at 6,9,12,15) = 6 Kraken procs."""
         _, phantom_autos = _calculate_phantom_hits(15, ["Guinsoo's Rageblade"])
-        procs, _ = _calculate_kraken_procs(15, phantom_autos, 0)
+        procs, _ = _calculate_stacking_procs(15, phantom_autos, 0, 3)
         assert procs == 6
 
     def test_17_autos_rageblade_7_procs(self) -> None:
         """17 autos + Rageblade (phantoms at 6,9,12,15) = 7 Kraken procs."""
         _, phantom_autos = _calculate_phantom_hits(17, ["Guinsoo's Rageblade"])
-        procs, _ = _calculate_kraken_procs(17, phantom_autos, 0)
+        procs, _ = _calculate_stacking_procs(17, phantom_autos, 0, 3)
         assert procs == 7
 
     def test_full_fight_kraken_plus_rageblade(self) -> None:
@@ -2470,8 +2538,6 @@ class TestKrakenSlayerPhantomHitStacking:
 
     def test_kraken_damage_scales_with_missing_hp(self) -> None:
         """Later Kraken procs should deal more due to higher missing HP."""
-        from src.calculator.damage import _simulate_kraken_damage
-
         # 9 autos, Kraken procs at autos 3, 6, 9 (indices 2, 5, 8)
         # No armor, melee, level 18 => base = 150 + 5*(18-8) = 200
         # First proc at full HP: missing = 0%, bonus = 1.0x => 200
@@ -2495,8 +2561,6 @@ class TestKrakenSlayerPhantomHitStacking:
 
     def test_kraken_first_proc_at_full_hp_is_base_damage(self) -> None:
         """First Kraken proc at full HP should deal base damage (no bonus)."""
-        from src.calculator.damage import _simulate_kraken_damage
-
         # 3 autos, Kraken procs on auto 3 (index 2), no other damage
         total = _simulate_kraken_damage(
             target_health=3000.0,
@@ -2513,8 +2577,6 @@ class TestKrakenSlayerPhantomHitStacking:
 
     def test_kraken_base_damage_flat_before_level_9(self) -> None:
         """Base damage should be flat 150 (melee) / 120 (ranged) at levels 1-8."""
-        from src.calculator.damage import _simulate_kraken_damage
-
         for lvl in [1, 5, 8]:
             total = _simulate_kraken_damage(
                 target_health=5000.0,
@@ -2544,8 +2606,6 @@ class TestKrakenSlayerPhantomHitStacking:
 
     def test_kraken_level_scaling_melee(self) -> None:
         """Melee Kraken base: 150 flat until 9, then +5/level."""
-        from src.calculator.damage import _simulate_kraken_damage
-
         expected = {9: 155, 10: 160, 14: 180, 18: 200, 20: 210}
         for lvl, exp in expected.items():
             total = _simulate_kraken_damage(
@@ -2564,8 +2624,6 @@ class TestKrakenSlayerPhantomHitStacking:
 
     def test_kraken_level_scaling_ranged(self) -> None:
         """Ranged Kraken base: 120 flat until 9, then +4/level."""
-        from src.calculator.damage import _simulate_kraken_damage
-
         expected = {9: 124, 10: 128, 14: 144, 18: 160, 20: 168}
         for lvl, exp in expected.items():
             total = _simulate_kraken_damage(
@@ -2584,8 +2642,6 @@ class TestKrakenSlayerPhantomHitStacking:
 
     def test_kraken_max_damage_ranged_level_18(self) -> None:
         """Ranged level 18 at 0% target HP should deal 160 * 1.75 = 280."""
-        from src.calculator.damage import _simulate_kraken_damage
-
         # Use very high auto damage to push target to 0 HP before Kraken procs
         total = _simulate_kraken_damage(
             target_health=100.0,
@@ -2619,42 +2675,24 @@ class TestHeartsteelDamage:
 
     def test_heartsteel_damage_calculation(self) -> None:
         """70 + 6% of 3000 max HP = 70 + 180 = 250 raw physical damage."""
-        from src.calculator.item_effects import calculate_heartsteel_damage
-
         stats = {"health": 3000.0}
-        damage = calculate_heartsteel_damage(stats)
+        effect = resolve_damage_effects(_build("Heartsteel")).first_autos[0]
+        damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         assert abs(damage - 250.0) < 0.01
 
     def test_heartsteel_damage_low_health(self) -> None:
         """70 + 6% of 1000 max HP = 70 + 60 = 130 raw physical damage."""
-        from src.calculator.item_effects import calculate_heartsteel_damage
-
         stats = {"health": 1000.0}
-        damage = calculate_heartsteel_damage(stats)
+        effect = resolve_damage_effects(_build("Heartsteel")).first_autos[0]
+        damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         assert abs(damage - 130.0) < 0.01
 
     def test_heartsteel_damage_zero_health(self) -> None:
         """With 0 health the damage is just the base 70."""
-        from src.calculator.item_effects import calculate_heartsteel_damage
-
         stats = {"health": 0.0}
-        damage = calculate_heartsteel_damage(stats)
+        effect = resolve_damage_effects(_build("Heartsteel")).first_autos[0]
+        damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         assert abs(damage - 70.0) < 0.01
-
-    def test_heartsteel_missing_from_effects_returns_zero(self) -> None:
-        """If Heartsteel is not in registry, function returns 0."""
-        from src.calculator.item_effects import (
-            calculate_heartsteel_damage,
-            ITEM_EFFECTS,
-        )
-
-        original = ITEM_EFFECTS.pop("Heartsteel", None)
-        try:
-            damage = calculate_heartsteel_damage({"health": 3000.0})
-            assert damage == 0.0
-        finally:
-            if original is not None:
-                ITEM_EFFECTS["Heartsteel"] = original
 
 
 class TestHexopticsC44BasicDamageAmp:
@@ -2662,18 +2700,14 @@ class TestHexopticsC44BasicDamageAmp:
 
     def test_amp_with_item(self) -> None:
         """With Hexoptics C44, amp should be 10% (1.10 multiplier)."""
-        from src.calculator.item_effects import get_basic_damage_amplifier
-
         items = [{"name": "Hexoptics C44"}]
-        result = get_basic_damage_amplifier(items)
+        result = resolve_damage_effects(items).basic_amp
         assert abs(result - 1.10) < 0.001
 
     def test_no_amp_without_item(self) -> None:
         """Without Hexoptics C44, basic amp should be 1.0."""
-        from src.calculator.item_effects import get_basic_damage_amplifier
-
         items = [{"name": "Infinity Edge"}]
-        result = get_basic_damage_amplifier(items)
+        result = resolve_damage_effects(items).basic_amp
         assert result == 1.0
 
     def test_parsed_values_from_json(self) -> None:
@@ -2780,18 +2814,14 @@ class TestHorizonFocusHypershotAmp:
 
     def test_amplifier_with_item(self) -> None:
         """With Horizon Focus, hypershot amp should be 1.10."""
-        from src.calculator.item_effects import get_hypershot_amplifier
-
         items = [{"name": "Horizon Focus"}]
-        result = get_hypershot_amplifier(items)
+        result = resolve_damage_effects(items).hypershot_amp
         assert abs(result - 1.10) < 0.001
 
     def test_amplifier_without_item(self) -> None:
         """Without Horizon Focus, hypershot amp should be 1.0."""
-        from src.calculator.item_effects import get_hypershot_amplifier
-
         items = [{"name": "Liandry's Torment"}]
-        result = get_hypershot_amplifier(items)
+        result = resolve_damage_effects(items).hypershot_amp
         assert result == 1.0
 
     def test_first_ability_not_amped(self) -> None:
@@ -2947,36 +2977,34 @@ class TestHullbreakerSkipper:
 
     def test_proc_damage_melee(self) -> None:
         """Melee proc: 120% base AD + 5% max HP."""
-        from src.calculator.item_effects import calculate_hullbreaker_proc_damage
-
         stats = {"base_attack_damage": 100.0, "health": 2000.0}
-        damage = calculate_hullbreaker_proc_damage(stats, is_melee=True)
+        effect = resolve_damage_effects(_build("Hullbreaker")).stacking_on_hits[0]
+        damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         # 1.20 * 100 + 0.05 * 2000 = 120 + 100 = 220
         assert abs(damage - 220.0) < 0.1
 
     def test_proc_damage_ranged(self) -> None:
         """Ranged proc: 84% base AD + 3.5% max HP."""
-        from src.calculator.item_effects import calculate_hullbreaker_proc_damage
-
         stats = {"base_attack_damage": 100.0, "health": 2000.0}
-        damage = calculate_hullbreaker_proc_damage(stats, is_melee=False)
+        effect = resolve_damage_effects(_build("Hullbreaker")).stacking_on_hits[0]
+        damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         # 0.84 * 100 + 0.035 * 2000 = 84 + 70 = 154
         assert abs(damage - 154.0) < 0.1
 
     def test_stacking_procs_5_hits(self) -> None:
         """5 autos should yield exactly 1 proc."""
-        procs, proc_autos = _calculate_hullbreaker_procs(5, set())
+        procs, proc_autos = _calculate_stacking_procs(5, set(), 0, 5)
         assert procs == 1
         assert proc_autos == [4]  # 0-indexed, 5th auto
 
     def test_stacking_procs_10_hits(self) -> None:
         """10 autos should yield exactly 2 procs."""
-        procs, _ = _calculate_hullbreaker_procs(10, set())
+        procs, _ = _calculate_stacking_procs(10, set(), 0, 5)
         assert procs == 2
 
     def test_stacking_procs_4_hits_no_proc(self) -> None:
         """4 autos should yield 0 procs."""
-        procs, _ = _calculate_hullbreaker_procs(4, set())
+        procs, _ = _calculate_stacking_procs(4, set(), 0, 5)
         assert procs == 0
 
     def test_phantom_hit_adds_stack_not_damage(self) -> None:
@@ -2985,7 +3013,7 @@ class TestHullbreakerSkipper:
         #   auto 0: 1, auto 1: 2, auto 2: 3, auto 3: 4+1(phantom)=5 -> proc
         #   auto 4: 1
         # Should get 1 proc on auto 3 (earlier than without phantom)
-        procs, proc_autos = _calculate_hullbreaker_procs(5, {3})
+        procs, proc_autos = _calculate_stacking_procs(5, {3}, 0, 5)
         assert procs == 1
         assert 3 in proc_autos  # Proc fires on auto 3, not 4
 
@@ -3029,8 +3057,6 @@ class TestMuramanaMultiCastR:
 
     def test_r_procs_muramana_per_dash(self) -> None:
         """Ahri R has 3 dashes — Muramana should proc 3 times, not 1."""
-        from src.calculator.item_effects import get_muramana_ability_damage
-
         stats = {
             "attack_damage": 80.0,
             "base_attack_damage": 60.0,
@@ -3076,7 +3102,8 @@ class TestMuramanaMultiCastR:
 
         # Muramana ranged ability: 3% max mana per proc * 3 procs
         # = 0.03 * 1500 * 3 = 135 raw physical damage
-        per_proc = get_muramana_ability_damage(stats, False, 1)
+        source = resolve_damage_effects(_build("Muramana")).per_ability_hits[0]
+        per_proc = source.raw_damage(DamageInputs(stats, 18, False, 2000, 2000))
         expected_raw = per_proc * 3
         # After 100 armor: 50% mitigation
         expected_mitigated = expected_raw * 0.5
@@ -3315,44 +3342,14 @@ class TestNavoriFlickerbladeFight:
         )
 
 
-class TestNewItemDamageEffects:
-    """Integration tests for newly implemented item damage effects."""
-
-    def _make_stats(self, **overrides: float) -> dict[str, float]:
-        """Create a minimal champion stats dict."""
-        stats = {
-            "health": 2000.0,
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "armor": 50.0,
-            "magic_resistance": 50.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "base_attack_damage": 100.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "lethality": 0.0,
-            "flat_armor_penetration": 0.0,
-            "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0,
-            "max_mana": 500.0,
-            "bonus_mana": 0.0,
-            "ability_haste": 0.0,
-            "basic_ability_haste": 0.0,
-            "level": 18,
-            "is_melee": True,
-        }
-        stats.update(overrides)
-        return stats
+class TestStormrazor(_FightHarness):
+    """Tests for Stormrazor's first-auto damage."""
 
     def test_stormrazor_first_auto_damage(self) -> None:
         """Stormrazor deals 100 magic damage on first auto (one proc)."""
         stats = self._make_stats()
-        result = calculate_fight_damage(
+        result = self.fight(
             stats,
-            {},
             target_health=2000,
             target_armor=50,
             target_magic_resistance=50,
@@ -3365,13 +3362,16 @@ class TestNewItemDamageEffects:
         assert entry["damage_type"] == "magic"
         assert entry["total_damage"] > 0
 
+
+class TestStatikkShiv(_FightHarness):
+    """Tests for Statikk Shiv's one-shot Electrospark proc."""
+
     def test_statikk_shiv_one_empowered_auto(self) -> None:
         """Reworked Electrospark: ONE empowered auto deals 60 magic damage
         (single-target: the chain lightning has nothing to bounce to)."""
         stats = self._make_stats()
-        result = calculate_fight_damage(
+        result = self.fight(
             stats,
-            {},
             target_health=2000,
             target_armor=50,
             target_magic_resistance=50,
@@ -3387,9 +3387,8 @@ class TestNewItemDamageEffects:
     def test_statikk_shiv_no_autos_no_proc(self) -> None:
         """Without any auto attacks there is no Electrospark proc."""
         stats = self._make_stats()
-        result = calculate_fight_damage(
+        result = self.fight(
             stats,
-            {},
             target_health=2000,
             target_armor=50,
             target_magic_resistance=50,
@@ -3399,12 +3398,15 @@ class TestNewItemDamageEffects:
         )
         assert "on_hit_once_Statikk Shiv" not in result["breakdown"]
 
+
+class TestTitanicHydra(_FightHarness):
+    """Tests for Titanic Hydra's Crescent active."""
+
     def test_titanic_hydra_active_in_breakdown(self) -> None:
         """Titanic Hydra Crescent active appears in fight breakdown."""
         stats = self._make_stats(health=3000.0)
-        result = calculate_fight_damage(
+        result = self.fight(
             stats,
-            {},
             target_health=2000,
             target_armor=50,
             target_magic_resistance=50,
@@ -3417,6 +3419,10 @@ class TestNewItemDamageEffects:
         assert entry["damage_type"] == "physical"
         # 4% of 3000 HP = 120 raw per proc
         assert entry["total_damage"] > 0
+
+
+class TestSpearOfShojin:
+    """Tests for Spear of Shojin's basic-ability haste rule."""
 
     def test_spear_of_shojin_basic_haste_reduces_q_cd(self) -> None:
         """Basic ability haste reduces Q/W/E cooldowns but not R.
@@ -3443,37 +3449,8 @@ class TestNewItemDamageEffects:
         assert abs(r_cd - 60.0) < 0.01
 
 
-class TestSunderedSky:
+class TestSunderedSky(_FightHarness):
     """Tests for Sundered Sky first-auto crit modifier."""
-
-    def _make_stats(self, **overrides: float) -> dict[str, float]:
-        """Create a minimal champion stats dict."""
-        stats = {
-            "health": 2000.0,
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "armor": 50.0,
-            "magic_resistance": 50.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "base_attack_damage": 100.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "lethality": 0.0,
-            "flat_armor_penetration": 0.0,
-            "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0,
-            "max_mana": 500.0,
-            "bonus_mana": 0.0,
-            "ability_haste": 0.0,
-            "basic_ability_haste": 0.0,
-            "level": 18,
-            "is_melee": True,
-        }
-        stats.update(overrides)
-        return stats
 
     def test_sundered_sky_first_auto_crits(self) -> None:
         """First auto with Sundered Sky always crits at reduced ratio."""
@@ -3557,36 +3534,8 @@ class TestSunderedSky:
         assert parsed["cooldown"] == 10.0
 
 
-class TestVoltaicCyclosword:
+class TestVoltaicCyclosword(_FightHarness):
     """Tests for Voltaic Cyclosword energized first-auto damage."""
-
-    def _make_stats(self, **overrides: float) -> dict[str, float]:
-        stats = {
-            "health": 2000.0,
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "armor": 50.0,
-            "magic_resistance": 50.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "base_attack_damage": 100.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "lethality": 0.0,
-            "flat_armor_penetration": 0.0,
-            "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0,
-            "max_mana": 500.0,
-            "bonus_mana": 0.0,
-            "ability_haste": 0.0,
-            "basic_ability_haste": 0.0,
-            "level": 18,
-            "is_melee": True,
-        }
-        stats.update(overrides)
-        return stats
 
     def test_voltaic_first_auto_damage(self) -> None:
         """Voltaic Cyclosword deals physical damage on first auto."""
@@ -3700,40 +3649,12 @@ class TestVoltaicCyclosword:
         assert entry["total_damage"] == 200.0
 
 
-class TestUnendingDespair:
+class TestUnendingDespair(_FightHarness):
     """Tests for Unending Despair periodic AoE damage."""
-
-    def _make_stats(self, **overrides: float) -> dict[str, float]:
-        stats = {
-            "health": 3000.0,
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "armor": 50.0,
-            "magic_resistance": 50.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "base_attack_damage": 100.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 1000.0,
-            "lethality": 0.0,
-            "flat_armor_penetration": 0.0,
-            "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0,
-            "max_mana": 500.0,
-            "bonus_mana": 0.0,
-            "ability_haste": 0.0,
-            "basic_ability_haste": 0.0,
-            "level": 18,
-            "is_melee": True,
-        }
-        stats.update(overrides)
-        return stats
 
     def test_unending_despair_in_breakdown(self) -> None:
         """Unending Despair Anguish appears in fight breakdown."""
-        stats = self._make_stats()
+        stats = self._make_stats(health=3000.0, bonus_health=1000.0)
         result = calculate_fight_damage(
             stats,
             {},
@@ -3751,7 +3672,7 @@ class TestUnendingDespair:
 
     def test_unending_despair_proc_count(self) -> None:
         """Procs at 4s intervals: 10s fight = 2 procs (at 4s and 8s)."""
-        stats = self._make_stats()
+        stats = self._make_stats(health=3000.0, bonus_health=1000.0)
         result = calculate_fight_damage(
             stats,
             {},
@@ -3769,7 +3690,7 @@ class TestUnendingDespair:
 
     def test_unending_despair_no_bonus_health_no_damage(self) -> None:
         """With 0 bonus health, Anguish deals no damage."""
-        stats = self._make_stats(bonus_health=0.0)
+        stats = self._make_stats(health=3000.0, bonus_health=0.0)
         result = calculate_fight_damage(
             stats,
             {},
@@ -3801,7 +3722,7 @@ class TestUnendingDespair:
         patched["bonus_hp_ratio"] = 0.10  # 10% instead of 3%
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Unending Despair", patched)
 
-        stats = self._make_stats()
+        stats = self._make_stats(health=3000.0, bonus_health=1000.0)
         result = calculate_fight_damage(
             stats,
             {},
@@ -3817,36 +3738,8 @@ class TestUnendingDespair:
         assert abs(entry["total_damage"] - 200.0) < 1.0
 
 
-class TestTerminusPenetration:
+class TestTerminusPenetration(_FightHarness):
     """Tests for Terminus armor/magic penetration stacking."""
-
-    def _make_stats(self, **overrides: float) -> dict[str, float]:
-        stats = {
-            "health": 2000.0,
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "armor": 50.0,
-            "magic_resistance": 50.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "base_attack_damage": 100.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "lethality": 0.0,
-            "flat_armor_penetration": 0.0,
-            "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0,
-            "max_mana": 500.0,
-            "bonus_mana": 0.0,
-            "ability_haste": 0.0,
-            "basic_ability_haste": 0.0,
-            "level": 18,
-            "is_melee": True,
-        }
-        stats.update(overrides)
-        return stats
 
     def test_terminus_pen_reduces_effective_armor(self) -> None:
         """Terminus pen reduces effective armor vs no Terminus."""
@@ -3902,54 +3795,6 @@ class TestTerminusPenetration:
         )
         assert result_with["total_damage"] > result_no["total_damage"]
 
-    def test_terminus_pen_average_12_autos(self) -> None:
-        """12 autos: pen per auto = 0,10,10,20,20,30,30,30,30,30,30,30.
-
-        Average = 270/12 = 22.5%.
-        """
-        from src.calculator.item_effects import get_terminus_pen_stacks
-
-        avg_pen = get_terminus_pen_stacks(12)
-        assert abs(avg_pen - 0.225) < 0.001
-
-    def test_terminus_pen_6_autos(self) -> None:
-        """6 autos: pen = 0,10,10,20,20,30 → avg = 90/6 = 15%."""
-        from src.calculator.item_effects import get_terminus_pen_stacks
-
-        assert abs(get_terminus_pen_stacks(6) - 0.15) < 0.001
-
-    def test_terminus_pen_2_autos(self) -> None:
-        """2 autos: pen = 0,10 → avg = 5%."""
-        from src.calculator.item_effects import get_terminus_pen_stacks
-
-        assert abs(get_terminus_pen_stacks(2) - 0.05) < 0.001
-
-    def test_terminus_pen_4_autos(self) -> None:
-        """4 autos: pen = 0,10,10,20 → avg = 40/4 = 10%."""
-        from src.calculator.item_effects import get_terminus_pen_stacks
-
-        assert abs(get_terminus_pen_stacks(4) - 0.10) < 0.001
-
-    def test_terminus_pen_zero_autos_no_pen(self) -> None:
-        """With 0 autos, no pen stacks."""
-        from src.calculator.item_effects import get_terminus_pen_stacks
-
-        assert get_terminus_pen_stacks(0) == 0.0
-
-    def test_terminus_pen_one_auto_no_pen(self) -> None:
-        """With 1 auto, no dark hits (dark = every other auto)."""
-        from src.calculator.item_effects import get_terminus_pen_stacks
-
-        assert get_terminus_pen_stacks(1) == 0.0
-
-    def test_terminus_pen_caps_at_30_long_fight(self) -> None:
-        """With many autos, average pen approaches 30% but never exceeds."""
-        from src.calculator.item_effects import get_terminus_pen_stacks
-
-        avg = get_terminus_pen_stacks(100)
-        assert avg < 0.30
-        assert avg > 0.28  # Should be close to 30%
-
     def test_terminus_pen_parsed_values(self) -> None:
         """Parser extracts dark_pen_per_stack and dark_max_stacks."""
         from src.calculator.passive_parser import parse_item_effect
@@ -3962,36 +3807,8 @@ class TestTerminusPenetration:
         assert parsed["dark_max_stacks"] == 3
 
 
-class TestCollectorThreshold:
+class TestCollectorThreshold(_FightHarness):
     """Tests for The Collector execution threshold display."""
-
-    def _make_stats(self, **overrides: float) -> dict[str, float]:
-        stats = {
-            "health": 2000.0,
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "armor": 50.0,
-            "magic_resistance": 50.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "base_attack_damage": 100.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "lethality": 0.0,
-            "flat_armor_penetration": 0.0,
-            "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0,
-            "max_mana": 500.0,
-            "bonus_mana": 0.0,
-            "ability_haste": 0.0,
-            "basic_ability_haste": 0.0,
-            "level": 18,
-            "is_melee": True,
-        }
-        stats.update(overrides)
-        return stats
 
     def test_collector_shows_threshold_not_damage(self) -> None:
         """Collector shows execution threshold but adds 0 damage."""

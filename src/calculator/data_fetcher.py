@@ -7,6 +7,7 @@ only reads from the local cache in the ``data/`` directory.
 
 import json
 import time
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -16,13 +17,26 @@ DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 CACHE_MAX_AGE_SECONDS = 24 * 60 * 60
 
 
+@lru_cache(maxsize=8)
+def _read_json_version(data_path: Path, _modified_ns: int) -> dict[str, Any]:
+    """Parse one immutable on-disk JSON version.
+
+    ``modified_ns`` exists to make the file version part of the cache key; the
+    path alone would keep serving stale data after ``data_updater`` replaces a
+    cache file.
+    """
+    with open(data_path, "r", encoding="utf-8") as data_file:
+        return json.load(data_file)
+
+
 def _get_cache_metadata_path(data_directory: Path, filename: str) -> Path:
     """Return the path to the cache metadata file for a given data file."""
     return data_directory / f".{filename}.meta"
 
 
 def _is_cache_valid(
-    data_directory: Path, filename: str,
+    data_directory: Path,
+    filename: str,
     max_age_seconds: int = CACHE_MAX_AGE_SECONDS,
 ) -> bool:
     """Check whether the cached file exists and is not stale."""
@@ -50,6 +64,7 @@ def _write_cache(data_directory: Path, filename: str, data: dict[str, Any]) -> N
 
     with open(data_path, "w", encoding="utf-8") as data_file:
         json.dump(data, data_file, indent=2)
+    _read_json_version.cache_clear()
 
     metadata = {"fetched_at": time.time(), "filename": filename}
     with open(meta_path, "w", encoding="utf-8") as meta_file:
@@ -57,10 +72,9 @@ def _write_cache(data_directory: Path, filename: str, data: dict[str, Any]) -> N
 
 
 def _read_cache(data_directory: Path, filename: str) -> dict[str, Any]:
-    """Read cached data from disk."""
-    data_path = data_directory / filename
-    with open(data_path, "r", encoding="utf-8") as data_file:
-        return json.load(data_file)
+    """Read cached data, parsing each path-and-mtime version only once."""
+    data_path = (data_directory / filename).resolve()
+    return _read_json_version(data_path, data_path.stat().st_mtime_ns)
 
 
 def _validate_champion_data(data: dict[str, Any]) -> None:
@@ -182,7 +196,9 @@ def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str
     raise KeyError(f"Champion '{name}' not found in data")
 
 
-def get_item_by_name(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
+def get_item_by_name(
+    name: str, data_directory: Path = DEFAULT_DATA_DIR
+) -> dict[str, Any]:
     """Get data for a specific item by name.
 
     Args:

@@ -103,6 +103,33 @@ def parse_abilities(
     )
 
 
+def parse_champion_abilities(
+    champion_data: dict[str, Any],
+    level: int,
+    total_ability_power: float,
+    ability_ranks: dict[str, int] | None = None,
+    champion_stats: dict[str, float] | None = None,
+    target_stats: dict[str, float] | None = None,
+    champion_options: dict[str, Any] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """Parse loaded champion data through its display-name dispatcher.
+
+    Prefer this entry point when the cached champion object is already in
+    hand. It prevents data keys such as ``KogMaw`` from accidentally bypassing
+    the registered ``Kog'Maw`` module.
+    """
+    return parse_abilities(
+        champion_data["name"],
+        champion_data,
+        level,
+        total_ability_power,
+        ability_ranks=ability_ranks,
+        champion_stats=champion_stats,
+        target_stats=target_stats,
+        champion_options=champion_options,
+    )
+
+
 def get_champion_options_meta(champion_name: str) -> dict[str, list]:
     """Return a champion's option/assumption metadata for the frontend.
 

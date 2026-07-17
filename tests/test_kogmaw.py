@@ -9,7 +9,7 @@ Reference damage (level 9, rank 5 Q, rank 3 W, rank 3 E, rank 1 R, 80 AP):
 
 import pytest
 
-from src.calculator.champions.kogmaw import parse_abilities
+from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import calculate_fight_damage
 
 # ---------------------------------------------------------------------------

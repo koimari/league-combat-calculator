@@ -5,12 +5,11 @@ physical, or magic damage) for a given champion/level/target configuration.
 """
 
 import time
+from dataclasses import replace
 from typing import Any
 
-from .damage import calculate_fight_damage
 from .data_fetcher import fetch_item_data, get_item_by_name
-from .champions import parse_abilities
-from .stats import calculate_total_stats
+from .pipeline import FightParams, run_fight
 
 # Items unavailable on Summoner's Rift.
 ITEM_BLOCKLIST = {
@@ -132,70 +131,17 @@ def _conflicts_with_build(
 
 
 def _evaluate_build(
-    champion_name: str,
     champion_data: dict[str, Any],
     level: int,
     items: list[dict[str, Any]],
-    target_health: float,
-    target_bonus_health: float,
-    target_armor: float,
-    target_mr: float,
-    fight_duration: float,
-    auto_attack_uptime: float,
-    ability_haste_override: float | None,
-    one_rotation: bool,
-    include_actives: bool,
-    cast_order: list[str] | None,
-    auto_attacks_only: bool,
-    ability_ranks: dict[str, int] | None,
-    champion_options: dict[str, Any] | None,
-    target_stats: dict[str, float] | None,
+    fight_params: FightParams,
     objective: str,
 ) -> float:
     """Evaluate a build and return the damage score for the given objective.
 
     Creates fresh copies of mutable state to avoid cross-call contamination.
     """
-    champion_stats = calculate_total_stats(champion_data, level, items)
-    ability_haste = (
-        ability_haste_override
-        if ability_haste_override is not None
-        else champion_stats.get("ability_haste", 0.0)
-    )
-
-    display_name = champion_data.get("name", champion_name)
-    ability_damages = parse_abilities(
-        display_name,
-        champion_data,
-        level,
-        champion_stats["ability_power"],
-        ability_ranks=ability_ranks,
-        champion_stats=champion_stats,
-        target_stats=target_stats,
-        champion_options=champion_options,
-    )
-
-    # calculate_fight_damage mutates champion_stats (e.g. attack speed
-    # buffs), so we pass a copy to keep our original clean.
-    stats_copy = dict(champion_stats)
-
-    result = calculate_fight_damage(
-        champion_stats=stats_copy,
-        ability_damages=ability_damages,
-        target_health=target_health,
-        target_bonus_health=target_bonus_health,
-        target_armor=target_armor,
-        target_magic_resistance=target_mr,
-        fight_duration_seconds=fight_duration,
-        auto_attack_uptime=auto_attack_uptime,
-        ability_haste=ability_haste,
-        items=items,
-        one_rotation=one_rotation,
-        include_actives=include_actives,
-        cast_order=cast_order,
-        auto_attacks_only=auto_attacks_only,
-        deterministic=True,
-    )
+    result = run_fight(champion_data, level, items, fight_params)
 
     if objective == "physical_damage":
         # Sum physical-type entries from breakdown
@@ -215,7 +161,6 @@ def _evaluate_build(
 
 
 def _greedy_fill(
-    champion_name: str,
     champion_data: dict[str, Any],
     level: int,
     locked_legendaries: list[dict[str, Any]],
@@ -260,7 +205,6 @@ def _greedy_fill(
                 trial_items = [boots] + trial_items
 
             score = _evaluate_build(
-                champion_name,
                 champion_data,
                 level,
                 trial_items,
@@ -285,7 +229,6 @@ def _greedy_fill(
         for candidate in boots_pool:
             trial_items = [candidate] + current
             score = _evaluate_build(
-                champion_name,
                 champion_data,
                 level,
                 trial_items,
@@ -299,7 +242,6 @@ def _greedy_fill(
     # Final score
     final_items = ([boots] if boots else []) + current
     final_score = _evaluate_build(
-        champion_name,
         champion_data,
         level,
         final_items,
@@ -309,7 +251,6 @@ def _greedy_fill(
 
 
 def _hill_climb(
-    champion_name: str,
     champion_data: dict[str, Any],
     level: int,
     legendaries: list[dict[str, Any]],
@@ -328,7 +269,6 @@ def _hill_climb(
 
     all_items = ([current_boots] if current_boots else []) + current
     best_score = _evaluate_build(
-        champion_name,
         champion_data,
         level,
         all_items,
@@ -362,7 +302,6 @@ def _hill_climb(
                 trial_items = ([current_boots] if current_boots else []) + trial
 
                 score = _evaluate_build(
-                    champion_name,
                     champion_data,
                     level,
                     trial_items,
@@ -386,7 +325,6 @@ def _hill_climb(
                     continue
                 trial_items = [candidate] + current
                 score = _evaluate_build(
-                    champion_name,
                     champion_data,
                     level,
                     trial_items,
@@ -406,22 +344,9 @@ def _hill_climb(
 
 
 def optimize_build(
-    champion_name: str,
     champion_data: dict[str, Any],
     level: int,
-    target_health: float = 2000.0,
-    target_bonus_health: float = 0.0,
-    target_armor: float = 50.0,
-    target_mr: float = 40.0,
-    fight_mode: str = "one_rotation",
-    fight_duration: float = 8.0,
-    include_auto_attacks: bool = False,
-    auto_attack_uptime: float = 0.8,
-    auto_attacks_only: bool = False,
-    ability_ranks: dict[str, int] | None = None,
-    include_actives: bool = True,
-    cast_order: list[str] | None = None,
-    champion_options: dict[str, Any] | None = None,
+    fight_params: FightParams | None = None,
     objective: str = "total_damage",
     locked_items: list[str] | None = None,
     locked_boots: str | None = None,
@@ -430,22 +355,9 @@ def optimize_build(
     """Find the optimal item build for a champion.
 
     Args:
-        champion_name: Champion display name.
         champion_data: Raw champion data dict.
         level: Champion level (1-20).
-        target_health: Target max HP.
-        target_bonus_health: Target bonus HP.
-        target_armor: Target armor.
-        target_mr: Target magic resistance.
-        fight_mode: "one_rotation", "timed", or "auto_only".
-        fight_duration: Fight length in seconds (for timed mode).
-        include_auto_attacks: Whether to include auto attacks.
-        auto_attack_uptime: Fraction of fight spent auto-attacking.
-        auto_attacks_only: If True, only auto attacks (no abilities).
-        ability_ranks: Optional ability rank overrides.
-        include_actives: Whether to include item actives.
-        cast_order: Ability cast order (permutation of Q, W, E, R).
-        champion_options: Champion-specific config.
+        fight_params: Shared target, mode, ability, and champion configuration.
         objective: "total_damage", "physical_damage", or "magic_damage".
         locked_items: Item names already selected (optimizer won't change these).
         locked_boots: Boots name already selected (optimizer won't change).
@@ -456,39 +368,13 @@ def optimize_build(
     """
     start_time = time.perf_counter()
 
-    # Resolve fight parameters
-    is_one_rotation = fight_mode == "one_rotation"
-    if is_one_rotation:
-        effective_duration = 5.0
-        effective_uptime = 0.0
-    elif auto_attacks_only:
-        effective_duration = fight_duration
-        effective_uptime = auto_attack_uptime
-    else:
-        effective_duration = fight_duration
-        effective_uptime = auto_attack_uptime if include_auto_attacks else 0.0
-
-    target_stats = {
-        "target_max_health": target_health,
-        "target_current_health": target_health,
-        "target_missing_health": 0.0,
-    }
+    if fight_params is None:
+        fight_params = FightParams.from_request({}, deterministic=True)
+    elif not fight_params.deterministic:
+        fight_params = replace(fight_params, deterministic=True)
 
     eval_kwargs = {
-        "target_health": target_health,
-        "target_bonus_health": target_bonus_health,
-        "target_armor": target_armor,
-        "target_mr": target_mr,
-        "fight_duration": effective_duration,
-        "auto_attack_uptime": effective_uptime,
-        "ability_haste_override": None,
-        "one_rotation": is_one_rotation,
-        "include_actives": include_actives,
-        "cast_order": cast_order,
-        "auto_attacks_only": auto_attacks_only,
-        "ability_ranks": ability_ranks,
-        "champion_options": champion_options,
-        "target_stats": target_stats,
+        "fight_params": fight_params,
         "objective": objective,
     }
 
@@ -550,7 +436,6 @@ def optimize_build(
 
     for seed in seeds:
         legendaries, boots, greedy_score = _greedy_fill(
-            champion_name,
             champion_data,
             level,
             resolved_locked,
@@ -566,7 +451,6 @@ def optimize_build(
         total_evals += len(pool) * slots_to_fill + len(boots_pool)
 
         legendaries, boots, hc_score, hc_evals = _hill_climb(
-            champion_name,
             champion_data,
             level,
             legendaries,

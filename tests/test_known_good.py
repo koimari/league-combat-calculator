@@ -13,8 +13,7 @@ What each case asserts, and how strictly:
   expiry, ability haste 0 / 15 / 15 per case. The expected totals anchor the
   calculator's validated output for that scenario; they are patch-sensitive
   (ability/item numbers get rebalanced) and are re-derived from the wiki JSON
-  when a data refresh moves them -- see the "Stale test constants" tables in
-  docs/refactors/campaign-2026-07.md. Last reconciled at patch 16.13.1.
+  when a data refresh moves them. Last reconciled at patch 16.13.1.
 
 These tests are the authority on the known-good scenarios. A previous
 companion file, tests/Known_Good.txt, described a DIFFERENT scenario (8s
@@ -28,7 +27,9 @@ sorc_shoes, void_staff, rabadons) come from tests/conftest.py.
 """
 
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.ahri import parse_abilities as parse_ahri_abilities
+from src.calculator.champions import (
+    parse_champion_abilities as parse_ahri_abilities,
+)
 from src.calculator.damage import calculate_fight_damage
 
 # ──────────────────────────────────────────────────────────────────────

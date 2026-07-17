@@ -7,9 +7,40 @@ from src.calculator.optimizer import (
     exclusivity_groups,
     get_eligible_legendaries,
     get_eligible_boots,
-    optimize_build,
+    optimize_build as _optimize_build,
     _SPELLBLADE_ITEMS,
 )
+from src.calculator.pipeline import FightParams
+
+_FIGHT_PARAM_KEYS = {
+    "target_health",
+    "target_bonus_health",
+    "target_armor",
+    "target_mr",
+    "fight_mode",
+    "fight_duration",
+    "include_auto_attacks",
+    "auto_attack_uptime",
+    "auto_attacks_only",
+    "ability_ranks",
+    "include_actives",
+    "cast_order",
+    "champion_options",
+}
+
+
+def optimize_build(_champion_name, champion_data, level, **kwargs):
+    """Keep scenarios readable while exercising the public FightParams seam."""
+    request_values = {
+        key: kwargs.pop(key) for key in tuple(kwargs) if key in _FIGHT_PARAM_KEYS
+    }
+    fight_params = FightParams.from_request(request_values, deterministic=True)
+    return _optimize_build(
+        champion_data,
+        level,
+        fight_params=fight_params,
+        **kwargs,
+    )
 
 
 class TestItemPools:

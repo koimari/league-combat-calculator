@@ -6,8 +6,8 @@ Why each slot is non-generic:
   the per-tick "Magic Damage" first), plus the empowered-auto bonus
   that Trample grants once per cast, which scales with champion LEVEL
   (not rank) and is baked into the cast total rather than emitted as an
-  on-hit. Phase 3b confirmed this shape does not fit toggle_dot (it is
-  a total-attribute read plus an add-once on-hit addend).
+  on-hit. This is a total-attribute read plus an add-once on-hit addend,
+  so the mechanic stays champion-local.
 - Q (Pulverize) / W (Headbutt) are fully generic single-hit magic
   damage — auto-mode ``simple_damage``, exactly the generic path the
   legacy module reached by calling the generic parser and patching its

@@ -1,0 +1,88 @@
+"""Tests for the shared stats -> abilities -> fight pipeline."""
+
+import pytest
+
+from src.calculator.pipeline import FightParams, run_fight
+
+
+@pytest.mark.parametrize(
+    ("request_data", "expected_duration", "expected_uptime", "one_rotation"),
+    [
+        ({}, 5.0, 0.0, True),
+        (
+            {
+                "fight_mode": "timed",
+                "fight_duration": 12,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 0.7,
+            },
+            12.0,
+            0.7,
+            False,
+        ),
+        (
+            {
+                "fight_mode": "timed",
+                "fight_duration": 12,
+                "include_auto_attacks": False,
+                "auto_attack_uptime": 0.7,
+            },
+            12.0,
+            0.0,
+            False,
+        ),
+        (
+            {
+                "fight_mode": "auto_only",
+                "fight_duration": 12,
+                "include_auto_attacks": False,
+                "auto_attack_uptime": 0.7,
+                "auto_attacks_only": True,
+            },
+            12.0,
+            0.7,
+            False,
+        ),
+    ],
+)
+def test_fight_params_resolve_modes(
+    request_data, expected_duration, expected_uptime, one_rotation
+):
+    params = FightParams.from_request(request_data)
+
+    assert params.fight_duration_seconds == expected_duration
+    assert params.auto_attack_uptime == expected_uptime
+    assert params.one_rotation is one_rotation
+
+
+def test_request_defaults_have_one_canonical_home():
+    params = FightParams.from_request({})
+
+    assert params.target_health == 1000.0
+    assert params.target_bonus_health == 0.0
+    assert params.target_armor == 100.0
+    assert params.target_magic_resistance == 100.0
+    assert params.deterministic is False
+
+
+@pytest.mark.parametrize(
+    ("request_data", "message"),
+    [
+        ({"cast_order": ["Q", "Q", "E", "R"]}, "Cast order must"),
+        ({"ability_ranks": {"Q": 6}}, "Q rank must be 0-5"),
+        ({"ability_ranks": {"R": 4}}, "R rank must be 0-3"),
+    ],
+)
+def test_fight_params_reject_invalid_shared_inputs(request_data, message):
+    with pytest.raises(ValueError, match=message):
+        FightParams.from_request(request_data)
+
+
+def test_run_fight_builds_fresh_stats_and_abilities(ahri_data):
+    params = FightParams.from_request({}, deterministic=True)
+
+    result = run_fight(ahri_data, 18, [], params)
+
+    assert result["total_damage"] > 0
+    assert "Q" in result["breakdown"]
+    assert result["champion_stats"]["ability_power"] == 0.0

@@ -31,7 +31,7 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
-    on_hit_entry,
+    ability_on_hit_entry,
     pct_health_per_hit,
     simple_damage,
 )
@@ -98,15 +98,18 @@ def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_hit is None:
         return None
 
-    entry = on_hit_entry(ability.get("name", "Bio-Arcane Barrage"), per_hit, "magic")
-    entry.update(
-        rank=rank,
+    name = ability.get("name", "Bio-Arcane Barrage")
+    return ability_on_hit_entry(
+        name,
+        rank,
+        "magic",
+        {
+            "name": f"{name} (on-hit)",
+            "damage_per_hit": per_hit,
+            "damage_type": "magic",
+        },
         cooldown=extract_cooldown(ability, rank),
-        damage_type="magic",
-        total_raw=0.0,
-        magic_damage=0.0,
     )
-    return entry
 
 
 _living_artillery_base = simple_damage(attr="Minimum Magic Damage", dmg_type="magic")

@@ -27,7 +27,13 @@ data, hence the module constant.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .slotlib import by_option, pct_health_per_hit, simple_damage, stat_buff
+from .slotlib import (
+    ability_on_hit_entry,
+    by_option,
+    pct_health_per_hit,
+    simple_damage,
+    stat_buff,
+)
 
 # Silver Bolts procs on every 3rd basic attack (wiki prose, not JSON).
 _SILVER_BOLTS_STACKS = 3
@@ -65,19 +71,17 @@ def _silver_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     name = ability.get("name", "Silver Bolts")
-    return {
-        "name": name,
-        "rank": rank,
-        "damage_type": "true",
-        "total_raw": 0.0,
-        "true_damage": 0.0,
-        "on_hit": {
+    return ability_on_hit_entry(
+        name,
+        rank,
+        "true",
+        {
             "name": name,
             "damage_per_hit": per_hit,
             "damage_type": "true",
             "stacks_required": _SILVER_BOLTS_STACKS,
         },
-    }
+    )
 
 
 OPTIONS = [

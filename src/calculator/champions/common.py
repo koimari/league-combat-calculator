@@ -12,7 +12,11 @@ def calculate_ability_damage(
     scaling_ratio: float,
     scaling_stat: float,
 ) -> float:
-    """Calculate raw ability damage before resistances.
+    """Public scalar convenience for base + ratio × stat damage.
+
+    This package-level compatibility helper is intentionally separate from
+    the champion JSON path, which resolves arbitrary modifier units through
+    ``slotlib.sum_modifiers`` and ``scaling.resolve_scaling``.
 
     Formula: base_damage + (scaling_ratio * scaling_stat)
 

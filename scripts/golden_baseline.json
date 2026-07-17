@@ -25932,12 +25932,7 @@
     }
   },
   "metadata": {
-    "build_substitutions": [
-      {
-        "requested": "Luden's Companion",
-        "used": "Luden's Echo"
-      }
-    ],
+    "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1783743759.197702,
     "git_head": "eda50e2c8bfa947331d1804ba2e99ffd016f3888",

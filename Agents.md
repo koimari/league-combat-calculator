@@ -49,4 +49,4 @@ After completing any task:
 
 - **Windows filenames:** `data_updater.py` monkey-patches `lolstaticdata`'s `download_soup` to strip colons from cache filenames (illegal on Windows)
 - **Wiki parser bugs:** Some champions (Heimerdinger, Sona, Karma, Nidalee) previously crashed the lolstaticdata parser due to `nvalues=None` — these were patched in the local copy
-- **Item names:** Parser configuration and build scenarios use the exact names in `data/items.json`; verify the cached name before adding an item.
+- **Item name mismatches:** Some JSON item names differ from wiki names (e.g., "Luden's Echo" vs "Luden's Companion") — `passive_parser.py` has `_NAME_ALIASES` to handle this

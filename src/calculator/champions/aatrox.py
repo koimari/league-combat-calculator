@@ -5,15 +5,13 @@ Why each slot is non-generic:
   ``stat_buff`` in percent_of mode (BUFF phase, so Q/W scale off the
   buffed AD).
 - Q (The Darkin Blade) is three sequential casts with individually
-  named damage attributes, summed by ``multi_hit_sum``; the
-  ``sweetspot`` option (default True) picks the sweetspot triad over
-  the normal-cast triad via ``by_option``.
+  named damage attributes; ``_darkin_blade`` sums the sweetspot or
+  normal triad selected by the ``sweetspot`` option.
 - W (Infernal Chains) hits twice — the "Total Damage" attribute
   (initial + pull-back combined) instead of the single-hit
   "Physical Damage" the classifier would find.
 - P (Deathbringer Stance) is on-hit magic damage as a per-LEVEL
-  percentage of target max health — ``on_hit_pct_health`` with
-  scale="level".
+  percentage of target max health — champion-local ``_deathbringer_stance``.
 - E (Umbral Dash) is a dash with healing amp only — no damage, absent
   from the slot map.
 
@@ -21,11 +19,15 @@ All numeric values are read from the champion JSON data; nothing is
 hardcoded.
 """
 
-from .engine import build_parser
+from typing import Any
+
+from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import (
-    by_option,
-    multi_hit_sum,
-    on_hit_pct_health,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    on_hit_entry,
+    pct_health_per_hit,
     simple_damage,
     stat_buff,
 )
@@ -40,6 +42,51 @@ _Q_NORMAL_ATTRS = [
     "Second Cast Damage",
     "Third Cast Damage",
 ]
+
+
+def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: sum all three sweetspot or normal casts into one entry."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    attrs = (
+        _Q_SWEETSPOT_ATTRS
+        if bool(ctx.options.get("sweetspot", True))
+        else _Q_NORMAL_ATTRS
+    )
+    total = sum(
+        extract_named(ability, attr, rank, ctx.stats, ctx.target) for attr in attrs
+    )
+    return damage_entry(
+        ability.get("name", "The Darkin Blade"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+
+
+def _deathbringer_stance(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: per-level target-max-health on-hit damage."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    per_hit = pct_health_per_hit(
+        ability,
+        "Max Health Damage",
+        ctx.level,
+        ctx.target,
+    )
+    if per_hit is None:
+        return None
+    return on_hit_entry(ability.get("name", "Deathbringer Stance"), per_hit, "magic")
+
+
+_deathbringer_stance.phase = ONHIT
 
 OPTIONS = [
     {"key": "sweetspot", "type": "bool", "default": True, "label": "Q Sweetspot hits"},
@@ -58,16 +105,9 @@ SLOTS = {
         percent_of="attack_damage",
         apply_to=("attack_damage", "bonus_attack_damage"),
     ),
-    "Q": by_option(
-        "sweetspot",
-        {
-            True: multi_hit_sum(_Q_SWEETSPOT_ATTRS, dmg_type="physical"),
-            False: multi_hit_sum(_Q_NORMAL_ATTRS, dmg_type="physical"),
-        },
-        default=True,
-    ),
+    "Q": _darkin_blade,
     "W": simple_damage(attr="Total Damage", dmg_type="physical"),
-    "P": on_hit_pct_health("Max Health Damage", "magic", scale="level"),
+    "P": _deathbringer_stance,
 }
 
 parse_abilities = build_parser(SLOTS, "Aatrox")

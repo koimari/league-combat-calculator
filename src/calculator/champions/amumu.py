@@ -14,7 +14,7 @@ Why each slot is non-generic:
   ``cooldown="recharge"``.
 - W (Despair) is a toggle DoT (0.5 s ticks, ``w_seconds`` option) whose
   entry carries the per-tick display keys (``damage_per_tick`` /
-  ``total_ticks``) that the shared toggle_dot archetype's standard
+  ``total_ticks``) that a standard damage entry
   entry shape does not include — custom fn. Its %maxHP-per-100-AP
   compound unit resolves automatically via scaling.py as long as the
   target stats reach ``extract_named``.

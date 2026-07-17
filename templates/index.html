@@ -268,21 +268,21 @@
                             <span class="stat-icon-inline" data-stat="hp"></span>
                             Base HP
                         </label>
-                        <input type="number" id="target-base-health" value="1000" min="1" max="10000" step="50">
+                        <input type="number" id="target-base-health" value="{{ default_target.health | int }}" min="1" max="10000" step="50">
                     </div>
                     <div class="enemy-stat">
                         <label for="target-bonus-health">
                             <span class="stat-icon-inline" data-stat="hp"></span>
                             Bonus HP
                         </label>
-                        <input type="number" id="target-bonus-health" value="0" min="0" max="10000" step="50">
+                        <input type="number" id="target-bonus-health" value="{{ default_target.bonus_health | int }}" min="0" max="10000" step="50">
                     </div>
                     <div class="enemy-stat">
                         <label>
                             <span class="stat-icon-inline" data-stat="hp"></span>
                             Total HP
                         </label>
-                        <span class="enemy-total-hp" id="target-total-health">1000</span>
+                        <span class="enemy-total-hp" id="target-total-health">{{ (default_target.health + default_target.bonus_health) | int }}</span>
                     </div>
                 </div>
                 <div class="enemy-stats-row">
@@ -291,14 +291,14 @@
                             <span class="stat-icon-inline" data-stat="armor"></span>
                             Armor
                         </label>
-                        <input type="number" id="target-armor" value="100" min="0" max="500" step="5">
+                        <input type="number" id="target-armor" value="{{ default_target.armor | int }}" min="0" max="500" step="5">
                     </div>
                     <div class="enemy-stat">
                         <label for="target-mr">
                             <span class="stat-icon-inline" data-stat="mr"></span>
                             MR
                         </label>
-                        <input type="number" id="target-mr" value="100" min="0" max="500" step="5">
+                        <input type="number" id="target-mr" value="{{ default_target.mr | int }}" min="0" max="500" step="5">
                     </div>
                 </div>
             </div>
@@ -320,8 +320,8 @@
                 <div id="time-based-options" class="time-options hidden">
                     <div class="slider-row">
                         <label for="fight-duration">Duration</label>
-                        <span class="slider-value"><span id="duration-display">8</span>s</span>
-                        <input type="range" id="fight-duration" min="1" max="10" value="8" step="1">
+                        <span class="slider-value"><span id="duration-display">{{ default_fight_duration | int }}</span>s</span>
+                        <input type="range" id="fight-duration" min="1" max="10" value="{{ default_fight_duration | int }}" step="1">
                     </div>
 
                     <div class="toggle-row">
@@ -338,8 +338,8 @@
                     <div id="uptime-options" class="hidden">
                         <div class="slider-row">
                             <label for="auto-uptime">AA Uptime</label>
-                            <span class="slider-value"><span id="uptime-display">80</span>%</span>
-                            <input type="range" id="auto-uptime" min="0" max="100" value="80" step="5">
+                            <span class="slider-value"><span id="uptime-display">{{ (default_auto_attack_uptime * 100) | int }}</span>%</span>
+                            <input type="range" id="auto-uptime" min="0" max="100" value="{{ (default_auto_attack_uptime * 100) | int }}" step="5">
                         </div>
                     </div>
                 </div>

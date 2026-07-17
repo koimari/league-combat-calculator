@@ -33,13 +33,15 @@ import re
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
+    find_named_leveling,
+    proc_damage,
     simple_damage,
+    sum_modifiers,
 )
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
@@ -69,44 +71,33 @@ def _extract_e_per_shot(
     Returns:
         Physical damage per shot before resistances.
     """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != "Physical Damage per Shot":
-                continue
+    leveling = find_named_leveling(ability, "Physical Damage per Shot")
+    if leveling is None:
+        return 0.0
 
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
+    def unusual_unit(unit: str, value: float) -> float | None:
+        unit_stripped = unit.strip()
+        if not unit_stripped or unit_stripped in ("×", "x"):
+            return value
+        if "per 100% bonus attack speed" not in unit:
+            return None
+        match = re.search(r"(\d+(?:\.\d+)?)\s*per\s*100%", unit)
+        if not match:
+            return 0.0
+        as_ratio = float(match.group(1))
+        bonus_as_pct = (
+            stats_context.get("bonus_attack_speed_percent", 0.0)
+            if stats_context
+            else 0.0
+        )
+        return as_ratio * (bonus_as_pct / 100.0) * value
 
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                # The flat base uses "  ×" (multiplication sign) as its unit.
-                unit_stripped = unit.strip()
-                if not unit_stripped or unit_stripped in ("×", "x"):
-                    total += value
-                elif is_flat_unit(unit):
-                    total += value
-                elif "per 100% bonus attack speed" in unit:
-                    # Small AS scaling: parse the ratio from the unit text.
-                    match = re.search(r"(\d+(?:\.\d+)?)\s*per\s*100%", unit)
-                    if match:
-                        as_ratio = float(match.group(1))
-                        bonus_as_pct = (
-                            stats_context.get("bonus_attack_speed_percent", 0.0)
-                            if stats_context
-                            else 0.0
-                        )
-                        total += as_ratio * (bonus_as_pct / 100.0) * value
-                else:
-                    total += resolve_scaling(unit, value, stats_context, None)
-            return total
-
-    return 0.0
+    return sum_modifiers(
+        leveling,
+        rank,
+        stats_context,
+        modifier_override=unusual_unit,
+    )
 
 
 def _parse_passive_proc_damage(
@@ -236,26 +227,9 @@ def _double_shot(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _dirty_fighting_procs(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: 3-stack magic proc x ``passive_procs`` option (default 3)."""
-    passive = ctx.ability()
-    if passive is None:
-        return None
-    procs = int(ctx.options.get("passive_procs", 3))
-    if procs <= 0:
-        return None
-
-    per_proc = _parse_passive_proc_damage(passive, ctx.level, ctx.stats)
-    if per_proc <= 0:
-        return None
-
-    return {
-        "name": "Dirty Fighting (3-Stack Proc)",
-        "damage_type": "magic",
-        "magic_damage": per_proc,
-        "total_raw": per_proc * procs,
-        "proc_count": procs,
-    }
+def _dirty_fighting_damage(ctx: SlotCtx, passive: dict[str, Any]) -> float:
+    """Resolve one Dirty Fighting three-stack proc from description text."""
+    return _parse_passive_proc_damage(passive, ctx.level, ctx.stats)
 
 
 OPTIONS = [
@@ -290,7 +264,12 @@ SLOTS = {
     "E": _heroic_swing,
     "R": _comeuppance,
     "passive_double_shot": _double_shot,
-    "P": _dirty_fighting_procs,
+    "P": proc_damage(
+        _dirty_fighting_damage,
+        "magic",
+        default_count=3,
+        name="Dirty Fighting (3-Stack Proc)",
+    ),
 }
 
 parse_abilities = build_parser(SLOTS, "Akshan")

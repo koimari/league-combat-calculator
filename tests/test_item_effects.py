@@ -13,28 +13,19 @@ import pytest
 from src.calculator import item_effects
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
-    get_ability_damage_amplifier,
+    DamageInputs,
     get_ap_multiplier,
     get_basic_ability_haste,
     get_bloodmail_bonus_ad,
     get_dawncore_bonus_ap,
-    get_energized_proc_damage,
-    get_fiendhunter_crit_ratios,
-    get_fiendhunter_empowerment,
     get_flowing_water_bonus_ap,
-    get_hullbreaker_hits_required,
     get_mana_to_ap_bonus,
     get_muramana_bonus_ad,
     get_passive_attack_speed_bonus,
-    get_statikk_empowered_auto_count,
     get_steraks_bonus_ad,
-    get_sundered_sky_crit_ratio,
     get_terminus_max_stack_bonuses,
-    get_terminus_max_stack_pen,
-    get_titanic_crescent,
-    get_ult_proc_mr_reduction,
-    get_voltaic_firmament,
     refresh_item_effects,
+    resolve_damage_effects,
 )
 
 
@@ -48,6 +39,225 @@ def _patch_effect(monkeypatch: pytest.MonkeyPatch, item_name: str, **overrides) 
     patched = dict(item_effects.ITEM_EFFECTS.get(item_name, {}))
     patched.update(overrides)
     monkeypatch.setitem(item_effects.ITEM_EFFECTS, item_name, patched)
+
+
+class TestResolveDamageEffects:
+    """Compile registry data into the fight engine's typed build projection."""
+
+    def test_formula_reads_live_registry_values(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _patch_effect(monkeypatch, "Nashor's Tooth", base=100.0, ap_ratio=0.5)
+
+        effects = resolve_damage_effects(_build("Nashor's Tooth"))
+        inputs = DamageInputs(
+            champion_stats={"ability_power": 200.0},
+            level=18,
+            is_melee=False,
+            target_max_health=1000.0,
+            target_current_health=1000.0,
+        )
+
+        assert effects.per_hits[0].source.raw_damage(inputs) == 200.0
+
+    def test_missing_required_key_names_item_and_key(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Nashor's Tooth"])
+        broken.pop("base")
+        monkeypatch.setitem(ITEM_EFFECTS, "Nashor's Tooth", broken)
+
+        with pytest.raises(KeyError) as exc_info:
+            resolve_damage_effects(_build("Nashor's Tooth"))
+        message = exc_info.value.args[0]
+        assert "Nashor's Tooth" in message
+        assert "base" in message
+
+    def test_unknown_effect_type_names_item_and_type(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Statikk Shiv"])
+        broken["type"] = "on_hit_onc"
+        monkeypatch.setitem(ITEM_EFFECTS, "Statikk Shiv", broken)
+
+        with pytest.raises(ValueError, match="Statikk Shiv.*on_hit_onc"):
+            resolve_damage_effects(_build("Statikk Shiv"))
+
+    def test_one_item_can_emit_multiple_behaviors(self) -> None:
+        effects = resolve_damage_effects(_build("Titanic Hydra", "Muramana"))
+
+        assert {effect.source.item_name for effect in effects.per_hits} == {
+            "Titanic Hydra",
+            "Muramana",
+        }
+        assert [effect.source.item_name for effect in effects.auto_cooldowns] == [
+            "Titanic Hydra"
+        ]
+        assert [effect.item_name for effect in effects.per_ability_hits] == ["Muramana"]
+
+    def test_spellblade_compiles_formula_and_scheduling(self) -> None:
+        effects = resolve_damage_effects(_build("Lich Bane"))
+        inputs = DamageInputs(
+            champion_stats={"base_attack_damage": 100.0, "ability_power": 200.0},
+            level=18,
+            is_melee=False,
+            target_max_health=1000.0,
+            target_current_health=1000.0,
+        )
+
+        assert effects.spellblade is not None
+        assert effects.spellblade.source.raw_damage(inputs) == 165.0
+        assert effects.spellblade.cooldown == 1.5
+        assert effects.spellblade.weave_delay == 1.5
+
+    def test_phase_families_compile_into_typed_buckets(self) -> None:
+        effects = resolve_damage_effects(
+            _build(
+                "Liandry's Torment",
+                "Sunfire Aegis",
+                "Unending Despair",
+                "Luden's Echo",
+                "Malignance",
+                "Hextech Rocketbelt",
+            )
+        )
+
+        assert [effect.source.item_name for effect in effects.burns] == [
+            "Liandry's Torment"
+        ]
+        assert [source.item_name for source in effects.immolates] == ["Sunfire Aegis"]
+        assert [effect.source.item_name for effect in effects.periodic] == [
+            "Unending Despair"
+        ]
+        assert [effect.source.item_name for effect in effects.cooldown_procs] == [
+            "Luden's Echo"
+        ]
+        assert [effect.source.item_name for effect in effects.ultimate_procs] == [
+            "Malignance"
+        ]
+        assert [source.item_name for source in effects.actives] == [
+            "Hextech Rocketbelt"
+        ]
+
+    def test_auto_trigger_families_compile_without_item_dispatch(self) -> None:
+        effects = resolve_damage_effects(
+            _build(
+                "Rapid Firecannon",
+                "Dead Man's Plate",
+                "Heartsteel",
+                "Statikk Shiv",
+                "Stormrazor",
+                "Voltaic Cyclosword",
+                "Hullbreaker",
+                "Kraken Slayer",
+                "Eclipse",
+            )
+        )
+
+        assert [effect.source.item_name for effect in effects.first_autos] == [
+            "Rapid Firecannon",
+            "Dead Man's Plate",
+            "Heartsteel",
+            "Statikk Shiv",
+            "Stormrazor",
+            "Voltaic Cyclosword",
+        ]
+        assert [effect.source.item_name for effect in effects.stacking_on_hits] == [
+            "Hullbreaker",
+            "Kraken Slayer",
+        ]
+        assert any(
+            effect.source.item_name == "Eclipse" for effect in effects.cooldown_procs
+        )
+
+    def test_engine_modifiers_compile_as_typed_values(self) -> None:
+        effects = resolve_damage_effects(
+            _build(
+                "Guinsoo's Rageblade",
+                "Terminus",
+                "Navori Flickerblade",
+                "Infinity Edge",
+                "Sundered Sky",
+                "Shadowflame",
+                "Experimental Hexplate",
+                "Fiendhunter Bolts",
+                "Actualizer",
+                "Hexoptics C44",
+                "The Collector",
+                "Liandry's Torment",
+                "Riftmaker",
+                "Lord Dominik's Regards",
+                "Spear of Shojin",
+                "Abyssal Mask",
+                "Horizon Focus",
+                "Black Cleaver",
+            )
+        )
+
+        assert effects.phantom_hit is not None
+        assert effects.phantom_hit.stacking_autos == 5
+        assert effects.phantom_hit.interval == 3
+        assert effects.stacking_pen is not None
+        assert effects.stacking_pen.max_pen == pytest.approx(0.30)
+        assert effects.stacking_pen.average_pen(6) == pytest.approx(0.15)
+        assert effects.navori_refund_percent == pytest.approx(0.15)
+        assert effects.crit_damage_bonus == pytest.approx(0.30)
+        assert effects.first_auto_crit is not None
+        assert effects.first_auto_crit.reduced_crit_ratio == pytest.approx(0.80)
+        assert effects.magic_true_crit is not None
+        assert effects.magic_true_crit.health_threshold == pytest.approx(0.40)
+        assert effects.ultimate_auto_buff is not None
+        assert effects.ultimate_auto_buff.empowered_auto_count == 3
+        assert effects.basic_amp_source == "Hexoptics C44"
+        assert effects.ability_amp_source == "Actualizer"
+        assert effects.basic_amp == pytest.approx(1.10)
+        assert effects.magic_amp == pytest.approx(1.12)
+        assert effects.hypershot_amp == pytest.approx(1.10)
+        assert effects.ability_amp is not None
+        assert effects.ability_amp.multiplier(
+            {"bonus_mana": 300.0}, include_actives=True
+        ) == pytest.approx(1.165)
+        assert effects.armor_reduction is not None
+        assert effects.armor_reduction.average_reduction(10) == pytest.approx(0.24)
+        amp_by_item = {
+            effect.item_name: effect.amp_fraction(4.0, 750.0)
+            for effect in effects.damage_amplifiers
+        }
+        assert amp_by_item == pytest.approx(
+            {
+                "Liandry's Torment": 0.03,
+                "Riftmaker": 0.04,
+                "Lord Dominik's Regards": 0.075,
+                "Spear of Shojin": 0.06,
+            }
+        )
+        assert effects.execute is not None
+        assert effects.execute.threshold == pytest.approx(0.05)
+        assert len(effects.conditional_notes) == 2
+
+    @pytest.mark.parametrize(
+        ("autos", "expected"),
+        [(0, 0.0), (1, 0.0), (2, 0.05), (4, 0.10), (6, 0.15), (12, 0.225)],
+    )
+    def test_stacking_pen_cadence(self, autos: int, expected: float) -> None:
+        effect = resolve_damage_effects(_build("Terminus")).stacking_pen
+        assert effect is not None
+        assert effect.average_pen(autos) == pytest.approx(expected)
+
+    def test_shaped_charge_compiles_formula_and_cooldown(self) -> None:
+        effects = resolve_damage_effects(_build("Bastionbreaker"))
+        inputs = DamageInputs(
+            champion_stats={"lethality": 20.0},
+            level=18,
+            is_melee=True,
+            target_max_health=1000.0,
+            target_current_health=1000.0,
+        )
+
+        assert len(effects.shaped_charges) == 1
+        effect = effects.shaped_charges[0]
+        assert effect.cooldown == 45.0
+        assert effect.source.raw_damage(inputs) == 60.0
 
 
 class TestApMultiplier:
@@ -195,108 +405,6 @@ class TestBasicAbilityHaste:
         assert get_basic_ability_haste(_build("Spear of Shojin")) == 25.0
 
 
-class TestFightEngineValueAccessors:
-    """Accessors that hand the fight engine its per-item numeric values.
-
-    Phase 4 moved these reads out of damage.py's step functions; each
-    accessor owns the registry lookup, the fight-model logic (proc
-    counts, mitigation, HP simulation) stays in the engine.
-    """
-
-    def test_ult_proc_mr_reduction_sums_ult_proc_items(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        _patch_effect(monkeypatch, "Malignance", type="ult_proc", mr_reduction=10.0)
-        build = _build("Malignance", "Liandry's Torment")
-        assert get_ult_proc_mr_reduction(build) == 10.0
-
-    def test_ult_proc_mr_reduction_zero_without_ult_proc_items(self) -> None:
-        assert get_ult_proc_mr_reduction(_build("Liandry's Torment")) == 0.0
-
-    def test_fiendhunter_empowerment(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        _patch_effect(
-            monkeypatch,
-            "Fiendhunter Bolts",
-            bonus_attack_speed_percent=50.0,
-            empowered_auto_count=3,
-            duration=6.0,
-        )
-        assert get_fiendhunter_empowerment() == (50.0, 3, 6.0)
-
-    def test_fiendhunter_crit_ratios(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        _patch_effect(
-            monkeypatch,
-            "Fiendhunter Bolts",
-            reduced_crit_ratio=0.8,
-            natural_crit_true_damage_ratio=0.4,
-        )
-        assert get_fiendhunter_crit_ratios() == (0.8, 0.4)
-
-    def test_sundered_sky_crit_ratio(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        _patch_effect(monkeypatch, "Sundered Sky", reduced_crit_ratio=0.6)
-        assert get_sundered_sky_crit_ratio() == 0.6
-
-    def test_terminus_max_stack_pen_is_a_fraction(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        _patch_effect(
-            monkeypatch, "Terminus", dark_pen_per_stack=0.10, dark_max_stacks=3
-        )
-        assert abs(get_terminus_max_stack_pen() - 0.30) < 1e-9
-
-    def test_energized_proc_damage(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        _patch_effect(monkeypatch, "Rapid Firecannon", base=120.0)
-        _patch_effect(monkeypatch, "Stormrazor", base=90.0)
-        assert get_energized_proc_damage("Rapid Firecannon") == 120.0
-        assert get_energized_proc_damage("Stormrazor") == 90.0
-
-    def test_statikk_empowered_auto_count_is_int(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        _patch_effect(monkeypatch, "Statikk Shiv", empowered_auto_count=1.0)
-        count = get_statikk_empowered_auto_count()
-        assert count == 1
-        assert isinstance(count, int)
-
-    def test_voltaic_firmament_melee_vs_ranged(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        _patch_effect(
-            monkeypatch,
-            "Voltaic Cyclosword",
-            current_hp_ratio_melee=0.09,
-            current_hp_ratio_ranged=0.07,
-        )
-        assert get_voltaic_firmament(is_melee=True) == 0.09
-        assert get_voltaic_firmament(is_melee=False) == 0.07
-
-    def test_titanic_crescent_melee_vs_ranged(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        _patch_effect(
-            monkeypatch,
-            "Titanic Hydra",
-            active_max_hp_ratio_melee=0.08,
-            active_max_hp_ratio_ranged=0.04,
-            active_cooldown=10.0,
-        )
-        assert get_titanic_crescent(is_melee=True) == (0.08, 10.0)
-        assert get_titanic_crescent(is_melee=False) == (0.04, 10.0)
-
-    def test_hullbreaker_hits_required(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        _patch_effect(monkeypatch, "Hullbreaker", hits_required=5)
-        assert get_hullbreaker_hits_required() == 5
-
-    def test_missing_key_raises_keyerror_naming_item(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        broken = dict(item_effects.ITEM_EFFECTS.get("Stormrazor", {}))
-        broken.pop("base", None)
-        monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Stormrazor", broken)
-        with pytest.raises(KeyError, match="Stormrazor"):
-            get_energized_proc_damage("Stormrazor")
-
-
 class TestMissingKeyFailsLoudly:
     """A missing effect key is a parser/defaults bug — never a silent default."""
 
@@ -306,6 +414,98 @@ class TestMissingKeyFailsLoudly:
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Sterak's Gage", broken)
         with pytest.raises(KeyError, match="base_ad_to_bonus_ad_ratio"):
             get_steraks_bonus_ad(_build("Sterak's Gage"), 100)
+
+
+class TestItemEffectProvenance:
+    """Static schema, parsed values, and offline fallback stay separate."""
+
+    def test_successful_partial_parse_does_not_borrow_offline_values(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from src.calculator import data_fetcher, passive_parser
+
+        monkeypatch.setattr(data_fetcher, "fetch_item_data", lambda **_kwargs: {})
+        monkeypatch.setattr(
+            passive_parser,
+            "parse_all_item_effects",
+            lambda _items: {"Lich Bane": {"base_ad_ratio": 0.75}},
+        )
+
+        registry = item_effects._build_item_effects()
+
+        assert registry["Lich Bane"]["type"] == "spellblade"
+        assert registry["Lich Bane"]["formula"] == "base_ad_ap"
+        assert "ap_ratio" not in registry["Lich Bane"]
+        assert "cooldown" not in registry["Lich Bane"]
+
+        monkeypatch.setattr(item_effects, "ITEM_EFFECTS", registry)
+        with pytest.raises(KeyError, match="ap_ratio"):
+            resolve_damage_effects(_build("Lich Bane"))
+
+    @pytest.mark.parametrize("failure_stage", ["load", "parse", "empty"])
+    def test_whole_pipeline_failure_uses_complete_offline_snapshot(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        failure_stage: str,
+    ) -> None:
+        from src.calculator import data_fetcher, passive_parser
+
+        if failure_stage == "load":
+
+            def fail_load(**_kwargs):
+                raise OSError("cache unavailable")
+
+            monkeypatch.setattr(data_fetcher, "fetch_item_data", fail_load)
+        else:
+            monkeypatch.setattr(data_fetcher, "fetch_item_data", lambda **_kwargs: {})
+            if failure_stage == "parse":
+
+                def fail_parse(_items):
+                    raise ValueError("parser unavailable")
+
+                monkeypatch.setattr(
+                    passive_parser,
+                    "parse_all_item_effects",
+                    fail_parse,
+                )
+            else:
+                monkeypatch.setattr(
+                    passive_parser,
+                    "parse_all_item_effects",
+                    lambda _items: {},
+                )
+
+        assert item_effects._build_item_effects() == item_effects._OFFLINE_ITEM_EFFECTS
+
+    def test_every_offline_key_has_exactly_one_owner(self) -> None:
+        for item_name, offline_values in item_effects._OFFLINE_ITEM_EFFECTS.items():
+            static_keys = frozenset(item_effects._STATIC_ITEM_EFFECTS[item_name])
+            parseable_keys = item_effects._PARSEABLE_ITEM_KEYS[item_name]
+            assert static_keys.isdisjoint(parseable_keys)
+            assert static_keys | parseable_keys == frozenset(offline_values)
+
+    def test_cached_parse_matches_offline_snapshot(self) -> None:
+        from src.calculator.data_fetcher import DEFAULT_DATA_DIR, fetch_item_data
+        from src.calculator.passive_parser import parse_all_item_effects
+
+        parsed = parse_all_item_effects(
+            fetch_item_data(data_directory=DEFAULT_DATA_DIR)
+        )
+        for item_name, parseable_keys in item_effects._PARSEABLE_ITEM_KEYS.items():
+            assert item_name in parsed
+            for key in parseable_keys:
+                assert key in parsed[item_name], f"{item_name}.{key} was not parsed"
+                expected = item_effects._OFFLINE_ITEM_EFFECTS[item_name][key]
+                actual = parsed[item_name][key]
+                if isinstance(expected, (int, float)):
+                    assert actual == pytest.approx(expected), f"{item_name}.{key}"
+                else:
+                    assert actual == expected, f"{item_name}.{key}"
+
+            classified = parseable_keys | frozenset(
+                item_effects._STATIC_ITEM_EFFECTS[item_name]
+            )
+            assert frozenset(parsed[item_name]) <= classified
 
 
 class TestRefreshItemEffects:
@@ -325,7 +525,7 @@ class TestRefreshItemEffects:
         monkeypatch.setattr(
             item_effects,
             "_build_item_effects",
-            lambda defaults: dict(fake_registry),
+            lambda: dict(fake_registry),
         )
 
         # ITEM_EFFECTS at this module's top is a from-import binding —
@@ -339,7 +539,7 @@ class TestRefreshItemEffects:
 
     def test_refresh_drops_stale_entries(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """clear() before update(): entries absent from the rebuild vanish."""
-        monkeypatch.setattr(item_effects, "_build_item_effects", lambda defaults: {})
+        monkeypatch.setattr(item_effects, "_build_item_effects", lambda: {})
         item_effects.ITEM_EFFECTS["Removed Item"] = {"type": "on_hit"}
         refresh_item_effects()
         assert "Removed Item" not in ITEM_EFFECTS
@@ -352,24 +552,29 @@ class TestActualizerAbilityDamageAmp:
         items = [{"name": "Actualizer"}]
         stats = {"bonus_mana": 0.0}
         # 15% base amp, no bonus mana
-        result = get_ability_damage_amplifier(items, stats)
+        effect = resolve_damage_effects(items).ability_amp
+        assert effect is not None
+        result = effect.multiplier(stats, include_actives=True)
         assert abs(result - 1.15) < 0.001
 
     def test_amp_with_300_bonus_mana(self) -> None:
         items = [{"name": "Actualizer"}]
         stats = {"bonus_mana": 300.0}
         # 15% + 0.5% * 3 = 16.5%
-        result = get_ability_damage_amplifier(items, stats)
+        effect = resolve_damage_effects(items).ability_amp
+        assert effect is not None
+        result = effect.multiplier(stats, include_actives=True)
         assert abs(result - 1.165) < 0.001
 
     def test_amp_disabled_when_actives_off(self) -> None:
         items = [{"name": "Actualizer"}]
         stats = {"bonus_mana": 300.0}
-        result = get_ability_damage_amplifier(items, stats, include_actives=False)
+        effect = resolve_damage_effects(items).ability_amp
+        assert effect is not None
+        result = effect.multiplier(stats, include_actives=False)
         assert result == 1.0
 
     def test_no_actualizer(self) -> None:
         items = [{"name": "Liandry's Torment"}]
         stats = {"bonus_mana": 300.0}
-        result = get_ability_damage_amplifier(items, stats)
-        assert result == 1.0
+        assert resolve_damage_effects(items).ability_amp is None

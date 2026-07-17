@@ -28,8 +28,14 @@ import re
 from typing import Any
 
 from .engine import SlotCtx, SlotParser, build_parser
-from .scaling import is_flat_unit, resolve_scaling
-from .slotlib import by_option, simple_damage, stat_buff
+from .slotlib import (
+    by_option,
+    find_named_leveling,
+    proc_damage,
+    simple_damage,
+    stat_buff,
+    sum_modifiers,
+)
 
 
 def _parse_passive_damage(
@@ -59,73 +65,31 @@ def _parse_passive_damage(
     stats_context = dict(champion_stats) if champion_stats else {}
     stats_context["ability_power"] = total_ability_power
 
+    leveling = find_named_leveling(passive, "Per-Level Scaling")
+    if leveling is None:
+        return 0.0
+
+    damage = sum_modifiers(leveling, level, stats_context)
+    modifiers = leveling.get("modifiers", [])
+    if len(modifiers) > 1:
+        return damage
+
+    # The bonus AD scaling is in prose when structured scaling is absent.
     for effect in passive.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != "Per-Level Scaling":
-                continue
+        desc = effect.get("description", "")
+        ad_match = re.search(r"\(\+\s*(\d+(?:\.\d+)?)%\s+bonus\s+AD\)", desc)
+        if ad_match:
+            ratio = float(ad_match.group(1)) / 100.0
+            return damage + ratio * stats_context.get("bonus_attack_damage", 0.0)
 
-            modifiers = leveling.get("modifiers", [])
-            if not modifiers:
-                continue
-
-            base_values = modifiers[0].get("values", [])
-            if not base_values:
-                continue
-
-            clamped_level = max(1, min(level, len(base_values)))
-            base_damage = float(base_values[clamped_level - 1])
-
-            # Remaining modifiers: scaling ratios (if present).
-            bonus_damage = 0.0
-            for modifier in modifiers[1:]:
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values or not units:
-                    continue
-                value = float(values[0])
-                unit = units[0] if units else ""
-                if is_flat_unit(unit):
-                    bonus_damage += value
-                else:
-                    bonus_damage += resolve_scaling(unit, value, stats_context, None)
-
-            # The bonus AD scaling is in the description but not
-            # always in leveling modifiers — extract from text.
-            if not modifiers[1:]:
-                desc = effect.get("description", "")
-                ad_match = re.search(r"\(\+\s*(\d+(?:\.\d+)?)%\s+bonus\s+AD\)", desc)
-                if ad_match:
-                    ratio = float(ad_match.group(1)) / 100.0
-                    bonus_ad = stats_context.get("bonus_attack_damage", 0.0)
-                    bonus_damage += ratio * bonus_ad
-
-            return base_damage + bonus_damage
-
-    return 0.0
+    return damage
 
 
-def _drakehounds_step(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: per-proc damage x ``passive_procs`` option (default 4)."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    procs = int(ctx.options.get("passive_procs", 4))
-    if procs <= 0:
-        return None
-
-    per_proc = _parse_passive_damage(
+def _drakehounds_step_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
+    """Resolve one Drakehound's Step proc from structured data/prose."""
+    return _parse_passive_damage(
         ability, ctx.level, ctx.stats, ctx.stats.get("ability_power", 0.0)
     )
-    if per_proc <= 0:
-        return None
-
-    return {
-        "name": ability.get("name", "Drakehound's Step"),
-        "damage_type": "physical",
-        "physical_damage": per_proc,
-        "total_raw": per_proc * procs,
-        "proc_count": procs,
-    }
 
 
 def _q_cast(index: int) -> SlotParser:
@@ -195,7 +159,7 @@ SLOTS = {
     "Q2": _sundering_slam,
     "W": simple_damage(attr="Increased Physical Damage", dmg_type="physical"),
     "E": simple_damage(attr="Total Physical Damage", dmg_type="physical"),
-    "P": _drakehounds_step,
+    "P": proc_damage(_drakehounds_step_damage, "physical"),
 }
 
 parse_abilities = build_parser(SLOTS, "Ambessa")

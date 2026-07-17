@@ -17,14 +17,18 @@ from calculator.data_fetcher import (
 )
 from calculator.data_updater import update_data
 from calculator.item_effects import refresh_item_effects
-from calculator.stats import calculate_total_stats
-from calculator.champions import champion_options_meta_map, parse_abilities
-from calculator.damage import (
-    DEFAULT_TARGET,
-    calculate_fight_damage,
-    split_auto_vs_ability,
-)
+from calculator.champions import champion_options_meta_map
+from calculator.damage import split_auto_vs_ability
 from calculator.optimizer import exclusivity_groups, optimize_build, ITEM_BLOCKLIST
+from calculator.pipeline import (
+    DEFAULT_AUTO_ATTACK_UPTIME,
+    DEFAULT_FIGHT_DURATION,
+    DEFAULT_FIGHT_MODE,
+    DEFAULT_TARGET,
+    ONE_ROTATION_DURATION,
+    FightParams,
+    run_fight,
+)
 
 app = Flask(
     __name__,
@@ -39,7 +43,12 @@ app.json.sort_keys = False
 @app.route("/")
 def index():
     """Serve the main calculator page."""
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        default_target=DEFAULT_TARGET,
+        default_fight_duration=DEFAULT_FIGHT_DURATION,
+        default_auto_attack_uptime=DEFAULT_AUTO_ATTACK_UPTIME,
+    )
 
 
 @app.route("/api/champions")
@@ -98,7 +107,7 @@ def api_config():
 
     Single source of truth for domain facts that would otherwise be
     hand-copied into app.js: item exclusivity groups (optimizer.py),
-    default target stats (damage.py), and champion option/assumption
+    fight/target defaults (pipeline.py), and champion option/assumption
     metadata (each champion module's OPTIONS/ASSUMPTIONS declarations).
     Champion options ride the existing one-shot bootstrap fetch rather
     than a per-champion endpoint so app.js can keep reading the map
@@ -108,6 +117,12 @@ def api_config():
         {
             "exclusivity_groups": exclusivity_groups(),
             "default_target": DEFAULT_TARGET,
+            "fight_defaults": {
+                "mode": DEFAULT_FIGHT_MODE,
+                "duration_seconds": DEFAULT_FIGHT_DURATION,
+                "auto_attack_uptime": DEFAULT_AUTO_ATTACK_UPTIME,
+                "one_rotation_duration_seconds": ONE_ROTATION_DURATION,
+            },
             "champion_options": champion_options_meta_map(),
         }
     )
@@ -148,45 +163,16 @@ def api_calculate():
     level = int(data.get("level", 1))
     item_names = data.get("items", [])
     boots_name = data.get("boots", "")
-    target_health = float(data.get("target_health", DEFAULT_TARGET["health"]))
-    target_bonus_health = float(
-        data.get("target_bonus_health", DEFAULT_TARGET["bonus_health"])
-    )
-    target_armor = float(data.get("target_armor", DEFAULT_TARGET["armor"]))
-    target_mr = float(data.get("target_mr", DEFAULT_TARGET["mr"]))
-    fight_mode = data.get("fight_mode", "one_rotation")
-    fight_duration = float(data.get("fight_duration", 8))
-    include_auto_attacks = data.get("include_auto_attacks", False)
-    auto_attack_uptime = float(data.get("auto_attack_uptime", 0.8))
-    auto_attacks_only = data.get("auto_attacks_only", False)
-    ability_ranks = data.get("ability_ranks", None)
-    include_actives = data.get("include_actives", True)
-    cast_order = data.get("cast_order", None)
-    champion_options = data.get("champion_options", None)
+    try:
+        fight_params = FightParams.from_request(data)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
 
     # Validate
     if not champion_name:
         return jsonify({"error": "No champion selected"}), 400
     if level < 1 or level > 20:
         return jsonify({"error": "Level must be between 1 and 20"}), 400
-
-    # Validate cast order if provided
-    if cast_order is not None:
-        if sorted(cast_order) != ["E", "Q", "R", "W"]:
-            return (
-                jsonify({"error": "Cast order must be a permutation of Q, W, E, R"}),
-                400,
-            )
-
-    # Validate ability ranks if provided
-    if ability_ranks:
-        for key in ("Q", "W", "E"):
-            val = ability_ranks.get(key, 0)
-            if val < 0 or val > 5:
-                return jsonify({"error": f"{key} rank must be 0-5"}), 400
-        r_val = ability_ranks.get("R", 0)
-        if r_val < 0 or r_val > 3:
-            return jsonify({"error": "R rank must be 0-3"}), 400
 
     try:
         champion_data = get_champion(champion_name)
@@ -208,57 +194,7 @@ def api_calculate():
         except KeyError:
             return jsonify({"error": f"Item '{item_name}' not found"}), 404
 
-    # Calculate stats
-    champion_stats = calculate_total_stats(champion_data, level, items)
-    ability_haste = champion_stats.get("ability_haste", 0.0)
-
-    # Build target stats context for %HP abilities
-    target_stats = {
-        "target_max_health": target_health,
-        "target_current_health": target_health,  # Assume full HP at start
-        "target_missing_health": 0.0,
-    }
-
-    # Parse abilities via the champion registry
-    # Use display name from data (e.g. "Kog'Maw") not the data key ("KogMaw")
-    display_name = champion_data.get("name", champion_name)
-    ability_damages = parse_abilities(
-        display_name,
-        champion_data,
-        level,
-        champion_stats["ability_power"],
-        ability_ranks=ability_ranks,
-        champion_stats=champion_stats,
-        target_stats=target_stats,
-        champion_options=champion_options,
-    )
-
-    # Determine fight parameters based on mode
-    is_one_rotation = fight_mode == "one_rotation"
-    if is_one_rotation:
-        effective_duration = 5.0  # One rotation takes ~5 seconds in practice
-        effective_uptime = 0.0
-    else:
-        effective_duration = fight_duration
-        effective_uptime = auto_attack_uptime if include_auto_attacks else 0.0
-
-    # Run damage calculation
-    result = calculate_fight_damage(
-        champion_stats=champion_stats,
-        ability_damages=ability_damages,
-        target_health=target_health,
-        target_bonus_health=target_bonus_health,
-        target_armor=target_armor,
-        target_magic_resistance=target_mr,
-        fight_duration_seconds=effective_duration,
-        auto_attack_uptime=effective_uptime,
-        ability_haste=ability_haste,
-        items=items,
-        one_rotation=is_one_rotation,
-        include_actives=include_actives,
-        cast_order=cast_order,
-        auto_attacks_only=auto_attacks_only,
-    )
+    result = run_fight(champion_data, level, items, fight_params)
 
     # Separate ability damage from auto-attack damage
     breakdown = result.get("breakdown", {})
@@ -310,7 +246,7 @@ def api_calculate():
 
     return jsonify(
         {
-            "champion_stats": champion_stats,
+            "champion_stats": result["champion_stats"],
             "total_damage": round(total_damage, 1),
             "ability_damage": round(ability_damage, 1),
             "auto_attack_damage": round(auto_attack_damage, 1),
@@ -341,22 +277,10 @@ def api_optimize():
     except KeyError:
         return jsonify({"error": f"Champion '{champion_name}' not found"}), 404
 
-    # Read all fight parameters (same as /api/calculate)
-    target_health = float(data.get("target_health", DEFAULT_TARGET["health"]))
-    target_bonus_health = float(
-        data.get("target_bonus_health", DEFAULT_TARGET["bonus_health"])
-    )
-    target_armor = float(data.get("target_armor", DEFAULT_TARGET["armor"]))
-    target_mr = float(data.get("target_mr", DEFAULT_TARGET["mr"]))
-    fight_mode = data.get("fight_mode", "one_rotation")
-    fight_duration = float(data.get("fight_duration", 8))
-    include_auto_attacks = data.get("include_auto_attacks", False)
-    auto_attack_uptime = float(data.get("auto_attack_uptime", 0.8))
-    auto_attacks_only = data.get("auto_attacks_only", False)
-    ability_ranks = data.get("ability_ranks", None)
-    include_actives = data.get("include_actives", True)
-    cast_order = data.get("cast_order", None)
-    champion_options = data.get("champion_options", None)
+    try:
+        fight_params = FightParams.from_request(data, deterministic=True)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
 
     # Optimizer-specific parameters
     objective = data.get("objective", "total_damage")
@@ -370,22 +294,9 @@ def api_optimize():
         return jsonify({"error": "max_legendary_slots must be 5 or 6"}), 400
 
     result = optimize_build(
-        champion_name=champion_name,
         champion_data=champion_data,
         level=level,
-        target_health=target_health,
-        target_bonus_health=target_bonus_health,
-        target_armor=target_armor,
-        target_mr=target_mr,
-        fight_mode=fight_mode,
-        fight_duration=fight_duration,
-        include_auto_attacks=include_auto_attacks,
-        auto_attack_uptime=auto_attack_uptime,
-        auto_attacks_only=auto_attacks_only,
-        ability_ranks=ability_ranks,
-        include_actives=include_actives,
-        cast_order=cast_order,
-        champion_options=champion_options,
+        fight_params=fight_params,
         objective=objective,
         locked_items=locked_items if locked_items else None,
         locked_boots=locked_boots if locked_boots else None,

@@ -4,36 +4,38 @@ Each item with a damage-relevant passive/active is registered in ITEM_EFFECTS.
 Functions compute bonus damage based on fight context (stats, target, duration).
 
 **Data sourcing:** Values are loaded from the cached item JSON data via
-``passive_parser`` whenever the data is available.  The ``_DEFAULT_ITEM_EFFECTS``
-dict below provides fallback values for fields that cannot be parsed from
-the wiki markup (e.g. cooldowns not stored in JSON, structural flags like
-``phantom_hit``).  When JSON data is refreshed (new patch), calling
-``refresh_item_effects()`` re-parses and updates ``ITEM_EFFECTS`` in place.
+``passive_parser`` whenever the data is available. ``_STATIC_ITEM_EFFECTS``
+owns schema and values the parser cannot provide; ``_OFFLINE_ITEM_EFFECTS``
+is a complete last-known-good snapshot used only when loading or parsing fails
+as a whole. When JSON data is refreshed, ``refresh_item_effects()`` re-parses
+and updates ``ITEM_EFFECTS`` in place.
 """
 
 import logging
-from typing import Any
+from copy import deepcopy
+from dataclasses import dataclass
+from typing import Any, Callable, Literal, Mapping, Sequence
 
 logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Default / fallback item effect values
+# Complete offline item effect snapshot
 # ---------------------------------------------------------------------------
-# These serve as the base for ITEM_EFFECTS.  Parsed values from JSON
-# override these where available; fields not parseable from the wiki
-# markup are kept from the defaults.
-
-_DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
+# Normal cached-data operation does not merge from this table. It is the
+# explicit whole-system fallback and the parity reference for parser updates.
+_OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── On-Hit (per auto attack) ──────────────────────────────────────────
     "Nashor's Tooth": {
         "type": "on_hit",
+        "formula": "flat_ap",
         "damage_type": "magic",
         "base": 15.0,
         "ap_ratio": 0.15,
     },
     "Blade of the Ruined King": {
         "type": "on_hit",
+        "formula": "current_hp",
         "damage_type": "physical",
         "current_hp_ratio_melee": 0.09,
         "current_hp_ratio_ranged": 0.06,
@@ -41,11 +43,13 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Wit's End": {
         "type": "on_hit",
+        "formula": "flat",
         "damage_type": "magic",
         "base": 45.0,
     },
     "Terminus": {
         "type": "on_hit",
+        "formula": "flat",
         "damage_type": "magic",
         "base": 30.0,
         # Juxtaposition: alternating Light/Dark hits, each stacks up to 3 times.
@@ -58,6 +62,8 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Titanic Hydra": {
         "type": "on_hit",
+        "formula": "max_hp",
+        "secondary_behavior": "auto_cooldown",
         "damage_type": "physical",
         "max_hp_ratio_melee": 0.01,
         "max_hp_ratio_ranged": 0.005,
@@ -68,6 +74,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Guinsoo's Rageblade": {
         "type": "on_hit",
+        "formula": "flat",
         "damage_type": "magic",
         "base": 30.0,
         # Phantom Hit: 3 autos to max Seething Strike stacks. The 4th auto
@@ -83,6 +90,8 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Muramana": {
         "type": "on_hit",
+        "formula": "max_mana",
+        "secondary_behavior": "per_ability_hit",
         "damage_type": "physical",
         "max_mana_ratio_on_hit": 0.012,
         "max_mana_ratio_ability_melee": 0.04,
@@ -93,6 +102,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Spellblade (after ability, next auto, mutually exclusive) ─────────
     "Trinity Force": {
         "type": "spellblade",
+        "formula": "base_ad",
         "damage_type": "physical",
         "base_ad_ratio": 2.0,
         "cooldown": 1.5,
@@ -100,14 +110,16 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Lich Bane": {
         "type": "spellblade",
+        "formula": "base_ad_ap",
         "damage_type": "magic",
         "base_ad_ratio": 0.75,
-        "ap_ratio": 0.40,
+        "ap_ratio": 0.45,
         "cooldown": 1.5,
         "weave_delay": 1.5,  # CD starts after empowered attack
     },
     "Essence Reaver": {
         "type": "spellblade",
+        "formula": "base_ad_crit",
         "damage_type": "physical",
         "base_ad_ratio": 1.25,
         # Bonus damage scales 0-50 based on crit chance
@@ -117,6 +129,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Iceborn Gauntlet": {
         "type": "spellblade",
+        "formula": "base_ad",
         "damage_type": "physical",
         "base_ad_ratio": 1.50,
         "cooldown": 1.5,
@@ -124,6 +137,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Bloodsong": {
         "type": "spellblade",
+        "formula": "base_ad",
         "damage_type": "physical",
         "base_ad_ratio": 1.0,
         "cooldown": 1.5,
@@ -133,6 +147,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Dusk and Dawn": {
         "type": "spellblade",
+        "formula": "base_ad_ap",
         "damage_type": "magic",
         "base_ad_ratio": 0.75,
         "ap_ratio": 0.10,
@@ -143,6 +158,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Burn / DoT ────────────────────────────────────────────────────────
     "Liandry's Torment": {
         "type": "burn",
+        "formula": "max_hp",
         "damage_type": "magic",
         # 1% max HP every 0.5s for 3s = 6% max HP total
         "max_hp_ratio_total": 0.06,
@@ -153,6 +169,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Blackfire Torch": {
         "type": "burn",
+        "formula": "flat_ap",
         "damage_type": "magic",
         # 10 + 1% AP per 0.5s for 3s = 60 + 6% AP total
         "base_total": 60.0,
@@ -163,6 +180,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Sunfire Aegis": {
         "type": "immolate",
+        "formula": "bonus_hp_dps",
         "damage_type": "magic",
         # 20 + 1% bonus HP per second
         "base_per_second": 20.0,
@@ -170,6 +188,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Hollow Radiance": {
         "type": "immolate",
+        "formula": "bonus_hp_dps",
         "damage_type": "magic",
         # 15 + 1% bonus HP per second
         "base_per_second": 15.0,
@@ -178,6 +197,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Proc Damage (cooldown-gated) ──────────────────────────────────────
     "Luden's Echo": {
         "type": "proc",
+        "formula": "charged_ap",
         "damage_type": "magic",
         # 6 charges, single target: primary + 5 × 20% = ×2.0 multiplier
         "base_per_charge": 75.0,
@@ -188,6 +208,10 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Statikk Shiv": {
         "type": "on_hit_once",
+        "formula": "flat",
+        "uses_empowered_auto_count": True,
+        "breakdown_key": "on_hit_once_Statikk Shiv",
+        "display_name": "Statikk Shiv (Electrospark)",
         "damage_type": "magic",
         # Electrospark: ONE empowered attack deals 60 bonus magic damage,
         # chain-lightning to up to 4-8 targets by level (single-target: 1 proc)
@@ -198,6 +222,8 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Stormsurge": {
         "type": "proc",
+        "formula": "flat_ap",
+        "repeat_on_cooldown": False,
         "damage_type": "magic",
         # 125 + 10% AP, 30s CD (triggers at 25% HP damage in 2.5s)
         "base": 125.0,
@@ -207,6 +233,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Zaz'Zak's Realmspike": {
         "type": "proc",
+        "formula": "flat_ap_max_hp",
         "damage_type": "magic",
         # 10 + 15% AP + 3% target max HP, 10s CD
         "base": 10.0,
@@ -218,6 +245,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Ultimate Proc ─────────────────────────────────────────────────────
     "Malignance": {
         "type": "ult_proc",
+        "formula": "flat_ap",
         "damage_type": "magic",
         # Hatefog: (60 + 5% AP) per second for 3s = 180 + 15% AP per
         # application.  Each R dash refreshes the zone timer, extending
@@ -231,6 +259,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Active Items (used once per fight) ────────────────────────────────
     "Hextech Rocketbelt": {
         "type": "active",
+        "formula": "flat_ap",
         "damage_type": "magic",
         # 100 + 10% AP magic damage
         "base": 100.0,
@@ -239,6 +268,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Profane Hydra": {
         "type": "active",
+        "formula": "total_ad",
         "damage_type": "physical",
         # Active: 80% total AD
         "total_ad_ratio": 0.80,
@@ -246,6 +276,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Hextech Gunblade": {
         "type": "active",
+        "formula": "level_ap",
         "damage_type": "magic",
         # Lightning Bolt: 175-262 (scales linearly levels 1-20) + 30% AP
         "base_min": 175.0,
@@ -255,6 +286,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Ravenous Hydra": {
         "type": "active",
+        "formula": "total_ad",
         "damage_type": "physical",
         # Ravenous Crescent: 80% total AD
         "total_ad_ratio": 0.80,
@@ -262,6 +294,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Stridebreaker": {
         "type": "active",
+        "formula": "total_ad",
         "damage_type": "physical",
         # Breaking Shockwave: 80% total AD + slow
         "total_ad_ratio": 0.80,
@@ -340,6 +373,9 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Max HP Proc (cooldown-gated, %max HP physical) ────────────────────
     "Eclipse": {
         "type": "max_hp_proc",
+        "formula": "max_hp",
+        "breakdown_key": "proc_Eclipse",
+        "display_name": "Eclipse (Ever Rising Moon)",
         "damage_type": "physical",
         # Ever Rising Moon: 2 stacks within 2s deals bonus physical damage
         # Melee 6% / Ranged 4% of target's maximum health
@@ -401,6 +437,9 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Energized ──────────────────────────────────────────────────────────
     "Rapid Firecannon": {
         "type": "on_hit_once",
+        "formula": "flat",
+        "breakdown_key": "on_hit_once_Rapid Firecannon",
+        "display_name": "Rapid Firecannon (Sharpshooter)",
         "damage_type": "magic",
         # Sharpshooter: 40 bonus magic damage on first energized auto
         "base": 40.0,
@@ -408,6 +447,9 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Other single-proc items ───────────────────────────────────────────
     "Dead Man's Plate": {
         "type": "on_hit_once",
+        "formula": "flat_base_ad",
+        "breakdown_key": "on_hit_once_Dead Man's Plate",
+        "display_name": "Dead Man's Plate (first hit)",
         "damage_type": "physical",
         # At max momentum: 40 + 100% base AD
         "base": 40.0,
@@ -415,6 +457,9 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Heartsteel": {
         "type": "on_hit_once",
+        "formula": "flat_max_hp",
+        "breakdown_key": "on_hit_once_Heartsteel",
+        "display_name": "Heartsteel (Colossal Consumption)",
         "damage_type": "physical",
         # Colossal Consumption: 70 + 6% max HP bonus physical damage
         # 30s cooldown — assumed to proc once per fight
@@ -424,6 +469,9 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Hullbreaker": {
         "type": "on_hit_stacking",
+        "formula": "base_ad_max_hp",
+        "breakdown_key": "on_hit_Hullbreaker",
+        "display_name": "Hullbreaker (Skipper)",
         "damage_type": "physical",
         # Skipper: every 5th on-hit application against any target.
         # At max stacks, next auto vs champion deals:
@@ -437,6 +485,9 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Kraken Slayer": {
         "type": "on_hit_stacking",
+        "formula": "level_missing_hp",
+        "breakdown_key": "on_hit_Kraken Slayer",
+        "display_name": "Kraken Slayer (Bring It Down)",
         "damage_type": "physical",
         # Every 3rd hit. Base damage is flat from levels 1-8, then scales
         # per level from 9 onward:
@@ -480,7 +531,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Staff of Flowing Water": {
         "type": "stat_conversion",
-        "rapids_bonus_ap": 45.0,
+        "rapids_bonus_ap": 40.0,
     },
     "Sterak's Gage": {
         "type": "stat_conversion",
@@ -488,6 +539,9 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Stormrazor": {
         "type": "on_hit_once",
+        "formula": "flat",
+        "breakdown_key": "on_hit_once_Stormrazor",
+        "display_name": "Stormrazor (Bolt)",
         "damage_type": "magic",
         "base": 100.0,
     },
@@ -502,6 +556,9 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Voltaic Cyclosword (energized first-auto) ───────────────────────────
     "Voltaic Cyclosword": {
         "type": "on_hit_once",
+        "formula": "current_hp",
+        "breakdown_key": "on_hit_once_Voltaic Cyclosword",
+        "display_name": "Voltaic Cyclosword (Firmament)",
         "damage_type": "physical",
         # Firmament: % of target's CURRENT health (melee 9% / ranged 7%),
         # capped at 200
@@ -512,6 +569,7 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Unending Despair (periodic AoE damage) ──────────────────────────────
     "Unending Despair": {
         "type": "periodic_aoe",
+        "formula": "bonus_hp",
         "damage_type": "magic",
         # Anguish: every 4 seconds, deal 3% bonus health as magic damage
         "interval": 4.0,
@@ -528,28 +586,76 @@ _DEFAULT_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
 }
 
 
+# Fields owned by code rather than wiki parsing. Every remaining offline field
+# is explicitly parser-owned through ``_PARSEABLE_ITEM_KEYS`` below.
+_STRUCTURAL_EFFECT_KEYS = frozenset(
+    {
+        "type",
+        "formula",
+        "secondary_behavior",
+        "breakdown_key",
+        "display_name",
+        "damage_type",
+        "phantom_hit",
+        "uses_empowered_auto_count",
+        "repeat_on_cooldown",
+        "is_ability_damage",
+        "double_on_hit",
+    }
+)
+
+_STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
+    "Blade of the Ruined King": frozenset({"min_damage"}),
+    "Experimental Hexplate": frozenset({"bonus_attack_speed_percent"}),
+    "Hextech Gunblade": frozenset({"base_min", "base_max", "cooldown"}),
+    "Hextech Rocketbelt": frozenset({"cooldown"}),
+    "Malignance": frozenset({"base", "ap_ratio", "duration"}),
+    "Muramana": frozenset(
+        {"max_mana_ratio_ability_melee", "max_mana_ratio_ability_ranged"}
+    ),
+    "Profane Hydra": frozenset({"cooldown"}),
+    "Ravenous Hydra": frozenset({"cooldown"}),
+    "Stridebreaker": frozenset({"cooldown"}),
+    "Titanic Hydra": frozenset({"active_cooldown"}),
+}
+
+
+def _static_keys(item_name: str) -> frozenset[str]:
+    """Return the code-owned registry keys for one item."""
+    return _STRUCTURAL_EFFECT_KEYS | _STATIC_VALUE_KEYS_BY_ITEM.get(
+        item_name, frozenset()
+    )
+
+
+_STATIC_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
+    item_name: {
+        key: value for key, value in values.items() if key in _static_keys(item_name)
+    }
+    for item_name, values in _OFFLINE_ITEM_EFFECTS.items()
+}
+
+_PARSEABLE_ITEM_KEYS: dict[str, frozenset[str]] = {
+    item_name: frozenset(values) - _static_keys(item_name)
+    for item_name, values in _OFFLINE_ITEM_EFFECTS.items()
+}
+
+
 # ---------------------------------------------------------------------------
 # Dynamic loading from JSON data
 # ---------------------------------------------------------------------------
 
 
-def _build_item_effects(
-    defaults: dict[str, dict[str, Any]],
-) -> dict[str, dict[str, Any]]:
-    """Build ITEM_EFFECTS by merging parsed JSON values over defaults.
+def _build_item_effects() -> dict[str, dict[str, Any]]:
+    """Build live effects from code-owned schema plus parsed values.
 
-    For each item the default dict is deep-copied, then any values
-    successfully parsed from the cached ``items.json`` are applied on
-    top.  Fields that the parser cannot extract (e.g. cooldowns absent
-    from JSON, structural flags like ``phantom_hit``) are preserved
-    from the defaults.
+    A successful parse never borrows a missing parser-owned value from the
+    offline snapshot. Loading failure, parser failure, or an empty whole-parse
+    result uses the complete last-known-good snapshot instead.
 
     Returns:
         Merged dict suitable for use as ``ITEM_EFFECTS``.
     """
-    import copy
-
-    result = copy.deepcopy(defaults)
+    result = deepcopy(_STATIC_ITEM_EFFECTS)
 
     try:
         from .data_fetcher import DEFAULT_DATA_DIR, fetch_item_data
@@ -557,7 +663,7 @@ def _build_item_effects(
         items_data = fetch_item_data(data_directory=DEFAULT_DATA_DIR)
     except Exception as exc:
         logger.debug("Could not load item JSON for parsing: %s", exc)
-        return result
+        return deepcopy(_OFFLINE_ITEM_EFFECTS)
 
     try:
         from .passive_parser import parse_all_item_effects
@@ -565,15 +671,24 @@ def _build_item_effects(
         parsed = parse_all_item_effects(items_data)
     except Exception as exc:
         logger.warning("Item passive parsing failed: %s", exc)
-        return result
+        return deepcopy(_OFFLINE_ITEM_EFFECTS)
+
+    if not parsed:
+        logger.warning("Item passive parsing produced no registered effects")
+        return deepcopy(_OFFLINE_ITEM_EFFECTS)
 
     for item_name, parsed_values in parsed.items():
         if item_name in result:
-            # Override default values with parsed ones
-            result[item_name].update(parsed_values)
+            parseable_keys = _PARSEABLE_ITEM_KEYS[item_name]
+            result[item_name].update(
+                {
+                    key: value
+                    for key, value in parsed_values.items()
+                    if key in parseable_keys
+                }
+            )
         else:
-            # New item not in defaults — add it
-            result[item_name] = parsed_values
+            result[item_name] = dict(parsed_values)
 
     return result
 
@@ -590,29 +705,25 @@ def refresh_item_effects() -> None:
     keep seeing the refreshed values through their existing binding.
     """
     ITEM_EFFECTS.clear()
-    ITEM_EFFECTS.update(_build_item_effects(_DEFAULT_ITEM_EFFECTS))
+    ITEM_EFFECTS.update(_build_item_effects())
 
 
 # Build the live registry at import time.
-ITEM_EFFECTS: dict[str, dict[str, Any]] = _build_item_effects(
-    _DEFAULT_ITEM_EFFECTS,
-)
+ITEM_EFFECTS: dict[str, dict[str, Any]] = _build_item_effects()
 
 
 def _required_effect_value(item_name: str, key: str) -> Any:
     """Read a required key from an item's effect entry, failing loudly.
 
-    ``ITEM_EFFECTS`` merges parsed wiki values over ``_DEFAULT_ITEM_EFFECTS``,
-    so every registered item is guaranteed to carry its default keys.  A
-    missing key therefore means a parser/defaults bug — raise a KeyError
-    naming the item and key instead of silently substituting a stale
-    literal (the failure mode behind the Statikk Shiv bug).
+    A missing key means the parser omitted a required parser-owned value or
+    code omitted a structural value. Raise with item and key context instead
+    of silently borrowing a potentially stale offline number.
     """
     effect = ITEM_EFFECTS.get(item_name, {})
     if key not in effect:
         raise KeyError(
             f"ITEM_EFFECTS[{item_name!r}] is missing {key!r} — "
-            "parser/defaults bug; check _DEFAULT_ITEM_EFFECTS and "
+            "parser/schema bug; check _STATIC_ITEM_EFFECTS and "
             "passive_parser"
         )
     return effect[key]
@@ -621,6 +732,1107 @@ def _required_effect_value(item_name: str, key: str) -> Any:
 def _item_names(items: list[dict[str, Any]]) -> set[str]:
     """Return the set of item names in a build."""
     return {item.get("name", "") for item in items}
+
+
+# ---------------------------------------------------------------------------
+# Compiled fight-engine boundary
+# ---------------------------------------------------------------------------
+
+DamageType = Literal["physical", "magic", "true"]
+RawDamageFormula = Callable[["DamageInputs"], float]
+
+
+@dataclass(frozen=True, slots=True)
+class DamageInputs:
+    """Runtime values a compiled raw-damage formula may read."""
+
+    champion_stats: Mapping[str, float]
+    level: int
+    is_melee: bool
+    target_max_health: float
+    target_current_health: float
+
+
+@dataclass(frozen=True, slots=True)
+class DamageSource:
+    """One item-owned raw damage formula plus its presentation metadata."""
+
+    item_name: str
+    breakdown_key: str
+    display_name: str
+    damage_type: DamageType
+    raw_damage: RawDamageFormula
+    is_ability_damage: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class PerHitEffect:
+    """Damage applied on each auto-attack on-hit application."""
+
+    source: DamageSource
+    tracks_current_health: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class SpellbladeEffect:
+    """One mutually-exclusive spellblade behavior."""
+
+    source: DamageSource
+    cooldown: float
+    weave_delay: float
+    double_on_hit: bool = False
+    expose_weakness_melee: float = 0.0
+    expose_weakness_ranged: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class BurnEffect:
+    """Refreshable burn behavior with an item-owned base-duration formula."""
+
+    source: DamageSource
+    duration: float
+
+
+@dataclass(frozen=True, slots=True)
+class PeriodicEffect:
+    """Damage applied once per fixed interval."""
+
+    source: DamageSource
+    interval: float
+
+
+@dataclass(frozen=True, slots=True)
+class CooldownProcEffect:
+    """Triggered damage with optional repeated cooldown applications."""
+
+    source: DamageSource
+    cooldown: float
+    repeat_on_cooldown: bool = True
+    late_phase: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class UltimateProcEffect:
+    """Ultimate-triggered damage whose base formula spans one duration."""
+
+    source: DamageSource
+    duration: float
+    mr_reduction: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class FirstAutoEffect:
+    """Damage triggered by the first eligible auto attack."""
+
+    source: DamageSource
+    max_procs: int = 1
+
+
+@dataclass(frozen=True, slots=True)
+class AutoCooldownEffect:
+    """Empowered-auto damage available again after a cooldown."""
+
+    source: DamageSource
+    cooldown: float
+
+
+@dataclass(frozen=True, slots=True)
+class StackingOnHitEffect:
+    """Damage triggered after a fixed number of on-hit applications."""
+
+    source: DamageSource
+    hits_required: int
+    tracks_target_health: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class PhantomHitEffect:
+    """Cadence for an extra on-hit application after autos stack."""
+
+    item_name: str
+    stacking_autos: int
+    interval: int
+
+
+@dataclass(frozen=True, slots=True)
+class UltimateAutoBuffEffect:
+    """Ultimate-triggered attack-speed and empowered-auto behavior."""
+
+    item_name: str
+    bonus_attack_speed_percent: float
+    empowered_auto_count: int
+    duration: float
+    reduced_crit_ratio: float
+    natural_crit_true_damage_ratio: float
+
+
+@dataclass(frozen=True, slots=True)
+class StackingPenEffect:
+    """Alternating-auto penetration that ramps to a stack cap."""
+
+    pen_per_stack: float
+    max_stacks: int
+
+    @property
+    def max_pen(self) -> float:
+        """Return the penetration fraction at maximum stacks."""
+        return self.pen_per_stack * self.max_stacks
+
+    def average_pen(self, num_auto_attacks: int) -> float:
+        """Return average penetration across the modeled auto sequence."""
+        if num_auto_attacks <= 0:
+            return 0.0
+        total_pen = 0.0
+        dark_stacks = 0
+        for auto_number in range(1, num_auto_attacks + 1):
+            if auto_number % 2 == 0:
+                dark_stacks = min(dark_stacks + 1, self.max_stacks)
+            total_pen += dark_stacks * self.pen_per_stack
+        return total_pen / num_auto_attacks
+
+
+@dataclass(frozen=True, slots=True)
+class FirstAutoCritEffect:
+    """Forced first-auto crit expressed as a fraction of full crit damage."""
+
+    item_name: str
+    reduced_crit_ratio: float
+
+
+@dataclass(frozen=True, slots=True)
+class MagicTrueCritEffect:
+    """Low-health critical modifier for magic and true damage."""
+
+    item_name: str
+    health_threshold: float
+    crit_multiplier: float
+
+
+@dataclass(frozen=True, slots=True)
+class StackingReductionEffect:
+    """Per-hit resistance reduction and its stack cap."""
+
+    reduction_per_stack: float
+    max_stacks: int
+
+
+@dataclass(frozen=True, slots=True)
+class ExecuteEffect:
+    """Display-only low-health execution threshold."""
+
+    item_name: str
+    threshold: float
+
+
+@dataclass(frozen=True, slots=True)
+class DamageAmplifierEffect:
+    """One fight-wide amplifier with registry values already captured."""
+
+    item_name: str
+    amp_fraction: Callable[[float, float], float]
+
+
+@dataclass(frozen=True, slots=True)
+class AbilityAmplifierEffect:
+    """Ability-only amplifier derived from champion bonus mana."""
+
+    item_name: str
+    base_amp: float
+    amp_per_100_bonus_mana: float
+
+    def multiplier(
+        self,
+        champion_stats: Mapping[str, float],
+        include_actives: bool,
+    ) -> float:
+        """Return the active multiplier for this champion state."""
+        if not include_actives:
+            return 1.0
+        bonus_mana = champion_stats.get("bonus_mana", 0.0)
+        return 1.0 + self.base_amp + self.amp_per_100_bonus_mana * (bonus_mana / 100.0)
+
+
+@dataclass(frozen=True, slots=True)
+class ArmorReductionEffect:
+    """Average stacking armor reduction for one fight."""
+
+    reduction_per_stack: float
+    max_stacks: int
+
+    def average_reduction(self, num_auto_attacks: int) -> float:
+        """Preserve the engine's established Black Cleaver ramp model."""
+        hits = num_auto_attacks + 4
+        if hits >= self.max_stacks:
+            average_stacks = self.max_stacks * 0.8
+        else:
+            average_stacks = hits / 2.0
+        return self.reduction_per_stack * average_stacks
+
+
+@dataclass(frozen=True, slots=True)
+class BuildDamageEffects:
+    """Typed item behaviors compiled once for one fight."""
+
+    per_hits: tuple[PerHitEffect, ...] = ()
+    spellblade: SpellbladeEffect | None = None
+    burns: tuple[BurnEffect, ...] = ()
+    immolates: tuple[DamageSource, ...] = ()
+    periodic: tuple[PeriodicEffect, ...] = ()
+    cooldown_procs: tuple[CooldownProcEffect, ...] = ()
+    ultimate_procs: tuple[UltimateProcEffect, ...] = ()
+    actives: tuple[DamageSource, ...] = ()
+    first_autos: tuple[FirstAutoEffect, ...] = ()
+    auto_cooldowns: tuple[AutoCooldownEffect, ...] = ()
+    stacking_on_hits: tuple[StackingOnHitEffect, ...] = ()
+    per_ability_hits: tuple[DamageSource, ...] = ()
+    shaped_charges: tuple[CooldownProcEffect, ...] = ()
+    phantom_hit: PhantomHitEffect | None = None
+    ultimate_auto_buff: UltimateAutoBuffEffect | None = None
+    stacking_pen: StackingPenEffect | None = None
+    navori_refund_percent: float = 0.0
+    crit_damage_bonus: float = 0.0
+    first_auto_crit: FirstAutoCritEffect | None = None
+    magic_true_crit: MagicTrueCritEffect | None = None
+    damage_amplifiers: tuple[DamageAmplifierEffect, ...] = ()
+    magic_amp: float = 1.0
+    basic_amp: float = 1.0
+    ability_amp: AbilityAmplifierEffect | None = None
+    hypershot_amp: float = 1.0
+    armor_reduction: ArmorReductionEffect | None = None
+    basic_amp_source: str | None = None
+    ability_amp_source: str | None = None
+    execute: ExecuteEffect | None = None
+    stacking_mr_reduction: StackingReductionEffect | None = None
+    cooldown_refund_source: str | None = None
+    conditional_notes: tuple[str, ...] = ()
+
+
+class _RequiredValues:
+    """Typed, contextual reads from one live registry record."""
+
+    def __init__(self, item_name: str, values: Mapping[str, Any]) -> None:
+        self.item_name = item_name
+        self.values = values
+
+    def value(self, key: str) -> Any:
+        """Return one required value or raise with item and key context."""
+        if key not in self.values:
+            raise KeyError(
+                f"ITEM_EFFECTS[{self.item_name!r}] is missing {key!r} — "
+                "parser/defaults bug; check item effect schema"
+            )
+        return self.values[key]
+
+    def number(self, key: str) -> float:
+        """Return one required numeric value as a float."""
+        return float(self.value(key))
+
+
+def _damage_source(
+    item_name: str,
+    damage_type: DamageType,
+    raw_damage: RawDamageFormula,
+    *,
+    suffix: str = "on-hit",
+    breakdown_key: str | None = None,
+) -> DamageSource:
+    """Build shared source metadata without leaking registry records."""
+    return DamageSource(
+        item_name=item_name,
+        breakdown_key=breakdown_key or f"on_hit_{item_name}",
+        display_name=f"{item_name} ({suffix})",
+        damage_type=damage_type,
+        raw_damage=raw_damage,
+    )
+
+
+def _compile_on_hit(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> PerHitEffect:
+    """Compile one declarative on-hit formula from validated values."""
+    required = _RequiredValues(item_name, values)
+    formula = required.value("formula")
+    damage_type = required.value("damage_type")
+
+    if formula == "flat_ap":
+        base = required.number("base")
+        ap_ratio = required.number("ap_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
+
+    elif formula == "current_hp":
+        melee_ratio = required.number("current_hp_ratio_melee")
+        ranged_ratio = required.number("current_hp_ratio_ranged")
+        minimum = required.number("min_damage")
+
+        def raw(inputs: DamageInputs) -> float:
+            ratio = melee_ratio if inputs.is_melee else ranged_ratio
+            return max(minimum, ratio * inputs.target_current_health)
+
+    elif formula == "flat":
+        base = required.number("base")
+
+        def raw(_inputs: DamageInputs) -> float:
+            return base
+
+    elif formula == "max_hp":
+        melee_ratio = required.number("max_hp_ratio_melee")
+        ranged_ratio = required.number("max_hp_ratio_ranged")
+
+        def raw(inputs: DamageInputs) -> float:
+            ratio = melee_ratio if inputs.is_melee else ranged_ratio
+            return ratio * inputs.champion_stats.get("health", 0.0)
+
+    elif formula == "max_mana":
+        ratio = required.number("max_mana_ratio_on_hit")
+
+        def raw(inputs: DamageInputs) -> float:
+            return ratio * inputs.champion_stats.get("max_mana", 0.0)
+
+    else:
+        raise ValueError(f"Unsupported on-hit formula {formula!r} for {item_name!r}")
+
+    source = _damage_source(item_name, damage_type, raw)
+    return PerHitEffect(source, tracks_current_health=formula == "current_hp")
+
+
+def _compile_auto_cooldown(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> AutoCooldownEffect:
+    """Compile Titanic-style empowered-auto damage."""
+    required = _RequiredValues(item_name, values)
+    melee_ratio = required.number("active_max_hp_ratio_melee")
+    ranged_ratio = required.number("active_max_hp_ratio_ranged")
+
+    def raw(inputs: DamageInputs) -> float:
+        ratio = melee_ratio if inputs.is_melee else ranged_ratio
+        return ratio * inputs.champion_stats.get("health", 0.0)
+
+    source = _damage_source(
+        item_name,
+        required.value("damage_type"),
+        raw,
+        suffix="Titanic Crescent",
+        breakdown_key=f"active_{item_name}",
+    )
+    return AutoCooldownEffect(source, required.number("active_cooldown"))
+
+
+def _compile_per_ability_hit(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> DamageSource:
+    """Compile Muramana-style damage applied per ability hit."""
+    required = _RequiredValues(item_name, values)
+    melee_ratio = required.number("max_mana_ratio_ability_melee")
+    ranged_ratio = required.number("max_mana_ratio_ability_ranged")
+
+    def raw(inputs: DamageInputs) -> float:
+        ratio = melee_ratio if inputs.is_melee else ranged_ratio
+        return ratio * inputs.champion_stats.get("max_mana", 0.0)
+
+    return _damage_source(
+        item_name,
+        required.value("damage_type"),
+        raw,
+        suffix="Shock - abilities",
+        breakdown_key="muramana_ability",
+    )
+
+
+def _compile_spellblade(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> SpellbladeEffect:
+    """Compile one spellblade formula and its engine scheduling values."""
+    required = _RequiredValues(item_name, values)
+    formula = required.value("formula")
+    base_ad_ratio = required.number("base_ad_ratio")
+
+    if formula == "base_ad":
+
+        def raw(inputs: DamageInputs) -> float:
+            return base_ad_ratio * inputs.champion_stats.get("base_attack_damage", 0.0)
+
+    elif formula == "base_ad_ap":
+        ap_ratio = required.number("ap_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            stats = inputs.champion_stats
+            return base_ad_ratio * stats.get(
+                "base_attack_damage", 0.0
+            ) + ap_ratio * stats.get("ability_power", 0.0)
+
+    elif formula == "base_ad_crit":
+        crit_bonus_max = required.number("crit_bonus_max")
+
+        def raw(inputs: DamageInputs) -> float:
+            stats = inputs.champion_stats
+            crit_ratio = min(stats.get("critical_strike_chance", 0.0) / 100.0, 1.0)
+            return (
+                base_ad_ratio * stats.get("base_attack_damage", 0.0)
+                + crit_bonus_max * crit_ratio
+            )
+
+    else:
+        raise ValueError(
+            f"Unsupported spellblade formula {formula!r} for {item_name!r}"
+        )
+
+    source = _damage_source(
+        item_name,
+        required.value("damage_type"),
+        raw,
+        suffix="Spellblade",
+        breakdown_key=f"spellblade_{item_name}",
+    )
+    return SpellbladeEffect(
+        source=source,
+        cooldown=required.number("cooldown"),
+        weave_delay=required.number("weave_delay"),
+        double_on_hit=bool(values.get("double_on_hit", False)),
+        expose_weakness_melee=float(values.get("expose_weakness_melee", 0.0)),
+        expose_weakness_ranged=float(values.get("expose_weakness_ranged", 0.0)),
+    )
+
+
+def _compile_burn(item_name: str, values: Mapping[str, Any]) -> BurnEffect:
+    """Compile one refreshable burn's base-duration raw damage."""
+    required = _RequiredValues(item_name, values)
+    formula = required.value("formula")
+    if formula == "max_hp":
+        ratio = required.number("max_hp_ratio_total")
+
+        def raw(inputs: DamageInputs) -> float:
+            return ratio * inputs.target_max_health
+
+    elif formula == "flat_ap":
+        base = required.number("base_total")
+        ap_ratio = required.number("ap_ratio_total")
+
+        def raw(inputs: DamageInputs) -> float:
+            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
+
+    else:
+        raise ValueError(f"Unsupported burn formula {formula!r} for {item_name!r}")
+    source = _damage_source(
+        item_name,
+        required.value("damage_type"),
+        raw,
+        suffix="burn",
+        breakdown_key=f"burn_{item_name}",
+    )
+    return BurnEffect(source, required.number("duration"))
+
+
+def _compile_immolate(item_name: str, values: Mapping[str, Any]) -> DamageSource:
+    """Compile one Immolate formula as raw damage per second."""
+    required = _RequiredValues(item_name, values)
+    if required.value("formula") != "bonus_hp_dps":
+        raise ValueError(f"Unsupported Immolate formula for {item_name!r}")
+    base = required.number("base_per_second")
+    bonus_hp_ratio = required.number("bonus_hp_ratio_per_second")
+
+    def raw(inputs: DamageInputs) -> float:
+        return base + bonus_hp_ratio * inputs.champion_stats.get("bonus_health", 0.0)
+
+    return _damage_source(
+        item_name,
+        required.value("damage_type"),
+        raw,
+        suffix="Immolate",
+        breakdown_key=f"immolate_{item_name}",
+    )
+
+
+def _compile_periodic(item_name: str, values: Mapping[str, Any]) -> PeriodicEffect:
+    """Compile one fixed-interval periodic damage formula."""
+    required = _RequiredValues(item_name, values)
+    if required.value("formula") != "bonus_hp":
+        raise ValueError(f"Unsupported periodic formula for {item_name!r}")
+    bonus_hp_ratio = required.number("bonus_hp_ratio")
+
+    def raw(inputs: DamageInputs) -> float:
+        return bonus_hp_ratio * inputs.champion_stats.get("bonus_health", 0.0)
+
+    source = _damage_source(
+        item_name,
+        required.value("damage_type"),
+        raw,
+        suffix="Anguish",
+        breakdown_key=f"periodic_{item_name}",
+    )
+    return PeriodicEffect(source, required.number("interval"))
+
+
+def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffect:
+    """Compile one triggered proc's per-application raw damage."""
+    required = _RequiredValues(item_name, values)
+    formula = required.value("formula")
+    if formula == "charged_ap":
+        base = required.number("base_per_charge")
+        ap_ratio = required.number("ap_ratio_per_charge")
+        multiplier = required.number("single_target_multiplier")
+
+        def raw(inputs: DamageInputs) -> float:
+            ap = inputs.champion_stats.get("ability_power", 0.0)
+            return (base + ap_ratio * ap) * multiplier
+
+    elif formula == "flat_ap":
+        base = required.number("base")
+        ap_ratio = required.number("ap_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
+
+    elif formula == "flat_ap_max_hp":
+        base = required.number("base")
+        ap_ratio = required.number("ap_ratio")
+        hp_ratio = required.number("target_max_hp_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            return (
+                base
+                + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
+                + hp_ratio * inputs.target_max_health
+            )
+
+    else:
+        raise ValueError(f"Unsupported proc formula {formula!r} for {item_name!r}")
+    source = DamageSource(
+        item_name=item_name,
+        breakdown_key=f"proc_{item_name}",
+        display_name=f"{item_name} (proc)",
+        damage_type=required.value("damage_type"),
+        raw_damage=raw,
+        is_ability_damage=bool(values.get("is_ability_damage", False)),
+    )
+    return CooldownProcEffect(
+        source,
+        required.number("cooldown"),
+        bool(values.get("repeat_on_cooldown", True)),
+    )
+
+
+def _compile_ultimate_proc(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> UltimateProcEffect:
+    """Compile one ultimate-triggered duration formula."""
+    required = _RequiredValues(item_name, values)
+    if required.value("formula") != "flat_ap":
+        raise ValueError(f"Unsupported ultimate proc formula for {item_name!r}")
+    base = required.number("base")
+    ap_ratio = required.number("ap_ratio")
+
+    def raw(inputs: DamageInputs) -> float:
+        return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
+
+    source = _damage_source(
+        item_name,
+        required.value("damage_type"),
+        raw,
+        suffix="Hatefog",
+        breakdown_key=f"ult_proc_{item_name}",
+    )
+    return UltimateProcEffect(
+        source,
+        required.number("duration"),
+        float(values.get("mr_reduction", 0.0)),
+    )
+
+
+def _compile_active(item_name: str, values: Mapping[str, Any]) -> DamageSource:
+    """Compile one once-per-fight active damage formula."""
+    required = _RequiredValues(item_name, values)
+    formula = required.value("formula")
+    if formula == "flat_ap":
+        base = required.number("base")
+        ap_ratio = required.number("ap_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
+
+    elif formula == "total_ad":
+        ratio = required.number("total_ad_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            return ratio * inputs.champion_stats.get("attack_damage", 0.0)
+
+    elif formula == "level_ap":
+        base_min = required.number("base_min")
+        base_max = required.number("base_max")
+        ap_ratio = required.number("ap_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            level = max(1, min(inputs.level, 20))
+            base = base_min + (base_max - base_min) * (level - 1) / 19
+            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
+
+    else:
+        raise ValueError(f"Unsupported active formula {formula!r} for {item_name!r}")
+    return _damage_source(
+        item_name,
+        required.value("damage_type"),
+        raw,
+        suffix="active",
+        breakdown_key=f"active_{item_name}",
+    )
+
+
+def _explicit_damage_source(
+    item_name: str,
+    required: _RequiredValues,
+    raw_damage: RawDamageFormula,
+) -> DamageSource:
+    """Compile registry-owned presentation metadata for special behaviors."""
+    return DamageSource(
+        item_name=item_name,
+        breakdown_key=str(required.value("breakdown_key")),
+        display_name=str(required.value("display_name")),
+        damage_type=required.value("damage_type"),
+        raw_damage=raw_damage,
+    )
+
+
+def _compile_first_auto(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> FirstAutoEffect:
+    """Compile a first-auto raw formula without exposing item identity."""
+    required = _RequiredValues(item_name, values)
+    formula = required.value("formula")
+    if formula == "flat":
+        base = required.number("base")
+
+        def raw(_inputs: DamageInputs) -> float:
+            return base
+
+    elif formula == "flat_base_ad":
+        base = required.number("base")
+        base_ad_ratio = required.number("base_ad_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            return base + base_ad_ratio * inputs.champion_stats.get(
+                "base_attack_damage", 0.0
+            )
+
+    elif formula == "flat_max_hp":
+        base = required.number("base")
+        max_hp_ratio = required.number("max_hp_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            return base + max_hp_ratio * inputs.champion_stats.get("health", 0.0)
+
+    elif formula == "current_hp":
+        melee_ratio = required.number("current_hp_ratio_melee")
+        ranged_ratio = required.number("current_hp_ratio_ranged")
+
+        def raw(inputs: DamageInputs) -> float:
+            ratio = melee_ratio if inputs.is_melee else ranged_ratio
+            return ratio * inputs.target_current_health
+
+    else:
+        raise ValueError(
+            f"Unsupported first-auto formula {formula!r} for {item_name!r}"
+        )
+
+    max_procs = 1
+    if values.get("uses_empowered_auto_count"):
+        max_procs = int(required.number("empowered_auto_count"))
+    return FirstAutoEffect(
+        _explicit_damage_source(item_name, required, raw),
+        max_procs=max_procs,
+    )
+
+
+def _compile_stacking_on_hit(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> StackingOnHitEffect:
+    """Compile every-Nth-on-hit damage and its current-HP dependency."""
+    required = _RequiredValues(item_name, values)
+    formula = required.value("formula")
+    if formula == "base_ad_max_hp":
+        base_ad_melee = required.number("base_ad_ratio_melee")
+        base_ad_ranged = required.number("base_ad_ratio_ranged")
+        hp_melee = required.number("max_hp_ratio_melee")
+        hp_ranged = required.number("max_hp_ratio_ranged")
+
+        def raw(inputs: DamageInputs) -> float:
+            base_ad_ratio = base_ad_melee if inputs.is_melee else base_ad_ranged
+            hp_ratio = hp_melee if inputs.is_melee else hp_ranged
+            stats = inputs.champion_stats
+            return base_ad_ratio * stats.get(
+                "base_attack_damage", 0.0
+            ) + hp_ratio * stats.get("health", 0.0)
+
+        tracks_target_health = False
+    elif formula == "level_missing_hp":
+        base_melee = required.number("base_melee")
+        per_level_melee = required.number("per_level_melee")
+        base_ranged = required.number("base_ranged")
+        per_level_ranged = required.number("per_level_ranged")
+        scaling_start = int(required.number("scaling_start_level"))
+        missing_bonus = required.number("missing_hp_bonus_max")
+
+        def raw(inputs: DamageInputs) -> float:
+            base = base_melee if inputs.is_melee else base_ranged
+            per_level = per_level_melee if inputs.is_melee else per_level_ranged
+            if inputs.level >= scaling_start:
+                base += per_level * (inputs.level - scaling_start + 1)
+            missing_ratio = max(
+                0.0,
+                1.0 - inputs.target_current_health / inputs.target_max_health,
+            )
+            return base * (1.0 + missing_bonus * missing_ratio)
+
+        tracks_target_health = True
+    else:
+        raise ValueError(f"Unsupported stacking formula {formula!r} for {item_name!r}")
+
+    return StackingOnHitEffect(
+        source=_explicit_damage_source(item_name, required, raw),
+        hits_required=int(required.number("hits_required")),
+        tracks_target_health=tracks_target_health,
+    )
+
+
+def _compile_max_hp_proc(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> CooldownProcEffect:
+    """Compile a cooldown proc based on target maximum health."""
+    required = _RequiredValues(item_name, values)
+    if required.value("formula") != "max_hp":
+        raise ValueError(f"Unsupported max-HP proc formula for {item_name!r}")
+    melee_ratio = required.number("target_max_hp_ratio_melee")
+    ranged_ratio = required.number("target_max_hp_ratio_ranged")
+
+    def raw(inputs: DamageInputs) -> float:
+        ratio = melee_ratio if inputs.is_melee else ranged_ratio
+        return ratio * inputs.target_max_health
+
+    return CooldownProcEffect(
+        source=_explicit_damage_source(item_name, required, raw),
+        cooldown=required.number("cooldown"),
+        late_phase=True,
+    )
+
+
+def _compile_shaped_charge(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> CooldownProcEffect:
+    """Compile an ability-triggered lethality proc without scheduling it."""
+    required = _RequiredValues(item_name, values)
+    base_melee = required.number("base_melee")
+    base_ranged = required.number("base_ranged")
+    ratio_melee = required.number("lethality_ratio_melee")
+    ratio_ranged = required.number("lethality_ratio_ranged")
+
+    def raw(inputs: DamageInputs) -> float:
+        base = base_melee if inputs.is_melee else base_ranged
+        ratio = ratio_melee if inputs.is_melee else ratio_ranged
+        return base + ratio * inputs.champion_stats.get("lethality", 0.0)
+
+    source = DamageSource(
+        item_name=item_name,
+        breakdown_key=f"shaped_charge_{item_name}",
+        display_name=f"{item_name} (Shaped Charge)",
+        damage_type="true",
+        raw_damage=raw,
+    )
+    return CooldownProcEffect(source, required.number("cooldown"))
+
+
+def _compile_damage_amplifier(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> DamageAmplifierEffect:
+    """Compile one supported amplifier schema into a fight-time formula."""
+    required = _RequiredValues(item_name, values)
+
+    if "damage_amp_per_second" in values:
+        per_second = required.number("damage_amp_per_second")
+        maximum = required.number("damage_amp_max")
+
+        def amp_fraction(duration: float, _target_bonus_health: float) -> float:
+            stacks = min(duration, maximum / per_second)
+            return per_second * stacks / 2.0
+
+    elif "amp_per_second" in values:
+        per_second = required.number("amp_per_second")
+        maximum = required.number("amp_max")
+
+        def amp_fraction(duration: float, _target_bonus_health: float) -> float:
+            stacks = min(duration, maximum / per_second)
+            return per_second * stacks / 2.0
+
+    elif "bonus_hp_cap" in values:
+        maximum = required.number("max_amp")
+        bonus_hp_cap = required.number("bonus_hp_cap")
+
+        def amp_fraction(_duration: float, target_bonus_health: float) -> float:
+            return maximum * min(target_bonus_health / bonus_hp_cap, 1.0)
+
+    elif "amp_per_stack" in values:
+        per_stack = required.number("amp_per_stack")
+        maximum_stacks = int(required.number("max_stacks"))
+
+        def amp_fraction(duration: float, _target_bonus_health: float) -> float:
+            stacks = min(maximum_stacks, max(1, int(duration / 2)))
+            return per_stack * stacks
+
+    else:
+        raise KeyError(
+            f"ITEM_EFFECTS[{item_name!r}] has unsupported damage-amplifier schema"
+        )
+
+    return DamageAmplifierEffect(item_name, amp_fraction)
+
+
+_KNOWN_EFFECT_TYPES = frozenset(
+    {
+        "ability_damage_amp",
+        "active",
+        "armor_reduction",
+        "basic_damage_amp",
+        "burn",
+        "conditional_attack_speed",
+        "crit_modifier",
+        "damage_amp",
+        "execute",
+        "first_auto_crit",
+        "hypershot_amp",
+        "immolate",
+        "magic_damage_amp",
+        "magic_true_crit",
+        "max_hp_proc",
+        "mr_reduction_stacking",
+        "on_hit",
+        "on_hit_once",
+        "on_hit_stacking",
+        "periodic_aoe",
+        "proc",
+        "shaped_charge",
+        "spellblade",
+        "stat_conversion",
+        "ult_attack_speed_buff",
+        "ult_empowered_autos",
+        "ult_proc",
+    }
+)
+
+
+def resolve_damage_effects(
+    items: Sequence[Mapping[str, Any]],
+) -> BuildDamageEffects:
+    """Compile a build's registered damage behaviors from the live registry."""
+    per_hits: list[PerHitEffect] = []
+    spellblade: SpellbladeEffect | None = None
+    burns: list[BurnEffect] = []
+    immolates: list[DamageSource] = []
+    periodic: list[PeriodicEffect] = []
+    cooldown_procs: list[CooldownProcEffect] = []
+    ultimate_procs: list[UltimateProcEffect] = []
+    actives: list[DamageSource] = []
+    first_autos: list[FirstAutoEffect] = []
+    stacking_on_hits: list[StackingOnHitEffect] = []
+    auto_cooldowns: list[AutoCooldownEffect] = []
+    per_ability_hits: list[DamageSource] = []
+    shaped_charges: list[CooldownProcEffect] = []
+    phantom_hit: PhantomHitEffect | None = None
+    ultimate_auto_buff: UltimateAutoBuffEffect | None = None
+    stacking_pen: StackingPenEffect | None = None
+    navori_refund_percent = 0.0
+    crit_damage_bonus = 0.0
+    first_auto_crit: FirstAutoCritEffect | None = None
+    magic_true_crit: MagicTrueCritEffect | None = None
+    damage_amplifiers: list[DamageAmplifierEffect] = []
+    magic_amp = 1.0
+    basic_amp = 1.0
+    ability_amp: AbilityAmplifierEffect | None = None
+    hypershot_amp = 1.0
+    armor_reduction: ArmorReductionEffect | None = None
+    basic_amp_source: str | None = None
+    ability_amp_source: str | None = None
+    execute: ExecuteEffect | None = None
+    stacking_mr_reduction: StackingReductionEffect | None = None
+    cooldown_refund_source: str | None = None
+    conditional_notes: list[str] = []
+
+    for item in items:
+        item_name = str(item.get("name", ""))
+        values = ITEM_EFFECTS.get(item_name)
+        if not values:
+            continue
+        effect_type = values.get("type")
+        if effect_type not in _KNOWN_EFFECT_TYPES:
+            raise ValueError(
+                f"ITEM_EFFECTS[{item_name!r}] has unknown effect type {effect_type!r}"
+            )
+        if effect_type == "on_hit":
+            per_hits.append(_compile_on_hit(item_name, values))
+        elif effect_type == "spellblade" and spellblade is None:
+            spellblade = _compile_spellblade(item_name, values)
+        elif effect_type == "burn":
+            burns.append(_compile_burn(item_name, values))
+        elif effect_type == "immolate":
+            immolates.append(_compile_immolate(item_name, values))
+        elif effect_type == "periodic_aoe":
+            periodic.append(_compile_periodic(item_name, values))
+        elif effect_type == "proc":
+            cooldown_procs.append(_compile_proc(item_name, values))
+        elif effect_type == "ult_proc":
+            ultimate_procs.append(_compile_ultimate_proc(item_name, values))
+        elif effect_type == "active":
+            actives.append(_compile_active(item_name, values))
+        elif effect_type == "on_hit_once":
+            first_autos.append(_compile_first_auto(item_name, values))
+        elif effect_type == "on_hit_stacking":
+            stacking_on_hits.append(_compile_stacking_on_hit(item_name, values))
+        elif effect_type == "max_hp_proc":
+            cooldown_procs.append(_compile_max_hp_proc(item_name, values))
+        elif effect_type == "shaped_charge":
+            shaped_charges.append(_compile_shaped_charge(item_name, values))
+        elif effect_type == "ult_empowered_autos":
+            required = _RequiredValues(item_name, values)
+            ultimate_auto_buff = UltimateAutoBuffEffect(
+                item_name=item_name,
+                bonus_attack_speed_percent=required.number(
+                    "bonus_attack_speed_percent"
+                ),
+                empowered_auto_count=int(required.number("empowered_auto_count")),
+                duration=required.number("duration"),
+                reduced_crit_ratio=required.number("reduced_crit_ratio"),
+                natural_crit_true_damage_ratio=required.number(
+                    "natural_crit_true_damage_ratio"
+                ),
+            )
+            conditional_notes.append(
+                "R is assumed to be cast at the start of the fight. "
+                f"{item_name} empowered attacks "
+                f"({required.number('bonus_attack_speed_percent'):.0f}% bonus AS, "
+                "guaranteed crits) are applied from time 0."
+            )
+        elif effect_type == "ult_attack_speed_buff":
+            required = _RequiredValues(item_name, values)
+            conditional_notes.append(
+                "R is assumed to be cast at the start of the fight. "
+                f"{item_name} Overdrive "
+                f"({required.number('bonus_attack_speed_percent'):.0f}% bonus AS) "
+                "is applied from time 0."
+            )
+        elif effect_type == "magic_true_crit":
+            required = _RequiredValues(item_name, values)
+            magic_true_crit = MagicTrueCritEffect(
+                item_name,
+                required.number("health_threshold"),
+                required.number("crit_multiplier"),
+            )
+        elif effect_type == "basic_damage_amp":
+            basic_amp += _RequiredValues(item_name, values).number("max_amp")
+            basic_amp_source = item_name
+        elif effect_type == "ability_damage_amp":
+            required = _RequiredValues(item_name, values)
+            ability_amp = AbilityAmplifierEffect(
+                item_name,
+                required.number("base_amp"),
+                required.number("amp_per_100_bonus_mana"),
+            )
+            ability_amp_source = item_name
+        elif effect_type == "execute":
+            execute = ExecuteEffect(
+                item_name,
+                _RequiredValues(item_name, values).number("threshold"),
+            )
+        elif effect_type == "mr_reduction_stacking":
+            required = _RequiredValues(item_name, values)
+            stacking_mr_reduction = StackingReductionEffect(
+                required.number("mr_reduction_per_stack"),
+                int(required.number("max_stacks")),
+            )
+        elif effect_type == "crit_modifier":
+            required = _RequiredValues(item_name, values)
+            if "bonus_crit_damage" in values:
+                crit_damage_bonus += required.number("bonus_crit_damage")
+            if "cd_refund_percent" in values:
+                navori_refund_percent = required.number("cd_refund_percent")
+                cooldown_refund_source = item_name
+        if "damage_amp_per_second" in values or effect_type == "damage_amp":
+            damage_amplifiers.append(_compile_damage_amplifier(item_name, values))
+        if effect_type == "magic_damage_amp":
+            magic_amp += _RequiredValues(item_name, values).number("magic_amp")
+        if effect_type == "hypershot_amp":
+            hypershot_amp += _RequiredValues(item_name, values).number("amp")
+        if effect_type == "armor_reduction":
+            required = _RequiredValues(item_name, values)
+            armor_reduction = ArmorReductionEffect(
+                required.number("reduction_per_stack"),
+                int(required.number("max_stacks")),
+            )
+        secondary = values.get("secondary_behavior")
+        if secondary == "auto_cooldown":
+            auto_cooldowns.append(_compile_auto_cooldown(item_name, values))
+        elif secondary == "per_ability_hit":
+            per_ability_hits.append(_compile_per_ability_hit(item_name, values))
+        if values.get("phantom_hit"):
+            required = _RequiredValues(item_name, values)
+            phantom_hit = PhantomHitEffect(
+                item_name,
+                int(required.number("stacking_autos")),
+                int(required.number("phantom_interval")),
+            )
+        if "dark_pen_per_stack" in values and "dark_max_stacks" in values:
+            required = _RequiredValues(item_name, values)
+            stacking_pen = StackingPenEffect(
+                required.number("dark_pen_per_stack"),
+                int(required.number("dark_max_stacks")),
+            )
+        if "reduced_crit_ratio" in values and effect_type == "first_auto_crit":
+            first_auto_crit = FirstAutoCritEffect(
+                item_name,
+                _RequiredValues(item_name, values).number("reduced_crit_ratio"),
+            )
+
+    return BuildDamageEffects(
+        per_hits=tuple(per_hits),
+        spellblade=spellblade,
+        burns=tuple(burns),
+        immolates=tuple(immolates),
+        periodic=tuple(periodic),
+        cooldown_procs=tuple(cooldown_procs),
+        ultimate_procs=tuple(ultimate_procs),
+        actives=tuple(actives),
+        first_autos=tuple(first_autos),
+        stacking_on_hits=tuple(stacking_on_hits),
+        auto_cooldowns=tuple(auto_cooldowns),
+        per_ability_hits=tuple(per_ability_hits),
+        shaped_charges=tuple(shaped_charges),
+        phantom_hit=phantom_hit,
+        ultimate_auto_buff=ultimate_auto_buff,
+        stacking_pen=stacking_pen,
+        navori_refund_percent=navori_refund_percent,
+        crit_damage_bonus=crit_damage_bonus,
+        first_auto_crit=first_auto_crit,
+        magic_true_crit=magic_true_crit,
+        damage_amplifiers=tuple(damage_amplifiers),
+        magic_amp=magic_amp,
+        basic_amp=basic_amp,
+        ability_amp=ability_amp,
+        hypershot_amp=hypershot_amp,
+        armor_reduction=armor_reduction,
+        basic_amp_source=basic_amp_source,
+        ability_amp_source=ability_amp_source,
+        execute=execute,
+        stacking_mr_reduction=stacking_mr_reduction,
+        cooldown_refund_source=cooldown_refund_source,
+        conditional_notes=tuple(conditional_notes),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -792,9 +2004,8 @@ def get_terminus_max_stack_bonuses(
 
     Light hits grant level-scaled bonus armor + MR per stack; dark hits
     grant % armor and magic penetration per stack.  Both are assumed at
-    max stacks for the stat display; the fight engine later replaces the
-    max-stack pen with a ramping per-auto average
-    (``get_terminus_pen_stacks``).
+    max stacks for the stat display; the fight engine consumes the compiled
+    ``StackingPenEffect`` to use a ramping per-auto average.
 
     Args:
         items: List of item data dicts.
@@ -807,7 +2018,13 @@ def get_terminus_max_stack_bonuses(
     if "Terminus" not in _item_names(items):
         return 0.0, 0.0
     max_stacks = _required_effect_value("Terminus", "dark_max_stacks")
-    bonus_resist = get_terminus_light_resist_per_stack(level) * max_stacks
+    low_resist = _required_effect_value("Terminus", "light_resist_min")
+    high_resist = _required_effect_value("Terminus", "light_resist_max")
+    clamped_level = max(1, min(level, 18))
+    resist_per_stack = (
+        low_resist + (high_resist - low_resist) * (clamped_level - 1) / 17.0
+    )
+    bonus_resist = resist_per_stack * max_stacks
     pen_percent = (
         _required_effect_value("Terminus", "dark_pen_per_stack") * max_stacks * 100.0
     )
@@ -826,961 +2043,3 @@ def get_basic_ability_haste(items: list[dict[str, Any]]) -> float:
     if "Spear of Shojin" not in _item_names(items):
         return 0.0
     return _required_effect_value("Spear of Shojin", "basic_ability_haste")
-
-
-# ---------------------------------------------------------------------------
-# Fight-engine value accessors (consumed by damage.py)
-# ---------------------------------------------------------------------------
-# Per-item numeric values the fight engine reads while modeling a fight.
-# Each accessor owns the registry lookup; the fight-model logic (proc
-# counts, mitigation, HP simulation) stays in damage.py's step functions.
-
-
-def get_ult_proc_mr_reduction(items: list[dict[str, Any]]) -> float:
-    """Total MR reduction from ult-triggered proc items (Malignance Hatefog).
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        Summed MR reduction across ult_proc items (0.0 with none).
-    """
-    total = 0.0
-    for item in items:
-        name = item.get("name", "")
-        if ITEM_EFFECTS.get(name, {}).get("type") == "ult_proc":
-            total += _required_effect_value(name, "mr_reduction")
-    return total
-
-
-def get_fiendhunter_empowerment() -> tuple[float, int, float]:
-    """Fiendhunter Bolts ult buff values.
-
-    Returns:
-        Tuple of (bonus attack speed percent, empowered auto count,
-        buff duration in seconds).
-    """
-    return (
-        _required_effect_value("Fiendhunter Bolts", "bonus_attack_speed_percent"),
-        _required_effect_value("Fiendhunter Bolts", "empowered_auto_count"),
-        _required_effect_value("Fiendhunter Bolts", "duration"),
-    )
-
-
-def get_fiendhunter_crit_ratios() -> tuple[float, float]:
-    """Fiendhunter Bolts empowered-auto crit ratios.
-
-    Returns:
-        Tuple of (non-crit damage as a fraction of full crit damage,
-        bonus true damage as a fraction of a natural crit's damage).
-    """
-    return (
-        _required_effect_value("Fiendhunter Bolts", "reduced_crit_ratio"),
-        _required_effect_value("Fiendhunter Bolts", "natural_crit_true_damage_ratio"),
-    )
-
-
-def get_sundered_sky_crit_ratio() -> float:
-    """Sundered Sky Lightshield Strike forced-crit ratio.
-
-    Returns:
-        The first auto's forced crit damage as a fraction of a full crit.
-    """
-    return _required_effect_value("Sundered Sky", "reduced_crit_ratio")
-
-
-def get_terminus_max_stack_pen() -> float:
-    """Terminus Juxtaposition max-stack pen as a fraction (e.g. 0.30).
-
-    The fraction counterpart of ``get_terminus_max_stack_bonuses``'
-    display percentage — the fight engine strips this from champion-stat
-    pen before applying the ramping per-auto average.
-    """
-    return _required_effect_value(
-        "Terminus", "dark_pen_per_stack"
-    ) * _required_effect_value("Terminus", "dark_max_stacks")
-
-
-def get_energized_proc_damage(item_name: str) -> float:
-    """Base damage of a one-shot energized proc.
-
-    Users: Rapid Firecannon (Sharpshooter), Stormrazor (Bolt), and
-    Statikk Shiv (Electrospark, per empowered auto).
-
-    Args:
-        item_name: The energized item's name.
-
-    Returns:
-        Raw base damage per proc.
-    """
-    return _required_effect_value(item_name, "base")
-
-
-def get_statikk_empowered_auto_count() -> int:
-    """Statikk Shiv Electrospark: number of empowered autos per energize."""
-    return int(_required_effect_value("Statikk Shiv", "empowered_auto_count"))
-
-
-def get_voltaic_firmament(is_melee: bool) -> float:
-    """Voltaic Cyclosword Firmament current-HP damage ratio.
-
-    The registry also carries ``damage_cap`` (200), but the wiki scopes
-    that cap to NON-champions — the calculator targets champions, so the
-    fight engine deliberately does not consume it.
-
-    Args:
-        is_melee: Whether the champion is melee.
-
-    Returns:
-        Current-HP damage ratio for the range class.
-    """
-    key = "current_hp_ratio_melee" if is_melee else "current_hp_ratio_ranged"
-    return _required_effect_value("Voltaic Cyclosword", key)
-
-
-def get_titanic_crescent(is_melee: bool) -> tuple[float, float]:
-    """Titanic Hydra Crescent active values.
-
-    Args:
-        is_melee: Whether the champion is melee.
-
-    Returns:
-        Tuple of (max-HP damage ratio for the range class, active cooldown).
-    """
-    key = "active_max_hp_ratio_melee" if is_melee else "active_max_hp_ratio_ranged"
-    return (
-        _required_effect_value("Titanic Hydra", key),
-        _required_effect_value("Titanic Hydra", "active_cooldown"),
-    )
-
-
-def get_hullbreaker_hits_required() -> int:
-    """Hullbreaker Skipper: on-hit applications required per proc."""
-    return _required_effect_value("Hullbreaker", "hits_required")
-
-
-# ---------------------------------------------------------------------------
-# Calculation helpers
-# ---------------------------------------------------------------------------
-
-
-def _lerp_by_level(
-    min_val: float,
-    max_val: float,
-    level: int,
-    max_level: int = 18,
-) -> float:
-    """Linearly interpolate a value between level 1 and max_level."""
-    clamped = max(1, min(level, max_level))
-    return min_val + (max_val - min_val) * (clamped - 1) / (max_level - 1)
-
-
-def get_on_hit_damage(
-    item_name: str,
-    champion_stats: dict[str, float],
-    target_health: float,
-    is_melee: bool,
-) -> float:
-    """Calculate bonus on-hit damage for a single auto attack.
-
-    Args:
-        item_name: Name of the item.
-        champion_stats: Champion's calculated stats.
-        target_health: Target's current health.
-        is_melee: Whether the champion is melee.
-
-    Returns:
-        Raw bonus damage per auto attack (before resistances).
-    """
-    effect = ITEM_EFFECTS.get(item_name)
-    if not effect or effect["type"] != "on_hit":
-        return 0.0
-
-    if item_name == "Nashor's Tooth":
-        return effect["base"] + effect["ap_ratio"] * champion_stats.get(
-            "ability_power", 0
-        )
-
-    if item_name == "Blade of the Ruined King":
-        ratio = (
-            effect["current_hp_ratio_melee"]
-            if is_melee
-            else effect["current_hp_ratio_ranged"]
-        )
-        return ratio * target_health
-
-    if item_name == "Wit's End":
-        return effect["base"]
-
-    if item_name == "Terminus":
-        return effect["base"]
-
-    if item_name == "Titanic Hydra":
-        ratio = (
-            effect["max_hp_ratio_melee"] if is_melee else effect["max_hp_ratio_ranged"]
-        )
-        return ratio * champion_stats.get("health", 0)
-
-    if item_name == "Guinsoo's Rageblade":
-        return effect["base"]
-
-    if item_name == "Muramana":
-        max_mana = champion_stats.get("max_mana", 0)
-        return effect["max_mana_ratio_on_hit"] * max_mana
-
-    return 0.0
-
-
-def get_spellblade_damage(
-    item_name: str,
-    champion_stats: dict[str, float],
-) -> float:
-    """Calculate spellblade proc damage.
-
-    Args:
-        item_name: Name of the spellblade item.
-        champion_stats: Champion's calculated stats.
-
-    Returns:
-        Raw spellblade damage per proc (before resistances).
-    """
-    effect = ITEM_EFFECTS.get(item_name)
-    if not effect or effect["type"] != "spellblade":
-        return 0.0
-
-    base_ad = champion_stats.get("base_attack_damage", 0)
-
-    if item_name == "Trinity Force":
-        return effect["base_ad_ratio"] * base_ad
-
-    if item_name == "Lich Bane":
-        ap = champion_stats.get("ability_power", 0)
-        return effect["base_ad_ratio"] * base_ad + effect["ap_ratio"] * ap
-
-    if item_name == "Essence Reaver":
-        crit = champion_stats.get("critical_strike_chance", 0)
-        crit_bonus = effect["crit_bonus_max"] * min(crit / 100.0, 1.0)
-        return effect["base_ad_ratio"] * base_ad + crit_bonus
-
-    if item_name == "Iceborn Gauntlet":
-        return effect["base_ad_ratio"] * base_ad
-
-    if item_name == "Bloodsong":
-        return effect["base_ad_ratio"] * base_ad
-
-    if item_name == "Dusk and Dawn":
-        ap = champion_stats.get("ability_power", 0)
-        return effect["base_ad_ratio"] * base_ad + effect["ap_ratio"] * ap
-
-    return 0.0
-
-
-def get_spellblade_damage_type(item_name: str) -> str:
-    """Return the damage type of a spellblade proc."""
-    effect = ITEM_EFFECTS.get(item_name)
-    if effect:
-        return effect.get("damage_type", "physical")
-    return "physical"
-
-
-def calculate_burn_damage(
-    item_name: str,
-    champion_stats: dict[str, float],
-    target_health: float,
-) -> float:
-    """Calculate total burn/DoT damage from an item.
-
-    Args:
-        item_name: Name of the burn item.
-        champion_stats: Champion's calculated stats.
-        target_health: Target's maximum health.
-
-    Returns:
-        Total raw burn damage (before resistances).
-    """
-    effect = ITEM_EFFECTS.get(item_name)
-    if not effect:
-        return 0.0
-
-    if item_name == "Liandry's Torment":
-        return effect["max_hp_ratio_total"] * target_health
-
-    if item_name == "Blackfire Torch":
-        ap = champion_stats.get("ability_power", 0)
-        return effect["base_total"] + effect["ap_ratio_total"] * ap
-
-    return 0.0
-
-
-def calculate_immolate_damage(
-    item_name: str,
-    champion_stats: dict[str, float],
-    fight_duration: float,
-) -> float:
-    """Calculate total immolate (aura) damage over a fight.
-
-    Args:
-        item_name: Name of the immolate item.
-        champion_stats: Champion's calculated stats.
-        fight_duration: Fight duration in seconds.
-
-    Returns:
-        Total raw immolate damage (before resistances).
-    """
-    effect = ITEM_EFFECTS.get(item_name)
-    if not effect or effect["type"] != "immolate":
-        return 0.0
-
-    bonus_hp = champion_stats.get("bonus_health", 0)
-    dps = effect["base_per_second"] + effect["bonus_hp_ratio_per_second"] * bonus_hp
-    return dps * fight_duration
-
-
-def calculate_proc_damage(
-    item_name: str,
-    champion_stats: dict[str, float],
-    target_health: float,
-    fight_duration: float,
-    level: int,
-) -> float:
-    """Calculate total proc damage over a fight duration.
-
-    Args:
-        item_name: Name of the proc item.
-        champion_stats: Champion's calculated stats.
-        target_health: Target's maximum health.
-        fight_duration: Fight duration in seconds.
-        level: Champion level.
-
-    Returns:
-        Total raw proc damage (before resistances).
-    """
-    effect = ITEM_EFFECTS.get(item_name)
-    if not effect or effect["type"] != "proc":
-        return 0.0
-
-    ap = champion_stats.get("ability_power", 0)
-
-    if item_name == "Luden's Echo":
-        per_charge = effect["base_per_charge"] + effect["ap_ratio_per_charge"] * ap
-        single_proc = per_charge * effect["single_target_multiplier"]
-        num_procs = 1 + int(fight_duration / effect["cooldown"])
-        return single_proc * num_procs
-
-    if item_name == "Stormsurge":
-        # Usually only procs once per fight (30s CD)
-        return effect["base"] + effect["ap_ratio"] * ap
-
-    if item_name == "Zaz'Zak's Realmspike":
-        per_proc = (
-            effect["base"]
-            + effect["ap_ratio"] * ap
-            + effect["target_max_hp_ratio"] * target_health
-        )
-        num_procs = 1 + int(fight_duration / effect["cooldown"])
-        return per_proc * num_procs
-
-    return 0.0
-
-
-def _level_scaled_base(effect: dict[str, Any], level: int) -> float:
-    """Interpolate base damage that scales linearly from min to max by level."""
-    base_min = effect.get("base_min", 0.0)
-    base_max = effect.get("base_max", base_min)
-    max_level = effect.get("max_level", 20)
-    clamped = max(1, min(level, max_level))
-    return base_min + (base_max - base_min) * (clamped - 1) / (max_level - 1)
-
-
-def calculate_active_damage(
-    item_name: str,
-    champion_stats: dict[str, float],
-    target_health: float = 0.0,
-) -> float:
-    """Calculate damage from an item active (used once per fight).
-
-    Args:
-        item_name: Name of the active item.
-        champion_stats: Champion's calculated stats.
-        target_health: Target's maximum health (for %HP actives).
-
-    Returns:
-        Total raw active damage (before resistances).
-    """
-    effect = ITEM_EFFECTS.get(item_name)
-    if not effect or effect["type"] != "active":
-        return 0.0
-
-    ap = champion_stats.get("ability_power", 0.0)
-    total_ad = champion_stats.get("attack_damage", 0.0)
-    level = int(champion_stats.get("level", 1))
-
-    if item_name == "Hextech Rocketbelt":
-        return effect["base"] + effect["ap_ratio"] * ap
-
-    if item_name in ("Profane Hydra", "Ravenous Hydra", "Stridebreaker"):
-        return effect["total_ad_ratio"] * total_ad
-
-    if item_name == "Hextech Gunblade":
-        base = _level_scaled_base(effect, level)
-        return base + effect["ap_ratio"] * ap
-
-    return 0.0
-
-
-def get_damage_amplifier(
-    items: list[dict[str, Any]],
-    fight_duration: float,
-    target_bonus_health: float = 0.0,
-) -> float:
-    """Calculate total damage amplification multiplier from items.
-
-    Args:
-        items: List of item data dicts.
-        fight_duration: Fight duration in seconds.
-        target_bonus_health: Target's bonus health (for Lord Dominik's).
-
-    Returns:
-        Total multiplier (e.g., 1.06 for 6% amp).
-    """
-    _, total = get_damage_amplifier_breakdown(
-        items,
-        fight_duration,
-        target_bonus_health,
-    )
-    return total
-
-
-def get_damage_amplifier_breakdown(
-    items: list[dict[str, Any]],
-    fight_duration: float,
-    target_bonus_health: float = 0.0,
-) -> tuple[list[tuple[str, float]], float]:
-    """Calculate per-item damage amplification with source names.
-
-    Returns:
-        Tuple of (list of (item_name, amp_fraction) pairs, total multiplier).
-    """
-    sources: list[tuple[str, float]] = []
-
-    for item in items:
-        name = item.get("name", "")
-        effect = ITEM_EFFECTS.get(name)
-        if not effect:
-            continue
-
-        if name == "Liandry's Torment":
-            max_time = effect["damage_amp_max"] / effect["damage_amp_per_second"]
-            stacks = min(fight_duration, max_time)
-            avg_amp = effect["damage_amp_per_second"] * stacks / 2.0
-            sources.append((name, avg_amp))
-
-        elif name == "Riftmaker":
-            stacks = min(fight_duration, effect["amp_max"] / effect["amp_per_second"])
-            avg_amp = effect["amp_per_second"] * stacks / 2.0
-            sources.append((name, avg_amp))
-
-        elif name == "Lord Dominik's Regards":
-            ratio = min(target_bonus_health / effect["bonus_hp_cap"], 1.0)
-            sources.append((name, effect["max_amp"] * ratio))
-
-        elif name == "Spear of Shojin":
-            stacks = min(effect["max_stacks"], max(1, int(fight_duration / 2)))
-            sources.append((name, effect["amp_per_stack"] * stacks))
-
-        elif effect.get("type") == "magic_damage_amp":
-            pass
-
-    total = 1.0 + sum(amp for _, amp in sources)
-    return sources, total
-
-
-def get_magic_damage_amplifier(items: list[dict[str, Any]]) -> float:
-    """Get magic-only damage amplification (e.g., Abyssal Mask).
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        Multiplier for magic damage only (e.g., 1.12 for 12% amp).
-    """
-    amp = 0.0
-    for item in items:
-        name = item.get("name", "")
-        effect = ITEM_EFFECTS.get(name)
-        if effect and effect.get("type") == "magic_damage_amp":
-            amp += effect["magic_amp"]
-    return 1.0 + amp
-
-
-def get_ability_damage_amplifier(
-    items: list[dict[str, Any]],
-    champion_stats: dict[str, float],
-    include_actives: bool = True,
-) -> float:
-    """Calculate ability-specific damage amplification (e.g., Actualizer).
-
-    Args:
-        items: List of item data dicts.
-        champion_stats: Champion's calculated stats.
-        include_actives: Whether active item effects are enabled.
-
-    Returns:
-        Multiplier for ability damage (e.g., 1.165 for 16.5% amp).
-    """
-    amp = 0.0
-    for item in items:
-        name = item.get("name", "")
-        effect = ITEM_EFFECTS.get(name)
-        if not effect or effect.get("type") != "ability_damage_amp":
-            continue
-        if not include_actives:
-            continue
-        bonus_mana = champion_stats.get("bonus_mana", 0.0)
-        base_amp = effect["base_amp"]
-        per_100 = effect["amp_per_100_bonus_mana"]
-        amp += base_amp + per_100 * (bonus_mana / 100.0)
-    return 1.0 + amp
-
-
-def get_hypershot_amplifier(items: list[dict[str, Any]]) -> float:
-    """Get Horizon Focus Hypershot damage amplification.
-
-    Always assumes max range (amp is active). The first ability triggers
-    the mark and does NOT benefit from the amp — the caller is responsible
-    for excluding it.
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        Multiplier for all damage after the trigger (e.g. 1.10 for 10%).
-    """
-    amp = 0.0
-    for item in items:
-        name = item.get("name", "")
-        effect = ITEM_EFFECTS.get(name)
-        if effect and effect.get("type") == "hypershot_amp":
-            amp += effect["amp"]
-    return 1.0 + amp
-
-
-def get_basic_damage_amplifier(
-    items: list[dict[str, Any]],
-) -> float:
-    """Calculate basic (auto attack) damage amplification from items.
-
-    Hexoptics C44 Magnification grants up to ``max_amp`` increased basic
-    damage based on distance.  We always assume maximum distance for the
-    calculation.
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        Multiplier for basic attack damage (e.g. 1.10 for 10% amp).
-    """
-    amp = 0.0
-    for item in items:
-        name = item.get("name", "")
-        effect = ITEM_EFFECTS.get(name)
-        if not effect or effect.get("type") != "basic_damage_amp":
-            continue
-        amp += effect["max_amp"]
-    return 1.0 + amp
-
-
-def calculate_eclipse_damage(
-    target_max_health: float,
-    is_melee: bool,
-    fight_duration: float,
-) -> float:
-    """Calculate Eclipse Ever Rising Moon proc damage over a fight.
-
-    Assumes one proc occurs immediately, then additional procs every 6s.
-
-    Args:
-        target_max_health: Target's maximum health.
-        is_melee: Whether the champion is melee.
-        fight_duration: Fight duration in seconds.
-
-    Returns:
-        Total raw bonus physical damage from Eclipse procs.
-    """
-    effect = ITEM_EFFECTS.get("Eclipse")
-    if not effect:
-        return 0.0
-
-    ratio = (
-        effect["target_max_hp_ratio_melee"]
-        if is_melee
-        else effect["target_max_hp_ratio_ranged"]
-    )
-    per_proc = ratio * target_max_health
-
-    cooldown = effect["cooldown"]
-    num_procs = 1 + int(fight_duration / cooldown)
-    return per_proc * num_procs
-
-
-def calculate_shaped_charge_damage(
-    champion_stats: dict[str, float],
-    is_melee: bool,
-    fight_duration: float,
-) -> float:
-    """Calculate Bastionbreaker Shaped Charge true damage.
-
-    Procs on the first ability damage instance, then every 45s.
-
-    Args:
-        champion_stats: Champion's calculated stats.
-        is_melee: Whether the champion is melee.
-        fight_duration: Fight duration in seconds.
-
-    Returns:
-        Total true damage from Shaped Charge procs.
-    """
-    effect = ITEM_EFFECTS.get("Bastionbreaker")
-    if not effect:
-        return 0.0
-
-    lethality = champion_stats.get("lethality", 0.0)
-    if is_melee:
-        per_proc = effect["base_melee"] + effect["lethality_ratio_melee"] * lethality
-    else:
-        per_proc = effect["base_ranged"] + effect["lethality_ratio_ranged"] * lethality
-
-    cooldown = effect["cooldown"]
-    num_procs = 1 + int(fight_duration / cooldown)
-    return per_proc * num_procs
-
-
-def get_armor_reduction(
-    items: list[dict[str, Any]],
-    fight_duration: float,
-    num_auto_attacks: int,
-) -> float:
-    """Calculate average armor reduction fraction from items like Black Cleaver.
-
-    Args:
-        items: List of item data dicts.
-        fight_duration: Fight duration in seconds.
-        num_auto_attacks: Number of auto attacks in the fight.
-
-    Returns:
-        Fraction of armor reduced (e.g., 0.24 for 24% reduction).
-    """
-    for item in items:
-        name = item.get("name", "")
-        effect = ITEM_EFFECTS.get(name)
-        if effect and effect.get("type") == "armor_reduction":
-            # Assume stacks build up over fight; approximate average
-            hits = num_auto_attacks + 4  # abilities also apply stacks
-            max_stacks = effect["max_stacks"]
-            # Ramp up: average stacks over the fight
-            if hits >= max_stacks:
-                # Most of the fight is at max stacks
-                avg_stacks = max_stacks * 0.8
-            else:
-                avg_stacks = hits / 2.0
-            return effect["reduction_per_stack"] * avg_stacks
-    return 0.0
-
-
-def calculate_execute_damage(
-    items: list[dict[str, Any]],
-    target_health: float,
-    total_damage_dealt: float,
-) -> float:
-    """Calculate bonus damage from execute effects (The Collector).
-
-    If total damage would leave target below execute threshold, the
-    remaining HP counts as bonus damage.
-
-    Args:
-        items: List of item data dicts.
-        target_health: Target's maximum health.
-        total_damage_dealt: Total damage already calculated.
-
-    Returns:
-        Bonus execute damage (remaining HP below threshold).
-    """
-    for item in items:
-        name = item.get("name", "")
-        effect = ITEM_EFFECTS.get(name)
-        if effect and effect.get("type") == "execute":
-            remaining_hp = target_health - total_damage_dealt
-            threshold_hp = target_health * effect["threshold"]
-            if 0 < remaining_hp <= threshold_hp:
-                return remaining_hp
-    return 0.0
-
-
-def calculate_hullbreaker_proc_damage(
-    champion_stats: dict[str, float],
-    is_melee: bool,
-) -> float:
-    """Calculate raw Hullbreaker Skipper proc damage (before resistances).
-
-    Args:
-        champion_stats: Champion's calculated stats.
-        is_melee: Whether the champion is melee.
-
-    Returns:
-        Raw bonus physical damage per proc.
-    """
-    effect = ITEM_EFFECTS.get("Hullbreaker")
-    if not effect:
-        return 0.0
-
-    base_ad = champion_stats.get("base_attack_damage", 0.0)
-    max_hp = champion_stats.get("health", 0.0)
-
-    if is_melee:
-        ad_ratio = effect["base_ad_ratio_melee"]
-        hp_ratio = effect["max_hp_ratio_melee"]
-    else:
-        ad_ratio = effect["base_ad_ratio_ranged"]
-        hp_ratio = effect["max_hp_ratio_ranged"]
-
-    return ad_ratio * base_ad + hp_ratio * max_hp
-
-
-def get_crit_multiplier(items: list[dict[str, Any]]) -> float:
-    """Get the critical strike damage multiplier.
-
-    Base crit multiplier is 2.0 (200% AD). Infinity Edge adds +0.30.
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        Crit damage multiplier (e.g., 2.05 with IE).
-    """
-    base_crit = 2.0
-    for item in items:
-        name = item.get("name", "")
-        effect = ITEM_EFFECTS.get(name)
-        if effect and effect.get("type") == "crit_modifier":
-            # Polymorphic across crit_modifier items: Navori Flickerblade
-            # has no bonus_crit_damage key, so 0 means "no crit damage
-            # modifier" — NOT a stale duplicate of a registry value.
-            base_crit += effect.get("bonus_crit_damage", 0)
-    return base_crit
-
-
-def calculate_dead_mans_plate_damage(
-    champion_stats: dict[str, float],
-) -> float:
-    """Calculate Dead Man's Plate first-auto damage at max momentum.
-
-    Args:
-        champion_stats: Champion's calculated stats.
-
-    Returns:
-        Raw bonus damage for the first auto attack.
-    """
-    effect = ITEM_EFFECTS.get("Dead Man's Plate")
-    if not effect:
-        return 0.0
-    base_ad = champion_stats.get("base_attack_damage", 0)
-    return effect["base"] + effect["base_ad_ratio"] * base_ad
-
-
-def calculate_heartsteel_damage(
-    champion_stats: dict[str, float],
-) -> float:
-    """Calculate Heartsteel Colossal Consumption proc damage.
-
-    Deals 70 + 6% of the champion's maximum health as bonus physical
-    damage. Applied once per fight (30s cooldown).
-
-    Args:
-        champion_stats: Champion's calculated stats.
-
-    Returns:
-        Raw bonus physical damage from Heartsteel proc.
-    """
-    effect = ITEM_EFFECTS.get("Heartsteel")
-    if not effect:
-        return 0.0
-    max_hp = champion_stats.get("health", 0)
-    return effect["base"] + effect["max_hp_ratio"] * max_hp
-
-
-def get_stacking_mr_reduction(
-    items: list[dict[str, Any]],
-) -> dict[str, Any] | None:
-    """Return stacking MR reduction effect data if any item provides it.
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        Effect dict with mr_reduction_per_stack and max_stacks, or None.
-    """
-    for item in items:
-        name = item.get("name", "")
-        effect = ITEM_EFFECTS.get(name)
-        if effect and effect.get("type") == "mr_reduction_stacking":
-            return effect
-    return None
-
-
-def get_item_effect_names(items: list[dict[str, Any]]) -> list[str]:
-    """Return names of items that have registered effects.
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        List of item names that have effects in the registry.
-    """
-    return [
-        item.get("name", "") for item in items if item.get("name", "") in ITEM_EFFECTS
-    ]
-
-
-def get_muramana_ability_damage(
-    champion_stats: dict[str, float],
-    is_melee: bool,
-    num_ability_hits: int,
-) -> float:
-    """Calculate Muramana bonus damage from ability hits.
-
-    Args:
-        champion_stats: Champion's calculated stats.
-        is_melee: Whether champion is melee.
-        num_ability_hits: Number of ability damage instances.
-
-    Returns:
-        Total raw bonus physical damage from Muramana on abilities.
-    """
-    effect = ITEM_EFFECTS.get("Muramana")
-    if not effect:
-        return 0.0
-
-    max_mana = champion_stats.get("max_mana", 0)
-    ratio = (
-        effect["max_mana_ratio_ability_melee"]
-        if is_melee
-        else effect["max_mana_ratio_ability_ranged"]
-    )
-    return ratio * max_mana * num_ability_hits
-
-
-def calculate_unending_despair_damage(
-    champion_stats: dict[str, float],
-    fight_duration: float,
-) -> float:
-    """Calculate Unending Despair Anguish damage over a fight.
-
-    Procs every N seconds after entering combat with champions.
-
-    Args:
-        champion_stats: Champion's calculated stats.
-        fight_duration: Fight duration in seconds.
-
-    Returns:
-        Total raw magic damage from Anguish procs.
-    """
-    effect = ITEM_EFFECTS.get("Unending Despair")
-    if not effect:
-        return 0.0
-
-    interval = effect["interval"]
-    bonus_hp = champion_stats.get("bonus_health", 0)
-    ratio = effect["bonus_hp_ratio"]
-    per_proc = ratio * bonus_hp
-
-    # First proc at interval seconds, then every interval thereafter
-    num_procs = int(fight_duration / interval) if interval > 0 else 0
-    return per_proc * num_procs
-
-
-def get_terminus_pen_stacks(
-    num_auto_attacks: int,
-) -> float:
-    """Calculate average Terminus armor/magic penetration across all autos.
-
-    Dark hits occur on every other auto (2nd, 4th, 6th...) and each
-    grants a penetration stack that also applies to that auto's damage.
-    Stacks cap at dark_max_stacks.
-
-    The pen per auto ramps up as stacks build:
-        Auto 1: 0%, Auto 2: 10%, Auto 3: 10%, Auto 4: 20%,
-        Auto 5: 20%, Auto 6+: 30%
-
-    Returns the weighted average pen across all autos, similar to how
-    Black Cleaver computes average armor reduction.
-
-    Args:
-        num_auto_attacks: Total auto attacks in the fight.
-
-    Returns:
-        Average penetration fraction (e.g. 0.225 for 22.5% average).
-    """
-    effect = ITEM_EFFECTS.get("Terminus")
-    if not effect:
-        return 0.0
-
-    pen_per_stack = effect["dark_pen_per_stack"]
-    max_stacks = effect["dark_max_stacks"]
-
-    if num_auto_attacks == 0:
-        return 0.0
-
-    # Simulate pen at each auto
-    total_pen = 0.0
-    dark_stacks = 0
-    for i in range(num_auto_attacks):
-        is_dark = (i + 1) % 2 == 0  # Dark hits on 2nd, 4th, 6th, ...
-        if is_dark:
-            dark_stacks = min(dark_stacks + 1, max_stacks)
-        # This auto's damage uses the current pen level
-        total_pen += dark_stacks * pen_per_stack
-
-    return total_pen / num_auto_attacks
-
-
-def get_terminus_light_resist_per_stack(level: int) -> float:
-    """Calculate Terminus bonus armor/MR per light hit stack at a given level.
-
-    Light hits grant bonus armor and magic resistance that scales with level.
-    At level 1 it's ``light_resist_min``, at level 18 it's ``light_resist_max``.
-
-    Args:
-        level: Champion level (1-18).
-
-    Returns:
-        Bonus armor (and MR) per light hit stack.
-    """
-    effect = ITEM_EFFECTS.get("Terminus")
-    if not effect:
-        return 0.0
-    low = effect["light_resist_min"]
-    high = effect["light_resist_max"]
-    clamped = max(1, min(level, 18))
-    return low + (high - low) * (clamped - 1) / 17.0
-
-
-def get_collector_execution_threshold(
-    items: list[dict[str, Any]],
-    target_health: float,
-) -> float | None:
-    """Return the Collector execution HP threshold for display purposes.
-
-    Args:
-        items: List of item data dicts.
-        target_health: Target's maximum health.
-
-    Returns:
-        HP value below which the target would be executed, or None if
-        The Collector is not in the build.
-    """
-    for item in items:
-        name = item.get("name", "")
-        effect = ITEM_EFFECTS.get(name)
-        if effect and effect.get("type") == "execute":
-            return target_health * effect["threshold"]
-    return None

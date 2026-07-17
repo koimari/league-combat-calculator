@@ -5,7 +5,8 @@ once duplicated between the legacy ``common.py`` and
 ``generic_parser.py``, both retired at the end of Phase 3).
 
 Extraction core:
-    ``_sum_modifiers``       — flat-vs-scaling dispatch over one leveling entry
+    ``sum_modifiers``        — flat/scaling dispatch with unusual-unit override
+    ``find_named_leveling``  — one exact attribute lookup
     ``extract_named``        — damage for an exact attribute name
     ``extract_auto``         — classifier-driven primary-damage detection
     ``extract_cooldown``     — base cooldown at rank
@@ -24,12 +25,13 @@ stamped with their engine phase. Shared factory params:
                                (rank pinned to champion level, for
                                passives and no-skill-point kits)
 
-The full Phase 3 archetype set (simple_damage, on_hit_auto, stat_buff,
-by_option, multi_hit_sum, on_hit_pct_health, toggle_dot, multi_cast,
-proc_damage, utility) landed with zero engine changes.
+Factories remain only for genuinely shared behavior: ``simple_damage``,
+``on_hit_auto``, ``stat_buff``, ``by_option``, and callback-based
+``proc_damage``. Unique mechanics are short functions in their champion module;
+shared output shells use entry builders instead of flag-heavy factories.
 """
 
-from typing import Any
+from typing import Any, Callable
 
 from .attribute_classifier import (
     classify_damage_type,
@@ -44,11 +46,15 @@ from .scaling import is_flat_unit, resolve_scaling
 # ---------------------------------------------------------------------------
 
 
-def _sum_modifiers(
+ModifierOverride = Callable[[str, float], float | None]
+
+
+def sum_modifiers(
     leveling: dict[str, Any],
     rank: int,
     stats: dict[str, float] | None = None,
     target: dict[str, float] | None = None,
+    modifier_override: ModifierOverride | None = None,
 ) -> float:
     """Sum one leveling entry's modifiers at a rank (flat + scaling).
 
@@ -72,7 +78,10 @@ def _sum_modifiers(
         value = float(values[idx])
         unit = units[idx] if idx < len(units) else ""
 
-        if is_flat_unit(unit):
+        overridden = modifier_override(unit, value) if modifier_override else None
+        if overridden is not None:
+            total += overridden
+        elif is_flat_unit(unit):
             total += value
         else:
             total += resolve_scaling(unit, value, stats, target)
@@ -103,7 +112,7 @@ def extract_named(
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute", "") == attribute:
-                return _sum_modifiers(leveling, rank, stats, target)
+                return sum_modifiers(leveling, rank, stats, target)
     return 0.0
 
 
@@ -151,10 +160,10 @@ def extract_auto(
     leveling = _find_primary_damage_leveling(ability)
     if leveling is None:
         return 0.0, damage_type
-    return _sum_modifiers(leveling, rank, stats, target), damage_type
+    return sum_modifiers(leveling, rank, stats, target), damage_type
 
 
-def _find_named_leveling(
+def find_named_leveling(
     ability: dict[str, Any],
     attribute: str,
 ) -> dict[str, Any] | None:
@@ -203,7 +212,7 @@ def extract_value(
     Returns:
         The flat numeric value at the given rank, or 0.0 if not found.
     """
-    leveling = _find_named_leveling(ability, attribute)
+    leveling = find_named_leveling(ability, attribute)
     if leveling is None:
         return 0.0
     return _modifier_value(leveling, modifier_index, rank)
@@ -242,7 +251,7 @@ def pct_health_per_hit(
         Damage per hit, or None when *attr* is absent from the ability
         (not this mechanic — the caller drops the slot).
     """
-    leveling = _find_named_leveling(ability, attr)
+    leveling = find_named_leveling(ability, attr)
     if leveling is None:
         return None
 
@@ -351,6 +360,27 @@ def on_hit_entry(
             "damage_type": dmg_type,
         },
     }
+
+
+def ability_on_hit_entry(
+    name: str,
+    rank: int,
+    damage_type: str,
+    on_hit: dict[str, Any],
+    cooldown: float | None = None,
+) -> dict[str, Any]:
+    """Wrap an on-hit payload in a zero-direct-damage ability shell."""
+    entry: dict[str, Any] = {
+        "name": name,
+        "rank": rank,
+        "damage_type": damage_type,
+        "total_raw": 0.0,
+        _DAMAGE_TYPE_KEYS[damage_type]: 0.0,
+        "on_hit": on_hit,
+    }
+    if cooldown is not None:
+        entry["cooldown"] = cooldown
+    return entry
 
 
 # ---------------------------------------------------------------------------
@@ -606,249 +636,6 @@ def by_option(
     return parse
 
 
-def multi_hit_sum(
-    attrs: list[str],
-    dmg_type: str = "auto",
-    source: tuple[str, int] | None = None,
-    cooldown_from: tuple[str, int] | None = None,
-) -> SlotParser:
-    """Several named leveling attributes summed into ONE damage entry.
-
-    The Aatrox-Q pattern: an ability that lands as a fixed sequence of
-    hits with individually-named damage attributes (First/Second/Third
-    Cast Damage), reported to the fight engine as a single cast.
-
-    Args:
-        attrs: Leveling attribute names summed at the slot's rank.
-        dmg_type: "magic"/"physical"/"true"/"mixed", or "auto" to
-            classify from the ability JSON.
-        source: (slot, index) of the JSON entry to read; defaults to
-            entry 0 of the parser's own slot.
-        cooldown_from: (slot, index) to read cooldown from instead of
-            the damage source.
-
-    Returns:
-        A DAMAGE-phase slot parser.
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability, src_slot = _resolve_source(ctx, source)
-        if ability is None:
-            return None
-        rank = ctx.rank_for(src_slot)
-        if rank < 1:
-            return None
-
-        total = sum(
-            extract_named(ability, attr, rank, ctx.stats, ctx.target) for attr in attrs
-        )
-        resolved_type = (
-            classify_damage_type(ability) if dmg_type == "auto" else dmg_type
-        )
-
-        cd_ability = ctx.ability(*cooldown_from) if cooldown_from else ability
-        cd_value = extract_cooldown(cd_ability, rank) if cd_ability else 0.0
-        name = ability.get("name", f"Ability {ctx.slot}")
-        return damage_entry(name, rank, cd_value, total, resolved_type)
-
-    parse.phase = DAMAGE
-    return parse
-
-
-def on_hit_pct_health(
-    attr: str,
-    dmg_type: str,
-    scale: str = "rank",
-    ap_ratio_per_100: bool = False,
-    floor_attr: str | None = None,
-    stacks_required: int | None = None,
-    source: tuple[str, int] | None = None,
-) -> SlotParser:
-    """%-of-target-max-health on-hit damage (Aatrox P pattern).
-
-    Wraps the shared ``pct_health_per_hit`` math in the minimal on-hit
-    shell (``{name, on_hit}``). Kog'Maw W and Vayne W use the same math
-    but keep their legacy entry shells (castable / cooldown-less) as
-    custom fns in their own modules — the shells differ in which
-    fight-engine keys they carry, which an archetype flag may not
-    change.
-
-    Args:
-        attr: Leveling attribute holding the %maxHP value.
-        dmg_type: On-hit damage type ("magic"/"physical"/"true").
-        scale: "rank" (skill order / overrides, rank-gated) or "level"
-            (per-level passives — rank pinned to champion level).
-        ap_ratio_per_100: Modifier 1 of *attr* is bonus % per 100 AP.
-        floor_attr: Attribute holding the minimum per-proc damage.
-        stacks_required: Hits per proc; divides the per-hit damage and
-            is emitted inside the on-hit dict for the fight engine's
-            proc grouping. None = every hit procs.
-        source: (slot, index) of the JSON entry to read; defaults to
-            entry 0 of the parser's own slot.
-
-    Returns:
-        An ONHIT-phase slot parser; emits nothing when *attr* is absent
-        from the ability.
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability, src_slot = _resolve_source(ctx, source)
-        if ability is None:
-            return None
-
-        if scale == "level":
-            rank = ctx.level
-        else:
-            rank = ctx.rank_for(src_slot)
-            if rank < 1:
-                return None
-
-        per_hit = pct_health_per_hit(
-            ability,
-            attr,
-            rank,
-            ctx.target,
-            ap=ctx.stats.get("ability_power", 0.0),
-            ap_ratio_per_100=ap_ratio_per_100,
-            floor_attr=floor_attr,
-            stacks_required=stacks_required or 1,
-        )
-        if per_hit is None:
-            return None
-
-        entry = on_hit_entry(ability.get("name", "Passive"), per_hit, dmg_type)
-        if stacks_required:
-            entry["on_hit"]["stacks_required"] = stacks_required
-        return entry
-
-    parse.phase = ONHIT
-    return parse
-
-
-def toggle_dot(
-    phases: list[tuple[str, int | None]],
-    duration_option: tuple[str, float],
-    interval: float = 0.5,
-    min_duration: float = 0.0,
-    cooldown: float = 0.0,
-    dmg_type: str = "auto",
-    source: tuple[str, int] | None = None,
-) -> SlotParser:
-    """Toggle/channel DoT summed over its ticks into a damage entry.
-
-    The active duration comes from a champion option; total tick count is
-    ``int(duration / interval)``. Ticks are consumed by ``phases`` in
-    order — e.g. Anivia R deals 3 initial-damage ticks, then empowered
-    ticks for the rest — and the phase damages are summed into ONE
-    standard damage entry (same shape as ``simple_damage``).
-
-    Args:
-        phases: Ordered ``(leveling_attribute, tick_cap)`` pairs. A cap
-            of None means "all remaining ticks" (use it last).
-        duration_option: ``(option_key, default_seconds)`` — the champion
-            option holding the active duration.
-        interval: Seconds per tick.
-        min_duration: Floor for the duration option (e.g. Anivia R's
-            first phase always completes).
-        cooldown: Emitted verbatim — toggles have no base cooldown, so
-            the caller pins it (0.0 = free toggle, 999.0 = model the
-            ability as cast exactly once per fight).
-        dmg_type: "magic"/"physical"/"true"/"mixed", or "auto" to
-            classify from the ability JSON.
-        source: (slot, index) of the JSON entry to read; defaults to
-            entry 0 of the parser's own slot.
-
-    Returns:
-        A DAMAGE-phase slot parser.
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability, src_slot = _resolve_source(ctx, source)
-        if ability is None:
-            return None
-
-        rank = ctx.rank_for(src_slot)
-        if rank < 1:
-            return None
-
-        option_key, default_seconds = duration_option
-        duration = float(ctx.options.get(option_key, default_seconds))
-        duration = max(duration, min_duration)
-
-        ticks_remaining = int(duration / interval)
-        total = 0.0
-        for attr, tick_cap in phases:
-            ticks = (
-                ticks_remaining if tick_cap is None else min(tick_cap, ticks_remaining)
-            )
-            per_tick = extract_named(ability, attr, rank, ctx.stats, ctx.target)
-            total += ticks * per_tick
-            ticks_remaining -= ticks
-
-        resolved_type = (
-            classify_damage_type(ability) if dmg_type == "auto" else dmg_type
-        )
-        name = ability.get("name", f"Ability {ctx.slot}")
-        return damage_entry(name, rank, cooldown, total, resolved_type)
-
-    parse.phase = DAMAGE
-    return parse
-
-
-def multi_cast(
-    casts: int,
-    attr: str | None = None,
-    dmg_type: str = "auto",
-    source: tuple[str, int] | None = None,
-) -> SlotParser:
-    """Ability recast N times per activation (Ahri R's three dashes).
-
-    Emits ``{name, rank, damage_per_cast, total_casts, total_raw,
-    damage_type}`` — deliberately NO cooldown key: damage.py treats a
-    ``total_casts`` slot as one activation and spaces the recasts
-    itself.
-
-    Args:
-        casts: Recasts per activation (kept as an int in the entry).
-        attr: Exact leveling attribute for per-cast damage, or None to
-            auto-detect via the classifier.
-        dmg_type: "magic"/"physical"/"true", or "auto" to classify.
-        source: (slot, index) of the JSON entry to read; defaults to
-            entry 0 of the parser's own slot.
-
-    Returns:
-        A DAMAGE-phase slot parser.
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability, src_slot = _resolve_source(ctx, source)
-        if ability is None:
-            return None
-        rank = ctx.rank_for(src_slot)
-        if rank < 1:
-            return None
-
-        if attr is None:
-            per_cast, resolved_type = extract_auto(ability, rank, ctx.stats, ctx.target)
-        else:
-            per_cast = extract_named(ability, attr, rank, ctx.stats, ctx.target)
-            resolved_type = classify_damage_type(ability)
-        if dmg_type != "auto":
-            resolved_type = dmg_type
-
-        return {
-            "name": ability.get("name", f"Ability {ctx.slot}"),
-            "rank": rank,
-            "damage_per_cast": per_cast,
-            "total_casts": casts,
-            "total_raw": per_cast * casts,
-            "damage_type": resolved_type,
-        }
-
-    parse.phase = DAMAGE
-    return parse
-
-
 # Damage type -> entry key for per-proc damage values.
 _DAMAGE_TYPE_KEYS = {
     "magic": "magic_damage",
@@ -857,11 +644,15 @@ _DAMAGE_TYPE_KEYS = {
 }
 
 
+ProcDamageResolver = Callable[[SlotCtx, dict[str, Any]], float]
+
+
 def proc_damage(
-    attr: str,
+    per_proc: ProcDamageResolver,
     dmg_type: str,
     count_option: str = "passive_procs",
     default_count: int = 4,
+    name: str | None = None,
 ) -> SlotParser:
     """Passive that procs N times per fight (Akali/Ambessa/Akshan P).
 
@@ -872,10 +663,11 @@ def proc_damage(
     ``proc_count`` outside the cast rotation.
 
     Args:
-        attr: Exact leveling attribute holding the per-proc damage.
+        per_proc: Champion-owned damage resolver for one proc.
         dmg_type: "magic"/"physical"/"true" — picks the per-proc key.
         count_option: Champion option holding the proc count.
         default_count: Proc count when the option is absent.
+        name: Optional emitted label override.
 
     Returns:
         A DAMAGE-phase slot parser; emits nothing at zero procs or zero
@@ -891,48 +683,17 @@ def proc_damage(
         if count <= 0:
             return None
 
-        per_proc = extract_named(ability, attr, ctx.level, ctx.stats, ctx.target)
-        if per_proc <= 0:
+        per_proc_damage = per_proc(ctx, ability)
+        if per_proc_damage <= 0:
             return None
 
         return {
-            "name": ability.get("name", f"Ability {ctx.slot}"),
+            "name": name or ability.get("name", f"Ability {ctx.slot}"),
             "damage_type": dmg_type,
-            _DAMAGE_TYPE_KEYS[dmg_type]: per_proc,
-            "total_raw": per_proc * count,
+            _DAMAGE_TYPE_KEYS[dmg_type]: per_proc_damage,
+            "total_raw": per_proc_damage * count,
             "proc_count": count,
         }
-
-    parse.phase = DAMAGE
-    return parse
-
-
-def utility(dmg_type: str = "magic") -> SlotParser:
-    """Zero-damage display placeholder for a ranked utility ability.
-
-    Shields, walls, and other non-damaging-but-castable slots that the
-    UI should still list: emits a standard damage entry with 0.0 damage
-    and the real cooldown, gated on the slot being ranked.
-
-    Args:
-        dmg_type: Damage type to label the placeholder with (drives
-            which zero-valued damage key is emitted).
-
-    Returns:
-        A DAMAGE-phase slot parser.
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
-            return None
-
-        rank = ctx.rank_for()
-        if rank < 1:
-            return None
-
-        name = ability.get("name", f"Ability {ctx.slot}")
-        return damage_entry(name, rank, extract_cooldown(ability, rank), 0.0, dmg_type)
 
     parse.phase = DAMAGE
     return parse

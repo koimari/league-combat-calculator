@@ -17,8 +17,36 @@ All numeric values are read from the champion JSON data; nothing is
 hardcoded.
 """
 
-from .engine import build_parser
-from .slotlib import simple_damage, toggle_dot
+from typing import Any
+
+from .engine import SlotCtx, build_parser
+from .slotlib import damage_entry, extract_named, simple_damage
+
+
+def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: three initial half-second ticks, then empowered ticks."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    duration = max(float(ctx.options.get("r_duration", 5.0)), 1.5)
+    total_ticks = int(duration / 0.5)
+    initial_ticks = min(3, total_ticks)
+    empowered_ticks = total_ticks - initial_ticks
+    initial = extract_named(
+        ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target
+    )
+    empowered = extract_named(
+        ability, "Empowered Damage per Tick", rank, ctx.stats, ctx.target
+    )
+    total = initial_ticks * initial + empowered_ticks * empowered
+    return damage_entry(
+        ability.get("name", "Glacial Storm"), rank, 999.0, total, "magic"
+    )
+
 
 OPTIONS = [
     {
@@ -43,16 +71,7 @@ ASSUMPTIONS = [
 SLOTS = {
     "Q": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "E": simple_damage(attr="Enhanced Damage", dmg_type="magic"),
-    "R": toggle_dot(
-        phases=[
-            ("Magic Damage per Tick", 3),
-            ("Empowered Damage per Tick", None),
-        ],
-        duration_option=("r_duration", 5.0),
-        min_duration=1.5,
-        cooldown=999.0,
-        dmg_type="magic",
-    ),
+    "R": _glacial_storm,
 }
 
 parse_abilities = build_parser(SLOTS, "Anivia")

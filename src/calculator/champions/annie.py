@@ -11,8 +11,8 @@ Why each slot is non-generic:
   the literal "P" results key (the pre-engine UI shape), so a custom
   slot fn writes it into ``ctx.results`` directly instead of using the
   engine's "P" -> "passive" mapping.
-- E (Molten Shield) is shield/retaliation only — a zero-damage
-  ``utility`` placeholder.
+- E (Molten Shield) is shield/retaliation only — champion-local
+  ``_molten_shield`` preserves its zero-damage display row.
 - Q/W are plain "Magic Damage" attribute reads.
 
 All numeric values are read from the champion JSON data except the
@@ -28,7 +28,6 @@ from .slotlib import (
     extract_named,
     extract_value,
     simple_damage,
-    utility,
 )
 
 # HARDCODED: verify on patch updates — pet stats are not in the JSON.
@@ -114,6 +113,23 @@ def _pyromania_placeholder(ctx: SlotCtx) -> None:
         )
 
 
+def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: ranked zero-damage row with the real cooldown."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    return damage_entry(
+        ability.get("name", "Molten Shield"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "magic",
+    )
+
+
 OPTIONS = [
     {
         "key": "tibbers_aura_seconds",
@@ -138,7 +154,7 @@ SLOTS = {
     "P": _pyromania_placeholder,
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "E": utility(dmg_type="magic"),
+    "E": _molten_shield,
 }
 
 parse_abilities = build_parser(SLOTS, "Annie")

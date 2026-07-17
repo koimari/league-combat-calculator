@@ -23,18 +23,16 @@ from src.calculator.champions.engine import (
     build_parser,
 )
 from src.calculator.champions.slotlib import (
+    ability_on_hit_entry,
     by_option,
     extract_value,
-    multi_cast,
-    multi_hit_sum,
+    find_named_leveling,
     on_hit_auto,
-    on_hit_pct_health,
     pct_health_per_hit,
     proc_damage,
     simple_damage,
     stat_buff,
-    toggle_dot,
-    utility,
+    sum_modifiers,
 )
 
 # ---------------------------------------------------------------------------
@@ -454,143 +452,6 @@ class TestSimpleDamageParams:
 
 
 # ---------------------------------------------------------------------------
-# toggle_dot archetype
-# ---------------------------------------------------------------------------
-
-
-class TestToggleDot:
-    """Phase-structured toggle/channel DoT summed into a damage entry."""
-
-    def _dot_champ(self) -> dict:
-        """R with initial and empowered per-tick attrs (Anivia shape)."""
-        return _champion(
-            R=[
-                _ability(
-                    name="Storm",
-                    cooldowns=[6, 6, 6],
-                    leveling=[
-                        _leveling("Magic Damage per Tick", [30, 45, 60]),
-                        _leveling("Empowered Damage per Tick", [90, 135, 180]),
-                    ],
-                )
-            ],
-        )
-
-    def _parse_storm(self, options: dict | None = None, **params) -> dict:
-        defaults = {
-            "phases": [
-                ("Magic Damage per Tick", 3),
-                ("Empowered Damage per Tick", None),
-            ],
-            "duration_option": ("r_duration", 5.0),
-            "min_duration": 1.5,
-            "cooldown": 999.0,
-            "dmg_type": "magic",
-        }
-        defaults.update(params)
-        parse = build_parser({"R": toggle_dot(**defaults)}, "TestChamp")
-        # Level 16 -> R rank 3.
-        return parse(self._dot_champ(), 16, 0.0, champion_options=options)
-
-    def test_phases_split_ticks_in_order(self) -> None:
-        """5s at 0.5s/tick = 3 initial + 7 empowered ticks."""
-        results = self._parse_storm()
-        assert results["R"]["total_raw"] == pytest.approx(3 * 60 + 7 * 180)
-        assert results["R"]["magic_damage"] == results["R"]["total_raw"]
-
-    def test_duration_option_overrides_default(self) -> None:
-        """10s = 3 initial + 17 empowered ticks."""
-        results = self._parse_storm(options={"r_duration": 10.0})
-        assert results["R"]["total_raw"] == pytest.approx(3 * 60 + 17 * 180)
-
-    def test_min_duration_clamp(self) -> None:
-        """Durations below the floor are clamped (3 initial ticks only)."""
-        results = self._parse_storm(options={"r_duration": 0.5})
-        assert results["R"]["total_raw"] == pytest.approx(3 * 60)
-
-    def test_cooldown_is_pinned_by_caller(self) -> None:
-        """The cooldown param is used verbatim (999 = cast-once)."""
-        results = self._parse_storm()
-        assert results["R"]["cooldown"] == 999.0
-
-    def test_single_phase_consumes_all_ticks(self) -> None:
-        """A single uncapped phase gets every tick."""
-        results = self._parse_storm(
-            phases=[("Magic Damage per Tick", None)],
-            cooldown=0.0,
-        )
-        assert results["R"]["total_raw"] == pytest.approx(10 * 60)
-        assert results["R"]["cooldown"] == 0.0
-
-    def test_rank_gate(self) -> None:
-        """Unranked slot emits nothing."""
-        parse = build_parser(
-            {
-                "R": toggle_dot(
-                    phases=[("Magic Damage per Tick", None)],
-                    duration_option=("r_duration", 5.0),
-                )
-            },
-            "TestChamp",
-        )
-        results = parse(self._dot_champ(), 16, 0.0, ability_ranks={"R": 0})
-        assert "R" not in results
-
-
-# ---------------------------------------------------------------------------
-# multi_cast archetype
-# ---------------------------------------------------------------------------
-
-
-class TestMultiCast:
-    """N recasts per activation, reported per-cast (Ahri R pattern)."""
-
-    def _dash_champ(self) -> dict:
-        return _champion(
-            R=[
-                _ability(
-                    name="Dash R",
-                    cooldowns=[130, 105, 80],
-                    leveling=[_leveling("Magic Damage", [60, 90, 120])],
-                )
-            ],
-        )
-
-    def test_emits_per_cast_shape_without_cooldown(self) -> None:
-        """total_casts stays an int; no cooldown key in the entry."""
-        parse = build_parser(
-            {"R": multi_cast(casts=3, dmg_type="magic")},
-            "TestChamp",
-        )
-        results = parse(self._dash_champ(), 16, 0.0)  # R rank 3
-        assert results["R"] == {
-            "name": "Dash R",
-            "rank": 3,
-            "damage_per_cast": 120.0,
-            "total_casts": 3,
-            "total_raw": 360.0,
-            "damage_type": "magic",
-        }
-
-    def test_explicit_attr_mode(self) -> None:
-        parse = build_parser(
-            {"R": multi_cast(casts=2, attr="Magic Damage", dmg_type="magic")},
-            "TestChamp",
-        )
-        results = parse(self._dash_champ(), 6, 0.0)  # R rank 1
-        assert results["R"]["damage_per_cast"] == 60.0
-        assert results["R"]["total_raw"] == 120.0
-
-    def test_rank_gate(self) -> None:
-        parse = build_parser(
-            {"R": multi_cast(casts=3, dmg_type="magic")},
-            "TestChamp",
-        )
-        results = parse(self._dash_champ(), 16, 0.0, ability_ranks={"R": 0})
-        assert "R" not in results
-
-
-# ---------------------------------------------------------------------------
 # proc_damage archetype
 # ---------------------------------------------------------------------------
 
@@ -610,7 +471,18 @@ class TestProcDamage:
         )
 
     def _parse(self, options: dict | None = None, **params) -> dict:
-        defaults = {"attr": "Bonus Magic Damage", "dmg_type": "magic"}
+        def resolve_per_proc(ctx, ability):
+            from src.calculator.champions.slotlib import extract_named
+
+            return extract_named(
+                ability,
+                "Bonus Magic Damage",
+                ctx.level,
+                ctx.stats,
+                ctx.target,
+            )
+
+        defaults = {"per_proc": resolve_per_proc, "dmg_type": "magic"}
         defaults.update(params)
         parse = build_parser({"P": proc_damage(**defaults)}, "TestChamp")
         return parse(self._proc_champ(), 9, 0.0, champion_options=options)
@@ -636,7 +508,7 @@ class TestProcDamage:
         assert results == {}
 
     def test_zero_damage_emits_nothing(self) -> None:
-        results = self._parse(attr="No Such Attribute")
+        results = self._parse(per_proc=lambda _ctx, _ability: 0.0)
         assert results == {}
 
     def test_physical_type_uses_physical_key(self) -> None:
@@ -644,43 +516,57 @@ class TestProcDamage:
         assert results["passive"]["physical_damage"] == 50.0
         assert "magic_damage" not in results["passive"]
 
+    def test_name_override_preserves_custom_proc_label(self) -> None:
+        results = self._parse(name="Custom Proc")
+        assert results["passive"]["name"] == "Custom Proc"
 
-# ---------------------------------------------------------------------------
-# utility archetype and extract_value
-# ---------------------------------------------------------------------------
 
+class TestSharedEntryAndModifierPrimitives:
+    """Small shared units used by multiple champion-local parsers."""
 
-class TestUtility:
-    """Zero-damage display placeholder for ranked utility abilities."""
+    def test_ability_on_hit_entry_preserves_payload_and_optional_cooldown(
+        self,
+    ) -> None:
+        payload = {"name": "Nested", "damage_per_hit": 42.0}
+        without_cd = ability_on_hit_entry("Ability", 3, "magic", payload)
+        with_cd = ability_on_hit_entry("Ability", 3, "magic", payload, 8.0)
 
-    def _shield_champ(self) -> dict:
-        return _champion(
-            E=[
-                _ability(
-                    name="Shield",
-                    damage_type=None,
-                    cooldowns=[14, 13, 12, 11, 10],
-                    leveling=[_leveling("Shield Strength", [60, 90, 120, 150, 180])],
-                )
-            ],
-        )
-
-    def test_emits_zero_damage_entry_with_real_cooldown(self) -> None:
-        parse = build_parser({"E": utility(dmg_type="magic")}, "TestChamp")
-        results = parse(self._shield_champ(), 9, 0.0, ability_ranks={"E": 5})
-        assert results["E"] == {
-            "name": "Shield",
-            "rank": 5,
-            "cooldown": 10.0,
+        assert without_cd == {
+            "name": "Ability",
+            "rank": 3,
             "damage_type": "magic",
-            "magic_damage": 0.0,
             "total_raw": 0.0,
+            "magic_damage": 0.0,
+            "on_hit": payload,
         }
+        assert with_cd["cooldown"] == 8.0
+        assert with_cd["on_hit"] is payload
 
-    def test_rank_gate(self) -> None:
-        parse = build_parser({"E": utility()}, "TestChamp")
-        results = parse(self._shield_champ(), 9, 0.0, ability_ranks={"E": 0})
-        assert "E" not in results
+    def test_named_leveling_and_modifier_override_share_one_walk(self) -> None:
+        ability = _ability(
+            leveling=[
+                {
+                    "attribute": "Odd Damage",
+                    "modifiers": [
+                        {"values": [10.0], "units": ["×"]},
+                        {"values": [2.0], "units": ["special"]},
+                    ],
+                }
+            ]
+        )
+        leveling = find_named_leveling(ability, "Odd Damage")
+
+        assert leveling is not None
+        assert (
+            sum_modifiers(
+                leveling,
+                1,
+                modifier_override=lambda unit, value: (
+                    value if unit == "×" else value * 5 if unit == "special" else None
+                ),
+            )
+            == 20.0
+        )
 
 
 class TestExtractValue:
@@ -954,175 +840,6 @@ class TestByOption:
             default=True,
         )
         assert buffed.phase == BUFF
-
-
-class TestMultiHitSum:
-    """Several named attributes summed into one entry (Aatrox Q triad)."""
-
-    def _triple_hit_champ(self) -> dict:
-        return _champion(
-            Q=[
-                _ability(
-                    name="Triple Q",
-                    damage_type="PHYSICAL_DAMAGE",
-                    cooldowns=[14, 12, 10, 8, 6],
-                    leveling=[
-                        _leveling("First Cast Damage", [10, 20, 30, 40, 50]),
-                        _leveling("Second Cast Damage", [15, 25, 35, 45, 55]),
-                        _leveling("Third Cast Damage", [20, 30, 40, 50, 60]),
-                    ],
-                )
-            ],
-        )
-
-    def test_sums_attrs_into_standard_entry(self) -> None:
-        parse = build_parser(
-            {
-                "Q": multi_hit_sum(
-                    [
-                        "First Cast Damage",
-                        "Second Cast Damage",
-                        "Third Cast Damage",
-                    ],
-                    dmg_type="physical",
-                )
-            },
-            "TestChamp",
-        )
-        results = parse(self._triple_hit_champ(), 9, 0.0)  # Q rank 5
-        assert results["Q"] == {
-            "name": "Triple Q",
-            "rank": 5,
-            "cooldown": 6.0,
-            "damage_type": "physical",
-            "total_raw": 165.0,
-            "physical_damage": 165.0,
-        }
-
-    def test_auto_dmg_type_classifies_from_json(self) -> None:
-        parse = build_parser(
-            {"Q": multi_hit_sum(["First Cast Damage", "Second Cast Damage"])},
-            "TestChamp",
-        )
-        results = parse(self._triple_hit_champ(), 9, 0.0)
-        assert results["Q"]["damage_type"] == "physical"
-        assert results["Q"]["total_raw"] == 105.0
-
-    def test_rank_gate(self) -> None:
-        parse = build_parser(
-            {"Q": multi_hit_sum(["First Cast Damage"], dmg_type="physical")},
-            "TestChamp",
-        )
-        results = parse(self._triple_hit_champ(), 9, 0.0, ability_ranks={"Q": 0})
-        assert "Q" not in results
-
-
-class TestOnHitPctHealth:
-    """ONHIT-phase %maxHP archetype in the minimal on-hit shell."""
-
-    def _passive_champ(self) -> dict:
-        """Aatrox-P shape: per-level %maxHP values on the passive."""
-        per_level = [float(4 + 0.5 * i) for i in range(18)]
-        return _champion(
-            P=[
-                _ability(
-                    name="Stance",
-                    leveling=[_leveling("Max Health Damage", per_level, ["%"] * 18)],
-                )
-            ],
-        )
-
-    def _ranked_champ(self) -> dict:
-        return _champion(
-            W=[
-                _ability(
-                    name="Bolts",
-                    damage_type="TRUE_DAMAGE",
-                    leveling=[
-                        _leveling("Bonus True Damage", [6, 7, 8, 9, 10], ["%"] * 5),
-                        _leveling("Minimum Bonus Damage", [50, 65, 80, 95, 110]),
-                    ],
-                )
-            ],
-        )
-
-    def test_level_scale_minimal_shell(self) -> None:
-        """scale='level': per-level percent, exact on-hit shell."""
-        parse = build_parser(
-            {"P": on_hit_pct_health("Max Health Damage", "magic", scale="level")},
-            "TestChamp",
-        )
-        results = parse(
-            self._passive_champ(),
-            9,
-            0.0,
-            target_stats=_default_target(target_max_health=2000.0),
-        )
-        # Level 9 -> 8% of 2000 = 160.
-        assert results["passive"] == {
-            "name": "Stance",
-            "on_hit": {
-                "name": "Stance (on-hit)",
-                "damage_per_hit": 160.0,
-                "damage_type": "magic",
-            },
-        }
-
-    def test_rank_scale_with_floor_and_stacks(self) -> None:
-        """scale='rank' + floor + stacks: per-hit is proc/stacks."""
-        parse = build_parser(
-            {
-                "W": on_hit_pct_health(
-                    "Bonus True Damage",
-                    "true",
-                    floor_attr="Minimum Bonus Damage",
-                    stacks_required=3,
-                )
-            },
-            "TestChamp",
-        )
-        results = parse(
-            self._ranked_champ(),
-            9,
-            0.0,
-            ability_ranks={"W": 5},
-            target_stats=_default_target(target_max_health=500.0),
-        )
-        # W rank 5: 10% of 500 = 50 < 110 floor -> 110 / 3 per hit.
-        on_hit = results["W"]["on_hit"]
-        assert on_hit["damage_per_hit"] == pytest.approx(110.0 / 3)
-        assert on_hit["stacks_required"] == 3
-
-    def test_rank_gate(self) -> None:
-        parse = build_parser(
-            {"W": on_hit_pct_health("Bonus True Damage", "true")},
-            "TestChamp",
-        )
-        results = parse(
-            self._ranked_champ(),
-            9,
-            0.0,
-            ability_ranks={"W": 0},
-            target_stats=_default_target(),
-        )
-        assert "W" not in results
-
-    def test_missing_attribute_emits_nothing(self) -> None:
-        parse = build_parser(
-            {"W": on_hit_pct_health("No Such Attribute", "true")},
-            "TestChamp",
-        )
-        results = parse(self._ranked_champ(), 9, 0.0)
-        assert results == {}
-
-    def test_zero_damage_without_target_still_emits(self) -> None:
-        """Attribute present, no target: a 0.0 on-hit entry (Aatrox P)."""
-        parse = build_parser(
-            {"P": on_hit_pct_health("Max Health Damage", "magic", scale="level")},
-            "TestChamp",
-        )
-        results = parse(self._passive_champ(), 9, 0.0)
-        assert results["passive"]["on_hit"]["damage_per_hit"] == 0.0
 
 
 class TestPctHealthPerHit:
