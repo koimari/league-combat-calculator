@@ -7,6 +7,9 @@ are distributed among Q, W, E.
 Format: list of 18 strings, one per champion level.
 """
 
+# Each table row is a level bracket (1-6 / 7-12 / 13-18) — keep the
+# 6-per-line layout black would otherwise explode.
+# fmt: off
 
 # Default: Q max first, then W, then E. R at 6/11/16.
 DEFAULT_SKILL_ORDER: list[str] = [
@@ -89,3 +92,4 @@ def get_ability_rank(
         if order[i] == ability_key:
             rank += 1
     return rank
+# fmt: on

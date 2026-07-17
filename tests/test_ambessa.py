@@ -2,6 +2,8 @@
 
 import pytest
 
+from src.calculator.ability_spec import parts_raw_total
+
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.ambessa import (
@@ -247,7 +249,9 @@ class TestPassiveDrakehoundsStep:
     def test_passive_scales_with_level(self, ambessa_data, parse_at) -> None:
         _, low = parse_at(ambessa_data, 1)
         _, high = parse_at(ambessa_data, 18)
-        assert high["passive"]["physical_damage"] > low["passive"]["physical_damage"]
+        assert parts_raw_total(high["passive"]["parts"], "physical") > parts_raw_total(
+            low["passive"]["parts"], "physical"
+        )
 
     def test_passive_proc_count_default(self, ambessa_data, parse_at) -> None:
         """Default passive procs should be 4."""
@@ -262,7 +266,7 @@ class TestPassiveDrakehoundsStep:
             champion_options={"passive_procs": 6},
         )
         assert abilities["passive"]["proc_count"] == 6
-        per_proc = abilities["passive"]["physical_damage"]
+        per_proc = parts_raw_total(abilities["passive"]["parts"], "physical")
         assert abs(abilities["passive"]["total_raw"] - per_proc * 6) < 0.1
 
     def test_passive_zero_procs_excluded(self, ambessa_data, parse_at) -> None:
@@ -277,7 +281,7 @@ class TestPassiveDrakehoundsStep:
     def test_passive_level1_base_damage(self, ambessa_data, parse_at) -> None:
         """Level 1 passive per-proc should be ~5 base + 25% bonus AD."""
         stats, abilities = parse_at(ambessa_data, 1)
-        per_proc = abilities["passive"]["physical_damage"]
+        per_proc = parts_raw_total(abilities["passive"]["parts"], "physical")
         bonus_ad = stats.get("bonus_attack_damage", 0.0)
         expected = 5.0 + 0.25 * bonus_ad
         assert abs(per_proc - expected) < 1.0
@@ -287,6 +291,6 @@ class TestPassiveDrakehoundsStep:
         item = get_item_by_name("Voltaic Cyclosword")
         _, no_items = parse_at(ambessa_data, 18)
         _, with_item = parse_at(ambessa_data, 18, items=[item])
-        assert with_item["passive"]["physical_damage"] > (
-            no_items["passive"]["physical_damage"]
+        assert parts_raw_total(with_item["passive"]["parts"], "physical") > (
+            parts_raw_total(no_items["passive"]["parts"], "physical")
         )

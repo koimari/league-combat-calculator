@@ -2,18 +2,12 @@
 
 from typing import Any
 
-from .item_effects import (
-    get_ap_multiplier,
-    get_basic_ability_haste,
-    get_bloodmail_bonus_ad,
-    get_dawncore_bonus_ap,
-    get_flowing_water_bonus_ap,
-    get_mana_to_ap_bonus,
-    get_muramana_bonus_ad,
-    get_passive_attack_speed_bonus,
-    get_steraks_bonus_ad,
-    get_terminus_max_stack_bonuses,
-)
+from .item_effects import resolve_stat_effects
+
+# Level cap — 20 is top-lane-only as of this season, so this is
+# season-volatile. Single source of truth: the API guards and the UI
+# slider (via the index template) both read this constant.
+MAX_LEVEL = 20
 
 
 def growth_stat(base: float, growth: float, level: int) -> float:
@@ -29,8 +23,8 @@ def growth_stat(base: float, growth: float, level: int) -> float:
     Returns:
         The stat value at the given level (not rounded).
     """
-    if level < 1 or level > 20:
-        raise ValueError(f"Level must be between 1 and 20, got {level}")
+    if level < 1 or level > MAX_LEVEL:
+        raise ValueError(f"Level must be between 1 and {MAX_LEVEL}, got {level}")
     return base + growth * (level - 1) * (0.7025 + 0.0175 * (level - 1))
 
 
@@ -187,36 +181,7 @@ def calculate_total_stats(
         for key in total_item_stats:
             total_item_stats[key] += item_stats.get(key, 0.0)
 
-    # Ability power: base + items + stat-converting passives, then the
-    # additive %AP multiplier (Rabadon's, Blackfire Torch).
-    raw_ability_power = base_stats["ability_power"] + total_item_stats["ability_power"]
-    raw_ability_power += get_mana_to_ap_bonus(items, total_item_stats["mana"])
-    raw_ability_power += get_dawncore_bonus_ap(
-        items, total_item_stats["mana_regen_percent"]
-    )
-    raw_ability_power += get_flowing_water_bonus_ap(items)
-
-    final_ability_power = raw_ability_power * get_ap_multiplier(items)
-
-    # Attack speed: base AS + (AS ratio × total bonus%)
-    base_as = champion_data["stats"]["attackSpeed"]["flat"]
-    as_ratio = champion_data["stats"].get("attackSpeedRatio", {}).get("flat", base_as)
-    level_as_bonus = growth_stat(
-        0, champion_data["stats"]["attackSpeed"]["perLevel"], level
-    )
-    total_as_bonus = level_as_bonus + total_item_stats["attack_speed_percent"]
-
-    # Assumed-active AS passives (Bandlepipes, Hexplate, Yun Tal)
-    is_melee = champion_data.get("attackType", "MELEE") == "MELEE"
-    total_as_bonus += get_passive_attack_speed_bonus(items, is_melee)
-
-    final_attack_speed = calculate_attack_speed(base_as, as_ratio, total_as_bonus)
-
-    # Lethality is 1:1 flat armor penetration (no level scaling since V14.1)
-    lethality = total_item_stats["lethality"]
-    flat_armor_pen = lethality
-
-    # Mana: base + growth + items
+    # Mana first — stat conversions read it (Awe → AP, Muramana → AD)
     cdm = champion_data["stats"]
     base_mana = growth_stat(
         cdm.get("mana", {}).get("flat", 0),
@@ -224,39 +189,70 @@ def calculate_total_stats(
         level,
     )
     total_mana = base_mana + total_item_stats["mana"]
+    is_melee = champion_data.get("attackType", "MELEE") == "MELEE"
 
-    # Stat-to-AD conversion passives (Muramana, Bloodmail, Sterak's)
-    muramana_bonus_ad = get_muramana_bonus_ad(items, total_mana)
-    bloodmail_bonus_ad = get_bloodmail_bonus_ad(items, total_item_stats["health"])
-    steraks_bonus_ad = get_steraks_bonus_ad(items, base_stats["attack_damage"])
+    # Every stat-granting item passive, compiled once. item_effects owns
+    # the per-item knowledge; this function owns the application order.
+    bonuses = resolve_stat_effects(
+        items,
+        bonus_mana=total_item_stats["mana"],
+        max_mana=total_mana,
+        bonus_health=total_item_stats["health"],
+        base_attack_damage=base_stats["attack_damage"],
+        bonus_mana_regen_percent=total_item_stats["mana_regen_percent"],
+        is_melee=is_melee,
+        level=level,
+    )
+
+    # Ability power: base + items + converted AP, then the additive %AP
+    # multiplier (Rabadon's, Blackfire Torch).
+    raw_ability_power = (
+        base_stats["ability_power"]
+        + total_item_stats["ability_power"]
+        + bonuses.bonus_ap
+    )
+    final_ability_power = raw_ability_power * bonuses.ap_multiplier
+
+    # Attack speed: base AS + (AS ratio × total bonus%)
+    base_as = champion_data["stats"]["attackSpeed"]["flat"]
+    as_ratio = champion_data["stats"].get("attackSpeedRatio", {}).get("flat", base_as)
+    level_as_bonus = growth_stat(
+        0, champion_data["stats"]["attackSpeed"]["perLevel"], level
+    )
+    total_as_bonus = (
+        level_as_bonus
+        + total_item_stats["attack_speed_percent"]
+        + bonuses.attack_speed_percent
+    )
+    final_attack_speed = calculate_attack_speed(base_as, as_ratio, total_as_bonus)
+
+    # Lethality is 1:1 flat armor penetration (no level scaling since V14.1)
+    lethality = total_item_stats["lethality"]
+    flat_armor_pen = lethality
 
     total_ad = (
         base_stats["attack_damage"]
         + total_item_stats["attack_damage"]
-        + muramana_bonus_ad
-        + bloodmail_bonus_ad
-        + steraks_bonus_ad
+        + bonuses.bonus_ad
     )
     total_health = base_stats["health"] + total_item_stats["health"]
 
-    # Terminus Juxtaposition: light hits grant bonus armor + MR, dark hits
-    # grant % armor + magic pen. Assumed at max stacks while auto-attacking.
-    terminus_bonus_resist, terminus_pen = get_terminus_max_stack_bonuses(items, level)
-
+    # Terminus max-stack display assumption: bonus resists to both armor
+    # and MR, percent pen to both armor and magic.
     final_armor = round(
-        base_stats["armor"] + total_item_stats["armor"] + terminus_bonus_resist
+        base_stats["armor"] + total_item_stats["armor"] + bonuses.bonus_resists
     )
     final_mr = round(
         base_stats["magic_resistance"]
         + total_item_stats["magic_resistance"]
-        + terminus_bonus_resist
+        + bonuses.bonus_resists
     )
 
     final_armor_pen_percent = (
-        total_item_stats["armor_penetration_percent"] + terminus_pen
+        total_item_stats["armor_penetration_percent"] + bonuses.bonus_pen_percent
     )
     final_magic_pen_percent = (
-        total_item_stats["magic_penetration_percent"] + terminus_pen
+        total_item_stats["magic_penetration_percent"] + bonuses.bonus_pen_percent
     )
 
     return {
@@ -271,10 +267,7 @@ def calculate_total_stats(
         "magic_penetration_percent": final_magic_pen_percent,
         "base_attack_damage": round(base_stats["attack_damage"]),
         "bonus_attack_damage": round(
-            total_item_stats["attack_damage"]
-            + muramana_bonus_ad
-            + bloodmail_bonus_ad
-            + steraks_bonus_ad
+            total_item_stats["attack_damage"] + bonuses.bonus_ad
         ),
         "bonus_health": round(total_item_stats["health"]),
         "lethality": lethality,
@@ -284,7 +277,7 @@ def calculate_total_stats(
         "max_mana": round(total_mana),
         "bonus_mana": round(total_item_stats["mana"]),
         "ability_haste": total_item_stats["ability_haste"],
-        "basic_ability_haste": get_basic_ability_haste(items),
+        "basic_ability_haste": bonuses.basic_ability_haste,
         "level": level,
         "is_melee": is_melee,
     }

@@ -11,6 +11,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.ability_spec import DamagePart
+
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
@@ -400,6 +402,7 @@ class TestBloodlettersCurseVileDecay:
             "attack_damage": 100,
             "ability_power": 0,
             "attack_speed": 0.625,
+            "attack_speed_ratio": 0.625,
             "magic_penetration_flat": 0,
             "magic_penetration_percent": 0,
             "armor_penetration_percent": 0,
@@ -414,6 +417,7 @@ class TestBloodlettersCurseVileDecay:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 200,
+                "parts": (DamagePart("physical", 200),),
                 "total_raw": 200,
                 "damage_type": "physical",
             },
@@ -477,7 +481,12 @@ class TestShadowflameCinderbloom:
             },
         }
         ability_damages = {
-            "Q": {"damage_type": "magic", "magic_damage": 100, "total_raw": 100},
+            "Q": {
+                "damage_type": "magic",
+                "magic_damage": 100,
+                "total_raw": 100,
+                "parts": (DamagePart("magic", 100),),
+            },
         }
         # Target at 1000 HP, threshold 400 — 100 damage won't cross it
         bonus = _calculate_shadowflame_bonus(
@@ -511,8 +520,18 @@ class TestShadowflameCinderbloom:
             },
         }
         ability_damages = {
-            "Q": {"damage_type": "magic", "magic_damage": 700, "total_raw": 700},
-            "W": {"damage_type": "magic", "magic_damage": 200, "total_raw": 200},
+            "Q": {
+                "damage_type": "magic",
+                "magic_damage": 700,
+                "total_raw": 700,
+                "parts": (DamagePart("magic", 700),),
+            },
+            "W": {
+                "damage_type": "magic",
+                "magic_damage": 200,
+                "total_raw": 200,
+                "parts": (DamagePart("magic", 200),),
+            },
         }
         bonus = _calculate_shadowflame_bonus(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
@@ -538,7 +557,12 @@ class TestShadowflameCinderbloom:
             },
         }
         ability_damages = {
-            "Q": {"damage_type": "magic", "magic_damage": 700, "total_raw": 700},
+            "Q": {
+                "damage_type": "magic",
+                "magic_damage": 700,
+                "total_raw": 700,
+                "parts": (DamagePart("magic", 700),),
+            },
         }
         bonus = _calculate_shadowflame_bonus(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
@@ -578,9 +602,18 @@ class TestShadowflameCinderbloom:
                 "damage_type": "mixed",
                 "magic_damage": 500,
                 "true_damage": 500,
+                "parts": (
+                    DamagePart("magic", 500),
+                    DamagePart("true", 500),
+                ),
                 "total_raw": 1000,
             },
-            "W": {"damage_type": "magic", "magic_damage": 150, "total_raw": 150},
+            "W": {
+                "damage_type": "magic",
+                "magic_damage": 150,
+                "total_raw": 150,
+                "parts": (DamagePart("magic", 150),),
+            },
         }
         bonus = _calculate_shadowflame_bonus(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
@@ -699,14 +732,25 @@ class TestShadowflameCinderbloom:
             },
         }
         ability_damages = {
-            "Q": {"damage_type": "magic", "magic_damage": 400, "total_raw": 400},
-            "Q2": {
+            "Q": {
                 "damage_type": "magic",
                 "magic_damage": 400,
                 "total_raw": 400,
+                "parts": (DamagePart("magic", 400),),
+            },
+            "Q2": {
+                "damage_type": "magic",
+                "magic_damage": 400,
+                "parts": (DamagePart("magic", 400),),
+                "total_raw": 400,
                 "recast_of": "Q",
             },
-            "W": {"damage_type": "magic", "magic_damage": 300, "total_raw": 300},
+            "W": {
+                "damage_type": "magic",
+                "magic_damage": 300,
+                "total_raw": 300,
+                "parts": (DamagePart("magic", 300),),
+            },
         }
         # Default cast_order includes "Q2" — step 1 already consumes it.
         bonus = _calculate_shadowflame_bonus(
@@ -850,6 +894,119 @@ class TestActualizerAmpRow:
         assert "proc_Stormsurge" in fight["breakdown"]
         row, expected = self._amp_row_and_expected(fight, ("proc_Stormsurge",))
         assert row["total_damage"] == pytest.approx(expected, abs=0.01)
+
+
+class TestBurnRefreshWindow:
+    """Burn windows stretch by the rotation cast spread.
+
+    Only a multi-instance R (Ahri: cast_instances=3) adds dash spread;
+    a plain single-instance R must not inherit Ahri's dash count.
+    """
+
+    _STATS = {
+        "attack_damage": 60.0,
+        "base_attack_damage": 60.0,
+        "attack_speed": 0.7,
+        "attack_speed_ratio": 0.625,
+        "critical_strike_chance": 0.0,
+        "magic_penetration_flat": 0.0,
+        "magic_penetration_percent": 0.0,
+        "armor_penetration_percent": 0.0,
+        "lethality": 0.0,
+        "ability_power": 100.0,
+        "is_melee": False,
+        "level": 18,
+    }
+
+    def _fight(self, abilities, item_names):
+        from src.calculator.data_fetcher import get_item_by_name
+
+        return calculate_fight_damage(
+            dict(self._STATS),
+            abilities,
+            target_health=2000,
+            target_armor=100,
+            target_magic_resistance=100,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=0.0,
+            items=[get_item_by_name(n) for n in item_names],
+            one_rotation=True,
+            cast_order=[k for k in ("Q", "R") if k in abilities],
+        )
+
+    @staticmethod
+    def _r_entry(cast_instances=None):
+        entry = {
+            "name": "Test R",
+            "parts": (DamagePart("magic", 300.0),),
+            "total_raw": 300.0,
+            "damage_type": "magic",
+            "cooldown": 60.0,
+        }
+        if cast_instances is not None:
+            entry["cast_instances"] = cast_instances
+        return entry
+
+    _Q = {
+        "name": "Test Q",
+        "parts": (DamagePart("magic", 200.0),),
+        "total_raw": 200.0,
+        "damage_type": "magic",
+        "cooldown": 6.0,
+    }
+
+    def test_single_instance_r_adds_no_dash_spread(self) -> None:
+        """A plain R must not inherit Ahri's 3-dash burn-window stretch.
+
+        Q + R one-rotation: base spread = (2 - 1) * 0.5s. With
+        cast_instances=3 the window gains 2 dashes x 0.5s; the plain-R
+        window must be exactly the base. Burn totals scale linearly with
+        (spread + duration), so the ratio pins both windows.
+        """
+        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        duration = burn.duration
+
+        plain = self._fight(
+            {"Q": dict(self._Q), "R": self._r_entry()},
+            ["Liandry's Torment"],
+        )
+        dashes = self._fight(
+            {"Q": dict(self._Q), "R": self._r_entry(cast_instances=3)},
+            ["Liandry's Torment"],
+        )
+        burn_key = next(k for k in plain["breakdown"] if k.startswith("burn_"))
+        plain_burn = plain["breakdown"][burn_key]["total_damage"]
+        dash_burn = dashes["breakdown"][burn_key]["total_damage"]
+
+        base_spread = 0.5  # (2 casts - 1) * 0.5s
+        expected_ratio = (base_spread + 1.0 + duration) / (base_spread + duration)
+        assert dash_burn / plain_burn == pytest.approx(expected_ratio)
+
+    def test_hatefog_refresh_window_uses_seconds_not_dash_count(self) -> None:
+        """Malignance's Hatefog starts at R1: cast_spread minus the dash
+        spread in SECONDS (r_extra x 0.5s), not minus the dash count."""
+        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        (hatefog,) = resolve_damage_effects(_build("Malignance")).ultimate_procs
+        duration = burn.duration
+
+        fight = self._fight(
+            {"R": self._r_entry(cast_instances=3)},
+            ["Liandry's Torment", "Malignance"],
+        )
+        burn_key = next(k for k in fight["breakdown"] if k.startswith("burn_"))
+        actual = fight["breakdown"][burn_key]["total_damage"]
+
+        # One R cast, 3 instances: spread = 2 dashes x 0.5s = 1.0s;
+        # R1 lands at spread - 2 x 0.5s = 0.0s; hatefog runs to its
+        # duration; burn refreshes until hatefog ends.
+        dot_refresh_end = max(1.0, 0.0 + hatefog.duration)
+        inputs = DamageInputs(dict(self._STATS), 18, False, 2000.0, 2000.0)
+        raw = burn.source.raw_damage(inputs)
+        raw *= (dot_refresh_end + duration) / duration
+        from src.calculator.resistance import apply_resistance
+
+        expected = apply_resistance(raw, fight["effective_mr"])
+        assert actual == pytest.approx(expected, rel=1e-6)
 
 
 class TestBloodsongSpellbladeAndExposeWeakness:
@@ -1024,6 +1181,7 @@ class TestBloodsongSpellbladeAndExposeWeakness:
             "ability_power": 0,
             "base_attack_damage": 100,
             "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
             "magic_penetration_flat": 0,
             "magic_penetration_percent": 0,
             "armor_penetration_percent": 0,
@@ -1038,6 +1196,7 @@ class TestBloodsongSpellbladeAndExposeWeakness:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 200,
+                "parts": (DamagePart("physical", 200),),
                 "total_raw": 200,
                 "damage_type": "physical",
             },
@@ -1217,6 +1376,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
             "ability_power": 0,
             "base_attack_damage": 100,
             "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
             "magic_penetration_flat": 0,
             "magic_penetration_percent": 0,
             "armor_penetration_percent": 0,
@@ -1231,6 +1391,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
                 "rank": 1,
                 "cooldown": 5.0,
                 "magic_damage": 200,
+                "parts": (DamagePart("magic", 200),),
                 "total_raw": 200,
                 "damage_type": "magic",
             },
@@ -1259,6 +1420,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
             "ability_power": 0,
             "base_attack_damage": 100,
             "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
             "magic_penetration_flat": 0,
             "magic_penetration_percent": 0,
             "armor_penetration_percent": 0,
@@ -1273,6 +1435,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 200,
+                "parts": (DamagePart("physical", 200),),
                 "total_raw": 200,
                 "damage_type": "physical",
             },
@@ -1303,6 +1466,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
             "ability_power": 0,
             "base_attack_damage": 100,
             "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
             "magic_penetration_flat": 0,
             "magic_penetration_percent": 0,
             "armor_penetration_percent": 0,
@@ -1320,6 +1484,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
                 "rank": 1,
                 "cooldown": 3.0,
                 "physical_damage": 200,
+                "parts": (DamagePart("physical", 200),),
                 "total_raw": 200,
                 "damage_type": "physical",
             },
@@ -1397,6 +1562,7 @@ class TestEclipseEverRisingMoon:
             "ability_power": 0,
             "base_attack_damage": 100,
             "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
             "magic_penetration_flat": 0,
             "magic_penetration_percent": 0,
             "armor_penetration_percent": 0,
@@ -1411,6 +1577,7 @@ class TestEclipseEverRisingMoon:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 200,
+                "parts": (DamagePart("physical", 200),),
                 "total_raw": 200,
                 "damage_type": "physical",
             },
@@ -1439,6 +1606,7 @@ class TestEclipseEverRisingMoon:
             "ability_power": 0,
             "base_attack_damage": 100,
             "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
             "magic_penetration_flat": 0,
             "magic_penetration_percent": 0,
             "armor_penetration_percent": 0,
@@ -1453,6 +1621,7 @@ class TestEclipseEverRisingMoon:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -1527,6 +1696,7 @@ class TestEclipseEverRisingMoon:
             "ability_power": 0,
             "base_attack_damage": 100,
             "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
             "magic_penetration_flat": 0,
             "magic_penetration_percent": 0,
             "armor_penetration_percent": 0,
@@ -1541,6 +1711,7 @@ class TestEclipseEverRisingMoon:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 200,
+                "parts": (DamagePart("physical", 200),),
                 "total_raw": 200,
                 "damage_type": "physical",
             },
@@ -1595,6 +1766,7 @@ class TestExperimentalHexplate:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -1647,6 +1819,7 @@ class TestExperimentalHexplate:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -1688,6 +1861,7 @@ class TestExperimentalHexplate:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -1729,6 +1903,7 @@ class TestExperimentalHexplate:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -1770,6 +1945,7 @@ class TestExperimentalHexplate:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -1829,6 +2005,7 @@ class TestFiendhunterBolts:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -1884,6 +2061,7 @@ class TestFiendhunterBolts:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -2095,6 +2273,7 @@ class TestFiendhunterBolts:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -2141,6 +2320,7 @@ class TestFiendhunterBolts:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -2184,6 +2364,7 @@ class TestFiendhunterBolts:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -2236,6 +2417,7 @@ class TestFiendhunterBolts:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -2278,6 +2460,7 @@ class TestFiendhunterBolts:
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
                 "total_raw": 100,
                 "damage_type": "physical",
             },
@@ -2726,6 +2909,7 @@ class TestHexopticsC44BasicDamageAmp:
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -2773,6 +2957,7 @@ class TestHexopticsC44BasicDamageAmp:
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -2830,6 +3015,7 @@ class TestHorizonFocusHypershotAmp:
             "attack_damage": 60.0,
             "base_attack_damage": 60.0,
             "attack_speed": 0.6,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -2844,12 +3030,14 @@ class TestHorizonFocusHypershotAmp:
         abilities = {
             "Q": {
                 "name": "Test Q",
+                "parts": (DamagePart("magic", 200.0),),
                 "total_raw": 200.0,
                 "damage_type": "magic",
                 "cooldown": 6.0,
             },
             "E": {
                 "name": "Test E",
+                "parts": (DamagePart("magic", 150.0),),
                 "total_raw": 150.0,
                 "damage_type": "magic",
                 "cooldown": 8.0,
@@ -2912,6 +3100,7 @@ class TestHorizonFocusHypershotAmp:
             "attack_damage": 60.0,
             "base_attack_damage": 60.0,
             "attack_speed": 0.6,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -2928,6 +3117,10 @@ class TestHorizonFocusHypershotAmp:
                 "name": "Orb of Deception",
                 "magic_damage": 100.0,
                 "true_damage": 100.0,
+                "parts": (
+                    DamagePart("magic", 100.0),
+                    DamagePart("true", 100.0),
+                ),
                 "total_raw": 200.0,
                 "damage_type": "mixed",
                 "cooldown": 7.0,
@@ -3023,6 +3216,7 @@ class TestHullbreakerSkipper:
             "attack_damage": 100.0,
             "base_attack_damage": 80.0,
             "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -3061,6 +3255,7 @@ class TestMuramanaMultiCastR:
             "attack_damage": 80.0,
             "base_attack_damage": 60.0,
             "attack_speed": 0.7,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -3077,8 +3272,8 @@ class TestMuramanaMultiCastR:
         abilities = {
             "R": {
                 "name": "Spirit Rush",
-                "damage_per_cast": 200.0,
-                "total_casts": 3,
+                "parts": (DamagePart("magic", 200.0, count=3),),
+                "cast_instances": 3,
                 "total_raw": 600.0,
                 "damage_type": "magic",
             },
@@ -3118,6 +3313,7 @@ class TestMuramanaMultiCastR:
             "attack_damage": 80.0,
             "base_attack_damage": 60.0,
             "attack_speed": 0.7,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -3132,6 +3328,7 @@ class TestMuramanaMultiCastR:
         abilities = {
             "Q": {
                 "name": "Test Q",
+                "parts": (DamagePart("magic", 200.0),),
                 "total_raw": 200.0,
                 "damage_type": "magic",
                 "cooldown": 7.0,
@@ -3166,6 +3363,7 @@ class TestNavoriFlickerbladeFight:
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.5,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -3179,6 +3377,7 @@ class TestNavoriFlickerbladeFight:
         abilities = {
             "Q": {
                 "name": "Test Q",
+                "parts": (DamagePart("magic", 200.0),),
                 "total_raw": 200.0,
                 "damage_type": "magic",
                 "cooldown": 7.0,
@@ -3218,6 +3417,7 @@ class TestNavoriFlickerbladeFight:
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.5,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -3231,8 +3431,8 @@ class TestNavoriFlickerbladeFight:
         abilities = {
             "R": {
                 "name": "Test R",
-                "damage_per_cast": 100.0,
-                "total_casts": 3,
+                "parts": (DamagePart("magic", 100.0, count=3),),
+                "cast_instances": 3,
                 "total_raw": 300.0,
                 "damage_type": "magic",
             },
@@ -3257,6 +3457,7 @@ class TestNavoriFlickerbladeFight:
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.5,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -3270,6 +3471,7 @@ class TestNavoriFlickerbladeFight:
         abilities = {
             "Q": {
                 "name": "Test Q",
+                "parts": (DamagePart("magic", 200.0),),
                 "total_raw": 200.0,
                 "damage_type": "magic",
                 "cooldown": 7.0,
@@ -3296,6 +3498,7 @@ class TestNavoriFlickerbladeFight:
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.5,
+            "attack_speed_ratio": 0.625,
             "critical_strike_chance": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
@@ -3309,6 +3512,7 @@ class TestNavoriFlickerbladeFight:
         abilities = {
             "Q": {
                 "name": "Test Q",
+                "parts": (DamagePart("magic", 200.0),),
                 "total_raw": 200.0,
                 "damage_type": "magic",
                 "cooldown": 7.0,
@@ -3431,7 +3635,7 @@ class TestSpearOfShojin:
         - Q at 6s base, 0 ability haste, 25 basic = 6 * 100/125 = 4.8s
         - R at 60s base, 0 ability haste, 25 basic = still 60s (no basic haste)
         """
-        from src.calculator.champions.common import effective_cooldown
+        from src.calculator.damage import effective_cooldown
 
         base_q_cd = 6.0
         base_r_cd = 60.0
@@ -3827,7 +4031,7 @@ class TestCollectorThreshold(_FightHarness):
         entry = result["breakdown"]["execute"]
         assert entry["total_damage"] == 0.0
         assert entry["execution_threshold_hp"] == 100.0  # 5% of 2000
-        assert "Collector Execution Threshold" in entry["note"]
+        assert "Collector Execution Threshold" in entry["detail"]
 
     def test_collector_threshold_scales_with_target_health(self) -> None:
         """Threshold scales with target max health."""

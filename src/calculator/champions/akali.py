@@ -6,10 +6,10 @@ Why each slot is non-generic:
   archetype.
 - E (Shuriken Flip) is two hits (throw + dash); "Total Magic Damage"
   captures both.
-- R (Perfect Execution) is a custom two-cast slot: R1 dash plus an R2
-  execute that scales 0-200% with target missing HP. The entry carries
-  ``r2_min``/``r2_max``/``missing_hp_scaling`` so damage.py can compute
-  R2 from the HP remaining after earlier casts in the rotation.
+- R (Perfect Execution) is a custom two-part slot: a flat R1 dash part
+  plus an R2 execute part whose ``hp_scaled_damage`` closure interpolates
+  min→max with the target's missing HP — the engine evaluates it against
+  the HP remaining after R1 and earlier casts in the rotation.
 - W (Twilight Shroud) deals no damage and is absent from the slot map.
 
 All numeric values are read from the champion JSON data.
@@ -17,6 +17,7 @@ All numeric values are read from the champion JSON data.
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import (
     extract_cooldown,
@@ -50,18 +51,23 @@ def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:
     r2_min = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats)
     r2_max = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats)
 
-    # magic_damage is R1 only; total_raw shows the R1 + R2-max upper
-    # bound. damage.py resolves actual R2 from missing HP at cast time.
+    # R1 is flat; R2 interpolates min→max with the target's missing HP
+    # at cast time — the part's closure sees HP after R1 lands because
+    # the engine threads running damage through parts in order.
+    span = r2_max - r2_min
     return {
         "name": ability.get("name", "Perfect Execution"),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
-        "magic_damage": r1_damage,
         "total_raw": r1_damage + r2_max,
-        "r2_min": r2_min,
-        "r2_max": r2_max,
-        "missing_hp_scaling": True,
+        "parts": (
+            DamagePart("magic", r1_damage),
+            DamagePart(
+                "magic",
+                hp_scaled_damage=lambda missing: r2_min + span * missing,
+            ),
+        ),
     }
 
 

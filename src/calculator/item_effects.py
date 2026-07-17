@@ -1844,7 +1844,7 @@ def resolve_damage_effects(
 # duplicate copies (legendary items are unique).
 
 
-def get_ap_multiplier(items: list[dict[str, Any]]) -> float:
+def _ap_multiplier(items: list[dict[str, Any]]) -> float:
     """Additive AP multiplier from item passives.
 
     Rabadon's Deathcap (+30% AP) and Blackfire Torch (+4% AP per burning
@@ -1865,7 +1865,7 @@ def get_ap_multiplier(items: list[dict[str, Any]]) -> float:
     return 1.0 + bonus
 
 
-def get_mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
+def _mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
     """Awe passives (Archangel's Staff, Seraph's Embrace): bonus mana → AP.
 
     Args:
@@ -1883,7 +1883,7 @@ def get_mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> floa
     return total
 
 
-def get_dawncore_bonus_ap(
+def _dawncore_bonus_ap(
     items: list[dict[str, Any]],
     bonus_mana_regen_percent: float,
 ) -> float:
@@ -1903,7 +1903,7 @@ def get_dawncore_bonus_ap(
     return (bonus_mana_regen_percent / threshold) * ap_per_unit
 
 
-def get_flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
+def _flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
     """Staff of Flowing Water Rapids: flat bonus AP (assumed always active).
 
     Args:
@@ -1917,7 +1917,7 @@ def get_flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
     return _required_effect_value("Staff of Flowing Water", "rapids_bonus_ap")
 
 
-def get_passive_attack_speed_bonus(
+def _passive_attack_speed_bonus(
     items: list[dict[str, Any]],
     is_melee: bool,
 ) -> float:
@@ -1945,7 +1945,7 @@ def get_passive_attack_speed_bonus(
     return bonus
 
 
-def get_muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
+def _muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
     """Muramana Awe passive: % of maximum mana as bonus AD.
 
     Args:
@@ -1960,7 +1960,7 @@ def get_muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float
     return _required_effect_value("Muramana", "max_mana_to_ad_ratio") * max_mana
 
 
-def get_bloodmail_bonus_ad(
+def _bloodmail_bonus_ad(
     items: list[dict[str, Any]],
     bonus_health: float,
 ) -> float:
@@ -1979,7 +1979,7 @@ def get_bloodmail_bonus_ad(
     return ratio * bonus_health
 
 
-def get_steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
+def _steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
     """Sterak's Gage The Claws that Catch: % of base AD as bonus AD.
 
     Args:
@@ -1996,7 +1996,7 @@ def get_steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
     )
 
 
-def get_terminus_max_stack_bonuses(
+def _terminus_max_stack_bonuses(
     items: list[dict[str, Any]],
     level: int,
 ) -> tuple[float, float]:
@@ -2031,7 +2031,7 @@ def get_terminus_max_stack_bonuses(
     return bonus_resist, pen_percent
 
 
-def get_basic_ability_haste(items: list[dict[str, Any]]) -> float:
+def _basic_ability_haste(items: list[dict[str, Any]]) -> float:
     """Spear of Shojin Dragonforce: basic ability haste (Q, W, E only).
 
     Args:
@@ -2043,3 +2043,64 @@ def get_basic_ability_haste(items: list[dict[str, Any]]) -> float:
     if "Spear of Shojin" not in _item_names(items):
         return 0.0
     return _required_effect_value("Spear of Shojin", "basic_ability_haste")
+
+
+@dataclass(frozen=True)
+class StatBonuses:
+    """Every stat-granting item passive for one build, compiled.
+
+    The stat layer's counterpart to ``BuildDamageEffects``: ``stats.py``
+    reads these typed fields instead of importing one accessor per item.
+    Application contract (owned by ``stats.calculate_total_stats``):
+    ``bonus_ap`` adds to AP *before* ``ap_multiplier`` multiplies;
+    ``bonus_resists`` adds to both armor and MR; ``bonus_pen_percent``
+    adds to both armor and magic percent pen (Terminus max-stack display
+    assumption — the fight engine ramps the real per-auto average).
+    """
+
+    bonus_ap: float  # Awe mana→AP, Dawncore, Staff of Flowing Water
+    ap_multiplier: float  # Rabadon's / Blackfire additive %AP (1.0 = none)
+    bonus_ad: float  # Muramana, Overlord's Bloodmail, Sterak's Gage
+    attack_speed_percent: float  # Bandlepipes, Hexplate, Yun Tal
+    bonus_resists: float  # Terminus light stacks (armor AND MR)
+    bonus_pen_percent: float  # Terminus dark stacks (armor AND magic pen)
+    basic_ability_haste: float  # Spear of Shojin (Q/W/E only)
+
+
+def resolve_stat_effects(
+    items: list[dict[str, Any]],
+    *,
+    bonus_mana: float,
+    max_mana: float,
+    bonus_health: float,
+    base_attack_damage: float,
+    bonus_mana_regen_percent: float,
+    is_melee: bool,
+    level: int,
+) -> StatBonuses:
+    """Compile the stat-granting passives of *items* into one bundle.
+
+    Callers supply the pre-computed stats each conversion reads (Awe
+    reads bonus mana, Muramana total mana, Bloodmail bonus health,
+    Sterak's base AD, Dawncore bonus base mana regen). A stat-converting
+    item added here is the ONLY edit item-side; ``stats.py`` never grows
+    a new import or call site.
+    """
+    terminus_resists, terminus_pen = _terminus_max_stack_bonuses(items, level)
+    return StatBonuses(
+        bonus_ap=(
+            _mana_to_ap_bonus(items, bonus_mana)
+            + _dawncore_bonus_ap(items, bonus_mana_regen_percent)
+            + _flowing_water_bonus_ap(items)
+        ),
+        ap_multiplier=_ap_multiplier(items),
+        bonus_ad=(
+            _muramana_bonus_ad(items, max_mana)
+            + _bloodmail_bonus_ad(items, bonus_health)
+            + _steraks_bonus_ad(items, base_attack_damage)
+        ),
+        attack_speed_percent=_passive_attack_speed_bonus(items, is_melee),
+        bonus_resists=terminus_resists,
+        bonus_pen_percent=terminus_pen,
+        basic_ability_haste=_basic_ability_haste(items),
+    )

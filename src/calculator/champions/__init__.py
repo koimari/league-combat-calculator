@@ -165,6 +165,15 @@ def champion_options_meta_map() -> dict[str, dict[str, list]]:
     return result
 
 
+def registered_champion_names() -> list[str]:
+    """Display names of champions with a custom module, sorted.
+
+    The sanctioned external view of the registry (the golden snapshot
+    iterates it); everyone else goes through ``parse_champion_abilities``.
+    """
+    return sorted(_CHAMPION_MODULES)
+
+
 def is_champion_supported(champion_name: str) -> bool:  # noqa: ARG001
     """Check whether a champion has ability damage implemented.
 

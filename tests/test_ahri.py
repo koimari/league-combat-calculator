@@ -7,6 +7,8 @@ the 16.13.1 JSON), plus an Ahri fight-level check of the Actualizer ability amp
 
 import pytest
 
+from src.calculator.ability_spec import parts_raw_total
+
 from src.calculator.damage import calculate_fight_damage
 
 
@@ -22,26 +24,30 @@ class TestParseAhriAbilities:
         _, abilities = parse_at(ahri_data, 6, ap=60)
         q = abilities["Q"]
         assert q["rank"] == 3
-        assert abs(q["magic_damage"] - 115.0) < 0.1
-        assert abs(q["true_damage"] - 115.0) < 0.1
+        assert abs(parts_raw_total(q["parts"], "magic") - 115.0) < 0.1
+        assert abs(parts_raw_total(q["parts"], "true") - 115.0) < 0.1
 
     def test_w_rank1_with_60ap(self, ahri_data: dict, parse_at) -> None:
         _, abilities = parse_at(ahri_data, 6, ap=60)
         w = abilities["W"]
         assert w["rank"] == 1
-        assert abs(w["initial_damage"] - 64.0) < 0.1
-        assert abs(w["subsequent_damage"] - 25.6) < 0.1
+        initial, subsequent = w["parts"]
+        assert abs(initial.amount - 64.0) < 0.1
+        assert abs(subsequent.amount - 25.6) < 0.1
+        assert subsequent.count == 2
 
     def test_e_rank1_with_60ap(self, ahri_data: dict, parse_at) -> None:
         _, abilities = parse_at(ahri_data, 6, ap=60)
         e = abilities["E"]
-        assert abs(e["magic_damage"] - 131.0) < 0.1
+        assert abs(parts_raw_total(e["parts"], "magic") - 131.0) < 0.1
 
     def test_r_rank1_with_60ap(self, ahri_data: dict, parse_at) -> None:
         _, abilities = parse_at(ahri_data, 6, ap=60)
         r = abilities["R"]
-        assert abs(r["damage_per_cast"] - 96.0) < 0.1
-        assert r["total_casts"] == 3
+        (dashes,) = r["parts"]
+        assert abs(dashes.amount - 96.0) < 0.1
+        assert dashes.count == 3
+        assert r["cast_instances"] == 3
         assert "cooldown" not in r
 
     def test_q_rank5_with_215ap(self, ahri_data: dict, parse_at) -> None:
@@ -50,23 +56,23 @@ class TestParseAhriAbilities:
         _, abilities = parse_at(ahri_data, 11, ap=215)
         q = abilities["Q"]
         assert q["rank"] == 5
-        assert abs(q["magic_damage"] - 242.5) < 0.1
+        assert abs(parts_raw_total(q["parts"], "magic") - 242.5) < 0.1
 
     def test_w_rank5_with_572ap(self, ahri_data: dict, parse_at) -> None:
         _, abilities = parse_at(ahri_data, 18, ap=572)
         w = abilities["W"]
         assert w["rank"] == 5
-        assert abs(w["initial_damage"] - 348.8) < 0.1
+        assert abs(w["parts"][0].amount - 348.8) < 0.1
 
     def test_e_rank5_with_572ap(self, ahri_data: dict, parse_at) -> None:
         _, abilities = parse_at(ahri_data, 18, ap=572)
         e = abilities["E"]
-        assert abs(e["magic_damage"] - 726.2) < 0.1
+        assert abs(parts_raw_total(e["parts"], "magic") - 726.2) < 0.1
 
     def test_r_rank3_with_572ap(self, ahri_data: dict, parse_at) -> None:
         _, abilities = parse_at(ahri_data, 18, ap=572)
         r = abilities["R"]
-        assert abs(r["damage_per_cast"] - 375.2) < 0.1
+        assert abs(r["parts"][0].amount - 375.2) < 0.1
 
 
 class TestActualizerFightDamage:

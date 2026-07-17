@@ -1,13 +1,11 @@
 """Tests for champion-layer primitives shared by all champion modules.
 
-Covers calculate_ability_damage / effective_cooldown (champions.common) and
-skill-order rank resolution (champions.skill_orders).
+Covers calculate_ability_damage (champions.common), effective_cooldown
+(damage.py), and skill-order rank resolution (champions.skill_orders).
 """
 
-from src.calculator.champions.common import (
-    calculate_ability_damage,
-    effective_cooldown,
-)
+from src.calculator.champions.common import calculate_ability_damage
+from src.calculator.damage import effective_cooldown
 from src.calculator.champions.skill_orders import get_ability_rank
 
 

@@ -32,6 +32,7 @@ wiki prose with no JSON home.
 import re
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
@@ -205,11 +206,18 @@ def _comeuppance(ctx: SlotCtx) -> dict[str, Any] | None:
     bullets = int(extract_value(ability, "Maximum Bullets Stored", rank))
 
     name = ability.get("name", "Comeuppance")
-    entry = damage_entry(
-        name, rank, extract_cooldown(ability, rank), per_bullet * bullets, "physical"
+    total = per_bullet * bullets
+    entry = damage_entry(name, rank, extract_cooldown(ability, rank), total, "physical")
+    # Barrage scales up to +200% with target missing HP; crits amplify
+    # at 30% effectiveness (both wiki-prose constants, see module doc).
+    entry["parts"] = (
+        DamagePart(
+            "physical",
+            hp_scaled_damage=lambda missing: total
+            * (1.0 + _R_MISSING_HP_MAX_BONUS * missing),
+            crit_effectiveness=_R_CRIT_EFFECTIVENESS,
+        ),
     )
-    entry["crit_effectiveness"] = _R_CRIT_EFFECTIVENESS
-    entry["missing_hp_max_bonus"] = _R_MISSING_HP_MAX_BONUS
     return entry
 
 

@@ -913,13 +913,10 @@ document.addEventListener("DOMContentLoaded", () => {
             tdName.textContent = entry.name;
 
             const tdDetail = document.createElement("td");
-            if (entry.execution_threshold_hp != null) {
-                // Collector: show execution threshold instead of damage
-                tdDetail.textContent = "Execute below " + Math.round(entry.execution_threshold_hp) + " HP";
-            } else if (entry.sundered_sky_note != null) {
-                tdDetail.textContent = entry.sundered_sky_note;
-            } else if (entry.note != null && entry.total_damage === 0) {
-                tdDetail.textContent = entry.note;
+            if (entry.detail != null) {
+                // Engine-minted display text (execute threshold, Sundered
+                // Sky diff, amp summaries) — always wins over derived text.
+                tdDetail.textContent = entry.detail;
             } else if (entry.casts != null) {
                 tdDetail.textContent = entry.casts + (entry.casts === 1 ? " cast" : " casts");
             } else if (entry.count != null) {
@@ -948,8 +945,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const tdDmg = document.createElement("td");
             tdDmg.className = "col-right";
-            if (entry.execution_threshold_hp != null) {
-                tdDmg.textContent = Math.round(entry.execution_threshold_hp) + " HP";
+            if (entry.damage_display != null) {
+                tdDmg.textContent = entry.damage_display;
             } else {
                 tdDmg.textContent = Math.round(entry.total_damage);
             }

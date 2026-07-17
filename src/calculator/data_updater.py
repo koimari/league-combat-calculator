@@ -26,14 +26,18 @@ if sys.platform == "win32":
     _orig_download_soup = _lsd_utils.download_soup
 
     def _win_download_soup(
-        url: str, use_cache: bool = True, dir: str = "__cache__",
+        url: str,
+        use_cache: bool = True,
+        dir: str = "__cache__",
     ) -> str:
         import os as _os
         import requests as _requests
         from bs4 import BeautifulSoup as _BS
 
         directory = _os.path.abspath(
-            _os.path.join(_os.path.dirname(_os.path.realpath(_lsd_utils.__file__)), "../..")
+            _os.path.join(
+                _os.path.dirname(_os.path.realpath(_lsd_utils.__file__)), "../.."
+            )
         )
         directory = _os.path.join(directory, dir)
         if not _os.path.exists(directory):
@@ -59,9 +63,15 @@ if sys.platform == "win32":
         soup = _BS(html, "lxml")
         html = str(soup)
         for old, new in [
-            ("\u00a0", " "), ("\u300c", "["), ("\u300d", "]"),
-            ("\u00ba", "\u00b0"), ("\u200b", ""), ("\u200e", ""),
-            ("\u2013", ":"), ("\xa0", " "), ("\uff06", "&"),
+            ("\u00a0", " "),
+            ("\u300c", "["),
+            ("\u300d", "]"),
+            ("\u00ba", "\u00b0"),
+            ("\u200b", ""),
+            ("\u200e", ""),
+            ("\u2013", ":"),
+            ("\xa0", " "),
+            ("\uff06", "&"),
         ]:
             html = html.replace(old, new)
         return html
@@ -106,9 +116,7 @@ def _build_champion_payload(
                 f"/characters/{champion.key.lower()}/hud/icons2d/"
             )
             for ability_key, abilities_list in champion.abilities.items():
-                for ability_index, ability in enumerate(
-                    abilities_list, start=1
-                ):
+                for ability_index, ability in enumerate(abilities_list, start=1):
                     url = get_ability_url(
                         champion.key,
                         ABILITY_KEY_TO_IDENTIFIER[ability_key],
@@ -122,9 +130,7 @@ def _build_champion_payload(
         except Exception:
             pass  # Ability icons are non-critical
 
-    champion_payload = json.loads(
-        champion.__json__(ensure_ascii=False)
-    )
+    champion_payload = json.loads(champion.__json__(ensure_ascii=False))
     champion_payload.pop("skins", None)
     champion_payload.pop("lore", None)
     champion_payload.pop("faction", None)
@@ -185,7 +191,9 @@ def _process_champions(
 
                 ddragon_champion = ddragon_champions[champion_key]
                 payload = _build_champion_payload(
-                    champion, latest_version, ddragon_champion,
+                    champion,
+                    latest_version,
+                    ddragon_champion,
                 )
                 champions.append(payload)
                 processed += 1
@@ -226,10 +234,7 @@ def _process_champions(
     #          slower since each call re-parses the cached wiki page).
     # ------------------------------------------------------------------
     if bulk_crashed:
-        remaining_keys = [
-            key for key in ddragon_champions
-            if key not in processed_keys
-        ]
+        remaining_keys = [key for key in ddragon_champions if key not in processed_keys]
 
         for champion_key in remaining_keys:
             try:
@@ -246,7 +251,9 @@ def _process_champions(
                     processed_keys.add(champion.key)
                     ddragon_champion = ddragon_champions[champion_key]
                     payload = _build_champion_payload(
-                        champion, latest_version, ddragon_champion,
+                        champion,
+                        latest_version,
+                        ddragon_champion,
                     )
                     champions.append(payload)
                     processed += 1

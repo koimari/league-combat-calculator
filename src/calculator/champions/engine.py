@@ -39,6 +39,35 @@ PHASE_ORDER = (BUFF, DEBUFF, DAMAGE, ONHIT, AMP)
 
 SlotParser = Callable[["SlotCtx"], dict[str, Any] | None]
 
+# Every key an emitted entry may carry. The fight engine reads the first
+# group; the second is producer-side diagnostics and champion display
+# metadata (never engine-read). An unknown key raises at parse time —
+# a misspelled key must never silently zero an ability.
+_ALLOWED_ENTRY_KEYS = frozenset(
+    {
+        # fight-engine contract
+        "name",
+        "rank",
+        "cooldown",
+        "damage_type",
+        "parts",
+        "cast_instances",
+        "recast_of",
+        "stat_buff",
+        "target_debuff",
+        "on_hit",
+        "proc_count",
+        "auto_attack_override",
+        "double_shot",
+        # producer diagnostics / display metadata
+        "total_raw",
+        "damage_per_tick",
+        "total_ticks",
+        "tibbers_aura",
+        "initial_burst",
+    }
+)
+
 
 # ---------------------------------------------------------------------------
 # Slot context
@@ -162,6 +191,17 @@ def build_parser(
             entry = parser(ctx)
             if entry is not None:
                 results[_result_key(slot)] = entry
+
+        # Validate AFTER all phases: AMP parsers mutate earlier entries,
+        # and a mutated entry must obey the contract too.
+        for result_key, entry in results.items():
+            unknown = set(entry) - _ALLOWED_ENTRY_KEYS
+            if unknown:
+                raise ValueError(
+                    f"{champion_name} entry {result_key!r}: unknown entry "
+                    f"key(s) {sorted(unknown)} (allowed keys are defined "
+                    f"by engine._ALLOWED_ENTRY_KEYS)"
+                )
 
         return results
 

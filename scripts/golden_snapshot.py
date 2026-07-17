@@ -36,7 +36,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.calculator.champions import _CHAMPION_MODULES, parse_champion_abilities
+from src.calculator.champions import (
+    parse_champion_abilities,
+    registered_champion_names,
+)
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.pipeline import FightParams, ONE_ROTATION_DURATION, run_fight
 from src.calculator.stats import calculate_total_stats
@@ -186,7 +189,7 @@ def snapshot_registered_fights(champions, items_by_name, substitutions):
     }
     by_display_name = {data.get("name"): data for data in champions.values()}
     out = {}
-    for display_name in sorted(_CHAMPION_MODULES):
+    for display_name in registered_champion_names():
         levels = {}
         for level in FIGHT_LEVELS:
             fights = {"sustained": {}}
@@ -271,7 +274,7 @@ def snapshot_metadata(champions, items, substitutions, sweep_error_count):
         "champions_fetched_at": meta_fetched_at("champions.json"),
         "items_fetched_at": meta_fetched_at("items.json"),
         "champion_count": len(champions),
-        "registered_champion_count": len(_CHAMPION_MODULES),
+        "registered_champion_count": len(registered_champion_names()),
         "item_count": len(items),
         "item_sweep_error_count": sweep_error_count,
         "build_substitutions": substitutions,

@@ -1,9 +1,9 @@
-"""Champion-agnostic damage math shared with the wider calculator.
+"""Package-level compatibility helper for the public calculator API.
 
 The champion parse layer itself lives in ``engine.py`` (slot evaluation)
 and ``slotlib.py`` (archetypes + JSON extraction core); this module only
-keeps the two formula helpers that non-champion code (``damage.py``,
-``calculator.__init__``) imports.
+keeps the scalar helper that ``calculator.__init__`` re-exports. The
+cooldown formula lives in ``damage.py`` (its only consumer).
 """
 
 
@@ -29,20 +29,3 @@ def calculate_ability_damage(
         Total raw ability damage.
     """
     return base_damage + (scaling_ratio * scaling_stat)
-
-
-def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
-    """Calculate effective cooldown after ability haste.
-
-    Formula: base_cd * 100 / (100 + ability_haste)
-
-    Args:
-        base_cooldown: Base cooldown in seconds.
-        ability_haste: Total ability haste.
-
-    Returns:
-        Effective cooldown in seconds.
-    """
-    if base_cooldown <= 0:
-        return 0.0
-    return base_cooldown * (100.0 / (100.0 + ability_haste))

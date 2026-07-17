@@ -41,12 +41,35 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from . import item_effects
+from .ability_spec import DamagePart, parts_raw_total
 from .resistance import (
     apply_resistance,
     apply_magic_penetration,
     apply_armor_penetration,
 )
-from .champions.common import effective_cooldown
+
+# Critical strikes deal 200% base damage (this changed once before, from
+# 175%). Items add on top via crit_damage_bonus; anything recovering the
+# item bonus from a total multiplier must subtract this same constant.
+BASE_CRIT_MULTIPLIER = 2.0
+
+
+def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
+    """Calculate effective cooldown after ability haste.
+
+    Formula: base_cd * 100 / (100 + ability_haste)
+
+    Args:
+        base_cooldown: Base cooldown in seconds.
+        ability_haste: Total ability haste.
+
+    Returns:
+        Effective cooldown in seconds.
+    """
+    if base_cooldown <= 0:
+        return 0.0
+    return base_cooldown * (100.0 / (100.0 + ability_haste))
+
 
 # ─────────────────────────────────────────────────────────────────────────
 # Fight-model state
@@ -234,7 +257,7 @@ class FightState:
     empowered_autos: int
     # ── Crit (resolved after stat-buff ultimates) ─────────────────────────
     crit_chance: float = 0.0
-    crit_multiplier: float = 2.0
+    crit_multiplier: float = BASE_CRIT_MULTIPLIER
     # ── Accumulators ──────────────────────────────────────────────────────
     breakdown: dict[str, Any] = field(default_factory=dict)
     total_damage: float = 0.0
@@ -538,15 +561,17 @@ def _calculate_shadowflame_bonus(
         if dtype == "mixed" and key in ability_damages:
             # Split into magic (mitigated) and true portions
             casts = entry.get("casts", 1)
-            true_per_cast = ability_damages[key].get("true_damage", 0)
+            true_per_cast = parts_raw_total(
+                ability_damages[key].get("parts", ()), "true"
+            )
             total_true = true_per_cast * casts
             magic_portion = damage - total_true
             events.append((magic_portion, True))
             events.append((total_true, True))
         elif dtype in ("magic", "true"):
             # R with multiple dashes: split into individual events
-            if key == "R" and ability_damages.get("R", {}).get("total_casts", 1) > 1:
-                total_dashes = ability_damages["R"]["total_casts"]
+            if key == "R" and ability_damages.get("R", {}).get("cast_instances", 1) > 1:
+                total_dashes = ability_damages["R"]["cast_instances"]
                 casts = entry.get("casts", 1)
                 per_event = damage / (total_dashes * casts)
                 for _ in range(total_dashes * casts):
@@ -693,7 +718,7 @@ def _resolve_combat_state(
     flat_armor_pen = champion_stats.get("flat_armor_penetration", 0.0)
 
     attack_speed = champion_stats["attack_speed"]
-    as_ratio = champion_stats.get("attack_speed_ratio", 0.625)
+    as_ratio = champion_stats["attack_speed_ratio"]
 
     # ── Ultimate-triggered AS buffs (Fiendhunter Bolts) ──────
     # NOTE: Hexplate 50% bonus AS is now baked into champion stats (stats.py)
@@ -852,7 +877,9 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
     # Crit stats — needed by both ability crit scaling (rotation) and the
     # auto-attack simulation.
     state.crit_chance = min(stats.get("critical_strike_chance", 0) / 100.0, 1.0)
-    state.crit_multiplier = 2.0 + state.damage_effects.crit_damage_bonus
+    state.crit_multiplier = (
+        BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
+    )
 
 
 @dataclass
@@ -867,17 +894,68 @@ class RotationResult:
     autos_per_second: float = 0.0
 
 
+def _evaluate_cast_parts(
+    state: "FightState",
+    parts: tuple[DamagePart, ...],
+    num_casts: int,
+    ability_mr: float,
+    running_damage: float,
+) -> tuple[float, float]:
+    """Evaluate an ability's typed damage parts over its casts.
+
+    Returns (total mitigated damage pre-amp, first part's mitigated
+    damage on the first cast — the Horizon Focus trigger value for
+    mixed entries). Threads running target damage through every part
+    and cast so HP-scaled parts see prior hits (Akali R2 after R1,
+    Kog'Maw R shot after shot).
+    """
+    resists = state.resists
+    target_health = state.target_health
+    total = 0.0
+    first_part_first_cast = 0.0
+    for cast_index in range(num_casts):
+        for part_index, part in enumerate(parts):
+            if part.hp_scaled_damage is not None:
+                hp_now = max(0.0, target_health - running_damage)
+                missing_ratio = (
+                    1.0 - hp_now / target_health if target_health > 0 else 1.0
+                )
+                raw = part.hp_scaled_damage(missing_ratio)
+            else:
+                raw = part.amount
+            if part.crit_effectiveness > 0:
+                eff = part.crit_effectiveness
+                bonus_crit = state.crit_multiplier - BASE_CRIT_MULTIPLIER
+                raw *= (
+                    1 + eff * state.crit_chance + eff * bonus_crit * state.crit_chance
+                )
+            if part.damage_type == "true":
+                mitigated = raw * part.count
+            elif part.damage_type == "physical":
+                mitigated = apply_resistance(raw, resists.effective_armor) * part.count
+            else:
+                mitigated = (
+                    apply_resistance(raw, ability_mr) * state.magic_amp * part.count
+                )
+            if cast_index == 0 and part_index == 0:
+                first_part_first_cast = mitigated
+            total += mitigated
+            running_damage += mitigated
+    return total, first_part_first_cast
+
+
 def _compute_ability_rotation(state: FightState) -> RotationResult:
     """Cast the ability rotation and accumulate mitigated ability damage.
 
     In time-based mode abilities recast when their cooldown expires within
     the fight duration (with ability haste, Spear of Shojin basic-ability
     haste, and Navori auto-attack CD refunds); in one-rotation mode each
-    ability is cast exactly once. Handles per-ability damage-type math
-    (mixed/magic/physical, multi-part, multi-cast, missing-HP scaling,
-    reduced-effectiveness crit scaling), Malignance's pre/post-ult MR,
-    Bloodletter's Vile Decay stacking, and target shreds applied AFTER the
-    shredding ability's own damage.
+    ability is cast exactly once. Damage arithmetic is evaluated from each
+    entry's typed DamageParts (_evaluate_cast_parts) — champion-specific
+    scaling lives in champion-module closures, never here. This function
+    owns scheduling plus Malignance's pre/post-ult MR, Bloodletter's Vile
+    Decay stacking, and target shreds applied AFTER the shredding
+    ability's own damage.
 
     On return the resists are switched to auto-attack penetration
     (Terminus average) and Vile Decay stacks are folded into
@@ -980,117 +1058,23 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 else resists.effective_mr_pre_ult
             )
 
-        if damage_type == "mixed":
-            magic_per_cast = (
-                apply_resistance(ability_info["magic_damage"], ability_mr) * magic_amp
-            )
-            true_per_cast = ability_info["true_damage"]
-            ability_total = (magic_per_cast + true_per_cast) * num_casts
-        elif damage_type == "magic":
-            # Field-based dispatch: check for multi-part ability fields
-            if "initial_damage" in ability_info:
-                # Multi-part ability (e.g. Fox-Fire: initial + subsequent)
-                initial_mit = apply_resistance(
-                    ability_info["initial_damage"], ability_mr
-                )
-                subsequent_mit = apply_resistance(
-                    ability_info["subsequent_damage"], ability_mr
-                )
-                per_cast = (initial_mit + subsequent_mit * 2) * magic_amp
-                ability_total = per_cast * num_casts
-            elif "damage_per_cast" in ability_info:
-                # Multi-cast ability (e.g. Spirit Rush: 3 dashes)
-                per_dash = (
-                    apply_resistance(ability_info["damage_per_cast"], ability_mr)
-                    * magic_amp
-                )
-                ability_total = per_dash * ability_info["total_casts"] * num_casts
-            elif ability_info.get("missing_hp_scaling"):
-                if "r_base_damage" in ability_info:
-                    # Single-damage ability with missing-HP multiplier
-                    # (e.g. Kog'Maw R: 0-50% bonus scaling linearly
-                    # with missing HP up to 60% missing, then 100%
-                    # bonus below 40% max HP).
-                    r_base = ability_info["r_base_damage"]
-                    ability_total = 0.0
-                    running_dmg = mitigated_damage_dealt
-                    for _ in range(num_casts):
-                        hp_now = max(
-                            0.0,
-                            target_health - running_dmg,
-                        )
-                        if target_health > 0:
-                            missing_pct = 1.0 - (hp_now / target_health)
-                        else:
-                            missing_pct = 1.0
-                        if missing_pct >= 0.6:
-                            multiplier = 2.0
-                        else:
-                            multiplier = 1.0 + 0.5 * (missing_pct / 0.6)
-                        raw = r_base * multiplier
-                        mit = apply_resistance(raw, ability_mr) * magic_amp
-                        ability_total += mit
-                        running_dmg += mit
-                else:
-                    # Two-part ability with missing-HP scaling on the
-                    # second cast (e.g. Akali R: R1 flat + R2 scales
-                    # 0-200% with target missing HP). Compute R2 based
-                    # on damage dealt so far in the rotation.
-                    r1_raw = ability_info.get("magic_damage", 0)
-                    r2_min = ability_info.get("r2_min", 0)
-                    r2_max = ability_info.get("r2_max", 0)
-                    r1_mit = apply_resistance(r1_raw, ability_mr) * magic_amp
-                    # After R1, estimate target HP to scale R2
-                    hp_after_r1 = max(
-                        0.0,
-                        target_health - mitigated_damage_dealt - r1_mit,
-                    )
-                    missing_ratio = (
-                        1.0 - (hp_after_r1 / target_health)
-                        if target_health > 0
-                        else 1.0
-                    )
-                    # R2 damage linearly interpolates min→max by
-                    # missing %
-                    r2_raw = r2_min + (r2_max - r2_min) * missing_ratio
-                    r2_mit = apply_resistance(r2_raw, ability_mr) * magic_amp
-                    ability_total = (r1_mit + r2_mit) * num_casts
-            else:
-                raw = ability_info.get("magic_damage", ability_info.get("total_raw", 0))
-                ability_total = (
-                    apply_resistance(raw, ability_mr) * magic_amp * num_casts
-                )
-        elif damage_type == "physical":
-            raw = ability_info.get("physical_damage", ability_info.get("total_raw", 0))
-            # Crit scaling at reduced effectiveness (e.g. Akshan R)
-            if "crit_effectiveness" in ability_info:
-                eff = ability_info["crit_effectiveness"]
-                bonus_crit = state.crit_multiplier - 2.0
-                raw *= (
-                    1 + eff * state.crit_chance + eff * bonus_crit * state.crit_chance
-                )
-            # Missing HP scaling (e.g. Akshan R: 0-200% bonus)
-            if "missing_hp_max_bonus" in ability_info:
-                max_bonus = ability_info["missing_hp_max_bonus"]
-                hp_remaining = max(
-                    0.0,
-                    target_health - mitigated_damage_dealt,
-                )
-                missing_ratio = (
-                    1.0 - (hp_remaining / target_health) if target_health > 0 else 1.0
-                )
-                raw *= 1 + max_bonus * missing_ratio
-            ability_total = apply_resistance(raw, resists.effective_armor) * num_casts
-        else:
-            ability_total = ability_info.get("total_raw", 0) * num_casts
+        # All damage arithmetic is typed DamageParts — champion-specific
+        # scaling lives in the champion module's closures, never here.
+        ability_total, first_part_damage = _evaluate_cast_parts(
+            state,
+            ability_info["parts"],
+            num_casts,
+            ability_mr,
+            mitigated_damage_dealt,
+        )
 
         # Apply ability-specific damage amplifiers (e.g., Actualizer)
         ability_total *= state.ability_amp
 
-        # Muramana procs once per ability cast. Multi-cast abilities
-        # (e.g. Ahri R with 3 dashes) proc once per sub-cast.
-        total_casts_per_use = ability_info.get("total_casts", 1)
-        result.total_muramana_procs += total_casts_per_use * num_casts
+        # Muramana procs once per ability cast. Multi-instance abilities
+        # (e.g. Ahri R with 3 dashes) proc once per instance.
+        cast_instances = ability_info.get("cast_instances", 1)
+        result.total_muramana_procs += cast_instances * num_casts
 
         # Track the first ability hit for Horizon Focus (trigger, not amped).
         # For mixed-type abilities (e.g. Ahri Q: magic outgoing + true return),
@@ -1098,7 +1082,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         if first_ability_key is None and num_casts > 0:
             first_ability_key = ability_key
             if damage_type == "mixed":
-                result.first_ability_damage = magic_per_cast
+                result.first_ability_damage = first_part_damage
             else:
                 result.first_ability_damage = ability_total / num_casts
 
@@ -1158,18 +1142,21 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
         if proc_count <= 0:
             continue
 
-        raw_per_proc = info.get(
-            "magic_damage",
-            info.get(
-                "physical_damage",
-                info.get("total_raw", 0),
-            ),
+        parts = info["parts"]
+        if any(part.hp_scaled_damage is not None for part in parts):
+            raise ValueError(
+                f"proc entry {info.get('name', key)!r}: hp-scaled parts are "
+                "not supported outside the cast rotation (procs have no "
+                "target-HP context)"
+            )
+        dtype = info["damage_type"]
+        per_proc = sum(
+            _mitigate(part.amount, part.damage_type, resists, state.magic_amp)
+            * part.count
+            for part in parts
         )
-        if raw_per_proc <= 0:
+        if per_proc <= 0:
             continue
-
-        dtype = info.get("damage_type", "magic")
-        per_proc = _mitigate(raw_per_proc, dtype, resists, state.magic_amp)
 
         proc_total = per_proc * proc_count
         state.breakdown[key] = {
@@ -1397,7 +1384,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         breakdown["sundered_sky"] = {
             "name": f"{first_auto_crit.item_name} (Lightshield Strike)",
             "total_damage": mitigated_diff,
-            "sundered_sky_note": ss_note,
+            "detail": ss_note,
+            "informational": True,
         }
 
     if fiendhunter_true_total > 0:
@@ -1419,7 +1407,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             "name": f"Damage Amplification ({amp_name})",
             "multiplier": basic_amp,
             "total_damage": basic_amp_bonus,
-            "note": "included in auto attack totals above",
+            "detail": "included in auto attack totals above",
+            "informational": True,
         }
 
     # Double shot: second auto per attack at reduced AD (e.g. Akshan passive)
@@ -1716,11 +1705,12 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         source = effect.source
         raw_burn = source.raw_damage(_damage_inputs(state))
         burn_duration = effect.duration
-        # Burn refreshes on each ability hit (including R dashes).
+        # Burn refreshes on each ability hit (including R dashes —
+        # only multi-instance Rs declare cast_instances; default 1).
         r_info = ability_damages.get("R")
         r_extra = 0
         if r_info:
-            r_extra = r_info.get("total_casts", 3) - 1
+            r_extra = r_info.get("cast_instances", 1) - 1
         # Estimate time from first to last ability hit.  In a fast
         # one-rotation combo, casts are ~0.5s apart (GCD-limited).
         inter_cast_delay = 0.5
@@ -1733,8 +1723,8 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         dot_refresh_end = cast_spread  # default: last ability hit
         for ultimate_proc in state.damage_effects.ultimate_procs:
             if "R" in ability_damages:
-                # R1 is cast at (cast_spread - r_extra) into the fight
-                r_start = cast_spread - r_extra
+                # R1 lands r_extra dashes (x0.5s each) before the last hit
+                r_start = cast_spread - r_extra * inter_cast_delay
                 hatefog_end = r_start + ultimate_proc.duration
                 dot_refresh_end = max(dot_refresh_end, hatefog_end)
 
@@ -1829,7 +1819,7 @@ def _add_item_proc_damage(state: FightState) -> None:
         # Hatefog zone refreshes on each R dash.  Effective duration is
         # the time from R1 to R_last plus the base zone duration.
         hatefog_duration = effect.duration
-        r_total_casts = r_info.get("total_casts", 1)
+        r_total_casts = r_info.get("cast_instances", 1)
         r_dash_spread = (r_total_casts - 1) * 0.5  # ~0.5s between dashes
         effective_hatefog = r_dash_spread + hatefog_duration
         raw *= effective_hatefog / hatefog_duration
@@ -2120,7 +2110,8 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
             "name": f"Damage Amplification ({amp_name})",
             "multiplier": state.ability_amp,
             "total_damage": actualizer_bonus,
-            "note": "included in ability/proc totals above",
+            "detail": "included in ability/proc totals above",
+            "informational": True,
         }
 
     # Horizon Focus Hypershot: amp all damage except the first ability cast
@@ -2155,11 +2146,13 @@ def _add_execute_display(state: FightState) -> None:
             "total_damage": 0.0,
             "damage_type": "true",
             "execution_threshold_hp": collector_threshold,
-            "note": (
+            "detail": (
                 f"{execute.item_name} Execution Threshold: "
                 f"{collector_threshold:.0f} HP "
                 f"({threshold_pct:.0f}% of {state.target_health:.0f})"
             ),
+            "damage_display": f"{collector_threshold:.0f} HP",
+            "informational": True,
         }
 
 
@@ -2326,28 +2319,26 @@ def split_auto_vs_ability(
 
     Attribution rules, keyed off the breakdown key names this module emits:
 
+    - Entries marked ``informational`` are display-only — their damage is
+      zero or already counted in other rows (the engine marks its amp
+      summaries, the execute-threshold row, and the Sundered Sky row
+      this way) — so they are skipped.
     - ``auto_attacks``, ``fiendhunter_true_damage``, and keys prefixed
       ``on_hit_`` or ``spellblade_`` count as auto-attack damage.
-    - Entries whose ``note`` contains "included in" are informational only
-      (e.g. Actualizer's amp row) — their damage is already counted in
-      other rows, so they are skipped.
-    - ``damage_amp_<source>`` and ``execute`` rows amplify both buckets,
-      so their damage is redistributed proportionally to the pre-amp
-      auto/ability ratio (dropped entirely if that total is zero).
-    - ``sundered_sky`` is a display-only row and is excluded outright.
+    - ``damage_amp_<source>`` rows amplify both buckets, so their damage
+      is redistributed proportionally to the pre-amp auto/ability ratio
+      (dropped entirely if that total is zero).
     - Everything else counts as ability damage.
     """
     auto_attack_damage = 0.0
     ability_damage = 0.0
-    redistributed_damage = 0.0  # damage_amp_<source> + execute rows
+    redistributed_damage = 0.0  # damage_amp_<source> rows
 
     on_hit_prefixes = ("on_hit_", "spellblade_")
 
     for key, entry in breakdown.items():
         dmg = entry.get("total_damage", 0.0)
-        # Skip informational-only entries whose damage is already counted
-        # in other breakdown rows (e.g. Actualizer, basic damage amp).
-        if "note" in entry and "included in" in entry.get("note", ""):
+        if entry.get("informational"):
             continue
         if (
             key == "auto_attacks"
@@ -2355,16 +2346,14 @@ def split_auto_vs_ability(
             or key.startswith(on_hit_prefixes)
         ):
             auto_attack_damage += dmg
-        elif key.startswith("damage_amp_") or key == "execute":
+        elif key.startswith("damage_amp_"):
             # Amplifiers scale both buckets — redistribute proportionally
             # below instead of attributing to either bucket.
             redistributed_damage += dmg
-        elif key == "sundered_sky":
-            pass  # Display-only row.
         else:
             ability_damage += dmg
 
-    # Damage amplification and execute — split proportionally.
+    # Damage amplification — split proportionally.
     pre_amp_total = auto_attack_damage + ability_damage
     if pre_amp_total > 0:
         auto_ratio = auto_attack_damage / pre_amp_total

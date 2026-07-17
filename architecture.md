@@ -32,9 +32,20 @@ wiki (lolstaticdata, external)
   per item family). Parse-config keys use the exact cached JSON item names.
 - `src/calculator/item_effects.py` — `_STATIC_ITEM_EFFECTS` owns schema/unparseable values;
   `_OFFLINE_ITEM_EFFECTS` is whole-parser recovery, never a per-key fallback. Parsed values
-  compile per build through `resolve_damage_effects()` into immutable, phase-aligned specs.
+  compile per build through two seams: `resolve_damage_effects()` (immutable, phase-aligned
+  fight specs) and `resolve_stat_effects()` (typed `StatBonuses` for stats.py — a
+  stat-converting item is added here only, never as a new stats.py import).
   A missing required key raises with item+key context. `refresh_item_effects()` re-parses
   in place after a data update.
+
+**Champion↔engine contract**
+- `src/calculator/ability_spec.py` — dependency-free leaf between the champion
+  layer and the fight engine (both import it, neither imports the other).
+  `DamagePart` carries ALL ability damage arithmetic: amount/count per
+  mitigation unit, `hp_scaled_damage` closures for champion-unique scaling
+  (Akali R2, Kog'Maw R, Akshan R), reduced-effectiveness crit. The engine
+  evaluates parts generically and never branches on champion-specific keys;
+  `engine.py` validates entry keys at parse time (unknown key raises).
 
 **Champion layer** — slot-archetype engine
 - `src/calculator/champions/__init__.py` — dispatcher. Registered names → champion module;
@@ -56,27 +67,39 @@ wiki (lolstaticdata, external)
   classification, stat-scaling resolution (engine infrastructure).
 
 **Champion math**
-- `src/calculator/stats.py` — level scaling + item stat aggregation (via item_effects
-  accessors only).
+- `src/calculator/stats.py` — level scaling + item stat aggregation. All
+  stat-granting item passives arrive through ONE seam
+  (`item_effects.resolve_stat_effects()` → typed `StatBonuses`); stats.py owns
+  only the application order. Owns `MAX_LEVEL` (served to the UI slider).
 - `src/calculator/resistance.py` — resistance/penetration formulas. Dependency-free
-  leaf; the CLAUDE.md domain formulas live here. (Lethality needs no formula:
-  it is 1:1 flat armor pen, applied in stats.py.)
+  leaf. (Lethality needs no formula: it is 1:1 flat armor pen, applied in
+  stats.py. The ability-haste→CDR formula lives in damage.py, its only
+  consumer.)
 
 **Fight engine**
 - `src/calculator/pipeline.py` — canonical stats → ability parsing → fight orchestration.
   Owns `FightParams`, request-mode resolution, and every fight/target default.
 - `src/calculator/damage.py` — `calculate_fight_damage` is a pipeline of named
   step functions over `FightState`/`Resists` (the body reads as the fight model).
-  `split_auto_vs_ability` owns breakdown-key attribution. It consumes compiled item specs,
-  never registry dictionaries or item-name branches: item VALUES/formulas live in
-  `item_effects`; timing, mitigation, falling HP, and stack cadence stay here.
+  `split_auto_vs_ability` owns breakdown-key attribution (exposed to consumers
+  via `run_fight`'s `auto_attack_damage`/`ability_damage` result keys); rows
+  marked `informational` are display-only. It consumes compiled item specs and
+  typed champion DamageParts, never registry dictionaries or name branches:
+  item VALUES/formulas live in `item_effects`, champion arithmetic in
+  `champions/<name>.py`; timing, mitigation, falling HP, stack cadence, and
+  the cooldown formula (`effective_cooldown`) stay here. Breakdown display
+  text (`detail`/`damage_display`) is minted here and passed through app.py
+  and app.js untouched.
 
 **Consumers**
 - `src/calculator/optimizer.py` — enumerates builds through `pipeline.run_fight`.
-  Owns `_EXCLUSIVITY_GROUPS`
-  (canonical; served to the frontend).
+  Owns `_EXCLUSIVITY_GROUPS` (canonical; served to the frontend) and the
+  item-eligibility predicates (`get_eligible_legendaries`/`get_eligible_boots`)
+  the item-picker routes reuse.
 - `src/app.py` — thin Flask routes. `/api/config` bootstraps the frontend (exclusivity
-  groups, fight/target defaults, champion options metadata). No calculation logic in routes.
+  groups, fight/target defaults, champion options metadata); `/api/items` and
+  `/api/boots` delegate eligibility to the optimizer. No calculation logic in
+  routes; breakdown display extras pass through untouched.
 - `static/js/app.js` — presentation only. Domain data (groups, defaults, options) arrives
   from `/api/config`; no formulas, no hand-maintained champion/item tables.
 

@@ -286,26 +286,20 @@ class TestRLivingArtillery:
         )
         assert abilities["R"]["total_raw"] == pytest.approx(128.0, abs=1.0)
 
-    def test_r_has_missing_hp_scaling_flag(self, kogmaw_data) -> None:
-        """R should be flagged for dynamic missing HP scaling."""
+    def test_r_part_scales_with_missing_hp_curve(self, kogmaw_data) -> None:
+        """R's part follows the wiki curve: +50% to 60% missing, then +100%."""
         abilities = parse_abilities(
             kogmaw_data,
             9,
             80.0,
             ability_ranks=STANDARD_RANKS,
         )
-        assert abilities["R"].get("missing_hp_scaling") is True
-
-    def test_r_has_base_damage_field(self, kogmaw_data) -> None:
-        """R should include r_base_damage for the fight engine."""
-        abilities = parse_abilities(
-            kogmaw_data,
-            9,
-            80.0,
-            ability_ranks=STANDARD_RANKS,
-        )
-        assert "r_base_damage" in abilities["R"]
-        assert abilities["R"]["r_base_damage"] > 0
+        (part,) = abilities["R"]["parts"]
+        base = part.hp_scaled_damage(0.0)
+        assert base > 0
+        assert part.hp_scaled_damage(0.3) == pytest.approx(base * 1.25)
+        assert part.hp_scaled_damage(0.6) == pytest.approx(base * 2.0)
+        assert part.hp_scaled_damage(1.0) == pytest.approx(base * 2.0)
 
     def test_r_scales_with_bonus_ad(self, kogmaw_data) -> None:
         """R should include bonus AD scaling (75% bonus AD)."""

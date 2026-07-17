@@ -2,6 +2,8 @@
 
 import pytest
 
+from src.calculator.ability_spec import parts_raw_total
+
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.amumu import _CURSE_BONUS_FRACTION
 from src.calculator.damage import calculate_fight_damage
@@ -52,7 +54,9 @@ class TestQBandageToss:
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
-        assert abilities["Q"]["magic_damage"] == pytest.approx(70.0, abs=0.5)
+        assert parts_raw_total(abilities["Q"]["parts"], "magic") == pytest.approx(
+            70.0, abs=0.5
+        )
 
     def test_q_with_ap_scaling(self, amumu_data, parse_at) -> None:
         """Q with 200 AP: 70 + 85%*200 = 70 + 170 = 240 per cast."""
@@ -63,7 +67,9 @@ class TestQBandageToss:
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
-        assert abilities["Q"]["magic_damage"] == pytest.approx(240.0, abs=0.5)
+        assert parts_raw_total(abilities["Q"]["parts"], "magic") == pytest.approx(
+            240.0, abs=0.5
+        )
 
     def test_q_curse_adds_true_damage(self, amumu_data, parse_at) -> None:
         """With curse, Q should have bonus true damage = 10% of magic."""
@@ -73,8 +79,8 @@ class TestQBandageToss:
             champion_options={"target_cursed": True},
             target_stats=_TARGET,
         )
-        magic = abilities["Q"]["magic_damage"]
-        true_dmg = abilities["Q"]["true_damage"]
+        magic = parts_raw_total(abilities["Q"]["parts"], "magic")
+        true_dmg = parts_raw_total(abilities["Q"]["parts"], "true")
         assert true_dmg == pytest.approx(magic * _CURSE_BONUS_FRACTION, rel=0.01)
 
     def test_q_reports_single_cast_damage(self, amumu_data, parse_at) -> None:
@@ -86,7 +92,9 @@ class TestQBandageToss:
             target_stats=_TARGET,
         )
         # Single cast at rank 1 with 0 AP = 70, not 140 (2 charges)
-        assert abilities["Q"]["magic_damage"] == pytest.approx(70.0, abs=0.5)
+        assert parts_raw_total(abilities["Q"]["parts"], "magic") == pytest.approx(
+            70.0, abs=0.5
+        )
 
 
 class TestWDespair:
@@ -140,7 +148,9 @@ class TestWDespair:
             target_stats=_TARGET,
         )
         # 1 tick at rank 1: 5 + 0.5% * 2000 = 5 + 10 = 15
-        assert abilities["W"]["magic_damage"] == pytest.approx(15.0, abs=1.0)
+        assert parts_raw_total(abilities["W"]["parts"], "magic") == pytest.approx(
+            15.0, abs=1.0
+        )
 
     def test_w_rank5_per_tick_with_ap(self, amumu_data, parse_at) -> None:
         """W rank 5 with 200 AP: 5 + (1% + 0.5%) * 2000 = 5 + 30 = 35."""
@@ -153,7 +163,9 @@ class TestWDespair:
         )
         # 1 tick: 5 + (1.0% + 0.25%*200/100) * 2000 = 5 + (1.0% + 0.5%) * 2000
         #       = 5 + 1.5% * 2000 = 5 + 30 = 35
-        assert abilities["W"]["magic_damage"] == pytest.approx(35.0, abs=1.0)
+        assert parts_raw_total(abilities["W"]["parts"], "magic") == pytest.approx(
+            35.0, abs=1.0
+        )
 
 
 class TestETantrum:
@@ -175,7 +187,9 @@ class TestETantrum:
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
-        assert abilities["E"]["magic_damage"] == pytest.approx(65.0, abs=0.5)
+        assert parts_raw_total(abilities["E"]["parts"], "magic") == pytest.approx(
+            65.0, abs=0.5
+        )
 
     def test_e_with_200_ap(self, amumu_data, parse_at) -> None:
         """E rank 1 with 200 AP: 65 + 100 = 165."""
@@ -186,7 +200,9 @@ class TestETantrum:
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
-        assert abilities["E"]["magic_damage"] == pytest.approx(165.0, abs=0.5)
+        assert parts_raw_total(abilities["E"]["parts"], "magic") == pytest.approx(
+            165.0, abs=0.5
+        )
 
 
 class TestRCurseOfTheSadMummy:
@@ -208,7 +224,9 @@ class TestRCurseOfTheSadMummy:
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
-        assert abilities["R"]["magic_damage"] == pytest.approx(200.0, abs=0.5)
+        assert parts_raw_total(abilities["R"]["parts"], "magic") == pytest.approx(
+            200.0, abs=0.5
+        )
 
     def test_r_rank3_with_200_ap(self, amumu_data, parse_at) -> None:
         """R rank 3 with 200 AP: 400 + 160 = 560 magic damage."""
@@ -219,7 +237,9 @@ class TestRCurseOfTheSadMummy:
             champion_options={"target_cursed": False},
             target_stats=_TARGET,
         )
-        assert abilities["R"]["magic_damage"] == pytest.approx(560.0, abs=0.5)
+        assert parts_raw_total(abilities["R"]["parts"], "magic") == pytest.approx(
+            560.0, abs=0.5
+        )
 
 
 class TestCurseIntegration:
@@ -234,8 +254,9 @@ class TestCurseIntegration:
             champion_options={"target_cursed": True},
         )
         for key in ("Q", "W", "E"):
-            assert "true_damage" in abilities[key], f"{key} missing true_damage"
-            assert abilities[key]["true_damage"] > 0, f"{key} true_damage is 0"
+            assert (
+                parts_raw_total(abilities[key]["parts"], "true") > 0
+            ), f"{key} missing curse true damage"
 
     def test_curse_off_no_true_damage(self, amumu_data, parse_at) -> None:
         """With curse off, abilities should have no true_damage key."""
@@ -258,8 +279,8 @@ class TestCurseIntegration:
             champion_options={"target_cursed": True},
         )
         for key in ("Q", "W", "E"):
-            magic = abilities[key]["magic_damage"]
-            true_dmg = abilities[key]["true_damage"]
+            magic = parts_raw_total(abilities[key]["parts"], "magic")
+            true_dmg = parts_raw_total(abilities[key]["parts"], "true")
             assert true_dmg == pytest.approx(
                 magic * 0.10, rel=0.01
             ), f"{key}: true={true_dmg}, expected 10% of magic={magic}"

@@ -15,6 +15,7 @@ import json
 
 import pytest
 
+from src.calculator.ability_spec import DamagePart
 from src.calculator.champions import GENERIC_SLOTS
 from src.calculator.champions import parse_abilities as dispatch_parse
 from src.calculator.champions.engine import (
@@ -430,8 +431,7 @@ class TestSimpleDamageParams:
         )
         results = parse(champ, 9, 0.0)
         assert results["Q"]["damage_type"] == "true"
-        assert results["Q"]["true_damage"] == 100.0
-        assert "magic_damage" not in results["Q"]
+        assert results["Q"]["parts"] == (DamagePart("true", 100.0),)
 
     def test_mixed_type_splits_magic_and_true(self) -> None:
         """Mixed damage splits evenly between magic and true (Ahri Q)."""
@@ -447,8 +447,10 @@ class TestSimpleDamageParams:
         )
         parse = build_parser({"Q": simple_damage()}, "TestChamp")
         results = parse(champ, 9, 0.0)
-        assert results["Q"]["magic_damage"] == 50.0
-        assert results["Q"]["true_damage"] == 50.0
+        assert results["Q"]["parts"] == (
+            DamagePart("magic", 50.0),
+            DamagePart("true", 50.0),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -493,8 +495,8 @@ class TestProcDamage:
         assert results["passive"] == {
             "name": "Mark",
             "damage_type": "magic",
-            "magic_damage": 50.0,
             "total_raw": 150.0,
+            "parts": (DamagePart("magic", 50.0),),
             "proc_count": 3,
         }
 
@@ -511,10 +513,9 @@ class TestProcDamage:
         results = self._parse(per_proc=lambda _ctx, _ability: 0.0)
         assert results == {}
 
-    def test_physical_type_uses_physical_key(self) -> None:
+    def test_physical_type_carries_physical_part(self) -> None:
         results = self._parse(dmg_type="physical", options={"passive_procs": 2})
-        assert results["passive"]["physical_damage"] == 50.0
-        assert "magic_damage" not in results["passive"]
+        assert results["passive"]["parts"] == (DamagePart("physical", 50.0),)
 
     def test_name_override_preserves_custom_proc_label(self) -> None:
         results = self._parse(name="Custom Proc")
@@ -536,7 +537,7 @@ class TestSharedEntryAndModifierPrimitives:
             "rank": 3,
             "damage_type": "magic",
             "total_raw": 0.0,
-            "magic_damage": 0.0,
+            "parts": (),
             "on_hit": payload,
         }
         assert with_cd["cooldown"] == 8.0
@@ -652,7 +653,7 @@ class TestStatBuff:
             "cooldown": 70.0,
             "damage_type": "physical",
             "total_raw": 0.0,
-            "physical_damage": 0.0,
+            "parts": (DamagePart("physical", 0.0),),
             "stat_buff": {"bonus_attack_damage": 65.0},
         }
 
@@ -712,7 +713,7 @@ class TestStatBuff:
             "TestChamp",
         )
         results = parse(champ, 11, 0.0)  # R rank 2
-        assert results["R"]["physical_damage"] == 250.0
+        assert results["R"]["parts"] == (DamagePart("physical", 250.0),)
         assert results["R"]["total_raw"] == 250.0
         assert results["R"]["stat_buff"] == {"bonus_attack_damage": 50.0}
 
@@ -745,11 +746,13 @@ class TestStatBuff:
         """Unranked R: no entry, no stats mutation, no stash."""
         champ = self._steroid_champ()
 
+        seen: dict[str, float] = {}
+
         def q_reads_stats(ctx):
+            seen["r_q_cdr"] = ctx.stats.get("r_q_cdr", 0.0)
             return {
                 "name": "Q",
                 "total_raw": ctx.stats.get("attack_damage", 0.0),
-                "stash": ctx.stats.get("r_q_cdr", 0.0),
             }
 
         parse = build_parser(
@@ -773,7 +776,7 @@ class TestStatBuff:
         )
         assert "R" not in results
         assert results["Q"]["total_raw"] == 100.0
-        assert results["Q"]["stash"] == 0.0
+        assert seen["r_q_cdr"] == 0.0
 
     def test_unknown_mode_rejected_at_factory_time(self) -> None:
         with pytest.raises(ValueError, match="sideways"):
@@ -942,6 +945,37 @@ class TestPctHealthPerHit:
             None,
         )
         assert damage == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Entry-key validation
+# ---------------------------------------------------------------------------
+
+
+class TestEntryKeyValidation:
+    """A slot parser emitting an unknown entry key fails loudly."""
+
+    def test_unknown_key_raises_with_champion_slot_and_key(self) -> None:
+        def bad_parser(_ctx):
+            return {"name": "Oops", "parts": (), "r2_mn": 1.0}
+
+        parse = build_parser({"Q": bad_parser}, "TestChamp")
+        with pytest.raises(ValueError, match=r"TestChamp.*Q.*r2_mn"):
+            parse(_champion(), 9, 0.0)
+
+    def test_known_keys_pass(self) -> None:
+        def good_parser(_ctx):
+            return {
+                "name": "Fine",
+                "rank": 1,
+                "cooldown": 5.0,
+                "damage_type": "magic",
+                "total_raw": 10.0,
+                "parts": (DamagePart("magic", 10.0),),
+            }
+
+        parse = build_parser({"Q": good_parser}, "TestChamp")
+        assert "Q" in parse(_champion(), 9, 0.0)
 
 
 # ---------------------------------------------------------------------------

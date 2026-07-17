@@ -2,6 +2,8 @@
 
 import pytest
 
+from src.calculator.ability_spec import parts_raw_total
+
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.akshan import (
     parse_abilities,
@@ -118,17 +120,25 @@ class TestRComeuppance:
         ad = stats["attack_damage"]
         expected_per_bullet = 25 + 0.15 * ad
         expected_total = expected_per_bullet * 5
-        assert abs(r["physical_damage"] - expected_total) < 1.0
+        (part,) = r["parts"]
+        assert abs(part.hp_scaled_damage(0.0) - expected_total) < 1.0
 
-    def test_r_has_crit_effectiveness(self, akshan_data, parse_at) -> None:
-        """R should have crit_effectiveness field for damage.py."""
+    def test_r_part_crits_at_reduced_effectiveness(self, akshan_data, parse_at) -> None:
+        """R's damage part carries the 30% crit effectiveness."""
         _, abilities = parse_at(akshan_data, 6)
-        assert abilities["R"]["crit_effectiveness"] == 0.3
+        (part,) = abilities["R"]["parts"]
+        assert part.crit_effectiveness == 0.3
 
-    def test_r_has_missing_hp_max_bonus(self, akshan_data, parse_at) -> None:
-        """R should have missing_hp_max_bonus of 2.0 (0-200% scaling)."""
+    def test_r_part_scales_to_triple_at_full_missing_hp(
+        self, akshan_data, parse_at
+    ) -> None:
+        """R's part scales 0-200% with missing HP (x3 at fully missing)."""
         _, abilities = parse_at(akshan_data, 6)
-        assert abilities["R"]["missing_hp_max_bonus"] == 2.0
+        r = abilities["R"]
+        (part,) = r["parts"]
+        base = part.hp_scaled_damage(0.0)
+        assert base > 0
+        assert part.hp_scaled_damage(1.0) == pytest.approx(base * 3.0)
 
     def test_r_rank2_has_6_bullets(self, akshan_data, parse_at) -> None:
         """R rank 2: 6 bullets * (35 + 15% AD) min per bullet."""
@@ -137,7 +147,8 @@ class TestRComeuppance:
         ad = stats["attack_damage"]
         per_bullet = 35 + 0.15 * ad
         expected = per_bullet * 6
-        assert abs(r["physical_damage"] - expected) < 1.0
+        (part,) = r["parts"]
+        assert abs(part.hp_scaled_damage(0.0) - expected) < 1.0
 
 
 class TestPassiveDoubleShot:
@@ -367,7 +378,7 @@ class TestFightEngineIntegration:
         """Verify R crit formula: 3% per 10% crit chance."""
         stats, abilities = parse_at(akshan_data, 18)
         stats["critical_strike_chance"] = 75.0
-        r_base = abilities["R"]["physical_damage"]
+        r_base = abilities["R"]["parts"][0].hp_scaled_damage(0.0)
 
         result = calculate_fight_damage(
             champion_stats=dict(stats),

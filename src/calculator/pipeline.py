@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Mapping
 
 from .champions import parse_champion_abilities
-from .damage import calculate_fight_damage
+from .damage import calculate_fight_damage, split_auto_vs_ability
 from .stats import calculate_total_stats
 
 DEFAULT_TARGET: dict[str, float] = {
@@ -151,4 +151,7 @@ def run_fight(
         deterministic=params.deterministic,
     )
     result["champion_stats"] = champion_stats
+    auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
+    result["auto_attack_damage"] = auto_damage
+    result["ability_damage"] = ability_damage
     return result

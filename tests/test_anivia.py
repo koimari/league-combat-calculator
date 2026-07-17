@@ -2,6 +2,8 @@
 
 import pytest
 
+from src.calculator.ability_spec import parts_raw_total
+
 # ---------------------------------------------------------------------------
 # Q — Flash Frost
 # ---------------------------------------------------------------------------
@@ -37,10 +39,12 @@ class TestQFlashFrost:
         )
         assert abilities["Q"]["total_raw"] == pytest.approx(400.0)
 
-    def test_q_has_magic_damage_key(self, anivia_data, parse_at) -> None:
+    def test_q_parts_match_total_raw(self, anivia_data, parse_at) -> None:
         _, abilities = parse_at(anivia_data, 9)
-        assert "magic_damage" in abilities["Q"]
-        assert abilities["Q"]["magic_damage"] == abilities["Q"]["total_raw"]
+        assert (
+            parts_raw_total(abilities["Q"]["parts"], "magic")
+            == abilities["Q"]["total_raw"]
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -91,10 +95,12 @@ class TestEFrostbite:
         )
         assert abilities["E"]["total_raw"] == pytest.approx(420.0)
 
-    def test_e_has_magic_damage_key(self, anivia_data, parse_at) -> None:
+    def test_e_parts_match_total_raw(self, anivia_data, parse_at) -> None:
         _, abilities = parse_at(anivia_data, 9)
-        assert "magic_damage" in abilities["E"]
-        assert abilities["E"]["magic_damage"] == abilities["E"]["total_raw"]
+        assert (
+            parts_raw_total(abilities["E"]["parts"], "magic")
+            == abilities["E"]["total_raw"]
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -163,10 +169,12 @@ class TestRGlacialStorm:
         )
         assert abilities["R"]["total_raw"] == pytest.approx(1620.0)
 
-    def test_r_has_magic_damage_key(self, anivia_data, parse_at) -> None:
+    def test_r_parts_match_total_raw(self, anivia_data, parse_at) -> None:
         _, abilities = parse_at(anivia_data, 16)
-        assert "magic_damage" in abilities["R"]
-        assert abilities["R"]["magic_damage"] == abilities["R"]["total_raw"]
+        assert (
+            parts_raw_total(abilities["R"]["parts"], "magic")
+            == abilities["R"]["total_raw"]
+        )
 
     def test_r_default_duration_is_5s(self, anivia_data, parse_at) -> None:
         """Without champion_options, R uses the default 5s duration."""

@@ -126,7 +126,8 @@ def _parse_compound_unit(
     # Check for "of [the] target's [current/maximum/missing] health" suffix
     target_hp_match = re.search(
         r"of\s+(?:the\s+)?target's\s+(maximum|current|missing)\s+health",
-        unit, re.IGNORECASE,
+        unit,
+        re.IGNORECASE,
     )
     if not target_hp_match:
         return None
@@ -144,7 +145,8 @@ def _parse_compound_unit(
     per_100_matches = re.findall(
         r"\+\s*(\d+(?:\.\d+)?)%\s+per\s+100\s+((?:bonus\s+)?(?:AP|AD|armor|"
         r"magic\s+resistance|health|mana))",
-        unit, re.IGNORECASE,
+        unit,
+        re.IGNORECASE,
     )
     for bonus_pct, stat_name in per_100_matches:
         bonus = float(bonus_pct)

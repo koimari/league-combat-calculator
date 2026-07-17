@@ -28,6 +28,7 @@ hardcoded.
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .engine import AMP, SlotCtx, build_parser
 from .slotlib import damage_entry, extract_named, simple_damage
 
@@ -37,17 +38,20 @@ _CURSE_BONUS_FRACTION = 0.10  # 10% bonus true damage on magic damage
 def _apply_curse(result: dict[str, Any]) -> None:
     """Add Cursed Touch bonus true damage to one ability entry.
 
-    Mutates *result* in place: adds a ``true_damage`` key equal to 10%
-    of the ability's magic damage, switches ``damage_type`` to
+    Mutates *result* in place: appends a true-damage part equal to 10%
+    of the ability's magic-part damage, switches ``damage_type`` to
     ``"mixed"``, and increases ``total_raw`` accordingly.
     """
-    magic = result.get("magic_damage", 0.0)
+    parts = result.get("parts", ())
+    magic = sum(
+        part.amount * part.count for part in parts if part.damage_type == "magic"
+    )
     if magic <= 0:
         return
     bonus_true = magic * _CURSE_BONUS_FRACTION
-    result["true_damage"] = bonus_true
     result["total_raw"] = magic + bonus_true
     result["damage_type"] = "mixed"
+    result["parts"] = parts + (DamagePart("true", bonus_true),)
 
 
 def _cursed_touch_amp(ctx: SlotCtx) -> None:
@@ -95,7 +99,7 @@ def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "magic",
         "damage_per_tick": per_tick,
         "total_ticks": total_ticks,
-        "magic_damage": total,
+        "parts": (DamagePart("magic", total),),
         "total_raw": total,
     }
 

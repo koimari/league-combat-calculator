@@ -42,7 +42,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     flurry_ratio = extract_value(ability, "Total Damage Per Flurry", rank) / 100.0
 
     # Apply the bonus AS to the shared stats context (BUFF phase).
-    as_ratio = ctx.stats.get("attack_speed_ratio", 0.625)
+    as_ratio = ctx.stats["attack_speed_ratio"]
     ctx.stats["attack_speed"] = ctx.stats.get("attack_speed", 0.0) + as_ratio * (
         bonus_as_pct / 100.0
     )
@@ -53,7 +53,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
         "total_raw": 0.0,
-        "physical_damage": 0.0,
+        "parts": (),
         "stat_buff": {
             "bonus_attack_speed": bonus_as_pct,
         },
@@ -76,6 +76,7 @@ def _frost_shot(ctx: SlotCtx) -> dict[str, Any] | None:
     entry: dict[str, Any] = {
         "name": ability.get("name", "Frost Shot"),
         "total_raw": 0.0,
+        "parts": (),
         "damage_type": "physical",
     }
     if "Q" not in ctx.results:

@@ -21,6 +21,7 @@ Tibbers aura constants.
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
@@ -82,13 +83,13 @@ def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
         "rank": rank,
         "cooldown": cooldown,
         "damage_type": "magic",
-        "magic_damage": total,
+        "parts": (DamagePart("magic", total),),
         "total_raw": total,
         "initial_burst": burst,
         "tibbers_aura": {
             "damage_per_tick": aura_per_tick,
             "total_ticks": total_ticks,
-            "magic_damage": aura_total,
+            "aura_total": aura_total,
         },
         "stat_buff": {
             "magic_penetration_percent": magic_pen,

@@ -218,11 +218,12 @@ def _my_slot(ctx: SlotCtx) -> dict[str, Any] | None:
 ```
 
 Go custom when the mechanic is single-user: prose-regex extraction (Akshan,
-Ambessa P), multi-part entry keys (`initial_damage`/`subsequent_damage`,
-per-tick display keys), coupling a buff with conditional entry parts
-(Ashe Q), or a legacy entry shape an archetype may not emit. A thin wrapper
-over an archetype is also fine (Kog'Maw R = `simple_damage` + missing-HP
-flags; Ambessa Q2 = `by_option` + `recast_of` stamp).
+Ambessa P), multi-part damage (Ahri W's two-tier flames as two
+`DamagePart`s), HP-scaled damage closures (Akali/Kog'Maw/Akshan R), or
+coupling a buff with conditional entry parts (Ashe Q). A thin wrapper over
+an archetype is also fine (Kog'Maw R = `simple_damage` + a
+`hp_scaled_damage` closure swapped onto the part; Ambessa Q2 = `by_option`
++ `recast_of` stamp).
 
 Study for patterns: `anivia.py` (unique toggle kept local), `vayne.py` (stat_buff
 couples + shared on-hit shell), `amumu.py` (AMP pseudo-slot, literal-"P" display row),
@@ -230,16 +231,21 @@ couples + shared on-hit shell), `amumu.py` (AMP pseudo-slot, literal-"P" display
 
 ## Entry shape (what the fight engine expects)
 
-Castable entries carry `name`, `rank`, `cooldown`, `total_raw`,
-`damage_type` ("magic"/"physical"/"true"/"mixed") plus the type-specific
-key (`magic_damage` etc.) — `slotlib.damage_entry` builds this. Optional
-keys the fight engine dispatches on: `on_hit` (`{name, damage_per_hit,
-damage_type, stacks_required?}`), `stat_buff` (`{stat_key: value}`,
-applied to champion stats before the fight), `target_debuff`,
-`damage_per_cast`+`total_casts`, `initial_damage`+`subsequent_damage`,
-`proc_count`, `recast_of`, `missing_hp_scaling`, `auto_attack_override`.
-Copy the exact key set from the closest existing module — the golden
-snapshot locks key shapes, not just values.
+Castable entries carry `name`, `rank`, `cooldown`, `total_raw`
+(test/golden diagnostic — the engine reads only `parts`), `damage_type`
+("magic"/"physical"/"true"/"mixed" summary
+label), and `parts` — a tuple of `ability_spec.DamagePart` holding ALL
+damage arithmetic (`amount`/`count` per mitigation unit, an optional
+`hp_scaled_damage` closure taking the target's missing-HP ratio, and
+`crit_effectiveness`) — `slotlib.damage_entry` builds the standard case.
+Optional keys the fight engine dispatches on: `on_hit` (`{name,
+damage_per_hit, damage_type, stacks_required?}`), `stat_buff`
+(`{stat_key: value}`, applied to champion stats before the fight),
+`target_debuff`, `cast_instances` (per-cast item procs, e.g. Ahri R = 3),
+`proc_count`, `recast_of`, `auto_attack_override`, `double_shot`.
+`engine.py` validates entry keys against `_ALLOWED_ENTRY_KEYS` — an
+unknown key raises at parse time. Copy the exact shape from the closest
+existing module — the golden snapshot locks key shapes, not just values.
 
 ## OPTIONS and ASSUMPTIONS (frontend, zero JS)
 

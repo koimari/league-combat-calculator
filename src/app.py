@@ -18,8 +18,13 @@ from calculator.data_fetcher import (
 from calculator.data_updater import update_data
 from calculator.item_effects import refresh_item_effects
 from calculator.champions import champion_options_meta_map
-from calculator.damage import split_auto_vs_ability
-from calculator.optimizer import exclusivity_groups, optimize_build, ITEM_BLOCKLIST
+from calculator.optimizer import (
+    exclusivity_groups,
+    get_eligible_boots,
+    get_eligible_legendaries,
+    optimize_build,
+)
+from calculator.stats import MAX_LEVEL
 from calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
     DEFAULT_FIGHT_DURATION,
@@ -37,8 +42,6 @@ app = Flask(
 )
 app.json.sort_keys = False
 
-# ITEM_BLOCKLIST is imported from calculator.optimizer
-
 
 @app.route("/")
 def index():
@@ -48,6 +51,7 @@ def index():
         default_target=DEFAULT_TARGET,
         default_fight_duration=DEFAULT_FIGHT_DURATION,
         default_auto_attack_uptime=DEFAULT_AUTO_ATTACK_UPTIME,
+        max_level=MAX_LEVEL,
     )
 
 
@@ -67,16 +71,15 @@ def api_champions():
 
 @app.route("/api/items")
 def api_items():
-    """Return a sorted list of Summoner's Rift item names with icons (no boots)."""
-    items = fetch_item_data()
+    """Return the optimizer-eligible legendaries (name + icon), sorted.
+
+    Delegates eligibility to the optimizer so the manual item picker and
+    the optimizer's candidate set can never diverge.
+    """
     result = sorted(
         [
-            {"name": item_data["name"], "icon": item_data.get("icon", "")}
-            for item_data in items.values()
-            if "LEGENDARY" in item_data.get("rank", [])
-            and item_data.get("name")
-            and "BOOTS" not in item_data.get("rank", [])
-            and item_data.get("name") not in ITEM_BLOCKLIST
+            {"name": item["name"], "icon": item.get("icon", "")}
+            for item in get_eligible_legendaries()
         ],
         key=lambda i: i["name"],
     )
@@ -85,16 +88,11 @@ def api_items():
 
 @app.route("/api/boots")
 def api_boots():
-    """Return a sorted list of boots with icons (tier 2+)."""
-    items = fetch_item_data()
+    """Return the optimizer-eligible tier-2+ boots (name + icon), sorted."""
     result = sorted(
         [
-            {"name": item_data["name"], "icon": item_data.get("icon", "")}
-            for item_data in items.values()
-            if "BOOTS" in item_data.get("rank", [])
-            and item_data.get("tier", 0) >= 2
-            and item_data.get("name")
-            and item_data.get("name") not in ITEM_BLOCKLIST
+            {"name": item["name"], "icon": item.get("icon", "")}
+            for item in get_eligible_boots()
         ],
         key=lambda i: i["name"],
     )
@@ -171,8 +169,8 @@ def api_calculate():
     # Validate
     if not champion_name:
         return jsonify({"error": "No champion selected"}), 400
-    if level < 1 or level > 20:
-        return jsonify({"error": "Level must be between 1 and 20"}), 400
+    if level < 1 or level > MAX_LEVEL:
+        return jsonify({"error": f"Level must be between 1 and {MAX_LEVEL}"}), 400
 
     try:
         champion_data = get_champion(champion_name)
@@ -196,21 +194,17 @@ def api_calculate():
 
     result = run_fight(champion_data, level, items, fight_params)
 
-    # Separate ability damage from auto-attack damage
     breakdown = result.get("breakdown", {})
-    auto_attack_damage, ability_damage = split_auto_vs_ability(breakdown)
-
+    auto_attack_damage = result["auto_attack_damage"]
+    ability_damage = result["ability_damage"]
     total_damage = result.get("total_damage", 0.0)
 
     # Build breakdown dict for JSON response
     api_breakdown = {}
     for key, entry in breakdown.items():
-        # Include entries with damage > 0, or special display entries
+        # Include damaging rows plus display-only rows carrying text
         has_damage = entry.get("total_damage", 0.0) > 0
-        has_note = "note" in entry
-        has_threshold = "execution_threshold_hp" in entry
-        has_ss_note = "sundered_sky_note" in entry
-        if not (has_damage or has_note or has_threshold or has_ss_note):
+        if not (has_damage or "detail" in entry):
             continue
         row = {
             "name": entry.get("name", key),
@@ -233,15 +227,11 @@ def api_calculate():
                 else None
             ),
         }
-        if "note" in entry:
-            row["note"] = entry["note"]
-        if "execution_threshold_hp" in entry:
-            row["execution_threshold_hp"] = round(
-                entry["execution_threshold_hp"],
-                1,
-            )
-        if "sundered_sky_note" in entry:
-            row["sundered_sky_note"] = entry["sundered_sky_note"]
+        # Display extras are minted by the engine and passed through
+        # untouched — adding a new one never requires editing this route.
+        for display_key in ("detail", "damage_display"):
+            if display_key in entry:
+                row[display_key] = entry[display_key]
         api_breakdown[key] = row
 
     return jsonify(
@@ -269,8 +259,8 @@ def api_optimize():
         return jsonify({"error": "No champion selected"}), 400
 
     level = int(data.get("level", 1))
-    if level < 1 or level > 20:
-        return jsonify({"error": "Level must be between 1 and 20"}), 400
+    if level < 1 or level > MAX_LEVEL:
+        return jsonify({"error": f"Level must be between 1 and {MAX_LEVEL}"}), 400
 
     try:
         champion_data = get_champion(champion_name)

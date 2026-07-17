@@ -86,3 +86,18 @@ def test_run_fight_builds_fresh_stats_and_abilities(ahri_data):
     assert result["total_damage"] > 0
     assert "Q" in result["breakdown"]
     assert result["champion_stats"]["ability_power"] == 0.0
+
+
+def test_run_fight_includes_auto_vs_ability_split(ahri_data):
+    # Consumers (the web layer) read the attribution off the result
+    # instead of importing the fight engine's split function directly.
+    params = FightParams.from_request({}, deterministic=True)
+
+    result = run_fight(ahri_data, 18, [], params)
+
+    assert result["auto_attack_damage"] >= 0.0
+    assert result["ability_damage"] > 0.0
+    # No amp/informational rows in an itemless fight: split sums to total.
+    assert result["auto_attack_damage"] + result["ability_damage"] == pytest.approx(
+        result["total_damage"]
+    )

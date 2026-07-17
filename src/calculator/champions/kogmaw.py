@@ -14,9 +14,10 @@ Why each slot is non-generic:
   custom fn, because the emitted shape is a castable shell
   (rank/cooldown/zero damage keys) around the on-hit dict.
 - E (Void Ooze) is a plain "Magic Damage" attribute read.
-- R (Living Artillery) is a "Minimum Magic Damage" read plus the
-  ``missing_hp_scaling``/``r_base_damage`` flags damage.py uses to
-  scale each shot with the target's missing health.
+- R (Living Artillery) is a "Minimum Magic Damage" read whose part
+  carries the wiki missing-HP curve as a ``hp_scaled_damage`` closure
+  (+50% linearly to 60% missing, then +100%) — the engine re-evaluates
+  it per shot against the target's falling HP.
 - P (Icathian Surprise) is a death passive — not modeled, absent from
   the slot map.
 
@@ -24,8 +25,9 @@ All numeric values are read from the champion JSON data; nothing is
 hardcoded.
 """
 
-from typing import Any
+from typing import Any, Callable
 
+from ..ability_spec import DamagePart
 from .engine import DEBUFF, SlotCtx, build_parser
 from .slotlib import (
     extract_cooldown,
@@ -52,7 +54,7 @@ def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
-        "magic_damage": damage,
+        "parts": (DamagePart("magic", damage),),
         "total_raw": damage,
     }
 
@@ -115,12 +117,25 @@ def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
 _living_artillery_base = simple_damage(attr="Minimum Magic Damage", dmg_type="magic")
 
 
+def _living_artillery_scaled(base: float) -> Callable[[float], float]:
+    """R missing-HP curve: +50% linearly to 60% missing, then +100%."""
+
+    def scaled(missing_ratio: float) -> float:
+        if missing_ratio >= 0.6:
+            return base * 2.0
+        return base * (1.0 + 0.5 * (missing_ratio / 0.6))
+
+    return scaled
+
+
 def _living_artillery(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: minimum-damage entry + missing-HP scaling flags for damage.py."""
+    """R: minimum-damage entry scaled per shot by the missing-HP curve."""
     entry = _living_artillery_base(ctx)
     if entry is not None:
-        entry["missing_hp_scaling"] = True
-        entry["r_base_damage"] = entry["magic_damage"]
+        base = entry["parts"][0].amount
+        entry["parts"] = (
+            DamagePart("magic", hp_scaled_damage=_living_artillery_scaled(base)),
+        )
     return entry
 
 

@@ -6,7 +6,6 @@ determines which attributes represent damage that should be included in
 the calculator, and what damage type they imply.
 """
 
-
 # Keywords that indicate a damage attribute (case-insensitive match)
 _DAMAGE_KEYWORDS: set[str] = {
     "damage",
@@ -20,9 +19,9 @@ _EXCLUDE_KEYWORDS: set[str] = {
     "monster",
     "cap",
     "minimum",
-    "total",        # "Total Damage" is a pre-computed sum, not primary
-    "subsequent",   # "Subsequent Magic Damage" is secondary (use primary)
-    "bounce",       # Bounced damage is secondary
+    "total",  # "Total Damage" is a pre-computed sum, not primary
+    "subsequent",  # "Subsequent Magic Damage" is secondary (use primary)
+    "bounce",  # Bounced damage is secondary
 }
 
 # Attribute names that should always be treated as primary damage
@@ -80,8 +79,13 @@ def is_primary_damage_attribute(attribute: str) -> bool:
     lower = attribute.lower()
 
     primary_names = {
-        "damage", "magic damage", "physical damage", "true damage",
-        "bonus damage", "bonus magic damage", "bonus physical damage",
+        "damage",
+        "magic damage",
+        "physical damage",
+        "true damage",
+        "bonus damage",
+        "bonus magic damage",
+        "bonus physical damage",
         "bonus true damage",
     }
     return lower in primary_names

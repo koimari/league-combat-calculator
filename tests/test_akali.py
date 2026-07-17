@@ -80,28 +80,29 @@ class TestRPerfectExecution:
         _, abilities = parse_at(akali_data, 11)
         assert abilities["R"]["damage_type"] == "magic"
 
-    def test_r_has_r2_scaling_fields(self, akali_data, parse_at) -> None:
-        """R should have r2_min, r2_max, and missing_hp_scaling."""
+    def test_r_parts_are_flat_r1_plus_scaling_r2(self, akali_data, parse_at) -> None:
+        """R is two parts: a flat R1 and an R2 that interpolates min-max."""
         _, abilities = parse_at(akali_data, 6, ap=100.0)
-        r = abilities["R"]
-        assert "r2_min" in r
-        assert "r2_max" in r
-        assert r["missing_hp_scaling"] is True
-        assert r["r2_max"] > r["r2_min"]
+        r1, r2 = abilities["R"]["parts"]
+        assert r1.hp_scaled_damage is None
+        r2_min = r2.hp_scaled_damage(0.0)
+        r2_max = r2.hp_scaled_damage(1.0)
+        assert r2_max > r2_min > 0
 
-    def test_r_magic_damage_is_r1_only(self, akali_data, parse_at) -> None:
-        """magic_damage field should be R1 only (R2 computed by engine)."""
+    def test_r_first_part_is_r1_only(self, akali_data, parse_at) -> None:
+        """The flat part is R1 only (R2 resolved by the engine at cast)."""
         stats, abilities = parse_at(akali_data, 6, ap=100.0)
-        r = abilities["R"]
+        r1, _ = abilities["R"]["parts"]
         bonus_ad = stats.get("bonus_attack_damage", 0.0)
         r1_expected = 110 + 0.50 * bonus_ad + 0.30 * 100
-        assert abs(r["magic_damage"] - r1_expected) < 1.0
+        assert abs(r1.amount - r1_expected) < 1.0
 
     def test_r_total_raw_is_r1_plus_r2_max(self, akali_data, parse_at) -> None:
         """total_raw should be R1 + R2 max (upper bound for display)."""
         _, abilities = parse_at(akali_data, 6, ap=100.0)
         r = abilities["R"]
-        assert abs(r["total_raw"] - (r["magic_damage"] + r["r2_max"])) < 0.1
+        r1, r2 = r["parts"]
+        assert abs(r["total_raw"] - (r1.amount + r2.hp_scaled_damage(1.0))) < 0.1
 
     def test_r_has_cooldown(self, akali_data, parse_at) -> None:
         _, abilities = parse_at(akali_data, 6)

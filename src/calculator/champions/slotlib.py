@@ -33,6 +33,7 @@ shared output shells use entry builders instead of flag-heavy factories.
 
 from typing import Any, Callable
 
+from ..ability_spec import DamagePart
 from .attribute_classifier import (
     classify_damage_type,
     is_damage_attribute,
@@ -324,8 +325,13 @@ def damage_entry(
 ) -> dict[str, Any]:
     """Build a castable-ability entry in the fight-engine format.
 
-    Sets the type-specific damage key from the damage type; "mixed"
-    splits evenly between magic and true (like Ahri Q).
+    Damage arithmetic goes in typed ``parts``; "mixed" splits evenly
+    between a magic part and a true part (like Ahri Q), magic first —
+    the first part is the Horizon Focus trigger. ``total_raw`` is a
+    producer-side test/golden diagnostic with per-entry semantics
+    (usually the parts sum; proc entries store per-proc × count, and
+    hp-scaled entries store a bound) — the fight engine reads ONLY
+    ``parts``.
     """
     entry: dict[str, Any] = {
         "name": name,
@@ -334,15 +340,13 @@ def damage_entry(
         "damage_type": dmg_type,
         "total_raw": total,
     }
-    if dmg_type == "magic":
-        entry["magic_damage"] = total
-    elif dmg_type == "physical":
-        entry["physical_damage"] = total
-    elif dmg_type == "true":
-        entry["true_damage"] = total
-    elif dmg_type == "mixed":
-        entry["magic_damage"] = total / 2.0
-        entry["true_damage"] = total / 2.0
+    if dmg_type == "mixed":
+        entry["parts"] = (
+            DamagePart("magic", total / 2.0),
+            DamagePart("true", total / 2.0),
+        )
+    else:
+        entry["parts"] = (DamagePart(dmg_type, total),)
     return entry
 
 
@@ -375,7 +379,7 @@ def ability_on_hit_entry(
         "rank": rank,
         "damage_type": damage_type,
         "total_raw": 0.0,
-        _DAMAGE_TYPE_KEYS[damage_type]: 0.0,
+        "parts": (),
         "on_hit": on_hit,
     }
     if cooldown is not None:
@@ -636,14 +640,6 @@ def by_option(
     return parse
 
 
-# Damage type -> entry key for per-proc damage values.
-_DAMAGE_TYPE_KEYS = {
-    "magic": "magic_damage",
-    "physical": "physical_damage",
-    "true": "true_damage",
-}
-
-
 ProcDamageResolver = Callable[[SlotCtx, dict[str, Any]], float]
 
 
@@ -658,7 +654,7 @@ def proc_damage(
 
     Per-proc damage scales per LEVEL (rank pinned to champion level);
     the proc count comes from a champion option. Emits
-    ``{name, damage_type, <type>_damage: per_proc, total_raw:
+    ``{name, damage_type, parts: (per-proc DamagePart,), total_raw:
     per_proc * count, proc_count}`` — damage.py schedules entries with a
     ``proc_count`` outside the cast rotation.
 
@@ -690,8 +686,8 @@ def proc_damage(
         return {
             "name": name or ability.get("name", f"Ability {ctx.slot}"),
             "damage_type": dmg_type,
-            _DAMAGE_TYPE_KEYS[dmg_type]: per_proc_damage,
             "total_raw": per_proc_damage * count,
+            "parts": (DamagePart(dmg_type, per_proc_damage),),
             "proc_count": count,
         }
 
