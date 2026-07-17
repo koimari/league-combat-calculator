@@ -66,9 +66,10 @@ def is_damage_attribute(attribute: str) -> bool:
 def is_primary_damage_attribute(attribute: str) -> bool:
     """Stricter check — only matches the main damage attribute.
 
-    Prefers attributes named exactly "Magic Damage", "Physical Damage",
-    "Damage", "Bonus Physical Damage", etc. over compound names like
-    "Damage Per Pass" or "Primary Magic Damage".
+    Only matches attributes named exactly "Magic Damage", "Physical Damage",
+    "Damage", "Bonus Physical Damage", etc. Does NOT match compound names
+    like "Damage Per Pass" or "Primary Magic Damage" — those are left
+    for the fallback tier in ``_find_damage_leveling``.
 
     Args:
         attribute: The attribute string.
@@ -78,16 +79,12 @@ def is_primary_damage_attribute(attribute: str) -> bool:
     """
     lower = attribute.lower()
 
-    # Exact matches for common primary damage names
     primary_names = {
         "damage", "magic damage", "physical damage", "true damage",
         "bonus damage", "bonus magic damage", "bonus physical damage",
         "bonus true damage",
     }
-    if lower in primary_names:
-        return True
-
-    return is_damage_attribute(attribute)
+    return lower in primary_names
 
 
 def infer_damage_type_from_attribute(attribute: str) -> str | None:

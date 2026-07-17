@@ -1,7 +1,9 @@
-"""Shared helpers used by all champion ability modules.
+"""Champion-agnostic damage math shared with the wider calculator.
 
-Functions here are champion-agnostic. Champion-specific data (base damages,
-scaling ratios, cooldowns, skill orders) lives in each champion's own module.
+The champion parse layer itself lives in ``engine.py`` (slot evaluation)
+and ``slotlib.py`` (archetypes + JSON extraction core); this module only
+keeps the two formula helpers that non-champion code (``damage.py``,
+``calculator.__init__``) imports.
 """
 
 
@@ -10,7 +12,11 @@ def calculate_ability_damage(
     scaling_ratio: float,
     scaling_stat: float,
 ) -> float:
-    """Calculate raw ability damage before resistances.
+    """Public scalar convenience for base + ratio × stat damage.
+
+    This package-level compatibility helper is intentionally separate from
+    the champion JSON path, which resolves arbitrary modifier units through
+    ``slotlib.sum_modifiers`` and ``scaling.resolve_scaling``.
 
     Formula: base_damage + (scaling_ratio * scaling_stat)
 

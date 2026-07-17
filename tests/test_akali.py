@@ -3,11 +3,23 @@
 import pytest
 
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.akali import (
-    parse_abilities,
-    _parse_passive_damage,
-)
+from src.calculator.champions import parse_champion_abilities as parse_abilities
+from src.calculator.champions.slotlib import build_stats_context, extract_named
 from src.calculator.damage import calculate_fight_damage
+
+
+def _passive_damage(
+    passive: dict,
+    level: int,
+    total_ability_power: float = 0.0,
+) -> float:
+    """Per-proc Assassin's Mark damage at a level.
+
+    The same "Bonus Magic Damage" extraction the P slot's proc_damage
+    archetype performs — validated here directly against wiki values.
+    """
+    stats = build_stats_context(None, total_ability_power)
+    return extract_named(passive, "Bonus Magic Damage", level, stats)
 
 
 class TestQFivePointStrike:
@@ -129,69 +141,83 @@ class TestPassiveAssassinsMark:
 
     def test_passive_in_results_with_procs(self, akali_data, parse_at) -> None:
         _, abilities = parse_at(
-            akali_data, 9, champion_options={"passive_procs": 3},
+            akali_data,
+            9,
+            champion_options={"passive_procs": 3},
         )
         assert "passive" in abilities
 
     def test_passive_not_in_results_with_zero_procs(self, akali_data, parse_at) -> None:
         _, abilities = parse_at(
-            akali_data, 9, champion_options={"passive_procs": 0},
+            akali_data,
+            9,
+            champion_options={"passive_procs": 0},
         )
         assert "passive" not in abilities
 
     def test_passive_damage_scales_with_level(self, akali_data) -> None:
-        low = _parse_passive_damage(akali_data["abilities"]["P"][0], 1)
-        high = _parse_passive_damage(akali_data["abilities"]["P"][0], 18)
+        low = _passive_damage(akali_data["abilities"]["P"][0], 1)
+        high = _passive_damage(akali_data["abilities"]["P"][0], 18)
         assert high > low
 
     def test_passive_level1_base(self, akali_data) -> None:
         """Level 1 passive base damage should be 35 (no AD/AP)."""
-        damage = _parse_passive_damage(akali_data["abilities"]["P"][0], 1)
+        damage = _passive_damage(akali_data["abilities"]["P"][0], 1)
         assert abs(damage - 35.0) < 0.1
 
     def test_passive_level18_base(self, akali_data) -> None:
         """Level 18 passive base damage should be 182 (non-linear growth)."""
-        damage = _parse_passive_damage(akali_data["abilities"]["P"][0], 18)
+        damage = _passive_damage(akali_data["abilities"]["P"][0], 18)
         assert abs(damage - 182.0) < 0.1
 
     def test_passive_level20_base(self, akali_data) -> None:
         """Level 20 passive base damage should be 212."""
-        damage = _parse_passive_damage(akali_data["abilities"]["P"][0], 20)
+        damage = _passive_damage(akali_data["abilities"]["P"][0], 20)
         assert abs(damage - 212.0) < 0.1
 
     def test_passive_level7_base(self, akali_data) -> None:
         """Level 7 passive base = 53 (+3/lvl from 35)."""
-        damage = _parse_passive_damage(akali_data["abilities"]["P"][0], 7)
+        damage = _passive_damage(akali_data["abilities"]["P"][0], 7)
         assert abs(damage - 53.0) < 0.1
 
     def test_passive_level8_base(self, akali_data) -> None:
         """Level 8 passive base = 62 (growth jumps to +9/lvl)."""
-        damage = _parse_passive_damage(akali_data["abilities"]["P"][0], 8)
+        damage = _passive_damage(akali_data["abilities"]["P"][0], 8)
         assert abs(damage - 62.0) < 0.1
 
     def test_passive_scales_with_ap(self, akali_data) -> None:
-        no_ap = _parse_passive_damage(
-            akali_data["abilities"]["P"][0], 9, total_ability_power=0.0,
+        no_ap = _passive_damage(
+            akali_data["abilities"]["P"][0],
+            9,
+            total_ability_power=0.0,
         )
-        with_ap = _parse_passive_damage(
-            akali_data["abilities"]["P"][0], 9, total_ability_power=200.0,
+        with_ap = _passive_damage(
+            akali_data["abilities"]["P"][0],
+            9,
+            total_ability_power=200.0,
         )
         assert with_ap > no_ap
 
     def test_passive_proc_count_multiplies_total(self, akali_data, parse_at) -> None:
         _, one = parse_at(
-            akali_data, 9, champion_options={"passive_procs": 1},
+            akali_data,
+            9,
+            champion_options={"passive_procs": 1},
         )
         _, three = parse_at(
-            akali_data, 9, champion_options={"passive_procs": 3},
+            akali_data,
+            9,
+            champion_options={"passive_procs": 3},
         )
-        assert abs(
-            three["passive"]["total_raw"] - one["passive"]["total_raw"] * 3
-        ) < 0.1
+        assert (
+            abs(three["passive"]["total_raw"] - one["passive"]["total_raw"] * 3) < 0.1
+        )
 
     def test_passive_has_proc_count_field(self, akali_data, parse_at) -> None:
         _, abilities = parse_at(
-            akali_data, 9, champion_options={"passive_procs": 5},
+            akali_data,
+            9,
+            champion_options={"passive_procs": 5},
         )
         assert abilities["passive"]["proc_count"] == 5
 
@@ -201,7 +227,9 @@ class TestPassiveInFightEngine:
 
     def test_passive_damage_in_breakdown(self, akali_data, parse_at) -> None:
         stats, abilities = parse_at(
-            akali_data, 9, champion_options={"passive_procs": 3},
+            akali_data,
+            9,
+            champion_options={"passive_procs": 3},
         )
         result = calculate_fight_damage(
             champion_stats=stats,

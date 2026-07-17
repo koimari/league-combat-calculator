@@ -24,5 +24,8 @@ jobs:
       - name: Run tests
         run: pytest
 
+      - name: Verify numeric golden snapshot
+        run: python scripts/golden_snapshot.py compare scripts/golden_baseline.json
+
       - name: Run linter
-        run: pylint src/ --fail-under=5
+        run: pylint src/ --fail-under=9

@@ -4,7 +4,7 @@ from .resistance import apply_resistance, apply_magic_penetration, apply_armor_p
 from .damage import calculate_fight_damage
 from .champions import parse_abilities, is_champion_supported
 from .champions.common import calculate_ability_damage
-from .champions.ahri import get_ability_rank
+from .champions.skill_orders import get_ability_rank
 from .item_effects import ITEM_EFFECTS
 
 __all__ = [

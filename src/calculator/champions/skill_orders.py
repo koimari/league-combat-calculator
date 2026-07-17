@@ -46,6 +46,12 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "W", "Q", "W", "Q", "R", "Q",
         "Q", "E", "E", "R", "E", "E",
     ],
+    # ── Q max first, then W ──
+    "Vayne": [
+        "Q", "W", "E", "Q", "Q", "R",
+        "Q", "W", "Q", "W", "R", "W",
+        "W", "E", "E", "R", "E", "E",
+    ],
 }
 
 

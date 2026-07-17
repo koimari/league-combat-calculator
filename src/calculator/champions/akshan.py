@@ -1,107 +1,55 @@
-"""Akshan ability parsing and damage calculation.
+"""Akshan — slot map for the archetype engine.
 
-Custom module needed because:
-- P (Dirty Fighting): Two-part passive. Part 1: double shot on every auto
-  (50% AD, applies on-hits and crits). Part 2: 3-stack magic damage proc
-  with user-configurable count.
-- Q (Avengerang): Boomerang that hits twice — use Total Physical Damage.
-- W (Going Rogue): Utility only, skipped.
-- E (Heroic Swing): Fires multiple shots during swing — user-configurable
-  shot count with unusual per-shot scaling (flat + % AD + AS scaling).
-- R (Comeuppance): Fully-channeled bullet barrage with crit chance and
-  crit damage scaling at 30% effectiveness.
+The design's honest ceiling: most of Akshan's numbers live in
+description TEXT rather than leveling data, so this module is mostly
+custom fns over regex extraction — deliberately NOT archetypes, since
+no other champion shares these mechanics.
 
-All numeric values are read from the champion JSON data.
+Why each slot is non-generic:
+- Q (Avengerang) hits on both passes — the "Total Physical Damage"
+  attribute (the classifier would pick the single-pass value).
+- E (Heroic Swing) fires ``e_shots`` shots (option, default 5); the
+  per-shot leveling data uses unusual unit strings ("×" for the flat
+  base, a prose per-100%-bonus-AS ratio) handled by the
+  ``_extract_e_per_shot`` seam.
+- R (Comeuppance) is min-damage-per-bullet × stored bullets, plus two
+  fight-engine scaling constants from wiki prose (see below): crits
+  amplify at 30% effectiveness and missing HP scales the barrage up to
+  +200%.
+- P (Dirty Fighting) is TWO results entries from one JSON passive:
+  ``passive_double_shot`` (every auto fires a second shot at a %AD
+  ratio regex-read from the description) and ``passive`` (the 3-stack
+  magic proc whose level breakpoints and AP ratio are also
+  description text, × the ``passive_procs`` option, default 3).
+- W (Going Rogue) is stealth/revive utility — not modeled, absent
+  from the slot map.
+
+All numeric values are read from the champion JSON data (several from
+description text) except the two R scaling constants below, which are
+wiki prose with no JSON home.
 """
 
 import re
 from typing import Any
 
-from .generic_parser import extract_cooldown
-from .scaling import is_flat_unit, resolve_scaling
-from .skill_orders import get_ability_rank
+from .engine import SlotCtx, build_parser
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    find_named_leveling,
+    proc_damage,
+    simple_damage,
+    sum_modifiers,
+)
 
-
-# ---------------------------------------------------------------------------
-# JSON extraction helpers
-# ---------------------------------------------------------------------------
-
-
-def _extract_leveling_damage(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-    stats_context: dict[str, float] | None = None,
-) -> float:
-    """Extract damage for a specific attribute name from ability JSON.
-
-    Searches all effects/leveling entries for a matching attribute and
-    sums the flat base + scaling contributions at the given rank.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute_name: Exact attribute name to look for.
-        rank: Ability rank (1-indexed).
-        stats_context: Champion stats for scaling resolution.
-
-    Returns:
-        Total raw damage for this attribute at the given rank.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
-
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                if is_flat_unit(unit):
-                    total += value
-                else:
-                    total += resolve_scaling(
-                        unit, value, stats_context, None,
-                    )
-            return total
-
-    return 0.0
-
-
-def _extract_leveling_value(
-    ability: dict[str, Any],
-    attribute_name: str,
-    rank: int,
-) -> float:
-    """Extract a single flat value from ability leveling data.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute_name: Exact attribute name to look for.
-        rank: Ability rank (1-indexed).
-
-    Returns:
-        The flat value at the given rank, or 0.0 if not found.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != attribute_name:
-                continue
-            modifiers = leveling.get("modifiers", [])
-            if not modifiers:
-                continue
-            values = modifiers[0].get("values", [])
-            if not values:
-                continue
-            idx = min(rank - 1, len(values) - 1)
-            return float(values[idx])
-    return 0.0
+# HARDCODED: verify on patch updates — wiki prose, not in the JSON.
+# https://wiki.leagueoflegends.com/en-us/Akshan
+# R bullets can crit at 30% effectiveness (3% damage per 10% crit
+# chance) and scale up to +200% based on the target's missing health.
+_R_CRIT_EFFECTIVENESS = 0.3
+_R_MISSING_HP_MAX_BONUS = 2.0
 
 
 def _extract_e_per_shot(
@@ -112,55 +60,44 @@ def _extract_e_per_shot(
     """Extract Heroic Swing per-shot damage from JSON.
 
     The JSON has modifiers with unusual unit strings (``"  ×"`` for flat
-    damage).  This function manually handles them.
+    damage) and a prose AS ratio ("+N per 100% bonus attack speed").
+    (Test seam: tests/test_akshan.py validates the JSON values here.)
 
     Args:
         ability: E ability dict from champion JSON.
         rank: E rank (1-indexed).
-        stats_context: Champion stats for AD scaling.
+        stats_context: Champion stats for AD/AS scaling.
 
     Returns:
         Physical damage per shot before resistances.
     """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != "Physical Damage per Shot":
-                continue
+    leveling = find_named_leveling(ability, "Physical Damage per Shot")
+    if leveling is None:
+        return 0.0
 
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
+    def unusual_unit(unit: str, value: float) -> float | None:
+        unit_stripped = unit.strip()
+        if not unit_stripped or unit_stripped in ("×", "x"):
+            return value
+        if "per 100% bonus attack speed" not in unit:
+            return None
+        match = re.search(r"(\d+(?:\.\d+)?)\s*per\s*100%", unit)
+        if not match:
+            return 0.0
+        as_ratio = float(match.group(1))
+        bonus_as_pct = (
+            stats_context.get("bonus_attack_speed_percent", 0.0)
+            if stats_context
+            else 0.0
+        )
+        return as_ratio * (bonus_as_pct / 100.0) * value
 
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                # The flat base uses "  ×" (multiplication sign) as its unit
-                unit_stripped = unit.strip()
-                if not unit_stripped or unit_stripped in ("×", "x"):
-                    total += value
-                elif is_flat_unit(unit):
-                    total += value
-                elif "per 100% bonus attack speed" in unit:
-                    # E has a small AS scaling: +0.3 per 100% bonus AS.
-                    # Parse the ratio from the unit string.
-                    match = re.search(r"(\d+(?:\.\d+)?)\s*per\s*100%", unit)
-                    if match:
-                        as_ratio = float(match.group(1))
-                        bonus_as_pct = stats_context.get(
-                            "bonus_attack_speed_percent", 0.0,
-                        ) if stats_context else 0.0
-                        total += as_ratio * (bonus_as_pct / 100.0) * value
-                else:
-                    total += resolve_scaling(
-                        unit, value, stats_context, None,
-                    )
-            return total
-
-    return 0.0
+    return sum_modifiers(
+        leveling,
+        rank,
+        stats_context,
+        modifier_override=unusual_unit,
+    )
 
 
 def _parse_passive_proc_damage(
@@ -170,11 +107,11 @@ def _parse_passive_proc_damage(
 ) -> float:
     """Parse Dirty Fighting 3-stack proc magic damage from the JSON.
 
-    The structured leveling data in the JSON contains shield values
-    (labelled ``"Bonus Damage"``), not the actual proc damage.  The proc
-    damage breakpoints (``15 / 40 / 80 / 150`` based on level) and
-    ``60% AP`` scaling are embedded in the effect description text, so
-    we parse them from there.
+    The structured leveling data contains shield values (labelled
+    "Bonus Damage"), not the proc damage. The proc breakpoints
+    (15/40/80/150 based on level) and 60% AP ratio are description
+    text, so they are regex-extracted. (Test seam: tests/test_akshan.py
+    validates the JSON values here.)
 
     Args:
         passive: Passive ability dict from champion JSON.
@@ -186,7 +123,7 @@ def _parse_passive_proc_damage(
     """
     for effect in passive.get("effects", []):
         desc = effect.get("description", "")
-        # Match "deal them N / N / N / N (based on level) (+ N% AP)"
+        # Match "deal them N / N / N / N (based on level) (+ N% AP)".
         dmg_match = re.search(
             r"deal them (\d+)\s*/\s*(\d+)\s*/\s*(\d+)\s*/\s*(\d+)\s*"
             r"\(based on level\)",
@@ -196,7 +133,7 @@ def _parse_passive_proc_damage(
             continue
 
         breakpoints = [int(dmg_match.group(i)) for i in range(1, 5)]
-        # Standard 4-breakpoint levels: 1, 6, 11, 16
+        # Standard 4-breakpoint levels: 1, 6, 11, 16.
         if level >= 16:
             base = float(breakpoints[3])
         elif level >= 11:
@@ -206,7 +143,6 @@ def _parse_passive_proc_damage(
         else:
             base = float(breakpoints[0])
 
-        # Extract AP ratio from "(+ N% AP)"
         ap_match = re.search(r"\+\s*(\d+)%\s*AP", desc)
         ap_ratio = float(ap_match.group(1)) / 100.0 if ap_match else 0.0
 
@@ -220,13 +156,7 @@ def _extract_double_shot_ratio(passive: dict[str, Any]) -> float:
     """Extract the double shot AD ratio from the passive description.
 
     The description says the additional shot deals ``50% AD`` physical
-    damage.
-
-    Args:
-        passive: Passive ability dict from champion JSON.
-
-    Returns:
-        AD ratio as a decimal (e.g. 0.5 for 50%).
+    damage. (Test seam: tests/test_akshan.py validates it here.)
     """
     for effect in passive.get("effects", []):
         desc = effect.get("description", "")
@@ -236,163 +166,110 @@ def _extract_double_shot_ratio(passive: dict[str, Any]) -> float:
     return 0.5  # Fallback
 
 
-# ---------------------------------------------------------------------------
-# Main parser
-# ---------------------------------------------------------------------------
+def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: per-shot damage x ``e_shots`` option (default 5)."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    shots = int(ctx.options.get("e_shots", 5))
+    if rank < 1 or shots <= 0:
+        return None
+
+    per_shot = _extract_e_per_shot(ability, rank, ctx.stats)
+    if per_shot <= 0:
+        return None
+
+    name = ability.get("name", "Heroic Swing")
+    cooldown = extract_cooldown(ability, rank)
+    return damage_entry(name, rank, cooldown, per_shot * shots, "physical")
 
 
-def parse_abilities(
-    champion_data: dict[str, Any],
-    level: int,
-    total_ability_power: float,
-    ability_ranks: dict[str, int] | None = None,
-    champion_options: dict[str, Any] | None = None,
-    champion_stats: dict[str, float] | None = None,
-    target_stats: dict[str, float] | None = None,
-) -> dict[str, dict[str, Any]]:
-    """Parse Akshan's abilities and calculate damage.
+def _comeuppance(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: min damage per bullet x stored bullets + crit/missing-HP flags.
 
-    Args:
-        champion_data: Akshan's champion data dictionary from JSON.
-        level: Champion level (1-20).
-        total_ability_power: Total AP after items and multipliers.
-        ability_ranks: Optional dict of ability key -> rank override.
-        champion_options: Champion-specific options. Supports:
-            ``{"passive_procs": int, "e_shots": int}``.
-        champion_stats: Champion's calculated stats (for AD scaling).
-        target_stats: Target stats (unused for Akshan).
-
-    Returns:
-        Dictionary with ability key -> damage information.
+    Uses "Minimum Physical Damage per Bullet" — the JSON's "Maximum"
+    variant already has the 3x missing-HP multiplier baked in; the
+    fight engine applies that scaling itself from the flags.
     """
-    abilities_data = champion_data.get("abilities", {})
-    results: dict[str, dict[str, Any]] = {}
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
 
-    # Default champion options
-    passive_procs = 3
-    e_shots = 5
-    if champion_options:
-        if "passive_procs" in champion_options:
-            passive_procs = int(champion_options["passive_procs"])
-        if "e_shots" in champion_options:
-            e_shots = int(champion_options["e_shots"])
+    per_bullet = extract_named(
+        ability, "Minimum Physical Damage per Bullet", rank, ctx.stats, ctx.target
+    )
+    bullets = int(extract_value(ability, "Maximum Bullets Stored", rank))
 
-    # Build stats context for scaling
-    stats_context: dict[str, float] = {}
-    if champion_stats:
-        stats_context = dict(champion_stats)
-    stats_context["ability_power"] = total_ability_power
+    name = ability.get("name", "Comeuppance")
+    entry = damage_entry(
+        name, rank, extract_cooldown(ability, rank), per_bullet * bullets, "physical"
+    )
+    entry["crit_effectiveness"] = _R_CRIT_EFFECTIVENESS
+    entry["missing_hp_max_bonus"] = _R_MISSING_HP_MAX_BONUS
+    return entry
 
-    def rank_for(key: str) -> int:
-        if ability_ranks and key in ability_ranks:
-            return ability_ranks[key]
-        return get_ability_rank(key, level, "Akshan")
 
-    # ── Q: Avengerang (both passes — Total Physical Damage) ──────────
-    q_rank = rank_for("Q")
-    if q_rank > 0:
-        q_ability_list = abilities_data.get("Q", [])
-        if q_ability_list:
-            q_ability = q_ability_list[0]
-            q_damage = _extract_leveling_damage(
-                q_ability, "Total Physical Damage", q_rank, stats_context,
-            )
-            q_cooldown = extract_cooldown(q_ability, q_rank)
-
-            if q_damage > 0:
-                results["Q"] = {
-                    "name": q_ability.get("name", "Avengerang"),
-                    "rank": q_rank,
-                    "cooldown": q_cooldown,
-                    "damage_type": "physical",
-                    "physical_damage": q_damage,
-                    "total_raw": q_damage,
-                }
-
-    # W: Going Rogue — no damage, skipped
-
-    # ── E: Heroic Swing (configurable shots) ─────────────────────────
-    e_rank = rank_for("E")
-    if e_rank > 0 and e_shots > 0:
-        e_ability_list = abilities_data.get("E", [])
-        if e_ability_list:
-            e_ability = e_ability_list[0]
-            per_shot = _extract_e_per_shot(
-                e_ability, e_rank, stats_context,
-            )
-            e_cooldown = extract_cooldown(e_ability, e_rank)
-            e_total = per_shot * e_shots
-
-            if per_shot > 0:
-                results["E"] = {
-                    "name": e_ability.get("name", "Heroic Swing"),
-                    "rank": e_rank,
-                    "cooldown": e_cooldown,
-                    "damage_type": "physical",
-                    "physical_damage": e_total,
-                    "total_raw": e_total,
-                }
-
-    # ── R: Comeuppance (fully charged, crit scaling) ─────────────────
-    r_rank = rank_for("R")
-    if r_rank > 0:
-        r_ability_list = abilities_data.get("R", [])
-        if r_ability_list:
-            r_ability = r_ability_list[0]
-
-            # Use "Minimum Physical Damage per Bullet" — this is the
-            # actual base per bullet (no missing HP scaling).  The JSON's
-            # "Maximum Physical Damage per Bullet" already has the 3×
-            # missing-HP multiplier baked in.
-            min_per_bullet = _extract_leveling_damage(
-                r_ability, "Minimum Physical Damage per Bullet",
-                r_rank, stats_context,
-            )
-            num_bullets = int(_extract_leveling_value(
-                r_ability, "Maximum Bullets Stored", r_rank,
-            ))
-            r_base = min_per_bullet * num_bullets
-            r_cooldown = extract_cooldown(r_ability, r_rank)
-
-            results["R"] = {
-                "name": r_ability.get("name", "Comeuppance"),
-                "rank": r_rank,
-                "cooldown": r_cooldown,
-                "damage_type": "physical",
-                "physical_damage": r_base,
-                "total_raw": r_base,
-                # Crit scaling at 30% effectiveness — applied by damage.py
-                "crit_effectiveness": 0.3,
-                # Missing HP scaling: 0-200% bonus (3× at 0 HP)
-                "missing_hp_max_bonus": 2.0,
-            }
-
-    # ── P: Dirty Fighting — Double Shot (on-hit per auto) ────────────
-    passive_list = abilities_data.get("P", [])
-    if passive_list:
-        ad_ratio = _extract_double_shot_ratio(passive_list[0])
-        ad = stats_context.get("attack_damage", 0.0)
-
-        results["passive_double_shot"] = {
+def _double_shot(ctx: SlotCtx) -> dict[str, Any] | None:
+    """passive_double_shot: every auto fires a second %AD shot."""
+    passive = ctx.ability("P")
+    if passive is None:
+        return None
+    return {
+        "name": "Dirty Fighting (Double Shot)",
+        "double_shot": {
             "name": "Dirty Fighting (Double Shot)",
-            "double_shot": {
-                "name": "Dirty Fighting (Double Shot)",
-                "ad_ratio": ad_ratio,
-            },
-        }
+            "ad_ratio": _extract_double_shot_ratio(passive),
+        },
+    }
 
-    # ── P: Dirty Fighting — 3-Stack Proc (magic damage) ──────────────
-    if passive_procs > 0 and passive_list:
-        per_proc = _parse_passive_proc_damage(
-            passive_list[0], level, stats_context,
-        )
-        if per_proc > 0:
-            results["passive"] = {
-                "name": "Dirty Fighting (3-Stack Proc)",
-                "damage_type": "magic",
-                "magic_damage": per_proc,
-                "total_raw": per_proc * passive_procs,
-                "proc_count": passive_procs,
-            }
 
-    return results
+def _dirty_fighting_damage(ctx: SlotCtx, passive: dict[str, Any]) -> float:
+    """Resolve one Dirty Fighting three-stack proc from description text."""
+    return _parse_passive_proc_damage(passive, ctx.level, ctx.stats)
+
+
+OPTIONS = [
+    {
+        "key": "passive_procs",
+        "type": "int",
+        "default": 3,
+        "label": "Passive procs (3-stack)",
+        "min": 0,
+        "max": 20,
+    },
+    {
+        "key": "e_shots",
+        "type": "int",
+        "default": 5,
+        "label": "E shots fired",
+        "min": 0,
+        "max": 20,
+    },
+]
+
+ASSUMPTIONS = [
+    "Q always hits both passes (outgoing and return)",
+    "R assumes full channel (max bullets at max damage)",
+    "R crit scaling at 30% effectiveness applied",
+    "Double shot applies on-hit effects and can crit",
+    "W is utility only (no damage)",
+]
+
+SLOTS = {
+    "Q": simple_damage(attr="Total Physical Damage", dmg_type="physical"),
+    "E": _heroic_swing,
+    "R": _comeuppance,
+    "passive_double_shot": _double_shot,
+    "P": proc_damage(
+        _dirty_fighting_damage,
+        "magic",
+        default_count=3,
+        name="Dirty Fighting (3-Stack Proc)",
+    ),
+}
+
+parse_abilities = build_parser(SLOTS, "Akshan")

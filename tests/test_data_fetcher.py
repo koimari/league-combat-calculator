@@ -1,6 +1,7 @@
 """Tests for the data fetcher module."""
 
 import json
+import os
 import time
 from pathlib import Path
 
@@ -16,7 +17,6 @@ from src.calculator.data_fetcher import (
     fetch_item_data,
     CACHE_MAX_AGE_SECONDS,
 )
-
 
 SAMPLE_CHAMPION_DATA = {
     "Aatrox": {
@@ -102,6 +102,36 @@ class TestCacheReadWrite:
         meta = json.loads(meta_path.read_text())
         assert "fetched_at" in meta
         assert meta["filename"] == "test.json"
+
+    def test_read_reuses_parsed_json_until_file_changes(self, tmp_path: Path) -> None:
+        """Repeated reads share one parse for the same path and mtime."""
+        data_path = tmp_path / "test.json"
+        data_path.write_text('{"version": 1}', encoding="utf-8")
+
+        first = _read_cache(tmp_path, "test.json")
+        second = _read_cache(tmp_path, "test.json")
+
+        assert second is first
+
+        old_mtime = data_path.stat().st_mtime_ns
+        data_path.write_text('{"version": 2}', encoding="utf-8")
+        os.utime(data_path, ns=(old_mtime + 1_000_000, old_mtime + 1_000_000))
+
+        refreshed = _read_cache(tmp_path, "test.json")
+        assert refreshed == {"version": 2}
+        assert refreshed is not first
+
+    def test_read_cache_key_includes_full_path(self, tmp_path: Path) -> None:
+        """Same-named files in different data directories never collide."""
+        first_dir = tmp_path / "first"
+        second_dir = tmp_path / "second"
+        first_dir.mkdir()
+        second_dir.mkdir()
+        (first_dir / "items.json").write_text('{"source": "first"}')
+        (second_dir / "items.json").write_text('{"source": "second"}')
+
+        assert _read_cache(first_dir, "items.json") == {"source": "first"}
+        assert _read_cache(second_dir, "items.json") == {"source": "second"}
 
 
 class TestValidateChampionData:

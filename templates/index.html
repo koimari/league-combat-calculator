@@ -268,21 +268,21 @@
                             <span class="stat-icon-inline" data-stat="hp"></span>
                             Base HP
                         </label>
-                        <input type="number" id="target-base-health" value="1000" min="1" max="10000" step="50">
+                        <input type="number" id="target-base-health" value="{{ default_target.health | int }}" min="1" max="10000" step="50">
                     </div>
                     <div class="enemy-stat">
                         <label for="target-bonus-health">
                             <span class="stat-icon-inline" data-stat="hp"></span>
                             Bonus HP
                         </label>
-                        <input type="number" id="target-bonus-health" value="0" min="0" max="10000" step="50">
+                        <input type="number" id="target-bonus-health" value="{{ default_target.bonus_health | int }}" min="0" max="10000" step="50">
                     </div>
                     <div class="enemy-stat">
                         <label>
                             <span class="stat-icon-inline" data-stat="hp"></span>
                             Total HP
                         </label>
-                        <span class="enemy-total-hp" id="target-total-health">1000</span>
+                        <span class="enemy-total-hp" id="target-total-health">{{ (default_target.health + default_target.bonus_health) | int }}</span>
                     </div>
                 </div>
                 <div class="enemy-stats-row">
@@ -291,14 +291,14 @@
                             <span class="stat-icon-inline" data-stat="armor"></span>
                             Armor
                         </label>
-                        <input type="number" id="target-armor" value="100" min="0" max="500" step="5">
+                        <input type="number" id="target-armor" value="{{ default_target.armor | int }}" min="0" max="500" step="5">
                     </div>
                     <div class="enemy-stat">
                         <label for="target-mr">
                             <span class="stat-icon-inline" data-stat="mr"></span>
                             MR
                         </label>
-                        <input type="number" id="target-mr" value="100" min="0" max="500" step="5">
+                        <input type="number" id="target-mr" value="{{ default_target.mr | int }}" min="0" max="500" step="5">
                     </div>
                 </div>
             </div>
@@ -320,8 +320,8 @@
                 <div id="time-based-options" class="time-options hidden">
                     <div class="slider-row">
                         <label for="fight-duration">Duration</label>
-                        <span class="slider-value"><span id="duration-display">8</span>s</span>
-                        <input type="range" id="fight-duration" min="1" max="10" value="8" step="1">
+                        <span class="slider-value"><span id="duration-display">{{ default_fight_duration | int }}</span>s</span>
+                        <input type="range" id="fight-duration" min="1" max="10" value="{{ default_fight_duration | int }}" step="1">
                     </div>
 
                     <div class="toggle-row">
@@ -338,8 +338,8 @@
                     <div id="uptime-options" class="hidden">
                         <div class="slider-row">
                             <label for="auto-uptime">AA Uptime</label>
-                            <span class="slider-value"><span id="uptime-display">80</span>%</span>
-                            <input type="range" id="auto-uptime" min="0" max="100" value="80" step="5">
+                            <span class="slider-value"><span id="uptime-display">{{ (default_auto_attack_uptime * 100) | int }}</span>%</span>
+                            <input type="range" id="auto-uptime" min="0" max="100" value="{{ (default_auto_attack_uptime * 100) | int }}" step="5">
                         </div>
                     </div>
                 </div>
@@ -359,6 +359,38 @@
                     <svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                 </span>
             </button>
+
+            <!-- Build Optimizer -->
+            <div class="config-group optimizer-group">
+                <div class="section-header">
+                    <h3>Build Optimizer</h3>
+                </div>
+                <div class="optimizer-controls">
+                    <div class="optimizer-row">
+                        <label for="optimize-objective">Maximize</label>
+                        <select id="optimize-objective" class="optimizer-select">
+                            <option value="total_damage">Total Damage</option>
+                            <option value="physical_damage">Physical Damage</option>
+                            <option value="magic_damage">Magic Damage</option>
+                        </select>
+                    </div>
+                    <div class="optimizer-row">
+                        <label for="optimize-slots">Legendary Items</label>
+                        <select id="optimize-slots" class="optimizer-select">
+                            <option value="5" selected>5 (Standard)</option>
+                            <option value="6">6 (Bot Lane)</option>
+                        </select>
+                    </div>
+                    <p class="optimizer-hint">Pre-selected items will be kept. Empty slots will be filled.</p>
+                </div>
+                <button id="optimize-btn" class="btn-optimize">
+                    <span class="btn-text">Optimize Build</span>
+                    <span class="btn-loading hidden">
+                        <svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    </span>
+                </button>
+                <p id="optimize-status" class="optimizer-status hidden"></p>
+            </div>
         </section>
 
         <!-- Right Column: Results -->

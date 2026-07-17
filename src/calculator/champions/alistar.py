@@ -1,12 +1,20 @@
-"""Alistar ability parsing and damage calculation.
+"""Alistar — slot map for the archetype engine.
 
-Custom module needed because:
-- E (Trample): Tick-based damage (10 ticks over 5 seconds) where the full
-  duration damage should be used, plus a secondary on-hit empowered auto
-  that scales with champion level (not ability rank).
-
-Q and W are standard single-hit magic damage abilities handled by the
-generic parser.
+Why each slot is non-generic:
+- E (Trample) is a custom fn: the cast total is the "Total Magic
+  Damage" attribute (all 10 ticks over 5 s — the classifier would pick
+  the per-tick "Magic Damage" first), plus the empowered-auto bonus
+  that Trample grants once per cast, which scales with champion LEVEL
+  (not rank) and is baked into the cast total rather than emitted as an
+  on-hit. This is a total-attribute read plus an add-once on-hit addend,
+  so the mechanic stays champion-local.
+- Q (Pulverize) / W (Headbutt) are fully generic single-hit magic
+  damage — auto-mode ``simple_damage``, exactly the generic path the
+  legacy module reached by calling the generic parser and patching its
+  output.
+- R (Unbreakable Will) is damage reduction only and P (Triumphant
+  Roar) is healing only — neither is modeled, both absent from the
+  slot map.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -14,30 +22,21 @@ hardcoded.
 
 from typing import Any
 
-from .generic_parser import (
-    extract_cooldown,
-    parse_abilities as generic_parse,
-)
-from .scaling import resolve_scaling, is_flat_unit
-from .skill_orders import get_ability_rank
+from .engine import SlotCtx, build_parser
+from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 
 
 def _extract_e_on_hit_damage(
     ability: dict[str, Any],
     level: int,
 ) -> float:
-    """Extract E empowered auto bonus magic damage from JSON.
+    """Extract E's empowered-auto bonus magic damage at a champion level.
 
-    The empowered auto-attack bonus damage scales with champion level
-    (not ability rank). The JSON stores it in effect[1] under the
-    ``"Bonus Magic Damage"`` attribute.
-
-    Args:
-        ability: E ability dict from champion JSON.
-        level: Champion level (1-18).
-
-    Returns:
-        Bonus magic damage for the empowered auto at the given level.
+    The empowered auto scales with champion level (not ability rank);
+    the JSON stores it under "Bonus Magic Damage" as per-level values.
+    Per-level arrays may have fewer entries than 18, in which case the
+    level is linearly interpolated across the available values.
+    (Test seam: tests/test_alistar.py validates the JSON values here.)
     """
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
@@ -52,12 +51,10 @@ def _extract_e_on_hit_damage(
             if not values:
                 continue
 
-            # Per-level values may have fewer entries than 18.
-            # Linearly interpolate across available values.
             if len(values) >= level:
                 return float(values[level - 1])
 
-            # Interpolate: map level (1-18) into the values array
+            # Interpolate: map level (1-18) into the values array.
             num_values = len(values)
             if num_values == 1:
                 return float(values[0])
@@ -67,128 +64,44 @@ def _extract_e_on_hit_damage(
             low_idx = int(index_float)
             high_idx = min(low_idx + 1, num_values - 1)
             weight = index_float - low_idx
-            return float(values[low_idx]) * (1 - weight) + float(values[high_idx]) * weight
-
-    return 0.0
-
-
-def _extract_e_total_damage(
-    ability: dict[str, Any],
-    rank: int,
-    stats_context: dict[str, float] | None = None,
-) -> float:
-    """Extract E total tick damage from the ``Total Magic Damage`` attribute.
-
-    Args:
-        ability: E ability dict from champion JSON.
-        rank: E ability rank (1-5).
-        stats_context: Champion stats for scaling resolution.
-
-    Returns:
-        Total raw magic damage from all ticks at the given rank.
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") != "Total Magic Damage":
-                continue
-
-            total = 0.0
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
-
-                idx = min(rank - 1, len(values) - 1)
-                value = float(values[idx])
-                unit = units[idx] if idx < len(units) else ""
-
-                if is_flat_unit(unit):
-                    total += value
-                else:
-                    total += resolve_scaling(
-                        unit, value, stats_context, None,
-                    )
-            return total
-
-    return 0.0
-
-
-def parse_abilities(
-    champion_data: dict[str, Any],
-    level: int,
-    total_ability_power: float,
-    ability_ranks: dict[str, int] | None = None,
-    champion_options: dict[str, Any] | None = None,  # pylint: disable=unused-argument
-    champion_stats: dict[str, float] | None = None,
-    target_stats: dict[str, float] | None = None,
-) -> dict[str, dict[str, Any]]:
-    """Parse Alistar's abilities and calculate damage.
-
-    Args:
-        champion_data: Alistar's champion data dictionary from JSON.
-        level: Champion level (1-18).
-        total_ability_power: Total AP after items and multipliers.
-        ability_ranks: Optional dict of ability key -> rank override.
-        champion_options: Champion-specific options (unused for Alistar).
-        champion_stats: Champion's calculated stats (for scaling).
-        target_stats: Target stats (for %HP abilities).
-
-    Returns:
-        Dictionary with ability key -> damage information.
-    """
-    # Let generic parser handle Q and W
-    results = generic_parse(
-        champion_data, level, total_ability_power, ability_ranks,
-        champion_stats=champion_stats, target_stats=target_stats,
-    )
-
-    # Remove any generic E parse — we handle it custom
-    results.pop("E", None)
-    # Remove R (utility only — damage reduction, no damage)
-    results.pop("R", None)
-    # Remove passive (healing, not damage)
-    results.pop("passive", None)
-
-    # Build stats context for scaling
-    stats_context: dict[str, float] = {}
-    if champion_stats:
-        stats_context = dict(champion_stats)
-    stats_context["ability_power"] = total_ability_power
-
-    abilities_data = champion_data.get("abilities", {})
-
-    def rank_for(key: str) -> int:
-        if ability_ranks and key in ability_ranks:
-            return ability_ranks[key]
-        return get_ability_rank(key, level, "Alistar")
-
-    # ── E: Trample (tick damage + empowered auto on-hit) ─────────────
-    e_rank = rank_for("E")
-    if e_rank > 0:
-        e_ability_list = abilities_data.get("E", [])
-        if e_ability_list:
-            e_ability = e_ability_list[0]
-
-            # Total tick damage (all 10 ticks over 5 seconds)
-            e_total_damage = _extract_e_total_damage(
-                e_ability, e_rank, stats_context,
+            return (
+                float(values[low_idx]) * (1 - weight) + float(values[high_idx]) * weight
             )
-            e_cooldown = extract_cooldown(e_ability, e_rank)
 
-            # Empowered auto bonus damage (scales with champion level).
-            # This procs once per E cast (not every auto), so add it
-            # directly to E's total damage.
-            e_on_hit_damage = _extract_e_on_hit_damage(e_ability, level)
-            e_total_damage += e_on_hit_damage
+    return 0.0
 
-            results["E"] = {
-                "name": e_ability.get("name", "Trample"),
-                "rank": e_rank,
-                "cooldown": e_cooldown,
-                "damage_type": "magic",
-                "magic_damage": e_total_damage,
-                "total_raw": e_total_damage,
-            }
 
-    return results
+def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: full-duration tick total + level-scaled empowered auto."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
+    # The empowered auto procs once per E cast, so it joins the cast
+    # total instead of becoming a per-auto on_hit entry.
+    total += _extract_e_on_hit_damage(ability, ctx.level)
+
+    name = ability.get("name", "Trample")
+    return damage_entry(name, rank, extract_cooldown(ability, rank), total, "magic")
+
+
+OPTIONS: list[dict[str, Any]] = []
+
+ASSUMPTIONS = [
+    "E Trample deals full duration damage (10 ticks over 5 seconds)",
+    "E empowered auto always procs once per cast (5 stacks reached)",
+    "Passive (Triumphant Roar) healing is ignored",
+    "R (Unbreakable Will) damage reduction is ignored",
+]
+
+SLOTS = {
+    "Q": simple_damage(),
+    "W": simple_damage(),
+    "E": _trample,
+}
+
+parse_abilities = build_parser(SLOTS, "Alistar")

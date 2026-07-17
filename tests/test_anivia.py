@@ -2,9 +2,6 @@
 
 import pytest
 
-from src.calculator.champions.anivia import _extract_leveling_damage
-
-
 # ---------------------------------------------------------------------------
 # Q — Flash Frost
 # ---------------------------------------------------------------------------
@@ -24,14 +21,18 @@ class TestQFlashFrost:
     def test_q_rank5_no_ap(self, anivia_data, parse_at) -> None:
         """Rank 5 Q with 0 AP: 330 total magic damage."""
         _, abilities = parse_at(
-            anivia_data, 9, ability_ranks={"Q": 5, "E": 1, "R": 1},
+            anivia_data,
+            9,
+            ability_ranks={"Q": 5, "E": 1, "R": 1},
         )
         assert abilities["Q"]["total_raw"] == pytest.approx(330.0)
 
     def test_q_rank5_100ap(self, anivia_data, parse_at) -> None:
         """Rank 5 Q with 100 AP: 330 + 70 = 400."""
         _, abilities = parse_at(
-            anivia_data, 9, ap=100.0,
+            anivia_data,
+            9,
+            ap=100.0,
             ability_ranks={"Q": 5, "E": 1, "R": 1},
         )
         assert abilities["Q"]["total_raw"] == pytest.approx(400.0)
@@ -74,14 +75,18 @@ class TestEFrostbite:
     def test_e_rank5_no_ap(self, anivia_data, parse_at) -> None:
         """Rank 5 E with 0 AP: 310 enhanced damage."""
         _, abilities = parse_at(
-            anivia_data, 9, ability_ranks={"Q": 1, "E": 5, "R": 1},
+            anivia_data,
+            9,
+            ability_ranks={"Q": 1, "E": 5, "R": 1},
         )
         assert abilities["E"]["total_raw"] == pytest.approx(310.0)
 
     def test_e_rank5_100ap(self, anivia_data, parse_at) -> None:
         """Rank 5 E with 100 AP: 310 + 110 = 420."""
         _, abilities = parse_at(
-            anivia_data, 9, ap=100.0,
+            anivia_data,
+            9,
+            ap=100.0,
             ability_ranks={"Q": 1, "E": 5, "R": 1},
         )
         assert abilities["E"]["total_raw"] == pytest.approx(420.0)
@@ -114,7 +119,9 @@ class TestRGlacialStorm:
         3 ticks × (30 + 6.25) + 7 ticks × (90 + 18.75) = 108.75 + 761.25 = 870.
         """
         _, abilities = parse_at(
-            anivia_data, 16, ap=100.0,
+            anivia_data,
+            16,
+            ap=100.0,
             ability_ranks={"Q": 5, "E": 5, "R": 3},
             champion_options={"r_duration": 5.0},
         )
@@ -125,7 +132,8 @@ class TestRGlacialStorm:
         3 × 30 + 7 × 90 = 90 + 630 = 720.
         """
         _, abilities = parse_at(
-            anivia_data, 16,
+            anivia_data,
+            16,
             ability_ranks={"Q": 5, "E": 5, "R": 3},
             champion_options={"r_duration": 5.0},
         )
@@ -134,7 +142,8 @@ class TestRGlacialStorm:
     def test_r_minimum_duration_clamp(self, anivia_data, parse_at) -> None:
         """Duration below 1.5 should be clamped to 1.5 (3 initial ticks only)."""
         _, abilities = parse_at(
-            anivia_data, 16,
+            anivia_data,
+            16,
             ability_ranks={"Q": 5, "E": 5, "R": 3},
             champion_options={"r_duration": 0.5},
         )
@@ -147,7 +156,8 @@ class TestRGlacialStorm:
         3 × 30 + 17 × 90 = 90 + 1530 = 1620.
         """
         _, abilities = parse_at(
-            anivia_data, 16,
+            anivia_data,
+            16,
             ability_ranks={"Q": 5, "E": 5, "R": 3},
             champion_options={"r_duration": 10.0},
         )
@@ -161,15 +171,19 @@ class TestRGlacialStorm:
     def test_r_default_duration_is_5s(self, anivia_data, parse_at) -> None:
         """Without champion_options, R uses the default 5s duration."""
         _, abilities_default = parse_at(
-            anivia_data, 16,
+            anivia_data,
+            16,
             ability_ranks={"Q": 5, "E": 5, "R": 3},
         )
         _, abilities_explicit = parse_at(
-            anivia_data, 16,
+            anivia_data,
+            16,
             ability_ranks={"Q": 5, "E": 5, "R": 3},
             champion_options={"r_duration": 5.0},
         )
-        assert abilities_default["R"]["total_raw"] == abilities_explicit["R"]["total_raw"]
+        assert (
+            abilities_default["R"]["total_raw"] == abilities_explicit["R"]["total_raw"]
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -195,7 +209,9 @@ class TestFullCombo:
 
     def test_full_combo_damage(self, anivia_data, parse_at) -> None:
         _, abilities = parse_at(
-            anivia_data, 18, ap=100.0,
+            anivia_data,
+            18,
+            ap=100.0,
             ability_ranks={"Q": 5, "E": 5, "R": 3},
             champion_options={"r_duration": 5.0},
         )

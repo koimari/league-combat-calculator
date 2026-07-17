@@ -1,19 +1,33 @@
-"""Tests for the generic champion ability parser."""
+"""Tests for the engine's generic champion path (GENERIC_SLOTS).
+
+The classifier-driven slot map every unregistered champion runs on —
+formerly generic_parser.py, now ``build_parser(GENERIC_SLOTS, ...)``.
+Covers the scaling/classifier/skill-order building blocks, per-champion
+generic behavior (Annie/Garen/Vayne shapes), and the mass-coverage
+guarantees (every champion parses; >=95% with damage).
+"""
 
 import json
 import pytest
 
-from src.calculator.champions.generic_parser import (
-    parse_abilities,
-    extract_cooldown,
-    extract_damage,
-)
+from src.calculator.champions import GENERIC_SLOTS
+from src.calculator.champions.engine import build_parser
 from src.calculator.champions.scaling import resolve_scaling
 from src.calculator.champions.attribute_classifier import (
     is_damage_attribute,
     classify_damage_type,
 )
 from src.calculator.champions.skill_orders import get_ability_rank
+
+
+def parse_abilities(champ: dict, *args, **kwargs) -> dict:
+    """Run a champion through the engine's generic slot map.
+
+    The exact path the dispatcher takes for unregistered champions
+    (Annie/Vayne below are registered — these tests deliberately
+    exercise the generic path on their data).
+    """
+    return build_parser(GENERIC_SLOTS, champ.get("name", ""))(champ, *args, **kwargs)
 
 
 @pytest.fixture(scope="module")
@@ -90,7 +104,8 @@ class TestScaling:
         target = {"target_max_health": 3000.0}
         # 10% target max HP = 300
         result = resolve_scaling(
-            "% of target's maximum health", 10.0,
+            "% of target's maximum health",
+            10.0,
             target_stats=target,
         )
         assert abs(result - 300.0) < 0.1
@@ -226,7 +241,9 @@ class TestGenericParserVayne:
         champ = _find_champion(champions_data, "Vayne")
         target = _default_target(target_max_health=3000.0)
         result = parse_abilities(
-            champ, 18, 0.0,
+            champ,
+            18,
+            0.0,
             champion_stats=_default_stats(),
             target_stats=target,
         )
@@ -238,7 +255,9 @@ class TestGenericParserVayne:
         champ = _find_champion(champions_data, "Vayne")
         target = _default_target(target_max_health=3000.0)
         result = parse_abilities(
-            champ, 18, 0.0,
+            champ,
+            18,
+            0.0,
             champion_stats=_default_stats(),
             target_stats=target,
         )
@@ -251,7 +270,9 @@ class TestGenericParserVayne:
         """Vayne Q Tumble is a normal castable ability."""
         champ = _find_champion(champions_data, "Vayne")
         result = parse_abilities(
-            champ, 18, 0.0,
+            champ,
+            18,
+            0.0,
             champion_stats=_default_stats(),
             target_stats=_default_target(),
         )
@@ -264,7 +285,8 @@ class TestGenericParserMassCoverage:
     """Mass coverage test — verify all champions parse without errors."""
 
     def test_all_champions_parse_without_errors(
-        self, champions_data: dict,
+        self,
+        champions_data: dict,
     ) -> None:
         """Every champion should parse without raising exceptions."""
         stats = _default_stats()
@@ -274,15 +296,19 @@ class TestGenericParserMassCoverage:
             name = champ.get("name", cid)
             try:
                 parse_abilities(
-                    champ, 13, 200.0,
-                    champion_stats=stats, target_stats=target,
+                    champ,
+                    13,
+                    200.0,
+                    champion_stats=stats,
+                    target_stats=target,
                 )
             except Exception as exc:
                 errors.append(f"{name}: {exc}")
         assert errors == [], f"Champions with errors: {errors}"
 
     def test_most_champions_have_damage(
-        self, champions_data: dict,
+        self,
+        champions_data: dict,
     ) -> None:
         """At least 95% of champions should have parseable damage."""
         stats = _default_stats()
@@ -292,13 +318,13 @@ class TestGenericParserMassCoverage:
         for _, champ in champions_data.items():
             total += 1
             result = parse_abilities(
-                champ, 13, 200.0,
-                champion_stats=stats, target_stats=target,
+                champ,
+                13,
+                200.0,
+                champion_stats=stats,
+                target_stats=target,
             )
-            if any(
-                v.get("total_raw", 0) > 0 or "on_hit" in v
-                for v in result.values()
-            ):
+            if any(v.get("total_raw", 0) > 0 or "on_hit" in v for v in result.values()):
                 has_damage += 1
         coverage = has_damage / total
         assert coverage >= 0.95, (

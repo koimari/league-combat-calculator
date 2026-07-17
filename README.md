@@ -8,6 +8,7 @@ A web-based League of Legends damage calculator that lets you select a champion,
 - **Item builds** — Equip up to 6 items + boots with correct stat stacking and passive effects
 - **Ability damage** — Calculates Q/W/E/R damage at any rank with AP/AD/bonus scaling
 - **Fight simulation** — Set a fight duration and see total damage accounting for ability cooldowns and auto-attack uptime
+- **Build optimizer** — Search legal item combinations for the strongest total, physical, or magic damage build
 - **Target configuration** — Set enemy health, armor, and magic resistance to see post-mitigation damage
 - **Item effects** — Supports on-hit (Nashor's, BotRK), spellblade (Lich Bane), burn (Liandry's), and more
 - **Auto-updating data** — Fetches champion and item data from the LoL Wiki for the latest patch
@@ -51,4 +52,4 @@ pytest
 - **Backend:** Python / Flask
 - **Frontend:** Vanilla HTML, CSS, JavaScript
 - **Data:** Scraped from the League of Legends Wiki via [lolstaticdata](https://github.com/meraki-analytics/lolstaticdata)
-- **Tests:** pytest (337 tests)
+- **Tests:** pytest plus a full-pipeline numeric golden snapshot

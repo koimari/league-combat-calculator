@@ -3,10 +3,10 @@
 import pytest
 
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions.slotlib import extract_named
 from src.calculator.champions.alistar import (
     parse_abilities,
     _extract_e_on_hit_damage,
-    _extract_e_total_damage,
 )
 from src.calculator.damage import calculate_fight_damage
 
@@ -31,11 +31,13 @@ class TestQPulverize:
 
     def test_q_scales_with_rank(self, alistar_data, parse_at) -> None:
         _, low = parse_at(
-            alistar_data, 3,
+            alistar_data,
+            3,
             ability_ranks={"Q": 1, "W": 1, "E": 1},
         )
         _, high = parse_at(
-            alistar_data, 9,
+            alistar_data,
+            9,
             ability_ranks={"Q": 5, "W": 1, "E": 1},
         )
         assert high["Q"]["total_raw"] > low["Q"]["total_raw"]
@@ -56,7 +58,9 @@ class TestWHeadbutt:
     def test_w_rank1_damage_matches_json(self, alistar_data, parse_at) -> None:
         """W rank 1: 55 base + 100% AP."""
         _, abilities = parse_at(
-            alistar_data, 2, ap=50.0,
+            alistar_data,
+            2,
+            ap=50.0,
             ability_ranks={"Q": 1, "W": 1, "E": 0},
         )
         expected = 55 + 1.00 * 50
@@ -78,7 +82,8 @@ class TestETrample:
     def test_e_uses_total_damage_not_per_tick(self, alistar_data, parse_at) -> None:
         """E should use Total Magic Damage (all 10 ticks), not per-tick."""
         _, abilities = parse_at(
-            alistar_data, 3,
+            alistar_data,
+            3,
             ability_ranks={"Q": 1, "W": 1, "E": 1},
         )
         assert abilities["E"]["total_raw"] >= 80.0
@@ -86,23 +91,30 @@ class TestETrample:
     def test_e_total_damage_rank1_matches_json(self, alistar_data) -> None:
         """E rank 1: Total Magic Damage = 80 + 70% AP."""
         e_ability = alistar_data["abilities"]["E"][0]
-        total = _extract_e_total_damage(e_ability, 1, {"ability_power": 100.0})
+        total = extract_named(
+            e_ability, "Total Magic Damage", 1, {"ability_power": 100.0}
+        )
         expected = 80 + 0.70 * 100
         assert abs(total - expected) < 0.5
 
     def test_e_total_damage_rank5_matches_json(self, alistar_data) -> None:
         """E rank 5: Total Magic Damage = 200 + 70% AP."""
         e_ability = alistar_data["abilities"]["E"][0]
-        total = _extract_e_total_damage(e_ability, 5, {"ability_power": 0.0})
+        total = extract_named(
+            e_ability, "Total Magic Damage", 5, {"ability_power": 0.0}
+        )
         assert abs(total - 200.0) < 0.5
 
     def test_e_includes_empowered_auto(self, alistar_data, parse_at) -> None:
         """E total should include empowered auto damage (once per cast)."""
         e_ability = alistar_data["abilities"]["E"][0]
-        tick_only = _extract_e_total_damage(e_ability, 1, {"ability_power": 0.0})
+        tick_only = extract_named(
+            e_ability, "Total Magic Damage", 1, {"ability_power": 0.0}
+        )
         empowered = _extract_e_on_hit_damage(e_ability, 1)
         _, abilities = parse_at(
-            alistar_data, 1,
+            alistar_data,
+            1,
             ability_ranks={"Q": 1, "W": 0, "E": 1},
         )
         assert abs(abilities["E"]["total_raw"] - (tick_only + empowered)) < 0.5
