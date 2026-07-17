@@ -18,3 +18,7 @@ Desktop.ini
 
 # Claude Code plans (temporary)
 .claude/plans/
+
+# Local dev-server logs
+.app-server.stdout.log
+.app-server.stderr.log
