@@ -32,6 +32,7 @@ pytest --cov=src      # Run tests with coverage
 black src/ tests/     # Format code
 pylint src/           # Lint code
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
+python scripts/patch_update.py run    # Patch day: re-pull wiki data, audit, gates (see /patch-update skill)
 ```
 
 ## Verification Steps

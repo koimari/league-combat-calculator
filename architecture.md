@@ -116,6 +116,10 @@ wiki (lolstaticdata, external)
   behavior of the whole pipeline (all champions, sustained + one-rotation fights,
   per-item sweep) to 2 decimals. Refactors must not move it; behavior fixes re-capture
   it with every changed scenario explained.
+- `scripts/patch_update.py run` — patch-day pipeline: clears lolstaticdata caches,
+  re-pulls wiki data, audits new-vs-HEAD for registered champions / configured items /
+  shop deltas, then runs pytest + golden compare and re-captures the baseline on green
+  tests. Judgment steps live in the `patch-update` skill.
 - Test layout mirrors source: `test_item_effects.py` (accessors) / `test_item_damage.py`
   (per-item fight behavior) / `test_resistance.py` / `test_damage.py` (engine core) /
   `test_<champion>.py` (only champions with custom modules) / `test_generic_path.py`
