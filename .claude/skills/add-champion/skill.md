@@ -33,14 +33,18 @@ generic path, so don't skip ahead "just in case."
 ```python
 import json
 from src.calculator.data_fetcher import get_champion
-from src.calculator.champions import parse_abilities
+from src.calculator.champions import parse_champion_abilities
 champ = get_champion("ChampionName")
 stats = {"attack_damage": 150.0, "bonus_attack_damage": 50.0, "ability_power": 200.0}
-result = parse_abilities("ChampionName", champ, 13, 200.0,
-                         champion_stats=stats,
-                         target_stats={"target_max_health": 2500.0})
+result = parse_champion_abilities(champ, 13, 200.0,
+                                  champion_stats=stats,
+                                  target_stats={"target_max_health": 2500.0})
 print(json.dumps(result, indent=2))
 ```
+
+(`parse_champion_abilities` dispatches on the data's own display name, so a
+cache-key spelling like `KogMaw` can never bypass a registered `Kog'Maw`
+module.)
 
 Cross-check each slot's `total_raw` / `damage_type` / `cooldown` against the
 [LoL Wiki](https://wiki.leagueoflegends.com/en-us/ChampionName). If every
@@ -191,7 +195,9 @@ _CHAMPION_MODULES: dict[str, str] = {
 ### Skill-order override (optional, any tier)
 
 If the champion doesn't max Q>W>E, add its 18-level sequence to
-`_SKILL_ORDERS` in `skill_orders.py` (R at 6/11/16).
+`_SKILL_ORDERS` in `skill_orders.py` (R at 6/11/16). Sequences stay 18
+entries even though `MAX_LEVEL` is 20 — levels 19-20 grant no skill
+points; `get_ability_rank` caps the lookup.
 
 ## Tier 3 — custom slot functions
 
@@ -268,8 +274,9 @@ ASSUMPTIONS = [
 
 Rules:
 - The parse path reads options via `ctx.options.get(key, default)` or
-  archetype params (`by_option(key, ...)`, `count_option=key`,
-  `duration_option=(key, default)`).
+  archetype params (`by_option(key, ...)`, `count_option=key`). Duration
+  and count options with no archetype home are plain `ctx.options.get`
+  reads in a custom fn (Anivia's `r_duration`).
 - **The Python default is the source of truth** — the declared `default`
   must match what the parse path falls back to.
 - Every declared key must appear as a string in the module source —
@@ -284,8 +291,9 @@ Champion test files are for champions with modules (tiers 2-3); the generic
 path is covered by `tests/test_generic_path.py` + the golden snapshot.
 Create `tests/test_<champion>.py` using the conftest fixtures:
 
-- **`<champion>_data`** — add a `get_champion("Name")` fixture to
-  `tests/conftest.py`.
+- **`<champion>_data`** — one line in `tests/conftest.py`:
+  `<name>_data = _champion_fixture("DataKey")` (the cache data key can
+  differ from the display name — `KogMaw` vs `Kog'Maw`).
 - **`parse_at`** — `stats, abilities = parse_at(data, level, *, items=None,
   ap=0.0, **kwargs)` — stats + dispatcher parse in one call.
 

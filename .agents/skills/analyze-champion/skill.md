@@ -33,21 +33,24 @@ Extract for each ability (P, Q, W, E, R):
 Run this to see what the parser actually has access to:
 
 ```python
-import json, pprint
+import json
 from src.calculator.data_fetcher import get_champion
 champion_data = get_champion("ChampionName")
 for slot in ['P', 'Q', 'W', 'E', 'R']:
-    ab = champion_data['abilities'][slot][0]
-    print(f'=== {slot}: {ab["name"]} ===')
-    print(f'damageType: {ab.get("damageType")}')
-    print(f'targeting: {ab.get("targeting")}')
-    for i, effect in enumerate(ab.get('effects', [])):
-        for j, lev in enumerate(effect.get('leveling', [])):
-            attr = lev.get('attribute', '')
-            mods = [{'values': m['values'][:5], 'units': m['units'][:5]}
-                    for m in lev.get('modifiers', [])]
-            print(f'  effect[{i}].leveling[{j}]: attr="{attr}" mods={mods}')
+    for k, ab in enumerate(champion_data['abilities'][slot]):
+        print(f'=== {slot}[{k}]: {ab["name"]} ===')
+        print(f'damageType: {ab.get("damageType")}  targeting: {ab.get("targeting")}')
+        for i, effect in enumerate(ab.get('effects', [])):
+            for j, lev in enumerate(effect.get('leveling', [])):
+                attr = lev.get('attribute', '')
+                mods = [{'values': m['values'][:5], 'units': m['units'][:5]}
+                        for m in lev.get('modifiers', [])]
+                print(f'  effect[{i}].leveling[{j}]: attr="{attr}" mods={mods}')
 ```
+
+Iterate **every** entry in each slot's list — recasts and subspells live in
+the extra entries (Ambessa Q2 is `Q[1]`; reading only `[0]` is how its %HP
+component was missed).
 
 Cross-reference the wiki page with the JSON to identify any discrepancies.
 

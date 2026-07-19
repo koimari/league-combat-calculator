@@ -33,14 +33,18 @@ generic path, so don't skip ahead "just in case."
 ```python
 import json
 from src.calculator.data_fetcher import get_champion
-from src.calculator.champions import parse_abilities
+from src.calculator.champions import parse_champion_abilities
 champ = get_champion("ChampionName")
 stats = {"attack_damage": 150.0, "bonus_attack_damage": 50.0, "ability_power": 200.0}
-result = parse_abilities("ChampionName", champ, 13, 200.0,
-                         champion_stats=stats,
-                         target_stats={"target_max_health": 2500.0})
+result = parse_champion_abilities(champ, 13, 200.0,
+                                  champion_stats=stats,
+                                  target_stats={"target_max_health": 2500.0})
 print(json.dumps(result, indent=2))
 ```
+
+(`parse_champion_abilities` dispatches on the data's own display name, so a
+cache-key spelling like `KogMaw` can never bypass a registered `Kog'Maw`
+module.)
 
 Cross-check each slot's `total_raw` / `damage_type` / `cooldown` against the
 [LoL Wiki](https://wiki.leagueoflegends.com/en-us/ChampionName). If every
@@ -191,7 +195,9 @@ _CHAMPION_MODULES: dict[str, str] = {
 ### Skill-order override (optional, any tier)
 
 If the champion doesn't max Q>W>E, add its 18-level sequence to
-`_SKILL_ORDERS` in `skill_orders.py` (R at 6/11/16).
+`_SKILL_ORDERS` in `skill_orders.py` (R at 6/11/16). Sequences stay 18
+entries even though `MAX_LEVEL` is 20 — levels 19-20 grant no skill
+points; `get_ability_rank` caps the lookup.
 
 ## Tier 3 — custom slot functions
 
@@ -218,11 +224,12 @@ def _my_slot(ctx: SlotCtx) -> dict[str, Any] | None:
 ```
 
 Go custom when the mechanic is single-user: prose-regex extraction (Akshan,
-Ambessa P), multi-part entry keys (`initial_damage`/`subsequent_damage`,
-per-tick display keys), coupling a buff with conditional entry parts
-(Ashe Q), or a legacy entry shape an archetype may not emit. A thin wrapper
-over an archetype is also fine (Kog'Maw R = `simple_damage` + missing-HP
-flags; Ambessa Q2 = `by_option` + `recast_of` stamp).
+Ambessa P), multi-part damage (Ahri W's two-tier flames as two
+`DamagePart`s), HP-scaled damage closures (Akali/Kog'Maw/Akshan R), or
+coupling a buff with conditional entry parts (Ashe Q). A thin wrapper over
+an archetype is also fine (Kog'Maw R = `simple_damage` + a
+`hp_scaled_damage` closure swapped onto the part; Ambessa Q2 = `by_option`
++ `recast_of` stamp).
 
 Study for patterns: `anivia.py` (unique toggle kept local), `vayne.py` (stat_buff
 couples + shared on-hit shell), `amumu.py` (AMP pseudo-slot, literal-"P" display row),
@@ -230,16 +237,21 @@ couples + shared on-hit shell), `amumu.py` (AMP pseudo-slot, literal-"P" display
 
 ## Entry shape (what the fight engine expects)
 
-Castable entries carry `name`, `rank`, `cooldown`, `total_raw`,
-`damage_type` ("magic"/"physical"/"true"/"mixed") plus the type-specific
-key (`magic_damage` etc.) — `slotlib.damage_entry` builds this. Optional
-keys the fight engine dispatches on: `on_hit` (`{name, damage_per_hit,
-damage_type, stacks_required?}`), `stat_buff` (`{stat_key: value}`,
-applied to champion stats before the fight), `target_debuff`,
-`damage_per_cast`+`total_casts`, `initial_damage`+`subsequent_damage`,
-`proc_count`, `recast_of`, `missing_hp_scaling`, `auto_attack_override`.
-Copy the exact key set from the closest existing module — the golden
-snapshot locks key shapes, not just values.
+Castable entries carry `name`, `rank`, `cooldown`, `total_raw`
+(test/golden diagnostic — the engine reads only `parts`), `damage_type`
+("magic"/"physical"/"true"/"mixed" summary
+label), and `parts` — a tuple of `ability_spec.DamagePart` holding ALL
+damage arithmetic (`amount`/`count` per mitigation unit, an optional
+`hp_scaled_damage` closure taking the target's missing-HP ratio, and
+`crit_effectiveness`) — `slotlib.damage_entry` builds the standard case.
+Optional keys the fight engine dispatches on: `on_hit` (`{name,
+damage_per_hit, damage_type, stacks_required?}`), `stat_buff`
+(`{stat_key: value}`, applied to champion stats before the fight),
+`target_debuff`, `cast_instances` (per-cast item procs, e.g. Ahri R = 3),
+`proc_count`, `recast_of`, `auto_attack_override`, `double_shot`.
+`engine.py` validates entry keys against `_ALLOWED_ENTRY_KEYS` — an
+unknown key raises at parse time. Copy the exact shape from the closest
+existing module — the golden snapshot locks key shapes, not just values.
 
 ## OPTIONS and ASSUMPTIONS (frontend, zero JS)
 
@@ -262,8 +274,9 @@ ASSUMPTIONS = [
 
 Rules:
 - The parse path reads options via `ctx.options.get(key, default)` or
-  archetype params (`by_option(key, ...)`, `count_option=key`,
-  `duration_option=(key, default)`).
+  archetype params (`by_option(key, ...)`, `count_option=key`). Duration
+  and count options with no archetype home are plain `ctx.options.get`
+  reads in a custom fn (Anivia's `r_duration`).
 - **The Python default is the source of truth** — the declared `default`
   must match what the parse path falls back to.
 - Every declared key must appear as a string in the module source —
@@ -278,8 +291,9 @@ Champion test files are for champions with modules (tiers 2-3); the generic
 path is covered by `tests/test_generic_path.py` + the golden snapshot.
 Create `tests/test_<champion>.py` using the conftest fixtures:
 
-- **`<champion>_data`** — add a `get_champion("Name")` fixture to
-  `tests/conftest.py`.
+- **`<champion>_data`** — one line in `tests/conftest.py`:
+  `<name>_data = _champion_fixture("DataKey")` (the cache data key can
+  differ from the display name — `KogMaw` vs `Kog'Maw`).
 - **`parse_at`** — `stats, abilities = parse_at(data, level, *, items=None,
   ap=0.0, **kwargs)` — stats + dispatcher parse in one call.
 

@@ -105,7 +105,7 @@ class TestOptionsDeclarationValidity:
 
         The parse path reads options via ``ctx.options.get(key, ...)``
         or archetype params (``by_option(key, ...)``,
-        ``count_option=key``, ``duration_option=(key, ...)``), so a
+        ``count_option=key``), so a
         declared key that never appears in the module source is a stale
         declaration or a rename that missed the parse path.
         """
