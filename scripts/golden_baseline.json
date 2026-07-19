@@ -2877,10 +2877,10 @@
           "ability_power": 0,
           "armor": 66,
           "armor_penetration_percent": 0.0,
-          "attack_damage": 70,
+          "attack_damage": 74,
           "attack_speed": 0.8,
           "attack_speed_ratio": 0.64,
-          "base_attack_damage": 70,
+          "base_attack_damage": 74,
           "basic_ability_haste": 0.0,
           "bonus_attack_damage": 0,
           "bonus_health": 0,
@@ -2901,10 +2901,10 @@
           "ability_power": 0,
           "armor": 104,
           "armor_penetration_percent": 0.0,
-          "attack_damage": 86,
+          "attack_damage": 94,
           "attack_speed": 0.95,
           "attack_speed_ratio": 0.64,
-          "base_attack_damage": 86,
+          "base_attack_damage": 94,
           "basic_ability_haste": 0.0,
           "bonus_attack_damage": 0,
           "bonus_health": 0,
@@ -4445,10 +4445,10 @@
           "damage_type": "true",
           "name": "Demacian Justice",
           "parts": [
-            "DamagePart(true, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(true, amount=200.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
           ],
           "rank": 2,
-          "total_raw": 250.0
+          "total_raw": 200.0
         }
       },
       "stats": {
@@ -8507,10 +8507,10 @@
           "damage_type": "magic",
           "name": "Ritual Nails",
           "parts": [
-            "DamagePart(magic, amount=90.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=82.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
           ],
           "rank": 5,
-          "total_raw": 90.0
+          "total_raw": 82.0
         },
         "R": {
           "cooldown": 100.0,
@@ -18455,10 +18455,10 @@
           "ability_power": 0,
           "armor": 64,
           "armor_penetration_percent": 0.0,
-          "attack_damage": 77,
+          "attack_damage": 81,
           "attack_speed": 0.76,
           "attack_speed_ratio": 0.65,
-          "base_attack_damage": 77,
+          "base_attack_damage": 81,
           "basic_ability_haste": 0.0,
           "bonus_attack_damage": 0,
           "bonus_health": 0,
@@ -18479,10 +18479,10 @@
           "ability_power": 0,
           "armor": 100,
           "armor_penetration_percent": 0.0,
-          "attack_damage": 98,
+          "attack_damage": 106,
           "attack_speed": 0.87,
           "attack_speed_ratio": 0.65,
-          "base_attack_damage": 98,
+          "base_attack_damage": 106,
           "basic_ability_haste": 0.0,
           "bonus_attack_damage": 0,
           "bonus_health": 0,
@@ -22761,7 +22761,7 @@
           "active_Hextech Rocketbelt",
           "auto_attacks"
         ],
-        "total_damage": 1084.71
+        "total_damage": 1056.71
       },
       "vayne": {
         "breakdown_keys": [
@@ -22773,7 +22773,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 887.86
+        "total_damage": 883.81
       }
     },
     "Hollow Radiance": {
@@ -27053,12 +27053,12 @@
   "metadata": {
     "build_substitutions": [],
     "champion_count": 173,
-    "champions_fetched_at": 1783743759.197702,
-    "git_head": "2e0905f3b695de7f124a39d3eb6e7f20481bfdf9",
+    "champions_fetched_at": 1784496747.7116182,
+    "git_head": "0de22ac2a8d09114ed8db94c05d92eab46f64b84",
     "item_count": 324,
     "item_sweep_error_count": 0,
-    "items_fetched_at": 1783743782.0325496,
-    "patch_last_changed_max": "26.13",
+    "items_fetched_at": 1784496771.6013362,
+    "patch_last_changed_max": "26.14",
     "registered_champion_count": 12
   },
   "registered_champion_fights": {
