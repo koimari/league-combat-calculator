@@ -20,9 +20,14 @@ the old patch), fetches the new data, diffs it against the last committed
 patch (git HEAD — `data/` is tracked), runs pytest and the golden compare,
 and re-captures the baseline **only if pytest is green**.
 
-Modifier-parse ERROR spam during the pull (Bard chimes, Jhin crit lines,
-"FAILURE TO PARSE MODIFIER") is normal lolstaticdata noise; only the
-`Skipped N` summary lines mean data was actually dropped.
+Modifier-parse ERROR spam during the pull ("FAILURE TO PARSE MODIFIER") is
+normal lolstaticdata noise; only the `Skipped N` summary lines mean data was
+actually dropped. The known offenders (gimmick scalings, all generic-path)
+are listed under "Known-degraded wiki parses" in CLAUDE.md's Known Quirks —
+compare new spam against that list. To attribute a NEW error to a champion:
+the ability names streamed to stdout right before the error belong to the
+champion being parsed (the `Processed X` line prints only after X finishes,
+so the error belongs to the champion AFTER the last `Processed` line).
 
 ## Triage the audit report
 
