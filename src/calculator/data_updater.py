@@ -10,8 +10,10 @@ import threading
 from pathlib import Path
 from typing import Any, Generator
 
-# Add lolstaticdata to the import path so we can use its modules directly
-_LOLSTATICDATA_ROOT = Path(__file__).resolve().parent.parent.parent / "lolstaticdata"
+# Add the vendored lolstaticdata to the import path so we can use its modules directly
+_LOLSTATICDATA_ROOT = (
+    Path(__file__).resolve().parent.parent.parent / "vendor" / "lolstaticdata"
+)
 if str(_LOLSTATICDATA_ROOT) not in sys.path:
     sys.path.insert(0, str(_LOLSTATICDATA_ROOT))
 

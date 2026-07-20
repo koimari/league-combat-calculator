@@ -5,7 +5,7 @@ __pycache__/
 *.pyo
 
 # lolstaticdata download cache
-lolstaticdata/__cache__/
+vendor/lolstaticdata/__cache__/
 
 # IDE
 .vscode/

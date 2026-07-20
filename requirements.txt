@@ -1,5 +1,5 @@
 # Calculator application + development environment.
-# lolstaticdata/requirements.txt belongs to the vendored external project;
+# vendor/lolstaticdata/requirements.txt belongs to the vendored external project;
 # its overlapping scraper packages are intentional.
 
 # Web framework

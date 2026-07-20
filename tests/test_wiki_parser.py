@@ -5,8 +5,10 @@ from pathlib import Path
 
 import pytest
 
-# Add lolstaticdata to path
-_LOLSTATICDATA_ROOT = Path(__file__).resolve().parent.parent / "lolstaticdata"
+# Add the vendored lolstaticdata to path
+_LOLSTATICDATA_ROOT = (
+    Path(__file__).resolve().parent.parent / "vendor" / "lolstaticdata"
+)
 sys.path.insert(0, str(_LOLSTATICDATA_ROOT))
 
 # Apply the Windows download_soup patch before importing the parser

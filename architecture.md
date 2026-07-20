@@ -5,7 +5,7 @@ Pipeline and module shape. One concept, one home — this file says which home.
 ## The pipeline
 
 ```
-wiki (lolstaticdata, external)
+wiki (vendor/lolstaticdata, external)
   → data_updater.py      (network fetch, writes cache)      [writes]
   → data/*.json          (cache; patch-stamped)
   → data_fetcher.py      (all reads go through here)        [reads]
@@ -20,7 +20,10 @@ wiki (lolstaticdata, external)
 ## Module homes
 
 **Data layer**
-- `lolstaticdata/` — external wiki-scraper code. Don't refactor; minimal targeted fixes only.
+- `vendor/lolstaticdata/` — external wiki-scraper code. Don't refactor; minimal targeted
+  fixes only. Its root also collects the scraper's own gitignored scratch output
+  (`__cache__/`, `champions/`, `items/`, `champions.json`, `items.json`) — never read at
+  runtime; see `vendor/README.md`.
 - `src/calculator/data_updater.py` — the ONLY module with network calls. Fetches wiki data,
   writes the `data/` cache.
 - `src/calculator/data_fetcher.py` — the ONLY read path for cached data. No network.
@@ -129,8 +132,9 @@ wiki (lolstaticdata, external)
 ## Dependencies
 
 - Root `requirements.txt` defines the calculator application, test, and lint environment.
-- `lolstaticdata/requirements.txt` belongs to the vendored external project. Its overlap with
-  the root manifest is intentional; it is not a second calculator environment definition.
+- `vendor/lolstaticdata/requirements.txt` belongs to the vendored external project. Its
+  overlap with the root manifest is intentional; it is not a second calculator environment
+  definition.
 
 ## Known limits (deliberate)
 

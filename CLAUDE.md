@@ -4,7 +4,7 @@ Module map and pipeline: see `architecture.md`.
 
 ## Important Rules
 
-1. **lolstaticdata/ is external code** — Don't refactor or restructure it. Minimal, targeted bug fixes are OK when they block functionality (e.g., parser crashes on specific champions).
+1. **vendor/lolstaticdata/ is external code** — Don't refactor or restructure it. Minimal, targeted bug fixes are OK when they block functionality (e.g., parser crashes on specific champions).
 2. **Always use the caching layer** — `data_fetcher.py` reads from `data/`. Never bypass it or add network calls to it. Data updates go through `data_updater.py`.
 3. **All calculation functions must have corresponding tests.**
 4. **Run tests before considering any task complete.**
@@ -50,5 +50,6 @@ After completing any task:
 ## Known Quirks
 
 - **Windows filenames:** `data_updater.py` monkey-patches `lolstaticdata`'s `download_soup` to strip colons from cache filenames (illegal on Windows)
+- **Three things are named "champions":** `src/calculator/champions/` (our champion code), `data/champions.json` (our tracked data cache), and `vendor/lolstaticdata/champions*` (the scraper's gitignored scratch output — not read at runtime). See `vendor/README.md` and `data/README.md`.
 - **Wiki parser bugs:** Some champions (Heimerdinger, Sona, Karma, Nidalee) previously crashed the lolstaticdata parser due to `nvalues=None` — these were patched in the local copy
 - **Item names:** Parser configuration and build scenarios use the exact names in `data/items.json`; verify the cached name before adding an item.

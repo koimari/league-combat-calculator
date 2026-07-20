@@ -264,7 +264,7 @@ def print_detail(names):
 def clear_wiki_caches():
     """Delete lolstaticdata's page caches so the pull fetches the new patch."""
     for cache_dir in ("__cache__", "__wiki__"):
-        path = REPO_ROOT / "lolstaticdata" / cache_dir
+        path = REPO_ROOT / "vendor" / "lolstaticdata" / cache_dir
         if path.exists():
             shutil.rmtree(path)
             print(f"Cleared {path.relative_to(REPO_ROOT)}")
