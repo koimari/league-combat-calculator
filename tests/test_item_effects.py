@@ -209,9 +209,11 @@ class TestResolveDamageEffects:
         assert effects.magic_true_crit.health_threshold == pytest.approx(0.40)
         assert effects.ultimate_auto_buff is not None
         assert effects.ultimate_auto_buff.empowered_auto_count == 3
-        assert effects.basic_amp_source == "Hexoptics C44"
+        assert effects.basic_amp is not None
+        assert effects.basic_amp.item_name == "Hexoptics C44"
         assert effects.ability_amp_source == "Actualizer"
-        assert effects.basic_amp == pytest.approx(1.10)
+        assert effects.basic_amp.multiplier(is_melee=False) == pytest.approx(1.10)
+        assert effects.basic_amp.multiplier(is_melee=True) == pytest.approx(1.02)
         assert effects.magic_amp == pytest.approx(1.12)
         assert effects.hypershot_amp == pytest.approx(1.10)
         assert effects.ability_amp is not None

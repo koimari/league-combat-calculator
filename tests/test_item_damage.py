@@ -3065,17 +3065,24 @@ class TestHeartsteelDamage:
 class TestHexopticsC44BasicDamageAmp:
     """Tests for Hexoptics C44 Magnification basic damage amplification."""
 
-    def test_amp_with_item(self) -> None:
-        """With Hexoptics C44, amp should be 10% (1.10 multiplier)."""
+    def test_ranged_amp_with_item(self) -> None:
+        """Ranged champs are assumed at max distance: full 10% amp."""
         items = [{"name": "Hexoptics C44"}]
-        result = resolve_damage_effects(items).basic_amp
-        assert abs(result - 1.10) < 0.001
+        effect = resolve_damage_effects(items).basic_amp
+        assert effect is not None
+        assert effect.multiplier(is_melee=False) == pytest.approx(1.10)
+
+    def test_melee_amp_with_item(self) -> None:
+        """Melee champs are assumed at ~100 units: 2% amp, not 10%."""
+        items = [{"name": "Hexoptics C44"}]
+        effect = resolve_damage_effects(items).basic_amp
+        assert effect is not None
+        assert effect.multiplier(is_melee=True) == pytest.approx(1.02)
 
     def test_no_amp_without_item(self) -> None:
-        """Without Hexoptics C44, basic amp should be 1.0."""
+        """Without Hexoptics C44, there is no basic amp effect."""
         items = [{"name": "Infinity Edge"}]
-        result = resolve_damage_effects(items).basic_amp
-        assert result == 1.0
+        assert resolve_damage_effects(items).basic_amp is None
 
     def test_parsed_values_from_json(self) -> None:
         """Verify parser extracts correct values from item JSON data."""
@@ -3086,6 +3093,7 @@ class TestHexopticsC44BasicDamageAmp:
         assert effect["type"] == "basic_damage_amp"
         assert abs(effect["max_amp"] - 0.10) < 0.001
         assert abs(effect["max_distance"] - 500.0) < 0.1
+        assert abs(effect["melee_assumed_distance"] - 100.0) < 0.1
 
     def test_fight_damage_auto_attacks_amplified(self) -> None:
         """Auto attack damage should be 10% higher with Hexoptics C44."""
@@ -3138,6 +3146,40 @@ class TestHexopticsC44BasicDamageAmp:
         assert (
             abs(ratio - 1.10) < 0.02
         ), f"Expected ~10% more damage, got ratio {ratio:.3f}"
+
+    def test_fight_damage_melee_gets_reduced_amp(self) -> None:
+        """A melee champion fights inside ~100 units, so the amp is ~2%."""
+        champion_stats = {
+            "attack_damage": 100.0,
+            "base_attack_damage": 70.0,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 0.625,
+            "critical_strike_chance": 0.0,
+            "magic_penetration_flat": 0.0,
+            "magic_penetration_percent": 0.0,
+            "armor_penetration_flat": 0.0,
+            "armor_penetration_percent": 0.0,
+            "lethality": 0.0,
+            "ability_power": 0.0,
+            "is_melee": True,
+            "level": 18,
+        }
+        config = FightConfig(
+            target_health=2000,
+            target_armor=100,
+            target_magic_resistance=100,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        fight_with = calculate_fight_damage(
+            champion_stats, {}, [{"name": "Hexoptics C44"}], config
+        )
+        fight_without = calculate_fight_damage(champion_stats, {}, [], config)
+        ratio = fight_with["total_damage"] / fight_without["total_damage"]
+        assert (
+            abs(ratio - 1.02) < 0.005
+        ), f"Expected ~2% more damage for melee, got ratio {ratio:.3f}"
 
     def test_breakdown_shows_amplification(self) -> None:
         """Breakdown should include a 'Damage Amplification' entry."""

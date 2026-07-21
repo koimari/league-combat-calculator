@@ -328,9 +328,12 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Hexoptics C44": {
         "type": "basic_damage_amp",
         # Magnification: 0-10% increased basic damage based on distance
-        # 1% per 50 units, max 10% at 500 units
+        # 1% per 50 units, max 10% at 500 units. Ranged champs are assumed
+        # at max distance (full amp); melee champs at ~100 units, which
+        # scales the amp down linearly (2% with current values).
         "max_amp": 0.10,
         "max_distance": 500.0,
+        "melee_assumed_distance": 100.0,
     },
     "Horizon Focus": {
         "type": "hypershot_amp",
@@ -607,6 +610,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Blade of the Ruined King": frozenset({"min_damage"}),
     "Experimental Hexplate": frozenset({"bonus_attack_speed_percent"}),
+    "Hexoptics C44": frozenset({"melee_assumed_distance"}),
     "Hextech Gunblade": frozenset({"base_min", "base_max", "cooldown"}),
     "Hextech Rocketbelt": frozenset({"cooldown"}),
     "Malignance": frozenset({"base", "ap_ratio", "duration"}),
@@ -953,6 +957,28 @@ class AbilityAmplifierEffect:
 
 
 @dataclass(frozen=True, slots=True)
+class BasicAmplifierEffect:
+    """Distance-scaled basic damage amplifier (Hexoptics C44 Magnification)."""
+
+    item_name: str
+    max_amp: float
+    max_distance: float
+    melee_assumed_distance: float
+
+    def multiplier(self, is_melee: bool) -> float:
+        """Return the amp multiplier under the fight's range assumption.
+
+        Ranged champions are assumed to attack from max Magnification
+        distance (full amp); melee champions attack from roughly
+        ``melee_assumed_distance`` units, scaling the amp down linearly.
+        """
+        if is_melee:
+            distance = min(self.melee_assumed_distance, self.max_distance)
+            return 1.0 + self.max_amp * (distance / self.max_distance)
+        return 1.0 + self.max_amp
+
+
+@dataclass(frozen=True, slots=True)
 class ArmorReductionEffect:
     """Average stacking armor reduction for one fight."""
 
@@ -995,11 +1021,10 @@ class BuildDamageEffects:
     magic_true_crit: MagicTrueCritEffect | None = None
     damage_amplifiers: tuple[DamageAmplifierEffect, ...] = ()
     magic_amp: float = 1.0
-    basic_amp: float = 1.0
+    basic_amp: BasicAmplifierEffect | None = None
     ability_amp: AbilityAmplifierEffect | None = None
     hypershot_amp: float = 1.0
     armor_reduction: ArmorReductionEffect | None = None
-    basic_amp_source: str | None = None
     ability_amp_source: str | None = None
     execute: ExecuteEffect | None = None
     stacking_mr_reduction: StackingReductionEffect | None = None
@@ -1654,11 +1679,10 @@ def resolve_damage_effects(
     magic_true_crit: MagicTrueCritEffect | None = None
     damage_amplifiers: list[DamageAmplifierEffect] = []
     magic_amp = 1.0
-    basic_amp = 1.0
+    basic_amp: BasicAmplifierEffect | None = None
     ability_amp: AbilityAmplifierEffect | None = None
     hypershot_amp = 1.0
     armor_reduction: ArmorReductionEffect | None = None
-    basic_amp_source: str | None = None
     ability_amp_source: str | None = None
     execute: ExecuteEffect | None = None
     stacking_mr_reduction: StackingReductionEffect | None = None
@@ -1735,8 +1759,13 @@ def resolve_damage_effects(
                 required.number("crit_multiplier"),
             )
         elif effect_type == "basic_damage_amp":
-            basic_amp += _RequiredValues(item_name, values).number("max_amp")
-            basic_amp_source = item_name
+            required = _RequiredValues(item_name, values)
+            basic_amp = BasicAmplifierEffect(
+                item_name=item_name,
+                max_amp=required.number("max_amp"),
+                max_distance=required.number("max_distance"),
+                melee_assumed_distance=required.number("melee_assumed_distance"),
+            )
         elif effect_type == "ability_damage_amp":
             required = _RequiredValues(item_name, values)
             ability_amp = AbilityAmplifierEffect(
@@ -1826,7 +1855,6 @@ def resolve_damage_effects(
         ability_amp=ability_amp,
         hypershot_amp=hypershot_amp,
         armor_reduction=armor_reduction,
-        basic_amp_source=basic_amp_source,
         ability_amp_source=ability_amp_source,
         execute=execute,
         stacking_mr_reduction=stacking_mr_reduction,

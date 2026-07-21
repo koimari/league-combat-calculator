@@ -936,7 +936,11 @@ def _resolve_combat_state(
             if damage_effects.ability_amp is not None
             else 1.0
         ),
-        basic_amp=damage_effects.basic_amp,
+        basic_amp=(
+            damage_effects.basic_amp.multiplier(is_melee)
+            if damage_effects.basic_amp is not None
+            else 1.0
+        ),
         hypershot_amp=damage_effects.hypershot_amp,
         attack_speed=attack_speed,
         attack_speed_ratio=as_ratio,
@@ -1612,7 +1616,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
     # Add basic damage amp breakdown entry (informational — already applied)
     if basic_amp > 1.0:
-        amp_name = state.damage_effects.basic_amp_source or "Basic Damage"
+        amp_effect = state.damage_effects.basic_amp
+        amp_name = amp_effect.item_name if amp_effect is not None else "Basic Damage"
         basic_amp_bonus = (
             (auto_total + fiendhunter_true_total) * (basic_amp - 1.0) / basic_amp
         )
