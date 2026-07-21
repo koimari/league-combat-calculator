@@ -868,8 +868,21 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
             continue
         for stat_key, buff_value in stat_buff.items():
             stats[stat_key] = stats.get(stat_key, 0.0) + buff_value
-        # Recalculate attack_damage if bonus_attack_damage was buffed
-        if "bonus_attack_damage" in stat_buff:
+        # Recalculate attack_damage if either AD component was buffed
+        # (base AD buffs exist too: Gnar's Mega form is a base-stat grant,
+        # which also feeds base-AD item scalings like spellblade)
+        if "base_attack_damage" in stat_buff:
+            # Items that convert base AD to bonus AD (Sterak's Gage) grow
+            # with a base-AD buff, exactly as in-game on Mega Gnar. The
+            # accessor is linear, so the delta composes.
+            steraks_delta = item_effects.steraks_bonus_ad(
+                state.items, stat_buff["base_attack_damage"]
+            )
+            if steraks_delta:
+                stats["bonus_attack_damage"] = (
+                    stats.get("bonus_attack_damage", 0.0) + steraks_delta
+                )
+        if "bonus_attack_damage" in stat_buff or "base_attack_damage" in stat_buff:
             stats["attack_damage"] = stats.get("base_attack_damage", 0.0) + stats.get(
                 "bonus_attack_damage", 0.0
             )
@@ -916,6 +929,7 @@ class RotationResult:
     has_navori: bool = False
     navori_refund: float = 0.0
     autos_per_second: float = 0.0
+    last_cast_time: float = 0.0  # timed mode: when the final recast lands
 
 
 def _evaluate_cast_parts(
@@ -1048,6 +1062,12 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                         cd, result.autos_per_second, result.navori_refund
                     )
                 num_casts = 1 + int(state.fight_duration_seconds / cd) if cd > 0 else 1
+                # Recasts land on cooldown: the last one at (N-1) x cd.
+                # Burns use the fight-wide max as their final refresh.
+                if cd > 0 and num_casts > 1:
+                    result.last_cast_time = max(
+                        result.last_cast_time, (num_casts - 1) * cd
+                    )
 
         recast_counts[ability_key] = num_casts
 
@@ -1744,7 +1764,10 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         # damage that also refreshes burns.  Hatefog starts at R cast
         # (not at fight start), so its refresh window begins partway
         # through the cast_spread.
-        dot_refresh_end = cast_spread  # default: last ability hit
+        # In timed mode, abilities recast on cooldown across the whole
+        # fight — the last recast (rotation.last_cast_time) refreshes
+        # the burn far beyond the GCD combo spread.
+        dot_refresh_end = max(cast_spread, rotation.last_cast_time)
         for ultimate_proc in state.damage_effects.ultimate_procs:
             if "R" in ability_damages:
                 # R1 lands r_extra dashes (x0.5s each) before the last hit

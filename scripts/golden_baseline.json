@@ -4536,10 +4536,13 @@
             "DamagePart(physical, amount=123.98, count=1, hp_scaled=no, crit_effectiveness=0.0)"
           ],
           "rank": 1,
+          "stat_buff": {
+            "bonus_attack_speed": 40.0
+          },
           "total_raw": 123.98
         },
         "Q": {
-          "cooldown": 10.0,
+          "cooldown": 6.0,
           "damage_type": "physical",
           "name": "Boomerang Throw",
           "parts": [
@@ -4548,23 +4551,18 @@
           "rank": 5,
           "total_raw": 275.0
         },
-        "R": {
-          "cooldown": 60.0,
-          "damage_type": "physical",
-          "name": "GNAR!",
-          "parts": [
-            "DamagePart(physical, amount=300.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
-          ],
-          "rank": 2,
-          "total_raw": 300.0
-        },
         "W": {
+          "damage_type": "magic",
           "name": "Hyper",
           "on_hit": {
-            "damage_per_hit": 220.0,
+            "damage_per_hit": 73.33,
             "damage_type": "magic",
-            "name": "Hyper (on-hit)"
-          }
+            "name": "Hyper",
+            "stacks_required": 3
+          },
+          "parts": [],
+          "rank": 3,
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -27054,12 +27052,12 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "0de22ac2a8d09114ed8db94c05d92eab46f64b84",
+    "git_head": "c0e58c19e1e901bd24f1e0b1118b2eeec7db35ac",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,
     "patch_last_changed_max": "26.14",
-    "registered_champion_count": 12
+    "registered_champion_count": 13
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -28440,6 +28438,138 @@
               "on_hit_Kraken Slayer": 372.25
             },
             "total_damage": 4885.23
+          }
+        }
+      }
+    },
+    "Gnar": {
+      "11": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 82.65,
+            "Q": 183.33,
+            "W": 0.0,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 421.35
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 82.65,
+            "Q": 183.33,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 265.99
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 93.57,
+            "Q": 353.77,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 447.34
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 82.65,
+              "Q": 183.33,
+              "W": 0.0,
+              "auto_attacks": 352.0,
+              "on_hit_ability_W": 1059.2,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 1863.62
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 82.65,
+              "Q": 183.33,
+              "W": 0.0,
+              "auto_attacks": 352.0,
+              "on_hit_ability_W": 314.29
+            },
+            "total_damage": 932.27
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 93.57,
+              "Q": 353.77,
+              "W": 0.0,
+              "auto_attacks": 2118.23,
+              "on_hit_Kraken Slayer": 296.79,
+              "on_hit_ability_W": 366.67
+            },
+            "total_damage": 3229.03
+          }
+        }
+      },
+      "18": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 201.99,
+            "Q": 205.0,
+            "W": 0.0,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 562.35
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 201.99,
+            "Q": 205.0,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 406.99
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 228.66,
+            "Q": 378.3,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 606.97
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 201.99,
+              "Q": 205.0,
+              "W": 0.0,
+              "auto_attacks": 608.0,
+              "on_hit_ability_W": 1625.6,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 2827.02
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 201.99,
+              "Q": 205.0,
+              "W": 0.0,
+              "auto_attacks": 608.0,
+              "on_hit_ability_W": 609.52
+            },
+            "total_damage": 1624.51
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 228.66,
+              "Q": 378.3,
+              "W": 0.0,
+              "auto_attacks": 3014.83,
+              "on_hit_Kraken Slayer": 580.63,
+              "on_hit_ability_W": 685.71
+            },
+            "total_damage": 4888.14
           }
         }
       }

@@ -63,6 +63,26 @@ When a user reports a bug or incorrect behavior after a champion is implemented,
 - **Root cause:** Terminus pen was computed as a weighted average across autos and applied to the global `armor_pen_percent` / `magic_pen_percent` variables, which were then used for both ability and auto-attack damage. Terminus pen stacks only build from auto attacks, so abilities should get zero Terminus pen.
 - **Pattern to watch for:** Item penetration that stacks via auto attacks (Terminus Juxtaposition) must use separate pen variables for abilities vs autos. Split into `ability_*_pen_percent` (no item-stacking pen) and `auto_*_pen_percent` (with weighted average). Switch from ability pen to auto pen after the ability damage loop.
 
+### Gnar — Mega form stats wrong: wiki stat box stale vs game files
+- **What happened:** Mega Q/W were ~2 too high and R was 318 instead of 300 (level 18, no items, 100 armor). The Mega AD delta was implemented as 6 + 2.5/lvl (→48.5 @18) from the wiki's "6 − 48.5" range; the real game files (Community Dragon `gnarbig.bin.json` vs `gnar.bin.json` CharacterRecords) give 66/5.5 vs 60/3.2 → 6 + 2.3/lvl (→45.1 @18). Armor/MR deltas were also slightly off.
+- **Root cause:** The wiki's Mega Gnar stat box is hand-maintained prose and was stale (claimed 5.7 AD growth; the game has 5.5). ddragon is no help — it lists Gnar's AD growth as 0 (handled by the transform script).
+- **Pattern to watch for:** Transform/multi-form champions (Gnar, Nidalee, Jayce, Elise, Shyvana...) — verify form stat deltas against Community Dragon game files (`<unit>.bin.json` CharacterRecords/Root), never the wiki stat box alone. An in-game practice-tool measurement of two AD-scaling abilities pins total AD exactly.
+
+### Gnar — form stat grant misclassified as bonus AD
+- **What happened:** R (75% **bonus** AD ratio) scaled off Mega's +45.1 AD; in-game an itemless Mega Gnar has 0 bonus AD and R deals its flat base.
+- **Root cause:** Mega Gnar's AD increase is a BASE-stat increase (it's GnarBig's own base AD block), but the module emitted it as `bonus_attack_damage`. Base vs bonus also matters for Sheen-type base-AD item scalings.
+- **Pattern to watch for:** When a form/steroid grants AD, determine base vs bonus explicitly. Form swaps that are separate in-game units grant BASE stats; ability steroids (Vayne R, Aatrox R) grant BONUS AD. The fight engine supports both keys (`base_attack_damage` / `bonus_attack_damage`) and re-resolves total AD for either.
+
+### Gnar — UI stats panel ignored the form toggle
+- **What happened:** Selecting Mega Gnar changed damage numbers but the champion stats panel kept showing Mini stats (HP 1883/AD 114 instead of 2714/159).
+- **Root cause:** `run_fight` reported the pre-buff base+items stats dict; the fight engine applied `stat_buff` entries to its own copy, which was discarded. Fixed in `pipeline.py`: the reported `champion_stats` is now the fight engine's post-buff copy ("fight-effective stats") — this also made Vayne/Aatrox R steroids visible in the panel.
+- **Pattern to watch for:** After implementing any stat-buff champion, verify `run_fight()["champion_stats"]` reflects the buff — the parse-context mutation alone only feeds ability ratios, not the display.
+
+### Gnar — Sterak's Gage didn't grow with Mega's base AD
+- **What happened:** Sterak's (45% base AD → bonus AD) gave ~55 bonus AD on Mega Gnar at level 20 instead of ~78.
+- **Root cause:** Sterak's is computed at build-stats time from pre-buff base AD; the Mega base-AD grant lands later (BUFF phase / fight engine). Fixed: `_apply_stat_buff_ultimates` now recomputes base-AD-derived item stats (via the `item_effects.steraks_bonus_ad` accessor — linear, so the delta composes) when a `base_attack_damage` stat_buff lands.
+- **Pattern to watch for:** When a champion grants BASE stats via `stat_buff`, check every item that converts a base stat (Sterak's: base AD; Overlord's Bloodmail: bonus health — correctly unaffected by base-HP grants). The recompute hook lives in `_apply_stat_buff_ultimates`; extend it there, numbers stay in `item_effects`.
+
 ### Amumu — Q damage doubled by fight engine
 - **What happened:** Q showed ~265 damage instead of ~110 for a single cast with Liandry's at level 18 against 100 MR.
 - **Root cause:** Two compounding issues: (1) Q result had both `damage_per_cast`/`total_casts` AND pre-multiplied `magic_damage`, causing fight engine double-counting. (2) Module pre-baked `q_casts=2` into `magic_damage`, but fight engine already determines cast count from cooldown. In one-rotation mode the engine casts once, but `magic_damage` already had 2 casts of damage.

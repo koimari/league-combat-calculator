@@ -1030,6 +1030,98 @@ class TestBurnRefreshWindow:
         assert actual == pytest.approx(expected, rel=1e-6)
 
 
+class TestBurnTimedModeUptime:
+    """In time-based mode, recasting abilities keep refreshing the burn.
+
+    The refresh window must run to the fight's LAST cast (spaced by
+    cooldowns across the duration), not the 0.5s-per-cast combo spread —
+    user bug: Liandry's in a 10s fight showed barely more than one
+    3-second application (~240 raw) instead of near-continuous uptime
+    (in-game measured ~2% max HP/s for the whole fight).
+    """
+
+    _STATS = {
+        "attack_damage": 60.0,
+        "base_attack_damage": 60.0,
+        "attack_speed": 0.7,
+        "attack_speed_ratio": 0.625,
+        "critical_strike_chance": 0.0,
+        "magic_penetration_flat": 0.0,
+        "magic_penetration_percent": 0.0,
+        "armor_penetration_percent": 0.0,
+        "lethality": 0.0,
+        "ability_power": 100.0,
+        "is_melee": False,
+        "level": 18,
+    }
+
+    def _fight(self, abilities, duration=10.0):
+        from src.calculator.data_fetcher import get_item_by_name
+
+        return calculate_fight_damage(
+            dict(self._STATS),
+            abilities,
+            [get_item_by_name("Liandry's Torment")],
+            FightConfig(
+                target_health=4000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=duration,
+                auto_attack_uptime=0.0,
+                one_rotation=False,
+                cast_order=[k for k in ("Q", "R") if k in abilities],
+            ),
+        )
+
+    def _expected_burn(self, fight, uptime_seconds):
+        from src.calculator.resistance import apply_resistance
+
+        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        inputs = DamageInputs(dict(self._STATS), 18, False, 4000.0, 4000.0)
+        raw = burn.source.raw_damage(inputs) * (uptime_seconds / burn.duration)
+        return apply_resistance(raw, fight["effective_mr"])
+
+    @staticmethod
+    def _q_entry(cooldown):
+        return {
+            "name": "Test Q",
+            "parts": (DamagePart("magic", 200.0),),
+            "total_raw": 200.0,
+            "damage_type": "magic",
+            "cooldown": cooldown,
+        }
+
+    def test_recasting_ability_refreshes_burn_to_fight_end(self) -> None:
+        """Q on a 4s cooldown over 10s casts at t=0/4/8: the burn is
+        refreshed at t=8 and ticks to the fight end — uptime 10s
+        (2% max HP/s for the whole fight), not combo-spread + 3s."""
+        fight = self._fight({"Q": self._q_entry(4.0)})
+        burn_key = next(k for k in fight["breakdown"] if k.startswith("burn_"))
+        actual = fight["breakdown"][burn_key]["total_damage"]
+        assert actual == pytest.approx(self._expected_burn(fight, 10.0), rel=1e-6)
+
+    def test_single_cast_abilities_keep_combo_spread(self) -> None:
+        """Nothing recasts (Q cd 100, R cd 60): the burn window stays
+        the GCD combo spread + burn duration — a sparse caster must NOT
+        get fight-long burn uptime."""
+        fight = self._fight(
+            {
+                "Q": self._q_entry(100.0),
+                "R": {
+                    "name": "Test R",
+                    "parts": (DamagePart("magic", 300.0),),
+                    "total_raw": 300.0,
+                    "damage_type": "magic",
+                    "cooldown": 60.0,
+                },
+            }
+        )
+        burn_key = next(k for k in fight["breakdown"] if k.startswith("burn_"))
+        actual = fight["breakdown"][burn_key]["total_damage"]
+        # 2 casts, 0.5s apart -> last hit t=0.5, burn to t=3.5
+        assert actual == pytest.approx(self._expected_burn(fight, 3.5), rel=1e-6)
+
+
 class TestBloodsongSpellbladeAndExposeWeakness:
     """Tests for Bloodsong's Spellblade and Expose Weakness passives."""
 

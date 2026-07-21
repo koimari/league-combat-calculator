@@ -41,6 +41,7 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Anivia": "anivia",
     "Annie": "annie",
     "Ashe": "ashe",
+    "Gnar": "gnar",
     "Kog'Maw": "kogmaw",
     "Vayne": "vayne",
 }

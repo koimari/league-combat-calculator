@@ -57,6 +57,7 @@ amumu_data = _champion_fixture("Amumu")
 anivia_data = _champion_fixture("Anivia")
 annie_data = _champion_fixture("Annie")
 ashe_data = _champion_fixture("Ashe")
+gnar_data = _champion_fixture("Gnar")
 # Data key differs from the display/dispatcher name "Kog'Maw".
 kogmaw_data = _champion_fixture("KogMaw")
 vayne_data = _champion_fixture("Vayne")

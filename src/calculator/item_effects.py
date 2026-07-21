@@ -1979,7 +1979,7 @@ def _bloodmail_bonus_ad(
     return ratio * bonus_health
 
 
-def _steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
+def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
     """Sterak's Gage The Claws that Catch: % of base AD as bonus AD.
 
     Args:
@@ -2097,7 +2097,7 @@ def resolve_stat_effects(
         bonus_ad=(
             _muramana_bonus_ad(items, max_mana)
             + _bloodmail_bonus_ad(items, bonus_health)
-            + _steraks_bonus_ad(items, base_attack_damage)
+            + steraks_bonus_ad(items, base_attack_damage)
         ),
         attack_speed_percent=_passive_attack_speed_bonus(items, is_melee),
         bonus_resists=terminus_resists,

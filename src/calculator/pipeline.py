@@ -126,10 +126,13 @@ def run_fight(
         champion_options=params.champion_options,
     )
 
-    result = calculate_fight_damage(
-        dict(champion_stats), ability_damages, items, params
-    )
-    result["champion_stats"] = champion_stats
+    # The fight engine applies ability stat buffs (Mega Gnar's form
+    # stats, Vayne/Aatrox R, ...) to this copy in place — report THESE
+    # as the champion's stats so the UI panel shows the fight-effective
+    # values, not the pre-buff base+items snapshot.
+    fight_stats = dict(champion_stats)
+    result = calculate_fight_damage(fight_stats, ability_damages, items, params)
+    result["champion_stats"] = fight_stats
     auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
     result["auto_attack_damage"] = auto_damage
     result["ability_damage"] = ability_damage

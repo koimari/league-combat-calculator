@@ -22,7 +22,7 @@ from src.calculator.item_effects import (
     _mana_to_ap_bonus,
     _muramana_bonus_ad,
     _passive_attack_speed_bonus,
-    _steraks_bonus_ad,
+    steraks_bonus_ad,
     _terminus_max_stack_bonuses,
     refresh_item_effects,
     resolve_damage_effects,
@@ -414,7 +414,7 @@ class TestBonusAdConversions:
 
     def test_steraks(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(monkeypatch, "Sterak's Gage", base_ad_to_bonus_ad_ratio=0.45)
-        assert _steraks_bonus_ad(_build("Sterak's Gage"), 100) == 45.0
+        assert steraks_bonus_ad(_build("Sterak's Gage"), 100) == 45.0
 
 
 class TestTerminusMaxStackBonuses:
@@ -463,7 +463,7 @@ class TestMissingKeyFailsLoudly:
         broken.pop("base_ad_to_bonus_ad_ratio", None)
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Sterak's Gage", broken)
         with pytest.raises(KeyError, match="base_ad_to_bonus_ad_ratio"):
-            _steraks_bonus_ad(_build("Sterak's Gage"), 100)
+            steraks_bonus_ad(_build("Sterak's Gage"), 100)
 
 
 class TestItemEffectProvenance:
