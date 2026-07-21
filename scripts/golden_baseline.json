@@ -1682,6 +1682,19 @@
           ],
           "rank": 5,
           "total_raw": 240.0
+        },
+        "passive": {
+          "damage_type": "magic",
+          "name": "Traveler's Call",
+          "on_hit": {
+            "damage_per_hit": 72.0,
+            "damage_type": "magic",
+            "max_procs": 3,
+            "name": "Traveler's Call (Meep)"
+          },
+          "parts": [],
+          "rank": 11,
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -27055,12 +27068,12 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "78eb571ad7e60c4a536fca740d18ec56752d6a46",
+    "git_head": "5148ac820a1bf7e9706c84fbc00c0c10be1bbe9c",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,
     "patch_last_changed_max": "26.14",
-    "registered_champion_count": 16
+    "registered_champion_count": 17
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -28848,6 +28861,114 @@
               "on_hit_Kraken Slayer": 142.86
             },
             "total_damage": 1745.72
+          }
+        }
+      }
+    },
+    "Bard": {
+      "11": {
+        "magic_build": {
+          "breakdown_totals": {
+            "Q": 474.88,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 630.24
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "Q": 171.43,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 171.43
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "Q": 171.43,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 171.43
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "Q": 474.88,
+              "auto_attacks": 156.0,
+              "on_hit_ability_passive": 597.12,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 1414.43
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "Q": 171.43,
+              "auto_attacks": 156.0,
+              "on_hit_ability_passive": 154.29
+            },
+            "total_damage": 481.71
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "Q": 171.43,
+              "auto_attacks": 1450.75,
+              "on_hit_Kraken Slayer": 123.61,
+              "on_hit_ability_passive": 154.29
+            },
+            "total_damage": 1900.08
+          }
+        }
+      },
+      "18": {
+        "magic_build": {
+          "breakdown_totals": {
+            "Q": 474.88,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 630.24
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "Q": 171.43,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 171.43
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "Q": 171.43,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 171.43
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "Q": 474.88,
+              "auto_attacks": 274.67,
+              "on_hit_ability_passive": 597.12,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 1533.1
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "Q": 171.43,
+              "auto_attacks": 274.67,
+              "on_hit_ability_passive": 154.29
+            },
+            "total_damage": 600.38
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "Q": 171.43,
+              "auto_attacks": 1606.42,
+              "on_hit_Kraken Slayer": 152.65,
+              "on_hit_ability_passive": 154.29
+            },
+            "total_damage": 2084.78
           }
         }
       }

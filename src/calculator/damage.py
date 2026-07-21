@@ -31,7 +31,9 @@ on-hit system via two mechanisms:
         }
 
     The fight engine processes these alongside item on-hits, and phantom
-    hits automatically double them.
+    hits automatically double them. An optional ``max_procs`` key caps the
+    number of applications (Bard meeps: stock + recharge availability) —
+    autos beyond the cap land without the on-hit damage.
 """
 
 import math
@@ -1677,6 +1679,12 @@ def _layer_on_hit_effects(
 
         hits = on_hit_hits + (rotation.total_ability_hits if counts_ability_hits else 0)
 
+        # Availability-limited on-hits (Bard meeps: stock + recharge)
+        # apply at most max_procs times; autos beyond the cap are plain.
+        max_procs = on_hit_data.get("max_procs")
+        if max_procs is not None:
+            hits = min(hits, int(max_procs))
+
         stacks_required = on_hit_data.get("stacks_required", 0)
         if stacks_required > 1 and counts_ability_hits:
             # Shared auto+ability stack counter (e.g. Aurora P): only
@@ -1688,7 +1696,12 @@ def _layer_on_hit_effects(
             # Autos-only on-hit (e.g. Vayne W): smooth per-hit average.
             ability_on_hit_damage = per_hit * hits
         on_hit_total += ability_on_hit_damage
-        result.static_on_hit_per_hit += per_hit
+        if max_procs is None:
+            result.static_on_hit_per_hit += per_hit
+        elif on_hit_hits > 0:
+            # Capped on-hits don't land on every auto — feed the HP
+            # simulations (BoRK, spellblade doubling) the per-auto average.
+            result.static_on_hit_per_hit += ability_on_hit_damage / on_hit_hits
 
         ability_name = on_hit_data.get("name", f"{ability_key} (on-hit)")
         if stacks_required > 1:
