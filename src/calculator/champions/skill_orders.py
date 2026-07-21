@@ -48,6 +48,11 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "Q", "E", "Q", "E", "R", "E",
         "E", "W", "W", "R", "W", "W",
     ],
+    "Aurora": [
+        "Q", "E", "W", "Q", "Q", "R",
+        "Q", "E", "Q", "E", "R", "E",
+        "E", "W", "W", "R", "W", "W",
+    ],
     # ── W max first (standard pattern) ──
     "Kog'Maw": [
         "Q", "W", "E", "W", "W", "R",

@@ -13,9 +13,12 @@ no other parse path.
 
 ## Triage: three tiers, cheapest first
 
-Work down this ladder and stop at the first tier that fits. Most champions
-stop at tier 1 — every champion that needs a file is a small failure of the
-generic path, so don't skip ahead "just in case."
+Work down this ladder and stop at the first tier that fits. In practice
+every champion analyzed so far has needed a file — kits are unique enough
+that a clean generic parse is the exception, and generic-path output is an
+unvalidated estimate until someone checks it. Still start at tier 1:
+verifying what the generic parse gets right scopes the module to the parts
+that genuinely need custom handling.
 
 1. **Nothing (generic path).** Champions absent from `_CHAMPION_MODULES`
    run `GENERIC_SLOTS` (classifier-driven `simple_damage()` on Q/W/E/R,

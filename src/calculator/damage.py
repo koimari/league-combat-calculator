@@ -924,6 +924,7 @@ class RotationResult:
     """Values produced by the ability rotation and consumed by later steps."""
 
     total_ability_casts: int = 0
+    total_ability_hits: int = 0  # damaging hit instances, for stack counters
     total_muramana_procs: int = 0  # one per cast; multi-cast R counts each
     first_ability_damage: float = 0.0  # Horizon Focus trigger (not amped)
     has_navori: bool = False
@@ -1076,6 +1077,14 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             ult_cast = True
 
         result.total_ability_casts += num_casts
+        # Damaging hit instances: each damaging part is one hit per cast
+        # (Aurora Q = first cast + recast = 2). Feeds on-hit stack
+        # counters that count ability hits (``count_ability_hits``).
+        result.total_ability_hits += num_casts * sum(
+            part.count
+            for part in ability_info["parts"]
+            if part.amount > 0 or part.hp_scaled_damage is not None
+        )
         damage_type = ability_info["damage_type"]
 
         # Determine base MR for this ability: pre-ult or post-ult
@@ -1507,7 +1516,11 @@ class OnHitResult:
     has_current_health_on_hit: bool = False
 
 
-def _layer_on_hit_effects(state: FightState, autos: AutoAttackResult) -> OnHitResult:
+def _layer_on_hit_effects(
+    state: FightState,
+    autos: AutoAttackResult,
+    rotation: RotationResult,
+) -> OnHitResult:
     """Layer per-hit on-hit damage (items and abilities) onto the autos.
 
     Computes Guinsoo's Rageblade phantom hits centrally — they apply ALL
@@ -1515,7 +1528,9 @@ def _layer_on_hit_effects(state: FightState, autos: AutoAttackResult) -> OnHitRe
     applications. Constant-damage on-hit items and ability on-hits
     (e.g. Vayne W stacks, Viego passive) multiply per-hit damage by the
     total application count; BoRK is simulated per-auto against the
-    target's decreasing current HP.
+    target's decreasing current HP. Ability on-hits flagged
+    ``count_ability_hits`` (e.g. Aurora P) also count the rotation's
+    damaging ability hits toward their stack counter.
     """
     resists = state.resists
     breakdown = state.breakdown
@@ -1576,7 +1591,10 @@ def _layer_on_hit_effects(state: FightState, autos: AutoAttackResult) -> OnHitRe
     # Phantom hits also apply these an additional time.
     for ability_key, ability_info in state.ability_damages.items():
         on_hit_data = ability_info.get("on_hit")
-        if not on_hit_data or num_auto_attacks == 0:
+        if not on_hit_data:
+            continue
+        counts_ability_hits = bool(on_hit_data.get("count_ability_hits"))
+        if num_auto_attacks == 0 and not counts_ability_hits:
             continue
 
         raw_per_hit = on_hit_data.get("damage_per_hit", 0.0)
@@ -1586,13 +1604,22 @@ def _layer_on_hit_effects(state: FightState, autos: AutoAttackResult) -> OnHitRe
         dmg_type = on_hit_data.get("damage_type", "magic")
         per_hit = _mitigate(raw_per_hit, dmg_type, resists, magic_amp)
 
-        hits = on_hit_hits
-        ability_on_hit_damage = per_hit * hits
+        hits = on_hit_hits + (rotation.total_ability_hits if counts_ability_hits else 0)
+
+        stacks_required = on_hit_data.get("stacks_required", 0)
+        if stacks_required > 1 and counts_ability_hits:
+            # Shared auto+ability stack counter (e.g. Aurora P): only
+            # complete procs deal damage — partial stacks expire.
+            ability_on_hit_damage = (
+                per_hit * stacks_required * (hits // stacks_required)
+            )
+        else:
+            # Autos-only on-hit (e.g. Vayne W): smooth per-hit average.
+            ability_on_hit_damage = per_hit * hits
         on_hit_total += ability_on_hit_damage
         result.static_on_hit_per_hit += per_hit
 
         ability_name = on_hit_data.get("name", f"{ability_key} (on-hit)")
-        stacks_required = on_hit_data.get("stacks_required", 0)
         if stacks_required > 1:
             # Stack-based on-hit (e.g. Vayne W): display as procs
             proc_count = hits // stacks_required
@@ -2278,7 +2305,7 @@ def calculate_fight_damage(
     autos = _simulate_auto_attacks(state)
 
     # ── On-hit damage layered onto the autos ────────────────────────────
-    on_hits = _layer_on_hit_effects(state, autos)
+    on_hits = _layer_on_hit_effects(state, autos, rotation)
 
     # ── Spellblade + Dusk and Dawn double on-hit ────────────────────────
     spellblade = _add_spellblade_damage(state, rotation, autos, on_hits)
