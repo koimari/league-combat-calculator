@@ -8,7 +8,7 @@ champion-agnostic fight engine; data fetching remains with each consumer.
 from dataclasses import dataclass
 from typing import Any, Mapping
 
-from .champions import parse_champion_abilities
+from .champions import RESERVED_OPTION_KEYS, parse_champion_abilities
 from .damage import FightConfig, calculate_fight_damage, split_auto_vs_ability
 from .stats import calculate_total_stats
 
@@ -116,6 +116,17 @@ def run_fight(
 ) -> dict[str, Any]:
     """Run stats, champion ability parsing, and fight damage as one pipeline."""
     champion_stats = calculate_total_stats(champion_data, level, items)
+
+    # Reserved option keys are pipeline-owned: strip whatever the caller
+    # sent, then hand timed fights the fight window so duration-driven
+    # champion mechanics (e.g. Aurelion Sol's continuous Q channel) can
+    # scale with it. One-rotation mode keeps the per-cast ability models.
+    champion_options = dict(params.champion_options or {})
+    for reserved_key in RESERVED_OPTION_KEYS:
+        champion_options.pop(reserved_key, None)
+    if not params.one_rotation:
+        champion_options["fight_duration_seconds"] = params.fight_duration_seconds
+
     ability_damages = parse_champion_abilities(
         champion_data,
         level,
@@ -123,7 +134,7 @@ def run_fight(
         ability_ranks=params.ability_ranks,
         champion_stats=champion_stats,
         target_stats=params.target_stats(),
-        champion_options=params.champion_options,
+        champion_options=champion_options,
     )
 
     # The fight engine applies ability stat buffs (Mega Gnar's form

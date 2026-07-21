@@ -41,10 +41,21 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Anivia": "anivia",
     "Annie": "annie",
     "Ashe": "ashe",
+    "Aurelion Sol": "aurelion_sol",
     "Gnar": "gnar",
     "Kog'Maw": "kogmaw",
     "Vayne": "vayne",
 }
+
+
+# Option keys owned by the pipeline — never user input, never a module
+# OPTIONS declaration (tests/test_champion_options.py enforces the
+# no-collision rule). ``fight_duration_seconds``: injected by
+# ``pipeline.run_fight`` for timed fights so duration-driven mechanics
+# (e.g. Aurelion Sol's continuous Q channel) can scale with the fight
+# window; absent in one-rotation mode and direct parse calls, where
+# modules fall back to their per-cast models.
+RESERVED_OPTION_KEYS = frozenset({"fight_duration_seconds"})
 
 
 def parse_abilities(

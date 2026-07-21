@@ -277,6 +277,16 @@ Rules:
   archetype params (`by_option(key, ...)`, `count_option=key`). Duration
   and count options with no archetype home are plain `ctx.options.get`
   reads in a custom fn (Anivia's `r_duration`).
+- **Reserved keys** (`RESERVED_OPTION_KEYS` in `champions/__init__.py`)
+  are pipeline-owned and must never appear in OPTIONS
+  (`tests/test_champion_options.py` enforces this). Currently:
+  `fight_duration_seconds` — injected by `pipeline.run_fight` for timed
+  (non-one-rotation) fights so duration-driven mechanics can scale with
+  the fight window (Aurelion Sol's continuous Q channel). Read it with
+  `ctx.options.get("fight_duration_seconds")`: present -> model the whole
+  fight (pin the entry's cooldown to 999 so it casts once); absent ->
+  per-cast model (one-rotation mode and direct parse calls).
+  Caller-supplied values for reserved keys are stripped by the pipeline.
 - **The Python default is the source of truth** — the declared `default`
   must match what the parse path falls back to.
 - Every declared key must appear as a string in the module source —

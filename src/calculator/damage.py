@@ -1136,6 +1136,10 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             "total_damage": ability_total,
             "damage_type": damage_type,
         }
+        # Champion-minted display text (e.g. Aurelion Sol E's execute
+        # threshold) rides the entry onto its breakdown row untouched.
+        if "detail" in ability_info:
+            breakdown[ability_key]["detail"] = ability_info["detail"]
         state.total_damage += ability_total
         mitigated_damage_dealt += ability_total
 

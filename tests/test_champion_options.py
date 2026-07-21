@@ -11,6 +11,7 @@ import inspect
 
 from src.calculator.champions import (
     _CHAMPION_MODULES,
+    RESERVED_OPTION_KEYS,
     champion_options_meta_map,
     get_champion_options_meta,
 )
@@ -99,6 +100,19 @@ class TestOptionsDeclarationValidity:
                 )
                 if "min" in opt and "max" in opt:
                     assert opt["min"] <= opt["default"] <= opt["max"], (name, opt)
+
+    def test_no_option_key_collides_with_a_reserved_key(self) -> None:
+        """Reserved keys are pipeline-owned (``RESERVED_OPTION_KEYS``).
+
+        A module declaring one would render a frontend control that
+        ``pipeline.run_fight`` silently clobbers in every timed fight.
+        """
+        for name in _CHAMPION_MODULES:
+            for opt in get_champion_options_meta(name)["options"]:
+                assert opt["key"] not in RESERVED_OPTION_KEYS, (
+                    f"{name}: OPTIONS key {opt['key']!r} collides with a "
+                    "pipeline-reserved option key"
+                )
 
     def test_every_option_key_is_consumed_by_the_module(self) -> None:
         """Each OPTIONS key must appear in its module's source.

@@ -59,6 +59,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "proc_count",
         "auto_attack_override",
         "double_shot",
+        "detail",  # display text copied onto the ability's breakdown row
         # producer diagnostics / display metadata
         "total_raw",
         "damage_per_tick",

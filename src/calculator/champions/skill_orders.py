@@ -43,6 +43,11 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "Q", "E", "Q", "E", "R", "E",
         "E", "W", "W", "R", "W", "W",
     ],
+    "Aurelion Sol": [
+        "Q", "W", "E", "Q", "Q", "R",
+        "Q", "E", "Q", "E", "R", "E",
+        "E", "W", "W", "R", "W", "W",
+    ],
     # ── W max first (standard pattern) ──
     "Kog'Maw": [
         "Q", "W", "E", "W", "W", "R",

@@ -1321,22 +1321,23 @@
         "E": {
           "cooldown": 12.0,
           "damage_type": "magic",
+          "detail": "Executes below 5.0% max HP (100 HP)",
           "name": "Singularity",
           "parts": [
-            "DamagePart(magic, amount=2.5, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=100.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
           ],
-          "rank": 1,
-          "total_raw": 2.5
+          "rank": 3,
+          "total_raw": 100.0
         },
         "Q": {
           "cooldown": 3.0,
           "damage_type": "magic",
           "name": "Breath of Light",
           "parts": [
-            "DamagePart(magic, amount=100.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=641.25, count=1, hp_scaled=no, crit_effectiveness=0.0)"
           ],
           "rank": 5,
-          "total_raw": 100.0
+          "total_raw": 641.25
         },
         "R": {
           "cooldown": 110.0,
@@ -1347,16 +1348,6 @@
           ],
           "rank": 2,
           "total_raw": 250.0
-        },
-        "W": {
-          "cooldown": 19.0,
-          "damage_type": "magic",
-          "name": "Astral Flight",
-          "parts": [
-            "DamagePart(magic, amount=110.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
-          ],
-          "rank": 3,
-          "total_raw": 110.0
         }
       },
       "stats": {
@@ -27052,12 +27043,12 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "c0e58c19e1e901bd24f1e0b1118b2eeec7db35ac",
+    "git_head": "1f4fce90f5854db3b7c0db0eb1e1f554908d4e8e",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,
     "patch_last_changed_max": "26.14",
-    "registered_champion_count": 13
+    "registered_champion_count": 14
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -28438,6 +28429,134 @@
               "on_hit_Kraken Slayer": 372.25
             },
             "total_damage": 4885.23
+          }
+        }
+      }
+    },
+    "Aurelion Sol": {
+      "11": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 292.16,
+            "Q": 1463.3,
+            "R": 465.2,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36,
+            "shadowflame_Shadowflame": 182.54
+          },
+          "total_damage": 2558.56
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 71.43,
+            "Q": 458.04,
+            "R": 178.57,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 708.04
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 71.43,
+            "Q": 458.04,
+            "R": 178.57,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 708.04
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 292.16,
+              "Q": 2322.8,
+              "R": 465.2,
+              "auto_attacks": 172.0,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 182.54
+            },
+            "total_damage": 3590.06
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 71.43,
+              "Q": 732.14,
+              "R": 178.57,
+              "auto_attacks": 172.0
+            },
+            "total_damage": 1154.14
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 71.43,
+              "Q": 732.14,
+              "R": 178.57,
+              "auto_attacks": 1200.45,
+              "on_hit_Kraken Slayer": 122.05
+            },
+            "total_damage": 2304.64
+          }
+        }
+      },
+      "18": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 332.16,
+            "Q": 1463.3,
+            "R": 545.2,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36,
+            "shadowflame_Shadowflame": 206.54
+          },
+          "total_damage": 2702.56
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 107.14,
+            "Q": 458.04,
+            "R": 250.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 815.18
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 107.14,
+            "Q": 458.04,
+            "R": 250.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 815.18
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 332.16,
+              "Q": 2322.8,
+              "R": 545.2,
+              "auto_attacks": 224.0,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 206.54
+            },
+            "total_damage": 3786.06
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 107.14,
+              "Q": 732.14,
+              "R": 250.0,
+              "auto_attacks": 224.0
+            },
+            "total_damage": 1313.29
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 107.14,
+              "Q": 732.14,
+              "R": 250.0,
+              "auto_attacks": 1662.45,
+              "on_hit_Kraken Slayer": 150.87
+            },
+            "total_damage": 2902.61
           }
         }
       }
