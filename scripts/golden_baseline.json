@@ -5777,14 +5777,17 @@
     "JarvanIV": {
       "abilities_level_11": {
         "E": {
-          "cooldown": 12.0,
+          "cooldown": 11.0,
           "damage_type": "magic",
           "name": "Demacian Standard",
           "parts": [
-            "DamagePart(magic, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=160.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
           ],
-          "rank": 1,
-          "total_raw": 80.0
+          "rank": 3,
+          "stat_buff": {
+            "bonus_attack_speed": 50.0
+          },
+          "total_raw": 160.0
         },
         "Q": {
           "cooldown": 6.0,
@@ -5794,6 +5797,9 @@
             "DamagePart(physical, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
           ],
           "rank": 5,
+          "target_debuff": {
+            "armor_reduction_percent": 26.0
+          },
           "total_raw": 250.0
         },
         "R": {
@@ -5805,6 +5811,16 @@
           ],
           "rank": 2,
           "total_raw": 325.0
+        },
+        "passive": {
+          "name": "Martial Cadence",
+          "on_hit": {
+            "current_health_percent": 8.0,
+            "damage_type": "physical",
+            "min_damage": 20.0,
+            "name": "Martial Cadence",
+            "proc_cooldown": 4.0
+          }
         }
       },
       "stats": {
@@ -27068,12 +27084,12 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "5148ac820a1bf7e9706c84fbc00c0c10be1bbe9c",
+    "git_head": "ad42e318e7e74b6d7b022e89f7575dba06750b27",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,
     "patch_last_changed_max": "26.14",
-    "registered_champion_count": 17
+    "registered_champion_count": 18
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -29101,6 +29117,138 @@
               "on_hit_ability_W": 685.71
             },
             "total_damage": 4888.14
+          }
+        }
+      }
+    },
+    "Jarvan IV": {
+      "11": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 410.88,
+            "Q": 166.67,
+            "R": 237.23,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 970.13
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 114.29,
+            "Q": 166.67,
+            "R": 237.23,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 518.18
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 114.29,
+            "Q": 358.3,
+            "R": 486.9,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 959.49
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 410.88,
+              "Q": 166.67,
+              "R": 237.23,
+              "auto_attacks": 328.47,
+              "on_hit_ability_passive": 116.79,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 1446.46
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 114.29,
+              "Q": 166.67,
+              "R": 237.23,
+              "auto_attacks": 328.47,
+              "on_hit_ability_passive": 116.79
+            },
+            "total_damage": 963.43
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 114.29,
+              "Q": 358.3,
+              "R": 486.9,
+              "auto_attacks": 1955.26,
+              "on_hit_Kraken Slayer": 388.06,
+              "on_hit_ability_passive": 128.98
+            },
+            "total_damage": 3431.79
+          }
+        }
+      },
+      "18": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 474.88,
+            "Q": 166.67,
+            "R": 328.47,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 1125.37
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 171.43,
+            "Q": 166.67,
+            "R": 328.47,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 666.56
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 171.43,
+            "Q": 358.3,
+            "R": 587.67,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 1117.4
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 474.88,
+              "Q": 166.67,
+              "R": 328.47,
+              "auto_attacks": 503.65,
+              "on_hit_ability_passive": 207.15,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 1867.25
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 171.43,
+              "Q": 166.67,
+              "R": 328.47,
+              "auto_attacks": 503.65,
+              "on_hit_ability_passive": 207.15
+            },
+            "total_damage": 1377.36
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 171.43,
+              "Q": 358.3,
+              "R": 587.67,
+              "auto_attacks": 2513.91,
+              "on_hit_Kraken Slayer": 486.8,
+              "on_hit_ability_passive": 145.1
+            },
+            "total_damage": 4263.2
           }
         }
       }

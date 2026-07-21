@@ -464,6 +464,95 @@ def _simulate_stacking_on_hit_damage(
     return total_damage
 
 
+def _schedule_cooldown_procs(
+    num_auto_attacks: int,
+    autos_per_second: float,
+    proc_cooldown: float,
+) -> list[int]:
+    """Schedule per-target-cooldown on-hit procs onto the auto timeline.
+
+    The first auto always procs; each later auto procs iff its timestamp
+    (auto index / effective attack rate) is at least ``proc_cooldown``
+    after the previous proc (Jarvan IV's Martial Cadence pattern).
+
+    Args:
+        num_auto_attacks: Total auto attacks in the fight.
+        autos_per_second: Effective auto rate (attack_speed * uptime) —
+            the same rate ``num_auto_attacks`` was derived from, so auto
+            timestamps span the fight window.
+        proc_cooldown: Per-target cooldown between procs, in seconds.
+
+    Returns:
+        Sorted 0-indexed auto indices on which the effect procs.
+    """
+    if num_auto_attacks <= 0 or autos_per_second <= 0:
+        return []
+    proc_autos: list[int] = []
+    next_ready = 0.0
+    for i in range(num_auto_attacks):
+        timestamp = i / autos_per_second
+        if timestamp >= next_ready:
+            proc_autos.append(i)
+            next_ready = timestamp + proc_cooldown
+    return proc_autos
+
+
+def _simulate_cooldown_current_health_procs(
+    on_hit_data: dict[str, Any],
+    target_health: float,
+    num_auto_attacks: int,
+    auto_damage_per_hit: float,
+    other_on_hit_per_hit: float,
+    resists: Resists,
+    magic_amp: float,
+    proc_autos: list[int],
+    effectiveness: float = 1.0,
+) -> float:
+    """Simulate cooldown-gated current-health procs (Jarvan IV passive).
+
+    Each proc deals ``current_health_percent`` of the target's decayed
+    current HP, floored at ``min_damage``, as ``damage_type`` damage.
+    Same decaying-HP walk as the stacking on-hit simulation: the proc
+    lands before that auto's own damage is subtracted.
+
+    Args:
+        on_hit_data: The ability entry's ``on_hit`` payload, carrying
+            ``current_health_percent`` / ``min_damage`` / ``damage_type``.
+        target_health: Target's starting (max) health.
+        num_auto_attacks: Number of auto attacks in the fight.
+        auto_damage_per_hit: Mitigated base auto attack damage per hit.
+        other_on_hit_per_hit: Mitigated per-hit damage from other on-hit
+            effects (static items/abilities plus the BoRK average).
+        proc_autos: Sorted 0-indexed auto indices where the effect procs.
+        effectiveness: On-hit effectiveness multiplier (Azir soldiers).
+
+    Returns:
+        Total mitigated damage across all procs.
+    """
+    if not proc_autos:
+        return 0.0
+
+    pct = on_hit_data["current_health_percent"] / 100.0
+    min_damage = on_hit_data.get("min_damage", 0.0)
+    dmg_type = on_hit_data.get("damage_type", "physical")
+    proc_set = set(proc_autos)
+
+    current_hp = target_health
+    total_damage = 0.0
+    for i in range(num_auto_attacks):
+        if i in proc_set:
+            raw_damage = max(pct * current_hp, min_damage) * effectiveness
+            mitigated = _mitigate(raw_damage, dmg_type, resists, magic_amp)
+            total_damage += mitigated
+            current_hp -= mitigated
+
+        # Reduce HP from auto attack + other on-hit damage
+        current_hp -= auto_damage_per_hit + other_on_hit_per_hit
+        current_hp = max(current_hp, 0.0)
+
+    return total_damage
+
+
 def _simulate_current_health_on_hit(
     effect: item_effects.PerHitEffect,
     base_inputs: item_effects.DamageInputs,
@@ -1666,6 +1755,8 @@ def _layer_on_hit_effects(
         on_hit_data = ability_info.get("on_hit")
         if not on_hit_data:
             continue
+        if "proc_cooldown" in on_hit_data:
+            continue  # cooldown-scheduled procs are simulated below
         counts_ability_hits = bool(on_hit_data.get("count_ability_hits"))
         if num_auto_attacks == 0 and not counts_ability_hits:
             continue
@@ -1757,6 +1848,45 @@ def _layer_on_hit_effects(
             "total_damage": current_health_total,
             "damage_type": source.damage_type,
         }
+
+    # Cooldown-gated current-health on-hits (Jarvan IV's Martial Cadence):
+    # procs ride the fight's auto timeline — the first auto procs, then
+    # the first auto at/after (last proc + per-target cooldown) — and each
+    # proc reads the target's decayed current HP. The per-target cooldown
+    # is why phantom hits / double shots never add procs, and why the proc
+    # stays out of static_on_hit_per_hit (spellblade doubling and the BoRK
+    # simulation must not re-apply it).
+    if num_auto_attacks > 0:
+        autos_per_second = state.attack_speed * state.auto_attack_uptime
+        for ability_key, ability_info in state.ability_damages.items():
+            on_hit_data = ability_info.get("on_hit")
+            if not on_hit_data or "proc_cooldown" not in on_hit_data:
+                continue
+            proc_autos = _schedule_cooldown_procs(
+                num_auto_attacks, autos_per_second, on_hit_data["proc_cooldown"]
+            )
+            if not proc_autos:
+                continue
+            proc_total = _simulate_cooldown_current_health_procs(
+                on_hit_data,
+                state.target_health,
+                num_auto_attacks,
+                autos.auto_damage_per_hit,
+                result.static_on_hit_per_hit + result.current_health_on_hit_avg,
+                resists,
+                magic_amp,
+                proc_autos,
+                effectiveness=on_hit_effectiveness,
+            )
+            on_hit_total += proc_total
+            breakdown[f"on_hit_ability_{ability_key}"] = {
+                "name": on_hit_data.get("name", f"{ability_key} (on-hit)"),
+                "count": len(proc_autos),
+                "damage_per_hit": proc_total / len(proc_autos),
+                "total_damage": proc_total,
+                "damage_type": on_hit_data.get("damage_type", "physical"),
+                "unit": "procs",
+            }
 
     state.total_damage += on_hit_total
     return result

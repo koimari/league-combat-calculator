@@ -63,6 +63,8 @@ aurora_data = _champion_fixture("Aurora")
 azir_data = _champion_fixture("Azir")
 bard_data = _champion_fixture("Bard")
 gnar_data = _champion_fixture("Gnar")
+# Data key differs from the display/dispatcher name "Jarvan IV".
+jarvan_iv_data = _champion_fixture("JarvanIV")
 # Data key differs from the display/dispatcher name "Kog'Maw".
 kogmaw_data = _champion_fixture("KogMaw")
 vayne_data = _champion_fixture("Vayne")
