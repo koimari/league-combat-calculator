@@ -83,6 +83,11 @@ When a user reports a bug or incorrect behavior after a champion is implemented,
 - **Root cause:** Sterak's is computed at build-stats time from pre-buff base AD; the Mega base-AD grant lands later (BUFF phase / fight engine). Fixed: `_apply_stat_buff_ultimates` now recomputes base-AD-derived item stats (via the `item_effects.steraks_bonus_ad` accessor — linear, so the delta composes) when a `base_attack_damage` stat_buff lands.
 - **Pattern to watch for:** When a champion grants BASE stats via `stat_buff`, check every item that converts a base stat (Sterak's: base AD; Overlord's Bloodmail: bonus health — correctly unaffected by base-HP grants). The recompute hook lives in `_apply_stat_buff_ultimates`; extend it there, numbers stay in `item_effects`.
 
+### Azir — proc-style item effects exempted from soldier 50% on-hit reduction
+- **What happened:** Sand Soldier autos halved per-hit on-hit damage (Nashor's, BoRK) but left proc-style systems (spellblade, Energized, Kraken Slayer) at full value, based on wiki notes claiming Energized "stacks but is not consumed."
+- **Root cause:** The wiki's notes section was stale. In-game (per user): spellblade/Lich Bane procs on soldier attacks at 50% damage; Energized IS consumed at 50% damage; Kraken procs every 3rd soldier attack at 50% damage. Sundered Sky is the only real exception — it does not apply at all.
+- **Pattern to watch for:** Attack-replacement / on-hit-effectiveness mechanics (Azir W, and any "on-hit at X% effectiveness" ability) — apply the reduction to ALL per-attack and proc-style item effects uniformly unless a specific exclusion is verified in-game. The wiki's item-interaction notes are less reliable than its numbers; treat them as hypotheses, not ground truth.
+
 ### Amumu — Q damage doubled by fight engine
 - **What happened:** Q showed ~265 damage instead of ~110 for a single cast with Liandry's at level 18 against 100 MR.
 - **Root cause:** Two compounding issues: (1) Q result had both `damage_per_cast`/`total_casts` AND pre-multiplied `magic_damage`, causing fight engine double-counting. (2) Module pre-baked `q_casts=2` into `magic_damage`, but fight engine already determines cast count from cooldown. In one-rotation mode the engine casts once, but `magic_damage` already had 2 casts of damage.

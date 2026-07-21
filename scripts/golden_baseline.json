@@ -1561,14 +1561,14 @@
           "total_raw": 70.0
         },
         "Q": {
-          "cooldown": 6.0,
+          "cooldown": 10.0,
           "damage_type": "magic",
           "name": "Conquering Sands",
           "parts": [
-            "DamagePart(magic, amount=140.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=100.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
           ],
-          "rank": 5,
-          "total_raw": 140.0
+          "rank": 3,
+          "total_raw": 100.0
         },
         "R": {
           "cooldown": 105.0,
@@ -1581,14 +1581,19 @@
           "total_raw": 400.0
         },
         "W": {
-          "cooldown": 1.5,
+          "auto_attack_override": {
+            "damage_type": "magic",
+            "name": "Sand Soldier Attacks",
+            "on_hit_effectiveness": 0.5,
+            "replace_raw": 152.35
+          },
+          "cooldown": 6.0,
           "damage_type": "magic",
+          "detail": "Soldier attacks replace autos: 152 magic per attack",
           "name": "Arise!",
-          "parts": [
-            "DamagePart(magic, amount=88.47058823529412, count=1, hp_scaled=no, crit_effectiveness=0.0)"
-          ],
-          "rank": 3,
-          "total_raw": 88.47
+          "parts": [],
+          "rank": 5,
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -27050,12 +27055,12 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "11c905276d52cba32c5b9703f238512aa65adea2",
+    "git_head": "78eb571ad7e60c4a536fca740d18ec56752d6a46",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,
     "patch_last_changed_max": "26.14",
-    "registered_champion_count": 15
+    "registered_champion_count": 16
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -28704,6 +28709,145 @@
               "on_hit_ability_passive": 42.86
             },
             "total_damage": 2447.86
+          }
+        }
+      }
+    },
+    "Azir": {
+      "11": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 268.16,
+            "Q": 239.12,
+            "R": 585.2,
+            "W": 0.0,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 1247.84
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 50.0,
+            "Q": 71.43,
+            "R": 285.71,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 407.14
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 50.0,
+            "Q": 71.43,
+            "R": 285.71,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 407.14
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 268.16,
+              "Q": 239.12,
+              "R": 585.2,
+              "W": 0.0,
+              "auto_attacks": 1406.89,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 2685.8
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 50.0,
+              "Q": 71.43,
+              "R": 285.71,
+              "W": 0.0,
+              "auto_attacks": 435.29
+            },
+            "total_damage": 842.44
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 50.0,
+              "Q": 71.43,
+              "R": 285.71,
+              "W": 0.0,
+              "auto_attacks": 652.94,
+              "on_hit_Kraken Slayer": 114.86
+            },
+            "total_damage": 1174.94
+          }
+        }
+      },
+      "18": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 396.16,
+            "Q": 306.48,
+            "R": 745.2,
+            "W": 0.0,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36,
+            "shadowflame_Shadowflame": 31.07
+          },
+          "total_damage": 1634.27
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 164.29,
+            "Q": 100.0,
+            "R": 428.57,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 692.86
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 164.29,
+            "Q": 100.0,
+            "R": 428.57,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 692.86
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "E": 396.16,
+              "Q": 306.48,
+              "R": 745.2,
+              "W": 0.0,
+              "auto_attacks": 2252.64,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 31.07
+            },
+            "total_damage": 3886.91
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "E": 164.29,
+              "Q": 100.0,
+              "R": 428.57,
+              "W": 0.0,
+              "auto_attacks": 780.0
+            },
+            "total_damage": 1472.86
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "E": 164.29,
+              "Q": 100.0,
+              "R": 428.57,
+              "W": 0.0,
+              "auto_attacks": 910.0,
+              "on_hit_Kraken Slayer": 142.86
+            },
+            "total_damage": 1745.72
           }
         }
       }

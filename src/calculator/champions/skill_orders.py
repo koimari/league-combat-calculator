@@ -53,6 +53,12 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "Q", "E", "Q", "E", "R", "E",
         "E", "W", "W", "R", "W", "W",
     ],
+    # ── W start, W max first (soldiers are the kit; standard since V13.7) ──
+    "Azir": [
+        "W", "Q", "E", "W", "W", "R",
+        "W", "Q", "W", "Q", "R", "Q",
+        "Q", "E", "E", "R", "E", "E",
+    ],
     # ── W max first (standard pattern) ──
     "Kog'Maw": [
         "Q", "W", "E", "W", "W", "R",

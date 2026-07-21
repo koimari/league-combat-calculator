@@ -401,6 +401,7 @@ def _simulate_stacking_on_hit_damage(
     resists: Resists,
     magic_amp: float,
     proc_autos: list[int],
+    effectiveness: float = 1.0,
 ) -> float:
     """Simulate a stacking proc whose formula reads decreasing target HP.
 
@@ -417,6 +418,8 @@ def _simulate_stacking_on_hit_damage(
         resists: Resolved target resistances.
         magic_amp: Magic-damage multiplier.
         proc_autos: Sorted 0-indexed auto indices where the effect procs.
+        effectiveness: On-hit effectiveness multiplier on each proc's raw
+            damage (Azir soldiers proc at 50%).
 
     Returns:
         Total mitigated damage across all procs.
@@ -441,7 +444,7 @@ def _simulate_stacking_on_hit_damage(
                 target_max_health=target_health,
                 target_current_health=current_hp,
             )
-            raw_damage = effect.source.raw_damage(inputs)
+            raw_damage = effect.source.raw_damage(inputs) * effectiveness
             mitigated = _mitigate(
                 raw_damage,
                 effect.source.damage_type,
@@ -470,6 +473,7 @@ def _simulate_current_health_on_hit(
     magic_amp: float,
     phantom_hit_autos: set[int] | None = None,
     double_hit_all: bool = False,
+    effectiveness: float = 1.0,
 ) -> tuple[float, int]:
     """Simulate a current-health on-hit against decreasing target HP.
 
@@ -492,6 +496,8 @@ def _simulate_current_health_on_hit(
             hits (from Guinsoo's Rageblade). BoRK procs an extra time on these.
         double_hit_all: If True, BoRK procs an extra time on every auto
             (e.g. Akshan's double shot applies on-hits).
+        effectiveness: On-hit effectiveness multiplier on each proc's raw
+            damage (Azir soldiers apply on-hit at 50%).
 
     Returns:
         Tuple of (total mitigated BoRK damage, total BoRK hit count).
@@ -520,7 +526,7 @@ def _simulate_current_health_on_hit(
                 target_max_health=target_health,
                 target_current_health=current_hp,
             )
-            raw_damage = effect.source.raw_damage(inputs)
+            raw_damage = effect.source.raw_damage(inputs) * effectiveness
             mitigated = _mitigate(
                 raw_damage,
                 effect.source.damage_type,
@@ -1248,11 +1254,45 @@ class AutoAttackResult:
     double_shot_info: dict[str, Any] | None = None
 
 
+def _find_auto_attack_override(
+    ability_damages: dict[str, dict[str, Any]],
+) -> dict[str, Any] | None:
+    """Return the first champion ``auto_attack_override`` payload, if any.
+
+    Supported keys: ``ad_ratio`` / ``crit_as_bonus`` (Ashe — crit chance
+    converts to bonus damage on every auto), and ``replace_raw`` /
+    ``damage_type`` / ``on_hit_effectiveness`` / ``name`` (Azir — the
+    auto stream is replaced wholesale by a module-computed flat amount
+    that cannot crit and reduces on-hit item effectiveness).
+    """
+    for info in ability_damages.values():
+        if "auto_attack_override" in info:
+            return info["auto_attack_override"]
+    return None
+
+
+def _on_hit_effectiveness(state: FightState) -> float:
+    """Item-effect effectiveness on the auto stream (default 1.0).
+
+    A champion ``auto_attack_override`` may carry ``on_hit_effectiveness``
+    (Azir soldiers: 0.5). While such an override is active, ALL
+    per-attack and proc-style item effects — per-hit on-hits, spellblade,
+    energized, stack-counter procs like Kraken Slayer — apply at this
+    effectiveness (game-verified for Azir). Sundered Sky is the
+    exception: it does not apply at all on replaced autos (handled in
+    ``_simulate_auto_attacks``, which skips its branch in replace mode).
+    """
+    override = _find_auto_attack_override(state.ability_damages)
+    return override.get("on_hit_effectiveness", 1.0) if override else 1.0
+
+
 def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     """Simulate each auto attack individually, rolling (or expecting) crits.
 
     Handles champion auto-attack overrides (Ashe: crit chance converts to
-    bonus damage on every auto), Fiendhunter Bolts empowered autos
+    bonus damage on every auto; Azir: soldier attacks replace the auto
+    stream with flat magic damage that cannot crit), Fiendhunter Bolts
+    empowered autos
     (guaranteed-crit true damage / reduced non-crits), Sundered Sky's
     forced first-auto crit, double-shot passives (Akshan), and the basic
     damage amplifier (Hexoptics). In deterministic mode crits are blended
@@ -1273,11 +1313,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
     # Detect auto_attack_override (e.g. Ashe passive — crit chance converts
     # to bonus damage instead of crit strikes; Q changes AD ratio).
-    auto_attack_override: dict[str, Any] | None = None
-    for _ov_key, _ov_info in state.ability_damages.items():
-        if "auto_attack_override" in _ov_info:
-            auto_attack_override = _ov_info["auto_attack_override"]
-            break
+    auto_attack_override = _find_auto_attack_override(state.ability_damages)
 
     # Detect champion double-shot passive (e.g. Akshan — second auto per
     # attack at reduced AD ratio, applies on-hits and can crit).
@@ -1312,13 +1348,31 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
     # Ashe-style override: crit chance converts to bonus AD ratio on every
     # auto instead of random crit strikes.  ad_ratio replaces the normal 1.0.
+    # Azir-style override: replace_raw substitutes the whole auto formula
+    # with a flat module-computed amount (its own damage type, no crits).
     override_ad_ratio = 0.0
     override_crit_as_bonus = False
+    override_replace_raw: float | None = None
+    override_damage_type = "physical"
     if auto_attack_override:
         override_ad_ratio = auto_attack_override.get("ad_ratio", 1.0)
         override_crit_as_bonus = auto_attack_override.get("crit_as_bonus", False)
+        override_replace_raw = auto_attack_override.get("replace_raw")
+        override_damage_type = auto_attack_override.get("damage_type", "physical")
 
     for i in range(num_auto_attacks):
+        if override_replace_raw is not None:
+            # Full auto replacement (Azir W): flat raw per attack, the
+            # override's damage type, cannot crit — crit items, the
+            # empowered-auto item branches, and Sundered Sky's forced
+            # first-auto crit (game-verified: not applied by soldier
+            # attacks at all) never apply.
+            mitigated = _mitigate(
+                override_replace_raw, override_damage_type, resists, state.magic_amp
+            )
+            auto_physical_total += mitigated
+            non_crit_damage_per_hit = mitigated
+            continue
         is_empowered = ultimate_auto_buff is not None and i < empowered_autos
         is_sundered = first_auto_crit is not None and i == 0
         if deterministic:
@@ -1407,8 +1461,14 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     auto_damage_per_hit = auto_total / num_auto_attacks if num_auto_attacks > 0 else 0.0
     num_non_crits = num_auto_attacks - num_crits
 
+    auto_name = "Auto Attacks"
+    auto_damage_type = "physical"
+    if override_replace_raw is not None:
+        auto_name = auto_attack_override.get("name", auto_name)
+        auto_damage_type = override_damage_type
+
     breakdown["auto_attacks"] = {
-        "name": "Auto Attacks",
+        "name": auto_name,
         "count": num_auto_attacks,
         "num_crits": num_crits,
         "num_non_crits": num_non_crits,
@@ -1418,13 +1478,18 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         ),
         "damage_per_hit": auto_damage_per_hit,
         "total_damage": auto_total,
-        "damage_type": "physical",
+        "damage_type": auto_damage_type,
     }
     if ultimate_auto_buff is not None and empowered_autos > 0:
         breakdown["auto_attacks"]["empowered_count"] = empowered_autos
 
-    # Sundered Sky breakdown: show the damage difference on first auto
-    if first_auto_crit is not None and num_auto_attacks > 0:
+    # Sundered Sky breakdown: show the damage difference on first auto.
+    # Replaced autos (Azir soldiers) never consume Sundered Sky — no row.
+    if (
+        first_auto_crit is not None
+        and num_auto_attacks > 0
+        and override_replace_raw is None
+    ):
         mitigated_diff = (
             apply_resistance(
                 abs(sundered_sky_damage_diff),
@@ -1531,11 +1596,17 @@ def _layer_on_hit_effects(
     target's decreasing current HP. Ability on-hits flagged
     ``count_ability_hits`` (e.g. Aurora P) also count the rotation's
     damaging ability hits toward their stack counter.
+
+    A champion ``auto_attack_override`` may carry ``on_hit_effectiveness``
+    (Azir soldiers: on-hit at 50%) — it scales every per-hit on-hit
+    application here, including the BoRK simulation.
     """
     resists = state.resists
     breakdown = state.breakdown
     num_auto_attacks = state.num_auto_attacks
     magic_amp = state.magic_amp
+
+    on_hit_effectiveness = _on_hit_effectiveness(state)
 
     on_hit_total = 0.0
     current_health_effect = next(
@@ -1565,7 +1636,7 @@ def _layer_on_hit_effects(
             continue
 
         source = effect.source
-        raw_per_hit = source.raw_damage(damage_inputs)
+        raw_per_hit = source.raw_damage(damage_inputs) * on_hit_effectiveness
         if raw_per_hit <= 0:
             continue
 
@@ -1597,7 +1668,7 @@ def _layer_on_hit_effects(
         if num_auto_attacks == 0 and not counts_ability_hits:
             continue
 
-        raw_per_hit = on_hit_data.get("damage_per_hit", 0.0)
+        raw_per_hit = on_hit_data.get("damage_per_hit", 0.0) * on_hit_effectiveness
         if raw_per_hit <= 0:
             continue
 
@@ -1656,6 +1727,7 @@ def _layer_on_hit_effects(
             magic_amp=magic_amp,
             phantom_hit_autos=result.phantom_hit_autos,
             double_hit_all=autos.double_shot_info is not None,
+            effectiveness=on_hit_effectiveness,
         )
         result.current_health_on_hit_avg = (
             current_health_total / current_health_hits
@@ -1701,6 +1773,9 @@ def _add_spellblade_damage(
     weave delay, and the fight's auto count. Also totals the extra on-hit
     stack applications (Dusk and Dawn double on-hits, double-shot autos)
     that accelerate Kraken Slayer / Hullbreaker stacking later.
+
+    Spellblade procs on replaced autos (Azir soldiers) at the override's
+    on-hit effectiveness (game-verified: Lich Bane procs at 50% damage).
     """
     resists = state.resists
     result = SpellbladeResult()
@@ -1713,7 +1788,7 @@ def _add_spellblade_damage(
 
     if effect is not None and state.num_auto_attacks > 0:
         source = effect.source
-        raw_sb = source.raw_damage(_damage_inputs(state))
+        raw_sb = source.raw_damage(_damage_inputs(state)) * _on_hit_effectiveness(state)
         effective_sb_cd = effect.cooldown + effect.weave_delay
 
         result.damage_per_proc = _mitigate(
@@ -1946,17 +2021,23 @@ def _add_single_proc_on_hits(
     the target's dropping HP (Kraken Slayer, Hullbreaker — phantom hits
     and double on-hits each grant an extra stack), Eclipse, and
     Muramana's per-ability-cast Shock damage.
+
+    Replaced autos (Azir soldiers) consume energized effects and build
+    stack-counter procs normally, but every auto-triggered proc's damage
+    is scaled by the override's on-hit effectiveness (game-verified:
+    Statikk Shiv and Kraken Slayer proc at 50% damage).
     """
     resists = state.resists
     breakdown = state.breakdown
     num_auto_attacks = state.num_auto_attacks
+    effectiveness = _on_hit_effectiveness(state)
 
     if num_auto_attacks > 0:
         inputs = _damage_inputs(state)
         for effect in state.damage_effects.first_autos:
             source = effect.source
             procs = min(effect.max_procs, num_auto_attacks)
-            raw_damage = source.raw_damage(inputs) * procs
+            raw_damage = source.raw_damage(inputs) * procs * effectiveness
             mitigated = _mitigate(
                 raw_damage, source.damage_type, resists, state.magic_amp
             )
@@ -1978,7 +2059,7 @@ def _add_single_proc_on_hits(
                 else 1
             )
             procs = min(procs, num_auto_attacks)
-            raw_damage = source.raw_damage(inputs) * procs
+            raw_damage = source.raw_damage(inputs) * procs * effectiveness
             mitigated = _mitigate(
                 raw_damage, source.damage_type, resists, state.magic_amp
             )
@@ -2017,9 +2098,10 @@ def _add_single_proc_on_hits(
                     resists,
                     state.magic_amp,
                     proc_autos,
+                    effectiveness=effectiveness,
                 )
             else:
-                raw = source.raw_damage(_damage_inputs(state)) * procs
+                raw = source.raw_damage(_damage_inputs(state)) * procs * effectiveness
                 total_damage = _mitigate(
                     raw, source.damage_type, resists, state.magic_amp
                 )

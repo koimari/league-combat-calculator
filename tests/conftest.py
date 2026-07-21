@@ -60,6 +60,7 @@ ashe_data = _champion_fixture("Ashe")
 # Data key differs from the display/dispatcher name "Aurelion Sol".
 aurelion_sol_data = _champion_fixture("AurelionSol")
 aurora_data = _champion_fixture("Aurora")
+azir_data = _champion_fixture("Azir")
 gnar_data = _champion_fixture("Gnar")
 # Data key differs from the display/dispatcher name "Kog'Maw".
 kogmaw_data = _champion_fixture("KogMaw")
