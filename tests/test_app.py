@@ -76,6 +76,35 @@ def test_config_exposes_all_request_defaults():
     }
 
 
+class TestChampionVerifiedFlags:
+    """/api/champions marks module-backed champions verified; the picker
+    greys out the rest (generic-path numbers are estimates — CLAUDE.md
+    rule 6). Verified champions sort first, then unverified, A-Z within
+    each group."""
+
+    def test_flags_match_the_module_registry(self):
+        champs = app_module.app.test_client().get("/api/champions").get_json()
+        by_name = {c["name"]: c["verified"] for c in champs}
+
+        assert by_name["Aatrox"] is True
+        assert by_name["Bel'Veth"] is True
+        assert by_name["Kled"] is False
+        assert by_name["Teemo"] is False
+
+    def test_verified_champions_sort_first(self):
+        champs = app_module.app.test_client().get("/api/champions").get_json()
+        flags = [c["verified"] for c in champs]
+
+        assert True in flags and False in flags
+        assert flags.index(False) == flags.count(True)  # no interleaving
+
+    def test_each_group_is_alphabetical(self):
+        champs = app_module.app.test_client().get("/api/champions").get_json()
+        for group in (True, False):
+            names = [c["name"] for c in champs if c["verified"] is group]
+            assert names == sorted(names)
+
+
 class TestUpdateDataDevGate:
     """/api/update-data re-scrapes the wiki and rewrites data/ — a local
     patch-day workflow, never a public endpoint. It only exists when

@@ -316,12 +316,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         champs.forEach((champ) => {
             const el = document.createElement("div");
-            el.className = "picker-item";
-            el.innerHTML = `<img src="${champ.icon}" alt="${champ.name}" loading="lazy"><div class="picker-tooltip">${champ.name}</div>`;
-            el.addEventListener("click", () => {
-                selectChampion(champ.name, champ.icon);
-                closeChampionPicker();
-            });
+            // Unverified = no champion module yet (server-decided; see
+            // /api/champions): greyed out, tooltip explains, no click.
+            el.className = champ.verified ? "picker-item" : "picker-item unverified";
+            const tooltip = champ.verified ? champ.name : `${champ.name} — not yet verified`;
+            el.innerHTML = `<img src="${champ.icon}" alt="${champ.name}" loading="lazy"><div class="picker-tooltip">${tooltip}</div>`;
+            if (champ.verified) {
+                el.addEventListener("click", () => {
+                    selectChampion(champ.name, champ.icon);
+                    closeChampionPicker();
+                });
+            }
             champPickerGrid.appendChild(el);
         });
     }

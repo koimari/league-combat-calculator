@@ -926,6 +926,19 @@ input[type="radio"] {
     pointer-events: none;
 }
 
+/* Champion without a module (see /api/champions verified flag): greyed
+   and unpickable, but hoverable so the tooltip can say why. */
+.picker-item.unverified {
+    filter: grayscale(1);
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.picker-item.unverified:hover {
+    border-color: var(--border-dark);
+    transform: none;
+}
+
 .picker-empty {
     grid-column: 1 / -1;
     text-align: center;

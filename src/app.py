@@ -16,7 +16,7 @@ from calculator.data_fetcher import (
     get_item_by_name,
 )
 from calculator.item_effects import refresh_item_effects
-from calculator.champions import champion_options_meta_map
+from calculator.champions import champion_options_meta_map, registered_champion_names
 from calculator.optimizer import (
     exclusivity_groups,
     get_eligible_boots,
@@ -75,14 +75,25 @@ def index():
 
 @app.route("/api/champions")
 def api_champions():
-    """Return a sorted list of champion names with icons."""
+    """Return champion names, icons, and verified flags for the picker.
+
+    ``verified`` = has a module in src/calculator/champions/ (the registry
+    is the source of truth). The picker greys out unverified champions —
+    generic-path numbers are estimates, never citable (CLAUDE.md rule 6).
+    Verified champions sort first, then unverified, A-Z within each group.
+    """
     champions = fetch_champion_data()
+    verified_names = set(registered_champion_names())
     result = sorted(
         [
-            {"name": champ_data["name"], "icon": champ_data.get("icon", "")}
+            {
+                "name": champ_data["name"],
+                "icon": champ_data.get("icon", ""),
+                "verified": champ_data["name"] in verified_names,
+            }
             for champ_data in champions.values()
         ],
-        key=lambda c: c["name"],
+        key=lambda c: (not c["verified"], c["name"]),
     )
     return jsonify(result)
 
