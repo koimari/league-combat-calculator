@@ -135,3 +135,67 @@ def test_calculate_and_optimize_reject_the_same_invalid_fight_params(invalid_val
     assert calculate.status_code == 400
     assert optimize.status_code == 400
     assert calculate.get_json() == optimize.get_json()
+
+
+class TestBreakdownProcRowShape:
+    """Proc-style breakdown rows reach the UI in ONE shape:
+    count / damage_per_hit / unit="procs" — the shape app.js's detail
+    cell renders ("N procs @ X each"). The procs/damage_per_proc
+    spelling never left app.py's row builder, so those rows displayed
+    an empty detail cell (the user-reported "no kraken procs")."""
+
+    def test_kraken_counter_row_one_rotation_belveth(self):
+        """Bel'Veth one-rotation, bare Kraken: Q's 4 dashes + 8 slashes
+        (passive + Kraken AS) = 12 shared hits = 4 procs, rendered."""
+        payload = {
+            "champion": "Belveth",
+            "level": 14,
+            "items": ["Kraken Slayer"],
+            "fight_mode": "one_rotation",
+        }
+        response = app_module.app.test_client().post("/api/calculate", json=payload)
+        assert response.status_code == 200
+        row = response.get_json()["breakdown"]["on_hit_Kraken Slayer"]
+        assert row["count"] == 4
+        assert row["unit"] == "procs"
+        assert row["damage_per_hit"] is not None and row["damage_per_hit"] > 0
+
+    def test_spellblade_row_carries_proc_detail(self):
+        """Any champ + Trinity Force, timed with autos: the spellblade
+        row renders its proc detail through the API."""
+        payload = {
+            "champion": "Ahri",
+            "level": 14,
+            "items": ["Trinity Force"],
+            "fight_mode": "timed",
+            "fight_duration": 8,
+            "include_auto_attacks": True,
+        }
+        response = app_module.app.test_client().post("/api/calculate", json=payload)
+        assert response.status_code == 200
+        breakdown = response.get_json()["breakdown"]
+        spellblade_rows = [
+            row for key, row in breakdown.items() if key.startswith("spellblade")
+        ]
+        assert spellblade_rows, f"no spellblade row in {sorted(breakdown)}"
+        row = spellblade_rows[0]
+        assert row["count"] and row["count"] > 0
+        assert row["unit"] == "procs"
+        assert row["damage_per_hit"] is not None and row["damage_per_hit"] > 0
+
+    def test_no_row_uses_the_old_proc_spelling(self):
+        """The procs/damage_per_proc spelling is retired from breakdown
+        rows engine-wide (Guinsoo build exercises phantom + counter)."""
+        payload = {
+            "champion": "Belveth",
+            "level": 14,
+            "items": ["Kraken Slayer", "Guinsoo's Rageblade", "Trinity Force"],
+            "fight_mode": "timed",
+            "fight_duration": 8,
+            "include_auto_attacks": True,
+        }
+        response = app_module.app.test_client().post("/api/calculate", json=payload)
+        assert response.status_code == 200
+        for key, row in response.get_json()["breakdown"].items():
+            assert "procs" not in row, key
+            assert "damage_per_proc" not in row, key

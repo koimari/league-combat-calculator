@@ -745,6 +745,36 @@ def _item_names(items: list[dict[str, Any]]) -> set[str]:
 DamageType = Literal["physical", "magic", "true"]
 RawDamageFormula = Callable[["DamageInputs"], float]
 
+# The wiki's canonical "On-Attacking" item list (a short, CLOSED set):
+# effects triggered by COMPLETING a basic attack's windup rather than by
+# a hit landing. Everything not listed here counts on-hit (Nashor's,
+# Wit's End, BotRK, Kraken's counter, Hullbreaker's counter, ...).
+# Ability sources that merely APPLY on-hit effects (Bel'Veth Q) never
+# advance on-attack mechanics; sources that count as attacks (autos,
+# Bel'Veth E slashes) advance both.
+# https://wiki.leagueoflegends.com/en-us/Basic_attack (On-attacking)
+ON_ATTACK_TRIGGER_ITEMS = frozenset(
+    {
+        "Guinsoo's Rageblade",
+        "Navori Flickerblade",
+        "Rapid Firecannon",
+        "Runaan's Hurricane",
+        "Voltaic Cyclosword",
+        "Yun Tal Wildarrows",
+    }
+)
+
+
+def counter_trigger(item_name: str) -> str:
+    """Trigger class of an item's counter/cadence mechanic.
+
+    ``"on_attack"`` for the canonical wiki On-Attacking items (Guinsoo's
+    phantom-hit cadence, energized stacking, ...), ``"on_hit"`` for
+    everything else (Kraken/Hullbreaker counters). The fight engine uses
+    this to decide which ability-carried applications advance a counter.
+    """
+    return "on_attack" if item_name in ON_ATTACK_TRIGGER_ITEMS else "on_hit"
+
 
 @dataclass(frozen=True, slots=True)
 class DamageInputs:

@@ -54,9 +54,17 @@ def _simulate_bork_damage(
 
 
 def _calculate_phantom_hits(num_auto_attacks, item_names):
-    """Keep cadence tables readable while production consumes typed rules."""
+    """Keep cadence tables readable while production consumes typed rules.
+
+    Returns (count, autos) for the auto-only case these tables cover;
+    production also receives leading ability-attack phantom positions.
+    """
     effects = resolve_damage_effects([{"name": name} for name in item_names])
-    return _calculate_phantom_hits_compiled(num_auto_attacks, effects.phantom_hit)
+    ability_phantoms, autos = _calculate_phantom_hits_compiled(
+        num_auto_attacks, effects.phantom_hit
+    )
+    assert ability_phantoms == []  # no leading ability attacks here
+    return len(autos), autos
 
 
 class TestMitigate:

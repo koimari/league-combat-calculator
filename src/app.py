@@ -211,6 +211,8 @@ def api_calculate():
             "total_damage": round(entry.get("total_damage", 0.0), 1),
             "casts": entry.get("casts", None),
             "count": entry.get("count", None),
+            # Count label for the detail cell ("procs" vs default "hits")
+            "unit": entry.get("unit", None),
             "damage_per_hit": (
                 round(entry["damage_per_hit"], 1) if "damage_per_hit" in entry else None
             ),

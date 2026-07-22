@@ -33,7 +33,36 @@ on-hit system via two mechanisms:
     The fight engine processes these alongside item on-hits, and phantom
     hits automatically double them. An optional ``max_procs`` key caps the
     number of applications (Bard meeps: stock + recharge availability) —
-    autos beyond the cap land without the on-hit damage.
+    autos beyond the cap land without the on-hit damage. A ``ramping``
+    flag (with ``stacks_required``) makes proc k deal k x the per-hit
+    damage (Bel'Veth R: stacks accumulate and never reset).
+
+**Case 3 — Abilities that apply ITEM on-hits** (e.g. Bel'Veth Q/E):
+    Ability entries may declare::
+
+        "applies_item_on_hits": {"effectiveness": 0.75, "hits": 4}
+
+    Each rotation cast then applies the build's per-hit on-hit item
+    effects ``hits`` times at the given effectiveness, evaluated by
+    ``_ability_applied_on_hit_damage`` from the same compiled specs the
+    auto stream reads. The optional ``triggers`` key (default
+    ``("on_hit",)``) declares what each application carries, matched
+    against the item trigger taxonomy (``item_effects.counter_trigger``
+    over the wiki's canonical On-Attacking list):
+
+    - ``"on_hit"`` — deals the per-hit item damage and counts one hit
+      on on-hit-gated counters (Kraken/Hullbreaker). Counters run
+      ability hits first, then autos; a proc fires at the effectiveness
+      of the hit that landed it.
+    - ``"on_attack"`` — the application is a real attack (Bel'Veth E
+      slashes) and advances on-attack cadences: Guinsoo's phantom-hit
+      counter (a slash-fired phantom re-applies item on-hits at the
+      slash's effectiveness and grants an extra on-hit counter stack).
+      On-attack mechanics the engine does not model per-hit (energized
+      stacking, Navori's refund rate, Yun Tal, Runaan's) are unaffected.
+
+    Spellblade is neither: it is consumed by the next basic attack and
+    stays on the auto timeline.
 """
 
 import math
@@ -311,39 +340,81 @@ def _damage_inputs(
     )
 
 
+def _ability_applied_on_hit_damage(
+    state: FightState,
+    effectiveness: float,
+    target_current_health: float,
+) -> float:
+    """Mitigated item on-hit damage for ONE ability-carried application.
+
+    Champions whose abilities apply item on-hit effects (Bel'Veth Q/E)
+    declare ``applies_item_on_hits`` on the ability entry; the rotation
+    calls this once per hit. It reads the SAME compiled per-hit specs
+    the auto stream applies (``state.damage_effects.per_hits``) —
+    including BoRK's current-health formula, evaluated at the rotation's
+    modeled target HP. Counter-gated procs (Kraken/Hullbreaker) are NOT
+    summed here — the application is recorded on the fight's shared hit
+    counter and its procs fire in ``_add_single_proc_on_hits``.
+    On-ATTACK-only mechanics (energized procs, spellblade, phantom
+    hits) are attack-triggered and never apply here.
+    """
+    inputs = _damage_inputs(state, target_current_health)
+    total = 0.0
+    for effect in state.damage_effects.per_hits:
+        raw = effect.source.raw_damage(inputs) * effectiveness
+        if raw <= 0:
+            continue
+        total += _mitigate(
+            raw, effect.source.damage_type, state.resists, state.magic_amp
+        )
+    return total
+
+
 def _calculate_phantom_hits(
     num_auto_attacks: int,
     effect: item_effects.PhantomHitEffect | None,
-) -> tuple[int, set[int]]:
-    """Calculate phantom-hit count and which autos trigger.
+    leading_attacks: int = 0,
+) -> tuple[list[int], set[int]]:
+    """Calculate which attacks trigger phantom hits.
 
-    Rageblade grants stacking attack speed per auto (Seething Strike).
-    The 4th auto maxes Seething AND starts Phantom stacking. At 2
-    Phantom stacks, the next auto consumes them to trigger a Phantom Hit
-    that applies all on-hit effects an additional time.
+    Rageblade grants stacking attack speed per attack (Seething Strike).
+    The 4th attack maxes Seething AND starts Phantom stacking. At 2
+    Phantom stacks, the next attack consumes them to trigger a Phantom
+    Hit that applies all on-hit effects an additional time.
 
-    Sequence: 5 autos to build up, 6th triggers, then every 3rd after
-    (6, 9, 12, 15, 18, ...).
+    Sequence: 5 attacks to build up, 6th triggers, then every 3rd after
+    (6, 9, 12, 15, 18, ...). Phantom stacking is an ON-ATTACK mechanic,
+    so the counter runs over one shared attack sequence: ability-carried
+    attacks (Bel'Veth E slashes) lead, then the fight's autos continue
+    it — a slash can be the 6th attack that fires the phantom.
 
     Args:
         num_auto_attacks: Total auto attacks in the fight.
         effect: Compiled phantom-hit cadence, or ``None``.
+        leading_attacks: Ability-carried attacks that precede the autos
+            on the shared attack counter.
 
     Returns:
-        Tuple of (phantom_hit_count, set of 0-indexed auto numbers that
-        trigger phantom hits).
+        Tuple of (0-indexed leading-attack indices that trigger phantom
+        hits, set of 0-indexed auto numbers that trigger phantom hits).
     """
-    if effect is None or num_auto_attacks <= effect.stacking_autos:
-        return 0, set()
+    total_attacks = leading_attacks + num_auto_attacks
+    if effect is None or total_attacks <= effect.stacking_autos:
+        return [], set()
 
+    ability_phantoms: list[int] = []
     phantom_autos: set[int] = set()
-    # First phantom hit at auto index = stacking_autos (0-indexed, so 6th auto)
-    auto_index = effect.stacking_autos
-    while auto_index < num_auto_attacks:
-        phantom_autos.add(auto_index)
-        auto_index += effect.interval
+    # First phantom hit at combined attack index = stacking_autos
+    # (0-indexed, so the 6th attack).
+    attack_index = effect.stacking_autos
+    while attack_index < total_attacks:
+        if attack_index < leading_attacks:
+            ability_phantoms.append(attack_index)
+        else:
+            phantom_autos.add(attack_index - leading_attacks)
+        attack_index += effect.interval
 
-    return len(phantom_autos), phantom_autos
+    return ability_phantoms, phantom_autos
 
 
 def _calculate_stacking_procs(
@@ -351,20 +422,46 @@ def _calculate_stacking_procs(
     phantom_hit_autos: set[int],
     double_on_hit_procs: int,
     hits_required: int,
-) -> tuple[int, list[int]]:
+    leading_ability_hits: int = 0,
+    ability_extra_stacks: set[int] | None = None,
+) -> tuple[list[int], list[int]]:
     """Simulate every-Nth-on-hit procs with extra-application awareness.
+
+    The counter runs over ONE shared hit sequence: ability-carried
+    on-hit applications first (the rotation leads the fight model),
+    then the fight's autos — leftover stacks carry across, so an
+    ability hit can land the Nth stack and the next auto continues from
+    a reset counter (Bel'Veth Q/E feeding Kraken).
 
     Args:
         num_auto_attacks: Total auto attacks in the fight.
         phantom_hit_autos: Set of 0-indexed autos that trigger phantom hits.
         double_on_hit_procs: Number of Dusk and Dawn double on-hit procs.
         hits_required: On-hit applications needed to proc.
+        leading_ability_hits: Ability-carried applications that precede
+            the autos on the shared counter.
+        ability_extra_stacks: Leading-hit indices that apply on-hit an
+            extra time (a Guinsoo phantom hit fired by that ability
+            attack), granting an extra stack like phantom autos do.
 
     Returns:
-        Tuple of (proc_count, list of 0-indexed auto indices where procs
-        fire).
+        Tuple of (0-indexed ability-hit indices where procs fire,
+        0-indexed auto indices where procs fire).
     """
     stacks = 0
+    ability_procs: list[int] = []
+    extra_stacks = ability_extra_stacks or set()
+    for i in range(leading_ability_hits):
+        stacks += 1
+        if stacks >= hits_required:
+            ability_procs.append(i)
+            stacks = 0
+        if i in extra_stacks:
+            stacks += 1
+            if stacks >= hits_required:
+                ability_procs.append(i)
+                stacks = 0
+
     proc_autos: list[int] = []
 
     double_on_hit_auto_set: set[int] = set()
@@ -390,7 +487,7 @@ def _calculate_stacking_procs(
                 proc_autos.append(i)
                 stacks = 0
 
-    return len(proc_autos), proc_autos
+    return ability_procs, proc_autos
 
 
 def _simulate_stacking_on_hit_damage(
@@ -1011,6 +1108,19 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                 * state.fight_duration_seconds
                 * state.auto_attack_uptime
             )
+        # A TOTAL-attack-speed multiplier (Bel'Veth True Form) scales the
+        # final attack speed, outside the base + ratio x bonus formula.
+        # Entries iterate in parse phase order (BUFF-phase bonus-AS
+        # grants insert before DAMAGE-phase ultimates), so additive
+        # bonus AS is folded in before this multiplies.
+        if "total_attack_speed_percent" in stat_buff:
+            state.attack_speed *= 1.0 + stat_buff["total_attack_speed_percent"] / 100.0
+            stats["attack_speed"] = state.attack_speed
+            state.num_auto_attacks = math.floor(
+                state.attack_speed
+                * state.fight_duration_seconds
+                * state.auto_attack_uptime
+            )
 
     # Crit stats — needed by both ability crit scaling (rotation) and the
     # auto-attack simulation.
@@ -1018,6 +1128,22 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
     state.crit_multiplier = (
         BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
     )
+
+
+@dataclass(frozen=True)
+class AbilityItemApplication:
+    """One ability-carried item application in the rotation's hit order.
+
+    ``on_hit`` applications deal per-hit item damage and count on the
+    shared on-hit counters (Kraken/Hullbreaker); ``on_attack``
+    applications advance on-attack cadences (Guinsoo's phantom hit).
+    Bel'Veth Q is on_hit only; her E slashes are both.
+    """
+
+    effectiveness: float
+    target_hp: float  # modeled target HP when the hit landed
+    on_hit: bool
+    on_attack: bool
 
 
 @dataclass
@@ -1032,6 +1158,13 @@ class RotationResult:
     navori_refund: float = 0.0
     autos_per_second: float = 0.0
     last_cast_time: float = 0.0  # timed mode: when the final recast lands
+    # Ability-carried item applications, in rotation order. They lead
+    # the fight's shared counters — autos continue the same counters
+    # afterwards (which counter a source advances is decided by the
+    # item taxonomy, item_effects.counter_trigger).
+    ability_item_applications: list[AbilityItemApplication] = field(
+        default_factory=list
+    )
 
 
 def _evaluate_cast_parts(
@@ -1253,6 +1386,57 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         state.total_damage += ability_total
         mitigated_damage_dealt += ability_total
 
+        # Ability-carried item applications (Bel'Veth Q/E): each hit
+        # applies the build's per-hit on-hit item effects at the slot's
+        # declared effectiveness. The per-hit damage comes from the same
+        # compiled specs the auto stream reads; each application decays
+        # the modeled target HP so BoRK's current-health formula ramps
+        # down through the combo. The slot's effectiveness is its own
+        # modifier — a champion ``auto_attack_override`` effectiveness
+        # applies to autos only. The spec's ``triggers`` declare what
+        # the application carries: "on_hit" (per-hit item damage +
+        # on-hit counters) and/or "on_attack" (counts as an attack for
+        # on-attack cadences like Guinsoo's phantom hit). Counter procs
+        # themselves fire in _add_single_proc_on_hits and
+        # _layer_on_hit_effects from the records kept here.
+        on_hit_spec = ability_info.get("applies_item_on_hits")
+        if on_hit_spec and num_casts > 0:
+            applications = num_casts * int(on_hit_spec["hits"])
+            effectiveness = float(on_hit_spec["effectiveness"])
+            triggers = frozenset(on_hit_spec.get("triggers", ("on_hit",)))
+            is_on_hit = "on_hit" in triggers
+            applied_total = 0.0
+            for _ in range(applications):
+                hp_now = max(0.0, target_health - mitigated_damage_dealt)
+                result.ability_item_applications.append(
+                    AbilityItemApplication(
+                        effectiveness=effectiveness,
+                        target_hp=hp_now,
+                        on_hit=is_on_hit,
+                        on_attack="on_attack" in triggers,
+                    )
+                )
+                applied = (
+                    _ability_applied_on_hit_damage(state, effectiveness, hp_now)
+                    if is_on_hit
+                    else 0.0
+                )
+                applied_total += applied
+                mitigated_damage_dealt += applied
+            if applied_total > 0:
+                types = {
+                    effect.source.damage_type
+                    for effect in state.damage_effects.per_hits
+                }
+                breakdown[f"on_hit_items_{ability_key}"] = {
+                    "name": f"{ability_info['name']} (item on-hits)",
+                    "count": applications,
+                    "damage_per_hit": applied_total / applications,
+                    "total_damage": applied_total,
+                    "damage_type": types.pop() if len(types) == 1 else "mixed",
+                }
+                state.total_damage += applied_total
+
         # Apply target debuffs (e.g. Kog'Maw Q resistance shred) AFTER
         # computing this ability's own damage, so subsequent abilities
         # benefit from the shred but the source ability does not.
@@ -1355,10 +1539,12 @@ def _find_auto_attack_override(
     """Return the first champion ``auto_attack_override`` payload, if any.
 
     Supported keys: ``ad_ratio`` / ``crit_as_bonus`` (Ashe — crit chance
-    converts to bonus damage on every auto), and ``replace_raw`` /
-    ``damage_type`` / ``on_hit_effectiveness`` / ``name`` (Azir — the
-    auto stream is replaced wholesale by a module-computed flat amount
-    that cannot crit and reduces on-hit item effectiveness).
+    converts to bonus damage on every auto), ``replace_raw`` /
+    ``damage_type`` / ``name`` (Azir — the auto stream is replaced
+    wholesale by a module-computed flat amount that cannot crit),
+    ``damage_ratio`` (Bel'Veth — every basic attack, crit or not, deals
+    this fraction of its normal damage), and ``on_hit_effectiveness``
+    (Azir 0.5, Bel'Veth 0.75 — scales every on-hit rider on the autos).
     """
     for info in ability_damages.values():
         if "auto_attack_override" in info:
@@ -1454,6 +1640,10 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         override_crit_as_bonus = auto_attack_override.get("crit_as_bonus", False)
         override_replace_raw = auto_attack_override.get("replace_raw")
         override_damage_type = auto_attack_override.get("damage_type", "physical")
+        # Flat modifier on ALL basic-attack damage (Bel'Veth passive:
+        # 75%): scaling the AD every auto branch reads covers normal,
+        # crit, empowered, forced-crit, and double-shot attacks alike.
+        attack_damage *= auto_attack_override.get("damage_ratio", 1.0)
 
     for i in range(num_auto_attacks):
         if override_replace_raw is not None:
@@ -1670,11 +1860,15 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 class OnHitResult:
     """Values produced by on-hit layering and consumed by later steps."""
 
-    phantom_hit_count: int = 0
+    phantom_hit_count: int = 0  # auto-segment phantom hits only
     phantom_hit_autos: set[int] = field(default_factory=set)
     static_on_hit_per_hit: float = 0.0  # mitigated, for HP simulations
     current_health_on_hit_avg: float = 0.0
     has_current_health_on_hit: bool = False
+    # Indices in the rotation's ON-HIT application sequence whose attack
+    # fired a phantom hit — each grants one extra on-hit counter stack
+    # (consumed by _add_single_proc_on_hits).
+    phantom_ability_stack_positions: set[int] = field(default_factory=set)
 
 
 def _layer_on_hit_effects(
@@ -1717,9 +1911,56 @@ def _layer_on_hit_effects(
 
     # Calculate Guinsoo's Rageblade phantom hits centrally — these apply
     # ALL on-hit effects (items AND abilities) an additional time.
-    result.phantom_hit_count, result.phantom_hit_autos = _calculate_phantom_hits(
-        num_auto_attacks, state.damage_effects.phantom_hit
+    # Phantom stacking is an ON-ATTACK cadence (item taxonomy), so
+    # ability-carried applications that count as attacks (Bel'Veth E
+    # slashes) lead the shared attack counter before the autos.
+    phantom_effect = state.damage_effects.phantom_hit
+    apps = rotation.ability_item_applications
+    attack_app_indices: list[int] = []
+    if phantom_effect is not None and apps:
+        wants_on_attack = (
+            item_effects.counter_trigger(phantom_effect.item_name) == "on_attack"
+        )
+        attack_app_indices = [
+            i
+            for i, app in enumerate(apps)
+            if (app.on_attack if wants_on_attack else app.on_hit)
+        ]
+    ability_phantoms, result.phantom_hit_autos = _calculate_phantom_hits(
+        num_auto_attacks, phantom_effect, leading_attacks=len(attack_app_indices)
     )
+    result.phantom_hit_count = len(result.phantom_hit_autos)
+
+    # Ability-segment phantom hits: re-apply the per-hit item effects
+    # once at the firing attack's own effectiveness (a slash's 8-32%),
+    # and grant one extra stack on the shared ON-HIT counters at that
+    # hit's position (mapped below; consumed by the stacking-proc walk).
+    if ability_phantoms:
+        on_hit_seq_index = {}
+        seq = 0
+        for i, app in enumerate(apps):
+            if app.on_hit:
+                on_hit_seq_index[i] = seq
+                seq += 1
+        phantom_ability_damage = 0.0
+        for position in ability_phantoms:
+            app = apps[attack_app_indices[position]]
+            phantom_ability_damage += _ability_applied_on_hit_damage(
+                state, app.effectiveness, app.target_hp
+            )
+            mapped = on_hit_seq_index.get(attack_app_indices[position])
+            if mapped is not None:
+                result.phantom_ability_stack_positions.add(mapped)
+        if phantom_ability_damage > 0:
+            assert phantom_effect is not None
+            breakdown["on_hit_items_phantom"] = {
+                "name": f"{phantom_effect.item_name} phantom hits (ability attacks)",
+                "count": len(ability_phantoms),
+                "total_damage": phantom_ability_damage,
+                "damage_type": "mixed",
+            }
+            on_hit_total += phantom_ability_damage
+
     # Double shot applies on-hit effects an additional time per auto
     double_shot_extra = num_auto_attacks if autos.double_shot_info else 0
     on_hit_hits = num_auto_attacks + result.phantom_hit_count + double_shot_extra
@@ -1782,7 +2023,14 @@ def _layer_on_hit_effects(
             hits = min(hits, int(max_procs))
 
         stacks_required = on_hit_data.get("stacks_required", 0)
-        if stacks_required > 1 and counts_ability_hits:
+        ramping = bool(on_hit_data.get("ramping"))
+        if ramping and stacks_required > 1:
+            # Ramping every-Nth proc (Bel'Veth R): proc k deals
+            # k x per_hit — stacks accumulate and never reset, so the
+            # total is per_hit x (1 + 2 + ... + procs).
+            procs = hits // stacks_required
+            ability_on_hit_damage = per_hit * procs * (procs + 1) / 2.0
+        elif stacks_required > 1 and counts_ability_hits:
             # Shared auto+ability stack counter (e.g. Aurora P): only
             # complete procs deal damage — partial stacks expire.
             ability_on_hit_damage = (
@@ -1792,7 +2040,7 @@ def _layer_on_hit_effects(
             # Autos-only on-hit (e.g. Vayne W): smooth per-hit average.
             ability_on_hit_damage = per_hit * hits
         on_hit_total += ability_on_hit_damage
-        if max_procs is None:
+        if max_procs is None and not ramping:
             result.static_on_hit_per_hit += per_hit
         elif on_hit_hits > 0:
             # Capped on-hits don't land on every auto — feed the HP
@@ -1801,9 +2049,14 @@ def _layer_on_hit_effects(
 
         ability_name = on_hit_data.get("name", f"{ability_key} (on-hit)")
         if stacks_required > 1:
-            # Stack-based on-hit (e.g. Vayne W): display as procs
+            # Stack-based on-hit (e.g. Vayne W): display as procs.
+            # Ramping procs escalate, so their per-proc figure is the
+            # average (total / procs) rather than a fixed amount.
             proc_count = hits // stacks_required
-            damage_per_proc = per_hit * stacks_required
+            if ramping and proc_count > 0:
+                damage_per_proc = ability_on_hit_damage / proc_count
+            else:
+                damage_per_proc = per_hit * stacks_required
             breakdown[f"on_hit_ability_{ability_key}"] = {
                 "name": ability_name,
                 "count": proc_count,
@@ -1953,8 +2206,9 @@ def _add_spellblade_damage(
 
         state.breakdown[source.breakdown_key] = {
             "name": source.display_name,
-            "procs": result.procs,
-            "damage_per_proc": result.damage_per_proc,
+            "count": result.procs,
+            "damage_per_hit": result.damage_per_proc,
+            "unit": "procs",
             "total_damage": sb_total,
             "damage_type": source.damage_type,
         }
@@ -1975,7 +2229,9 @@ def _add_spellblade_damage(
             if extra_on_hit > 0:
                 state.breakdown[f"double_on_hit_{result.item}"] = {
                     "name": f"{result.item} (Double On-Hit)",
-                    "procs": result.double_on_hit_procs,
+                    "count": result.double_on_hit_procs,
+                    "damage_per_hit": extra_on_hit / result.double_on_hit_procs,
+                    "unit": "procs",
                     "total_damage": extra_on_hit,
                     "damage_type": "mixed",
                 }
@@ -2170,6 +2426,11 @@ def _add_single_proc_on_hits(
     and double on-hits each grant an extra stack), Eclipse, and
     Muramana's per-ability-cast Shock damage.
 
+    Stack counters count ON-HIT applications, so they run on one shared
+    hit sequence: the rotation's ability-carried applications (Bel'Veth
+    Q/E) lead, then the autos continue the same counter. A proc fires at
+    the effectiveness of the hit that landed the Nth stack.
+
     Replaced autos (Azir soldiers) consume energized effects and build
     stack-counter procs normally, but every auto-triggered proc's damage
     is scaled by the override's on-hit effectiveness (game-verified:
@@ -2191,7 +2452,9 @@ def _add_single_proc_on_hits(
             )
             breakdown[source.breakdown_key] = {
                 "name": source.display_name,
-                "procs": procs,
+                "count": procs,
+                "damage_per_hit": mitigated / procs,
+                "unit": "procs",
                 "total_damage": mitigated,
                 "damage_type": source.damage_type,
             }
@@ -2213,51 +2476,96 @@ def _add_single_proc_on_hits(
             )
             breakdown[source.breakdown_key] = {
                 "name": source.display_name,
-                "procs": procs,
+                "count": procs,
+                "damage_per_hit": mitigated / procs,
+                "unit": "procs",
                 "total_damage": mitigated,
                 "damage_type": source.damage_type,
             }
             state.total_damage += mitigated
 
-    if num_auto_attacks > 0:
+    apps = rotation.ability_item_applications
+    if num_auto_attacks > 0 or apps:
         other_on_hit_per_hit = on_hits.static_on_hit_per_hit
         if on_hits.has_current_health_on_hit and on_hits.current_health_on_hit_avg > 0:
             other_on_hit_per_hit += on_hits.current_health_on_hit_avg
 
         for effect in state.damage_effects.stacking_on_hits:
             source = effect.source
-            procs, proc_autos = _calculate_stacking_procs(
+            # The item taxonomy decides which ability applications
+            # advance this counter (Kraken/Hullbreaker count ON-HIT
+            # applications; an on-attack-gated counter would count only
+            # attack-carrying applications like Bel'Veth E slashes).
+            wants_on_attack = (
+                item_effects.counter_trigger(source.item_name) == "on_attack"
+            )
+            counted_hits = [
+                app
+                for app in apps
+                if (app.on_attack if wants_on_attack else app.on_hit)
+            ]
+            # Phantom hits fired by ability attacks re-apply on-hit —
+            # one extra stack on on-hit-gated counters at that position.
+            extra_stacks = (
+                set() if wants_on_attack else on_hits.phantom_ability_stack_positions
+            )
+            ability_procs, proc_autos = _calculate_stacking_procs(
                 num_auto_attacks,
                 on_hits.phantom_hit_autos,
                 spellblade.double_on_hit_procs,
                 hits_required=effect.hits_required,
+                leading_ability_hits=len(counted_hits),
+                ability_extra_stacks=extra_stacks,
             )
+            procs = len(ability_procs) + len(proc_autos)
             if procs <= 0:
                 continue
 
-            if effect.tracks_target_health:
-                total_damage = _simulate_stacking_on_hit_damage(
-                    effect,
-                    _damage_inputs(state),
-                    state.target_health,
-                    num_auto_attacks,
-                    autos.auto_damage_per_hit,
-                    other_on_hit_per_hit,
-                    resists,
-                    state.magic_amp,
-                    proc_autos,
-                    effectiveness=effectiveness,
-                )
-            else:
-                raw = source.raw_damage(_damage_inputs(state)) * procs * effectiveness
-                total_damage = _mitigate(
-                    raw, source.damage_type, resists, state.magic_amp
-                )
+            # Ability-segment procs: the hit that lands the Nth stack
+            # fires the proc at ITS effectiveness (Bel'Veth Q 75%, E
+            # 8-32%), reading the rotation's modeled target HP (with
+            # earlier procs of this effect folded in).
+            total_damage = 0.0
+            proc_hp_dealt = 0.0
+            for hit_index in ability_procs:
+                app = counted_hits[hit_index]
+                inputs = _damage_inputs(state, max(0.0, app.target_hp - proc_hp_dealt))
+                raw = source.raw_damage(inputs) * app.effectiveness
+                mitigated = _mitigate(raw, source.damage_type, resists, state.magic_amp)
+                total_damage += mitigated
+                proc_hp_dealt += mitigated
+
+            # Auto-segment procs: unchanged auto-timeline behavior at
+            # the auto stream's effectiveness.
+            if proc_autos:
+                if effect.tracks_target_health:
+                    total_damage += _simulate_stacking_on_hit_damage(
+                        effect,
+                        _damage_inputs(state),
+                        state.target_health,
+                        num_auto_attacks,
+                        autos.auto_damage_per_hit,
+                        other_on_hit_per_hit,
+                        resists,
+                        state.magic_amp,
+                        proc_autos,
+                        effectiveness=effectiveness,
+                    )
+                else:
+                    raw = (
+                        source.raw_damage(_damage_inputs(state))
+                        * len(proc_autos)
+                        * effectiveness
+                    )
+                    total_damage += _mitigate(
+                        raw, source.damage_type, resists, state.magic_amp
+                    )
 
             breakdown[source.breakdown_key] = {
                 "name": source.display_name,
-                "procs": procs,
-                "damage_per_proc": total_damage / procs,
+                "count": procs,
+                "damage_per_hit": total_damage / procs,
+                "unit": "procs",
                 "total_damage": total_damage,
                 "damage_type": source.damage_type,
             }

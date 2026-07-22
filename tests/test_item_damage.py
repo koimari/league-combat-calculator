@@ -1174,7 +1174,7 @@ class TestBloodsongSpellbladeAndExposeWeakness:
             ),
         )
         sb = fight["breakdown"]["spellblade_Bloodsong"]
-        assert sb["procs"] == 2
+        assert sb["count"] == 2
 
     def test_expose_weakness_present_in_breakdown(
         self,
@@ -1398,7 +1398,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
             ),
         )
         sb = fight["breakdown"]["spellblade_Dusk and Dawn"]
-        assert sb["procs"] == 2
+        assert sb["count"] == 2
 
     def test_double_on_hit_present_in_breakdown(
         self,
@@ -1427,7 +1427,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         )
         assert "double_on_hit_Dusk and Dawn" in fight["breakdown"]
         doh = fight["breakdown"]["double_on_hit_Dusk and Dawn"]
-        assert doh["procs"] == 2
+        assert doh["count"] == 2
         assert doh["total_damage"] > 0
 
     def test_no_double_on_hit_without_on_hit_items(
@@ -1534,7 +1534,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         )
         assert "double_on_hit_Dusk and Dawn" in fight["breakdown"]
         doh = fight["breakdown"]["double_on_hit_Dusk and Dawn"]
-        assert doh["procs"] == 2
+        assert doh["count"] == 2
         assert doh["total_damage"] > 0
 
     def test_double_on_hit_with_bork(self) -> None:
@@ -2841,33 +2841,34 @@ class TestKrakenSlayerPhantomHitStacking:
 
     def test_kraken_no_rageblade_normal_stacking(self) -> None:
         """Without Rageblade, Kraken procs every 3rd auto normally."""
-        procs, proc_autos = _calculate_stacking_procs(10, set(), 0, 3)
-        assert procs == 3  # autos 3, 6, 9
+        ability_procs, proc_autos = _calculate_stacking_procs(10, set(), 0, 3)
+        assert ability_procs == []  # no ability-carried applications
+        assert len(proc_autos) == 3  # autos 3, 6, 9
         assert proc_autos == [2, 5, 8]  # 0-indexed
 
     def test_10_autos_rageblade_4_procs(self) -> None:
         """10 autos + Rageblade (phantoms at 6,9) = 4 Kraken procs."""
         _, phantom_autos = _calculate_phantom_hits(10, ["Guinsoo's Rageblade"])
-        procs, _ = _calculate_stacking_procs(10, phantom_autos, 0, 3)
-        assert procs == 4
+        _, proc_autos = _calculate_stacking_procs(10, phantom_autos, 0, 3)
+        assert len(proc_autos) == 4
 
     def test_12_autos_rageblade_5_procs(self) -> None:
         """12 autos + Rageblade (phantoms at 6,9,12) = 5 Kraken procs."""
         _, phantom_autos = _calculate_phantom_hits(12, ["Guinsoo's Rageblade"])
-        procs, _ = _calculate_stacking_procs(12, phantom_autos, 0, 3)
-        assert procs == 5
+        _, proc_autos = _calculate_stacking_procs(12, phantom_autos, 0, 3)
+        assert len(proc_autos) == 5
 
     def test_15_autos_rageblade_6_procs(self) -> None:
         """15 autos + Rageblade (phantoms at 6,9,12,15) = 6 Kraken procs."""
         _, phantom_autos = _calculate_phantom_hits(15, ["Guinsoo's Rageblade"])
-        procs, _ = _calculate_stacking_procs(15, phantom_autos, 0, 3)
-        assert procs == 6
+        _, proc_autos = _calculate_stacking_procs(15, phantom_autos, 0, 3)
+        assert len(proc_autos) == 6
 
     def test_17_autos_rageblade_7_procs(self) -> None:
         """17 autos + Rageblade (phantoms at 6,9,12,15) = 7 Kraken procs."""
         _, phantom_autos = _calculate_phantom_hits(17, ["Guinsoo's Rageblade"])
-        procs, _ = _calculate_stacking_procs(17, phantom_autos, 0, 3)
-        assert procs == 7
+        _, proc_autos = _calculate_stacking_procs(17, phantom_autos, 0, 3)
+        assert len(proc_autos) == 7
 
     def test_full_fight_kraken_plus_rageblade(self) -> None:
         """Integration test: Kraken + Rageblade in full fight shows correct procs."""
@@ -2901,7 +2902,7 @@ class TestKrakenSlayerPhantomHitStacking:
         )
         kraken = fight["breakdown"].get("on_hit_Kraken Slayer")
         assert kraken is not None
-        assert kraken["procs"] == 4  # 10 autos, phantoms at 6,9
+        assert kraken["count"] == 4  # 10 autos, phantoms at 6,9
 
     def test_kraken_damage_scales_with_missing_hp(self) -> None:
         """Later Kraken procs should deal more due to higher missing HP."""
@@ -3424,19 +3425,19 @@ class TestHullbreakerSkipper:
 
     def test_stacking_procs_5_hits(self) -> None:
         """5 autos should yield exactly 1 proc."""
-        procs, proc_autos = _calculate_stacking_procs(5, set(), 0, 5)
-        assert procs == 1
+        _, proc_autos = _calculate_stacking_procs(5, set(), 0, 5)
+        assert len(proc_autos) == 1
         assert proc_autos == [4]  # 0-indexed, 5th auto
 
     def test_stacking_procs_10_hits(self) -> None:
         """10 autos should yield exactly 2 procs."""
-        procs, _ = _calculate_stacking_procs(10, set(), 0, 5)
-        assert procs == 2
+        _, proc_autos = _calculate_stacking_procs(10, set(), 0, 5)
+        assert len(proc_autos) == 2
 
     def test_stacking_procs_4_hits_no_proc(self) -> None:
         """4 autos should yield 0 procs."""
-        procs, _ = _calculate_stacking_procs(4, set(), 0, 5)
-        assert procs == 0
+        _, proc_autos = _calculate_stacking_procs(4, set(), 0, 5)
+        assert len(proc_autos) == 0
 
     def test_phantom_hit_adds_stack_not_damage(self) -> None:
         """Phantom hit accelerates stacking but doesn't duplicate proc."""
@@ -3444,8 +3445,8 @@ class TestHullbreakerSkipper:
         #   auto 0: 1, auto 1: 2, auto 2: 3, auto 3: 4+1(phantom)=5 -> proc
         #   auto 4: 1
         # Should get 1 proc on auto 3 (earlier than without phantom)
-        procs, proc_autos = _calculate_stacking_procs(5, {3}, 0, 5)
-        assert procs == 1
+        _, proc_autos = _calculate_stacking_procs(5, {3}, 0, 5)
+        assert len(proc_autos) == 1
         assert 3 in proc_autos  # Proc fires on auto 3, not 4
 
     def test_fight_damage_with_hullbreaker(self) -> None:
@@ -3482,7 +3483,7 @@ class TestHullbreakerSkipper:
         hb_entry = fight["breakdown"].get("on_hit_Hullbreaker")
         assert hb_entry is not None, "Missing Hullbreaker breakdown entry"
         assert hb_entry["name"] == "Hullbreaker (Skipper)"
-        assert hb_entry["procs"] >= 1
+        assert hb_entry["count"] >= 1
         assert hb_entry["total_damage"] > 0
 
 
@@ -3841,7 +3842,7 @@ class TestStatikkShiv(_FightHarness):
         )
         assert "on_hit_once_Statikk Shiv" in result["breakdown"]
         entry = result["breakdown"]["on_hit_once_Statikk Shiv"]
-        assert entry["procs"] == 1
+        assert entry["count"] == 1
         assert entry["damage_type"] == "magic"
 
     def test_statikk_shiv_no_autos_no_proc(self) -> None:

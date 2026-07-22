@@ -58,6 +58,11 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "Q", "E", "Q", "E", "R", "E",
         "E", "W", "W", "R", "W", "W",
     ],
+    "Bel'Veth": [
+        "Q", "E", "W", "Q", "Q", "R",
+        "Q", "E", "Q", "E", "R", "E",
+        "E", "W", "W", "R", "W", "W",
+    ],
     # ── W start, W max first (soldiers are the kit; standard since V13.7) ──
     "Azir": [
         "W", "Q", "E", "W", "W", "R",

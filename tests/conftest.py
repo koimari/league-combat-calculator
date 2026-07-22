@@ -62,6 +62,8 @@ aurelion_sol_data = _champion_fixture("AurelionSol")
 aurora_data = _champion_fixture("Aurora")
 azir_data = _champion_fixture("Azir")
 bard_data = _champion_fixture("Bard")
+# Data key differs from the display/dispatcher name "Bel'Veth".
+belveth_data = _champion_fixture("Belveth")
 gnar_data = _champion_fixture("Gnar")
 # Data key differs from the display/dispatcher name "Jarvan IV".
 jarvan_iv_data = _champion_fixture("JarvanIV")

@@ -57,6 +57,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "target_debuff",
         "on_hit",
         "proc_count",
+        "applies_item_on_hits",
         "auto_attack_override",
         "double_shot",
         "detail",  # display text copied onto the ability's breakdown row

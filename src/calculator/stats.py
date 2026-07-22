@@ -263,6 +263,10 @@ def calculate_total_stats(
         "magic_resistance": final_mr,
         "attack_speed": final_attack_speed,
         "attack_speed_ratio": as_ratio,
+        # Total bonus AS percent (level growth + items + item passives) —
+        # champion mechanics that scale with bonus AS (Bel'Veth E's slash
+        # count) read this; ability AS steroids add to it at fight time.
+        "bonus_attack_speed": total_as_bonus,
         "magic_penetration_flat": total_item_stats["magic_penetration_flat"],
         "magic_penetration_percent": final_magic_pen_percent,
         "base_attack_damage": round(base_stats["attack_damage"]),
