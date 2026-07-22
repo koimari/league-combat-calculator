@@ -1,0 +1,13 @@
+# The Dockerfile's explicit COPYs decide what enters the image; this file
+# keeps the build-context upload small. vendor/ is the big one — its
+# __cache__/ accumulates scraped wiki pages.
+.git
+vendor
+tests
+scripts
+docs
+**/__pycache__
+.pytest_cache
+*.md
+Notes.txt
+run_web.bat

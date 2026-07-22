@@ -128,6 +128,11 @@ document.addEventListener("DOMContentLoaded", () => {
         .then((data) => {
             defaultTarget = data.default_target;
             championOptionsMeta = data.champion_options || {};
+            // Update Data is a local dev workflow (LOL_CALC_DEV=1); the
+            // deployed site 404s the endpoint, so hide its button.
+            if (!data.dev_mode) {
+                document.getElementById("update-btn").classList.add("hidden");
+            }
             // Reverse lookup: item name -> list of group names it belongs to
             for (const [group, members] of Object.entries(data.exclusivity_groups)) {
                 for (const name of members) {

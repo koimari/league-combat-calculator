@@ -1,6 +1,7 @@
 """Flask web application for the LoL Damage Calculator."""
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -11,11 +12,9 @@ from flask import Flask, Response, jsonify, render_template, request
 
 from calculator.data_fetcher import (
     fetch_champion_data,
-    fetch_item_data,
     get_champion,
     get_item_by_name,
 )
-from calculator.data_updater import update_data
 from calculator.item_effects import refresh_item_effects
 from calculator.champions import champion_options_meta_map
 from calculator.optimizer import (
@@ -41,6 +40,25 @@ app = Flask(
     static_folder=str(Path(__file__).resolve().parent.parent / "static"),
 )
 app.json.sort_keys = False
+
+
+def _dev_mode() -> bool:
+    """True when LOL_CALC_DEV=1 (run_web.bat sets it; deployments don't).
+
+    Gates the wiki re-scrape endpoint: patch-day data updates run locally
+    and ship to the deployed site as a git-tracked data/ cache
+    (see docs/deploy.md).
+    """
+    return os.environ.get("LOL_CALC_DEV") == "1"
+
+
+def _run_data_update():
+    """Import data_updater only when actually updating: its import chain
+    pulls in vendor/lolstaticdata, which production images don't ship."""
+    # pylint: disable-next=import-outside-toplevel  # deliberate, see docstring
+    from calculator.data_updater import update_data
+
+    return update_data()
 
 
 @app.route("/")
@@ -122,6 +140,7 @@ def api_config():
                 "one_rotation_duration_seconds": ONE_ROTATION_DURATION,
             },
             "champion_options": champion_options_meta_map(),
+            "dev_mode": _dev_mode(),
         }
     )
 
@@ -312,10 +331,13 @@ def api_optimize():
 
 @app.route("/api/update-data")
 def api_update_data():
-    """Stream data update progress via Server-Sent Events."""
+    """Stream data update progress via Server-Sent Events. Dev-only:
+    404s unless LOL_CALC_DEV=1 (see _dev_mode)."""
+    if not _dev_mode():
+        return jsonify({"error": "Data updates are disabled on this server"}), 404
 
     def generate():
-        for event in update_data():
+        for event in _run_data_update():
             yield f"data: {json.dumps(event)}\n\n"
         # Fresh item JSON is now on disk — re-parse ITEM_EFFECTS in place
         # so in-memory effects reflect the newly fetched patch data.

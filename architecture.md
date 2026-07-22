@@ -104,7 +104,8 @@ wiki (vendor/lolstaticdata, external)
   Owns `_EXCLUSIVITY_GROUPS` (canonical; served to the frontend) and the
   item-eligibility predicates (`get_eligible_legendaries`/`get_eligible_boots`)
   the item-picker routes reuse.
-- `src/app.py` — thin Flask routes. `/api/config` bootstraps the frontend (exclusivity
+- `src/app.py` — thin Flask routes. Deployment (Docker image, `prod` branch
+  gate, dev-mode flag): `docs/deploy.md`. `/api/config` bootstraps the frontend (exclusivity
   groups, fight/target defaults, champion options metadata); `/api/items` and
   `/api/boots` delegate eligibility to the optimizer. No calculation logic in
   routes; breakdown display extras pass through untouched.

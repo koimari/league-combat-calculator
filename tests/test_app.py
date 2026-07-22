@@ -76,6 +76,50 @@ def test_config_exposes_all_request_defaults():
     }
 
 
+class TestUpdateDataDevGate:
+    """/api/update-data re-scrapes the wiki and rewrites data/ — a local
+    patch-day workflow, never a public endpoint. It only exists when
+    LOL_CALC_DEV=1 (run_web.bat sets it; the deployed site doesn't)."""
+
+    def test_update_data_is_404_without_dev_flag(self, monkeypatch):
+        monkeypatch.delenv("LOL_CALC_DEV", raising=False)
+
+        response = app_module.app.test_client().get("/api/update-data")
+
+        assert response.status_code == 404
+
+    def test_update_data_streams_events_in_dev_mode(self, monkeypatch):
+        monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setattr(
+            app_module, "_run_data_update", lambda: iter([{"phase": "done"}])
+        )
+        refreshed = []
+        monkeypatch.setattr(
+            app_module, "refresh_item_effects", lambda: refreshed.append(True)
+        )
+
+        response = app_module.app.test_client().get("/api/update-data")
+
+        assert response.status_code == 200
+        assert response.mimetype == "text/event-stream"
+        assert b'data: {"phase": "done"}' in response.data
+        assert refreshed == [True]
+
+    def test_config_exposes_dev_mode_off_by_default(self, monkeypatch):
+        monkeypatch.delenv("LOL_CALC_DEV", raising=False)
+
+        data = app_module.app.test_client().get("/api/config").get_json()
+
+        assert data["dev_mode"] is False
+
+    def test_config_exposes_dev_mode_on_when_flagged(self, monkeypatch):
+        monkeypatch.setenv("LOL_CALC_DEV", "1")
+
+        data = app_module.app.test_client().get("/api/config").get_json()
+
+        assert data["dev_mode"] is True
+
+
 @pytest.mark.parametrize("slot_count", [1, 2, 3, 4, 5, 6])
 def test_optimize_accepts_slot_counts_one_through_six(monkeypatch, slot_count):
     monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
