@@ -26,8 +26,20 @@ Promote only when `pytest` and the golden gate are green on master.
 `/api/update-data` wiki re-scrape endpoint. **Never set it on a deployment** —
 the endpoint is unauthenticated, hammers the wiki from the server's IP, and
 with multiple gunicorn workers would refresh only one worker's memory. Unset,
-the endpoint 404s and the frontend hides the button. Production needs no env
-vars at all (`PORT` comes from the host).
+the endpoint 404s and the frontend hides the button.
+
+Production env vars (Render dashboard → Environment):
+
+- `PORT=10000` — Render routes to this port either way, but setting it
+  explicitly skips Docker port *detection*, which on the first deploy took
+  ~5 minutes — during which the edge intermittently answered plain-text
+  `Not Found` (`x-render-routing: no-server`) instead of reaching the app.
+  Every deploy repeats detection, so set this once and forget it.
+- `WEB_CONCURRENCY=2` — Render auto-sets this to the CPU count (1 on
+  Standard), and one sync gunicorn worker means a multi-second
+  `/api/optimize` call blocks every other visitor. Two processes on one
+  CPU timeshare, so cheap calculate requests keep flowing. Memory is not
+  a constraint (~60 MB per worker on a 2 GB instance).
 
 ## Patch-day flow (unchanged, plus one merge)
 
@@ -43,9 +55,9 @@ vars at all (`PORT` comes from the host).
    (private repos work fine)
 2. Runtime: **Docker** (it finds the `Dockerfile` automatically);
    Branch: **prod**
-3. Instance: **Standard** (2 GB / 1 CPU, ~$25/mo) to start. Each gunicorn
-   worker holds ~100 MB; set `WEB_CONCURRENCY=2` on 1 CPU. If `/api/optimize`
-   queues up under real traffic, move to a multi-CPU instance and raise
+3. Instance: **Standard** (2 GB / 1 CPU, ~$25/mo) to start. Set the two
+   env vars above before the first deploy. If `/api/optimize` queues up
+   under real traffic, move to a multi-CPU instance and raise
    `WEB_CONCURRENCY` to match cores — that endpoint runs a multi-second
    CPU-bound build search and is the only scaling pressure.
 4. Optional but recommended: put the domain behind Cloudflare's free tier
