@@ -3,20 +3,28 @@
 # Ships only the runtime: src/, static/, templates/, and the data/ cache.
 # vendor/ (the wiki scraper) stays out — patch-day data updates run locally
 # and arrive here as committed changes to data/.
-FROM python:3.14-slim
+FROM python:3.14.3-slim@sha256:5e59aae31ff0e87511226be8e2b94d78c58f05216efda3b07dbbed938ec8583b
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-runtime.txt .
+RUN pip install --no-cache-dir --require-hashes -r requirements-runtime.txt \
+    && addgroup --system app \
+    && adduser --system --ingroup app app
 
-COPY src/ src/
-COPY static/ static/
-COPY templates/ templates/
-COPY data/ data/
+COPY --chown=app:app src/ src/
+COPY --chown=app:app static/ static/
+COPY --chown=app:app templates/ templates/
+COPY --chown=app:app data/ data/
 
 # PaaS hosts (Render, Fly) inject PORT; 8000 is for local `docker run`.
 # Workers are processes, not threads — fight sims are CPU-bound Python.
-# The generous timeout covers multi-second /api/optimize searches.
-ENV PORT=8000
-CMD gunicorn src.app:app --bind 0.0.0.0:$PORT --workers ${WEB_CONCURRENCY:-4} --timeout 120
+# Request bounds keep every valid calculation below this finite deadline.
+ENV PORT=8000 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+USER app
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD ["python", "-c", "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.environ['PORT'] + '/healthz', timeout=2)"]
+CMD ["sh", "-c", "exec gunicorn src.app:app --bind 0.0.0.0:$PORT --workers ${WEB_CONCURRENCY:-2} --timeout 30 --access-logfile - --error-logfile -"]

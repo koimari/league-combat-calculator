@@ -135,7 +135,10 @@ wiki (vendor/lolstaticdata, external)
 
 ## Dependencies
 
-- Root `requirements.txt` defines the calculator application, test, and lint environment.
+- Root `requirements.txt` defines the local calculator, scraper, test, lint, and
+  security-scan environment. `requirements-runtime.in` is the small human-owned
+  production manifest; its hashed `requirements-runtime.txt` lock is what Docker
+  installs.
 - `vendor/lolstaticdata/requirements.txt` belongs to the vendored external project. Its
   overlap with the root manifest is intentional; it is not a second calculator environment
   definition.

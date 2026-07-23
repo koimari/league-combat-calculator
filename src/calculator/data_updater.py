@@ -10,6 +10,8 @@ import threading
 from pathlib import Path
 from typing import Any, Generator
 
+import requests as _requests
+
 # Add the vendored lolstaticdata to the import path so we can use its modules directly
 _LOLSTATICDATA_ROOT = (
     Path(__file__).resolve().parent.parent.parent / "vendor" / "lolstaticdata"
@@ -19,6 +21,16 @@ if str(_LOLSTATICDATA_ROOT) not in sys.path:
 
 from lolstaticdata.common import utils as _lsd_utils
 from lolstaticdata.common.utils import download_json, get_latest_patch_version
+
+_http_get = _requests.get
+
+
+def _download_page(url: str) -> str:
+    """Fetch wiki HTML with a finite wait and explicit HTTP error handling."""
+    response = _http_get(url, timeout=30)
+    response.raise_for_status()
+    return response.text
+
 
 # Monkey-patch download_soup on Windows: the original builds cache filenames
 # via url.replace("/", "@") but never strips colons, which are illegal in
@@ -33,7 +45,6 @@ if sys.platform == "win32":
         dir: str = "__cache__",
     ) -> str:
         import os as _os
-        import requests as _requests
         from bs4 import BeautifulSoup as _BS
 
         directory = _os.path.abspath(
@@ -56,8 +67,7 @@ if sys.platform == "win32":
             with open(fn, encoding="utf-8") as f:
                 html = f.read()
         else:
-            page = _requests.get(url)
-            html = page.text
+            html = _download_page(url)
             if use_cache:
                 with open(fn, "w", encoding="utf-8") as f:
                     f.write(html)
@@ -85,7 +95,7 @@ from lolstaticdata.champions.pull_champions_dragons import get_ability_url
 from lolstaticdata.champions.__main__ import get_ability_filenames
 from lolstaticdata.items.__main__ import main as run_items_generator
 
-from calculator.data_fetcher import DEFAULT_DATA_DIR, _write_cache
+from .data_fetcher import DEFAULT_DATA_DIR, _write_cache
 
 # Only one update can run at a time
 _update_lock = threading.Lock()

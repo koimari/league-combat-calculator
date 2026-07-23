@@ -130,7 +130,8 @@ def download_json(url: str, use_cache: bool = True) -> Json:
             j = json.load(f)
     else:
         headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"}
-        page = requests.get(url, headers=headers)
+        page = requests.get(url, headers=headers, timeout=30)
+        page.raise_for_status()
         j = page.json()
         if use_cache:
             with open(fn, "w") as f:
@@ -152,7 +153,8 @@ def download_soup(url: str, use_cache: bool = True, dir: str = f"__cache__"):
         with open(fn, encoding="utf-8") as f:
             html = f.read()
     else:
-        page = requests.get(url)
+        page = requests.get(url, timeout=30)
+        page.raise_for_status()
         # html = page.content.decode(page.encoding)
         html = page.text
         if use_cache:

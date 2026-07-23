@@ -1,10 +1,22 @@
 """Route-level contracts for shared fight request parsing."""
 
 from dataclasses import replace
+from pathlib import Path
+import sqlite3
 
 import pytest
 
 import src.app as app_module
+from src.rate_limit import TokenBucketStore
+
+
+@pytest.fixture(autouse=True)
+def _disable_rate_limits_between_route_tests():
+    """Only dedicated tests spend the production abuse-control budget."""
+    previous = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
+    app_module.app.config["RATE_LIMIT_ENABLED"] = False
+    yield
+    app_module.app.config["RATE_LIMIT_ENABLED"] = previous
 
 
 def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
@@ -38,7 +50,7 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
         "champion": "Ahri",
         "level": 18,
         "fight_mode": "auto_only",
-        "fight_duration": 12,
+        "fight_duration": 10,
         "include_auto_attacks": False,
         "auto_attack_uptime": 0.7,
         "auto_attacks_only": True,
@@ -58,6 +70,249 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
     assert captured["calculate"] == replace(captured["optimize"], deterministic=False)
 
 
+@pytest.mark.parametrize(
+    ("endpoint", "payload"),
+    [
+        ("/api/calculate", ["Aatrox"]),
+        ("/api/optimize", ["Aatrox"]),
+        ("/api/calculate", {"champion": "Aatrox", "level": "nope"}),
+        ("/api/optimize", {"champion": "Aatrox", "level": "nope"}),
+        ("/api/calculate", {"champion": {}, "level": 18}),
+        ("/api/optimize", {"champion": {}, "level": 18}),
+        (
+            "/api/calculate",
+            {"champion": "Aatrox", "fight_mode": "timed", "fight_duration": 11},
+        ),
+        (
+            "/api/optimize",
+            {"champion": "Aatrox", "fight_mode": "timed", "fight_duration": 11},
+        ),
+        ("/api/calculate", {"champion": "Aatrox", "target_health": "nan"}),
+        ("/api/optimize", {"champion": "Aatrox", "target_health": "inf"}),
+        ("/api/calculate", {"champion": "Aatrox", "ability_ranks": []}),
+        ("/api/optimize", {"champion": "Aatrox", "champion_options": []}),
+        ("/api/calculate", {"champion": "Aatrox", "cast_order": [{}, "W", "E", "R"]}),
+        ("/api/calculate", {"champion": "Aatrox", "ability_ranks": {"Q": 1.5}}),
+        (
+            "/api/calculate",
+            {"champion": "Aatrox", "champion_options": {"unknown": True}},
+        ),
+        (
+            "/api/calculate",
+            {"champion": "Aatrox", "champion_options": {"sweetspot": "false"}},
+        ),
+        ("/api/calculate", {"champion": "Aatrox", "items": "Kraken Slayer"}),
+        (
+            "/api/calculate",
+            {"champion": "Aatrox", "items": ["Kraken Slayer"] * 7},
+        ),
+        ("/api/optimize", {"champion": "Aatrox", "locked_items": "Kraken Slayer"}),
+    ],
+)
+def test_public_post_routes_reject_malformed_or_unbounded_input(endpoint, payload):
+    response = app_module.app.test_client().post(endpoint, json=payload)
+
+    assert response.status_code == 400
+    assert response.is_json
+    assert response.get_json()["error"]
+
+
+def test_public_post_routes_reject_request_bodies_over_32_kib():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={"champion": "Aatrox", "padding": "x" * 33_000},
+    )
+
+    assert response.status_code == 413
+    assert response.get_json() == {"error": "Request body exceeds 32 KiB"}
+
+
+def test_public_bounds_accept_the_existing_ui_maxima():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Aatrox",
+            "level": 20,
+            "fight_mode": "timed",
+            "fight_duration": 10,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1,
+            "target_health": 10_000,
+            "target_bonus_health": 10_000,
+            "target_armor": 500,
+            "target_mr": 500,
+        },
+    )
+
+    assert response.status_code == 200
+
+
+def test_optimize_rejects_unknown_locked_items_as_client_input():
+    response = app_module.app.test_client().post(
+        "/api/optimize",
+        json={"champion": "Aatrox", "locked_items": ["Definitely Not An Item"]},
+    )
+
+    assert response.status_code == 404
+    assert response.get_json() == {"error": "Item 'Definitely Not An Item' not found"}
+
+
+@pytest.mark.parametrize("endpoint", ["/api/calculate", "/api/optimize"])
+def test_public_post_routes_reject_unverified_champions_before_compute(
+    monkeypatch, endpoint
+):
+    class RecordingLimiter:
+        calls = 0
+
+        def consume(self, *_args, **_kwargs):
+            self.calls += 1
+            return True, 0.0
+
+    limiter = RecordingLimiter()
+    monkeypatch.setattr(app_module, "_rate_limiter", limiter)
+    app_module.app.config["RATE_LIMIT_ENABLED"] = True
+    payload = {
+        "champion": "Kled",
+        "level": 20,
+        "fight_mode": "timed",
+        "fight_duration": 10,
+        "include_auto_attacks": True,
+        "auto_attack_uptime": 1,
+        "target_health": 10_000,
+        "target_bonus_health": 10_000,
+        "target_armor": 500,
+        "target_mr": 500,
+        "max_legendary_slots": 6,
+    }
+
+    response = app_module.app.test_client().post(endpoint, json=payload)
+
+    assert response.status_code == 422
+    assert response.get_json() == {"error": "Champion 'Kled' is not verified"}
+    assert limiter.calls == 0
+
+
+def test_optimizer_global_bucket_returns_json_429(monkeypatch, tmp_path):
+    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+    monkeypatch.setattr(
+        app_module,
+        "optimize_build",
+        lambda **_kwargs: {"items": [], "total_damage": 0.0},
+    )
+    monkeypatch.setattr(
+        app_module,
+        "_rate_limiter",
+        TokenBucketStore(tmp_path / "rate-limits.sqlite3"),
+        raising=False,
+    )
+    app_module.app.config["RATE_LIMIT_ENABLED"] = True
+    client = app_module.app.test_client()
+
+    responses = [
+        client.post("/api/optimize", json={"champion": "Ahri", "level": 18})
+        for _ in range(3)
+    ]
+
+    assert [response.status_code for response in responses] == [200, 200, 429]
+    assert responses[-1].get_json() == {"error": "Optimizer is busy; retry shortly"}
+    assert int(responses[-1].headers["Retry-After"]) >= 1
+
+
+def test_optimizer_budget_caps_measured_worst_case_cpu_share():
+    capacity, refill_per_second = app_module._RATE_LIMIT_POLICIES["optimize"]
+
+    assert capacity == 2
+    assert 1.81 * refill_per_second <= 0.20
+
+
+def test_rate_limit_store_failure_fails_closed(monkeypatch):
+    class BrokenLimiter:
+        def consume(self, *_args, **_kwargs):
+            raise sqlite3.OperationalError("disk unavailable")
+
+    monkeypatch.setattr(app_module, "_rate_limiter", BrokenLimiter())
+    app_module.app.config["RATE_LIMIT_ENABLED"] = True
+
+    response = app_module.app.test_client().post(
+        "/api/calculate", json={"champion": "Aatrox"}
+    )
+
+    assert response.status_code == 503
+    assert response.get_json() == {"error": "Rate-limit service unavailable"}
+    assert response.headers["Retry-After"] == "1"
+
+
+def test_malformed_requests_do_not_spend_the_expensive_work_budget(monkeypatch):
+    class RecordingLimiter:
+        calls = 0
+
+        def consume(self, *_args, **_kwargs):
+            self.calls += 1
+            return True, 0.0
+
+    limiter = RecordingLimiter()
+    monkeypatch.setattr(app_module, "_rate_limiter", limiter)
+    app_module.app.config["RATE_LIMIT_ENABLED"] = True
+
+    response = app_module.app.test_client().post("/api/optimize", json=[])
+
+    assert response.status_code == 400
+    assert limiter.calls == 0
+
+
+@pytest.mark.parametrize("path", ["/", "/api/config", "/not-found"])
+def test_security_headers_cover_html_json_and_errors(path):
+    response = app_module.app.test_client().get(path)
+
+    assert response.headers["Strict-Transport-Security"] == (
+        "max-age=31536000; includeSubDomains"
+    )
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["X-Frame-Options"] == "DENY"
+    assert response.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+    assert response.headers["Permissions-Policy"] == (
+        "camera=(), geolocation=(), microphone=()"
+    )
+    assert response.headers["Cross-Origin-Opener-Policy"] == "same-origin"
+    assert response.headers["Cross-Origin-Resource-Policy"] == "same-origin"
+    policy = response.headers["Content-Security-Policy"]
+    assert "default-src 'self'" in policy
+    assert "script-src 'self'" in policy
+    assert "frame-ancestors 'none'" in policy
+    assert "object-src 'none'" in policy
+    assert "https://ddragon.leagueoflegends.com" in policy
+    assert "img-src 'self' https:;" not in policy
+    assert "unsafe-eval" not in policy
+
+
+def test_picker_rendering_never_puts_api_strings_into_inner_html():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "el.innerHTML = `" not in source
+    assert "createPickerContent" in source
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "javascript:alert(1)",
+        "data:image/svg+xml,<svg onload=alert(1)>",
+        "//attacker.example/icon.png",
+        "https://attacker.example/icon.png",
+        "not a url",
+    ],
+)
+def test_icon_api_rejects_non_http_urls(url):
+    assert app_module._https_icon(url) == ""
+
+
+def test_health_endpoint_is_lightweight_json():
+    response = app_module.app.test_client().get("/healthz")
+
+    assert response.status_code == 200
+    assert response.get_json() == {"status": "ok"}
+
+
 def test_config_exposes_all_request_defaults():
     response = app_module.app.test_client().get("/api/config")
 
@@ -74,6 +329,14 @@ def test_config_exposes_all_request_defaults():
         "duration_seconds": 8.0,
         "auto_attack_uptime": 0.8,
         "one_rotation_duration_seconds": 5.0,
+    }
+    assert data["input_limits"] == {
+        "fight_duration": [1.0, 10.0],
+        "auto_attack_uptime": [0.0, 1.0],
+        "target_health": [1.0, 10_000.0],
+        "target_bonus_health": [0.0, 10_000.0],
+        "target_armor": [0.0, 500.0],
+        "target_mr": [0.0, 500.0],
     }
 
 
@@ -150,12 +413,60 @@ class TestUpdateDataDevGate:
             app_module, "refresh_item_effects", lambda: refreshed.append(True)
         )
 
-        response = app_module.app.test_client().get("/api/update-data")
+        client = app_module.app.test_client()
+        config_response = client.get("/api/config")
+        response = client.get("/api/update-data")
 
+        assert "HttpOnly" in config_response.headers["Set-Cookie"]
+        assert "SameSite=Strict" in config_response.headers["Set-Cookie"]
         assert response.status_code == 200
         assert response.mimetype == "text/event-stream"
         assert b'data: {"phase": "done"}' in response.data
         assert refreshed == [True]
+
+    def test_update_data_needs_same_site_bootstrap_cookie(self, monkeypatch):
+        monkeypatch.setenv("LOL_CALC_DEV", "1")
+
+        response = app_module.app.test_client().get("/api/update-data")
+
+        assert response.status_code == 404
+
+    def test_dev_mode_rejects_non_local_host_even_from_loopback(self, monkeypatch):
+        monkeypatch.setenv("LOL_CALC_DEV", "1")
+        client = app_module.app.test_client()
+
+        config = client.get("/api/config", headers={"Host": "attacker.example"})
+        update = client.get("/api/update-data", headers={"Host": "attacker.example"})
+
+        assert config.get_json()["dev_mode"] is False
+        assert update.status_code == 404
+
+    def test_update_data_is_404_for_remote_request_even_with_dev_flag(
+        self, monkeypatch
+    ):
+        monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setattr(
+            app_module,
+            "_run_data_update",
+            lambda: pytest.fail("remote update must not run"),
+        )
+
+        response = app_module.app.test_client().get(
+            "/api/update-data", environ_base={"REMOTE_ADDR": "203.0.113.10"}
+        )
+
+        assert response.status_code == 404
+
+    def test_config_hides_dev_mode_from_remote_requests(self, monkeypatch):
+        monkeypatch.setenv("LOL_CALC_DEV", "1")
+
+        data = (
+            app_module.app.test_client()
+            .get("/api/config", environ_base={"REMOTE_ADDR": "203.0.113.10"})
+            .get_json()
+        )
+
+        assert data["dev_mode"] is False
 
     def test_config_exposes_dev_mode_off_by_default(self, monkeypatch):
         monkeypatch.delenv("LOL_CALC_DEV", raising=False)

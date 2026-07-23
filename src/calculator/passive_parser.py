@@ -16,7 +16,9 @@ Markup reference (subset used by the parser):
     ``'''text'''``    — bold wiki text
 """
 
+import ast
 import logging
+import math
 import re
 from typing import Any
 
@@ -128,9 +130,46 @@ def _eval_simple_expr(expr: str) -> float:
     Only allows safe numeric operations.
     """
     expr = expr.strip()
-    if not re.match(r"^[\d\s\+\-\*/\.\(\)]+$", expr):
-        raise ValueError(f"Unsafe expression: {expr}")
-    return float(eval(expr, {"__builtins__": {}}, {}))  # noqa: S307
+    if len(expr) > 100:
+        raise ValueError("Arithmetic expression is too long")
+    try:
+        tree = ast.parse(expr, mode="eval")
+    except SyntaxError as exc:
+        raise ValueError(f"Invalid arithmetic expression: {expr}") from exc
+
+    def evaluate(node: ast.AST, depth: int = 0) -> float:
+        if depth > 10:
+            raise ValueError("Arithmetic expression is too deeply nested")
+        if isinstance(node, ast.Constant):
+            if type(node.value) not in (int, float):
+                raise ValueError(f"Unsafe expression: {expr}")
+            value = float(node.value)
+        elif isinstance(node, ast.UnaryOp) and isinstance(
+            node.op, (ast.UAdd, ast.USub)
+        ):
+            operand = evaluate(node.operand, depth + 1)
+            value = operand if isinstance(node.op, ast.UAdd) else -operand
+        elif isinstance(node, ast.BinOp) and isinstance(
+            node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div)
+        ):
+            left = evaluate(node.left, depth + 1)
+            right = evaluate(node.right, depth + 1)
+            if isinstance(node.op, ast.Add):
+                value = left + right
+            elif isinstance(node.op, ast.Sub):
+                value = left - right
+            elif isinstance(node.op, ast.Mult):
+                value = left * right
+            else:
+                value = left / right
+        else:
+            raise ValueError(f"Unsafe expression: {expr}")
+
+        if not math.isfinite(value) or abs(value) > 1e12:
+            raise ValueError("Arithmetic expression result is out of range")
+        return value
+
+    return evaluate(tree.body)
 
 
 # ---------------------------------------------------------------------------

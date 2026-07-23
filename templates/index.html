@@ -20,7 +20,7 @@
                 </svg>
                 <h1>Damage Calculator</h1>
             </div>
-            <button id="update-btn" class="btn-update">
+            <button id="update-btn" class="btn-update hidden">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
                 Update Data
             </button>
@@ -238,14 +238,14 @@
                             <span class="stat-icon-inline" data-stat="hp"></span>
                             Base HP
                         </label>
-                        <input type="number" id="target-base-health" value="{{ default_target.health | int }}" min="1" max="10000" step="50">
+                        <input type="number" id="target-base-health" value="{{ default_target.health | int }}" min="{{ input_limits.target_health[0] | int }}" max="{{ input_limits.target_health[1] | int }}" step="50">
                     </div>
                     <div class="enemy-stat">
                         <label for="target-bonus-health">
                             <span class="stat-icon-inline" data-stat="hp"></span>
                             Bonus HP
                         </label>
-                        <input type="number" id="target-bonus-health" value="{{ default_target.bonus_health | int }}" min="0" max="10000" step="50">
+                        <input type="number" id="target-bonus-health" value="{{ default_target.bonus_health | int }}" min="{{ input_limits.target_bonus_health[0] | int }}" max="{{ input_limits.target_bonus_health[1] | int }}" step="50">
                     </div>
                     <div class="enemy-stat">
                         <label>
@@ -261,14 +261,14 @@
                             <span class="stat-icon-inline" data-stat="armor"></span>
                             Armor
                         </label>
-                        <input type="number" id="target-armor" value="{{ default_target.armor | int }}" min="0" max="500" step="5">
+                        <input type="number" id="target-armor" value="{{ default_target.armor | int }}" min="{{ input_limits.target_armor[0] | int }}" max="{{ input_limits.target_armor[1] | int }}" step="5">
                     </div>
                     <div class="enemy-stat">
                         <label for="target-mr">
                             <span class="stat-icon-inline" data-stat="mr"></span>
                             MR
                         </label>
-                        <input type="number" id="target-mr" value="{{ default_target.mr | int }}" min="0" max="500" step="5">
+                        <input type="number" id="target-mr" value="{{ default_target.mr | int }}" min="{{ input_limits.target_mr[0] | int }}" max="{{ input_limits.target_mr[1] | int }}" step="5">
                     </div>
                 </div>
             </div>
@@ -291,7 +291,7 @@
                     <div class="slider-row">
                         <label for="fight-duration">Duration</label>
                         <span class="slider-value"><span id="duration-display">{{ default_fight_duration | int }}</span>s</span>
-                        <input type="range" id="fight-duration" min="1" max="10" value="{{ default_fight_duration | int }}" step="1">
+                        <input type="range" id="fight-duration" min="{{ input_limits.fight_duration[0] | int }}" max="{{ input_limits.fight_duration[1] | int }}" value="{{ default_fight_duration | int }}" step="1">
                     </div>
 
                     <div class="toggle-row">

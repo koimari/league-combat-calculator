@@ -5,6 +5,7 @@ cross-domain orchestration from stats through champion ability parsing into the
 champion-agnostic fight engine; data fetching remains with each consumer.
 """
 
+import math
 from dataclasses import dataclass
 from typing import Any, Mapping
 
@@ -27,6 +28,41 @@ DEFAULT_FIGHT_DURATION = 8.0
 DEFAULT_AUTO_ATTACK_UPTIME = 0.8
 DEFAULT_FIGHT_MODE = "one_rotation"
 ONE_ROTATION_DURATION = 5.0
+PUBLIC_INPUT_LIMITS: dict[str, tuple[float, float]] = {
+    "fight_duration": (1.0, 10.0),
+    "auto_attack_uptime": (0.0, 1.0),
+    "target_health": (1.0, 10_000.0),
+    "target_bonus_health": (0.0, 10_000.0),
+    "target_armor": (0.0, 500.0),
+    "target_mr": (0.0, 500.0),
+}
+_PUBLIC_FIGHT_MODES = frozenset({"one_rotation", "time_based", "timed", "auto_only"})
+
+
+def _bounded_request_float(data: Mapping[str, Any], key: str, default: float) -> float:
+    """Parse one finite public number inside its UI-supported range."""
+    value = data.get(key, default)
+    if isinstance(value, bool):
+        raise ValueError(f"{key} must be a number")
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{key} must be a number") from exc
+    if not math.isfinite(parsed):
+        raise ValueError(f"{key} must be finite")
+
+    minimum, maximum = PUBLIC_INPUT_LIMITS[key]
+    if not minimum <= parsed <= maximum:
+        raise ValueError(f"{key} must be between {minimum:g} and {maximum:g}")
+    return parsed
+
+
+def _request_bool(data: Mapping[str, Any], key: str, default: bool) -> bool:
+    """Parse a JSON boolean without treating non-empty strings as true."""
+    value = data.get(key, default)
+    if not isinstance(value, bool):
+        raise ValueError(f"{key} must be true or false")
+    return value
 
 
 @dataclass(frozen=True)
@@ -49,11 +85,17 @@ class FightParams(FightConfig):
     ) -> "FightParams":
         """Parse request-shaped values and resolve fight-mode semantics once."""
         fight_mode = data.get("fight_mode", DEFAULT_FIGHT_MODE)
+        if not isinstance(fight_mode, str) or fight_mode not in _PUBLIC_FIGHT_MODES:
+            raise ValueError(
+                "fight_mode must be one_rotation, time_based, timed, or auto_only"
+            )
         one_rotation = fight_mode == "one_rotation"
-        auto_attacks_only = bool(data.get("auto_attacks_only", False))
-        requested_duration = float(data.get("fight_duration", DEFAULT_FIGHT_DURATION))
-        requested_uptime = float(
-            data.get("auto_attack_uptime", DEFAULT_AUTO_ATTACK_UPTIME)
+        auto_attacks_only = _request_bool(data, "auto_attacks_only", False)
+        requested_duration = _bounded_request_float(
+            data, "fight_duration", DEFAULT_FIGHT_DURATION
+        )
+        requested_uptime = _bounded_request_float(
+            data, "auto_attack_uptime", DEFAULT_AUTO_ATTACK_UPTIME
         )
 
         if one_rotation:
@@ -61,24 +103,39 @@ class FightParams(FightConfig):
             uptime = 0.0
         else:
             duration = requested_duration
-            include_autos = bool(data.get("include_auto_attacks", False))
+            include_autos = _request_bool(data, "include_auto_attacks", False)
             uptime = requested_uptime if include_autos or auto_attacks_only else 0.0
 
+        ability_ranks = data.get("ability_ranks")
+        if ability_ranks is not None and not isinstance(ability_ranks, Mapping):
+            raise ValueError("ability_ranks must be an object")
+        champion_options = data.get("champion_options")
+        if champion_options is not None and not isinstance(champion_options, Mapping):
+            raise ValueError("champion_options must be an object")
+
         params = cls(
-            target_health=float(data.get("target_health", DEFAULT_TARGET["health"])),
-            target_bonus_health=float(
-                data.get("target_bonus_health", DEFAULT_TARGET["bonus_health"])
+            target_health=_bounded_request_float(
+                data, "target_health", DEFAULT_TARGET["health"]
             ),
-            target_armor=float(data.get("target_armor", DEFAULT_TARGET["armor"])),
-            target_magic_resistance=float(data.get("target_mr", DEFAULT_TARGET["mr"])),
+            target_bonus_health=_bounded_request_float(
+                data, "target_bonus_health", DEFAULT_TARGET["bonus_health"]
+            ),
+            target_armor=_bounded_request_float(
+                data, "target_armor", DEFAULT_TARGET["armor"]
+            ),
+            target_magic_resistance=_bounded_request_float(
+                data, "target_mr", DEFAULT_TARGET["mr"]
+            ),
             fight_duration_seconds=duration,
             auto_attack_uptime=uptime,
             one_rotation=one_rotation,
-            include_actives=bool(data.get("include_actives", True)),
+            include_actives=_request_bool(data, "include_actives", True),
             cast_order=data.get("cast_order"),
             auto_attacks_only=auto_attacks_only,
-            ability_ranks=data.get("ability_ranks"),
-            champion_options=data.get("champion_options"),
+            ability_ranks=dict(ability_ranks) if ability_ranks is not None else None,
+            champion_options=(
+                dict(champion_options) if champion_options is not None else None
+            ),
             deterministic=deterministic,
         )
         params._validate_request_values()
@@ -86,21 +143,30 @@ class FightParams(FightConfig):
 
     def _validate_request_values(self) -> None:
         """Reject malformed cast orders and ability ranks for every consumer."""
-        if self.cast_order is not None and sorted(self.cast_order) != [
-            "E",
-            "Q",
-            "R",
-            "W",
-        ]:
-            raise ValueError("Cast order must be a permutation of Q, W, E, R")
+        if self.cast_order is not None:
+            if not isinstance(self.cast_order, list) or any(
+                not isinstance(key, str) for key in self.cast_order
+            ):
+                raise ValueError("Cast order must be a permutation of Q, W, E, R")
+            if sorted(self.cast_order) != ["E", "Q", "R", "W"]:
+                raise ValueError("Cast order must be a permutation of Q, W, E, R")
 
         if not self.ability_ranks:
             return
+        unknown_keys = set(self.ability_ranks) - {"Q", "W", "E", "R"}
+        if unknown_keys:
+            raise ValueError(
+                f"Unknown ability rank keys: {', '.join(sorted(unknown_keys))}"
+            )
         for key in ("Q", "W", "E"):
             value = self.ability_ranks.get(key, 0)
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise ValueError(f"{key} rank must be an integer")
             if value < 0 or value > 5:
                 raise ValueError(f"{key} rank must be 0-5")
         ultimate_rank = self.ability_ranks.get("R", 0)
+        if isinstance(ultimate_rank, bool) or not isinstance(ultimate_rank, int):
+            raise ValueError("R rank must be an integer")
         if ultimate_rank < 0 or ultimate_rank > 3:
             raise ValueError("R rank must be 0-3")
 

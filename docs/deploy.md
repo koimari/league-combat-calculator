@@ -1,10 +1,11 @@
 # Deploying the calculator
 
-The app is a stateless Flask service: no database, no logins, and the entire
-data layer is the git-tracked `data/` cache (~10 MB of JSON). The server never
-writes anything at runtime — patch-day updates happen locally and reach the
-site as ordinary commits. That makes deployment "build the Docker image, run
-it" with nothing to migrate or back up.
+The app is a stateless Flask service: no business database, no logins, and the
+entire data layer is the git-tracked `data/` cache (~10 MB of JSON). Patch-day
+updates happen locally and reach the site as ordinary commits. At runtime, the
+app writes only a disposable SQLite token-bucket file in the container's temp
+directory so all Gunicorn workers share one CPU-abuse budget. There is nothing
+to migrate or back up.
 
 ## The prod branch is the deploy gate
 
@@ -23,10 +24,12 @@ Promote only when `pytest` and the golden gate are green on master.
 ## Dev mode vs. production
 
 `LOL_CALC_DEV=1` (set by `run_web.bat`) enables the Update Data button and its
-`/api/update-data` wiki re-scrape endpoint. **Never set it on a deployment** —
-the endpoint is unauthenticated, hammers the wiki from the server's IP, and
-with multiple gunicorn workers would refresh only one worker's memory. Unset,
-the endpoint 404s and the frontend hides the button.
+`/api/update-data` wiki re-scrape endpoint only for loopback requests. Render's
+built-in `RENDER=true` marker disables it unconditionally, even if someone
+accidentally sets `LOL_CALC_DEV`. The endpoint otherwise 404s and the frontend
+hides the button. Local use also requires a localhost Host header and the
+HttpOnly, SameSite=Strict bootstrap cookie set by `/api/config`, preventing a
+website open in the browser from triggering the side-effectful SSE request.
 
 Production env vars (Render dashboard → Environment):
 
@@ -61,7 +64,16 @@ Production env vars (Render dashboard → Environment):
    `WEB_CONCURRENCY` to match cores — that endpoint runs a multi-second
    CPU-bound build search and is the only scaling pressure.
 4. Optional but recommended: put the domain behind Cloudflare's free tier
-   (static asset caching, bot absorption, rate limiting for `/api/optimize`).
+   (static asset caching and bot absorption). The application itself applies
+   process-shared global budgets to `/api/calculate` and `/api/optimize`.
+   The optimizer allows a two-request burst and then one request per 10 seconds;
+   that was calibrated against a 1.81 CPU-second max-valid local benchmark to
+   keep sustained abuse near 20% of one core. Under abuse, optimizer callers
+   receive `429` while the calculator keeps its independent budget.
+   Re-run `.venv/Scripts/python scripts/benchmark_security_budget.py` after
+   optimizer or fight-engine performance changes and update the measured
+   comment/policy together.
+5. Set Render's health check path to `/healthz`.
 
 Any Docker host works the same way — Fly.io and Cloud Run need only
 "deploy this Dockerfile, listen on `PORT`".
@@ -70,15 +82,23 @@ Any Docker host works the same way — Fly.io and Cloud Run need only
 
 ```bash
 docker build -t lol-calc .
-docker run --rm -p 8000:8000 lol-calc
+docker run --rm -d --name lol-calc -p 8000:8000 lol-calc
 # http://localhost:8000 — verify the Update Data button is absent
 # and /api/update-data returns 404
+docker inspect --format '{{json .State.Health}}' lol-calc
+docker stop lol-calc
 ```
 
-## Possible later optimizations (not needed at launch)
+The production image installs the hash-locked `requirements-runtime.txt`, runs
+as an unprivileged `app` user, and excludes scraper/test/lint dependencies. To
+change a runtime dependency, edit `requirements-runtime.in` and regenerate:
 
-- Slim the image: the Dockerfile installs the full `requirements.txt`,
-  including scraper/test/lint deps the server never imports. A runtime-only
-  manifest would shave ~80 MB off the image if build time ever matters.
+```bash
+uv pip compile requirements-runtime.in --universal --generate-hashes \
+  --output-file requirements-runtime.txt
+```
+
+## Possible later optimization
+
 - Cache `/api/optimize` results: requests run with `deterministic=True`, so
   an LRU keyed on the request body makes repeated popular configs free.

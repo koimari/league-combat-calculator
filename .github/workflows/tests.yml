@@ -1,22 +1,29 @@
-name: Tests
+name: Tests and security
 
 on:
   push:
-    branches: [master]
+    branches: [master, prod]
   pull_request:
-    branches: [master]
+    branches: [master, prod]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -29,3 +36,67 @@ jobs:
 
       - name: Run linter
         run: pylint src/ --fail-under=9
+
+      - name: Audit Python dependencies
+        run: |
+          pip-audit -r requirements.txt
+          pip-audit -r requirements-runtime.txt
+
+      - name: Scan Python source
+        run: bandit -r src -ll
+
+  container:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Build production image
+        run: docker build --tag lol-calculator:ci .
+
+      - name: Smoke production image
+        run: |
+          docker run --detach --name lol-calculator-smoke \
+            --publish 127.0.0.1:18000:8000 lol-calculator:ci
+          trap 'docker rm --force lol-calculator-smoke' EXIT
+
+          for attempt in {1..45}; do
+            if curl --fail --silent http://127.0.0.1:18000/healthz; then
+              break
+            fi
+            if [ "$attempt" = 45 ]; then
+              docker logs lol-calculator-smoke
+              exit 1
+            fi
+            sleep 1
+          done
+
+          test "$(docker exec lol-calculator-smoke id -u)" != "0"
+          curl --fail --silent --show-error \
+            --header 'Content-Type: application/json' \
+            --data '{"champion":"Aatrox"}' \
+            http://127.0.0.1:18000/api/calculate \
+            | grep --quiet '"total_damage"'
+
+          for attempt in {1..45}; do
+            health="$(docker inspect --format '{{.State.Health.Status}}' lol-calculator-smoke)"
+            if [ "$health" = healthy ]; then
+              break
+            fi
+            if [ "$health" = unhealthy ] || [ "$attempt" = 45 ]; then
+              docker inspect lol-calculator-smoke
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Scan production image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: lol-calculator:ci
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL

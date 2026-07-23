@@ -148,9 +148,9 @@ document.addEventListener("DOMContentLoaded", () => {
             championOptionsMeta = data.champion_options || {};
             // Update Data is a local dev workflow (LOL_CALC_DEV=1); the
             // deployed site 404s the endpoint, so hide its button.
-            if (!data.dev_mode) {
-                document.getElementById("update-btn").classList.add("hidden");
-            }
+            document
+                .getElementById("update-btn")
+                .classList.toggle("hidden", !data.dev_mode);
             // Reverse lookup: item name -> list of group names it belongs to
             for (const [group, members] of Object.entries(data.exclusivity_groups)) {
                 for (const name of members) {
@@ -326,6 +326,18 @@ document.addEventListener("DOMContentLoaded", () => {
         champPickerOverlay.classList.add("hidden");
     }
 
+    function createPickerContent(icon, name, tooltip) {
+        const image = document.createElement("img");
+        image.src = icon;
+        image.alt = name;
+        image.loading = "lazy";
+
+        const label = document.createElement("div");
+        label.className = "picker-tooltip";
+        label.textContent = tooltip;
+        return [image, label];
+    }
+
     function renderChampionGrid(champs) {
         champPickerGrid.innerHTML = "";
         if (champs.length === 0) {
@@ -338,7 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // /api/champions): greyed out, tooltip explains, no click.
             el.className = champ.verified ? "picker-item" : "picker-item unverified";
             const tooltip = champ.verified ? champ.name : `${champ.name} — not yet verified`;
-            el.innerHTML = `<img src="${champ.icon}" alt="${champ.name}" loading="lazy"><div class="picker-tooltip">${tooltip}</div>`;
+            el.append(...createPickerContent(champ.icon, champ.name, tooltip));
             if (champ.verified) {
                 el.addEventListener("click", () => {
                     selectChampion(champ.name, champ.icon);
@@ -515,7 +527,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let tooltip = item.name;
             if (isUsed) tooltip += " (already selected)";
             else if (exclusivityBlock) tooltip += ` (${exclusivityBlock})`;
-            el.innerHTML = `<img src="${item.icon}" alt="${item.name}" loading="lazy"><div class="picker-tooltip">${tooltip}</div>`;
+            el.append(...createPickerContent(item.icon, item.name, tooltip));
             if (!isBlocked) {
                 el.addEventListener("click", () => {
                     selectItem(activePicker.build, activePicker.slot, item.name, item.icon);
