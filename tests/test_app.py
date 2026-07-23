@@ -76,6 +76,28 @@ def test_config_exposes_all_request_defaults():
     }
 
 
+class TestIconUrlsAreHttps:
+    """The wiki cache stores Data Dragon icon URLs as http://; the site
+    serves over https, so browsers flag every icon as mixed content.
+    app.py normalizes the scheme at the API boundary — the cache itself
+    stays whatever the scraper wrote."""
+
+    def test_champion_and_item_icons_are_https(self):
+        client = app_module.app.test_client()
+        champs = client.get("/api/champions").get_json()
+        items = client.get("/api/items").get_json()
+        boots = client.get("/api/boots").get_json()
+
+        icons = [c["icon"] for c in champs] + [i["icon"] for i in items + boots]
+        assert icons
+        assert not [u for u in icons if u.startswith("http://")]
+
+    def test_ability_icons_are_https(self):
+        abilities = app_module.app.test_client().get("/api/abilities/Aatrox").get_json()
+
+        assert all(not a["icon"].startswith("http://") for a in abilities.values())
+
+
 class TestChampionVerifiedFlags:
     """/api/champions marks module-backed champions verified; the picker
     greys out the rest (generic-path numbers are estimates — CLAUDE.md

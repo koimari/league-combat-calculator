@@ -52,6 +52,15 @@ def _dev_mode() -> bool:
     return os.environ.get("LOL_CALC_DEV") == "1"
 
 
+def _https_icon(url: str) -> str:
+    """Force https on icon URLs at the API boundary.
+
+    The wiki cache stores Data Dragon links as http://, which an https
+    site can't display without mixed-content warnings. Serving-side fix
+    so the cache stays byte-for-byte what the scraper wrote."""
+    return "https://" + url[len("http://") :] if url.startswith("http://") else url
+
+
 def _run_data_update():
     """Import data_updater only when actually updating: its import chain
     pulls in vendor/lolstaticdata, which production images don't ship."""
@@ -88,7 +97,7 @@ def api_champions():
         [
             {
                 "name": champ_data["name"],
-                "icon": champ_data.get("icon", ""),
+                "icon": _https_icon(champ_data.get("icon", "")),
                 "verified": champ_data["name"] in verified_names,
             }
             for champ_data in champions.values()
@@ -107,7 +116,7 @@ def api_items():
     """
     result = sorted(
         [
-            {"name": item["name"], "icon": item.get("icon", "")}
+            {"name": item["name"], "icon": _https_icon(item.get("icon", ""))}
             for item in get_eligible_legendaries()
         ],
         key=lambda i: i["name"],
@@ -120,7 +129,7 @@ def api_boots():
     """Return the optimizer-eligible tier-2+ boots (name + icon), sorted."""
     result = sorted(
         [
-            {"name": item["name"], "icon": item.get("icon", "")}
+            {"name": item["name"], "icon": _https_icon(item.get("icon", ""))}
             for item in get_eligible_boots()
         ],
         key=lambda i: i["name"],
@@ -171,7 +180,7 @@ def api_abilities(champion_name: str):
         if ability_list and isinstance(ability_list[0], dict):
             result[key] = {
                 "name": ability_list[0].get("name", key),
-                "icon": ability_list[0].get("icon", ""),
+                "icon": _https_icon(ability_list[0].get("icon", "")),
             }
         elif ability_list and isinstance(ability_list[0], str):
             result[key] = {"name": ability_list[0], "icon": ""}

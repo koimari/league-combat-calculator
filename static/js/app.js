@@ -594,61 +594,69 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // === Level slider ===
+    // === Level slider + fight settings ===
+
+    // Derive every JS-driven display (value badges, tab highlight, panel
+    // visibility, total-HP readout) from the inputs' current values.
+    // Handlers mutate input state and then call this; it also runs once on
+    // load because browsers (notably Firefox) restore form values across
+    // reload WITHOUT firing events — without the load-time sync the UI
+    // shows defaults while Calculate reads the restored inputs.
+    function syncControlsFromInputs() {
+        levelDisplay.textContent = levelSlider.value;
+        durationDisplay.textContent = fightDuration.value;
+        uptimeDisplay.textContent = autoUptime.value;
+        let timeBased = false;
+        fightTabs.forEach((tab) => {
+            const radio = tab.querySelector('input[type="radio"]');
+            tab.classList.toggle("active", radio.checked);
+            if (radio.checked && radio.value === "time_based") timeBased = true;
+        });
+        timeBasedOptions.classList.toggle("hidden", !timeBased);
+        uptimeOptions.classList.toggle("hidden", !includeAutos.checked);
+        updateTotalHealth();
+    }
 
     levelSlider.addEventListener("input", () => {
-        levelDisplay.textContent = levelSlider.value;
+        syncControlsFromInputs();
         scheduleRecalc();
     });
 
-    // === Fight settings ===
-
     fightDuration.addEventListener("input", () => {
-        durationDisplay.textContent = fightDuration.value;
+        syncControlsFromInputs();
         scheduleRecalc();
     });
 
     autoUptime.addEventListener("input", () => {
-        uptimeDisplay.textContent = autoUptime.value;
+        syncControlsFromInputs();
         scheduleRecalc();
     });
 
     // Fight mode tabs
     fightTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
-            fightTabs.forEach((t) => t.classList.remove("active"));
-            tab.classList.add("active");
-            const radio = tab.querySelector('input[type="radio"]');
-            radio.checked = true;
-
-            if (radio.value === "time_based") {
-                timeBasedOptions.classList.remove("hidden");
-            } else {
-                timeBasedOptions.classList.add("hidden");
-            }
+            tab.querySelector('input[type="radio"]').checked = true;
+            syncControlsFromInputs();
             scheduleRecalc();
         });
     });
 
     includeAutos.addEventListener("change", () => {
-        if (includeAutos.checked) {
-            uptimeOptions.classList.remove("hidden");
-        } else {
-            uptimeOptions.classList.add("hidden");
-            // Uncheck "Auto Attacks Only" if autos are disabled
-            autoAttacksOnly.checked = false;
-        }
+        // Uncheck "Auto Attacks Only" if autos are disabled
+        if (!includeAutos.checked) autoAttacksOnly.checked = false;
+        syncControlsFromInputs();
         scheduleRecalc();
     });
 
     autoAttacksOnly.addEventListener("change", () => {
-        if (autoAttacksOnly.checked) {
-            // Auto-enable "Include Auto Attacks" and show uptime options
-            includeAutos.checked = true;
-            uptimeOptions.classList.remove("hidden");
-        }
+        // "Auto Attacks Only" implies "Include Auto Attacks"
+        if (autoAttacksOnly.checked) includeAutos.checked = true;
+        syncControlsFromInputs();
         scheduleRecalc();
     });
+
+    // Absorb browser-restored form state (see syncControlsFromInputs).
+    syncControlsFromInputs();
 
     // Update total HP display when base or bonus changes
     function updateTotalHealth() {
