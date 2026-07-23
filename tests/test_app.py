@@ -21,6 +21,7 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
             "total_damage": 0.0,
             "auto_attack_damage": 0.0,
             "ability_damage": 0.0,
+            "damage_by_type": {"physical": 0.0, "magic": 0.0, "true": 0.0},
             "effective_mr": params.target_magic_resistance,
             "effective_armor": params.target_armor,
             "notes": [],

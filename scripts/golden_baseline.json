@@ -27652,7 +27652,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "a5da95a34149dd34cbbc797577d2e264557837b5",
+    "git_head": "a60051df26d47907083f4a4c1512a06d8668e00c",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,
@@ -29352,9 +29352,9 @@
               "W": 0.0,
               "auto_attacks": 1406.89,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 31.07
+              "shadowflame_Shadowflame": 242.11
             },
-            "total_damage": 2685.8
+            "total_damage": 2896.83
           },
           "no_items": {
             "breakdown_totals": {
@@ -29421,9 +29421,9 @@
               "W": 0.0,
               "auto_attacks": 2252.64,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 31.07
+              "shadowflame_Shadowflame": 481.6
             },
-            "total_damage": 3886.91
+            "total_damage": 4337.44
           },
           "no_items": {
             "breakdown_totals": {

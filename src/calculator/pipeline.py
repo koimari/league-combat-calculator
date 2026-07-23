@@ -9,7 +9,12 @@ from dataclasses import dataclass
 from typing import Any, Mapping
 
 from .champions import RESERVED_OPTION_KEYS, parse_champion_abilities
-from .damage import FightConfig, calculate_fight_damage, split_auto_vs_ability
+from .damage import (
+    FightConfig,
+    calculate_fight_damage,
+    split_auto_vs_ability,
+    split_by_damage_type,
+)
 from .stats import calculate_total_stats
 
 DEFAULT_TARGET: dict[str, float] = {
@@ -147,4 +152,5 @@ def run_fight(
     auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
     result["auto_attack_damage"] = auto_damage
     result["ability_damage"] = ability_damage
+    result["damage_by_type"] = split_by_damage_type(result["breakdown"])
     return result

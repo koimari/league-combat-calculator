@@ -18,6 +18,7 @@ from src.calculator.damage import (
     FightConfig,
     calculate_fight_damage,
     split_auto_vs_ability,
+    split_by_damage_type,
     _simulate_current_health_on_hit,
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
     _navori_effective_cd,
@@ -616,3 +617,132 @@ class TestSplitAutoVsAbility:
         auto, ability = split_auto_vs_ability(breakdown)
         assert auto == 50.0
         assert ability == 0.0
+
+
+class TestSplitByDamageType:
+    """Tests for split_by_damage_type — physical/magic/true attribution.
+
+    Every non-informational breakdown row carries a ``damage_type``;
+    mixed rows built from typed parts additionally carry their exact
+    ``damage_by_type`` composition. Untyped rows (amp rows) and mixed
+    rows without a composition redistribute proportionally, mirroring
+    split_auto_vs_ability's amp rule.
+    """
+
+    def test_typed_rows_land_in_their_buckets(self) -> None:
+        breakdown = {
+            "auto_attacks": {
+                "name": "Auto Attacks",
+                "total_damage": 400.0,
+                "damage_type": "physical",
+            },
+            "Q": {"name": "Q", "total_damage": 100.0, "damage_type": "magic"},
+            "fiendhunter_true_damage": {
+                "name": "Fiendhunter",
+                "total_damage": 50.0,
+                "damage_type": "true",
+            },
+        }
+        split = split_by_damage_type(breakdown)
+        assert split == {"physical": 400.0, "magic": 100.0, "true": 50.0}
+
+    def test_mixed_row_uses_exact_composition(self) -> None:
+        # Mixed abilities (e.g. Ahri Q: magic outgoing + true return)
+        # carry damage_by_type — the exact per-type mitigated totals.
+        breakdown = {
+            "Q": {
+                "name": "Orb of Deception",
+                "total_damage": 300.0,
+                "damage_type": "mixed",
+                "damage_by_type": {"magic": 200.0, "true": 100.0},
+            },
+        }
+        split = split_by_damage_type(breakdown)
+        assert split == {"physical": 0.0, "magic": 200.0, "true": 100.0}
+
+    def test_mixed_without_composition_redistributes_proportionally(self) -> None:
+        # physical 300 / magic 100 -> mixed 40 splits 30 physical, 10 magic.
+        breakdown = {
+            "auto_attacks": {
+                "name": "Auto Attacks",
+                "total_damage": 300.0,
+                "damage_type": "physical",
+            },
+            "Q": {"name": "Q", "total_damage": 100.0, "damage_type": "magic"},
+            "double_on_hit_Dusk and Dawn": {
+                "name": "Dusk and Dawn (Double On-Hit)",
+                "total_damage": 40.0,
+                "damage_type": "mixed",
+            },
+        }
+        split = split_by_damage_type(breakdown)
+        assert split["physical"] == pytest.approx(330.0)
+        assert split["magic"] == pytest.approx(110.0)
+        assert split["true"] == 0.0
+
+    def test_amp_rows_redistribute_proportionally(self) -> None:
+        # damage_amp_<source> rows amplify every damage type equally.
+        breakdown = {
+            "auto_attacks": {
+                "name": "Auto Attacks",
+                "total_damage": 100.0,
+                "damage_type": "physical",
+            },
+            "Q": {"name": "Q", "total_damage": 300.0, "damage_type": "magic"},
+            "damage_amp_Lord Dominik's Regards": {
+                "name": "Damage Amplification (Lord Dominik's Regards)",
+                "total_damage": 40.0,
+            },
+        }
+        split = split_by_damage_type(breakdown)
+        assert split["physical"] == pytest.approx(110.0)
+        assert split["magic"] == pytest.approx(330.0)
+        assert split["true"] == 0.0
+
+    def test_informational_rows_skipped(self) -> None:
+        breakdown = {
+            "Q": {"name": "Q", "total_damage": 100.0, "damage_type": "magic"},
+            "execute": {
+                "name": "The Collector (Execute)",
+                "total_damage": 0.0,
+                "damage_type": "true",
+                "informational": True,
+            },
+            "ability_amp_Actualizer": {
+                "name": "Damage Amplification (Actualizer)",
+                "total_damage": 15.0,
+                "informational": True,
+            },
+        }
+        split = split_by_damage_type(breakdown)
+        assert split == {"physical": 0.0, "magic": 100.0, "true": 0.0}
+
+    def test_zero_typed_total_drops_untyped_damage(self) -> None:
+        # No typed damage -> no ratio to split by; amp damage is dropped.
+        breakdown = {
+            "damage_amp_Lord Dominik's Regards": {
+                "name": "Damage Amplification (Lord Dominik's Regards)",
+                "total_damage": 40.0,
+            },
+        }
+        split = split_by_damage_type(breakdown)
+        assert split == {"physical": 0.0, "magic": 0.0, "true": 0.0}
+
+    def test_empty_breakdown(self) -> None:
+        assert split_by_damage_type({}) == {
+            "physical": 0.0,
+            "magic": 0.0,
+            "true": 0.0,
+        }
+
+    def test_missing_total_damage_treated_as_zero(self) -> None:
+        breakdown = {
+            "Q": {"name": "Q", "damage_type": "magic"},
+            "auto_attacks": {
+                "name": "Auto Attacks",
+                "total_damage": 50.0,
+                "damage_type": "physical",
+            },
+        }
+        split = split_by_damage_type(breakdown)
+        assert split == {"physical": 50.0, "magic": 0.0, "true": 0.0}

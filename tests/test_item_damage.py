@@ -503,7 +503,7 @@ class TestShadowflameCinderbloom:
             },
         }
         # Target at 1000 HP, threshold 400 — 100 damage won't cross it
-        bonus = _calculate_shadowflame_bonus(
+        bonus, _ = _calculate_shadowflame_bonus(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         assert bonus == 0.0
@@ -547,7 +547,7 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 200),),
             },
         }
-        bonus = _calculate_shadowflame_bonus(
+        bonus, _ = _calculate_shadowflame_bonus(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         # W (200) dealt below threshold, gets 20% bonus = 40
@@ -578,7 +578,7 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 700),),
             },
         }
-        bonus = _calculate_shadowflame_bonus(
+        bonus, _ = _calculate_shadowflame_bonus(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         # Auto attacks are physical — no crit bonus
@@ -598,6 +598,9 @@ class TestShadowflameCinderbloom:
                 "casts": 1,
                 "total_damage": 800.0,
                 "damage_type": "mixed",
+                # The rotation attaches the exact mitigated composition
+                # to every mixed row; Cinderbloom reads it directly.
+                "damage_by_type": {"magic": 300.0, "true": 500.0},
             },
             "W": {
                 "name": "Fire",
@@ -629,7 +632,7 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 150),),
             },
         }
-        bonus = _calculate_shadowflame_bonus(
+        bonus, _ = _calculate_shadowflame_bonus(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         assert abs(bonus - 30.0) < 0.01
@@ -770,7 +773,7 @@ class TestShadowflameCinderbloom:
             },
         }
         # Default cast_order includes "Q2" — step 1 already consumes it.
-        bonus = _calculate_shadowflame_bonus(
+        bonus, _ = _calculate_shadowflame_bonus(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         assert abs(bonus - 60.0) < 0.01

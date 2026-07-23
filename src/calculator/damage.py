@@ -72,7 +72,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from . import item_effects
-from .ability_spec import DamagePart, parts_raw_total
+from .ability_spec import DamagePart
 from .resistance import (
     apply_resistance,
     apply_magic_penetration,
@@ -344,7 +344,7 @@ def _ability_applied_on_hit_damage(
     state: FightState,
     effectiveness: float,
     target_current_health: float,
-) -> float:
+) -> dict[str, float]:
     """Mitigated item on-hit damage for ONE ability-carried application.
 
     Champions whose abilities apply item on-hit effects (Bel'Veth Q/E)
@@ -357,17 +357,33 @@ def _ability_applied_on_hit_damage(
     counter and its procs fire in ``_add_single_proc_on_hits``.
     On-ATTACK-only mechanics (energized procs, spellblade, phantom
     hits) are attack-triggered and never apply here.
+
+    Returns the application's damage per damage type; sum the values
+    for the total.
     """
     inputs = _damage_inputs(state, target_current_health)
-    total = 0.0
+    by_type: dict[str, float] = {}
     for effect in state.damage_effects.per_hits:
         raw = effect.source.raw_damage(inputs) * effectiveness
         if raw <= 0:
             continue
-        total += _mitigate(
-            raw, effect.source.damage_type, state.resists, state.magic_amp
+        dtype = effect.source.damage_type
+        by_type[dtype] = by_type.get(dtype, 0.0) + _mitigate(
+            raw, dtype, state.resists, state.magic_amp
         )
-    return total
+    return by_type
+
+
+def _damage_type_fields(by_type: dict[str, float]) -> dict[str, Any]:
+    """Breakdown-row typing fields for a per-type damage composition.
+
+    A single contributing type yields a plain ``damage_type``; multiple
+    types yield ``"mixed"`` plus the exact ``damage_by_type`` composition
+    that ``split_by_damage_type`` consumes.
+    """
+    if len(by_type) == 1:
+        return {"damage_type": next(iter(by_type))}
+    return {"damage_type": "mixed", "damage_by_type": dict(by_type)}
 
 
 def _calculate_phantom_hits(
@@ -745,7 +761,7 @@ def _calculate_shadowflame_bonus(
     ability_damages: dict[str, dict[str, Any]],
     target_health: float,
     cast_order: list[str] | None = None,
-) -> float:
+) -> tuple[float, dict[str, float]]:
     """Calculate bonus damage from Shadowflame's Cinderbloom passive.
 
     Simulates damage dealt in ability-cast order. When the target's
@@ -759,7 +775,8 @@ def _calculate_shadowflame_bonus(
         cast_order: Ability cast order (e.g., ["E", "Q", "W", "R"]).
 
     Returns:
-        Total bonus damage from Shadowflame crits.
+        (total bonus damage from Shadowflame crits, bonus per damage
+        type — the crit bonus keeps the underlying damage's type).
     """
     if cast_order is None:
         cast_order = list(DEFAULT_CAST_ORDER)
@@ -767,9 +784,11 @@ def _calculate_shadowflame_bonus(
     crit_bonus = effect.crit_multiplier - 1.0
     current_hp = target_health
     total_bonus = 0.0
+    bonus_by_type: dict[str, float] = {}
 
-    # Build events: (damage_amount, is_magic_or_true)
-    events: list[tuple[float, bool]] = []
+    # Build events: (damage_amount, damage_type) — only "magic" and
+    # "true" events are Cinderbloom-crittable.
+    events: list[tuple[float, str]] = []
 
     # 1. Abilities in cast order
     for key in cast_order:
@@ -779,16 +798,11 @@ def _calculate_shadowflame_bonus(
         damage = entry["total_damage"]
         dtype = entry.get("damage_type", "magic")
 
-        if dtype == "mixed" and key in ability_damages:
-            # Split into magic (mitigated) and true portions
-            casts = entry.get("casts", 1)
-            true_per_cast = parts_raw_total(
-                ability_damages[key].get("parts", ()), "true"
-            )
-            total_true = true_per_cast * casts
-            magic_portion = damage - total_true
-            events.append((magic_portion, True))
-            events.append((total_true, True))
+        if dtype == "mixed" and "damage_by_type" in entry:
+            # Mixed abilities carry their exact mitigated composition
+            # (e.g. Ahri Q: magic outgoing + true return).
+            for part_type, amount in entry["damage_by_type"].items():
+                events.append((amount, part_type))
         elif dtype in ("magic", "true"):
             # R with multiple dashes: split into individual events
             if key == "R" and ability_damages.get("R", {}).get("cast_instances", 1) > 1:
@@ -796,16 +810,24 @@ def _calculate_shadowflame_bonus(
                 casts = entry.get("casts", 1)
                 per_event = damage / (total_dashes * casts)
                 for _ in range(total_dashes * casts):
-                    events.append((per_event, True))
+                    events.append((per_event, dtype))
             else:
-                events.append((damage, True))
+                events.append((damage, dtype))
         else:
-            events.append((damage, False))
+            events.append((damage, dtype))
 
-    # 2. Auto attacks (physical, never crits from Shadowflame)
+    # 2. Auto attacks — physical for most champions, but auto-attack
+    # overrides can retype them (Azir's magic soldier attacks DO crit).
+    # Per-hit events so crits gate as the auto stream itself crosses the
+    # threshold. (Coarse ordering remains: the model lands all autos
+    # after all abilities, so retyped-auto bonuses are an upper bound.)
     auto = breakdown.get("auto_attacks")
     if auto and auto["total_damage"] > 0:
-        events.append((auto["total_damage"], False))
+        auto_hits = max(1, int(auto.get("count", 1)))
+        auto_per_hit = auto["total_damage"] / auto_hits
+        auto_type = auto.get("damage_type", "physical")
+        for _ in range(auto_hits):
+            events.append((auto_per_hit, auto_type))
 
     # 3. Item effect damage (burns, procs, on-hits, etc.)
     # Skip every ability row the rotation pass already consumed — derived from
@@ -821,16 +843,21 @@ def _calculate_shadowflame_bonus(
         damage = entry.get("total_damage", 0)
         if damage <= 0:
             continue
-        dtype = entry.get("damage_type", "")
-        events.append((damage, dtype in ("magic", "true")))
+        # Known coarseness: mixed item rows (e.g. Bel'Veth item on-hits
+        # carrying magic + physical) pass through whole and never crit,
+        # even though their composition is on the row — matches the
+        # pre-composition behavior.
+        events.append((damage, entry.get("damage_type", "")))
 
     # 4. Simulate damage order, tracking target HP
-    for damage, is_crittable in events:
-        if is_crittable and current_hp < threshold_hp:
-            total_bonus += damage * crit_bonus
+    for damage, dtype in events:
+        if dtype in ("magic", "true") and current_hp < threshold_hp:
+            bonus = damage * crit_bonus
+            total_bonus += bonus
+            bonus_by_type[dtype] = bonus_by_type.get(dtype, 0.0) + bonus
         current_hp -= damage
 
-    return total_bonus
+    return total_bonus, bonus_by_type
 
 
 def _navori_effective_cd(
@@ -1173,18 +1200,20 @@ def _evaluate_cast_parts(
     num_casts: int,
     ability_mr: float,
     running_damage: float,
-) -> tuple[float, float]:
+) -> tuple[float, float, dict[str, float]]:
     """Evaluate an ability's typed damage parts over its casts.
 
-    Returns (total mitigated damage pre-amp, first part's mitigated
-    damage on the first cast — the Horizon Focus trigger value for
-    mixed entries). Threads running target damage through every part
-    and cast so HP-scaled parts see prior hits (Akali R2 after R1,
-    Kog'Maw R shot after shot).
+    Returns a 3-tuple: total mitigated damage pre-amp; the first part's
+    mitigated damage on the first cast (the Horizon Focus trigger value
+    for mixed entries); and per-damage-type mitigated totals pre-amp.
+    Threads running target damage through every part and cast so
+    HP-scaled parts see prior hits (Akali R2 after R1, Kog'Maw R shot
+    after shot).
     """
     resists = state.resists
     target_health = state.target_health
     total = 0.0
+    by_type: dict[str, float] = {}
     first_part_first_cast = 0.0
     for cast_index in range(num_casts):
         for part_index, part in enumerate(parts):
@@ -1213,8 +1242,9 @@ def _evaluate_cast_parts(
             if cast_index == 0 and part_index == 0:
                 first_part_first_cast = mitigated
             total += mitigated
+            by_type[part.damage_type] = by_type.get(part.damage_type, 0.0) + mitigated
             running_damage += mitigated
-    return total, first_part_first_cast
+    return total, first_part_first_cast, by_type
 
 
 def _compute_ability_rotation(state: FightState) -> RotationResult:
@@ -1347,7 +1377,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
 
         # All damage arithmetic is typed DamageParts — champion-specific
         # scaling lives in the champion module's closures, never here.
-        ability_total, first_part_damage = _evaluate_cast_parts(
+        ability_total, first_part_damage, ability_by_type = _evaluate_cast_parts(
             state,
             ability_info["parts"],
             num_casts,
@@ -1379,6 +1409,13 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             "total_damage": ability_total,
             "damage_type": damage_type,
         }
+        if damage_type == "mixed":
+            # Exact composition for the physical/magic/true split (the
+            # ability amp scales every part uniformly).
+            breakdown[ability_key]["damage_by_type"] = {
+                dtype: amount * state.ability_amp
+                for dtype, amount in ability_by_type.items()
+            }
         # Champion-minted display text (e.g. Aurelion Sol E's execute
         # threshold) rides the entry onto its breakdown row untouched.
         if "detail" in ability_info:
@@ -1406,6 +1443,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             triggers = frozenset(on_hit_spec.get("triggers", ("on_hit",)))
             is_on_hit = "on_hit" in triggers
             applied_total = 0.0
+            applied_by_type: dict[str, float] = {}
             for _ in range(applications):
                 hp_now = max(0.0, target_health - mitigated_damage_dealt)
                 result.ability_item_applications.append(
@@ -1419,21 +1457,20 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 applied = (
                     _ability_applied_on_hit_damage(state, effectiveness, hp_now)
                     if is_on_hit
-                    else 0.0
+                    else {}
                 )
-                applied_total += applied
-                mitigated_damage_dealt += applied
+                applied_sum = sum(applied.values())
+                for dtype, amount in applied.items():
+                    applied_by_type[dtype] = applied_by_type.get(dtype, 0.0) + amount
+                applied_total += applied_sum
+                mitigated_damage_dealt += applied_sum
             if applied_total > 0:
-                types = {
-                    effect.source.damage_type
-                    for effect in state.damage_effects.per_hits
-                }
                 breakdown[f"on_hit_items_{ability_key}"] = {
                     "name": f"{ability_info['name']} (item on-hits)",
                     "count": applications,
                     "damage_per_hit": applied_total / applications,
                     "total_damage": applied_total,
-                    "damage_type": types.pop() if len(types) == 1 else "mixed",
+                    **_damage_type_fields(applied_by_type),
                 }
                 state.total_damage += applied_total
 
@@ -1863,7 +1900,11 @@ class OnHitResult:
     phantom_hit_count: int = 0  # auto-segment phantom hits only
     phantom_hit_autos: set[int] = field(default_factory=set)
     static_on_hit_per_hit: float = 0.0  # mitigated, for HP simulations
+    # Same per-hit damage keyed by damage type (physical/magic/true) —
+    # types the spellblade double-on-hit breakdown row exactly.
+    static_on_hit_by_type: dict[str, float] = field(default_factory=dict)
     current_health_on_hit_avg: float = 0.0
+    current_health_damage_type: str = "physical"
     has_current_health_on_hit: bool = False
     # Indices in the rotation's ON-HIT application sequence whose attack
     # fired a phantom hit — each grants one extra on-hit counter stack
@@ -1943,11 +1984,15 @@ def _layer_on_hit_effects(
                 on_hit_seq_index[i] = seq
                 seq += 1
         phantom_ability_damage = 0.0
+        phantom_by_type: dict[str, float] = {}
         for position in ability_phantoms:
             app = apps[attack_app_indices[position]]
-            phantom_ability_damage += _ability_applied_on_hit_damage(
+            applied = _ability_applied_on_hit_damage(
                 state, app.effectiveness, app.target_hp
             )
+            for dtype, amount in applied.items():
+                phantom_by_type[dtype] = phantom_by_type.get(dtype, 0.0) + amount
+            phantom_ability_damage += sum(applied.values())
             mapped = on_hit_seq_index.get(attack_app_indices[position])
             if mapped is not None:
                 result.phantom_ability_stack_positions.add(mapped)
@@ -1957,7 +2002,7 @@ def _layer_on_hit_effects(
                 "name": f"{phantom_effect.item_name} phantom hits (ability attacks)",
                 "count": len(ability_phantoms),
                 "total_damage": phantom_ability_damage,
-                "damage_type": "mixed",
+                **_damage_type_fields(phantom_by_type),
             }
             on_hit_total += phantom_ability_damage
 
@@ -1984,6 +2029,9 @@ def _layer_on_hit_effects(
         item_damage = per_hit * hits
         on_hit_total += item_damage
         result.static_on_hit_per_hit += per_hit
+        result.static_on_hit_by_type[source.damage_type] = (
+            result.static_on_hit_by_type.get(source.damage_type, 0.0) + per_hit
+        )
 
         breakdown[source.breakdown_key] = {
             "name": source.display_name,
@@ -2041,11 +2089,18 @@ def _layer_on_hit_effects(
             ability_on_hit_damage = per_hit * hits
         on_hit_total += ability_on_hit_damage
         if max_procs is None and not ramping:
-            result.static_on_hit_per_hit += per_hit
+            static_share = per_hit
         elif on_hit_hits > 0:
             # Capped on-hits don't land on every auto — feed the HP
             # simulations (BoRK, spellblade doubling) the per-auto average.
-            result.static_on_hit_per_hit += ability_on_hit_damage / on_hit_hits
+            static_share = ability_on_hit_damage / on_hit_hits
+        else:
+            static_share = 0.0
+        if static_share > 0:
+            result.static_on_hit_per_hit += static_share
+            result.static_on_hit_by_type[dmg_type] = (
+                result.static_on_hit_by_type.get(dmg_type, 0.0) + static_share
+            )
 
         ability_name = on_hit_data.get("name", f"{ability_key} (on-hit)")
         if stacks_required > 1:
@@ -2096,6 +2151,7 @@ def _layer_on_hit_effects(
             if current_health_hits > 0
             else 0.0
         )
+        result.current_health_damage_type = current_health_effect.source.damage_type
         on_hit_total += current_health_total
 
         source = current_health_effect.source
@@ -2218,14 +2274,19 @@ def _add_spellblade_damage(
     if effect is not None and result.procs > 0:
         if effect.double_on_hit:
             result.double_on_hit_procs = result.procs
-            extra_on_hit = on_hits.static_on_hit_per_hit * result.double_on_hit_procs
+            extra_by_type = {
+                dtype: amount * result.double_on_hit_procs
+                for dtype, amount in on_hits.static_on_hit_by_type.items()
+            }
 
             # Current-health extra procs use the fight's average per-hit damage.
             if on_hits.has_current_health_on_hit and state.num_auto_attacks > 0:
-                extra_on_hit += (
+                ch_type = on_hits.current_health_damage_type
+                extra_by_type[ch_type] = extra_by_type.get(ch_type, 0.0) + (
                     on_hits.current_health_on_hit_avg * result.double_on_hit_procs
                 )
 
+            extra_on_hit = sum(extra_by_type.values())
             if extra_on_hit > 0:
                 state.breakdown[f"double_on_hit_{result.item}"] = {
                     "name": f"{result.item} (Double On-Hit)",
@@ -2233,7 +2294,7 @@ def _add_spellblade_damage(
                     "damage_per_hit": extra_on_hit / result.double_on_hit_procs,
                     "unit": "procs",
                     "total_damage": extra_on_hit,
-                    "damage_type": "mixed",
+                    **_damage_type_fields(extra_by_type),
                 }
                 state.total_damage += extra_on_hit
 
@@ -2606,7 +2667,7 @@ def _add_shadowflame_cinderbloom(state: FightState) -> None:
     effect = state.damage_effects.magic_true_crit
     if effect is None:
         return
-    shadowflame_bonus = _calculate_shadowflame_bonus(
+    shadowflame_bonus, bonus_by_type = _calculate_shadowflame_bonus(
         effect,
         state.breakdown,
         state.ability_damages,
@@ -2617,7 +2678,7 @@ def _add_shadowflame_cinderbloom(state: FightState) -> None:
         state.breakdown[f"shadowflame_{effect.item_name}"] = {
             "name": f"{effect.item_name} (Cinderbloom)",
             "total_damage": shadowflame_bonus,
-            "damage_type": "mixed",
+            **_damage_type_fields(bonus_by_type),
         }
         state.total_damage += shadowflame_bonus
 
@@ -2934,3 +2995,46 @@ def split_auto_vs_ability(
         ability_damage += redistributed_damage * (1 - auto_ratio)
 
     return auto_attack_damage, ability_damage
+
+
+def split_by_damage_type(
+    breakdown: dict[str, dict[str, Any]],
+) -> dict[str, float]:
+    """Split a fight breakdown into physical/magic/true damage totals.
+
+    Attribution rules, keyed off the row fields this module emits:
+
+    - Entries marked ``informational`` are display-only — their damage
+      is zero or already counted in other rows — so they are skipped.
+    - Entries carrying ``damage_by_type`` (mixed rows built from typed
+      parts) contribute their exact per-type composition.
+    - Entries with a singular ``damage_type`` contribute their full
+      damage to that bucket.
+    - Everything else — ``damage_amp_<source>`` rows and mixed rows
+      whose composition is not reconstructable — scales or combines all
+      types, so its damage is redistributed proportionally to the typed
+      totals (dropped entirely if that total is zero).
+    """
+    totals = {"physical": 0.0, "magic": 0.0, "true": 0.0}
+    redistributed_damage = 0.0
+
+    for entry in breakdown.values():
+        if entry.get("informational"):
+            continue
+        by_type = entry.get("damage_by_type")
+        if by_type is not None:
+            # Keys are validated DamagePart/DamageType values
+            # (physical/magic/true); a stray key should raise.
+            for dtype, amount in by_type.items():
+                totals[dtype] += amount
+        elif entry.get("damage_type") in totals:
+            totals[entry["damage_type"]] += entry.get("total_damage", 0.0)
+        else:
+            redistributed_damage += entry.get("total_damage", 0.0)
+
+    typed_total = sum(totals.values())
+    if typed_total > 0:
+        for dtype in totals:
+            totals[dtype] += redistributed_damage * (totals[dtype] / typed_total)
+
+    return totals

@@ -50,8 +50,6 @@
     --dmg-physical:  #FF6E26;
     --dmg-magic:     #4FC3F7;
     --dmg-true:      #F0E6D2;
-    --dmg-ability:   #4FC3F7;
-    --dmg-auto:      #FF6E26;
 
     /* Spacing */
     --gap-xs: 4px;
@@ -1336,12 +1334,15 @@ input[type="radio"] {
 }
 
 .damage-split {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* Flex, not grid: the true-damage card hides when there is no
+       true damage and the remaining cards share the row. */
+    display: flex;
     gap: var(--gap-sm);
 }
 
 .split-card {
+    flex: 1;
+    min-width: 0;
     background: var(--bg-deepest);
     border-radius: var(--radius-md);
     padding: 0.6rem;
@@ -1349,12 +1350,16 @@ input[type="radio"] {
     border-left: 3px solid transparent;
 }
 
-.ability-split {
-    border-left-color: var(--dmg-ability);
+.physical-split {
+    border-left-color: var(--dmg-physical);
 }
 
-.auto-split {
-    border-left-color: var(--dmg-auto);
+.magic-split {
+    border-left-color: var(--dmg-magic);
+}
+
+.true-split {
+    border-left-color: var(--dmg-true);
 }
 
 .split-label {
@@ -1372,8 +1377,9 @@ input[type="radio"] {
     color: var(--text-primary);
 }
 
-.ability-split .split-value { color: var(--dmg-ability); }
-.auto-split .split-value { color: var(--dmg-auto); }
+.physical-split .split-value { color: var(--dmg-physical); }
+.magic-split .split-value { color: var(--dmg-magic); }
+.true-split .split-value { color: var(--dmg-true); }
 
 /* =============== RESISTANCES =============== */
 .resistance-row {

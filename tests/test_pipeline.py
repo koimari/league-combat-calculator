@@ -101,3 +101,18 @@ def test_run_fight_includes_auto_vs_ability_split(ahri_data):
     assert result["auto_attack_damage"] + result["ability_damage"] == pytest.approx(
         result["total_damage"]
     )
+
+
+def test_run_fight_includes_damage_by_type_split(ahri_data):
+    # The web layer reads the physical/magic/true attribution off the
+    # result. Ahri Q is mixed (magic outgoing + true return), so an
+    # itemless fight must attribute both buckets exactly.
+    params = FightParams.from_request({}, deterministic=True)
+
+    result = run_fight(ahri_data, 18, [], params)
+
+    split = result["damage_by_type"]
+    assert set(split) == {"physical", "magic", "true"}
+    assert split["magic"] > 0.0
+    assert split["true"] > 0.0
+    assert sum(split.values()) == pytest.approx(result["total_damage"])

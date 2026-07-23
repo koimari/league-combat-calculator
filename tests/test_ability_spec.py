@@ -46,7 +46,7 @@ class TestDamagePartValidation:
 class TestEvaluateCastParts:
     def test_single_magic_part_mitigated_and_amped(self) -> None:
         state = _stub_state(magic_amp=1.1)
-        total, first = _evaluate_cast_parts(
+        total, first, _ = _evaluate_cast_parts(
             state, (DamagePart("magic", 200.0),), 1, 40.0, 0.0
         )
         expected = apply_resistance(200.0, 40.0) * 1.1
@@ -55,24 +55,24 @@ class TestEvaluateCastParts:
 
     def test_true_part_ignores_resists_and_amp(self) -> None:
         state = _stub_state(magic_amp=1.5)
-        total, _ = _evaluate_cast_parts(
+        total, _, _ = _evaluate_cast_parts(
             state, (DamagePart("true", 100.0),), 1, 40.0, 0.0
         )
         assert total == 100.0
 
     def test_physical_part_uses_armor_without_magic_amp(self) -> None:
         state = _stub_state(effective_armor=100.0, magic_amp=2.0)
-        total, _ = _evaluate_cast_parts(
+        total, _, _ = _evaluate_cast_parts(
             state, (DamagePart("physical", 100.0),), 1, 0.0, 0.0
         )
         assert total == pytest.approx(apply_resistance(100.0, 100.0))
 
     def test_count_multiplies_one_part(self) -> None:
         state = _stub_state()
-        single, _ = _evaluate_cast_parts(
+        single, _, _ = _evaluate_cast_parts(
             state, (DamagePart("magic", 90.0),), 1, 0.0, 0.0
         )
-        tripled, _ = _evaluate_cast_parts(
+        tripled, _, _ = _evaluate_cast_parts(
             state, (DamagePart("magic", 90.0, count=3),), 1, 0.0, 0.0
         )
         assert tripled == pytest.approx(single * 3)
@@ -88,7 +88,7 @@ class TestEvaluateCastParts:
             seen_ratios.append(missing_ratio)
             return 100.0 + span * missing_ratio
 
-        total, _ = _evaluate_cast_parts(
+        total, _, _ = _evaluate_cast_parts(
             state,
             (DamagePart("magic", r1), DamagePart("magic", hp_scaled_damage=r2)),
             1,
@@ -132,7 +132,7 @@ class TestEvaluateCastParts:
     def test_crit_effectiveness_scales_raw(self) -> None:
         # Akshan R: raw × (1 + eff·cc + eff·(cm-2)·cc), physical.
         state = _stub_state(effective_armor=0.0, crit_chance=0.5, crit_multiplier=2.3)
-        total, _ = _evaluate_cast_parts(
+        total, _, _ = _evaluate_cast_parts(
             state,
             (DamagePart("physical", 100.0, crit_effectiveness=0.3),),
             1,
@@ -144,7 +144,7 @@ class TestEvaluateCastParts:
 
     def test_first_return_is_first_part_first_cast(self) -> None:
         state = _stub_state()
-        _, first = _evaluate_cast_parts(
+        _, first, _ = _evaluate_cast_parts(
             state,
             (DamagePart("magic", 100.0), DamagePart("true", 40.0)),
             2,
@@ -152,6 +152,21 @@ class TestEvaluateCastParts:
             0.0,
         )
         assert first == pytest.approx(apply_resistance(100.0, 0.0))
+
+    def test_by_type_return_splits_mixed_parts(self) -> None:
+        # Ahri Q shape: magic outgoing + true return, over 2 casts.
+        state = _stub_state(magic_amp=1.1)
+        total, _, by_type = _evaluate_cast_parts(
+            state,
+            (DamagePart("magic", 100.0), DamagePart("true", 40.0)),
+            2,
+            50.0,
+            0.0,
+        )
+        expected_magic = apply_resistance(100.0, 50.0) * 1.1 * 2
+        assert by_type["magic"] == pytest.approx(expected_magic)
+        assert by_type["true"] == pytest.approx(80.0)
+        assert sum(by_type.values()) == pytest.approx(total)
 
     def test_zero_target_health_means_fully_missing(self) -> None:
         state = _stub_state(target_health=0.0)

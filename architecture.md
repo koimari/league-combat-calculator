@@ -89,9 +89,12 @@ wiki (vendor/lolstaticdata, external)
   config)` is a pipeline of named step functions over `FightState`/`Resists`
   (the body reads as the fight model). Ability haste is a champion stat, read
   from `champion_stats` like its sibling `basic_ability_haste`.
-  `split_auto_vs_ability` owns breakdown-key attribution (exposed to consumers
-  via `run_fight`'s `auto_attack_damage`/`ability_damage` result keys); rows
-  marked `informational` are display-only. It consumes compiled item specs and
+  `split_auto_vs_ability` and `split_by_damage_type` own breakdown-row
+  attribution (exposed to consumers via `run_fight`'s
+  `auto_attack_damage`/`ability_damage` and `damage_by_type` result keys);
+  mixed rows carry their exact `damage_by_type` composition, untyped amp rows
+  redistribute proportionally, and rows marked `informational` are
+  display-only. It consumes compiled item specs and
   typed champion DamageParts, never registry dictionaries or name branches:
   item VALUES/formulas live in `item_effects`, champion arithmetic in
   `champions/<name>.py`; timing, mitigation, falling HP, stack cadence, and

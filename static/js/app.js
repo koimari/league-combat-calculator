@@ -908,12 +908,19 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("stat-mpen-pct").textContent =
             Math.round(stats.magic_penetration_percent) + "%";
 
-        // Damage summary
+        // Damage summary — physical/magic/true split. The true-damage
+        // card only shows when there is true damage to report.
         animateValue("total-damage-value", Math.round(data.total_damage));
-        document.getElementById("ability-damage-value").textContent =
-            Math.round(data.ability_damage);
-        document.getElementById("auto-damage-value").textContent =
-            Math.round(data.auto_attack_damage);
+        const byType = data.damage_by_type;
+        document.getElementById("physical-damage-value").textContent =
+            Math.round(byType.physical);
+        document.getElementById("magic-damage-value").textContent =
+            Math.round(byType.magic);
+        const trueDamage = Math.round(byType.true);
+        document.getElementById("true-damage-value").textContent = trueDamage;
+        document.getElementById("true-damage-card").classList.toggle(
+            "hidden", trueDamage <= 0
+        );
 
         // Effective resistances
         document.getElementById("eff-armor").textContent = data.effective_armor;

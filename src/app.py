@@ -281,6 +281,10 @@ def api_calculate():
             "total_damage": round(total_damage, 1),
             "ability_damage": round(ability_damage, 1),
             "auto_attack_damage": round(auto_attack_damage, 1),
+            "damage_by_type": {
+                dtype: round(amount, 1)
+                for dtype, amount in result["damage_by_type"].items()
+            },
             "breakdown": api_breakdown,
             "effective_mr": round(result.get("effective_mr", 0.0), 1),
             "effective_armor": round(result.get("effective_armor", 0.0), 1),
