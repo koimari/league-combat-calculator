@@ -161,52 +161,21 @@
                 </div>
             </div>
 
-            <!-- Cast Order -->
-            <div class="config-group">
-                <div class="section-header">
-                    <h3>Cast Order</h3>
-                    <label class="toggle-label">
-                        <input type="checkbox" id="auto-cast-order" checked>
-                        <span class="toggle-text">Default</span>
-                    </label>
-                </div>
-                <div class="cast-order-bar" id="cast-order-container">
-                    <div class="cast-order-slot">
-                        <span class="cast-order-num">1</span>
-                        <select id="cast-order-1" class="cast-order-select">
-                            <option value="Q" selected>Q</option><option value="W">W</option><option value="E">E</option><option value="R">R</option>
-                        </select>
-                    </div>
-                    <span class="cast-arrow">&rarr;</span>
-                    <div class="cast-order-slot">
-                        <span class="cast-order-num">2</span>
-                        <select id="cast-order-2" class="cast-order-select">
-                            <option value="Q">Q</option><option value="W" selected>W</option><option value="E">E</option><option value="R">R</option>
-                        </select>
-                    </div>
-                    <span class="cast-arrow">&rarr;</span>
-                    <div class="cast-order-slot">
-                        <span class="cast-order-num">3</span>
-                        <select id="cast-order-3" class="cast-order-select">
-                            <option value="Q">Q</option><option value="W">W</option><option value="E" selected>E</option><option value="R">R</option>
-                        </select>
-                    </div>
-                    <span class="cast-arrow">&rarr;</span>
-                    <div class="cast-order-slot">
-                        <span class="cast-order-num">4</span>
-                        <select id="cast-order-4" class="cast-order-select">
-                            <option value="Q">Q</option><option value="W">W</option><option value="E">E</option><option value="R" selected>R</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
             <!-- Item Build -->
             <div class="config-group">
-                <h3>Build</h3>
-                <div class="item-build-bar">
+                <div class="section-header">
+                    <h3>Build</h3>
+                    <label class="toggle-label">
+                        <input type="checkbox" id="compare-mode">
+                        <span class="toggle-text">Compare</span>
+                    </label>
+                </div>
+                <!-- Build B is cloned from this row by app.js at startup -->
+                <div class="build-row" id="build-row-a" data-build="a">
+                    <span class="build-row-tag hidden">Build A</span>
+                    <div class="item-build-bar">
                     <div class="item-slot boots-slot" data-slot="boots" title="Boots">
-                        <img class="item-slot-icon hidden" id="boots-icon" src="" alt="">
+                        <img class="item-slot-icon hidden" src="" alt="">
                         <div class="item-slot-empty">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3C3B37" stroke-width="1.5"><path d="M7 21l3-9-4-1 2-9h5l-1 5h4l-6 14"/></svg>
                         </div>
@@ -256,6 +225,7 @@
                         </div>
                         <button class="item-remove-btn hidden" title="Remove">&times;</button>
                     </div>
+                </div>
                 </div>
             </div>
 
@@ -397,129 +367,141 @@
             </div>
         </section>
 
-        <!-- Right Column: Results -->
-        <section class="results-panel">
-            <div id="results-placeholder" class="results-placeholder">
+        <!-- Right Column: Results. All value targets are data-field (not id)
+             so app.js can clone this panel for Compare mode (Build B). -->
+        <section class="results-panel" id="results-panel-a">
+            <div class="results-placeholder">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2B2A27" stroke-width="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                 <p>Select a champion and click Calculate</p>
             </div>
 
-            <div id="results-content" class="hidden">
+            <!-- Error display (outside results-content so it shows before first calc) -->
+            <div class="error-display result-group hidden">
+                <p class="error-text" data-field="error-message"></p>
+            </div>
+
+            <div class="results-content hidden">
+                <!-- Build Summary (Compare mode only) -->
+                <div class="result-group build-summary hidden">
+                    <h3 data-field="build-summary-title">Build A</h3>
+                    <div class="build-summary-items" data-field="build-summary-items"></div>
+                </div>
+
                 <!-- Champion Stats -->
-                <div id="stats-display" class="result-group">
+                <div class="result-group">
                     <h3>Champion Stats</h3>
                     <div class="stats-grid">
                         <div class="stat-card" data-stat="hp">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-hp">-</span>
+                            <span class="stat-card-value" data-field="stat-hp">-</span>
                             <span class="stat-card-label">Health</span>
                         </div>
                         <div class="stat-card" data-stat="mana">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-mana">-</span>
+                            <span class="stat-card-value" data-field="stat-mana">-</span>
                             <span class="stat-card-label">Mana</span>
                         </div>
                         <div class="stat-card" data-stat="ad">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-ad">-</span>
+                            <span class="stat-card-value" data-field="stat-ad">-</span>
                             <span class="stat-card-label">Attack Damage</span>
                         </div>
                         <div class="stat-card" data-stat="ap">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-ap">-</span>
+                            <span class="stat-card-value" data-field="stat-ap">-</span>
                             <span class="stat-card-label">Ability Power</span>
                         </div>
                         <div class="stat-card" data-stat="as">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-as">-</span>
+                            <span class="stat-card-value" data-field="stat-as">-</span>
                             <span class="stat-card-label">Attack Speed</span>
                         </div>
                         <div class="stat-card" data-stat="armor">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-armor">-</span>
+                            <span class="stat-card-value" data-field="stat-armor">-</span>
                             <span class="stat-card-label">Armor</span>
                         </div>
                         <div class="stat-card" data-stat="mr">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-mr">-</span>
+                            <span class="stat-card-value" data-field="stat-mr">-</span>
                             <span class="stat-card-label">Magic Resist</span>
                         </div>
                         <div class="stat-card" data-stat="crit">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-crit">-</span>
+                            <span class="stat-card-value" data-field="stat-crit">-</span>
                             <span class="stat-card-label">Crit Chance</span>
                         </div>
                         <div class="stat-card" data-stat="ah">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-ah">-</span>
+                            <span class="stat-card-value" data-field="stat-ah">-</span>
                             <span class="stat-card-label">Ability Haste</span>
                         </div>
                         <div class="stat-card" data-stat="lethality">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-lethality">-</span>
+                            <span class="stat-card-value" data-field="stat-lethality">-</span>
                             <span class="stat-card-label">Lethality</span>
                         </div>
                         <div class="stat-card" data-stat="mpen">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-mpen">-</span>
+                            <span class="stat-card-value" data-field="stat-mpen">-</span>
                             <span class="stat-card-label">Magic Pen</span>
                         </div>
                         <div class="stat-card" data-stat="armor-pen">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-armor-pen">-</span>
+                            <span class="stat-card-value" data-field="stat-armor-pen">-</span>
                             <span class="stat-card-label">% Armor Pen</span>
                         </div>
                         <div class="stat-card" data-stat="mpen-pct">
                             <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" id="stat-mpen-pct">-</span>
+                            <span class="stat-card-value" data-field="stat-mpen-pct">-</span>
                             <span class="stat-card-label">% Magic Pen</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Damage Summary -->
-                <div id="damage-summary" class="result-group">
+                <div class="result-group">
                     <div class="total-damage-card">
                         <span class="total-label">Total Damage</span>
-                        <span id="total-damage-value" class="total-value">0</span>
+                        <span class="total-value" data-field="total-damage-value">0</span>
                     </div>
                     <div class="damage-split">
                         <div class="split-card physical-split">
                             <span class="split-label">Physical Damage</span>
-                            <span id="physical-damage-value" class="split-value">0</span>
+                            <span class="split-value" data-field="physical-damage-value">0</span>
                         </div>
                         <div class="split-card magic-split">
                             <span class="split-label">Magic Damage</span>
-                            <span id="magic-damage-value" class="split-value">0</span>
+                            <span class="split-value" data-field="magic-damage-value">0</span>
                         </div>
-                        <div id="true-damage-card" class="split-card true-split hidden">
+                        <div class="split-card true-split hidden" data-field="true-damage-card">
                             <span class="split-label">True Damage</span>
-                            <span id="true-damage-value" class="split-value">0</span>
+                            <span class="split-value" data-field="true-damage-value">0</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Effective Resistances -->
-                <div id="resistance-display" class="result-group">
+                <div class="result-group">
                     <h3>Effective Enemy Resistances</h3>
                     <div class="resistance-row">
                         <div class="resistance-card">
                             <span class="stat-icon-inline" data-stat="armor"></span>
-                            <span class="resistance-value" id="eff-armor">-</span>
+                            <span class="resistance-value" data-field="eff-armor">-</span>
                             <span class="resistance-label">Armor</span>
                         </div>
                         <div class="resistance-card">
                             <span class="stat-icon-inline" data-stat="mr"></span>
-                            <span class="resistance-value" id="eff-mr">-</span>
+                            <span class="resistance-value" data-field="eff-mr">-</span>
                             <span class="resistance-label">Magic Resist</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Damage Breakdown -->
-                <div id="breakdown-display" class="result-group">
+                <div class="result-group">
                     <h3>Damage Breakdown</h3>
-                    <table id="breakdown-table">
+                    <table class="breakdown-table">
                         <thead>
                             <tr>
                                 <th>Source</th>
@@ -527,20 +509,15 @@
                                 <th class="col-right">Damage</th>
                             </tr>
                         </thead>
-                        <tbody id="breakdown-body">
+                        <tbody data-field="breakdown-body">
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Champion Assumptions -->
-                <div id="champion-assumptions" class="result-group hidden">
+                <div class="result-group champion-assumptions hidden">
                     <h3>Champion Assumptions</h3>
-                    <ul id="champion-assumptions-list"></ul>
-                </div>
-
-                <!-- Error display -->
-                <div id="error-display" class="result-group hidden">
-                    <p id="error-message" class="error-text"></p>
+                    <ul data-field="champion-assumptions-list"></ul>
                 </div>
             </div>
         </section>

@@ -26,20 +26,35 @@ document.addEventListener("DOMContentLoaded", () => {
     const includeActives = document.getElementById("include-actives");
     const autoRankCheckbox = document.getElementById("auto-rank");
     const abilitiesBar = document.getElementById("abilities-bar");
-    const autoCastOrderCheckbox = document.getElementById("auto-cast-order");
-    const castOrderContainer = document.getElementById("cast-order-container");
-    const castOrderSelects = [
-        document.getElementById("cast-order-1"),
-        document.getElementById("cast-order-2"),
-        document.getElementById("cast-order-3"),
-        document.getElementById("cast-order-4"),
-    ];
+    const compareCheckbox = document.getElementById("compare-mode");
+    const container = document.querySelector("main.container");
+    const optimizerGroup = document.querySelector(".optimizer-group");
 
-    // Result elements
-    const resultsPlaceholder = document.getElementById("results-placeholder");
-    const resultsContent = document.getElementById("results-content");
-    const errorDisplay = document.getElementById("error-display");
-    const errorMessage = document.getElementById("error-message");
+    // Build rows. Build B (Compare mode) is a clone of build A's row, made
+    // before the slot click handlers are attached so both rows wire up
+    // identically. Slots find their build via .build-row[data-build].
+    const buildRowA = document.getElementById("build-row-a");
+    const buildRowB = buildRowA.cloneNode(true);
+    buildRowB.id = "build-row-b";
+    buildRowB.dataset.build = "b";
+    buildRowB.classList.add("hidden");
+    buildRowB.querySelector(".build-row-tag").textContent = "Build B";
+    buildRowB.querySelector(".build-row-tag").classList.remove("hidden");
+    buildRowA.after(buildRowB);
+
+    // Results panels. Panel B (Compare mode) is a clone of panel A —
+    // everything inside is targeted by class/data-field, never id, so the
+    // clone stays in sync with the markup by construction.
+    const resultsPanelA = document.getElementById("results-panel-a");
+    const resultsPanelB = resultsPanelA.cloneNode(true);
+    resultsPanelB.id = "results-panel-b";
+    resultsPanelB.classList.add("hidden");
+    resultsPanelA.after(resultsPanelB);
+    const resultsPanels = { a: resultsPanelA, b: resultsPanelB };
+
+    // Errors always surface on panel A (they're global, not per-build)
+    const errorDisplay = resultsPanelA.querySelector(".error-display");
+    const errorMessage = resultsPanelA.querySelector('[data-field="error-message"]');
 
     // Item picker elements
     const pickerOverlay = document.getElementById("item-picker-overlay");
@@ -82,10 +97,13 @@ document.addEventListener("DOMContentLoaded", () => {
     let isCalculating = false;
     let recalcTimer = null;
 
-    // Track which items are selected in which slots
-    // slots: { boots: "", 1: "", 2: "", 3: "", 4: "", 5: "", 6: "" }
-    let selectedItems = { boots: "", 1: "", 2: "", 3: "", 4: "", 5: "", 6: "" };
-    let activePickerSlot = null;
+    // Track which items are selected in which slots, per build. Build "a"
+    // is the normal build; build "b" only exists in Compare mode.
+    function emptyBuild() {
+        return { boots: "", 1: "", 2: "", 3: "", 4: "", 5: "", 6: "" };
+    }
+    let selectedItems = { a: emptyBuild(), b: emptyBuild() };
+    let activePicker = null; // { build, slot } while the item picker is open
 
     // === Populate data ===
 
@@ -371,57 +389,41 @@ document.addEventListener("DOMContentLoaded", () => {
         sel.addEventListener("change", scheduleRecalc);
     });
 
-    // === Cast order ===
+    // === Compare mode ===
+    // Compare shows a second build row in the sidebar and a second results
+    // panel; Calculate then runs both builds. The optimizer is meaningless
+    // when comparing (which build would it fill?), so it's greyed out.
 
-    autoCastOrderCheckbox.addEventListener("change", () => {
-        if (autoCastOrderCheckbox.checked) {
-            castOrderContainer.classList.add("cast-order-disabled");
-            const defaults = ["Q", "W", "E", "R"];
-            castOrderSelects.forEach((sel, i) => { sel.value = defaults[i]; });
-        } else {
-            castOrderContainer.classList.remove("cast-order-disabled");
-        }
+    compareCheckbox.addEventListener("change", () => {
+        const compare = compareCheckbox.checked;
+        container.classList.toggle("compare-mode", compare);
+        buildRowA.querySelector(".build-row-tag").classList.toggle("hidden", !compare);
+        buildRowB.classList.toggle("hidden", !compare);
+        resultsPanelB.classList.toggle("hidden", !compare);
+        optimizerGroup.classList.toggle("compare-disabled", compare);
+        optimizeBtn.disabled = compare;
         scheduleRecalc();
-    });
-    castOrderContainer.classList.add("cast-order-disabled");
-
-    // Auto-swap logic
-    castOrderSelects.forEach((sel, idx) => {
-        sel.addEventListener("change", () => {
-            const chosen = sel.value;
-            castOrderSelects.forEach((other, otherIdx) => {
-                if (otherIdx !== idx && other.value === chosen) {
-                    const allUsed = castOrderSelects.map((s) => s.value);
-                    const missing = ["Q", "W", "E", "R"].find(
-                        (k) => allUsed.filter((v) => v === k).length === 0
-                    );
-                    if (missing) other.value = missing;
-                }
-            });
-            scheduleRecalc();
-        });
     });
 
     // === Item Build Slots ===
 
-    const itemSlots = document.querySelectorAll(".item-slot");
+    document.querySelectorAll(".item-slot").forEach((slot) => {
+        const build = slot.closest(".build-row").dataset.build;
+        const slotKey = slot.dataset.slot;
+        if (!slotKey) return;
 
-    itemSlots.forEach((slot) => {
         // Left click on slot background/empty area opens picker
         slot.addEventListener("click", (e) => {
-            const slotKey = slot.dataset.slot;
-            if (!slotKey) return;
             // Don't open picker if they clicked the remove button
             if (e.target.closest(".item-remove-btn")) return;
-            openItemPicker(slotKey);
+            openItemPicker(build, slotKey);
         });
 
         // Right click to remove item
         slot.addEventListener("contextmenu", (e) => {
             e.preventDefault();
-            const slotKey = slot.dataset.slot;
-            if (!slotKey || !selectedItems[slotKey]) return;
-            clearItemSlot(slotKey);
+            if (!selectedItems[build][slotKey]) return;
+            clearItemSlot(build, slotKey);
             scheduleRecalc();
         });
 
@@ -430,18 +432,23 @@ document.addEventListener("DOMContentLoaded", () => {
         if (removeBtn) {
             removeBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
-                const slotKey = slot.dataset.slot;
-                if (!slotKey) return;
-                clearItemSlot(slotKey);
+                clearItemSlot(build, slotKey);
                 scheduleRecalc();
             });
         }
     });
 
-    // Get names of all currently selected items (for duplicate prevention)
-    function getSelectedItemNames() {
+    function slotElement(build, slotKey) {
+        return document.querySelector(
+            `.build-row[data-build="${build}"] .item-slot[data-slot="${slotKey}"]`
+        );
+    }
+
+    // Get names of items selected in one build (for duplicate prevention —
+    // the same item in build A and build B is fine, that's the comparison)
+    function getSelectedItemNames(build) {
         const names = new Set();
-        for (const [key, name] of Object.entries(selectedItems)) {
+        for (const name of Object.values(selectedItems[build])) {
             if (name) names.add(name);
         }
         return names;
@@ -452,12 +459,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // so the manual builder and the optimizer enforce the same table.
 
     // Returns the exclusivity reason if an item is blocked, or null if allowed.
-    // currentSlot is the slot being picked for (its current item is allowed).
-    function getExclusivityBlock(itemName, currentSlot) {
+    // Checked within one build only; currentSlot's own item is allowed.
+    function getExclusivityBlock(build, itemName, currentSlot) {
         const groups = itemToGroups[itemName];
         if (!groups) return null;
 
-        for (const [slotKey, slotItem] of Object.entries(selectedItems)) {
+        for (const [slotKey, slotItem] of Object.entries(selectedItems[build])) {
             if (!slotItem || slotKey === currentSlot) continue;
             if (slotItem === itemName) continue; // duplicate check handled elsewhere
             const slotGroups = itemToGroups[slotItem];
@@ -471,8 +478,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
     }
 
-    function openItemPicker(slotKey) {
-        activePickerSlot = slotKey;
+    function openItemPicker(build, slotKey) {
+        activePicker = { build: build, slot: slotKey };
         const isBoot = slotKey === "boots";
         const sourceItems = isBoot ? bootsData : itemsData;
 
@@ -492,15 +499,17 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Get already-selected items to mark as unavailable
-        const selected = getSelectedItemNames();
+        // Get already-selected items in this build to mark as unavailable
+        const selected = getSelectedItemNames(activePicker.build);
         // The item currently in this slot is allowed (replacing itself)
-        const currentInSlot = selectedItems[activePickerSlot] || "";
+        const currentInSlot = selectedItems[activePicker.build][activePicker.slot] || "";
 
         items.forEach((item) => {
             const el = document.createElement("div");
             const isUsed = selected.has(item.name) && item.name !== currentInSlot;
-            const exclusivityBlock = !isUsed ? getExclusivityBlock(item.name, activePickerSlot) : null;
+            const exclusivityBlock = !isUsed
+                ? getExclusivityBlock(activePicker.build, item.name, activePicker.slot)
+                : null;
             const isBlocked = isUsed || exclusivityBlock;
             el.className = "picker-item" + (isBlocked ? " picker-item-used" : "");
             let tooltip = item.name;
@@ -509,7 +518,7 @@ document.addEventListener("DOMContentLoaded", () => {
             el.innerHTML = `<img src="${item.icon}" alt="${item.name}" loading="lazy"><div class="picker-tooltip">${tooltip}</div>`;
             if (!isBlocked) {
                 el.addEventListener("click", () => {
-                    selectItem(activePickerSlot, item.name, item.icon);
+                    selectItem(activePicker.build, activePicker.slot, item.name, item.icon);
                     closePicker();
                 });
             }
@@ -517,10 +526,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function selectItem(slotKey, name, icon) {
-        selectedItems[slotKey] = name;
+    function selectItem(build, slotKey, name, icon) {
+        selectedItems[build][slotKey] = name;
 
-        const slot = document.querySelector(`.item-slot[data-slot="${slotKey}"]`);
+        const slot = slotElement(build, slotKey);
         if (!slot) return;
 
         slot.title = name;
@@ -539,10 +548,10 @@ document.addEventListener("DOMContentLoaded", () => {
         scheduleRecalc();
     }
 
-    function clearItemSlot(slotKey) {
-        selectedItems[slotKey] = "";
+    function clearItemSlot(build, slotKey) {
+        selectedItems[build][slotKey] = "";
 
-        const slot = document.querySelector(`.item-slot[data-slot="${slotKey}"]`);
+        const slot = slotElement(build, slotKey);
         if (!slot) return;
 
         slot.title = slotKey === "boots" ? "Boots" : `Item ${slotKey}`;
@@ -561,7 +570,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function closePicker() {
         pickerOverlay.classList.add("hidden");
-        activePickerSlot = null;
+        activePicker = null;
     }
 
     pickerClose.addEventListener("click", closePicker);
@@ -572,7 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Picker search
     pickerSearch.addEventListener("input", () => {
         const query = pickerSearch.value.toLowerCase().trim();
-        const isBoot = activePickerSlot === "boots";
+        const isBoot = activePicker && activePicker.slot === "boots";
         const sourceItems = isBoot ? bootsData : itemsData;
 
         if (!query) {
@@ -727,11 +736,6 @@ document.addEventListener("DOMContentLoaded", () => {
             };
         }
 
-        // Cast order
-        if (!autoCastOrderCheckbox.checked) {
-            payload.cast_order = castOrderSelects.map((sel) => sel.value);
-        }
-
         // Champion-specific options
         const championOptions = collectChampionOptions(champion);
         if (championOptions) {
@@ -741,6 +745,28 @@ document.addEventListener("DOMContentLoaded", () => {
         return payload;
     }
 
+    // Legendary item names for one build's payload (boots travel separately)
+    function buildItemList(build) {
+        const items = [];
+        for (let i = 1; i <= 6; i++) {
+            if (selectedItems[build][i]) items.push(selectedItems[build][i]);
+        }
+        return items;
+    }
+
+    // POST one build to /api/calculate; resolves to the response JSON
+    function calculateBuild(champion, build) {
+        const payload = buildFightPayload(champion);
+        payload.boots = selectedItems[build].boots;
+        payload.items = buildItemList(build);
+        return fetch("/api/calculate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        }).then((res) => res.json());
+    }
+
+    // Calculate build A, or builds A and B side by side in Compare mode
     function doCalculate() {
         const champion = championSelect.value;
         if (!champion) {
@@ -751,15 +777,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isCalculating) return;
         isCalculating = true;
 
-        // Collect items from slots
-        const items = [];
-        for (let i = 1; i <= 6; i++) {
-            if (selectedItems[i]) items.push(selectedItems[i]);
-        }
-
-        const payload = buildFightPayload(champion);
-        payload.boots = selectedItems.boots;
-        payload.items = items;
+        const builds = compareCheckbox.checked ? ["a", "b"] : ["a"];
 
         // Show loading state
         if (!hasCalculated) {
@@ -767,22 +785,22 @@ document.addEventListener("DOMContentLoaded", () => {
             btnLoading.classList.remove("hidden");
             calculateBtn.disabled = true;
         } else {
-            resultsContent.classList.add("recalculating");
+            builds.forEach((build) => {
+                resultsPanels[build]
+                    .querySelector(".results-content")
+                    .classList.add("recalculating");
+            });
         }
 
-        fetch("/api/calculate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.error) {
-                    showError(data.error);
+        Promise.all(builds.map((build) => calculateBuild(champion, build)))
+            .then((results) => {
+                const failed = results.find((data) => data.error);
+                if (failed) {
+                    showError(failed.error);
                     return;
                 }
                 hideError();
-                displayResults(data);
+                builds.forEach((build, i) => displayResults(build, results[i]));
 
                 if (!hasCalculated) {
                     hasCalculated = true;
@@ -798,7 +816,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 isCalculating = false;
                 calculateBtn.disabled = false;
                 btnLoading.classList.add("hidden");
-                resultsContent.classList.remove("recalculating");
+                document.querySelectorAll(".results-content").forEach((el) => {
+                    el.classList.remove("recalculating");
+                });
             });
     }
 
@@ -883,51 +903,78 @@ document.addEventListener("DOMContentLoaded", () => {
         errorDisplay.classList.add("hidden");
     }
 
-    function displayResults(data) {
+    // Render item icons for one build into a compare-mode summary row
+    function renderBuildSummaryItems(el, build) {
+        el.innerHTML = "";
+        const names = [selectedItems[build].boots, ...buildItemList(build)].filter(Boolean);
+        if (names.length === 0) {
+            el.innerHTML = '<span class="build-summary-empty">No items</span>';
+            return;
+        }
+        names.forEach((name) => {
+            const img = document.createElement("img");
+            img.src = itemIconMap[name] || "";
+            img.alt = name;
+            img.title = name;
+            el.appendChild(img);
+        });
+    }
+
+    // Render one calculate response into the given build's results panel
+    function displayResults(build, data) {
+        const panel = resultsPanels[build];
+        const field = (name) => panel.querySelector(`[data-field="${name}"]`);
+
         // Show results, hide placeholder
-        resultsPlaceholder.classList.add("hidden");
-        resultsContent.classList.remove("hidden");
+        panel.querySelector(".results-placeholder").classList.add("hidden");
+        panel.querySelector(".results-content").classList.remove("hidden");
+
+        // Build summary header — Compare mode only (in single mode the
+        // sidebar's build bar already shows the items)
+        const compare = compareCheckbox.checked;
+        panel.querySelector(".build-summary").classList.toggle("hidden", !compare);
+        if (compare) {
+            field("build-summary-title").textContent =
+                build === "a" ? "Build A" : "Build B";
+            renderBuildSummaryItems(field("build-summary-items"), build);
+        }
 
         const stats = data.champion_stats;
 
         // Champion stats
-        document.getElementById("stat-hp").textContent = Math.round(stats.health);
-        document.getElementById("stat-ad").textContent = Math.round(stats.attack_damage);
-        document.getElementById("stat-ap").textContent = Math.round(stats.ability_power);
-        document.getElementById("stat-as").textContent = stats.attack_speed.toFixed(3);
-        document.getElementById("stat-armor").textContent = Math.round(stats.armor);
-        document.getElementById("stat-mr").textContent = Math.round(stats.magic_resistance);
-        document.getElementById("stat-crit").textContent =
+        field("stat-hp").textContent = Math.round(stats.health);
+        field("stat-ad").textContent = Math.round(stats.attack_damage);
+        field("stat-ap").textContent = Math.round(stats.ability_power);
+        field("stat-as").textContent = stats.attack_speed.toFixed(3);
+        field("stat-armor").textContent = Math.round(stats.armor);
+        field("stat-mr").textContent = Math.round(stats.magic_resistance);
+        field("stat-crit").textContent =
             Math.round(stats.critical_strike_chance) + "%";
-        document.getElementById("stat-mana").textContent = Math.round(stats.max_mana);
-        document.getElementById("stat-ah").textContent = Math.round(stats.ability_haste);
-        document.getElementById("stat-lethality").textContent = Math.round(stats.lethality);
-        document.getElementById("stat-mpen").textContent = Math.round(stats.magic_penetration_flat);
-        document.getElementById("stat-armor-pen").textContent =
+        field("stat-mana").textContent = Math.round(stats.max_mana);
+        field("stat-ah").textContent = Math.round(stats.ability_haste);
+        field("stat-lethality").textContent = Math.round(stats.lethality);
+        field("stat-mpen").textContent = Math.round(stats.magic_penetration_flat);
+        field("stat-armor-pen").textContent =
             Math.round(stats.armor_penetration_percent) + "%";
-        document.getElementById("stat-mpen-pct").textContent =
+        field("stat-mpen-pct").textContent =
             Math.round(stats.magic_penetration_percent) + "%";
 
         // Damage summary — physical/magic/true split. The true-damage
         // card only shows when there is true damage to report.
-        animateValue("total-damage-value", Math.round(data.total_damage));
+        animateValue(field("total-damage-value"), Math.round(data.total_damage));
         const byType = data.damage_by_type;
-        document.getElementById("physical-damage-value").textContent =
-            Math.round(byType.physical);
-        document.getElementById("magic-damage-value").textContent =
-            Math.round(byType.magic);
+        field("physical-damage-value").textContent = Math.round(byType.physical);
+        field("magic-damage-value").textContent = Math.round(byType.magic);
         const trueDamage = Math.round(byType.true);
-        document.getElementById("true-damage-value").textContent = trueDamage;
-        document.getElementById("true-damage-card").classList.toggle(
-            "hidden", trueDamage <= 0
-        );
+        field("true-damage-value").textContent = trueDamage;
+        field("true-damage-card").classList.toggle("hidden", trueDamage <= 0);
 
         // Effective resistances
-        document.getElementById("eff-armor").textContent = data.effective_armor;
-        document.getElementById("eff-mr").textContent = data.effective_mr;
+        field("eff-armor").textContent = data.effective_armor;
+        field("eff-mr").textContent = data.effective_mr;
 
         // Breakdown table
-        const tbody = document.getElementById("breakdown-body");
+        const tbody = field("breakdown-body");
         tbody.innerHTML = "";
 
         const breakdown = data.breakdown;
@@ -982,27 +1029,26 @@ document.addEventListener("DOMContentLoaded", () => {
             tbody.appendChild(tr);
         }
 
-        // Champion assumptions
-        const assumptionsPanel = document.getElementById("champion-assumptions");
-        const assumptionsList = document.getElementById("champion-assumptions-list");
-        const champion = championSelect.value;
-        const meta = championOptionsMeta[champion];
-        if (meta && meta.assumptions && meta.assumptions.length > 0) {
+        // Champion assumptions are champion-level, not build-level: show
+        // them on panel A only so Compare mode doesn't repeat them.
+        const assumptionsGroup = panel.querySelector(".champion-assumptions");
+        const meta = championOptionsMeta[championSelect.value];
+        const showAssumptions =
+            build === "a" && meta && meta.assumptions && meta.assumptions.length > 0;
+        if (showAssumptions) {
+            const assumptionsList = field("champion-assumptions-list");
             assumptionsList.innerHTML = "";
             meta.assumptions.forEach((text) => {
                 const li = document.createElement("li");
                 li.textContent = text;
                 assumptionsList.appendChild(li);
             });
-            assumptionsPanel.classList.remove("hidden");
-        } else {
-            assumptionsPanel.classList.add("hidden");
         }
+        assumptionsGroup.classList.toggle("hidden", !showAssumptions);
     }
 
     // Simple animated counter for total damage
-    function animateValue(elementId, targetValue) {
-        const el = document.getElementById(elementId);
+    function animateValue(el, targetValue) {
         const currentValue = parseInt(el.textContent) || 0;
         const diff = targetValue - currentValue;
 
@@ -1039,23 +1085,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let isOptimizing = false;
 
+    // The optimizer always works on build A; it's disabled in Compare mode
     optimizeBtn.addEventListener("click", () => {
         const champion = championSelect.value;
         if (!champion) {
             showError("Please select a champion first.");
             return;
         }
-        if (isOptimizing) return;
+        if (isOptimizing || compareCheckbox.checked) return;
         isOptimizing = true;
 
         const maxSlots = parseInt(optimizeSlots.value, 10);
 
         // Collect locked items (non-empty slots)
-        const lockedItems = [];
-        for (let i = 1; i <= 6; i++) {
-            if (selectedItems[i]) lockedItems.push(selectedItems[i]);
-        }
-        const lockedBoots = selectedItems.boots || "";
+        const lockedItems = buildItemList("a");
+        const lockedBoots = selectedItems.a.boots || "";
 
         const payload = buildFightPayload(champion);
         payload.objective = optimizeObjective.value;
@@ -1089,18 +1133,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 let newIdx = 0;
                 for (let i = 1; i <= 6 && newIdx < newItems.length; i++) {
-                    if (!selectedItems[i]) {
+                    if (!selectedItems.a[i]) {
                         const name = newItems[newIdx];
                         const icon = itemIconMap[name] || "";
-                        selectItem(String(i), name, icon);
+                        selectItem("a", String(i), name, icon);
                         newIdx++;
                     }
                 }
 
                 // Fill boots if it was empty
-                if (!selectedItems.boots && data.boots) {
+                if (!selectedItems.a.boots && data.boots) {
                     const icon = itemIconMap[data.boots] || "";
-                    selectItem("boots", data.boots, icon);
+                    selectItem("a", "boots", data.boots, icon);
                 }
 
                 // Show status

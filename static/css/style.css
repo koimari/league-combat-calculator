@@ -221,8 +221,22 @@ body {
     padding: 0 var(--gap-lg);
 }
 
+/* Compare mode: results panels for build A and build B side by side */
+.container.compare-mode {
+    grid-template-columns: 380px 1fr 1fr;
+    max-width: 1800px;
+}
+
+@media (max-width: 1250px) {
+    /* Not enough width for three columns: build B wraps below build A */
+    .container.compare-mode { grid-template-columns: 380px 1fr; }
+    .container.compare-mode .results-panel { grid-column: 2; }
+}
+
 @media (max-width: 860px) {
-    .container { grid-template-columns: 1fr; }
+    .container,
+    .container.compare-mode { grid-template-columns: 1fr; }
+    .container.compare-mode .results-panel { grid-column: auto; }
 }
 
 /* =============== PANELS =============== */
@@ -632,46 +646,21 @@ input[type="radio"] {
     opacity: 0;
 }
 
-/* =============== CAST ORDER =============== */
-.cast-order-bar {
-    display: flex;
-    align-items: center;
-    gap: var(--gap-xs);
-}
-
-.cast-order-slot {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    flex: 1;
-}
-
-.cast-order-num {
-    font-size: 0.6rem;
-    color: var(--text-dark);
-    text-transform: uppercase;
-}
-
-.cast-order-select {
-    width: 48px !important;
-    text-align: center;
-    font-size: 0.8rem;
-    padding: 0.25rem !important;
-}
-
-.cast-arrow {
-    color: var(--text-dark);
-    font-size: 0.75rem;
-    margin-top: 10px;
-}
-
-.cast-order-bar.cast-order-disabled .cast-order-select {
-    opacity: 0.25;
-    pointer-events: none;
-}
-
 /* =============== ITEM BUILD BAR =============== */
+/* Compare mode: build B's row is cloned from build A's (app.js) */
+.build-row + .build-row {
+    margin-top: var(--gap-md);
+}
+
+.build-row-tag {
+    display: block;
+    font-size: 0.6rem;
+    color: var(--gold-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
 .item-build-bar {
     display: flex;
     align-items: flex-start;
@@ -1410,13 +1399,13 @@ input[type="radio"] {
 }
 
 /* =============== BREAKDOWN TABLE =============== */
-#breakdown-table {
+.breakdown-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.82rem;
 }
 
-#breakdown-table th {
+.breakdown-table th {
     text-align: left;
     font-size: 0.68rem;
     text-transform: uppercase;
@@ -1426,13 +1415,13 @@ input[type="radio"] {
     border-bottom: 1px solid var(--border-dark);
 }
 
-#breakdown-table td {
+.breakdown-table td {
     padding: 0.4rem 0.5rem;
     border-bottom: 1px solid rgba(30, 35, 40, 0.5);
     color: var(--text-body);
 }
 
-#breakdown-table tr:hover td {
+.breakdown-table tr:hover td {
     background: rgba(200, 155, 60, 0.03);
 }
 
@@ -1440,7 +1429,7 @@ input[type="radio"] {
     text-align: right !important;
 }
 
-#breakdown-table td:last-child {
+.breakdown-table td:last-child {
     text-align: right;
     font-weight: 600;
     color: var(--gold);
@@ -1486,21 +1475,43 @@ input[type="radio"] {
 .result-group:nth-child(5) { animation-delay: 0.2s; }
 
 /* Champion Assumptions */
-#champion-assumptions-list {
+.champion-assumptions ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-#champion-assumptions-list li {
+.champion-assumptions li {
     font-size: 0.8rem;
     color: var(--text-dim);
     padding: 4px 0;
     border-bottom: 1px solid var(--border-subtle);
 }
 
-#champion-assumptions-list li:last-child {
+.champion-assumptions li:last-child {
     border-bottom: none;
+}
+
+/* =============== BUILD SUMMARY (Compare mode) =============== */
+.build-summary-items {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.build-summary-items img {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-dark);
+    object-fit: cover;
+}
+
+.build-summary-empty {
+    font-size: 0.78rem;
+    color: var(--text-dark);
+    font-style: italic;
 }
 
 /* =============== RECALCULATING INDICATOR =============== */
@@ -1520,6 +1531,12 @@ input[type="radio"] {
 .optimizer-group {
     border-top: 1px solid var(--border-dark);
     padding-top: var(--gap-lg);
+}
+
+/* Optimizing has no meaning in Compare mode: grey the whole group out */
+.optimizer-group.compare-disabled {
+    opacity: 0.35;
+    pointer-events: none;
 }
 
 .optimizer-controls {
