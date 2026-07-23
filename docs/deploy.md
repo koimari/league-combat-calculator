@@ -89,9 +89,12 @@ docker inspect --format '{{json .State.Health}}' lol-calc
 docker stop lol-calc
 ```
 
-The production image installs the hash-locked `requirements-runtime.txt`, runs
-as an unprivileged `app` user, and excludes scraper/test/lint dependencies. To
-change a runtime dependency, edit `requirements-runtime.in` and regenerate:
+The production image applies Debian security updates, installs the hash-locked
+`requirements-runtime.txt`, runs as an unprivileged `app` user, and excludes
+scraper/test/lint dependencies. CI rebuilds and scans the image so OS fixes
+published after the pinned base-image snapshot are still required before a
+release passes. To change a runtime dependency, edit `requirements-runtime.in`
+and regenerate:
 
 ```bash
 uv pip compile requirements-runtime.in --universal --generate-hashes \
