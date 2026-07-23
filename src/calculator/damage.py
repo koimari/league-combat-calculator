@@ -1327,6 +1327,14 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                         cd, result.autos_per_second, result.navori_refund
                     )
                 num_casts = 1 + int(state.fight_duration_seconds / cd) if cd > 0 else 1
+                # Empowered-auto abilities (Vayne Q) only deal damage
+                # through the next basic attack, so casts can never
+                # exceed the autos that consume them. The auto count
+                # itself is untouched: such casts are attack resets,
+                # spent in attack-cooldown dead time (the in-game reset
+                # acceleration is not modeled — conservative).
+                if ability_info.get("empowers_next_auto"):
+                    num_casts = min(num_casts, state.num_auto_attacks)
                 # Recasts land on cooldown: the last one at (N-1) x cd.
                 # Burns use the fight-wide max as their final refresh.
                 if cd > 0 and num_casts > 1:

@@ -147,6 +147,86 @@ class TestQCooldownWithR:
 
 
 # ---------------------------------------------------------------------------
+# Q: Tumble ↔ auto-attack coupling (time-based fights)
+# ---------------------------------------------------------------------------
+
+
+class TestTumbleAutoCoupling:
+    """Q empowers the next auto: casts are gated by the auto stream.
+
+    Reference scenario (mirrors the observed optimizer bug): level 18,
+    R rank 3 (Q CD 2.0s -> 1.0s), 50 ability haste (-> 0.667s), 1.29
+    attack speed, 10s fight, 100% AA uptime. Uncoupled, the engine cast
+    Q 16 times against only 12 autos — impossible, since Tumble only
+    deals damage through the empowered auto.
+
+    Coupled model: casts = min(cooldown casts, autos) = min(16, 12)
+    = 12. The auto count itself stays floor(1.29 * 10) = 12: Tumble is
+    an attack reset, its dash spent in attack-cooldown dead time (the
+    in-game reset acceleration is not modeled — conservative).
+    """
+
+    @staticmethod
+    def _run_fight(stats: dict, abilities: dict, **overrides) -> dict:
+        config = {
+            "target_health": 1000.0,
+            "target_armor": 100.0,
+            "target_magic_resistance": 100.0,
+            "fight_duration_seconds": 10.0,
+            "auto_attack_uptime": 1.0,
+            "one_rotation": False,
+            "deterministic": True,
+        }
+        config.update(overrides)
+        return calculate_fight_damage(stats, abilities, [], FightConfig(**config))
+
+    @pytest.fixture
+    def reference_setup(self, vayne_data, parse_at) -> tuple[dict, dict]:
+        stats, abilities = parse_at(
+            vayne_data,
+            18,
+            ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
+        )
+        stats["ability_haste"] = 50.0
+        stats["attack_speed"] = 1.29
+        return stats, abilities
+
+    def test_q_casts_capped_by_auto_count(self, reference_setup) -> None:
+        """Tumble only damages via the empowered auto: casts <= autos."""
+        stats, abilities = reference_setup
+        result = self._run_fight(stats, abilities)
+        q_casts = result["breakdown"]["Q"]["casts"]
+        autos = result["breakdown"]["auto_attacks"]["count"]
+        assert q_casts <= autos
+
+    def test_autos_unchanged_by_tumbling(self, reference_setup) -> None:
+        """Tumble is an attack reset: the auto count is not reduced."""
+        stats, abilities = reference_setup
+        result = self._run_fight(stats, abilities)
+        autos = result["breakdown"]["auto_attacks"]["count"]
+        assert autos == int(1.29 * 10.0)  # 12, same as without Q casts
+
+    def test_reference_cast_and_auto_counts(self, reference_setup) -> None:
+        """Hand-derived: min(16 cooldown casts, 12 autos) -> 12 and 12."""
+        stats, abilities = reference_setup
+        result = self._run_fight(stats, abilities)
+        assert result["breakdown"]["Q"]["casts"] == 12
+        assert result["breakdown"]["auto_attacks"]["count"] == 12
+
+    def test_one_rotation_q_casts_once(self, reference_setup) -> None:
+        """One-rotation mode is unaffected: Q casts exactly once."""
+        stats, abilities = reference_setup
+        result = self._run_fight(stats, abilities, one_rotation=True)
+        assert result["breakdown"]["Q"]["casts"] == 1
+
+    def test_no_autos_means_no_tumbles(self, reference_setup) -> None:
+        """With zero AA uptime there is no auto to empower: Q never lands."""
+        stats, abilities = reference_setup
+        result = self._run_fight(stats, abilities, auto_attack_uptime=0.0)
+        assert result["breakdown"]["Q"]["casts"] == 0
+
+
+# ---------------------------------------------------------------------------
 # W: Silver Bolts
 # ---------------------------------------------------------------------------
 

@@ -53,6 +53,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "parts",
         "cast_instances",
         "recast_of",
+        "empowers_next_auto",
         "stat_buff",
         "target_debuff",
         "on_hit",

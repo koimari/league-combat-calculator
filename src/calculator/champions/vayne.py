@@ -7,7 +7,12 @@ Why each slot is non-generic:
   context via the archetype's ``couples`` param, under the
   ``tumble_cd_reduction_percent`` stash key Q reads below.
 - Q (Tumble) is a plain "Bonus Physical Damage" read wrapped to scale
-  its cooldown by R's published reduction (100% - reduction).
+  its cooldown by R's published reduction (100% - reduction), stamped
+  ``empowers_next_auto`` so the fight engine caps casts at the auto
+  count: the damage only lands through the empowered basic attack.
+  Tumble is an attack reset (wiki: "resets Vayne's basic attack
+  timer"), so the dash costs no attack time and the auto count is
+  unaffected; the reset's throughput gain is not modeled.
 - W (Silver Bolts) procs true damage (% of target max health, floored
   at "Minimum Bonus Damage") on every 3rd hit — the shared
   ``pct_health_per_hit`` math in a custom fn, because the emitted
@@ -42,11 +47,12 @@ _tumble_damage = simple_damage(attr="Bonus Physical Damage", dmg_type="physical"
 
 
 def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: standard damage entry, cooldown scaled by R's published CDR."""
+    """Q: empowered-auto damage entry, cooldown scaled by R's published CDR."""
     entry = _tumble_damage(ctx)
     if entry is not None:
         reduction = ctx.stats.get("tumble_cd_reduction_percent", 0.0)
         entry["cooldown"] *= 1.0 - reduction / 100.0
+        entry["empowers_next_auto"] = True
     return entry
 
 
@@ -96,7 +102,9 @@ OPTIONS = [
 ASSUMPTIONS = [
     "R (Final Hour) always active if ranked — bonus AD applied",
     "W (Silver Bolts) procs every 3rd hit (on-hit model)",
-    "Q empowered auto applies once per cast",
+    "Q (Tumble) damage rides the next auto — casts capped by the auto "
+    "count; the dash is an attack reset, so it costs no attack time "
+    "(reset acceleration not modeled)",
     "Passive (Night Hunter) is utility only — not modeled",
 ]
 

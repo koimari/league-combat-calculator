@@ -450,6 +450,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Clear-all X next to the Build header: empties build A, and build B too
+    // when Compare mode is on.
+    document.getElementById("build-clear-btn").addEventListener("click", () => {
+        const builds = compareCheckbox.checked ? ["a", "b"] : ["a"];
+        for (const build of builds) {
+            for (const slotKey of Object.keys(selectedItems[build])) {
+                clearItemSlot(build, slotKey);
+            }
+        }
+        scheduleRecalc();
+    });
+
     function slotElement(build, slotKey) {
         return document.querySelector(
             `.build-row[data-build="${build}"] .item-slot[data-slot="${slotKey}"]`

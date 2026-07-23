@@ -17097,6 +17097,7 @@
         "Q": {
           "cooldown": 1.2,
           "damage_type": "physical",
+          "empowers_next_auto": true,
           "name": "Tumble",
           "parts": [
             "DamagePart(physical, amount=150.64999999999998, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -27652,7 +27653,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "a60051df26d47907083f4a4c1512a06d8668e00c",
+    "git_head": "249b0d4fc6e10995e8a06d5fd37c5a3840128318",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,
@@ -30151,7 +30152,7 @@
           "magic_build": {
             "breakdown_totals": {
               "E": 125.0,
-              "Q": 1238.83,
+              "Q": 991.07,
               "R": 0.0,
               "W": 0.0,
               "auto_attacks": 349.33,
@@ -30159,18 +30160,18 @@
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 73.74
             },
-            "total_damage": 2155.6
+            "total_damage": 1907.83
           },
           "no_items": {
             "breakdown_totals": {
               "E": 125.0,
-              "Q": 502.17,
+              "Q": 401.73,
               "R": 0.0,
               "W": 0.0,
               "auto_attacks": 349.33,
               "on_hit_ability_W": 213.33
             },
-            "total_damage": 1189.83
+            "total_damage": 1089.4
           },
           "physical_build": {
             "breakdown_totals": {
@@ -30222,7 +30223,7 @@
           "magic_build": {
             "breakdown_totals": {
               "E": 370.83,
-              "Q": 1643.0,
+              "Q": 1369.17,
               "R": 0.0,
               "W": 0.0,
               "auto_attacks": 550.0,
@@ -30230,18 +30231,18 @@
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 97.74
             },
-            "total_damage": 3150.27
+            "total_damage": 2876.43
           },
           "no_items": {
             "breakdown_totals": {
               "E": 370.83,
-              "Q": 759.0,
+              "Q": 632.5,
               "R": 0.0,
               "W": 0.0,
               "auto_attacks": 550.0,
               "on_hit_ability_W": 333.33
             },
-            "total_damage": 2013.17
+            "total_damage": 1886.67
           },
           "physical_build": {
             "breakdown_totals": {
