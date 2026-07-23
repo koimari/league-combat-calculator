@@ -58,6 +58,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "target_debuff",
         "on_hit",
         "proc_count",
+        "dot_duration",
         "applies_item_on_hits",
         "auto_attack_override",
         "double_shot",

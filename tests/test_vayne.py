@@ -219,6 +219,20 @@ class TestTumbleAutoCoupling:
         result = self._run_fight(stats, abilities, one_rotation=True)
         assert result["breakdown"]["Q"]["casts"] == 1
 
+    def test_one_rotation_q_carries_the_consumed_auto(self, reference_setup) -> None:
+        """A pure one-rotation has no auto stream, but casting Q still
+        attacks: the row is the full empowered hit — base swing + bonus."""
+        stats, abilities = reference_setup
+        result = self._run_fight(
+            stats,
+            abilities,
+            one_rotation=True,
+            auto_attack_uptime=0.0,
+            target_armor=0.0,
+        )
+        expected = stats["attack_damage"] + abilities["Q"]["total_raw"]
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(expected)
+
     def test_no_autos_means_no_tumbles(self, reference_setup) -> None:
         """With zero AA uptime there is no auto to empower: Q never lands."""
         stats, abilities = reference_setup

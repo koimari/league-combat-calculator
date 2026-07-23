@@ -1385,9 +1385,27 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
 
         # All damage arithmetic is typed DamageParts — champion-specific
         # scaling lives in the champion module's closures, never here.
+        parts = ability_info["parts"]
+        # An empowered-auto cast with no auto stream to ride (one-rotation
+        # mode) still forces its basic attack — carry the consumed swing
+        # on the ability's own row, matching the in-game "attack + bonus"
+        # hit (Blitzcrank E, Vayne Q). Time-based fights never get here:
+        # casts are capped by the auto count above, and the auto stream
+        # itself carries the swing.
+        if (
+            ability_info.get("empowers_next_auto")
+            and num_casts > 0
+            and state.num_auto_attacks == 0
+        ):
+            swing = DamagePart(
+                "physical",
+                state.champion_stats.get("attack_damage", 0.0),
+                crit_effectiveness=1.0,
+            )
+            parts = parts + (swing,)
         ability_total, first_part_damage, ability_by_type = _evaluate_cast_parts(
             state,
-            ability_info["parts"],
+            parts,
             num_casts,
             ability_mr,
             mitigated_damage_dealt,
@@ -2339,6 +2357,14 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         inter_cast_delay = 0.5
         cast_spread = (rotation.total_ability_casts - 1 + r_extra) * inter_cast_delay
 
+        # Champion DoTs (e.g. Brand's Blaze) keep dealing ability
+        # damage for their ``dot_duration`` tail after the applying
+        # cast — every tick refreshes the burn. Ablaze re-applies on
+        # each cast, so the tail extends from the LAST cast.
+        champion_dot_tail = max(
+            (info.get("dot_duration", 0.0) for info in ability_damages.values()),
+            default=0.0,
+        )
         # Other item DoTs (e.g. Malignance Hatefog) deal ability
         # damage that also refreshes burns.  Hatefog starts at R cast
         # (not at fight start), so its refresh window begins partway
@@ -2346,7 +2372,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         # In timed mode, abilities recast on cooldown across the whole
         # fight — the last recast (rotation.last_cast_time) refreshes
         # the burn far beyond the GCD combo spread.
-        dot_refresh_end = max(cast_spread, rotation.last_cast_time)
+        dot_refresh_end = max(cast_spread, rotation.last_cast_time) + champion_dot_tail
         for ultimate_proc in state.damage_effects.ultimate_procs:
             if "R" in ability_damages:
                 # R1 lands r_extra dashes (x0.5s each) before the last hit

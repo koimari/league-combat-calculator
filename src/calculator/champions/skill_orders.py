@@ -69,6 +69,12 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "W", "Q", "W", "Q", "R", "Q",
         "Q", "E", "E", "R", "E", "E",
     ],
+    # ── W max first (Pillar of Flame is the damage ability) ──
+    "Brand": [
+        "Q", "W", "E", "W", "W", "R",
+        "W", "Q", "W", "Q", "R", "Q",
+        "Q", "E", "E", "R", "E", "E",
+    ],
     # ── W max first (standard pattern) ──
     "Kog'Maw": [
         "Q", "W", "E", "W", "W", "R",

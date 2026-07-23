@@ -64,6 +64,8 @@ azir_data = _champion_fixture("Azir")
 bard_data = _champion_fixture("Bard")
 # Data key differs from the display/dispatcher name "Bel'Veth".
 belveth_data = _champion_fixture("Belveth")
+blitzcrank_data = _champion_fixture("Blitzcrank")
+brand_data = _champion_fixture("Brand")
 gnar_data = _champion_fixture("Gnar")
 # Data key differs from the display/dispatcher name "Jarvan IV".
 jarvan_iv_data = _champion_fixture("JarvanIV")

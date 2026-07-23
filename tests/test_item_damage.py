@@ -1006,6 +1006,44 @@ class TestBurnRefreshWindow:
         expected_ratio = (base_spread + 1.0 + duration) / (base_spread + duration)
         assert dash_burn / plain_burn == pytest.approx(expected_ratio)
 
+    def test_champion_dot_extends_burn_refresh_window(self) -> None:
+        """An entry's dot_duration (Brand's Blaze) stretches the burn.
+
+        The champion DoT keeps dealing ability damage for its tail after
+        the last cast, and every tick refreshes the burn: window =
+        spread + tail + duration. Burn totals scale linearly with the
+        window, so the ratio pins the semantics.
+        """
+        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        duration = burn.duration
+
+        plain = self._fight(
+            {"Q": dict(self._Q), "R": self._r_entry()},
+            ["Liandry's Torment"],
+        )
+        with_dot = self._fight(
+            {
+                "Q": dict(self._Q),
+                "R": self._r_entry(),
+                "P": {
+                    "name": "Test Blaze",
+                    "parts": (DamagePart("magic", 60.0, count=3),),
+                    "total_raw": 180.0,
+                    "damage_type": "magic",
+                    "proc_count": 1,
+                    "dot_duration": 4.0,
+                },
+            },
+            ["Liandry's Torment"],
+        )
+        burn_key = next(k for k in plain["breakdown"] if k.startswith("burn_"))
+        plain_burn = plain["breakdown"][burn_key]["total_damage"]
+        dot_burn = with_dot["breakdown"][burn_key]["total_damage"]
+
+        spread = 0.5  # (2 casts - 1) x 0.5s; the P proc entry is not a cast
+        expected_ratio = (spread + 4.0 + duration) / (spread + duration)
+        assert dot_burn / plain_burn == pytest.approx(expected_ratio)
+
     def test_hatefog_refresh_window_uses_seconds_not_dash_count(self) -> None:
         """Malignance's Hatefog starts at R1: cast_spread minus the dash
         spread in SECONDS (r_extra x 0.5s), not minus the dash count."""
