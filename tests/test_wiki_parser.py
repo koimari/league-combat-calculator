@@ -17,7 +17,6 @@ import calculator.data_updater  # noqa: F401  — triggers the monkey-patch
 
 from lolstaticdata.champions.pull_champions_wiki import LolWikiDataHandler
 
-
 # Champions that have nvalues=None in the parser
 NVALUES_NONE_CHAMPIONS = ["Heimerdinger", "Sona", "Karma", "Nidalee"]
 

@@ -274,6 +274,13 @@ def calculate_total_stats(
             total_item_stats["attack_damage"] + bonuses.bonus_ad
         ),
         "bonus_health": round(total_item_stats["health"]),
+        # Bonus (non-base) resists — champion mechanics scaling off bonus
+        # armor/MR (Braum W's 36%) and the "% bonus armor" /
+        # "% bonus magic resistance" scaling units read these.
+        "bonus_armor": round(total_item_stats["armor"] + bonuses.bonus_resists),
+        "bonus_magic_resistance": round(
+            total_item_stats["magic_resistance"] + bonuses.bonus_resists
+        ),
         "lethality": lethality,
         "flat_armor_penetration": flat_armor_pen,
         "armor_penetration_percent": final_armor_pen_percent,

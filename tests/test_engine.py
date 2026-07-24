@@ -20,12 +20,14 @@ from src.calculator.champions import GENERIC_SLOTS
 from src.calculator.champions import parse_abilities as dispatch_parse
 from src.calculator.champions.engine import (
     BUFF,
+    DAMAGE,
     PHASE_ORDER,
     build_parser,
 )
 from src.calculator.champions.slotlib import (
     ability_on_hit_entry,
     by_option,
+    damage_entry,
     extract_value,
     find_named_leveling,
     on_hit_auto,
@@ -1066,3 +1068,68 @@ class TestPassiveSlot:
         )
         parse = build_parser({"P": on_hit_auto()}, "TestChamp")
         assert parse(champ, 10, 0.0) == {}
+
+
+# ---------------------------------------------------------------------------
+# Cast-time stamping
+# ---------------------------------------------------------------------------
+
+
+class TestCastTimeStamping:
+    """The engine stamps castable entries with the slot JSON's castTime,
+    so timed fights can budget cast lockout without every slot parser
+    (module or generic) plumbing it through by hand."""
+
+    @staticmethod
+    def _castable_slot(**extra):
+        def slot_fn(_ctx):
+            entry = damage_entry("Zap", 1, 5.0, 100.0, "magic")
+            entry.update(extra)
+            return entry
+
+        slot_fn.phase = DAMAGE
+        return slot_fn
+
+    @staticmethod
+    def _q_champion(cast_time) -> dict:
+        ability = _ability(name="Zap")
+        if cast_time is not None:
+            ability["castTime"] = cast_time
+        return _champion(Q=[ability])
+
+    def test_castable_entry_gets_cast_time(self) -> None:
+        parse = build_parser({"Q": self._castable_slot()}, "TestChamp")
+        results = parse(self._q_champion("0.4"), 9, 0.0)
+        assert results["Q"]["cast_time"] == pytest.approx(0.4)
+
+    def test_instant_cast_omits_the_key(self) -> None:
+        """castTime "none" (or absent) stamps nothing — entries stay lean
+        and champions without cast-time data keep legacy behavior."""
+        parse = build_parser({"Q": self._castable_slot()}, "TestChamp")
+        assert "cast_time" not in parse(self._q_champion("none"), 9, 0.0)["Q"]
+        assert "cast_time" not in parse(self._q_champion(None), 9, 0.0)["Q"]
+
+    def test_module_supplied_cast_time_wins(self) -> None:
+        parse = build_parser({"Q": self._castable_slot(cast_time=0.9)}, "TestChamp")
+        results = parse(self._q_champion("0.4"), 9, 0.0)
+        assert results["Q"]["cast_time"] == pytest.approx(0.9)
+
+    def test_proc_entry_without_cooldown_not_stamped(self) -> None:
+        """Non-castable entries (proc rows have no cooldown) are never
+        stamped — they occupy no time on the cast timeline."""
+
+        def proc_slot(_ctx):
+            return {
+                "name": "Proc",
+                "damage_type": "magic",
+                "total_raw": 10.0,
+                "parts": (DamagePart("magic", 10.0),),
+                "proc_count": 1,
+            }
+
+        proc_slot.phase = DAMAGE
+        parse = build_parser({"P": proc_slot}, "TestChamp")
+        ability = _ability(name="Innate")
+        ability["castTime"] = "0.25"
+        results = parse(_champion(P=[ability]), 9, 0.0)
+        assert "cast_time" not in results["passive"]

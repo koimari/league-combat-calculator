@@ -48,6 +48,12 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Bel'Veth": "belveth",
     "Blitzcrank": "blitzcrank",
     "Brand": "brand",
+    "Braum": "braum",
+    "Briar": "briar",
+    "Caitlyn": "caitlyn",
+    "Camille": "camille",
+    "Cassiopeia": "cassiopeia",
+    "Cho'Gath": "chogath",
     "Gnar": "gnar",
     "Jarvan IV": "jarvan_iv",
     "Kog'Maw": "kogmaw",
@@ -57,12 +63,15 @@ _CHAMPION_MODULES: dict[str, str] = {
 
 # Option keys owned by the pipeline — never user input, never a module
 # OPTIONS declaration (tests/test_champion_options.py enforces the
-# no-collision rule). ``fight_duration_seconds``: injected by
-# ``pipeline.run_fight`` for timed fights so duration-driven mechanics
-# (e.g. Aurelion Sol's continuous Q channel) can scale with the fight
-# window; absent in one-rotation mode and direct parse calls, where
+# no-collision rule). Injected by ``pipeline.run_fight`` for timed
+# fights; absent in one-rotation mode and direct parse calls, where
 # modules fall back to their per-cast models.
-RESERVED_OPTION_KEYS = frozenset({"fight_duration_seconds"})
+# ``fight_duration_seconds``: the fight window, so duration-driven
+# mechanics (e.g. Aurelion Sol's continuous Q channel) can scale with it.
+# ``auto_attack_uptime``: the fight's auto uptime, so auto-timeline
+# mechanics (e.g. Braum's passive stack cycle) walk the same auto
+# cadence (attack_speed x uptime) the fight engine schedules.
+RESERVED_OPTION_KEYS = frozenset({"fight_duration_seconds", "auto_attack_uptime"})
 
 
 def parse_abilities(

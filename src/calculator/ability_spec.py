@@ -13,7 +13,6 @@ fight engine: both import the contract, neither imports the other.
 from collections.abc import Callable
 from dataclasses import dataclass
 
-
 _PART_DAMAGE_TYPES = frozenset({"magic", "physical", "true"})
 
 
@@ -39,6 +38,9 @@ class DamagePart:
             overrides ``amount``.
         crit_effectiveness: >0 — the part crits at this effectiveness
             (Akshan R: 0.3).
+        basic_damage: the part is classified basic damage in-game (a
+            forced basic-attack swing, Caitlyn's Headshot rider) —
+            basic-damage amplifiers (Hexoptics C44) apply to it.
     """
 
     damage_type: str
@@ -46,6 +48,7 @@ class DamagePart:
     count: int = 1
     hp_scaled_damage: Callable[[float], float] | None = None
     crit_effectiveness: float = 0.0
+    basic_damage: bool = False
 
     def __post_init__(self) -> None:
         if self.damage_type not in _PART_DAMAGE_TYPES:
@@ -58,10 +61,13 @@ class DamagePart:
         # Deterministic repr: the golden snapshot serializes entries via
         # repr(), and a closure's default repr embeds a memory address.
         hp_scaled = "yes" if self.hp_scaled_damage is not None else "no"
+        # basic_damage appears only when set, keeping the golden reprs of
+        # every pre-existing part byte-identical.
+        basic = ", basic_damage=yes" if self.basic_damage else ""
         return (
             f"DamagePart({self.damage_type}, amount={self.amount}, "
             f"count={self.count}, hp_scaled={hp_scaled}, "
-            f"crit_effectiveness={self.crit_effectiveness})"
+            f"crit_effectiveness={self.crit_effectiveness}{basic})"
         )
 
 

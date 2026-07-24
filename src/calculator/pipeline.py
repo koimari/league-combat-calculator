@@ -16,6 +16,7 @@ from .damage import (
     split_auto_vs_ability,
     split_by_damage_type,
 )
+from .item_effects import resolve_damage_effects
 from .stats import calculate_total_stats
 
 DEFAULT_TARGET: dict[str, float] = {
@@ -189,21 +190,32 @@ def run_fight(
     champion_stats = calculate_total_stats(champion_data, level, items)
 
     # Reserved option keys are pipeline-owned: strip whatever the caller
-    # sent, then hand timed fights the fight window so duration-driven
-    # champion mechanics (e.g. Aurelion Sol's continuous Q channel) can
-    # scale with it. One-rotation mode keeps the per-cast ability models.
+    # sent, then hand timed fights the fight window and auto uptime so
+    # duration/timeline-driven champion mechanics (Aurelion Sol's
+    # continuous Q channel, Braum's passive stack cycle) can scale with
+    # them. One-rotation mode keeps the per-cast ability models.
     champion_options = dict(params.champion_options or {})
     for reserved_key in RESERVED_OPTION_KEYS:
         champion_options.pop(reserved_key, None)
     if not params.one_rotation:
         champion_options["fight_duration_seconds"] = params.fight_duration_seconds
+        champion_options["auto_attack_uptime"] = params.auto_attack_uptime
+
+    # Champion mechanics priced in crit at parse time (Caitlyn's Headshot
+    # rider) need the build's bonus crit damage above the 2.0 base
+    # (Infinity Edge's +0.3). It lives in the items' DamageEffects — the
+    # same value the fight engine folds into its crit multiplier — so
+    # surface it to the parse context only, keeping the reported
+    # champion_stats panel item-stats-only.
+    parse_stats = dict(champion_stats)
+    parse_stats["crit_damage_bonus"] = resolve_damage_effects(items).crit_damage_bonus
 
     ability_damages = parse_champion_abilities(
         champion_data,
         level,
         champion_stats["ability_power"],
         ability_ranks=params.ability_ranks,
-        champion_stats=champion_stats,
+        champion_stats=parse_stats,
         target_stats=params.target_stats(),
         champion_options=champion_options,
     )

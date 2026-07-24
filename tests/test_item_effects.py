@@ -16,7 +16,7 @@ from src.calculator.item_effects import (
     DamageInputs,
     _ap_multiplier,
     _basic_ability_haste,
-    _bloodmail_bonus_ad,
+    bloodmail_bonus_ad,
     _dawncore_bonus_ap,
     _flowing_water_bonus_ap,
     _mana_to_ap_bonus,
@@ -412,7 +412,7 @@ class TestBonusAdConversions:
         _patch_effect(
             monkeypatch, "Overlord's Bloodmail", bonus_health_to_ad_ratio=0.025
         )
-        assert _bloodmail_bonus_ad(_build("Overlord's Bloodmail"), 400) == 10.0
+        assert bloodmail_bonus_ad(_build("Overlord's Bloodmail"), 400) == 10.0
 
     def test_steraks(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(monkeypatch, "Sterak's Gage", base_ad_to_bonus_ad_ratio=0.45)

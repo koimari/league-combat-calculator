@@ -233,11 +233,15 @@ class TestTumbleAutoCoupling:
         expected = stats["attack_damage"] + abilities["Q"]["total_raw"]
         assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(expected)
 
-    def test_no_autos_means_no_tumbles(self, reference_setup) -> None:
-        """With zero AA uptime there is no auto to empower: Q never lands."""
+    def test_zero_uptime_tumbles_force_their_attacks(self, reference_setup) -> None:
+        """With zero AA uptime there is no auto stream to empower, but
+        each Q cast still forces its own empowered attack: casts run on
+        cooldown and carry the base swing (was 0 damage)."""
         stats, abilities = reference_setup
         result = self._run_fight(stats, abilities, auto_attack_uptime=0.0)
-        assert result["breakdown"]["Q"]["casts"] == 0
+        row = result["breakdown"]["Q"]
+        assert row["casts"] > 0
+        assert row["total_damage"] > 0
 
 
 # ---------------------------------------------------------------------------

@@ -63,6 +63,32 @@ on-hit system via two mechanisms:
 
     Spellblade is neither: it is consumed by the next basic attack and
     stays on the auto timeline.
+
+**Case 4 — Hit-timeline stacking DoT** (e.g. Briar passive):
+    One entry (usually the passive) declares the DoT::
+
+        "stacking_dot": {
+            "name": "Crimson Curse (bleed)",
+            "damage_type": "physical",
+            "single_stack_raw": 100.0,   # one stack's total over duration
+            "duration": 5.0,
+            "max_stacks": 5,
+            "extra_stack_effectiveness": 0.25,
+            "applied_by_autos": True,
+        }
+
+    and each castable whose applications add a stack carries
+    ``"applies_dot_stack": True``. ``_add_stacking_dot_damage`` builds
+    the fight's hit timeline — autos at attack-speed intervals plus
+    ability applications at their cast times (t=0 in one-rotation
+    mode) — and integrates the tick rate at the running stack count:
+    ``single_dps x (1 + extra_eff x (stacks - 1))``, stacks capped at
+    ``max_stacks``. Every application refreshes the shared duration;
+    a gap longer than ``duration`` expires the chain. Accounting is
+    COMMITTED: the last hit's full ``duration`` of ticks counts even
+    past the fight cutoff. An ``empowers_next_auto`` applier's swing is
+    one of the fight's autos, so its stack rides the auto timeline
+    (it is only counted separately when there is no auto stream).
 """
 
 import math
@@ -320,6 +346,27 @@ class FightState:
     breakdown: dict[str, Any] = field(default_factory=dict)
     total_damage: float = 0.0
     notes: list[str] = field(default_factory=list)
+    # Mitigated bonus from basic_damage ability parts (forced swings,
+    # Caitlyn's Headshot rider) amplified by Hexoptics — already inside
+    # their rows; surfaced on the basic-amp info row.
+    basic_amp_ability_bonus: float = 0.0
+
+
+def _apply_basic_amp(
+    state: "FightState", part: DamagePart, mitigated: float, procs: int = 1
+) -> float:
+    """Amplify a basic-damage part (Hexoptics C44), tracking the info-row bonus.
+
+    Resistance is linear in raw damage, so amplifying post-mitigation is
+    exact. Non-basic parts pass through untouched. ``procs`` scales only
+    the tracked bonus, for callers that multiply the returned per-proc
+    value afterwards.
+    """
+    if not part.basic_damage or state.basic_amp <= 1.0:
+        return mitigated
+    amped = mitigated * state.basic_amp
+    state.basic_amp_ability_bonus += (amped - mitigated) * procs
+    return amped
 
 
 def _damage_inputs(
@@ -1123,6 +1170,23 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                 stats.get("armor_penetration_percent", 0.0) / 100.0
             )
             resists.resolve_armor()
+        # Bonus health raises max health, and items converting bonus
+        # health to AD (Overlord's Bloodmail) grow with the buff
+        # (Cho'Gath R's Feast stacks). The accessor is linear, so the
+        # delta composes with the item-health conversion already in the
+        # build stats.
+        if "bonus_health" in stat_buff:
+            stats["health"] = stats.get("health", 0.0) + stat_buff["bonus_health"]
+            bloodmail_delta = item_effects.bloodmail_bonus_ad(
+                state.items, stat_buff["bonus_health"]
+            )
+            if bloodmail_delta:
+                stats["bonus_attack_damage"] = (
+                    stats.get("bonus_attack_damage", 0.0) + bloodmail_delta
+                )
+                stats["attack_damage"] = stats.get(
+                    "base_attack_damage", 0.0
+                ) + stats.get("bonus_attack_damage", 0.0)
         # Recalculate attack speed and auto count if AS was buffed
         if "bonus_attack_speed" in stat_buff:
             bonus_as_pct = stat_buff["bonus_attack_speed"]
@@ -1179,6 +1243,10 @@ class RotationResult:
 
     total_ability_casts: int = 0
     total_ability_hits: int = 0  # damaging hit instances, for stack counters
+    # Basic attacks forced by empowered-auto casts when there is no auto
+    # stream (one-rotation, or timed at zero uptime). These are real
+    # attacks: they consume spellblade charges like any auto.
+    forced_basic_attacks: int = 0
     total_muramana_procs: int = 0  # one per cast; multi-cast R counts each
     first_ability_damage: float = 0.0  # Horizon Focus trigger (not amped)
     has_navori: bool = False
@@ -1192,6 +1260,20 @@ class RotationResult:
     ability_item_applications: list[AbilityItemApplication] = field(
         default_factory=list
     )
+    # Timestamps of ability applications that add a stacking-DoT stack
+    # (entries flagged ``applies_dot_stack``); merged with the auto
+    # timeline by _add_stacking_dot_damage.
+    dot_application_times: list[float] = field(default_factory=list)
+
+
+def _empower_hits(empower: Any) -> int:
+    """Basic attacks one empowered-auto cast rides or forces.
+
+    ``empowers_next_auto`` is ``True`` (one attack — Vayne Q) or a dict
+    that may carry ``hits`` (Cho'Gath E empowers the next 3). Absent
+    ``hits`` defaults to 1.
+    """
+    return int(empower.get("hits", 1)) if isinstance(empower, dict) else 1
 
 
 def _evaluate_cast_parts(
@@ -1239,12 +1321,102 @@ def _evaluate_cast_parts(
                 mitigated = (
                     apply_resistance(raw, ability_mr) * state.magic_amp * part.count
                 )
+            mitigated = _apply_basic_amp(state, part, mitigated)
             if cast_index == 0 and part_index == 0:
                 first_part_first_cast = mitigated
             total += mitigated
             by_type[part.damage_type] = by_type.get(part.damage_type, 0.0) + mitigated
             running_damage += mitigated
     return total, first_part_first_cast, by_type
+
+
+def _effective_timed_cooldown(
+    state: "FightState",
+    result: "RotationResult",
+    ability_key: str,
+    ability_info: dict,
+    basic_ability_haste: float,
+) -> float:
+    """Effective recast cooldown in timed mode: ability haste, Spear of
+    Shojin basic-ability haste (Q/W/E), and Navori auto-attack refunds."""
+    base_cd = ability_info.get("cooldown", 0.0)
+    total_haste = state.ability_haste
+    if ability_key in ("Q", "W", "E"):
+        total_haste += basic_ability_haste
+    cd = effective_cooldown(base_cd, total_haste)
+    if result.navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
+        cd = _navori_effective_cd(cd, result.autos_per_second, result.navori_refund)
+    return cd
+
+
+_CAST_SCHEDULE_EPS = 1e-9
+
+
+def _schedule_shared_casts(
+    state: "FightState",
+    result: "RotationResult",
+    basic_ability_haste: float,
+) -> dict[str, list[float]]:
+    """Timed-mode cast start times on ONE shared timeline.
+
+    The champion has one set of hands: each cast occupies its
+    ``cast_time`` (stamped from the wiki by the champion engine; absent
+    means instant, preserving the legacy ``1 + T/cd`` counts), and an
+    ability recasts when its cooldown — running from the END of its
+    cast — is back up and no other cast is in progress. Ties break by
+    cast_order position. R and zero-cooldown entries cast exactly once
+    (unchanged timed-mode rules); recast entries ride their parent's
+    casts and are not scheduled. A cast counts if it STARTS within the
+    fight duration. Cassiopeia's 0.75s-cooldown E exposed the old
+    independent-timeline formula overcounting (5 casts vs 3 in-game
+    over a 3s fight).
+    """
+    duration = state.fight_duration_seconds
+    # Mirror the rotation loop's recast pairing exactly: an entry rides
+    # its parent's casts only when the parent appears EARLIER in the
+    # cast order; otherwise it schedules independently (legacy rule).
+    seen: set[str] = set()
+    keys: list[str] = []
+    for key in state.cast_order:
+        info = state.ability_damages.get(key)
+        if info is None:
+            continue
+        parent = info.get("recast_of")
+        if not (parent and parent in seen):
+            keys.append(key)
+        seen.add(key)
+    cooldowns = {
+        key: _effective_timed_cooldown(
+            state, result, key, state.ability_damages[key], basic_ability_haste
+        )
+        for key in keys
+    }
+    cast_times = {key: state.ability_damages[key].get("cast_time", 0.0) for key in keys}
+    single_cast = {key for key in keys if key == "R" or cooldowns[key] <= 0}
+
+    times: dict[str, list[float]] = {key: [] for key in keys}
+    next_ready = dict.fromkeys(keys, 0.0)
+    pending = set(keys)
+    now = 0.0
+    while pending and now <= duration + _CAST_SCHEDULE_EPS:
+        ready = [
+            key
+            for key in keys
+            if key in pending and next_ready[key] <= now + _CAST_SCHEDULE_EPS
+        ]
+        if not ready:
+            # Hands free but everything on cooldown — jump to the next
+            # ready time (strictly advances: nothing was ready at now).
+            now = min(next_ready[key] for key in pending)
+            continue
+        key = ready[0]
+        times[key].append(now)
+        if key in single_cast:
+            pending.remove(key)
+        else:
+            next_ready[key] = now + cast_times[key] + cooldowns[key]
+        now += cast_times[key]
+    return times
 
 
 def _compute_ability_rotation(state: FightState) -> RotationResult:
@@ -1294,6 +1466,14 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
 
     basic_ability_haste = state.champion_stats.get("basic_ability_haste", 0.0)
 
+    # Timed mode: all abilities share one cast timeline (cast times lock
+    # out other casts). One-rotation and autos-only modes never recast,
+    # so they skip scheduling entirely.
+    timed_mode = not (state.one_rotation or state.auto_attacks_only)
+    schedule = (
+        _schedule_shared_casts(state, result, basic_ability_haste) if timed_mode else {}
+    )
+
     recast_counts: dict[str, int] = {}  # Track casts for recast pairing
 
     for ability_key in state.cast_order:
@@ -1301,9 +1481,10 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             continue
         ability_info = ability_damages[ability_key]
 
+        scheduled_casts: list[float] = []  # this entry's cast start times
         if state.auto_attacks_only:
             num_casts = 0
-        elif state.one_rotation or ability_key == "R":
+        elif state.one_rotation:
             num_casts = 1
         else:
             # Recasts (e.g. Q2) always match their parent ability's casts
@@ -1311,38 +1492,45 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             if parent_key and parent_key in recast_counts:
                 num_casts = recast_counts[parent_key]
             else:
-                base_cd = ability_info.get("cooldown", 0.0)
-                # Basic ability haste (e.g. Spear of Shojin) applies to Q, W, E
-                total_haste = state.ability_haste
-                if ability_key in ("Q", "W", "E"):
-                    total_haste += basic_ability_haste
-                cd = effective_cooldown(base_cd, total_haste)
-                # Navori reduces basic ability CDs (Q, W, E) via auto attacks
-                if (
-                    result.navori_refund > 0
-                    and cd > 0
-                    and ability_key in ("Q", "W", "E")
-                ):
-                    cd = _navori_effective_cd(
-                        cd, result.autos_per_second, result.navori_refund
-                    )
-                num_casts = 1 + int(state.fight_duration_seconds / cd) if cd > 0 else 1
+                scheduled_casts = schedule[ability_key]
                 # Empowered-auto abilities (Vayne Q) only deal damage
-                # through the next basic attack, so casts can never
-                # exceed the autos that consume them. The auto count
-                # itself is untouched: such casts are attack resets,
-                # spent in attack-cooldown dead time (the in-game reset
-                # acceleration is not modeled — conservative).
-                if ability_info.get("empowers_next_auto"):
-                    num_casts = min(num_casts, state.num_auto_attacks)
-                # Recasts land on cooldown: the last one at (N-1) x cd.
-                # Burns use the fight-wide max as their final refresh.
-                if cd > 0 and num_casts > 1:
+                # through the next basic attack(s), so casts can never
+                # exceed the autos that consume them (a multi-hit
+                # empower like Cho'Gath E consumes ``hits`` autos per
+                # cast). The auto count itself is untouched: such casts
+                # are attack resets, spent in attack-cooldown dead time
+                # (the in-game reset acceleration is not modeled —
+                # conservative). With no auto stream at all (zero
+                # uptime), each cast forces its own attack(s) instead —
+                # the swings are appended below.
+                empower = ability_info.get("empowers_next_auto")
+                if empower and state.num_auto_attacks > 0:
+                    max_casts = state.num_auto_attacks // _empower_hits(empower)
+                    scheduled_casts = scheduled_casts[:max_casts]
+                num_casts = len(scheduled_casts)
+                # Burns use the fight-wide last cast as their final refresh.
+                if scheduled_casts:
                     result.last_cast_time = max(
-                        result.last_cast_time, (num_casts - 1) * cd
+                        result.last_cast_time, scheduled_casts[-1]
                     )
 
         recast_counts[ability_key] = num_casts
+
+        # Hit-timeline stacking DoT stacks (Case 4): record when this
+        # entry's applications land — at the scheduled cast times (all
+        # at t=0 in one-rotation mode). An empowers_next_auto cast rides
+        # the auto stream when one exists: that swing is one of the
+        # fight's autos, whose timeline already counts its stack.
+        if ability_info.get("applies_dot_stack") and num_casts > 0:
+            rides_auto_stream = (
+                ability_info.get("empowers_next_auto") and state.num_auto_attacks > 0
+            )
+            if not rides_auto_stream:
+                result.dot_application_times.extend(
+                    scheduled_casts
+                    if scheduled_casts
+                    else (0.0 for _ in range(num_casts))
+                )
 
         # Malignance MR reduction activates when R is cast
         if ability_key == "R":
@@ -1387,22 +1575,30 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # scaling lives in the champion module's closures, never here.
         parts = ability_info["parts"]
         # An empowered-auto cast with no auto stream to ride (one-rotation
-        # mode) still forces its basic attack — carry the consumed swing
-        # on the ability's own row, matching the in-game "attack + bonus"
-        # hit (Blitzcrank E, Vayne Q). Time-based fights never get here:
-        # casts are capped by the auto count above, and the auto stream
-        # itself carries the swing.
-        if (
-            ability_info.get("empowers_next_auto")
-            and num_casts > 0
-            and state.num_auto_attacks == 0
-        ):
-            swing = DamagePart(
-                "physical",
-                state.champion_stats.get("attack_damage", 0.0),
-                crit_effectiveness=1.0,
-            )
-            parts = parts + (swing,)
+        # mode, or a timed fight at zero auto uptime) still forces its
+        # basic attack(s) — carry the consumed swings on the ability's
+        # own row, matching the in-game "attack + bonus" hit (Blitzcrank
+        # E, Vayne Q; Cho'Gath E forces ``hits`` = 3 swings). Timed
+        # fights WITH autos never get here: casts are capped by the auto
+        # count above, and the auto stream itself carries the swings. A
+        # dict-valued flag may carry module-authored ``swing_parts``
+        # replacing the default expected-crit swing (Camille Q: the
+        # whole attack cannot crit and may convert to true damage).
+        empower = ability_info.get("empowers_next_auto")
+        if empower and num_casts > 0 and state.num_auto_attacks == 0:
+            hits = _empower_hits(empower)
+            result.forced_basic_attacks += num_casts * hits
+            if isinstance(empower, dict) and "swing_parts" in empower:
+                parts = parts + tuple(empower["swing_parts"])
+            else:
+                swing = DamagePart(
+                    "physical",
+                    state.champion_stats.get("attack_damage", 0.0),
+                    count=hits,
+                    crit_effectiveness=1.0,
+                    basic_damage=True,
+                )
+                parts = parts + (swing,)
         ability_total, first_part_damage, ability_by_type = _evaluate_cast_parts(
             state,
             parts,
@@ -1556,8 +1752,13 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
             )
         dtype = info["damage_type"]
         per_proc = sum(
-            _mitigate(part.amount, part.damage_type, resists, state.magic_amp)
-            * part.count
+            _apply_basic_amp(
+                state,
+                part,
+                _mitigate(part.amount, part.damage_type, resists, state.magic_amp)
+                * part.count,
+                procs=proc_count,
+            )
             for part in parts
         )
         if per_proc <= 0:
@@ -1571,7 +1772,86 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
             "total_damage": proc_total,
             "damage_type": dtype,
         }
+        # Champion-minted display text (e.g. Braum P's cycle summary)
+        # rides the entry onto its breakdown row, as in the rotation.
+        if "detail" in info:
+            state.breakdown[key]["detail"] = info["detail"]
         state.total_damage += proc_total
+
+
+def _add_stacking_dot_damage(state: FightState, rotation: RotationResult) -> None:
+    """Add hit-timeline stacking DoT damage (Case 4, e.g. Briar's bleed).
+
+    Builds the fight's hit timeline — the rotation's recorded stack
+    applications plus autos at attack-speed intervals — and integrates
+    the DoT's tick rate at the running stack count. Every application
+    refreshes the shared duration (in-game: reapplying refreshes the
+    whole bleed); a gap longer than ``duration`` expires the chain.
+    Committed accounting: the final ``duration`` of ticks after the last
+    hit counts in full, even past the fight cutoff. The DoT cannot crit
+    and triggers nothing; it is mitigated once as its declared type.
+    """
+    dot_key, spec = next(
+        (
+            (key, info["stacking_dot"])
+            for key, info in state.ability_damages.items()
+            if "stacking_dot" in info
+        ),
+        (None, None),
+    )
+    if spec is None:
+        return
+
+    hit_times = list(rotation.dot_application_times)
+    if spec.get("applied_by_autos", True) and state.num_auto_attacks > 0:
+        autos_per_second = state.attack_speed * state.auto_attack_uptime
+        if autos_per_second > 0:
+            hit_times.extend(
+                i / autos_per_second for i in range(state.num_auto_attacks)
+            )
+    if not hit_times:
+        return
+    hit_times.sort()
+
+    duration = float(spec["duration"])
+    max_stacks = int(spec["max_stacks"])
+    extra_effectiveness = float(spec["extra_stack_effectiveness"])
+    single_stack_dps = float(spec["single_stack_raw"]) / duration
+
+    def tick_rate(stacks: int) -> float:
+        """Raw DPS at a stack count; extra stacks tick at reduced rate."""
+        return single_stack_dps * (1.0 + extra_effectiveness * (stacks - 1))
+
+    raw_total = 0.0
+    stacks = 0
+    previous_hit = 0.0
+    for hit_time in hit_times:
+        if stacks > 0:
+            gap = hit_time - previous_hit
+            raw_total += tick_rate(stacks) * min(gap, duration)
+            if gap >= duration:
+                stacks = 0  # chain expired before this hit
+        stacks = min(stacks + 1, max_stacks)
+        previous_hit = hit_time
+    # Committed tail: the last application's full window of ticks.
+    raw_total += tick_rate(stacks) * duration
+
+    damage_type = spec.get("damage_type", "physical")
+    total = _mitigate(raw_total, damage_type, state.resists, state.magic_amp)
+    applications = len(hit_times)
+    state.breakdown[f"stacking_dot_{dot_key}"] = {
+        "name": spec["name"],
+        "count": applications,
+        "damage_per_hit": total / applications,
+        "unit": "stacks",
+        "total_damage": total,
+        "damage_type": damage_type,
+        "detail": (
+            f"{applications} stack application(s); each refresh commits "
+            f"the full {duration:g}s of ticks"
+        ),
+    }
+    state.total_damage += total
 
 
 def _add_shaped_charge_damage(state: FightState) -> None:
@@ -1873,12 +2153,12 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         amp_name = amp_effect.item_name if amp_effect is not None else "Basic Damage"
         basic_amp_bonus = (
             (auto_total + fiendhunter_true_total) * (basic_amp - 1.0) / basic_amp
-        )
+        ) + state.basic_amp_ability_bonus
         breakdown[f"basic_amp_{amp_name}"] = {
             "name": f"Damage Amplification ({amp_name})",
             "multiplier": basic_amp,
             "total_damage": basic_amp_bonus,
-            "detail": "included in auto attack totals above",
+            "detail": "included in the auto attack / basic damage rows above",
             "informational": True,
         }
 
@@ -2075,8 +2355,8 @@ def _layer_on_hit_effects(
         on_hit_data = ability_info.get("on_hit")
         if not on_hit_data:
             continue
-        if "proc_cooldown" in on_hit_data:
-            continue  # cooldown-scheduled procs are simulated below
+        if "proc_cooldown" in on_hit_data or "proc_window" in on_hit_data:
+            continue  # scheduled current-health procs are simulated below
         counts_ability_hits = bool(on_hit_data.get("count_ability_hits"))
         if num_auto_attacks == 0 and not counts_ability_hits:
             continue
@@ -2189,22 +2469,38 @@ def _layer_on_hit_effects(
             "damage_type": source.damage_type,
         }
 
-    # Cooldown-gated current-health on-hits (Jarvan IV's Martial Cadence):
-    # procs ride the fight's auto timeline — the first auto procs, then
-    # the first auto at/after (last proc + per-target cooldown) — and each
-    # proc reads the target's decayed current HP. The per-target cooldown
-    # is why phantom hits / double shots never add procs, and why the proc
-    # stays out of static_on_hit_per_hit (spellblade doubling and the BoRK
-    # simulation must not re-apply it).
+    # Scheduled current-health on-hits ride the fight's auto timeline and
+    # read the target's decayed current HP per proc. Two schedules:
+    # ``proc_cooldown`` (Jarvan IV's Martial Cadence) procs the first
+    # auto, then the first auto at/after (last proc + per-target
+    # cooldown); ``proc_window`` (Camille R's rider) procs every auto
+    # landing inside the window after the ability is cast — so a fight
+    # that never casts it (auto-only mode) gets nothing. Schedule-gated
+    # procs don't land on every auto, which is why phantom hits / double
+    # shots never add procs and why the proc stays out of
+    # static_on_hit_per_hit (spellblade doubling and the BoRK simulation
+    # must not re-apply it).
     if num_auto_attacks > 0:
         autos_per_second = state.attack_speed * state.auto_attack_uptime
         for ability_key, ability_info in state.ability_damages.items():
             on_hit_data = ability_info.get("on_hit")
-            if not on_hit_data or "proc_cooldown" not in on_hit_data:
+            if not on_hit_data:
                 continue
-            proc_autos = _schedule_cooldown_procs(
-                num_auto_attacks, autos_per_second, on_hit_data["proc_cooldown"]
-            )
+            if "proc_cooldown" in on_hit_data:
+                proc_autos = _schedule_cooldown_procs(
+                    num_auto_attacks, autos_per_second, on_hit_data["proc_cooldown"]
+                )
+            elif "proc_window" in on_hit_data:
+                if breakdown.get(ability_key, {}).get("casts", 0) < 1:
+                    continue  # rider exists only after the ability is cast
+                # Autos land at i / autos_per_second; the triggering auto
+                # at t=0 always fits a positive window.
+                autos_in_window = max(
+                    1, int(autos_per_second * on_hit_data["proc_window"])
+                )
+                proc_autos = list(range(min(num_auto_attacks, autos_in_window)))
+            else:
+                continue
             if not proc_autos:
                 continue
             proc_total = _simulate_cooldown_current_health_procs(
@@ -2269,7 +2565,11 @@ def _add_spellblade_damage(
         result.expose_weakness_melee = effect.expose_weakness_melee
         result.expose_weakness_ranged = effect.expose_weakness_ranged
 
-    if effect is not None and state.num_auto_attacks > 0:
+    # A spellblade charge is consumed by any basic attack: the auto
+    # stream when one exists, plus attacks forced by empowered-auto
+    # casts when it doesn't (Camille Q, Blitzcrank E in one-rotation).
+    consuming_attacks = state.num_auto_attacks + rotation.forced_basic_attacks
+    if effect is not None and consuming_attacks > 0:
         source = effect.source
         raw_sb = source.raw_damage(_damage_inputs(state)) * _on_hit_effectiveness(state)
         effective_sb_cd = effect.cooldown + effect.weave_delay
@@ -2282,18 +2582,53 @@ def _add_spellblade_damage(
         result.procs = min(
             rotation.total_ability_casts,
             1 + int(state.fight_duration_seconds / effective_sb_cd),
-            state.num_auto_attacks,
+            consuming_attacks,
         )
-        sb_total = result.damage_per_proc * result.procs
 
-        state.breakdown[source.breakdown_key] = {
-            "name": source.display_name,
-            "count": result.procs,
-            "damage_per_hit": result.damage_per_proc,
-            "unit": "procs",
-            "total_damage": sb_total,
-            "damage_type": source.damage_type,
-        }
+        # True-damage conversion (Camille Q2): an entry flagged
+        # ``spellblade_true_ratio`` converts the proc its empowered
+        # attack consumes — that ratio of the proc becomes unmitigated
+        # true damage, the rest keeps the item's own type. One converted
+        # proc per cast of the flagged entry (assumes procs land on the
+        # flagged casts first — exact whenever procs aren't starved).
+        converted_ratio = 0.0
+        converted = 0
+        for key, info in state.ability_damages.items():
+            ratio = info.get("spellblade_true_ratio", 0.0)
+            if ratio > 0:
+                converted_ratio = max(converted_ratio, ratio)
+                converted += state.breakdown.get(key, {}).get("casts", 0)
+        converted = min(converted, result.procs)
+        converted_per_proc = raw_sb * converted_ratio + result.damage_per_proc * (
+            1.0 - converted_ratio
+        )
+
+        plain = result.procs - converted
+        sb_total = result.damage_per_proc * plain + converted_per_proc * converted
+
+        if plain > 0 or converted == 0:  # unconverted builds keep the row as-is
+            state.breakdown[source.breakdown_key] = {
+                "name": source.display_name,
+                "count": plain,
+                "damage_per_hit": result.damage_per_proc,
+                "unit": "procs",
+                "total_damage": result.damage_per_proc * plain,
+                "damage_type": source.damage_type,
+            }
+        if converted > 0:
+            converted_by_type = {"true": raw_sb * converted_ratio * converted}
+            if converted_ratio < 1.0:
+                converted_by_type[source.damage_type] = (
+                    result.damage_per_proc * (1.0 - converted_ratio) * converted
+                )
+            state.breakdown[f"{source.breakdown_key}_true"] = {
+                "name": f"{source.display_name} (true conversion)",
+                "count": converted,
+                "damage_per_hit": converted_per_proc,
+                "unit": "procs",
+                "total_damage": converted_per_proc * converted,
+                **_damage_type_fields(converted_by_type),
+            }
         state.total_damage += sb_total
 
     # ── Double on-hit from spellblade (Dusk and Dawn) ──
@@ -2337,7 +2672,9 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
 
     Burns refresh on each ability hit (and on Malignance's Hatefog DoT),
     so the effective burn window stretches across the rotation's cast
-    spread — capped at the fight duration outside one-rotation mode.
+    spread, and the final application resolves fully past the fight's
+    end (refresh EVENTS stop with the last cast/DoT tick; the burn they
+    lit does not).
     """
     resists = state.resists
     ability_damages = state.ability_damages
@@ -2380,13 +2717,13 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                 hatefog_end = r_start + ultimate_proc.duration
                 dot_refresh_end = max(dot_refresh_end, hatefog_end)
 
-        if state.one_rotation:
-            effective_burn_time = dot_refresh_end + burn_duration
-        else:
-            effective_burn_time = min(
-                dot_refresh_end + burn_duration,
-                state.fight_duration_seconds,
-            )
+        # The final refresh's burn resolves in FULL — DoT consequences
+        # of casts made within the fight tick out past its end, in both
+        # modes. Capping timed mode at fight_duration priced the burn
+        # as rate x fight_duration and undercounted short fights ~3x
+        # (user-measured: Cassiopeia + Blackfire over 3s did ~90
+        # in-game, the capped model said ~30).
+        effective_burn_time = dot_refresh_end + burn_duration
         if effective_burn_time > burn_duration:
             burn_multiplier = effective_burn_time / burn_duration
             raw_burn *= burn_multiplier
@@ -2929,9 +3266,10 @@ def calculate_fight_damage(
     # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
     _apply_stat_buff_ultimates(state)
 
-    # ── Ability rotation, precomputed procs, and Shaped Charge ──────────
+    # ── Ability rotation, precomputed procs, DoTs, and Shaped Charge ────
     rotation = _compute_ability_rotation(state)
     _add_precomputed_proc_damage(state)
+    _add_stacking_dot_damage(state, rotation)
     _add_shaped_charge_damage(state)
 
     # ── Auto attacks (per-auto crit simulation) ─────────────────────────

@@ -1132,14 +1132,16 @@ class TestBurnTimedModeUptime:
             "cooldown": cooldown,
         }
 
-    def test_recasting_ability_refreshes_burn_to_fight_end(self) -> None:
-        """Q on a 4s cooldown over 10s casts at t=0/4/8: the burn is
-        refreshed at t=8 and ticks to the fight end — uptime 10s
-        (2% max HP/s for the whole fight), not combo-spread + 3s."""
+    def test_recasting_ability_burn_resolves_past_fight_end(self) -> None:
+        """Q on a 4s cooldown over 10s casts at t=0/4/8: the t=8 refresh
+        ticks until the burn expires at t=11 — uptime 11s, NOT capped at
+        the 10s fight. User bug (Cassiopeia + Blackfire, 3s fight): the
+        cap priced the burn as rate x fight_duration (~30) while the
+        in-game burn resolved its full window (~90)."""
         fight = self._fight({"Q": self._q_entry(4.0)})
         burn_key = next(k for k in fight["breakdown"] if k.startswith("burn_"))
         actual = fight["breakdown"][burn_key]["total_damage"]
-        assert actual == pytest.approx(self._expected_burn(fight, 10.0), rel=1e-6)
+        assert actual == pytest.approx(self._expected_burn(fight, 11.0), rel=1e-6)
 
     def test_single_cast_abilities_keep_combo_spread(self) -> None:
         """Nothing recasts (Q cd 100, R cd 60): the burn window stays
@@ -1279,7 +1281,11 @@ class TestBloodsongSpellbladeAndExposeWeakness:
     ) -> None:
         """Ahri level 18 with Bloodsong vs 1000 HP / 100 Armor / 100 MR.
 
-        5-second fight, 100% auto uptime. Expected ~1161 total damage (±5%).
+        5-second fight, 100% auto uptime. Expected ~1040 total damage
+        (±5%). Was ~1161 before the shared cast timeline: W (5.0s cd)
+        used to sneak a second cast at exactly t=5.0, but Q's 0.25s cast
+        time delays W to t=0.25, putting its recast at 5.25 — past the
+        fight's end, as in-game.
         """
         from src.calculator.stats import calculate_total_stats
 
@@ -1299,7 +1305,7 @@ class TestBloodsongSpellbladeAndExposeWeakness:
                 one_rotation=False,
             ),
         )
-        expected = 1161
+        expected = 1040
         actual = fight["total_damage"]
         tolerance = expected * 0.05
         assert abs(actual - expected) <= tolerance, (

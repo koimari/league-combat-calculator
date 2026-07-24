@@ -1,12 +1,16 @@
 """Tests for champion-layer primitives shared by all champion modules.
 
 Covers calculate_ability_damage (champions.common), effective_cooldown
-(damage.py), and skill-order rank resolution (champions.skill_orders).
+(damage.py), castTime extraction (champions.slotlib), and skill-order
+rank resolution (champions.skill_orders).
 """
+
+import pytest
 
 from src.calculator.champions.common import calculate_ability_damage
 from src.calculator.damage import effective_cooldown
 from src.calculator.champions.skill_orders import get_ability_rank
+from src.calculator.champions.slotlib import extract_cast_time
 
 
 class TestCalculateAbilityDamage:
@@ -71,3 +75,44 @@ class TestGetEffectiveCooldown:
         result = effective_cooldown(7.0, 15.0)
         expected = 7.0 * 100 / 115
         assert abs(result - expected) < 0.01
+
+
+class TestExtractCastTime:
+    """Wiki castTime free text -> seconds of cast lockout."""
+
+    def test_missing_and_none_strings_are_instant(self) -> None:
+        assert extract_cast_time({}) == 0.0
+        assert extract_cast_time({"castTime": None}) == 0.0
+        assert extract_cast_time({"castTime": "none"}) == 0.0
+        assert extract_cast_time({"castTime": "None"}) == 0.0
+        assert extract_cast_time({"castTime": "false"}) == 0.0
+
+    def test_plain_numbers(self) -> None:
+        assert extract_cast_time({"castTime": "0.25"}) == pytest.approx(0.25)
+        assert extract_cast_time({"castTime": "1"}) == pytest.approx(1.0)
+        assert extract_cast_time({"castTime": 0.5}) == pytest.approx(0.5)
+
+    def test_first_cast_segment_wins_over_recast(self) -> None:
+        """'cast • recast': only the first segment locks out the caster."""
+        assert extract_cast_time({"castTime": "0.25 • None"}) == pytest.approx(0.25)
+        assert extract_cast_time({"castTime": "None • 0.25"}) == 0.0
+        assert extract_cast_time({"castTime": "1 • 1.25"}) == pytest.approx(1.0)
+
+    def test_scaling_text_takes_base_value(self) -> None:
+        """Level/AS-scaled cast times read the first (slowest) value."""
+        assert extract_cast_time(
+            {"castTime": "0.25 / 0.225 / 0.2 / 0.175 (based on level)"}
+        ) == pytest.approx(0.25)
+        assert extract_cast_time(
+            {"castTime": "0.25 : 0.1 (based on bonus attack speed)"}
+        ) == pytest.approx(0.25)
+
+    def test_windup_percentage_reads_at_base_seconds(self) -> None:
+        """'80% of X's windup time (0.4 at base...)': 80 is not seconds."""
+        assert extract_cast_time(
+            {"castTime": "80% of Senna's windup time (0.4 at base attack speed)"}
+        ) == pytest.approx(0.4)
+
+    def test_pure_windup_text_is_instant(self) -> None:
+        assert extract_cast_time({"castTime": "Attack Windup Time"}) == 0.0
+        assert extract_cast_time({"castTime": "Basic attack timer"}) == 0.0

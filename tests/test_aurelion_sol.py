@@ -49,9 +49,7 @@ class TestQBreathOfLight:
 
     def test_q_rank5_no_ap(self, aurelion_sol_data, parse_at) -> None:
         """Rank 5, 0 AP: beam 105 x 3.25 + 3 x 100 = 341.25 + 300 = 641.25."""
-        _, abilities = parse_at(
-            aurelion_sol_data, 18, ap=0.0, ability_ranks=MAX_RANKS
-        )
+        _, abilities = parse_at(aurelion_sol_data, 18, ap=0.0, ability_ranks=MAX_RANKS)
         assert abilities["Q"]["total_raw"] == pytest.approx(641.25)
 
     def test_q_rank5_100ap(self, aurelion_sol_data, parse_at) -> None:
@@ -61,9 +59,7 @@ class TestQBreathOfLight:
         )
         assert abilities["Q"]["total_raw"] == pytest.approx(910.0)
 
-    def test_q_w_active_beam_only_modifier(
-        self, aurelion_sol_data, parse_at
-    ) -> None:
+    def test_q_w_active_beam_only_modifier(self, aurelion_sol_data, parse_at) -> None:
         """W rank 5 multiplies the beam base by 112%; bursts unchanged.
 
         341.25 x 1.12 + 300 = 682.20 (wiki: 'non-burst flat damage').
@@ -90,9 +86,7 @@ class TestQBreathOfLight:
         )
         assert abilities["Q"]["total_raw"] == pytest.approx(950.95)
 
-    def test_q_w_active_without_w_learned(
-        self, aurelion_sol_data, parse_at
-    ) -> None:
+    def test_q_w_active_without_w_learned(self, aurelion_sol_data, parse_at) -> None:
         """w_active with W at rank 0 applies no modifier."""
         _, abilities = parse_at(
             aurelion_sol_data,
@@ -267,9 +261,7 @@ class TestESingularity:
 
     def test_e_rank5_no_ap(self, aurelion_sol_data, parse_at) -> None:
         """Rank 5, 0 AP: 150 total over the full zone."""
-        _, abilities = parse_at(
-            aurelion_sol_data, 18, ap=0.0, ability_ranks=MAX_RANKS
-        )
+        _, abilities = parse_at(aurelion_sol_data, 18, ap=0.0, ability_ranks=MAX_RANKS)
         assert abilities["E"]["total_raw"] == pytest.approx(150.0)
 
     def test_e_rank5_100ap(self, aurelion_sol_data, parse_at) -> None:
@@ -279,9 +271,7 @@ class TestESingularity:
         )
         assert abilities["E"]["total_raw"] == pytest.approx(210.0)
 
-    def test_e_execute_display_no_stardust(
-        self, aurelion_sol_data, parse_at
-    ) -> None:
+    def test_e_execute_display_no_stardust(self, aurelion_sol_data, parse_at) -> None:
         """0 Stardust vs 1000 max HP: executes below 5% (50 HP)."""
         _, abilities = parse_at(
             aurelion_sol_data,
@@ -291,9 +281,7 @@ class TestESingularity:
         )
         assert abilities["E"]["detail"] == "Executes below 5.0% max HP (50 HP)"
 
-    def test_e_execute_display_100_stardust(
-        self, aurelion_sol_data, parse_at
-    ) -> None:
+    def test_e_execute_display_100_stardust(self, aurelion_sol_data, parse_at) -> None:
         """100 Stardust: 5 + 2.6 = 7.6% (76 HP of 1000)."""
         _, abilities = parse_at(
             aurelion_sol_data,
@@ -333,9 +321,7 @@ class TestRFallingStar:
 
     def test_r_base_rank3_no_ap(self, aurelion_sol_data, parse_at) -> None:
         """Falling Star rank 3, 0 AP: 350."""
-        _, abilities = parse_at(
-            aurelion_sol_data, 18, ap=0.0, ability_ranks=MAX_RANKS
-        )
+        _, abilities = parse_at(aurelion_sol_data, 18, ap=0.0, ability_ranks=MAX_RANKS)
         assert abilities["R"]["total_raw"] == pytest.approx(350.0)
         assert abilities["R"]["name"] == "Falling Star"
 
@@ -384,13 +370,9 @@ class TestRFallingStar:
             ability_ranks=MAX_RANKS,
             champion_options={"r_empowered": True},
         )
-        assert emp["R"]["total_raw"] == pytest.approx(
-            base["R"]["total_raw"] * 1.25
-        )
+        assert emp["R"]["total_raw"] == pytest.approx(base["R"]["total_raw"] * 1.25)
 
-    def test_r_empowered_uses_base_cooldown(
-        self, aurelion_sol_data, parse_at
-    ) -> None:
+    def test_r_empowered_uses_base_cooldown(self, aurelion_sol_data, parse_at) -> None:
         """R[1] has no cooldown data — the empowered form reads R[0]'s."""
         _, abilities = parse_at(
             aurelion_sol_data,
@@ -456,9 +438,7 @@ def _fight_params(**overrides) -> FightParams:
 class TestFightIntegration:
     """run_fight wires the fight duration into the Q channel model."""
 
-    def test_timed_fight_channels_q_continuously(
-        self, aurelion_sol_data
-    ) -> None:
+    def test_timed_fight_channels_q_continuously(self, aurelion_sol_data) -> None:
         """10s timed fight, level 18, no items (0 AP), 0 MR target:
         Q = 105 x 10 + 100 x 10 = 2050 in ONE cast."""
         params = _fight_params(fight_mode="timed", fight_duration=10.0)
@@ -467,9 +447,7 @@ class TestFightIntegration:
         assert q_row["casts"] == 1
         assert q_row["total_damage"] == pytest.approx(2050.0)
 
-    def test_one_rotation_fight_keeps_per_cast_q(
-        self, aurelion_sol_data
-    ) -> None:
+    def test_one_rotation_fight_keeps_per_cast_q(self, aurelion_sol_data) -> None:
         """One-rotation mode keeps the single full-channel model (641.25)."""
         params = _fight_params(fight_mode="one_rotation")
         result = run_fight(aurelion_sol_data, 18, [], params)
@@ -477,14 +455,11 @@ class TestFightIntegration:
         assert q_row["casts"] == 1
         assert q_row["total_damage"] == pytest.approx(641.25)
 
-    def test_e_execute_detail_reaches_breakdown(
-        self, aurelion_sol_data
-    ) -> None:
+    def test_e_execute_detail_reaches_breakdown(self, aurelion_sol_data) -> None:
         params = _fight_params(fight_mode="one_rotation")
         result = run_fight(aurelion_sol_data, 18, [], params)
         assert (
-            result["breakdown"]["E"]["detail"]
-            == "Executes below 5.0% max HP (50 HP)"
+            result["breakdown"]["E"]["detail"] == "Executes below 5.0% max HP (50 HP)"
         )
 
     def test_one_rotation_strips_smuggled_duration_option(

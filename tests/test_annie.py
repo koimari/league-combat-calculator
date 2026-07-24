@@ -8,7 +8,6 @@ from src.calculator.champions.annie import (
     _TIBBERS_AURA_TICK_INTERVAL,
 )
 
-
 # ---------------------------------------------------------------------------
 # P: Pyromania (stun only, no damage)
 # ---------------------------------------------------------------------------

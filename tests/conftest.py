@@ -66,6 +66,13 @@ bard_data = _champion_fixture("Bard")
 belveth_data = _champion_fixture("Belveth")
 blitzcrank_data = _champion_fixture("Blitzcrank")
 brand_data = _champion_fixture("Brand")
+braum_data = _champion_fixture("Braum")
+briar_data = _champion_fixture("Briar")
+caitlyn_data = _champion_fixture("Caitlyn")
+camille_data = _champion_fixture("Camille")
+cassiopeia_data = _champion_fixture("Cassiopeia")
+# Data key differs from the display/dispatcher name "Cho'Gath".
+chogath_data = _champion_fixture("Chogath")
 gnar_data = _champion_fixture("Gnar")
 # Data key differs from the display/dispatcher name "Jarvan IV".
 jarvan_iv_data = _champion_fixture("JarvanIV")

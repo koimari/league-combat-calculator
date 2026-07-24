@@ -53,6 +53,11 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "Q", "E", "Q", "E", "R", "E",
         "E", "W", "W", "R", "W", "W",
     ],
+    "Camille": [
+        "Q", "E", "W", "Q", "Q", "R",
+        "Q", "E", "Q", "E", "R", "E",
+        "E", "W", "W", "R", "W", "W",
+    ],
     "Jarvan IV": [
         "Q", "E", "W", "Q", "Q", "R",
         "Q", "E", "Q", "E", "R", "E",
@@ -63,6 +68,12 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "Q", "E", "Q", "E", "R", "E",
         "E", "W", "W", "R", "W", "W",
     ],
+    # ── E max first (Twin Fang is the core spam spell), Q second ──
+    "Cassiopeia": [
+        "Q", "E", "W", "E", "E", "R",
+        "E", "Q", "E", "Q", "R", "Q",
+        "Q", "W", "W", "R", "W", "W",
+    ],
     # ── W start, W max first (soldiers are the kit; standard since V13.7) ──
     "Azir": [
         "W", "Q", "E", "W", "W", "R",
@@ -71,6 +82,12 @@ _SKILL_ORDERS: dict[str, list[str]] = {
     ],
     # ── W max first (Pillar of Flame is the damage ability) ──
     "Brand": [
+        "Q", "W", "E", "W", "W", "R",
+        "W", "Q", "W", "Q", "R", "Q",
+        "Q", "E", "E", "R", "E", "E",
+    ],
+    # ── W max first (Blood Frenzy is the steroid; standard jungle order) ──
+    "Briar": [
         "Q", "W", "E", "W", "W", "R",
         "W", "Q", "W", "Q", "R", "Q",
         "Q", "E", "E", "R", "E", "E",

@@ -31,6 +31,7 @@ Factories remain only for genuinely shared behavior: ``simple_damage``,
 shared output shells use entry builders instead of flag-heavy factories.
 """
 
+import re
 from typing import Any, Callable
 
 from ..ability_spec import DamagePart
@@ -289,6 +290,33 @@ def extract_cooldown(ability: dict[str, Any], rank: int) -> float:
     return float(values[idx])
 
 
+_NUMBER = re.compile(r"\d+(?:\.\d+)?")
+_PERCENT = re.compile(r"\d+(?:\.\d+)?\s*%")
+
+
+def extract_cast_time(ability: dict[str, Any]) -> float:
+    """Seconds the champion is locked out casting this ability.
+
+    The wiki's ``castTime`` is free text: "0.25", "none",
+    "0.25 / 0.2 (based on level)", "0.25 : 0.1 (based on bonus attack
+    speed)", "0.25 • None" (cast • recast), "80% of X's windup time
+    (0.4 at base attack speed)", "Attack Windup Time". Rule: read the
+    first cast segment (before any '•' recast separator) and take its
+    first number with percentages stripped — scaled forms yield their
+    base (slowest) value, windup-percentage forms fall through to the
+    parenthesized at-base seconds, and pure text ("none", "Attack
+    Windup Time") is instant (0.0).
+    """
+    raw = ability.get("castTime")
+    if raw is None:
+        return 0.0
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    first_cast_segment = str(raw).split("•", 1)[0]
+    match = _NUMBER.search(_PERCENT.sub("", first_cast_segment))
+    return float(match.group()) if match else 0.0
+
+
 def build_stats_context(
     champion_stats: dict[str, float] | None,
     total_ability_power: float,
@@ -442,6 +470,7 @@ def simple_damage(
     cooldown_from: tuple[str, int] | None = None,
     cooldown: str = "standard",
     ranks: str = "rank",
+    dot_duration: float | None = None,
 ) -> SlotParser:
     """Standard castable damage slot.
 
@@ -466,6 +495,10 @@ def simple_damage(
             Amumu Q).
         ranks: "rank" (skill order / overrides, slot skipped below
             rank 1) or "level" (rank pinned to champion level).
+        dot_duration: Seconds the ability keeps dealing ability damage
+            after the cast (poisons, zone ticks). Item burns (Liandry's,
+            Blackfire) stay refreshed for this tail — see
+            ``_add_burn_damage``. None (default) emits nothing.
 
     Returns:
         A DAMAGE-phase slot parser.
@@ -513,7 +546,10 @@ def simple_damage(
 
         total *= _resolve_casts(casts, ability, rank)
         name = ability.get("name", f"Ability {ctx.slot}")
-        return damage_entry(name, rank, cd_value, total, resolved_type)
+        entry = damage_entry(name, rank, cd_value, total, resolved_type)
+        if dot_duration is not None:
+            entry["dot_duration"] = dot_duration
+        return entry
 
     parse.phase = DAMAGE
     return parse

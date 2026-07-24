@@ -10,6 +10,7 @@ primitives in test_champion_primitives.py.
 import pytest
 from types import SimpleNamespace
 
+from src.calculator.ability_spec import DamagePart
 from src.calculator.resistance import apply_resistance
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
@@ -746,3 +747,348 @@ class TestSplitByDamageType:
         }
         split = split_by_damage_type(breakdown)
         assert split == {"physical": 50.0, "magic": 0.0, "true": 0.0}
+
+
+# ---------------------------------------------------------------------------
+# Hit-timeline stacking DoT (Briar's Crimson Curse)
+# ---------------------------------------------------------------------------
+
+
+def _stacking_dot_passive(single_stack_raw=100.0, applied_by_autos=True):
+    """Passive entry declaring a hit-driven stacking DoT (Briar P shape)."""
+    return {
+        "name": "Bleed",
+        "damage_type": "physical",
+        "total_raw": single_stack_raw,
+        "parts": (),
+        "stacking_dot": {
+            "name": "Bleed",
+            "damage_type": "physical",
+            "single_stack_raw": single_stack_raw,
+            "duration": 5.0,
+            "max_stacks": 5,
+            "extra_stack_effectiveness": 0.25,
+            "applied_by_autos": applied_by_autos,
+        },
+    }
+
+
+def _stack_applier(cooldown=20.0, empowers_next_auto=False):
+    """Zero-damage castable whose applications add one DoT stack each."""
+    from src.calculator.ability_spec import DamagePart
+
+    entry = {
+        "name": "Applier",
+        "cooldown": cooldown,
+        "damage_type": "physical",
+        "parts": (DamagePart("physical", 0.0),),
+        "applies_dot_stack": True,
+    }
+    if empowers_next_auto:
+        entry["empowers_next_auto"] = True
+    return entry
+
+
+class TestStackingDot:
+    """Hit-timeline stacking DoT: rate = single_dps x (1 + 0.25 x (n-1)),
+    stacks from the fight's real hit timeline (autos at attack-speed
+    intervals, ability applications at cast times), shared duration
+    refreshed by every application, committed 5s tail past the last hit.
+
+    Single stack = 100 raw over 5s -> 20 dps; rates by stack count:
+    20 / 25 / 30 / 35 / 40 (5-stack rate = 2x single = 200 per 5s window).
+    """
+
+    def test_auto_ramp_reduced_stacks_and_committed_tail(
+        self, attacker_stats, fight
+    ) -> None:
+        """10 autos at 1/s over a 10s fight: ramp 20+25+30+35+40 over the
+        first 5s, 4s at the 5-stack rate 40, then the full committed 5s
+        tail (200) past fight end -> 510 raw."""
+        result = fight(
+            attacker_stats(),
+            {"passive": _stacking_dot_passive()},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+        )
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert row["total_damage"] == pytest.approx(510.0)
+        assert row["count"] == 10
+        assert row["unit"] == "stacks"
+        assert row["damage_per_hit"] == pytest.approx(51.0)
+        assert row["damage_type"] == "physical"
+
+    def test_one_rotation_marginal_sum_is_175_percent(
+        self, attacker_stats, fight
+    ) -> None:
+        """Q+W+E+R applications land together in one-rotation mode: the
+        first stack commits 100%, the other three 25% each -> 1.75x."""
+        abilities = {
+            "passive": _stacking_dot_passive(),
+            "Q": _stack_applier(),
+            "W": _stack_applier(),
+            "E": _stack_applier(),
+            "R": _stack_applier(),
+        }
+        result = fight(attacker_stats(), abilities, target_armor=0.0)
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert row["total_damage"] == pytest.approx(175.0)
+        assert row["count"] == 4
+
+    def test_single_application_commits_full_duration(
+        self, attacker_stats, fight
+    ) -> None:
+        """One application = the full single-stack total, fight end or not."""
+        abilities = {
+            "passive": _stacking_dot_passive(),
+            "Q": _stack_applier(),
+        }
+        result = fight(attacker_stats(), abilities, target_armor=0.0)
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert row["total_damage"] == pytest.approx(100.0)
+
+    def test_reapplication_refreshes_shared_duration(
+        self, attacker_stats, fight
+    ) -> None:
+        """Autos at t=0 and t=4 (0.25 AS): the second hit refreshes before
+        expiry -> 4s at 1 stack (80) + committed 5s at 2 stacks (125)."""
+        result = fight(
+            attacker_stats(attack_speed=0.25),
+            {"passive": _stacking_dot_passive()},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=9.0,
+            auto_attack_uptime=1.0,
+        )
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert row["total_damage"] == pytest.approx(205.0)
+
+    def test_stacks_expire_after_duration_gap(self, attacker_stats, fight) -> None:
+        """Autos at t=0 and t=6 (gap > 5s): the first stack runs its full
+        5s and expires; the second starts a fresh chain -> 100 + 100."""
+        result = fight(
+            attacker_stats(attack_speed=1.0 / 6.0),
+            {"passive": _stacking_dot_passive()},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=12.0,
+            auto_attack_uptime=1.0,
+        )
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert row["total_damage"] == pytest.approx(200.0)
+        assert row["count"] == 2
+
+    def test_timed_casts_apply_stacks_on_cooldown(self, attacker_stats, fight) -> None:
+        """No autos; a 4s-cooldown applier casts at t=0/4/8 over 10s:
+        4s at 1 stack (80) + 4s at 2 (100) + committed 5s at 3 (150)."""
+        abilities = {
+            "passive": _stacking_dot_passive(),
+            "Q": _stack_applier(cooldown=4.0),
+        }
+        result = fight(
+            attacker_stats(),
+            abilities,
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.0,
+        )
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert row["total_damage"] == pytest.approx(330.0)
+        assert row["count"] == 3
+
+    def test_bleed_is_mitigated_by_armor(self, attacker_stats, fight) -> None:
+        """The DoT is physical damage: 100 armor halves it."""
+        abilities = {
+            "passive": _stacking_dot_passive(),
+            "Q": _stack_applier(),
+        }
+        result = fight(attacker_stats(), abilities, target_armor=100.0)
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert row["total_damage"] == pytest.approx(50.0)
+
+    def test_empowered_auto_stack_rides_the_auto_stream(
+        self, attacker_stats, fight
+    ) -> None:
+        """An empowers_next_auto applier's swing IS one of the fight's
+        autos - its stack must not be counted twice on the timeline."""
+        abilities = {
+            "passive": _stacking_dot_passive(),
+            "W": _stack_applier(cooldown=20.0, empowers_next_auto=True),
+        }
+        result = fight(
+            attacker_stats(),
+            abilities,
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+        )
+        row = result["breakdown"]["stacking_dot_passive"]
+        # Identical to the autos-only timeline: 10 hits -> 510 raw.
+        assert row["total_damage"] == pytest.approx(510.0)
+        assert row["count"] == 10
+
+    def test_empowered_auto_applies_stack_without_auto_stream(
+        self, attacker_stats, fight
+    ) -> None:
+        """One-rotation mode (no autos): the forced swing carries the
+        stack, so the applier still commits one full stack."""
+        abilities = {
+            "passive": _stacking_dot_passive(),
+            "W": _stack_applier(cooldown=20.0, empowers_next_auto=True),
+        }
+        result = fight(attacker_stats(), abilities, target_armor=0.0)
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert row["total_damage"] == pytest.approx(100.0)
+        assert row["count"] == 1
+
+    def test_no_applications_no_row(self, attacker_stats, fight) -> None:
+        """A declared DoT with no hits in the fight emits nothing."""
+        result = fight(
+            attacker_stats(),
+            {"passive": _stacking_dot_passive()},
+            target_armor=0.0,
+        )
+        assert "stacking_dot_passive" not in result["breakdown"]
+
+
+# ---------------------------------------------------------------------------
+# Empowered-auto forced swings: zero-uptime timed fights and Hexoptics amp
+# ---------------------------------------------------------------------------
+
+
+def _empowered_bonus_ability(cooldown: float = 4.0) -> dict:
+    """Vayne-Q-shaped entry: bonus physical riding the next basic attack."""
+    from src.calculator.ability_spec import DamagePart
+
+    return {
+        "name": "Empowered Strike",
+        "damage_type": "physical",
+        "cooldown": cooldown,
+        "parts": (DamagePart("physical", 50.0),),
+        "empowers_next_auto": True,
+    }
+
+
+class TestEmpoweredAutoZeroUptimeTimed:
+    """A timed fight with zero auto uptime still forces the empowered
+    attack per cast — each cast carries bonus + base swing (was 0)."""
+
+    def test_timed_zero_uptime_carries_swings(self, attacker_stats, fight) -> None:
+        """cd 4 over 10s = 3 casts x (50 bonus + 100 swing) = 450."""
+        result = fight(
+            attacker_stats(),
+            {"Q": _empowered_bonus_ability(cooldown=4.0)},
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.0,
+            target_armor=0.0,
+        )
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(450.0)
+
+    def test_timed_with_auto_stream_unchanged(self, attacker_stats, fight) -> None:
+        """With autos on, the auto stream hosts the swings: bonus only."""
+        result = fight(
+            attacker_stats(),
+            {"Q": _empowered_bonus_ability(cooldown=4.0)},
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+            target_armor=0.0,
+        )
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(150.0)
+
+
+class TestForcedSwingBasicAmp:
+    """Hexoptics C44 amplifies forced basic-attack swings on ability rows
+    (they ARE basic attacks), and the info row reports that bonus."""
+
+    def test_one_rotation_swing_amped(self, attacker_stats, fight) -> None:
+        """Ranged amp 1.10: 50 bonus (unamped) + 100 swing x 1.10 = 160."""
+        result = fight(
+            attacker_stats(is_melee=False),
+            {"Q": _empowered_bonus_ability()},
+            items=[{"name": "Hexoptics C44"}],
+            target_armor=0.0,
+        )
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(160.0)
+        amp_row = result["breakdown"]["basic_amp_Hexoptics C44"]
+        assert amp_row["total_damage"] == pytest.approx(10.0)
+
+
+def _timeline_entry(name, cooldown, cast_time=None, damage=100.0):
+    """Minimal castable ability entry for cast-timeline tests."""
+    entry = {
+        "name": name,
+        "rank": 5,
+        "cooldown": cooldown,
+        "damage_type": "magic",
+        "total_raw": damage,
+        "parts": (DamagePart("magic", damage),),
+    }
+    if cast_time is not None:
+        entry["cast_time"] = cast_time
+    return entry
+
+
+class TestSharedCastTimeline:
+    """Timed-mode casts share ONE timeline: each cast occupies its
+    cast_time (cooldown runs from cast end), and no ability can start
+    while another is mid-cast. Cassiopeia's E-spam exposed the old
+    per-ability `1 + T/cd` formula overcounting (5 casts vs ~3 in-game
+    over 3s)."""
+
+    @staticmethod
+    def _timed(fight, attacker_stats, abilities, duration=3.0):
+        return fight(
+            attacker_stats(),
+            abilities,
+            one_rotation=False,
+            fight_duration_seconds=duration,
+        )
+
+    def test_cast_time_stretches_own_cycle(self, fight, attacker_stats) -> None:
+        """cd 0.75 + cast 0.125 = 0.875s cycle: starts at 0/.875/1.75/2.625
+        -> 4 casts in 3s (the old cd-only formula said 5)."""
+        result = self._timed(
+            fight, attacker_stats, {"E": _timeline_entry("Spam", 0.75, 0.125)}
+        )
+        assert result["breakdown"]["E"]["casts"] == 4
+
+    def test_other_casts_displace_the_spam_spell(self, fight, attacker_stats) -> None:
+        """Q (0.5s cast) and R (0.5s) occupy the timeline's first ~1.1s,
+        so E only starts at 0.5/1.375/2.25 -> 3 casts, not 4."""
+        result = self._timed(
+            fight,
+            attacker_stats,
+            {
+                "Q": _timeline_entry("Opener", 10.0, 0.5),
+                "E": _timeline_entry("Spam", 0.75, 0.125),
+                "R": _timeline_entry("Ult", 60.0, 0.5),
+            },
+        )
+        breakdown = result["breakdown"]
+        assert breakdown["Q"]["casts"] == 1
+        assert breakdown["E"]["casts"] == 3
+        assert breakdown["R"]["casts"] == 1
+
+    def test_zero_cast_time_preserves_legacy_counts(
+        self, fight, attacker_stats
+    ) -> None:
+        """Entries without cast_time are instant: cd 1.0 over 3s casts at
+        0/1/2/3 = 4, exactly the old `1 + int(T/cd)`."""
+        result = self._timed(fight, attacker_stats, {"Q": _timeline_entry("Bolt", 1.0)})
+        assert result["breakdown"]["Q"]["casts"] == 4
+
+    def test_r_still_casts_once_in_timed_mode(self, fight, attacker_stats) -> None:
+        """R never recasts on cooldown in timed mode (unchanged rule)."""
+        result = self._timed(
+            fight,
+            attacker_stats,
+            {"R": _timeline_entry("Ult", 2.0, 0.5)},
+            duration=10.0,
+        )
+        assert result["breakdown"]["R"]["casts"] == 1

@@ -2018,15 +2018,19 @@ def _muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
     return _required_effect_value("Muramana", "max_mana_to_ad_ratio") * max_mana
 
 
-def _bloodmail_bonus_ad(
+def bloodmail_bonus_ad(
     items: list[dict[str, Any]],
     bonus_health: float,
 ) -> float:
     """Overlord's Bloodmail Tyranny passive: % of bonus health as bonus AD.
 
+    Public (like ``steraks_bonus_ad``): the fight engine re-applies it
+    for ability bonus-health buffs (Cho'Gath R's Feast stacks) — the
+    conversion is linear, so the delta composes.
+
     Args:
         items: List of item data dicts.
-        bonus_health: Total bonus health from items.
+        bonus_health: Bonus health to convert (items, or a buff delta).
 
     Returns:
         Flat bonus AD from Tyranny.
@@ -2154,7 +2158,7 @@ def resolve_stat_effects(
         ap_multiplier=_ap_multiplier(items),
         bonus_ad=(
             _muramana_bonus_ad(items, max_mana)
-            + _bloodmail_bonus_ad(items, bonus_health)
+            + bloodmail_bonus_ad(items, bonus_health)
             + steraks_bonus_ad(items, base_attack_damage)
         ),
         attack_speed_percent=_passive_attack_speed_bonus(items, is_melee),

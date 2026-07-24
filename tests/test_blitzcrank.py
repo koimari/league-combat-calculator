@@ -16,6 +16,7 @@ import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.resistance import apply_resistance
 from src.calculator.data_fetcher import get_item_by_name
 
 # ---------------------------------------------------------------------------
@@ -205,8 +206,10 @@ class TestEPowerFist:
         abilities = _parse(blitzcrank_data, ALL_MAXED)
         assert abilities["E"]["empowers_next_auto"] is True
 
-    def test_e_no_autos_means_no_power_fists(self, blitzcrank_data, parse_at) -> None:
-        """With zero AA uptime there is no auto to empower."""
+    def test_e_zero_uptime_forces_its_attacks(self, blitzcrank_data, parse_at) -> None:
+        """With zero AA uptime there is no auto stream to empower, but
+        each E cast still forces its own punch: casts run on cooldown
+        and every cast carries the base swing (was 0 damage)."""
         stats, abilities = parse_at(blitzcrank_data, 13)
         result = calculate_fight_damage(
             stats,
@@ -221,7 +224,14 @@ class TestEPowerFist:
                 one_rotation=False,
             ),
         )
-        assert result["breakdown"]["E"]["casts"] == 0
+        row = result["breakdown"]["E"]
+        assert row["casts"] > 0
+        # Each cast is a full empowered hit: swing + bonus, so per-cast
+        # damage must exceed the bonus-only raw total per cast.
+        per_cast_raw = abilities["E"]["total_raw"]
+        assert row["total_damage"] / row["casts"] > apply_resistance(
+            per_cast_raw, 100.0
+        )
 
     def test_e_one_rotation_carries_the_consumed_auto(
         self, blitzcrank_data, parse_at
@@ -246,6 +256,33 @@ class TestEPowerFist:
         )
         expected = 2.0 * stats["attack_damage"] + 0.25 * stats["ability_power"]
         assert result["breakdown"]["E"]["total_damage"] == pytest.approx(expected)
+
+    def test_e_one_rotation_forced_swing_consumes_spellblade(
+        self, blitzcrank_data, parse_at
+    ) -> None:
+        """E's forced punch is a basic attack, so it consumes the Trinity
+        Force spellblade charge even with no auto stream (was: spellblade
+        silently absent in one-rotation mode)."""
+        triforce = get_item_by_name("Trinity Force")
+        stats, abilities = parse_at(blitzcrank_data, 13, items=[triforce])
+        result = calculate_fight_damage(
+            stats,
+            abilities,
+            [triforce],
+            FightConfig(
+                target_health=5000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                deterministic=True,
+            ),
+        )
+        row = result["breakdown"]["spellblade_Trinity Force"]
+        # One forced swing (E) -> exactly one proc at 200% base AD.
+        assert row["count"] == 1
+        assert row["total_damage"] == pytest.approx(2.0 * stats["base_attack_damage"])
 
     def test_e_crit_increases_fight_damage(self, blitzcrank_data, parse_at) -> None:
         """E's fight damage grows with crit chance (expected-crit model:

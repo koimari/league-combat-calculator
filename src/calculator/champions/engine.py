@@ -49,6 +49,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "name",
         "rank",
         "cooldown",
+        "cast_time",
         "damage_type",
         "parts",
         "cast_instances",
@@ -59,7 +60,10 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "on_hit",
         "proc_count",
         "dot_duration",
+        "stacking_dot",
+        "applies_dot_stack",
         "applies_item_on_hits",
+        "spellblade_true_ratio",
         "auto_attack_override",
         "double_shot",
         "detail",  # display text copied onto the ability's breakdown row
@@ -119,6 +123,29 @@ class SlotCtx:
 # ---------------------------------------------------------------------------
 # Parser builder
 # ---------------------------------------------------------------------------
+
+
+def _stamp_cast_time(
+    entry: dict[str, Any], ability_json: dict[str, Any] | None
+) -> None:
+    """Stamp a castable entry with its slot JSON's cast time.
+
+    One home instead of every slot parser (module or generic) plumbing
+    it. Only castable entries (they carry a cooldown) occupy the timed
+    fight's shared cast timeline; slot-fn-supplied values win; instant
+    casts (0.0) stay unstamped so entries stay lean and cast-time-less
+    data keeps legacy cast counts.
+    """
+    if "cooldown" not in entry or "cast_time" in entry or ability_json is None:
+        return
+    # Deferred import: slotlib imports the phase constants from this
+    # module, so engine.py must not import slotlib at module level.
+    # pylint: disable-next=import-outside-toplevel,cyclic-import
+    from .slotlib import extract_cast_time
+
+    cast_time = extract_cast_time(ability_json)
+    if cast_time > 0:
+        entry["cast_time"] = cast_time
 
 
 def _result_key(slot: str) -> str:
@@ -194,6 +221,7 @@ def build_parser(
             )
             entry = parser(ctx)
             if entry is not None:
+                _stamp_cast_time(entry, ctx.ability())
                 results[_result_key(slot)] = entry
 
         # Validate AFTER all phases: AMP parsers mutate earlier entries,
