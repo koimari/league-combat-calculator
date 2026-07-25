@@ -191,27 +191,42 @@ class TestTumbleAutoCoupling:
         stats["attack_speed"] = 1.29
         return stats, abilities
 
-    def test_q_casts_capped_by_auto_count(self, reference_setup) -> None:
-        """Tumble only damages via the empowered auto: casts <= autos."""
+    def test_q_casts_capped_by_attack_count(self, reference_setup) -> None:
+        """Tumble only damages via the empowered auto: casts <= attacks.
+
+        A Q-empowered swing is reported on the Q row rather than the auto
+        row, so the cap is against the fight's TOTAL attacks (plain autos
+        plus the empowered ones), not the auto row's count alone.
+        """
         stats, abilities = reference_setup
         result = self._run_fight(stats, abilities)
         q_casts = result["breakdown"]["Q"]["casts"]
         autos = result["breakdown"]["auto_attacks"]["count"]
-        assert q_casts <= autos
+        assert q_casts <= q_casts + autos == int(1.29 * 10.0)
 
     def test_autos_unchanged_by_tumbling(self, reference_setup) -> None:
-        """Tumble is an attack reset: the auto count is not reduced."""
+        """Tumble is an attack reset: it never costs Vayne an attack.
+
+        Tumbling re-labels attacks as Q-empowered (moving them onto the Q
+        row); the fight's total attack count is identical to a fight with
+        no Q casts at all.
+        """
         stats, abilities = reference_setup
         result = self._run_fight(stats, abilities)
         autos = result["breakdown"]["auto_attacks"]["count"]
-        assert autos == int(1.29 * 10.0)  # 12, same as without Q casts
+        q_casts = result["breakdown"]["Q"]["casts"]
+        assert autos + q_casts == int(1.29 * 10.0)  # 12, same as without Q
 
     def test_reference_cast_and_auto_counts(self, reference_setup) -> None:
-        """Hand-derived: min(16 cooldown casts, 12 autos) -> 12 and 12."""
+        """Hand-derived: min(16 cooldown casts, 12 attacks) -> 12 casts.
+
+        Every one of the 12 attacks is Q-empowered here, so all 12 are
+        reported on the Q row and no plain autos remain.
+        """
         stats, abilities = reference_setup
         result = self._run_fight(stats, abilities)
         assert result["breakdown"]["Q"]["casts"] == 12
-        assert result["breakdown"]["auto_attacks"]["count"] == 12
+        assert result["breakdown"]["auto_attacks"]["count"] == 0
 
     def test_one_rotation_q_casts_once(self, reference_setup) -> None:
         """One-rotation mode is unaffected: Q casts exactly once."""

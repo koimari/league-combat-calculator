@@ -274,6 +274,14 @@ def calculate_total_stats(
             total_item_stats["attack_damage"] + bonuses.bonus_ad
         ),
         "bonus_health": round(total_item_stats["health"]),
+        # Base health = champion base stats + level growth, no items.
+        # Derived as total - bonus rather than rounded on its own so
+        # ``health == base_health + bonus_health`` holds by construction:
+        # rounding the two components independently drifts by 1 whenever
+        # base health lands on a .5 boundary (Ambessa/Karthus at 13).
+        # Abilities scale off all three separately ("% base health",
+        # "% bonus health", "% maximum health"), so each is first-class.
+        "base_health": round(total_health) - round(total_item_stats["health"]),
         # Bonus (non-base) resists — champion mechanics scaling off bonus
         # armor/MR (Braum W's 36%) and the "% bonus armor" /
         # "% bonus magic resistance" scaling units read these.

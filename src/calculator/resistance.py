@@ -24,6 +24,41 @@ def apply_resistance(raw_damage: float, resistance: float) -> float:
     return raw_damage * (2.0 - 100.0 / (100.0 - resistance))
 
 
+def reduce_resistance(
+    resistance: float,
+    reduction_percent: float = 0.0,
+    reduction_flat: float = 0.0,
+) -> float:
+    """Reduce a resistance: flat first, then percent of what remains.
+
+    REDUCTION is not penetration, and the difference is the whole reason
+    both live here:
+
+    - Order — the game applies flat reduction, then percent reduction,
+      then percent penetration, then flat penetration. This function owns
+      the first half, ``apply_*_penetration`` the second.
+    - Floor — reduction has none. Negative resistance is a real state
+      that amplifies damage (``apply_resistance``); only penetration
+      floors at 0.
+
+    The percent share only bites into positive resistance: scaling an
+    already-negative value moves it back toward zero, which would make a
+    reduction effect *protect* the target.
+
+    Args:
+        resistance: Target's current armor or magic resistance.
+        reduction_percent: Percent reduction (e.g. ``32`` for 32%).
+        reduction_flat: Flat reduction (e.g. Corki E's 12-20).
+
+    Returns:
+        The reduced resistance, which may be negative.
+    """
+    resistance -= reduction_flat
+    if reduction_percent and resistance > 0:
+        resistance *= 1.0 - reduction_percent / 100.0
+    return resistance
+
+
 def apply_magic_penetration(
     target_magic_resistance: float,
     flat_penetration: float,
@@ -39,8 +74,13 @@ def apply_magic_penetration(
         percent_penetration: Percent magic penetration as decimal (e.g., 0.40 for 40%).
 
     Returns:
-        Effective magic resistance (minimum 0).
+        Effective magic resistance (minimum 0), or the target's own
+        already-negative MR untouched.
     """
+    if target_magic_resistance <= 0:
+        # Already below zero from a REDUCTION effect (Corki E's flat
+        # shred) — penetration neither deepens nor undoes that.
+        return target_magic_resistance
     effective = target_magic_resistance * (1.0 - percent_penetration)
     effective = effective - flat_penetration
     return max(0.0, effective)
@@ -65,8 +105,13 @@ def apply_armor_penetration(
         percent_penetration: Percent armor penetration as decimal.
 
     Returns:
-        Effective armor (minimum 0).
+        Effective armor (minimum 0), or the target's own already-negative
+        armor untouched.
     """
+    if target_armor <= 0:
+        # Already below zero from a REDUCTION effect (Corki E's flat
+        # shred) — penetration neither deepens nor undoes that.
+        return target_armor
     effective = target_armor * (1.0 - percent_penetration)
     effective = effective - flat_penetration
     return max(0.0, effective)

@@ -25,7 +25,7 @@ These LoL-specific facts affect calculations and must be correct:
 - **Resistance math:** `actual_damage = raw × 100 / (100 + resistance)` — negative resistance amplifies damage
 - **True damage** ignores all resistances entirely
 
-## Common Commands
+## Commands and gates
 
 ```bash
 pytest                # Run all tests
@@ -36,17 +36,10 @@ python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numer
 python scripts/patch_update.py run    # Patch day: re-pull wiki data, audit, gates (see /patch-update skill)
 ```
 
-## Verification Steps
-
-After completing any task:
-1. Run the test suite: `pytest`
-2. Verify all tests pass
-3. If calculation code changed, run the golden gate:
-   `python scripts/golden_snapshot.py compare scripts/golden_baseline.json`
-   — a pure refactor must show zero diffs; a behavior fix re-captures the baseline
-   with every diff explained in the commit.
-4. Run linter if code was modified: `pylint src/`
-5. Show output of verification steps
+`pytest` gates every task; `pylint src/` gates any code change. **The golden gate is the
+one with non-obvious semantics** — run it whenever calculation code changed: a pure
+refactor must show zero diffs, while a behavior fix re-captures the baseline with every
+diff explained in the commit.
 
 ## Known Quirks
 

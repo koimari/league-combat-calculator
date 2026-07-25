@@ -49,6 +49,11 @@ ABILITY_LEVEL = 11
 FIGHT_LEVELS = (11, 18)
 PHYSICAL_BUILD = ["Kraken Slayer", "Infinity Edge", "Lord Dominik's Regards"]
 MAGIC_BUILD = ["Luden's Echo", "Shadowflame", "Rabadon's Deathcap"]
+# Spellblade + crit + attack speed: the only sweep build that exercises
+# the spellblade proc path and champion riders on it (Corki's Hextech
+# Munitions true damage). Without it those live on unit tests alone —
+# the blind spot that hid the timed-burn bug.
+SPELLBLADE_BUILD = ["Trinity Force", "Infinity Edge", "Berserker's Greaves"]
 # Deliberately non-default regression scenario; product defaults live in pipeline.py.
 SNAPSHOT_TARGET_HEALTH = 2000.0
 SNAPSHOT_TARGET_ARMOR = 50.0
@@ -176,7 +181,7 @@ def _resolve_build(requested_names, items_by_name, substitutions):
 
 
 def snapshot_registered_fights(champions, items_by_name, substitutions):
-    """Section 2: fights for the 12 registered champions, 3 builds x 2 levels.
+    """Section 2: fights for every registered champion, 4 builds x 2 levels.
 
     Each level holds the original one-rotation entries under the build keys,
     plus a "sustained" sibling (auto_attack_uptime=1.0, one_rotation=False,
@@ -186,6 +191,9 @@ def snapshot_registered_fights(champions, items_by_name, substitutions):
         "no_items": [],
         "physical_build": _resolve_build(PHYSICAL_BUILD, items_by_name, substitutions),
         "magic_build": _resolve_build(MAGIC_BUILD, items_by_name, substitutions),
+        "spellblade_build": _resolve_build(
+            SPELLBLADE_BUILD, items_by_name, substitutions
+        ),
     }
     by_display_name = {data.get("name"): data for data in champions.values()}
     out = {}

@@ -78,24 +78,46 @@ on-hit system via two mechanisms:
         }
 
     and each castable whose applications add a stack carries
-    ``"applies_dot_stack": True``. ``_add_stacking_dot_damage`` builds
-    the fight's hit timeline — autos at attack-speed intervals plus
-    ability applications at their cast times (t=0 in one-rotation
-    mode) — and integrates the tick rate at the running stack count:
-    ``single_dps x (1 + extra_eff x (stacks - 1))``, stacks capped at
-    ``max_stacks``. Every application refreshes the shared duration;
-    a gap longer than ``duration`` expires the chain. Accounting is
-    COMMITTED: the last hit's full ``duration`` of ticks counts even
-    past the fight cutoff. An ``empowers_next_auto`` applier's swing is
-    one of the fight's autos, so its stack rides the auto timeline
-    (it is only counted separately when there is no auto stream).
+    ``"applies_dot_stack": True``. ``_build_stack_timeline`` builds the
+    fight's hit timeline — autos at attack-speed intervals plus ability
+    applications at their cast times (t=0 in one-rotation mode) — and
+    ``_add_stacking_dot_damage`` integrates the tick rate at the running
+    stack count: ``single_dps x (1 + extra_eff x (stacks - 1))``, stacks
+    capped at ``max_stacks``. Every application refreshes the shared
+    duration; a gap longer than ``duration`` expires the chain.
+    Accounting is COMMITTED: the last hit's full ``duration`` of ticks
+    counts even past the fight cutoff. An ``empowers_next_auto``
+    applier's swing is one of the fight's autos, so its stack rides the
+    auto timeline (it is only counted separately when there is no auto
+    stream).
+
+**Case 5 — Stack-triggered mid-fight steroid** (e.g. Darius' Noxian
+Might): the same entry may declare::
+
+        "stack_triggered_buff": {
+            "name": "Noxian Might",
+            "trigger_stacks": 5,
+            "duration": 5.0,
+            "bonus_attack_damage": 280.0,
+        }
+
+    Every application that lands ON ``trigger_stacks`` opens (or
+    refreshes) a ``duration``-second window of bonus AD, derived from
+    the SAME ``StackTimeline`` the DoT integrates — one home for "when
+    does a stack land". Casts, autos and DoT ticks inside a window are
+    priced against the buffed AD: a part declares how it reacts with
+    ``DamagePart.bonus_ad_ratio`` (its derivative in bonus AD), the DoT
+    with ``single_stack_bonus_ad_ratio``. The application that opens a
+    window is NOT itself buffed — the buff is triggered BY its damage.
+    A part may also declare ``dot_stack_scaled`` to hit once per stack
+    on the target when the cast lands (Darius R's per-stack bonus).
 """
 
 import math
 import random
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 from . import item_effects
 from .ability_spec import DamagePart
@@ -103,6 +125,7 @@ from .resistance import (
     apply_resistance,
     apply_magic_penetration,
     apply_armor_penetration,
+    reduce_resistance,
 )
 
 # Critical strikes deal 200% base damage (this changed once before, from
@@ -220,23 +243,28 @@ class Resists:
                 self.auto_armor_pen_percent = 1.0 - (1.0 - stripped) * (
                     1.0 - self.terminus_avg_pen
                 )
-        self.reduced_armor = self.target_armor * (1.0 - self.bc_reduction)
+        self._resolve_armor_from_target()
+
+    def _resolve_armor_from_target(self) -> None:
+        """Re-derive reduced/effective armor from the target's armor."""
+        self.reduced_armor = reduce_resistance(
+            self.target_armor, self.bc_reduction * 100.0
+        )
         self.effective_armor = apply_armor_penetration(
             self.reduced_armor, self.flat_armor_pen, self.ability_armor_pen_percent
         )
 
-    def shred_armor(self, reduction_percent: float) -> None:
-        """Apply a % armor shred (e.g. Kog'Maw Q) and re-resolve armor."""
-        self.target_armor *= 1.0 - reduction_percent / 100.0
-        self.reduced_armor = self.target_armor * (1.0 - self.bc_reduction)
-        self.effective_armor = apply_armor_penetration(
-            self.reduced_armor, self.flat_armor_pen, self.ability_armor_pen_percent
+    def _resolve_mr_from_target(self) -> None:
+        """Re-derive reduced/effective MR from the target's base MR."""
+        # Malignance's Hatefog is a flat reduction. Its historical floor
+        # at 0 is kept for a positive-MR target, but it must never LIFT
+        # an MR that a shred already drove negative.
+        self.reduced_mr = max(
+            reduce_resistance(
+                self.base_mr, reduction_flat=self.malignance_mr_reduction
+            ),
+            min(0.0, self.base_mr),
         )
-
-    def shred_mr(self, reduction_percent: float) -> None:
-        """Apply a % MR shred (e.g. Kog'Maw Q) and re-resolve MR."""
-        self.base_mr *= 1.0 - reduction_percent / 100.0
-        self.reduced_mr = max(self.base_mr - self.malignance_mr_reduction, 0)
         self.effective_mr_pre_ult = apply_magic_penetration(
             self.base_mr, self.magic_pen_flat, self.ability_magic_pen_percent
         )
@@ -244,6 +272,33 @@ class Resists:
             self.reduced_mr, self.magic_pen_flat, self.ability_magic_pen_percent
         )
         self.effective_mr = self.effective_mr_post_ult
+
+    def shred_armor(
+        self, reduction_percent: float = 0.0, reduction_flat: float = 0.0
+    ) -> None:
+        """Reduce the target's armor and re-resolve armor.
+
+        Percent shreds (Kog'Maw Q) scale the armor that is left; flat
+        shreds (Corki E) subtract from it. Reduction — unlike penetration
+        — has no floor: negative armor amplifies damage.
+        """
+        self.target_armor = reduce_resistance(
+            self.target_armor, reduction_percent, reduction_flat
+        )
+        self._resolve_armor_from_target()
+
+    def shred_mr(
+        self, reduction_percent: float = 0.0, reduction_flat: float = 0.0
+    ) -> None:
+        """Reduce the target's magic resist and re-resolve MR.
+
+        Same rules as :meth:`shred_armor` — flat reduction may take MR
+        below zero, where it amplifies damage.
+        """
+        self.base_mr = reduce_resistance(
+            self.base_mr, reduction_percent, reduction_flat
+        )
+        self._resolve_mr_from_target()
 
     def use_auto_pen(self) -> None:
         """Switch effective resistances to auto-attack pen (Terminus avg).
@@ -342,6 +397,10 @@ class FightState:
     # ── Crit (resolved after stat-buff ultimates) ─────────────────────────
     crit_chance: float = 0.0
     crit_multiplier: float = BASE_CRIT_MULTIPLIER
+    # ── Fight timeline (built by the rotation, read by later steps) ───────
+    # When stacking-DoT stacks land and which mid-fight buff windows they
+    # open — the ONE home every stack-aware step reads (Case 4 and 5).
+    stack_timeline: "StackTimeline | None" = None
     # ── Accumulators ──────────────────────────────────────────────────────
     breakdown: dict[str, Any] = field(default_factory=dict)
     total_damage: float = 0.0
@@ -1187,6 +1246,13 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                 stats["attack_damage"] = stats.get(
                     "base_attack_damage", 0.0
                 ) + stats.get("bonus_attack_damage", 0.0)
+        # A BASE-health grant (Dr. Mundo R) raises max health exactly like
+        # a bonus-health one — so %maximum-health mechanics grow with it —
+        # but items converting BONUS health to a stat (Overlord's
+        # Bloodmail) must NOT see it. That base-vs-bonus split is the
+        # whole reason the two keys are separate (the Gnar rule).
+        if "base_health" in stat_buff:
+            stats["health"] = stats.get("health", 0.0) + stat_buff["base_health"]
         # Recalculate attack speed and auto count if AS was buffed
         if "bonus_attack_speed" in stat_buff:
             bonus_as_pct = stat_buff["bonus_attack_speed"]
@@ -1260,10 +1326,6 @@ class RotationResult:
     ability_item_applications: list[AbilityItemApplication] = field(
         default_factory=list
     )
-    # Timestamps of ability applications that add a stacking-DoT stack
-    # (entries flagged ``applies_dot_stack``); merged with the auto
-    # timeline by _add_stacking_dot_damage.
-    dot_application_times: list[float] = field(default_factory=list)
 
 
 def _empower_hits(empower: Any) -> int:
@@ -1276,12 +1338,139 @@ def _empower_hits(empower: Any) -> int:
     return int(empower.get("hits", 1)) if isinstance(empower, dict) else 1
 
 
+def _ability_mr(resists: Resists, ult_cast: bool, vile_decay_stacks: int) -> float:
+    """Effective MR one ability's magic damage is mitigated by.
+
+    Malignance's Hatefog only applies once R has been cast (``ult_cast``),
+    and Bloodletter's Curse deepens the reduction per Vile Decay stack.
+    """
+    if resists.mr_reduction_effect is None or vile_decay_stacks <= 0:
+        return (
+            resists.effective_mr_post_ult if ult_cast else resists.effective_mr_pre_ult
+        )
+    base = resists.reduced_mr if ult_cast else resists.base_mr
+    reduced = reduce_resistance(
+        base,
+        resists.mr_reduction_effect.reduction_per_stack * vile_decay_stacks * 100.0,
+    )
+    return apply_magic_penetration(
+        max(reduced, min(0.0, base)),
+        resists.magic_pen_flat,
+        resists.ability_magic_pen_percent,
+    )
+
+
+def _apply_target_shred(
+    resists: Resists,
+    debuff: dict[str, Any],
+    fraction: float = 1.0,
+) -> None:
+    """Apply a ``target_debuff``'s resistance reduction to the target.
+
+    Supported keys: ``armor_reduction_percent`` / ``mr_reduction_percent``
+    (Kog'Maw Q, Briar Q, Jarvan IV Q) and ``armor_reduction_flat`` /
+    ``mr_reduction_flat`` (Corki E), each naming the FULL reduction.
+    ``fraction`` applies one equal share of it — the ramp seam below.
+    """
+    armor_pct = debuff.get("armor_reduction_percent", 0.0)
+    armor_flat = debuff.get("armor_reduction_flat", 0.0) * fraction
+    if armor_pct or armor_flat:
+        resists.shred_armor(armor_pct * fraction, armor_flat)
+    mr_pct = debuff.get("mr_reduction_percent", 0.0)
+    mr_flat = debuff.get("mr_reduction_flat", 0.0) * fraction
+    if mr_pct or mr_flat:
+        resists.shred_mr(mr_pct * fraction, mr_flat)
+
+
+@dataclass
+class _ShredRamp:
+    """A ``target_debuff`` that stacks up across its own ability's hits.
+
+    Corki's Gatling Gun applies one shred stack per tick to a cap: tick 1
+    lands unshredded, tick 2 against one stack, and so on. Declared as
+    ``"stacks": N`` on the debuff, this fires one Nth of the reduction
+    after each of the ability's first N HITS — counting every hit of
+    every part, so a champion declares its ticks as one part with a
+    ``count`` and never has to mirror the engine's loop. First cast only:
+    the engine's shreds are permanent, so later casts land against the
+    full stack. Stages that never fire — fewer hits than stacks, or an
+    uncast ability — land together via ``apply_remainder``, matching the
+    unramped "shred applies after the ability" rule.
+    """
+
+    resists: Resists
+    debuff: dict[str, Any]
+    stacks: int
+    ability_mr: Callable[[], float]
+    fired: int = 0
+
+    def stage(self, current_mr: float) -> float:
+        """Apply one stack after a hit; return MR for the hits after it."""
+        if self.fired >= self.stacks:
+            return current_mr
+        self.fired += 1
+        _apply_target_shred(self.resists, self.debuff, 1.0 / self.stacks)
+        return self.ability_mr()
+
+    def apply_remainder(self) -> None:
+        """Apply whatever share of the reduction never staged."""
+        if self.fired < self.stacks:
+            _apply_target_shred(
+                self.resists, self.debuff, (self.stacks - self.fired) / self.stacks
+            )
+
+
+def _make_shred_ramp(
+    resists: Resists,
+    ability_info: dict[str, Any],
+    ult_cast: bool,
+    vile_decay_stacks: int,
+) -> _ShredRamp | None:
+    """Build the ramp for a ``stacks``-declaring target_debuff, else None."""
+    debuff = ability_info.get("target_debuff")
+    stacks = int(debuff.get("stacks", 0)) if debuff else 0
+    if stacks <= 0:
+        return None
+    if debuff.get("armor_reduction_percent") or debuff.get("mr_reduction_percent"):
+        raise ValueError(
+            f"{ability_info.get('name', '?')!r}: a ramped target_debuff must "
+            "reduce resistances by a FLAT amount — percent stages compound "
+            "multiplicatively and cannot be split into equal shares"
+        )
+    return _ShredRamp(
+        resists=resists,
+        debuff=debuff,
+        stacks=stacks,
+        ability_mr=lambda: _ability_mr(resists, ult_cast, vile_decay_stacks),
+    )
+
+
+def _mitigate_hits(
+    state: "FightState",
+    part: DamagePart,
+    raw: float,
+    ability_mr: float,
+    hits: int,
+) -> float:
+    """Mitigated damage for *hits* identical hits of one damage part."""
+    if part.damage_type == "true":
+        mitigated = raw * hits
+    elif part.damage_type == "physical":
+        mitigated = apply_resistance(raw, state.resists.effective_armor) * hits
+    else:
+        mitigated = apply_resistance(raw, ability_mr) * state.magic_amp * hits
+    return _apply_basic_amp(state, part, mitigated)
+
+
 def _evaluate_cast_parts(
     state: "FightState",
     parts: tuple[DamagePart, ...],
     num_casts: int,
     ability_mr: float,
     running_damage: float,
+    *,
+    on_hit: "Callable[[float], float] | None" = None,
+    pricing: "tuple[CastPricing, ...] | None" = None,
 ) -> tuple[float, float, dict[str, float]]:
     """Evaluate an ability's typed damage parts over its casts.
 
@@ -1291,13 +1480,25 @@ def _evaluate_cast_parts(
     Threads running target damage through every part and cast so
     HP-scaled parts see prior hits (Akali R2 after R1, Kog'Maw R shot
     after shot).
+
+    ``on_hit`` runs after every individual hit and returns the ability's
+    MR for the hits that follow — the seam a ramped resistance shred uses
+    to land between an ability's own ticks (Corki E), keeping the "a
+    shred never boosts the hit that applied it" rule per tick. Without
+    it a part's hits are priced in one multiply, as they always were.
+
+    ``pricing`` carries one :class:`CastPricing` per cast, from the
+    fight's stack timeline: a mid-fight bonus-AD steroid active at that
+    cast (re-pricing ``bonus_ad_ratio`` parts) and the DoT stacks on the
+    target (counting ``dot_stack_scaled`` parts). Absent, every cast is
+    priced against the fight's static stats, exactly as before.
     """
-    resists = state.resists
     target_health = state.target_health
     total = 0.0
     by_type: dict[str, float] = {}
     first_part_first_cast = 0.0
     for cast_index in range(num_casts):
+        price = pricing[cast_index] if pricing is not None else _NO_PRICING
         for part_index, part in enumerate(parts):
             if part.hp_scaled_damage is not None:
                 hp_now = max(0.0, target_health - running_damage)
@@ -1307,21 +1508,23 @@ def _evaluate_cast_parts(
                 raw = part.hp_scaled_damage(missing_ratio)
             else:
                 raw = part.amount
+            # A mid-fight bonus-AD steroid re-prices the part's declared
+            # derivative in bonus AD (Darius' Noxian Might).
+            raw += part.bonus_ad_ratio * price.bonus_attack_damage
+            hits = price.dot_stacks if part.dot_stack_scaled else part.count
             if part.crit_effectiveness > 0:
                 eff = part.crit_effectiveness
                 bonus_crit = state.crit_multiplier - BASE_CRIT_MULTIPLIER
                 raw *= (
                     1 + eff * state.crit_chance + eff * bonus_crit * state.crit_chance
                 )
-            if part.damage_type == "true":
-                mitigated = raw * part.count
-            elif part.damage_type == "physical":
-                mitigated = apply_resistance(raw, resists.effective_armor) * part.count
+            if on_hit is None:
+                mitigated = _mitigate_hits(state, part, raw, ability_mr, hits)
             else:
-                mitigated = (
-                    apply_resistance(raw, ability_mr) * state.magic_amp * part.count
-                )
-            mitigated = _apply_basic_amp(state, part, mitigated)
+                mitigated = 0.0
+                for _ in range(hits):
+                    mitigated += _mitigate_hits(state, part, raw, ability_mr, 1)
+                    ability_mr = on_hit(ability_mr)
             if cast_index == 0 and part_index == 0:
                 first_part_first_cast = mitigated
             total += mitigated
@@ -1419,6 +1622,330 @@ def _schedule_shared_casts(
     return times
 
 
+@dataclass(frozen=True)
+class CastPlan:
+    """When every ability entry casts, resolved BEFORE any damage is priced.
+
+    The rotation used to decide an ability's cast count inline, one
+    ability at a time. Stack-timeline mechanics (Case 4/5) need the whole
+    fight's cast schedule up front — a cast at t=3s must know which
+    stacks and buffs the casts before it produced — so the resolution is
+    a pass of its own.
+
+    Mode rules are unchanged: autos-only casts nothing, one-rotation
+    casts every entry once at t=0, and timed mode reads the shared cast
+    schedule (a recast rides its parent's count when the parent appears
+    earlier in the cast order). ``times`` always holds one timestamp per
+    cast, 0.0-filled for entries the scheduler never placed;
+    ``last_cast_time`` counts only genuinely scheduled casts.
+    """
+
+    counts: dict[str, int]
+    times: dict[str, tuple[float, ...]]
+    last_cast_time: float
+
+
+def _resolve_cast_plan(
+    state: FightState,
+    schedule: dict[str, list[float]],
+) -> CastPlan:
+    """Resolve every ability entry's cast count and cast times."""
+    counts: dict[str, int] = {}
+    times: dict[str, tuple[float, ...]] = {}
+    last_cast_time = 0.0
+
+    for ability_key in state.cast_order:
+        ability_info = state.ability_damages.get(ability_key)
+        if ability_info is None:
+            continue
+
+        scheduled: list[float] = []
+        if state.auto_attacks_only:
+            num_casts = 0
+        elif state.one_rotation:
+            num_casts = 1
+        else:
+            # Recasts (e.g. Q2) always match their parent ability's casts.
+            parent_key = ability_info.get("recast_of")
+            if parent_key and parent_key in counts:
+                num_casts = counts[parent_key]
+            else:
+                scheduled = schedule[ability_key]
+                # Empowered-auto abilities (Vayne Q) only deal damage
+                # through the next basic attack(s), so casts can never
+                # exceed the autos that consume them (a multi-hit empower
+                # like Cho'Gath E consumes ``hits`` autos per cast). The
+                # auto count itself is untouched: such casts are attack
+                # resets, spent in attack-cooldown dead time (the in-game
+                # reset acceleration is not modeled — conservative). With
+                # no auto stream at all (zero uptime), each cast forces
+                # its own attack(s) instead.
+                empower = ability_info.get("empowers_next_auto")
+                if empower and state.num_auto_attacks > 0:
+                    scheduled = scheduled[
+                        : state.num_auto_attacks // _empower_hits(empower)
+                    ]
+                num_casts = len(scheduled)
+                # Burns use the fight-wide last cast as their final refresh.
+                if scheduled:
+                    last_cast_time = max(last_cast_time, scheduled[-1])
+
+        counts[ability_key] = num_casts
+        times[ability_key] = tuple(scheduled) if scheduled else (0.0,) * num_casts
+
+    return CastPlan(counts=counts, times=times, last_cast_time=last_cast_time)
+
+
+@dataclass(frozen=True)
+class StackApplication:
+    """One stacking-DoT stack landing on the target."""
+
+    time: float
+    stacks_before: int  # stacks the target carried when this hit landed
+    stacks_after: int  # after this application, capped at max_stacks
+    buff_bonus_ad: float  # stack-triggered bonus AD already active
+
+
+@dataclass(frozen=True)
+class CastPricing:
+    """What the fight timeline contributes to ONE cast's damage.
+
+    ``bonus_attack_damage`` re-prices every part that declares a
+    ``bonus_ad_ratio``; ``dot_stacks`` supplies the hit count of every
+    part that declares ``dot_stack_scaled``. The all-zero default is
+    what every fight without a stack timeline uses, so parts that
+    declare neither are priced exactly as before.
+    """
+
+    bonus_attack_damage: float = 0.0
+    dot_stacks: int = 0
+
+
+_NO_PRICING = CastPricing()
+
+
+@dataclass(frozen=True)
+class StackTimeline:
+    """The fight's stacking-DoT applications and everything they gate.
+
+    ONE home for "when does a stack land". The DoT integration
+    (``_add_stacking_dot_damage``), the stack-triggered buff windows,
+    per-cast stack reads (Darius R) and per-auto buff pricing all read
+    THIS object, so they can never drift apart.
+
+    ``applications`` is sorted by time; within one instant (one-rotation
+    mode puts every cast at t=0) it keeps cast order, then autos.
+    ``buff_windows`` are merged, sorted, half-open ``[start, end)``
+    intervals of an active stack-triggered steroid.
+
+    ``starting_stacks`` is the target's stack count at t=0 — stacks put
+    on before the modeled fight. Because they were applied by pre-fight
+    hits, they carry every consequence a mid-fight application would:
+    they open the steroid window at t=0 when they meet
+    ``trigger_stacks``, they scale ``dot_stack_scaled`` parts, and they
+    tick. Seeding here is what keeps those three answers from
+    disagreeing (a target cannot hold max stacks while the champion
+    lacks the buff that reaching max stacks grants).
+    """
+
+    dot_key: str
+    spec: dict[str, Any]
+    applications: tuple[StackApplication, ...]
+    buff_windows: tuple[tuple[float, float], ...]
+    buff_bonus_ad: float
+    buff_name: str
+    starting_stacks: int
+    _by_cast: dict[tuple[str, int], int]
+    _by_auto: dict[int, int]
+
+    def _at_time(self, time: float) -> StackApplication | None:
+        """The last application strictly before *time*, if any."""
+        found = None
+        for application in self.applications:
+            if application.time >= time:
+                break
+            found = application
+        return found
+
+    def cast_pricing(self, ability_key: str, ordinal: int, time: float) -> CastPricing:
+        """Timeline-derived pricing for one cast of *ability_key*.
+
+        A cast that applies a stack is priced from its OWN slot in the
+        timeline: it reads the stacks it found on arrival, and the cast
+        that lands the trigger stack is not buffed by the window its own
+        damage opens. Any other cast is priced from the fight clock.
+        """
+        index = self._by_cast.get((ability_key, ordinal))
+        if index is not None:
+            application = self.applications[index]
+            return CastPricing(application.buff_bonus_ad, application.stacks_before)
+        return CastPricing(self.bonus_ad_at(time), self.stacks_at(time))
+
+    def auto_bonus_ad(self, auto_index: int, time: float) -> float:
+        """Stack-triggered bonus AD active on auto attack *auto_index*."""
+        index = self._by_auto.get(auto_index)
+        if index is not None:
+            return self.applications[index].buff_bonus_ad
+        return self.bonus_ad_at(time)
+
+    def bonus_ad_at(self, time: float) -> float:
+        """Stack-triggered bonus AD active at *time*."""
+        for start, end in self.buff_windows:
+            if start <= time < end:
+                return self.buff_bonus_ad
+        return 0.0
+
+    def stacks_at(self, time: float) -> int:
+        """Stacks on the target at *time*, before anything landing there."""
+        duration = float(self.spec["duration"])
+        previous = self._at_time(time)
+        if previous is None:
+            # Pre-fight stacks, applied at t=0 and expiring like any
+            # other application.
+            return self.starting_stacks if time < duration else 0
+        if time - previous.time >= duration:
+            return 0
+        return previous.stacks_after
+
+
+def _find_stacking_dot(state: FightState) -> tuple[str, dict[str, Any]] | None:
+    """The entry declaring the fight's stacking DoT — one per champion."""
+    return next(
+        (
+            (key, info["stacking_dot"])
+            for key, info in state.ability_damages.items()
+            if "stacking_dot" in info
+        ),
+        None,
+    )
+
+
+def _stack_application_times(
+    state: FightState,
+    plan: CastPlan,
+    spec: dict[str, Any],
+) -> list[tuple[float, tuple[str, int] | None, int | None]]:
+    """Every stack application as ``(time, cast slot, auto index)``.
+
+    Ability applications land at their cast times (all t=0 in
+    one-rotation mode); an ``empowers_next_auto`` applier's swing IS one
+    of the fight's autos, so its stack rides the auto timeline whenever
+    one exists. Sorting is stable, so casts keep cast order within one
+    instant and autos follow them.
+    """
+    applications: list[tuple[float, tuple[str, int] | None, int | None]] = []
+    for ability_key in state.cast_order:
+        info = state.ability_damages.get(ability_key)
+        if info is None or not info.get("applies_dot_stack"):
+            continue
+        if info.get("empowers_next_auto") and state.num_auto_attacks > 0:
+            continue
+        for ordinal, cast_time in enumerate(plan.times[ability_key]):
+            applications.append((cast_time, (ability_key, ordinal), None))
+
+    if spec.get("applied_by_autos", True) and state.num_auto_attacks > 0:
+        autos_per_second = state.attack_speed * state.auto_attack_uptime
+        if autos_per_second > 0:
+            for index in range(state.num_auto_attacks):
+                applications.append((index / autos_per_second, None, index))
+
+    applications.sort(key=lambda application: application[0])
+    return applications
+
+
+def _build_stack_timeline(state: FightState, plan: CastPlan) -> StackTimeline | None:
+    """Walk the fight's stack applications once, deriving everything.
+
+    Stack rules (shared by every consumer): each application adds a
+    stack up to ``max_stacks`` and refreshes the shared window; a gap of
+    ``duration`` or more expires the chain. An application that lands ON
+    ``trigger_stacks`` opens or refreshes the stack-triggered steroid
+    (Darius' Noxian Might) — including a reapplication at max stacks, so
+    holding the target at max holds the buff. Returns None when the
+    champion declares no stacking DoT.
+
+    A ``starting_stacks`` spec seeds the target's pre-fight stacks. They
+    were put on by pre-fight hits, so if they already meet
+    ``trigger_stacks`` the fight opens with the steroid running — the
+    t=0 casts are buffed by a window they did not open themselves.
+    """
+    found = _find_stacking_dot(state)
+    buff = next(
+        (
+            info["stack_triggered_buff"]
+            for info in state.ability_damages.values()
+            if "stack_triggered_buff" in info
+        ),
+        None,
+    )
+    if found is None:
+        if buff is not None:
+            # The buff is triggered BY stacks; with no stacking DoT to
+            # count them it could never fire, and would silently grant
+            # nothing rather than failing loudly.
+            raise ValueError(
+                f"stack_triggered_buff {buff.get('name', '?')!r} declared "
+                "without a stacking_dot to trigger it — the buff has no "
+                "stack source"
+            )
+        return None
+    dot_key, spec = found
+
+    duration = float(spec["duration"])
+    max_stacks = int(spec["max_stacks"])
+    trigger_stacks = int(buff["trigger_stacks"]) if buff else 0
+    buff_duration = float(buff["duration"]) if buff else 0.0
+    buff_bonus_ad = float(buff["bonus_attack_damage"]) if buff else 0.0
+
+    starting_stacks = min(int(spec.get("starting_stacks", 0)), max_stacks)
+
+    applications: list[StackApplication] = []
+    by_cast: dict[tuple[str, int], int] = {}
+    by_auto: dict[int, int] = {}
+    windows: list[list[float]] = []
+    stacks = starting_stacks
+    previous_time = 0.0
+    buff_until = 0.0  # never active before the first trigger (times >= 0)
+    if buff is not None and starting_stacks > 0 and starting_stacks >= trigger_stacks:
+        # Pre-fight hits reached the trigger, so the window is already
+        # running when the fight opens.
+        buff_until = buff_duration
+        windows.append([0.0, buff_until])
+
+    for time, cast_slot, auto_index in _stack_application_times(state, plan, spec):
+        if stacks > 0 and time - previous_time >= duration:
+            stacks = 0
+        stacks_before = stacks
+        # The application that opens a window is not itself buffed: the
+        # steroid is triggered BY the damage this hit deals.
+        active_ad = buff_bonus_ad if time < buff_until else 0.0
+        stacks = min(stacks + 1, max_stacks)
+        if cast_slot is not None:
+            by_cast[cast_slot] = len(applications)
+        if auto_index is not None:
+            by_auto[auto_index] = len(applications)
+        applications.append(StackApplication(time, stacks_before, stacks, active_ad))
+        if buff is not None and stacks >= trigger_stacks:
+            buff_until = time + buff_duration
+            if windows and time <= windows[-1][1]:
+                windows[-1][1] = buff_until
+            else:
+                windows.append([time, buff_until])
+        previous_time = time
+
+    return StackTimeline(
+        dot_key=dot_key,
+        spec=spec,
+        applications=tuple(applications),
+        buff_windows=tuple((start, end) for start, end in windows),
+        buff_bonus_ad=buff_bonus_ad,
+        buff_name=str(buff["name"]) if buff else "",
+        starting_stacks=starting_stacks,
+        _by_cast=by_cast,
+        _by_auto=by_auto,
+    )
+
+
 def _compute_ability_rotation(state: FightState) -> RotationResult:
     """Cast the ability rotation and accumulate mitigated ability damage.
 
@@ -1441,7 +1968,6 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     breakdown = state.breakdown
     ability_damages = state.ability_damages
     target_health = state.target_health
-    magic_amp = state.magic_amp
 
     result = RotationResult()
     vile_decay_stacks = 0  # Bloodletter's Curse MR reduction stacks
@@ -1474,63 +2000,30 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         _schedule_shared_casts(state, result, basic_ability_haste) if timed_mode else {}
     )
 
-    recast_counts: dict[str, int] = {}  # Track casts for recast pairing
+    # Resolve WHEN everything casts before pricing anything: the stack
+    # timeline (Case 4/5) must exist before the first cast is priced, and
+    # both it and the DoT integration afterwards read this one plan.
+    plan = _resolve_cast_plan(state, schedule)
+    result.last_cast_time = plan.last_cast_time
+    state.stack_timeline = _build_stack_timeline(state, plan)
+    timeline = state.stack_timeline
 
     for ability_key in state.cast_order:
         if ability_key not in ability_damages:
             continue
         ability_info = ability_damages[ability_key]
 
-        scheduled_casts: list[float] = []  # this entry's cast start times
-        if state.auto_attacks_only:
-            num_casts = 0
-        elif state.one_rotation:
-            num_casts = 1
-        else:
-            # Recasts (e.g. Q2) always match their parent ability's casts
-            parent_key = ability_info.get("recast_of")
-            if parent_key and parent_key in recast_counts:
-                num_casts = recast_counts[parent_key]
-            else:
-                scheduled_casts = schedule[ability_key]
-                # Empowered-auto abilities (Vayne Q) only deal damage
-                # through the next basic attack(s), so casts can never
-                # exceed the autos that consume them (a multi-hit
-                # empower like Cho'Gath E consumes ``hits`` autos per
-                # cast). The auto count itself is untouched: such casts
-                # are attack resets, spent in attack-cooldown dead time
-                # (the in-game reset acceleration is not modeled —
-                # conservative). With no auto stream at all (zero
-                # uptime), each cast forces its own attack(s) instead —
-                # the swings are appended below.
-                empower = ability_info.get("empowers_next_auto")
-                if empower and state.num_auto_attacks > 0:
-                    max_casts = state.num_auto_attacks // _empower_hits(empower)
-                    scheduled_casts = scheduled_casts[:max_casts]
-                num_casts = len(scheduled_casts)
-                # Burns use the fight-wide last cast as their final refresh.
-                if scheduled_casts:
-                    result.last_cast_time = max(
-                        result.last_cast_time, scheduled_casts[-1]
-                    )
-
-        recast_counts[ability_key] = num_casts
-
-        # Hit-timeline stacking DoT stacks (Case 4): record when this
-        # entry's applications land — at the scheduled cast times (all
-        # at t=0 in one-rotation mode). An empowers_next_auto cast rides
-        # the auto stream when one exists: that swing is one of the
-        # fight's autos, whose timeline already counts its stack.
-        if ability_info.get("applies_dot_stack") and num_casts > 0:
-            rides_auto_stream = (
-                ability_info.get("empowers_next_auto") and state.num_auto_attacks > 0
+        num_casts = plan.counts[ability_key]
+        # Per-cast timeline pricing: a mid-fight bonus-AD steroid active
+        # at that cast, and the DoT stacks on the target when it lands.
+        pricing = (
+            tuple(
+                timeline.cast_pricing(ability_key, ordinal, cast_time)
+                for ordinal, cast_time in enumerate(plan.times[ability_key])
             )
-            if not rides_auto_stream:
-                result.dot_application_times.extend(
-                    scheduled_casts
-                    if scheduled_casts
-                    else (0.0 for _ in range(num_casts))
-                )
+            if timeline is not None
+            else None
+        )
 
         # Malignance MR reduction activates when R is cast
         if ability_key == "R":
@@ -1547,29 +2040,16 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         )
         damage_type = ability_info["damage_type"]
 
-        # Determine base MR for this ability: pre-ult or post-ult
-        current_base_mr = resists.reduced_mr if ult_cast else resists.base_mr
-
         # Bloodletter's Curse: magic damage abilities apply a Vile Decay
         # stack. The ability's own damage benefits from its stack.
+        ability_stacks = 0
         if resists.mr_reduction_effect and damage_type in ("magic", "mixed"):
             vile_decay_stacks = min(
                 vile_decay_stacks + 1,
                 resists.mr_reduction_effect.max_stacks,
             )
-            mr_reduced = current_base_mr * (
-                1 - resists.mr_reduction_effect.reduction_per_stack * vile_decay_stacks
-            )
-            mr_reduced = max(mr_reduced, 0)
-            ability_mr = apply_magic_penetration(
-                mr_reduced, resists.magic_pen_flat, resists.ability_magic_pen_percent
-            )
-        else:
-            ability_mr = (
-                resists.effective_mr_post_ult
-                if ult_cast
-                else resists.effective_mr_pre_ult
-            )
+            ability_stacks = vile_decay_stacks
+        ability_mr = _ability_mr(resists, ult_cast, ability_stacks)
 
         # All damage arithmetic is typed DamageParts — champion-specific
         # scaling lives in the champion module's closures, never here.
@@ -1597,14 +2077,22 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                     count=hits,
                     crit_effectiveness=1.0,
                     basic_damage=True,
+                    # A basic attack is 100% total AD, so a mid-fight
+                    # bonus-AD steroid raises the forced swing 1:1.
+                    bonus_ad_ratio=1.0,
                 )
                 parts = parts + (swing,)
+        # A ramped shred (Corki E) stacks up across this ability's own
+        # hits; an unramped one lands in full after it (below).
+        shred_ramp = _make_shred_ramp(resists, ability_info, ult_cast, ability_stacks)
         ability_total, first_part_damage, ability_by_type = _evaluate_cast_parts(
             state,
             parts,
             num_casts,
             ability_mr,
             mitigated_damage_dealt,
+            on_hit=shred_ramp.stage if shred_ramp is not None else None,
+            pricing=pricing,
         )
 
         # Apply ability-specific damage amplifiers (e.g., Actualizer)
@@ -1698,25 +2186,26 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
 
         # Apply target debuffs (e.g. Kog'Maw Q resistance shred) AFTER
         # computing this ability's own damage, so subsequent abilities
-        # benefit from the shred but the source ability does not.
+        # benefit from the shred but the source ability does not. An
+        # ability that never gets cast (autos-only mode) shreds nothing.
+        # A ramped debuff already staged itself across the ability's own
+        # hits; only its unfired remainder lands here.
         target_debuff = ability_info.get("target_debuff")
-        if target_debuff:
-            armor_reduction_pct = target_debuff.get("armor_reduction_percent", 0.0)
-            if armor_reduction_pct > 0:
-                resists.shred_armor(armor_reduction_pct)
-
-            mr_reduction_pct = target_debuff.get("mr_reduction_percent", 0.0)
-            if mr_reduction_pct > 0:
-                resists.shred_mr(mr_reduction_pct)
+        if target_debuff and num_casts > 0:
+            if shred_ramp is not None:
+                shred_ramp.apply_remainder()
+            else:
+                _apply_target_shred(resists, target_debuff)
 
     # Update effective MR for non-ability damage using final Vile Decay stacks.
     # Non-ability damage occurs during/after the full rotation, so use
     # post-ult MR (Malignance reduction active).
     if resists.mr_reduction_effect and vile_decay_stacks > 0:
-        mr_with_stacks = resists.reduced_mr * (
-            1 - resists.mr_reduction_effect.reduction_per_stack * vile_decay_stacks
+        mr_with_stacks = reduce_resistance(
+            resists.reduced_mr,
+            resists.mr_reduction_effect.reduction_per_stack * vile_decay_stacks * 100.0,
         )
-        mr_with_stacks = max(mr_with_stacks, 0)
+        mr_with_stacks = max(mr_with_stacks, min(0.0, resists.reduced_mr))
         resists.effective_mr = apply_magic_penetration(
             mr_with_stacks, resists.magic_pen_flat, resists.auto_magic_pen_percent
         )
@@ -1772,73 +2261,95 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
             "total_damage": proc_total,
             "damage_type": dtype,
         }
-        # Champion-minted display text (e.g. Braum P's cycle summary)
-        # rides the entry onto its breakdown row, as in the rotation.
-        if "detail" in info:
-            state.breakdown[key]["detail"] = info["detail"]
+        # Champion-minted display text (e.g. Braum P's cycle summary) and
+        # count label (e.g. Diana's "cleaves") ride the entry onto its
+        # breakdown row, as in the rotation.
+        for display_key in ("detail", "unit"):
+            if display_key in info:
+                state.breakdown[key][display_key] = info[display_key]
         state.total_damage += proc_total
 
 
-def _add_stacking_dot_damage(state: FightState, rotation: RotationResult) -> None:
+def _add_stacking_dot_damage(state: FightState) -> None:
     """Add hit-timeline stacking DoT damage (Case 4, e.g. Briar's bleed).
 
-    Builds the fight's hit timeline — the rotation's recorded stack
-    applications plus autos at attack-speed intervals — and integrates
-    the DoT's tick rate at the running stack count. Every application
-    refreshes the shared duration (in-game: reapplying refreshes the
-    whole bleed); a gap longer than ``duration`` expires the chain.
-    Committed accounting: the final ``duration`` of ticks after the last
-    hit counts in full, even past the fight cutoff. The DoT cannot crit
-    and triggers nothing; it is mitigated once as its declared type.
+    Integrates the DoT's tick rate at the running stack count over the
+    fight's :class:`StackTimeline` — the SAME applications the rotation
+    priced its casts against. Every application refreshes the shared
+    duration (in-game: reapplying refreshes the whole bleed); a gap
+    longer than ``duration`` expires the chain. Committed accounting:
+    the final ``duration`` of ticks after the last hit counts in full,
+    even past the fight cutoff. A stack-triggered bonus-AD window
+    (Case 5) raises the tick rate for exactly the part of each gap that
+    falls inside it, so a window opening mid-gap splits that gap. The
+    DoT cannot crit and triggers nothing; it is mitigated once as its
+    declared type.
     """
-    dot_key, spec = next(
-        (
-            (key, info["stacking_dot"])
-            for key, info in state.ability_damages.items()
-            if "stacking_dot" in info
-        ),
-        (None, None),
-    )
-    if spec is None:
+    timeline = state.stack_timeline
+    if timeline is None:
         return
-
-    hit_times = list(rotation.dot_application_times)
-    if spec.get("applied_by_autos", True) and state.num_auto_attacks > 0:
-        autos_per_second = state.attack_speed * state.auto_attack_uptime
-        if autos_per_second > 0:
-            hit_times.extend(
-                i / autos_per_second for i in range(state.num_auto_attacks)
-            )
-    if not hit_times:
+    # Pre-fight stacks tick on their own, so a fight that lands no
+    # applications still bleeds when the target arrives stacked.
+    if not timeline.applications and timeline.starting_stacks <= 0:
         return
-    hit_times.sort()
+    dot_key, spec = timeline.dot_key, timeline.spec
 
     duration = float(spec["duration"])
-    max_stacks = int(spec["max_stacks"])
     extra_effectiveness = float(spec["extra_stack_effectiveness"])
     single_stack_dps = float(spec["single_stack_raw"]) / duration
+    # A mid-fight bonus-AD steroid raises every stack's rate by the
+    # DoT's own declared derivative in bonus AD (Darius' bleed: 30% of
+    # bonus AD per stack).
+    buffed_bonus_dps = (
+        float(spec.get("single_stack_bonus_ad_ratio", 0.0))
+        * timeline.buff_bonus_ad
+        / duration
+    )
 
-    def tick_rate(stacks: int) -> float:
-        """Raw DPS at a stack count; extra stacks tick at reduced rate."""
-        return single_stack_dps * (1.0 + extra_effectiveness * (stacks - 1))
+    def tick_rate(stacks: int, buffed: bool) -> float:
+        """Raw DPS at a stack count; extra stacks may tick reduced."""
+        single = single_stack_dps + (buffed_bonus_dps if buffed else 0.0)
+        return single * (1.0 + extra_effectiveness * (stacks - 1))
+
+    def integrate(start: float, end: float, stacks: int) -> float:
+        """Raw damage ticked over [start, end), split at buff windows."""
+        total_raw = 0.0
+        cursor = start
+        for window_start, window_end in timeline.buff_windows:
+            if window_end <= cursor:
+                continue
+            if window_start >= end:
+                break
+            if window_start > cursor:
+                total_raw += tick_rate(stacks, False) * (window_start - cursor)
+                cursor = window_start
+            segment_end = min(window_end, end)
+            total_raw += tick_rate(stacks, True) * (segment_end - cursor)
+            cursor = segment_end
+        if cursor < end:
+            total_raw += tick_rate(stacks, False) * (end - cursor)
+        return total_raw
 
     raw_total = 0.0
-    stacks = 0
+    stacks = timeline.starting_stacks
     previous_hit = 0.0
-    for hit_time in hit_times:
+    for application in timeline.applications:
         if stacks > 0:
-            gap = hit_time - previous_hit
-            raw_total += tick_rate(stacks) * min(gap, duration)
-            if gap >= duration:
-                stacks = 0  # chain expired before this hit
-        stacks = min(stacks + 1, max_stacks)
-        previous_hit = hit_time
+            # Ticks stop ``duration`` after the last application even if
+            # the next one comes later (the chain expired meanwhile).
+            raw_total += integrate(
+                previous_hit, min(application.time, previous_hit + duration), stacks
+            )
+        stacks = application.stacks_after
+        previous_hit = application.time
     # Committed tail: the last application's full window of ticks.
-    raw_total += tick_rate(stacks) * duration
+    raw_total += integrate(previous_hit, previous_hit + duration, stacks)
 
     damage_type = spec.get("damage_type", "physical")
     total = _mitigate(raw_total, damage_type, state.resists, state.magic_amp)
-    applications = len(hit_times)
+    # A seeded-only fight lands no applications; the pre-fight stacks are
+    # what the row is reporting, so they are its count.
+    applications = len(timeline.applications) or timeline.starting_stacks
     state.breakdown[f"stacking_dot_{dot_key}"] = {
         "name": spec["name"],
         "count": applications,
@@ -1895,6 +2406,27 @@ def _find_auto_attack_override(
     return None
 
 
+def _basic_attack_true_rider(
+    ability_damages: dict[str, dict[str, Any]],
+) -> tuple[float, str]:
+    """A champion's bonus-true-damage share of every basic attack.
+
+    Corki's Hextech Munitions: each attack deals 20% of its own
+    PRE-MITIGATION damage again as true damage. Declared as
+    ``basic_attack_true_ratio`` on the ability entry; riding the raw
+    damage is what makes the true instance crit-multiplied, exactly as
+    the wiki describes ("affected by critical strike modifiers").
+
+    Returns ``(ratio, display_name)``; ratio 0.0 when no entry declares
+    it. The name comes from the declaring entry — no second key.
+    """
+    for info in ability_damages.values():
+        ratio = info.get("basic_attack_true_ratio", 0.0)
+        if ratio > 0:
+            return ratio, info.get("name", "Passive")
+    return 0.0, ""
+
+
 def _on_hit_effectiveness(state: FightState) -> float:
     """Item-effect effectiveness on the auto stream (default 1.0).
 
@@ -1908,6 +2440,33 @@ def _on_hit_effectiveness(state: FightState) -> float:
     """
     override = _find_auto_attack_override(state.ability_damages)
     return override.get("on_hit_effectiveness", 1.0) if override else 1.0
+
+
+def _auto_swing_bonus_ad(
+    state: FightState,
+    damage_ratio: float,
+) -> Callable[[int], float]:
+    """Per-auto bonus AD from a stack-triggered steroid (Case 5).
+
+    A mid-fight buff (Darius' Noxian Might) covers only part of the
+    fight, so an auto is priced at the AD its own timestamp saw — read
+    from the fight's shared :class:`StackTimeline`, which already knows
+    which auto opened the window (and so is not itself buffed).
+    ``damage_ratio`` mirrors the flat basic-attack modifier the caller
+    already applied to the base AD (Bel'Veth's 75%). Returns a function
+    of the auto index that is constantly 0.0 whenever no such buff
+    exists — every other champion's swings are untouched.
+    """
+    timeline = state.stack_timeline
+    if timeline is None or not timeline.buff_windows:
+        return lambda auto_index: 0.0
+    autos_per_second = state.attack_speed * state.auto_attack_uptime
+
+    def bonus_ad(auto_index: int) -> float:
+        time = auto_index / autos_per_second if autos_per_second > 0 else 0.0
+        return timeline.auto_bonus_ad(auto_index, time) * damage_ratio
+
+    return bonus_ad
 
 
 def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
@@ -1950,6 +2509,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     # Simulate each auto attack individually, rolling for crits
     auto_physical_total = 0.0
     fiendhunter_true_total = 0.0
+    passive_true_total = 0.0  # champion rider (Corki P), % of the raw swing
     num_crits = 0
     crit_damage_per_hit = 0.0
     non_crit_damage_per_hit = 0.0
@@ -1978,6 +2538,10 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     override_crit_as_bonus = False
     override_replace_raw: float | None = None
     override_damage_type = "physical"
+    damage_ratio = 1.0
+    passive_true_ratio, passive_true_name = _basic_attack_true_rider(
+        state.ability_damages
+    )
     if auto_attack_override:
         override_ad_ratio = auto_attack_override.get("ad_ratio", 1.0)
         override_crit_as_bonus = auto_attack_override.get("crit_as_bonus", False)
@@ -1986,9 +2550,17 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         # Flat modifier on ALL basic-attack damage (Bel'Veth passive:
         # 75%): scaling the AD every auto branch reads covers normal,
         # crit, empowered, forced-crit, and double-shot attacks alike.
-        attack_damage *= auto_attack_override.get("damage_ratio", 1.0)
+        damage_ratio = auto_attack_override.get("damage_ratio", 1.0)
+        attack_damage *= damage_ratio
+
+    # A stack-triggered bonus-AD steroid (Darius' Noxian Might) only
+    # covers part of the fight, so each swing is priced at the AD its own
+    # timestamp saw. Without such a buff every swing_ad below is exactly
+    # ``attack_damage``, as it always was.
+    swing_bonus_ad = _auto_swing_bonus_ad(state, damage_ratio)
 
     for i in range(num_auto_attacks):
+        swing_ad = attack_damage + swing_bonus_ad(i)
         if override_replace_raw is not None:
             # Full auto replacement (Azir W): flat raw per attack, the
             # override's damage type, cannot crit — crit items, the
@@ -2021,54 +2593,58 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             # With IE:    AD * ratio * (1 + crit_chance * 1.30)
             bonus_crit_ratio = crit_multiplier - 1.0
             raw_phys = (
-                attack_damage * override_ad_ratio * (1 + crit_chance * bonus_crit_ratio)
+                swing_ad * override_ad_ratio * (1 + crit_chance * bonus_crit_ratio)
             )
             raw_true = 0.0
         elif is_empowered:
             if deterministic:
                 # Expected-value for empowered autos
-                raw_phys_crit = attack_damage * crit_multiplier
+                raw_phys_crit = swing_ad * crit_multiplier
                 raw_true_crit = raw_phys_crit * fh_true_ratio
-                raw_phys_no = attack_damage * crit_multiplier * fh_reduced_crit
+                raw_phys_no = swing_ad * crit_multiplier * fh_reduced_crit
                 raw_phys = crit_chance * raw_phys_crit + (1 - crit_chance) * raw_phys_no
                 raw_true = crit_chance * raw_true_crit
             elif natural_crit:
                 # Full crit + bonus true damage
-                raw_phys = attack_damage * crit_multiplier
+                raw_phys = swing_ad * crit_multiplier
                 raw_true = raw_phys * fh_true_ratio
             else:
                 # Reduced crit (80% of normal crit damage)
-                raw_phys = attack_damage * crit_multiplier * fh_reduced_crit
+                raw_phys = swing_ad * crit_multiplier * fh_reduced_crit
                 raw_true = 0.0
             fiendhunter_true_total += raw_true
         elif is_sundered:
             # Sundered Sky: forced crit at reduced ratio, overrides natural crit
-            raw_phys = attack_damage * crit_multiplier * ss_reduced_crit
+            raw_phys = swing_ad * crit_multiplier * ss_reduced_crit
             # Calculate what the auto would have dealt without Sundered Sky
             if deterministic:
-                normal_raw = attack_damage * (
+                normal_raw = swing_ad * (
                     crit_chance * crit_multiplier + (1 - crit_chance)
                 )
             elif natural_crit:
-                normal_raw = attack_damage * crit_multiplier
+                normal_raw = swing_ad * crit_multiplier
             else:
-                normal_raw = attack_damage
+                normal_raw = swing_ad
             sundered_sky_damage_diff = raw_phys - normal_raw
             raw_true = 0.0
         else:
             if deterministic:
                 # Expected-value: blend crit and non-crit damage
-                raw_phys = attack_damage * (
+                raw_phys = swing_ad * (
                     crit_chance * crit_multiplier + (1 - crit_chance)
                 )
             elif natural_crit:
-                raw_phys = attack_damage * crit_multiplier
+                raw_phys = swing_ad * crit_multiplier
             else:
-                raw_phys = attack_damage
+                raw_phys = swing_ad
             raw_true = 0.0
 
         mitigated = apply_resistance(raw_phys, effective_armor)
         auto_physical_total += mitigated
+        # Champion rider: a share of this swing's PRE-mitigation damage
+        # again as true damage (Corki P). Riding raw_phys carries the
+        # attack's crit multiplier, exactly as the wiki describes.
+        passive_true_total += raw_phys * passive_true_ratio
 
         # Track per-hit damage for crits vs non-crits (last value wins;
         # all crits deal the same and all non-crits deal the same)
@@ -2082,6 +2658,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     # Apply basic damage amplification (e.g. Hexoptics C44 Magnification)
     auto_physical_total *= basic_amp
     fiendhunter_true_total *= basic_amp
+    # Corki's true instance is basic damage in-game, like the physical one.
+    passive_true_total *= basic_amp
     crit_damage_per_hit *= basic_amp
     non_crit_damage_per_hit *= basic_amp
 
@@ -2147,12 +2725,23 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             "damage_type": "true",
         }
 
+    if passive_true_total > 0:
+        breakdown["auto_attacks_true_damage"] = {
+            "name": f"{passive_true_name} (true damage)",
+            "count": num_auto_attacks,
+            "damage_per_hit": passive_true_total / num_auto_attacks,
+            "total_damage": passive_true_total,
+            "damage_type": "true",
+        }
+
     # Add basic damage amp breakdown entry (informational — already applied)
     if basic_amp > 1.0:
         amp_effect = state.damage_effects.basic_amp
         amp_name = amp_effect.item_name if amp_effect is not None else "Basic Damage"
         basic_amp_bonus = (
-            (auto_total + fiendhunter_true_total) * (basic_amp - 1.0) / basic_amp
+            (auto_total + fiendhunter_true_total + passive_true_total)
+            * (basic_amp - 1.0)
+            / basic_amp
         ) + state.basic_amp_ability_bonus
         breakdown[f"basic_amp_{amp_name}"] = {
             "name": f"Damage Amplification ({amp_name})",
@@ -2191,7 +2780,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             "damage_type": "physical",
         }
 
-    state.total_damage += auto_total + fiendhunter_true_total + double_shot_total
+    state.total_damage += (
+        auto_total + fiendhunter_true_total + passive_true_total + double_shot_total
+    )
 
     return AutoAttackResult(
         auto_damage_per_hit=auto_damage_per_hit,
@@ -2540,6 +3131,42 @@ class SpellbladeResult:
     expose_weakness_ranged: float = 0.0
 
 
+def _add_spellblade_true_rider(
+    state: FightState,
+    source: item_effects.DamageSource,
+    raw_per_proc: float,
+    procs: int,
+) -> None:
+    """Add a champion's true-damage rider on spellblade procs (Corki P).
+
+    The wiki special-cases spellblade effects into Hextech Munitions:
+    each proc deals ``spellblade_bonus_true_ratio`` of its own
+    PRE-mitigation damage again as true damage. This is ADDED ON TOP of
+    the proc; its sibling ``spellblade_true_ratio`` (Camille Q2) instead
+    CONVERTS that share of the proc out of the item's own damage type.
+    """
+    ratio = max(
+        (
+            info.get("spellblade_bonus_true_ratio", 0.0)
+            for info in state.ability_damages.values()
+        ),
+        default=0.0,
+    )
+    if ratio <= 0 or procs <= 0:
+        return
+
+    rider_total = raw_per_proc * ratio * procs
+    state.breakdown[f"{source.breakdown_key}_bonus_true"] = {
+        "name": f"{source.display_name} (bonus true damage)",
+        "count": procs,
+        "damage_per_hit": rider_total / procs,
+        "unit": "procs",
+        "total_damage": rider_total,
+        "damage_type": "true",
+    }
+    state.total_damage += rider_total
+
+
 def _add_spellblade_damage(
     state: FightState,
     rotation: RotationResult,
@@ -2630,6 +3257,7 @@ def _add_spellblade_damage(
                 **_damage_type_fields(converted_by_type),
             }
         state.total_damage += sb_total
+        _add_spellblade_true_rider(state, source, raw_sb, result.procs)
 
     # ── Double on-hit from spellblade (Dusk and Dawn) ──
     if effect is not None and result.procs > 0:
@@ -3209,9 +3837,20 @@ def _collect_fight_notes(
     rotation: RotationResult,
     on_hits: OnHitResult,
 ) -> None:
-    """Collect the notes documenting conditional item assumptions."""
+    """Collect the notes documenting conditional item and timeline assumptions."""
     notes = state.notes
     notes.extend(state.damage_effects.conditional_notes)
+
+    timeline = state.stack_timeline
+    if timeline is not None and timeline.buff_windows:
+        uptime = sum(end - start for start, end in timeline.buff_windows)
+        notes.append(
+            f"{timeline.buff_name}: {len(timeline.buff_windows)} window(s) "
+            f"from the stack timeline — +{timeline.buff_bonus_ad:.0f} bonus AD, "
+            f"first at {timeline.buff_windows[0][0]:.2f}s, {uptime:.2f}s "
+            f"committed (a window runs its full duration past the fight's "
+            f"end, like the DoT it rides)."
+        )
 
     if (
         rotation.has_navori
@@ -3234,6 +3873,65 @@ def _collect_fight_notes(
             f"all on-hit effects apply an additional time on autos "
             f"#{', #'.join(str(a + 1) for a in sorted(on_hits.phantom_hit_autos))}."
         )
+
+
+def _reattribute_empowered_swings(state: FightState) -> None:
+    """Show an empowered auto's swing on the ability that forced it.
+
+    An ``empowers_next_auto`` ability (Mundo E, Camille Q, Darius W,
+    Cho'Gath E) consumes a basic attack, so in-game the player sees ONE
+    hit worth ``attack + bonus``. With no auto stream the ability row
+    already carries that swing (``_compute_ability_rotation``); with a
+    stream it was left in the auto row, so the same ability read as
+    bonus-only in timed fights and attack+bonus in one-rotation — two
+    meanings for one row. Moving the consumed swings here reconciles the
+    modes.
+
+    Damage only moves BETWEEN rows: the fight total is untouched, and so
+    is every on-hit row, which the empowered attack genuinely still
+    triggers. The swing is priced at the auto row's blended per-hit
+    average, so the remaining autos keep their per-hit damage and the
+    crit split is rescaled to stay consistent with the new count.
+    """
+    auto_row = state.breakdown.get("auto_attacks")
+    if not auto_row:
+        return
+    original_count = auto_row.get("count", 0)
+    per_hit = auto_row.get("damage_per_hit", 0.0)
+    if original_count <= 0 or per_hit <= 0:
+        return
+
+    remaining = original_count
+    for ability_key in state.cast_order:
+        info = state.ability_damages.get(ability_key)
+        row = state.breakdown.get(ability_key)
+        if info is None or row is None:
+            continue
+        empower = info.get("empowers_next_auto")
+        if not empower:
+            continue
+        swings = min(row.get("casts", 0) * _empower_hits(empower), remaining)
+        if swings <= 0:
+            continue
+
+        row["total_damage"] += swings * per_hit
+        auto_row["total_damage"] -= swings * per_hit
+        remaining -= swings
+        # ``detail`` always wins over the UI's derived "N casts" text, so
+        # spell out that the row now includes the attack it consumed.
+        casts = row.get("casts", 0)
+        base = row.get("detail") or f"{casts} cast{'' if casts == 1 else 's'}"
+        row["detail"] = f"{base}, incl. basic attack"
+
+    if remaining == original_count:
+        return
+
+    auto_row["count"] = remaining
+    if auto_row.get("num_crits") is not None:
+        # Rescale the crit split so num_crits + num_non_crits == count.
+        crits = round(auto_row["num_crits"] * remaining / original_count)
+        auto_row["num_crits"] = crits
+        auto_row["num_non_crits"] = remaining - crits
 
 
 def calculate_fight_damage(
@@ -3269,7 +3967,7 @@ def calculate_fight_damage(
     # ── Ability rotation, precomputed procs, DoTs, and Shaped Charge ────
     rotation = _compute_ability_rotation(state)
     _add_precomputed_proc_damage(state)
-    _add_stacking_dot_damage(state, rotation)
+    _add_stacking_dot_damage(state)
     _add_shaped_charge_damage(state)
 
     # ── Auto attacks (per-auto crit simulation) ─────────────────────────
@@ -3297,6 +3995,9 @@ def calculate_fight_damage(
 
     # ── Fight-wide damage amplifiers ────────────────────────────────────
     _apply_damage_amplifiers(state, rotation)
+
+    # ── Empowered-auto swings shown on the ability that forced them ─────
+    _reattribute_empowered_swings(state)
 
     # ── Execute threshold display (The Collector) ───────────────────────
     _add_execute_display(state)
@@ -3329,8 +4030,10 @@ def split_auto_vs_ability(
       zero or already counted in other rows (the engine marks its amp
       summaries, the execute-threshold row, and the Sundered Sky row
       this way) — so they are skipped.
-    - ``auto_attacks``, ``fiendhunter_true_damage``, and keys prefixed
-      ``on_hit_`` or ``spellblade_`` count as auto-attack damage.
+    - keys prefixed ``auto_attacks`` (the stream itself plus champion
+      riders on it, e.g. Corki's true-damage instance),
+      ``fiendhunter_true_damage``, ``on_hit_``, or ``spellblade_`` count
+      as auto-attack damage.
     - ``damage_amp_<source>`` rows amplify both buckets, so their damage
       is redistributed proportionally to the pre-amp auto/ability ratio
       (dropped entirely if that total is zero).
@@ -3347,7 +4050,7 @@ def split_auto_vs_ability(
         if entry.get("informational"):
             continue
         if (
-            key == "auto_attacks"
+            key.startswith("auto_attacks")
             or key == "fiendhunter_true_damage"
             or key.startswith(on_hit_prefixes)
         ):

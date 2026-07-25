@@ -37,6 +37,12 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "W", "Q", "W", "Q", "R", "Q",
         "Q", "E", "E", "R", "E", "E",
     ],
+    # ── Q max first, then E, then W ──
+    "Dr. Mundo": [
+        "Q", "W", "E", "Q", "Q", "R",
+        "Q", "E", "Q", "E", "R", "E",
+        "E", "W", "W", "R", "W", "W",
+    ],
     # ── E max second ──
     "Anivia": [
         "Q", "E", "W", "Q", "Q", "R",
@@ -54,6 +60,11 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "E", "W", "W", "R", "W", "W",
     ],
     "Camille": [
+        "Q", "E", "W", "Q", "Q", "R",
+        "Q", "E", "Q", "E", "R", "E",
+        "E", "W", "W", "R", "W", "W",
+    ],
+    "Corki": [
         "Q", "E", "W", "Q", "Q", "R",
         "Q", "E", "Q", "E", "R", "E",
         "E", "W", "W", "R", "W", "W",

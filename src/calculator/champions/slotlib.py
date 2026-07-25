@@ -10,6 +10,7 @@ Extraction core:
     ``extract_named``        — damage for an exact attribute name
     ``extract_auto``         — classifier-driven primary-damage detection
     ``extract_cooldown``     — base cooldown at rank
+    ``extract_recharge``     — charge-ability recharge rate at rank
     ``pct_health_per_hit``   — %maxHP on-hit math (AP ratio/floor/stacks)
     ``build_stats_context``  — champion stats + current AP for scaling
 
@@ -168,12 +169,21 @@ def extract_auto(
 def find_named_leveling(
     ability: dict[str, Any],
     attribute: str,
+    occurrence: int = 0,
 ) -> dict[str, Any] | None:
-    """Return the first leveling entry with this exact attribute name."""
+    """Return the N-th leveling entry with this exact attribute name.
+
+    ``occurrence`` addresses abilities that store several arrays under one
+    generic attribute (Diana P keeps base AND tripled attack speed as two
+    "Per-Level Scaling" entries); the default 0 is the plain first match.
+    """
+    seen = 0
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute", "") == attribute:
-                return leveling
+                if seen == occurrence:
+                    return leveling
+                seen += 1
     return None
 
 
@@ -447,7 +457,7 @@ def _resolve_casts(
     return float(casts)
 
 
-def _extract_recharge(ability: dict[str, Any], rank: int) -> float:
+def extract_recharge(ability: dict[str, Any], rank: int) -> float:
     """Cooldown for a charge ability: rechargeRate at rank.
 
     The JSON ``cooldown`` field of a charge ability stores the short
@@ -508,7 +518,7 @@ def simple_damage(
             f"simple_damage: unknown cooldown mode {cooldown!r} "
             "(must be 'standard' or 'recharge')"
         )
-    extract_cd = _extract_recharge if cooldown == "recharge" else extract_cooldown
+    extract_cd = extract_recharge if cooldown == "recharge" else extract_cooldown
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, src_slot = _resolve_source(ctx, source)

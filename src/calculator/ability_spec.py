@@ -41,6 +41,18 @@ class DamagePart:
         basic_damage: the part is classified basic damage in-game (a
             forced basic-attack swing, Caitlyn's Headshot rider) —
             basic-damage amplifiers (Hexoptics C44) apply to it.
+        bonus_ad_ratio: raw damage this part gains per point of bonus AD
+            granted MID-FIGHT, on top of what ``amount`` already prices
+            (Darius' Noxian Might). It is the part's derivative in bonus
+            AD, so a total-AD scaling declares its total-AD ratio.
+            Ignored unless the fight grants such a buff — ``amount``
+            alone remains the whole story for every static build.
+        dot_stack_scaled: the part hits once per stacking-DoT stack on
+            the target when the cast lands (Darius R's per-stack bonus).
+            The fight engine ALWAYS resolves the count from the fight's
+            stack timeline — no timeline means no stacks, so the part
+            deals nothing and ``count`` is ignored. A champion that
+            wants a fixed stack count says so with a plain part.
     """
 
     damage_type: str
@@ -49,6 +61,8 @@ class DamagePart:
     hp_scaled_damage: Callable[[float], float] | None = None
     crit_effectiveness: float = 0.0
     basic_damage: bool = False
+    bonus_ad_ratio: float = 0.0
+    dot_stack_scaled: bool = False
 
     def __post_init__(self) -> None:
         if self.damage_type not in _PART_DAMAGE_TYPES:
@@ -61,13 +75,17 @@ class DamagePart:
         # Deterministic repr: the golden snapshot serializes entries via
         # repr(), and a closure's default repr embeds a memory address.
         hp_scaled = "yes" if self.hp_scaled_damage is not None else "no"
-        # basic_damage appears only when set, keeping the golden reprs of
-        # every pre-existing part byte-identical.
-        basic = ", basic_damage=yes" if self.basic_damage else ""
+        # Optional fields appear only when set, keeping the golden reprs
+        # of every pre-existing part byte-identical.
+        extras = ", basic_damage=yes" if self.basic_damage else ""
+        if self.bonus_ad_ratio:
+            extras += f", bonus_ad_ratio={self.bonus_ad_ratio}"
+        if self.dot_stack_scaled:
+            extras += ", dot_stack_scaled=yes"
         return (
             f"DamagePart({self.damage_type}, amount={self.amount}, "
             f"count={self.count}, hp_scaled={hp_scaled}, "
-            f"crit_effectiveness={self.crit_effectiveness}{basic})"
+            f"crit_effectiveness={self.crit_effectiveness}{extras})"
         )
 
 

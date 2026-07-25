@@ -115,7 +115,7 @@ class TestPassiveRageGene:
     def test_mega_stat_buff_values_at_18(self, gnar_data) -> None:
         abilities = parse_mega(gnar_data, champion_stats={})
         buff = abilities["passive"]["stat_buff"]
-        assert buff["health"] == pytest.approx(831.0)
+        assert buff["base_health"] == pytest.approx(831.0)
         assert buff["base_attack_damage"] == pytest.approx(45.1)
         assert buff["armor"] == pytest.approx(55.0)
         assert buff["magic_resistance"] == pytest.approx(62.5)
@@ -131,7 +131,8 @@ class TestPassiveRageGene:
             champion_stats={},
         )
         buff = abilities["passive"]["stat_buff"]
-        assert buff["health"] == pytest.approx(100.0)
+        assert buff["base_health"] == pytest.approx(100.0)
+        assert "health" not in buff, "Mega's grant is BASE health, not total"
         assert buff["base_attack_damage"] == pytest.approx(6.0)
         assert buff["bonus_attack_speed"] == pytest.approx(0.0)
 

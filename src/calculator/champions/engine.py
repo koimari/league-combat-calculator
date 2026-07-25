@@ -61,18 +61,35 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "proc_count",
         "dot_duration",
         "stacking_dot",
+        "stack_triggered_buff",
         "applies_dot_stack",
         "applies_item_on_hits",
+        "basic_attack_true_ratio",
         "spellblade_true_ratio",
+        "spellblade_bonus_true_ratio",
         "auto_attack_override",
         "double_shot",
         "detail",  # display text copied onto the ability's breakdown row
+        "unit",  # count label for a proc row ("cleaves"); default is "hits"
         # producer diagnostics / display metadata
         "total_raw",
         "damage_per_tick",
         "total_ticks",
         "tibbers_aura",
         "initial_burst",
+    }
+)
+
+# Keys a ``target_debuff`` payload may carry. Validated for the same
+# reason as the entry keys one level up: a misspelled
+# ``mr_reduction_flatt`` would silently shred nothing.
+_ALLOWED_DEBUFF_KEYS = frozenset(
+    {
+        "armor_reduction_percent",
+        "mr_reduction_percent",
+        "armor_reduction_flat",
+        "mr_reduction_flat",
+        "stacks",  # ramp the reduction one share per hit, up to N
     }
 )
 
@@ -146,6 +163,34 @@ def _stamp_cast_time(
     cast_time = extract_cast_time(ability_json)
     if cast_time > 0:
         entry["cast_time"] = cast_time
+
+
+def _validate_entry_keys(
+    champion_name: str,
+    result_key: str,
+    entry: dict[str, Any],
+) -> None:
+    """Reject unknown keys on an emitted entry and its target_debuff.
+
+    A misspelled key must never silently zero an ability (or, one level
+    down, silently shred nothing).
+    """
+    for keys, allowed, label, constant in (
+        (set(entry), _ALLOWED_ENTRY_KEYS, "entry", "_ALLOWED_ENTRY_KEYS"),
+        (
+            set(entry.get("target_debuff", ())),
+            _ALLOWED_DEBUFF_KEYS,
+            "target_debuff",
+            "_ALLOWED_DEBUFF_KEYS",
+        ),
+    ):
+        unknown = keys - allowed
+        if unknown:
+            raise ValueError(
+                f"{champion_name} entry {result_key!r}: unknown {label} "
+                f"key(s) {sorted(unknown)} (allowed keys are defined by "
+                f"engine.{constant})"
+            )
 
 
 def _result_key(slot: str) -> str:
@@ -227,13 +272,7 @@ def build_parser(
         # Validate AFTER all phases: AMP parsers mutate earlier entries,
         # and a mutated entry must obey the contract too.
         for result_key, entry in results.items():
-            unknown = set(entry) - _ALLOWED_ENTRY_KEYS
-            if unknown:
-                raise ValueError(
-                    f"{champion_name} entry {result_key!r}: unknown entry "
-                    f"key(s) {sorted(unknown)} (allowed keys are defined "
-                    f"by engine._ALLOWED_ENTRY_KEYS)"
-                )
+            _validate_entry_keys(champion_name, result_key, entry)
 
         return results
 

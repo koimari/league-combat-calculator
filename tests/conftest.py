@@ -73,6 +73,11 @@ camille_data = _champion_fixture("Camille")
 cassiopeia_data = _champion_fixture("Cassiopeia")
 # Data key differs from the display/dispatcher name "Cho'Gath".
 chogath_data = _champion_fixture("Chogath")
+corki_data = _champion_fixture("Corki")
+darius_data = _champion_fixture("Darius")
+diana_data = _champion_fixture("Diana")
+# Data key differs from the display/dispatcher name "Dr. Mundo".
+dr_mundo_data = _champion_fixture("DrMundo")
 gnar_data = _champion_fixture("Gnar")
 # Data key differs from the display/dispatcher name "Jarvan IV".
 jarvan_iv_data = _champion_fixture("JarvanIV")

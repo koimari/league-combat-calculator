@@ -117,6 +117,7 @@ def _rage_gene(ctx: SlotCtx) -> dict[str, Any] | None:
     # only — bonus_attack_damage must stay untouched (R scales %bonus AD).
     for key, value in (
         ("health", hp),
+        ("base_health", hp),
         ("attack_damage", ad),
         ("base_attack_damage", ad),
         ("armor", armor),
@@ -126,7 +127,7 @@ def _rage_gene(ctx: SlotCtx) -> dict[str, Any] | None:
 
     entry = damage_entry(ability.get("name", "Rage Gene"), 0, 0.0, 0.0, "physical")
     entry["stat_buff"] = {
-        "health": hp,
+        "base_health": hp,
         "base_attack_damage": ad,
         "armor": armor,
         "magic_resistance": mr,

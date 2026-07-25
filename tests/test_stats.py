@@ -492,3 +492,60 @@ class TestNewItemStats:
         assert parsed["bonus_attack_speed_percent"] == 30.0
         assert parsed["duration"] == 6.0
         assert parsed["cooldown"] == 30.0
+
+
+class TestHealthComponents:
+    """Base, bonus, and total health are three separate first-class stats.
+
+    Base health comes from base stats + level growth, bonus health from
+    items/runes, and ``health`` is their total. Scalings differ per
+    ability ("% base health" vs "% bonus health" vs "% maximum health"),
+    so each must be readable on its own and the three must stay
+    consistent: ``health == base_health + bonus_health`` always.
+    """
+
+    def test_all_three_health_stats_are_emitted(self, ahri_data: dict) -> None:
+        stats = calculate_total_stats(ahri_data, 18, [])
+        for key in ("health", "base_health", "bonus_health"):
+            assert key in stats, f"{key} missing from stats output"
+
+    def test_no_items_means_zero_bonus_health(self, ahri_data: dict) -> None:
+        stats = calculate_total_stats(ahri_data, 18, [])
+        assert stats["bonus_health"] == 0
+        assert stats["base_health"] == stats["health"]
+
+    def test_base_health_matches_growth_formula(self, ahri_data: dict) -> None:
+        """Base health is the champion's own base + growth, sans items."""
+        base = get_champion_base_stats(ahri_data, 18)
+        stats = calculate_total_stats(ahri_data, 18, [])
+        assert stats["base_health"] == round(base["health"])
+
+    def test_items_raise_bonus_health_only(self, ahri_data: dict) -> None:
+        """An item's health lands in bonus, never in base."""
+        naked = calculate_total_stats(ahri_data, 18, [])
+        warmogs = get_item_by_name("Warmog's Armor")
+        built = calculate_total_stats(ahri_data, 18, [warmogs])
+
+        assert built["base_health"] == naked["base_health"]
+        assert built["bonus_health"] > 0
+        assert built["health"] > naked["health"]
+
+    @pytest.mark.parametrize("level", [1, 6, 11, 18, 20])
+    def test_invariant_holds_across_levels(self, ahri_data: dict, level: int) -> None:
+        stats = calculate_total_stats(ahri_data, level, [])
+        assert stats["health"] == stats["base_health"] + stats["bonus_health"]
+
+    @pytest.mark.parametrize(
+        "item_names",
+        [
+            ["Warmog's Armor"],
+            ["Heartsteel"],
+            ["Warmog's Armor", "Heartsteel", "Sunfire Aegis"],
+        ],
+    )
+    def test_invariant_holds_with_items(
+        self, ahri_data: dict, item_names: list[str]
+    ) -> None:
+        items = [get_item_by_name(name) for name in item_names]
+        stats = calculate_total_stats(ahri_data, 18, items)
+        assert stats["health"] == stats["base_health"] + stats["bonus_health"]

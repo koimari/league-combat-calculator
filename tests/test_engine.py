@@ -979,6 +979,36 @@ class TestEntryKeyValidation:
         parse = build_parser({"Q": good_parser}, "TestChamp")
         assert "Q" in parse(_champion(), 9, 0.0)
 
+    def test_unknown_target_debuff_key_raises(self) -> None:
+        """The rule-5 failure mode one level down: a typo'd shred key
+        would silently reduce nothing."""
+
+        def bad_parser(_ctx):
+            return {
+                "name": "Shred",
+                "parts": (),
+                "target_debuff": {"mr_reduction_flatt": 12.0},
+            }
+
+        parse = build_parser({"Q": bad_parser}, "TestChamp")
+        with pytest.raises(ValueError, match=r"target_debuff.*mr_reduction_flatt"):
+            parse(_champion(), 9, 0.0)
+
+    def test_known_target_debuff_keys_pass(self) -> None:
+        def good_parser(_ctx):
+            return {
+                "name": "Shred",
+                "parts": (),
+                "target_debuff": {
+                    "armor_reduction_flat": 12.0,
+                    "mr_reduction_flat": 12.0,
+                    "stacks": 4,
+                },
+            }
+
+        parse = build_parser({"Q": good_parser}, "TestChamp")
+        assert "Q" in parse(_champion(), 9, 0.0)
+
 
 # ---------------------------------------------------------------------------
 # P-slot handling

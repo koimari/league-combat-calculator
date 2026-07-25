@@ -373,8 +373,12 @@ class TestFightIntegration:
                 auto_attack_uptime=1.0,
             ),
         )
+        # W's empowered swings are reported on the W row, so the auto row
+        # counts only the PLAIN autos — every attack still bleeds.
         autos = result["breakdown"]["auto_attacks"]["count"]
+        w_row = result["breakdown"].get("W")
+        total_attacks = autos + (w_row["casts"] if w_row else 0)
         # Q cd 9 -> 2 casts; E cd 16 -> 1; R -> 1 (no ability haste).
         expected_casts = 2 + 1 + 1
         row = result["breakdown"]["stacking_dot_passive"]
-        assert row["count"] == autos + expected_casts
+        assert row["count"] == total_attacks + expected_casts

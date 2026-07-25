@@ -46,7 +46,10 @@ wiki (vendor/lolstaticdata, external)
   layer and the fight engine (both import it, neither imports the other).
   `DamagePart` carries ALL ability damage arithmetic: amount/count per
   mitigation unit, `hp_scaled_damage` closures for champion-unique scaling
-  (Akali R2, Kog'Maw R, Akshan R), reduced-effectiveness crit. The engine
+  (Akali R2, Kog'Maw R, Akshan R), reduced-effectiveness crit, and the two
+  fields a fight-timeline mechanic needs — `bonus_ad_ratio` (the part's
+  derivative in bonus AD, for mid-fight steroids) and `dot_stack_scaled`
+  (hits once per DoT stack on the target). The engine
   evaluates parts generically and never branches on champion-specific keys;
   `engine.py` validates entry keys at parse time (unknown key raises).
 
@@ -98,7 +101,10 @@ wiki (vendor/lolstaticdata, external)
   typed champion DamageParts, never registry dictionaries or name branches:
   item VALUES/formulas live in `item_effects`, champion arithmetic in
   `champions/<name>.py`; timing, mitigation, falling HP, stack cadence, and
-  the cooldown formula (`effective_cooldown`) stay here. Breakdown display
+  the cooldown formula (`effective_cooldown`) stay here. "When does a stack
+  land" has ONE home: `StackTimeline`, built once per fight from the
+  `CastPlan` — the stacking-DoT integration, stack-triggered buff windows
+  (Darius' Noxian Might), and per-cast stack counts all read it. Breakdown display
   text (`detail`/`damage_display`) is minted here and passed through app.py
   and app.js untouched.
 

@@ -74,3 +74,19 @@ class TestApplyArmorPenetration:
         # 20 lethality vs 10 armor floors at 0 -- it must never produce
         # negative armor (which apply_resistance would amplify).
         assert apply_armor_penetration(10, 20, 0) == 0.0
+
+    def test_negative_armor_from_reduction_survives_penetration(self) -> None:
+        # A flat REDUCTION (Corki E) may take armor below zero; penetration
+        # must neither undo it (percent) nor deepen it (flat).
+        assert apply_armor_penetration(-8, 20, 0.30) == -8.0
+
+
+class TestPenetrationOnNegativeResistance:
+    """Reduction effects can go negative; penetration leaves them alone."""
+
+    def test_negative_mr_survives_penetration(self) -> None:
+        assert apply_magic_penetration(-8, 20, 0.40) == -8.0
+
+    def test_zero_resistance_stays_zero(self) -> None:
+        assert apply_magic_penetration(0, 20, 0.40) == 0.0
+        assert apply_armor_penetration(0, 20, 0.40) == 0.0

@@ -519,6 +519,18 @@ class TestSplitAutoVsAbility:
         assert auto == 75.0
         assert ability == 25.0
 
+    def test_auto_stream_riders_count_as_auto(self) -> None:
+        """Champion riders on the swing (Corki P's true instance) share the
+        ``auto_attacks`` prefix — a wrong bucket is invisible in the total."""
+        breakdown = {
+            "auto_attacks": {"name": "Auto Attacks", "total_damage": 300.0},
+            "auto_attacks_true_damage": {"name": "Corki P", "total_damage": 60.0},
+            "Q": {"name": "Q", "total_damage": 40.0},
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == 360.0
+        assert ability == 40.0
+
     def test_informational_entries_skipped(self) -> None:
         # Entries marked informational (e.g. Actualizer's amp summary)
         # have damage already counted in other rows — never double-count.
@@ -956,6 +968,260 @@ class TestStackingDot:
 
 
 # ---------------------------------------------------------------------------
+# Stack-triggered mid-fight steroid (Darius' Noxian Might)
+# ---------------------------------------------------------------------------
+
+
+def _buffing_passive(
+    *,
+    single_stack_raw=100.0,
+    single_stack_bonus_ad_ratio=0.0,
+    trigger_stacks=5,
+    bonus_attack_damage=200.0,
+    duration=5.0,
+):
+    """Passive declaring BOTH a stacking DoT and the steroid it triggers."""
+    entry = _stacking_dot_passive(single_stack_raw=single_stack_raw)
+    entry["stacking_dot"]["single_stack_bonus_ad_ratio"] = single_stack_bonus_ad_ratio
+    entry["stack_triggered_buff"] = {
+        "name": "Steroid",
+        "trigger_stacks": trigger_stacks,
+        "duration": duration,
+        "bonus_attack_damage": bonus_attack_damage,
+    }
+    return entry
+
+
+def _ad_scaled_ability(cooldown=4.0, amount=100.0, bonus_ad_ratio=1.0):
+    """Castable whose damage grows 1:1 with mid-fight bonus AD."""
+    return {
+        "name": "Scaled",
+        "cooldown": cooldown,
+        "damage_type": "physical",
+        "parts": (DamagePart("physical", amount, bonus_ad_ratio=bonus_ad_ratio),),
+        "applies_dot_stack": True,
+    }
+
+
+class TestStackTriggeredBuff:
+    """Reaching ``trigger_stacks`` opens a bonus-AD window derived from
+    the SAME stack timeline the DoT integrates. Casts, autos and DoT
+    ticks inside a window price against the buffed AD; the application
+    that opens the window is not itself buffed."""
+
+    def test_no_buff_declared_changes_nothing(self, attacker_stats, fight) -> None:
+        """A DoT without a stack_triggered_buff is priced exactly as before."""
+        plain = fight(
+            attacker_stats(),
+            {"passive": _stacking_dot_passive()},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+        )
+        assert plain["breakdown"]["stacking_dot_passive"][
+            "total_damage"
+        ] == pytest.approx(510.0)
+
+    def test_trigger_application_is_not_itself_buffed(
+        self, attacker_stats, fight
+    ) -> None:
+        """10 autos at 1/s: the 5th auto (t=4) lands stack 5 and opens the
+        window, but is not buffed by the steroid its own damage
+        triggered. Autos 0-4 swing at 100 AD, autos 5-9 at 100+200."""
+        result = fight(
+            attacker_stats(),
+            {"passive": _buffing_passive(single_stack_raw=0.0)},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+        )
+        autos = result["breakdown"]["auto_attacks"]
+        assert autos["count"] == 10
+        assert autos["total_damage"] == pytest.approx(5 * 100.0 + 5 * 300.0)
+        assert result["notes"][-1].startswith("Steroid: 1 window(s)")
+
+    def test_window_expires_and_a_later_hit_reopens_it(
+        self, attacker_stats, fight
+    ) -> None:
+        """6 autos at 0.6/s (1.667s apart) with a 1s window: the 5th auto
+        (t=6.67) opens window 1, which expires before the 6th (t=8.33) —
+        so that auto is unbuffed and opens window 2 instead. Every auto
+        swings at base AD; the note reports two windows."""
+        result = fight(
+            attacker_stats(attack_speed=0.6),
+            {"passive": _buffing_passive(single_stack_raw=0.0, duration=1.0)},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+        )
+        autos = result["breakdown"]["auto_attacks"]
+        assert autos["count"] == 6
+        assert autos["total_damage"] == pytest.approx(6 * 100.0)
+        assert result["notes"][-1].startswith("Steroid: 2 window(s)")
+
+    def test_cast_inside_window_is_repriced(self, attacker_stats, fight) -> None:
+        """A bonus_ad_ratio part inside the window gains ratio x buff AD."""
+        abilities = {
+            "passive": _buffing_passive(single_stack_raw=0.0, trigger_stacks=1),
+            "Q": _ad_scaled_ability(cooldown=4.0, amount=100.0, bonus_ad_ratio=0.5),
+        }
+        result = fight(
+            attacker_stats(),
+            abilities,
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.0,
+        )
+        # Casts at t=0/4/8. The t=0 cast lands the trigger stack itself so
+        # it is unbuffed (100); the later two are inside the window and
+        # gain 0.5 x 200 = 100 each.
+        assert result["breakdown"]["Q"]["casts"] == 3
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(
+            100.0 + 200.0 + 200.0
+        )
+
+    def test_dot_ticks_split_at_window_boundaries(self, attacker_stats, fight) -> None:
+        """One application at t=0 with an instant trigger: the bleed's own
+        bonus-AD ratio raises the whole committed 5s window."""
+        abilities = {
+            "passive": _buffing_passive(
+                single_stack_raw=100.0,
+                single_stack_bonus_ad_ratio=0.25,
+                trigger_stacks=1,
+                bonus_attack_damage=200.0,
+            ),
+            "Q": _stack_applier(),
+        }
+        result = fight(attacker_stats(), abilities, target_armor=0.0)
+        # Window [0, 5) covers the entire committed tail: the single stack
+        # ticks at (100 + 0.25 x 200) = 150 raw over its 5s.
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert row["total_damage"] == pytest.approx(150.0)
+
+    def test_dot_gap_partially_inside_window(self, attacker_stats, fight) -> None:
+        """A window opening mid-gap splits that gap: 2 autos at t=0/6 with
+        a 2s window opened by the second. Stack 1 ticks 20/s for 5s (100,
+        chain then expires); stack 2 ticks (100+50)/5 = 30/s for its 2s
+        window then 20/s for the remaining 3s -> 60 + 60 = 120."""
+        abilities = {
+            "passive": _buffing_passive(
+                single_stack_raw=100.0,
+                single_stack_bonus_ad_ratio=0.25,
+                trigger_stacks=1,
+                bonus_attack_damage=200.0,
+                duration=2.0,
+            )
+        }
+        result = fight(
+            attacker_stats(attack_speed=1.0 / 6.0),
+            abilities,
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=12.0,
+            auto_attack_uptime=1.0,
+        )
+        row = result["breakdown"]["stacking_dot_passive"]
+        # First stack's own 5s is buffed for its first 2s: 2x30 + 3x20 = 120.
+        assert row["total_damage"] == pytest.approx(120.0 + 120.0)
+
+    def test_buff_refreshes_while_held_at_max(self, attacker_stats, fight) -> None:
+        """Reapplying at max stacks refreshes the window: 10 autos at 1/s
+        with a 2s window keep the buff alive from the 5th auto onward
+        (without refresh only the t=5 auto lands inside it: 1200)."""
+        result = fight(
+            attacker_stats(),
+            {"passive": _buffing_passive(single_stack_raw=0.0, duration=2.0)},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+        )
+        autos = result["breakdown"]["auto_attacks"]
+        # Trigger at t=4; every later auto both refreshes and is buffed.
+        assert autos["total_damage"] == pytest.approx(5 * 100.0 + 5 * 300.0)
+
+    def test_dot_stack_scaled_part_counts_target_stacks(
+        self, attacker_stats, fight
+    ) -> None:
+        """A dot_stack_scaled part hits once per stack ON the target when
+        the cast lands — Darius R's per-stack bonus."""
+        finisher = {
+            "name": "Finisher",
+            "cooldown": 100.0,
+            "damage_type": "true",
+            "parts": (
+                DamagePart("true", 50.0),
+                DamagePart("true", 10.0, count=0, dot_stack_scaled=True),
+            ),
+            "applies_dot_stack": True,
+        }
+        abilities = {
+            "passive": _stacking_dot_passive(single_stack_raw=0.0),
+            "Q": _stack_applier(),
+            "W": _stack_applier(),
+            "R": finisher,
+        }
+        result = fight(attacker_stats(), abilities, target_armor=0.0)
+        # One-rotation: Q and W land their stacks before R, so R sees 2.
+        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(70.0)
+
+    def test_buff_without_a_stacking_dot_raises(self, attacker_stats, fight) -> None:
+        """A steroid triggered by stacks needs a stack source; declaring
+        it alone must fail loudly rather than granting nothing."""
+        orphan = {
+            "name": "Orphan",
+            "damage_type": "physical",
+            "parts": (),
+            "stack_triggered_buff": {
+                "name": "Steroid",
+                "trigger_stacks": 5,
+                "duration": 5.0,
+                "bonus_attack_damage": 200.0,
+            },
+        }
+        with pytest.raises(ValueError, match="without a stacking_dot"):
+            fight(attacker_stats(), {"passive": orphan}, target_armor=0.0)
+
+    def test_dot_stack_scaled_without_timeline_deals_nothing(
+        self, attacker_stats, fight
+    ) -> None:
+        """No stacking DoT in the fight means no stacks — the declared
+        ``count`` is ignored rather than becoming a silent fallback."""
+        finisher = {
+            "name": "Finisher",
+            "cooldown": 100.0,
+            "damage_type": "true",
+            "parts": (
+                DamagePart("true", 50.0),
+                DamagePart("true", 10.0, count=3, dot_stack_scaled=True),
+            ),
+        }
+        result = fight(attacker_stats(), {"R": finisher}, target_armor=0.0)
+        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(50.0)
+
+
+class TestDamagePartRepr:
+    """The golden snapshot serializes parts through repr(), so optional
+    fields must print only when set."""
+
+    def test_plain_part_repr_unchanged(self) -> None:
+        assert repr(DamagePart("physical", 10.0)) == (
+            "DamagePart(physical, amount=10.0, count=1, hp_scaled=no, "
+            "crit_effectiveness=0.0)"
+        )
+
+    def test_new_fields_appear_only_when_set(self) -> None:
+        part = DamagePart("true", 5.0, bonus_ad_ratio=0.15, dot_stack_scaled=True)
+        assert repr(part).endswith("bonus_ad_ratio=0.15, dot_stack_scaled=yes)")
+        assert "bonus_ad_ratio" not in repr(DamagePart("true", 5.0))
+        assert "dot_stack_scaled" not in repr(DamagePart("true", 5.0))
+
+
+# ---------------------------------------------------------------------------
 # Empowered-auto forced swings: zero-uptime timed fights and Hexoptics amp
 # ---------------------------------------------------------------------------
 
@@ -989,8 +1255,15 @@ class TestEmpoweredAutoZeroUptimeTimed:
         )
         assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(450.0)
 
-    def test_timed_with_auto_stream_unchanged(self, attacker_stats, fight) -> None:
-        """With autos on, the auto stream hosts the swings: bonus only."""
+    def test_timed_with_auto_stream_matches_zero_uptime(
+        self, attacker_stats, fight
+    ) -> None:
+        """An auto stream changes which row hosts the swing, not its value.
+
+        The swings come out of the auto stream rather than being forced,
+        but the ability row reports the same attack+bonus hit either way
+        — same 450 as the zero-uptime sibling above.
+        """
         result = fight(
             attacker_stats(),
             {"Q": _empowered_bonus_ability(cooldown=4.0)},
@@ -999,7 +1272,7 @@ class TestEmpoweredAutoZeroUptimeTimed:
             auto_attack_uptime=1.0,
             target_armor=0.0,
         )
-        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(150.0)
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(450.0)
 
 
 class TestForcedSwingBasicAmp:
@@ -1092,3 +1365,340 @@ class TestSharedCastTimeline:
             duration=10.0,
         )
         assert result["breakdown"]["R"]["casts"] == 1
+
+
+def _shred_entry(name, parts, debuff, cooldown=10.0):
+    """Minimal castable entry carrying a target_debuff."""
+    return {
+        "name": name,
+        "rank": 1,
+        "cooldown": cooldown,
+        "damage_type": parts[0].damage_type,
+        "total_raw": sum(p.amount * p.count for p in parts),
+        "parts": tuple(parts),
+        "target_debuff": debuff,
+    }
+
+
+class TestFlatResistanceShred:
+    """``*_reduction_flat`` debuffs (Corki E) subtract resistances outright.
+
+    Percent shreds scale what remains; flat shreds subtract, and — unlike
+    penetration — may take a resistance below zero, where it amplifies.
+    """
+
+    def test_flat_armor_shred_helps_the_next_ability(
+        self, fight, attacker_stats
+    ) -> None:
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": _shred_entry(
+                    "Shredder",
+                    [DamagePart("physical", 100.0)],
+                    {"armor_reduction_flat": 50.0},
+                ),
+                "W": {
+                    "name": "After",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 100.0,
+                    "parts": (DamagePart("physical", 100.0),),
+                },
+            },
+            target_armor=100.0,
+        )
+        # Q at 100 armor -> 50; W at 50 armor -> 66.67 (the source ability
+        # never benefits from its own shred).
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(50.0)
+        assert result["breakdown"]["W"]["total_damage"] == pytest.approx(
+            66.667, abs=0.01
+        )
+
+    def test_flat_shred_can_take_resistance_negative(
+        self, fight, attacker_stats
+    ) -> None:
+        """20 armor shredded by 50 -> -30 armor, which amplifies damage."""
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": _shred_entry(
+                    "Shredder",
+                    [DamagePart("physical", 1.0)],
+                    {"armor_reduction_flat": 50.0},
+                ),
+                "W": {
+                    "name": "After",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 100.0,
+                    "parts": (DamagePart("physical", 100.0),),
+                },
+            },
+            target_armor=20.0,
+        )
+        assert result["effective_armor"] == pytest.approx(-30.0)
+        assert result["breakdown"]["W"]["total_damage"] == pytest.approx(
+            apply_resistance(100.0, -30.0)
+        )
+
+    def test_uncast_ability_shreds_nothing(self, fight, attacker_stats) -> None:
+        """Autos-only mode never casts the ability, so no shred lands —
+        otherwise autos get a free reduction from a spell never used."""
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": _shred_entry(
+                    "Shredder",
+                    [DamagePart("physical", 100.0)],
+                    {"armor_reduction_flat": 50.0},
+                )
+            },
+            target_armor=100.0,
+            one_rotation=False,
+            auto_attacks_only=True,
+            auto_attack_uptime=1.0,
+        )
+        assert result["breakdown"]["Q"]["casts"] == 0
+        assert result["effective_armor"] == pytest.approx(100.0)
+
+    def test_flat_mr_shred_applies_to_magic_damage(self, fight, attacker_stats) -> None:
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": _shred_entry(
+                    "Shredder",
+                    [DamagePart("physical", 1.0)],
+                    {"mr_reduction_flat": 40.0},
+                ),
+                "W": {
+                    "name": "After",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 100.0,
+                    "parts": (DamagePart("magic", 100.0),),
+                },
+            },
+            target_magic_resistance=100.0,
+        )
+        assert result["breakdown"]["W"]["total_damage"] == pytest.approx(62.5)
+
+
+class TestRampedResistanceShred:
+    """``"stacks": N`` stages a flat shred across the ability's own parts.
+
+    Corki's Gatling Gun applies one stack per tick: part 1 lands
+    unshredded, part 2 against one stack, ... and everything after the
+    Nth part against the full reduction. This deliberately deviates from
+    the single-application Kog'Maw rule (see corki.py's docstring).
+    """
+
+    @staticmethod
+    def _ramp_result(fight, attacker_stats, parts, stacks=2, flat=50.0):
+        return fight(
+            attacker_stats(),
+            {
+                "Q": _shred_entry(
+                    "Ramp",
+                    parts,
+                    {
+                        "armor_reduction_flat": flat,
+                        "mr_reduction_flat": flat,
+                        "stacks": stacks,
+                    },
+                )
+            },
+            target_armor=100.0,
+        )
+
+    def test_later_parts_benefit_from_earlier_stacks(
+        self, fight, attacker_stats
+    ) -> None:
+        """3 parts of 100 raw, 2 stacks of 25 armor: 100 -> 75 -> 50 armor."""
+        result = self._ramp_result(
+            fight,
+            attacker_stats,
+            [DamagePart("physical", 100.0) for _ in range(3)],
+            stacks=2,
+        )
+        expected = (
+            apply_resistance(100.0, 100.0)
+            + apply_resistance(100.0, 75.0)
+            + apply_resistance(100.0, 50.0)
+        )
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(expected)
+        assert result["effective_armor"] == pytest.approx(50.0)
+
+    def test_full_reduction_lands_even_with_fewer_parts_than_stacks(
+        self, fight, attacker_stats
+    ) -> None:
+        """One part, four stacks: the three unfired stages land afterwards."""
+        result = self._ramp_result(
+            fight,
+            attacker_stats,
+            [DamagePart("physical", 100.0)],
+            stacks=4,
+            flat=40.0,
+        )
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(50.0)
+        assert result["effective_armor"] == pytest.approx(60.0)
+
+    def test_percent_reduction_cannot_be_ramped(self, fight, attacker_stats) -> None:
+        """Percent stages compound; splitting them into equal shares is wrong."""
+        with pytest.raises(ValueError, match="FLAT"):
+            fight(
+                attacker_stats(),
+                {
+                    "Q": _shred_entry(
+                        "Ramp",
+                        [DamagePart("physical", 100.0)],
+                        {"armor_reduction_percent": 30.0, "stacks": 2},
+                    )
+                },
+            )
+
+
+class TestHealthComponentInvariant:
+    """``health == base_health + bonus_health`` survives stat buffs.
+
+    Base and bonus health are separate stats with separate scalings, so
+    a champion granting one must not silently corrupt the other. Gnar's
+    Mega form and Dr. Mundo's R both grant BASE health: total rises with
+    base, and bonus health — the only component item conversions like
+    Overlord's Bloodmail may read — stays exactly where it was.
+    """
+
+    @staticmethod
+    def _stats(champion_data, level, items, options):
+        from src.calculator.pipeline import FightParams, run_fight
+
+        params = FightParams.from_request({"champion_options": options})
+        return run_fight(champion_data, level, list(items), params)["champion_stats"]
+
+    def _assert_invariant(self, stats) -> None:
+        assert stats["health"] == pytest.approx(
+            stats["base_health"] + stats["bonus_health"]
+        )
+
+    def test_gnar_mini_form_holds_invariant(self, gnar_data: dict) -> None:
+        self._assert_invariant(self._stats(gnar_data, 18, [], {"mega": False}))
+
+    def test_gnar_mega_grant_raises_base_not_bonus(self, gnar_data: dict) -> None:
+        mini = self._stats(gnar_data, 18, [], {"mega": False})
+        mega = self._stats(gnar_data, 18, [], {"mega": True})
+
+        self._assert_invariant(mega)
+        assert mega["base_health"] > mini["base_health"]
+        assert mega["bonus_health"] == mini["bonus_health"]
+
+    def test_dr_mundo_r_grant_raises_base_not_bonus(self, dr_mundo_data: dict) -> None:
+        full = self._stats(dr_mundo_data, 18, [], {"mundo_missing_health_percent": 0})
+        hurt = self._stats(dr_mundo_data, 18, [], {"mundo_missing_health_percent": 50})
+
+        self._assert_invariant(hurt)
+        assert hurt["base_health"] > full["base_health"]
+        assert hurt["bonus_health"] == full["bonus_health"]
+
+    def test_invariant_holds_with_health_items(self, dr_mundo_data: dict) -> None:
+        """Items feed bonus health; R's grant feeds base. Both at once."""
+        from src.calculator.data_fetcher import get_item_by_name
+
+        items = [get_item_by_name("Warmog's Armor"), get_item_by_name("Heartsteel")]
+        stats = self._stats(
+            dr_mundo_data, 18, items, {"mundo_missing_health_percent": 50}
+        )
+
+        self._assert_invariant(stats)
+        assert stats["bonus_health"] > 0
+        assert stats["base_health"] > 0
+
+
+class TestEmpoweredSwingAttribution:
+    """An empowered auto's swing shows on the ability that forced it.
+
+    ``empowers_next_auto`` abilities consume a basic attack, so in-game
+    the player sees ONE hit worth ``attack + bonus``. One-rotation mode
+    already put that swing on the ability row; timed fights with autos
+    left it in the auto stream, so the same ability read as bonus-only
+    in one mode and attack+bonus in the other. Both modes now agree.
+    Re-attribution moves damage between rows and must never change the
+    fight total.
+    """
+
+    @staticmethod
+    def _fight(champion_data, level=18, items=(), **overrides):
+        from src.calculator.pipeline import FightParams, run_fight
+
+        request = {
+            "target_health": 1000,
+            "target_armor": 0,
+            "target_mr": 0,
+            "fight_mode": "time_based",
+            "fight_duration": 5.0,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        }
+        request.update(overrides)
+        params = FightParams.from_request(request)
+        return run_fight(champion_data, level, list(items), params)
+
+    def test_mundo_e_row_includes_the_consumed_swing(self, dr_mundo_data) -> None:
+        result = self._fight(dr_mundo_data)
+        e_row = result["breakdown"]["E"]
+        auto_row = result["breakdown"]["auto_attacks"]
+
+        # E's own bonus was 52.7; the swing it consumes is one auto.
+        assert e_row["total_damage"] == pytest.approx(
+            52.7 + auto_row["damage_per_hit"], rel=1e-3
+        )
+        assert auto_row["count"] == 4
+
+    def test_reattribution_preserves_the_fight_total(self, dr_mundo_data) -> None:
+        result = self._fight(dr_mundo_data)
+        assert result["total_damage"] == pytest.approx(1904.0, rel=1e-3)
+
+    def test_breakdown_rows_still_sum_to_total(self, dr_mundo_data) -> None:
+        result = self._fight(dr_mundo_data)
+        rows = sum(r.get("total_damage", 0.0) for r in result["breakdown"].values())
+        assert rows == pytest.approx(result["total_damage"], rel=1e-6)
+
+    def test_auto_row_per_hit_damage_is_unchanged(self, dr_mundo_data) -> None:
+        """Only the count moves — each remaining auto still hits the same."""
+        result = self._fight(dr_mundo_data)
+        assert result["breakdown"]["auto_attacks"]["damage_per_hit"] == pytest.approx(
+            186.2504, rel=1e-3
+        )
+
+    def test_auto_row_crit_counts_stay_consistent(self, dr_mundo_data) -> None:
+        from src.calculator.data_fetcher import get_item_by_name
+
+        result = self._fight(dr_mundo_data, items=[get_item_by_name("Infinity Edge")])
+        auto_row = result["breakdown"]["auto_attacks"]
+        assert auto_row["num_crits"] + auto_row["num_non_crits"] == auto_row["count"]
+
+    def test_one_rotation_mode_is_untouched(self, dr_mundo_data) -> None:
+        """Zero-auto mode already carried the swing; it must not double."""
+        result = self._fight(dr_mundo_data, fight_mode="one_rotation")
+        assert result["breakdown"]["E"]["total_damage"] == pytest.approx(239.0, rel=1e-3)
+        assert result["breakdown"]["auto_attacks"]["count"] == 0
+
+    def test_multi_swing_ability_moves_every_swing(self, chogath_data) -> None:
+        """Cho'Gath E empowers 3 attacks per cast, not 1."""
+        result = self._fight(chogath_data)
+        e_row = result["breakdown"]["E"]
+        auto_row = result["breakdown"]["auto_attacks"]
+        assert e_row["casts"] >= 1
+        assert auto_row["count"] >= 0
+        # Rows still reconcile against the total after a 3-swing move.
+        rows = sum(r.get("total_damage", 0.0) for r in result["breakdown"].values())
+        assert rows == pytest.approx(result["total_damage"], rel=1e-6)
+
+    def test_non_empowering_champion_unaffected(self, ahri_data) -> None:
+        result = self._fight(ahri_data)
+        auto_row = result["breakdown"]["auto_attacks"]
+        assert auto_row["count"] > 0
+        rows = sum(r.get("total_damage", 0.0) for r in result["breakdown"].values())
+        assert rows == pytest.approx(result["total_damage"], rel=1e-6)
