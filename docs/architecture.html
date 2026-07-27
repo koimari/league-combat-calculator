@@ -1,0 +1,1004 @@
+<title>Fight Calculator — Architecture</title>
+
+<style>
+  :root {
+    --ground:    #EDEFF2;
+    --surface:   #F8F9FB;
+    --sunken:    #E3E7EC;
+    --ink:       #16202B;
+    --ink-soft:  #4E5D6B;
+    --ink-faint: #7C8A98;
+    --rule:      #CDD4DC;
+    --rule-soft: #DDE2E8;
+    --accent:    #8A6716;
+    --accent-bg: #F0E6CC;
+    --flow:      #1F6663;
+    --flow-bg:   #DCEAE9;
+    --warn:      #97402A;
+    --warn-bg:   #F3E1DB;
+
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, "Roboto Mono", monospace;
+    --text: Charter, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+
+    --measure: 68ch;
+    --step--1: 0.78rem;
+    --step-0:  1.0625rem;
+    --step-1:  1.32rem;
+    --step-2:  1.72rem;
+    --step-3:  2.4rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:    #0D141C;
+      --surface:   #141D27;
+      --sunken:    #101821;
+      --ink:       #DCE3EA;
+      --ink-soft:  #94A3B1;
+      --ink-faint: #6B7A89;
+      --rule:      #26333F;
+      --rule-soft: #1D2833;
+      --accent:    #D3AC60;
+      --accent-bg: #241D0E;
+      --flow:      #56A9A5;
+      --flow-bg:   #0F2220;
+      --warn:      #D5795F;
+      --warn-bg:   #26140F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:    #0D141C;
+    --surface:   #141D27;
+    --sunken:    #101821;
+    --ink:       #DCE3EA;
+    --ink-soft:  #94A3B1;
+    --ink-faint: #6B7A89;
+    --rule:      #26333F;
+    --rule-soft: #1D2833;
+    --accent:    #D3AC60;
+    --accent-bg: #241D0E;
+    --flow:      #56A9A5;
+    --flow-bg:   #0F2220;
+    --warn:      #D5795F;
+    --warn-bg:   #26140F;
+  }
+
+  :root[data-theme="light"] {
+    --ground:    #EDEFF2;
+    --surface:   #F8F9FB;
+    --sunken:    #E3E7EC;
+    --ink:       #16202B;
+    --ink-soft:  #4E5D6B;
+    --ink-faint: #7C8A98;
+    --rule:      #CDD4DC;
+    --rule-soft: #DDE2E8;
+    --accent:    #8A6716;
+    --accent-bg: #F0E6CC;
+    --flow:      #1F6663;
+    --flow-bg:   #DCEAE9;
+    --warn:      #97402A;
+    --warn-bg:   #F3E1DB;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--text);
+    font-size: var(--step-0);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 78ch;
+    margin: 0 auto;
+    padding: clamp(2rem, 6vw, 5rem) clamp(1.1rem, 4vw, 2.5rem) 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3.25rem;
+  }
+
+  /* ── Masthead ─────────────────────────────────────────── */
+
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: var(--step-3);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    max-width: var(--measure);
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    text-wrap: pretty;
+  }
+
+  .counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2.25rem;
+    margin-top: 0.5rem;
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+  .counts b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* ── Sections ─────────────────────────────────────────── */
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+
+  h2 {
+    font-family: var(--mono);
+    font-size: var(--step-2);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--mono);
+    font-size: var(--step-0);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    margin-top: 0.5rem;
+  }
+
+  p, li {
+    max-width: var(--measure);
+    text-wrap: pretty;
+  }
+
+  ul, ol {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding-left: 1.35rem;
+  }
+  li::marker { color: var(--ink-faint); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--sunken);
+    border: 1px solid var(--rule-soft);
+    border-radius: 3px;
+    padding: 0.08em 0.34em;
+    word-break: break-word;
+  }
+
+  strong { font-weight: 700; }
+  em { font-style: italic; color: var(--ink); }
+
+  a {
+    color: var(--flow);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+  a:focus-visible,
+  .theme-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ── Flow diagram ─────────────────────────────────────── */
+
+  .flowchart {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0.5rem 0;
+  }
+
+  .node {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--flow);
+    padding: 0.85rem 1.1rem;
+  }
+  .node.is-gate { border-left-color: var(--accent); }
+  .node.is-external {
+    border-left-style: dashed;
+    border-left-color: var(--ink-faint);
+    background: transparent;
+  }
+
+  .node-name {
+    font-family: var(--mono);
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+  .node-role {
+    display: block;
+    font-family: var(--text);
+    font-size: 0.88rem;
+    font-weight: 400;
+    color: var(--ink-soft);
+    margin-top: 0.15rem;
+  }
+  .node-tag {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    background: var(--flow-bg);
+    color: var(--flow);
+  }
+  .node-tag.tag-gate { background: var(--accent-bg); color: var(--accent); }
+  .node-tag.tag-ext  { background: transparent; color: var(--ink-faint); border: 1px solid var(--rule); }
+
+  .connector {
+    align-self: start;
+    width: 3px;
+    height: 1.5rem;
+    margin-left: 1.5rem;
+    background: linear-gradient(var(--rule), var(--rule));
+  }
+  .connector span {
+    position: relative;
+    left: -0.42rem;
+    top: 1.1rem;
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    padding-left: 1.1rem;
+  }
+
+  .branch {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  /* ── Code blocks ──────────────────────────────────────── */
+
+  .code {
+    background: var(--sunken);
+    border: 1px solid var(--rule-soft);
+    border-radius: 4px;
+    padding: 1rem 1.15rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    white-space: pre;
+    tab-size: 2;
+  }
+  .code .cm { color: var(--ink-faint); }
+  .code .hl { color: var(--accent); font-weight: 700; }
+  .code .ok { color: var(--flow); }
+
+  .code-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: -0.85rem;
+  }
+
+  /* ── Tables ───────────────────────────────────────────── */
+
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 34rem;
+    font-size: 0.92rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.9rem 0.6rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom-color: var(--rule);
+  }
+  td code { font-size: 0.8rem; }
+  .verdict {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  .verdict.free { color: var(--flow); }
+  .verdict.work { color: var(--warn); }
+
+  /* ── Callouts ─────────────────────────────────────────── */
+
+  .callout {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--warn-bg);
+    border-left: 3px solid var(--warn);
+  }
+  .callout.is-rule {
+    background: var(--accent-bg);
+    border-left-color: var(--accent);
+  }
+  .callout p { max-width: none; margin: 0; }
+  .callout-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--warn);
+  }
+  .callout.is-rule .callout-label { color: var(--accent); }
+
+  /* ── Phase strip ──────────────────────────────────────── */
+
+  .phases {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+  .phase {
+    flex: 1 1 8rem;
+    padding: 0.7rem 0.85rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--flow);
+  }
+  .phase-name {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .phase-note {
+    display: block;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    margin-top: 0.2rem;
+  }
+
+  /* ── Tier ladder ──────────────────────────────────────── */
+
+  .tiers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-left: 0;
+    list-style: none;
+  }
+  .tiers > li {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 1rem;
+    max-width: none;
+    padding: 0.9rem 1.1rem 0.9rem 0.9rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+  }
+  .tier-num {
+    font-family: var(--mono);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .tier-body p { max-width: none; }
+  .tier-title {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  /* ── Footer ───────────────────────────────────────────── */
+
+  footer {
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="kicker">League of Legends Calculator · Internal Architecture</div>
+    <h1>How the fight calculator works</h1>
+    <p class="standfirst">
+      A damage model for a game that is rebalanced every two weeks. The whole shape of this
+      codebase follows from one decision: <em>numbers live in data, structure lives in code</em>.
+      Riot moves the numbers; we re-pull and ship.
+    </p>
+    <div class="counts">
+      <span><b>173</b> champions cached</span>
+      <span><b>324</b> items</span>
+      <span><b>31</b> champion modules</span>
+      <span><b>1,679</b> tests</span>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2>The problem the shape solves</h2>
+    </div>
+
+    <p>
+      A fight calculator has to answer one question: <em>if this champion, at this level, with
+      these items, fights this target for this long — how much damage lands?</em> That is a
+      an arithmetic problem, and arithmetic is the easy part. The hard part is that every input to
+      it is a moving target. Riot ships a balance patch roughly every two weeks; each one nudges
+      base damages, AP ratios, cooldowns, item prices, and occasionally reworks a kit outright.
+    </p>
+    <p>
+      A calculator that hardcodes <code>ahri_q_damage = 35 + 0.5 * ap</code> is correct for
+      about ten days. So no number that Riot controls is ever written in our source. Champion
+      and item values are scraped from the League Wiki into a JSON cache; the code refers to
+      them by <em>name</em> — <code>"Damage Per Pass"</code>, not <code>35</code> — and reads
+      whatever the current patch put in that slot.
+    </p>
+    <p>
+      Everything below is downstream of that. The pipeline exists to keep the scrape isolated,
+      the champion layer exists to describe kit <em>structure</em> without owning kit
+      <em>values</em>, and the gates exist to catch the day the trick stops working.
+    </p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2>The pipeline</h2>
+    </div>
+
+    <p>
+      Data flows one direction, and two chokepoints are enforced by convention and tested for:
+      exactly one module makes network calls, and exactly one module reads the cache.
+    </p>
+
+    <div class="flowchart">
+      <div class="node is-external">
+        <span class="node-name">League Wiki
+          <span class="node-role">via <code>vendor/lolstaticdata</code> — external scraper, vendored, not ours to refactor</span>
+        </span>
+        <span class="node-tag tag-ext">external</span>
+      </div>
+      <div class="connector"><span>scrape (patch day only)</span></div>
+
+      <div class="node is-gate">
+        <span class="node-name">data_updater.py
+          <span class="node-role">The only module in the codebase that touches the network. Fetches, normalizes, writes the cache.</span>
+        </span>
+        <span class="node-tag tag-gate">writes</span>
+      </div>
+      <div class="connector"></div>
+
+      <div class="node is-gate">
+        <span class="node-name">data/champions.json · data/items.json
+          <span class="node-role">Patch-stamped cache, committed to git. Because it is tracked, <code>HEAD</code> <em>is</em> the previous patch — that is what makes the patch-day diff possible.</span>
+        </span>
+        <span class="node-tag tag-gate">cache</span>
+      </div>
+      <div class="connector"></div>
+
+      <div class="node is-gate">
+        <span class="node-name">data_fetcher.py
+          <span class="node-role">The only read path. No network, ever. Parsed JSON is memoized by path + mtime, so an optimizer sweep reuses one in-memory copy and still notices an update.</span>
+        </span>
+        <span class="node-tag tag-gate">reads</span>
+      </div>
+      <div class="connector"><span>fan out — two knowledge domains</span></div>
+
+      <div class="branch">
+        <div class="node">
+          <span class="node-name">passive_parser.py → item_effects.py
+            <span class="node-role">Item passive prose → typed effect objects. Compiles once per build, before the fight runs.</span>
+          </span>
+        </div>
+        <div class="node">
+          <span class="node-name">champions/
+            <span class="node-role">Kit structure → typed <code>DamagePart</code>s. Slot maps, one file per champion.</span>
+          </span>
+        </div>
+      </div>
+      <div class="connector"></div>
+
+      <div class="node">
+        <span class="node-name">stats.py + resistance.py
+          <span class="node-role">Level scaling, item stat aggregation, penetration and mitigation math.</span>
+        </span>
+      </div>
+      <div class="connector"></div>
+
+      <div class="node">
+        <span class="node-name">pipeline.py → damage.py
+          <span class="node-role">Orchestration, then the champion-agnostic fight engine. Input validation and every fight/target default live in <code>pipeline.py</code>; the simulation lives in <code>damage.py</code>.</span>
+        </span>
+      </div>
+      <div class="connector"></div>
+
+      <div class="branch">
+        <div class="node">
+          <span class="node-name">app.py → static/js/app.js
+            <span class="node-role">Thin Flask routes; the frontend holds no formulas and no champion tables.</span>
+          </span>
+        </div>
+        <div class="node">
+          <span class="node-name">optimizer.py
+            <span class="node-role">Build search — enumerates item combinations through the same <code>run_fight</code>.</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout is-rule">
+      <span class="callout-label">Why the chokepoints matter</span>
+      <p>
+        One network module means the calculator is fully deterministic and offline at runtime —
+        tests, the optimizer's thousands of build evaluations, and production all read the same
+        frozen snapshot. One read module means a data-shape change has exactly one place to be
+        absorbed.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2>Patch day: Riot buffs Ahri Q by 20</h2>
+    </div>
+
+    <p>
+      Take the concrete case. Ahri's Q, Orb of Deception, currently deals 35 / 60 / 85 / 110 / 135
+      (+50% AP) per pass. Suppose the next patch adds 20 flat damage at every rank. Here is the
+      full trace of what happens in this codebase.
+    </p>
+
+    <h3>What the cache holds today</h3>
+    <div class="code-label">data/champions.json → Ahri.abilities.Q[0]</div>
+    <div class="code">"leveling": [
+  {
+    "attribute": "Damage Per Pass",
+    "modifiers": [
+      { "values": [<span class="hl">35, 60, 85, 110, 135</span>], "units": ["", "", "", "", ""] },
+      { "values": [50, 50, 50, 50, 50],  "units": ["% AP", …] }
+    ]
+  }
+]</div>
+
+    <p>
+      The five-element array is the five ability ranks; the second modifier is the AP ratio. This
+      shape — <code>effects[].leveling[].modifiers[].values[rank-1]</code> — is universal across
+      every champion in the cache, and <code>slotlib.sum_modifiers()</code> is the single function
+      that walks it. Flat units add directly; unit strings like <code>"% AP"</code> route through
+      <code>scaling.resolve_scaling()</code> against the build's live stats.
+    </p>
+
+    <h3>What our Ahri module says</h3>
+    <div class="code-label">src/calculator/champions/ahri.py</div>
+    <div class="code">SLOTS = {
+    "Q": simple_damage(attr=<span class="hl">"Damage Per Pass"</span>, dmg_type="mixed", casts=2),
+    "W": _fox_fire,
+    "E": simple_damage(dmg_type="magic"),
+    "R": _spirit_rush,
+}</div>
+
+    <p>
+      That single line is the entire model of Ahri's Q, and it contains no damage number. It says
+      three structural things — read the attribute called <em>Damage Per Pass</em>; the orb passes
+      through twice, so <code>casts=2</code>; the two passes are magic outbound and true on the
+      return, which is what <code>dmg_type="mixed"</code> encodes (an even split into a magic
+      <code>DamagePart</code> and a true one, mitigated separately). All three remain true after a
+      damage buff.
+    </p>
+
+    <h3>The trace</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Step</th><th>What happens</th><th>Work</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>patch_update.py run</code></td>
+            <td>Clears the scraper's page caches (a stale cache silently "re-pulls" the old patch), re-scrapes, rewrites <code>data/</code>.</td>
+            <td class="verdict free">automated</td>
+          </tr>
+          <tr>
+            <td>Audit</td>
+            <td>Leaf-diffs the new cache against <code>git HEAD</code>, filtered to what we actually implement: registered champions, configured items, plus a shop and roster roll-call. Reports <code>Ahri.abilities.Q[0]…values[0]: 35 → 55</code>.</td>
+            <td class="verdict free">automated</td>
+          </tr>
+          <tr>
+            <td>Ahri Q recomputes</td>
+            <td><code>sum_modifiers</code> reads <code>values[rank-1]</code> from the new array. Nothing in <code>ahri.py</code> is aware anything moved.</td>
+            <td class="verdict free">no code change</td>
+          </tr>
+          <tr>
+            <td>Downstream</td>
+            <td>The bigger <code>DamagePart</code> flows into mitigation, the cast timeline, item procs it triggers, breakdown rows, and the optimizer's build ranking — all champion-agnostic, all unchanged.</td>
+            <td class="verdict free">no code change</td>
+          </tr>
+          <tr>
+            <td>Gates</td>
+            <td><code>pytest</code>, then the golden snapshot compare. Ahri scenarios shift; every other champion must not move.</td>
+            <td class="verdict work">review</td>
+          </tr>
+          <tr>
+            <td>Baseline + commit</td>
+            <td>On green tests the golden baseline is re-captured in place; the commit explains each moved number by citing the patch note.</td>
+            <td class="verdict work">judgment</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The only human step is confirming the diffs are the ones Riot announced. A pure number
+      change costs a data pull and a commit.
+    </p>
+
+    <h3>What a patch <em>does</em> cost code</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Patch change</th><th>Cost</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Base damage, ratio, cooldown, cost, item stat values</td>
+            <td class="verdict free">free — data only</td>
+          </tr>
+          <tr>
+            <td>Wiki renames the attribute (<code>"Damage Per Pass"</code> → <code>"Magic Damage Per Pass"</code>)</td>
+            <td class="verdict work">one string in the champion module</td>
+          </tr>
+          <tr>
+            <td>A kit gains a mechanic — a recast, a new proc, a stack</td>
+            <td class="verdict work">new or edited slot function</td>
+          </tr>
+          <tr>
+            <td>A new or reworked item passive</td>
+            <td class="verdict work">parse config + <code>item_effects</code> accessor + test</td>
+          </tr>
+          <tr>
+            <td>A new champion released</td>
+            <td class="verdict work">runs generic immediately; module before the numbers are trusted</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <span class="callout-label">The failure this design defends against</span>
+      <p>
+        Values are read strictly: a missing key <em>raises</em>, naming the item and the key. No
+        call site is allowed a <code>.get(key, stale_literal)</code> fallback, because a fallback
+        turns a loud parser break into a silently wrong number — that exact pattern once hid a
+        3× overstatement of Statikk Shiv's damage for weeks. Loud beats plausible.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2>The fight engine</h2>
+    </div>
+
+    <p>
+      <code>damage.py</code> is the simulation, and it knows nothing about any specific champion.
+      It consumes two typed inputs — compiled item effects and champion <code>DamagePart</code>s —
+      and never branches on a champion or item name. Its top-level function reads as the fight
+      model itself:
+    </p>
+
+    <div class="code-label">damage.py → calculate_fight_damage()</div>
+    <div class="code">state    = _resolve_combat_state(...)   <span class="cm"># resists, pen, amps, attack timing</span>
+_apply_stat_buff_ultimates(state)      <span class="cm"># R steroids land before damage reads stats</span>
+rotation = _compute_ability_rotation(state)
+_add_stacking_dot_damage(state)
+autos    = _simulate_auto_attacks(state)   <span class="cm"># per-auto crit simulation</span>
+on_hits  = _layer_on_hit_effects(state, autos, rotation)
+spellblade = _add_spellblade_damage(state, rotation, autos, on_hits)
+_add_burn_damage(state, rotation)
+_add_item_proc_damage(state)
+_apply_damage_amplifiers(state, rotation)  <span class="cm"># fight-wide amps, applied last</span>
+<span class="ok">return</span> {"breakdown": state.breakdown, "total_damage": state.total_damage, …}</div>
+
+    <p>
+      Ordering here is load-bearing rather than stylistic. Buffs mutate stats before damage reads
+      them; on-hits layer onto autos that have already been simulated; amplifiers apply to
+      totals rather than to each source. Each step appends labelled rows to a shared breakdown,
+      which is what the UI renders and what the golden snapshot locks.
+    </p>
+
+    <h3>Where the tricky bits live</h3>
+    <ul>
+      <li>
+        <strong>Timing has one home.</strong> "When does a stack land" is answered by
+        <code>StackTimeline</code>, built once per fight from the cast plan. Stacking DoTs,
+        stack-triggered buff windows (Darius' Noxian Might), and per-cast stack counts all read
+        that one object rather than each re-deriving cadence.
+      </li>
+      <li>
+        <strong>Mid-fight stat changes are handled as derivatives.</strong> A <code>DamagePart</code>
+        carries <code>bonus_ad_ratio</code> — the part's derivative in bonus AD — so a steroid that
+        lands mid-rotation reprices later casts correctly instead of the whole fight being computed
+        at one stat snapshot.
+      </li>
+      <li>
+        <strong>Two fight modes.</strong> One-rotation (each ability once — burst) and time-based
+        (abilities recast as cooldowns expire, autos woven in at a configured uptime — sustained).
+        Ability haste is read as a champion stat like any other, through
+        <code>effective_cd = base_cd × 100 / (100 + haste)</code>.
+      </li>
+      <li>
+        <strong>Display text is minted here.</strong> Breakdown labels pass through the Flask
+        layer and the frontend untouched, so there is no second place where a row can be
+        described differently.
+      </li>
+    </ul>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2>How champions are modelled</h2>
+    </div>
+
+    <p>
+      A champion is a <strong>slot map</strong>: <code>{slot_key: slot_parser}</code>, where a slot
+      parser is a plain function <code>SlotCtx → entry | None</code>. There is no second parse
+      path — the 31 champions with modules and the 142 without run the identical engine, differing
+      only in which slot map it is handed.
+    </p>
+
+    <h3>Phase order</h3>
+    <p>
+      Slots are evaluated phase by phase, not in Q-W-E-R order. This is what makes cross-slot
+      interactions work without any module coordinating with another:
+    </p>
+
+    <div class="phases">
+      <div class="phase"><span class="phase-name">BUFF</span><span class="phase-note">Mutates the shared stats context — R steroids, form changes.</span></div>
+      <div class="phase"><span class="phase-name">DEBUFF</span><span class="phase-note">Mutates the target — resist shreds.</span></div>
+      <div class="phase"><span class="phase-name">DAMAGE</span><span class="phase-note">Emits castable entries. The default phase.</span></div>
+      <div class="phase"><span class="phase-name">ONHIT</span><span class="phase-note">Emits effects layered onto autos.</span></div>
+      <div class="phase"><span class="phase-name">AMP</span><span class="phase-note">Scales entries already computed.</span></div>
+    </div>
+
+    <p>
+      Because BUFF runs first, a damage slot is guaranteed to read post-buff stats — an engine
+      guarantee rather than a comment each module has to honor. Aatrox's R bonus AD is applied
+      before his Q is priced, and neither slot function mentions the other.
+    </p>
+
+    <h3>Adding a champion: three tiers, cheapest first</h3>
+
+    <ol class="tiers">
+      <li>
+        <span class="tier-num">1</span>
+        <div class="tier-body">
+          <div class="tier-title">Nothing — the generic path</div>
+          <p>
+            Champions absent from the registry run <code>GENERIC_SLOTS</code>: classifier-driven
+            damage detection on Q/W/E/R and on-hit auto-detection on the passive. It infers the
+            damage type from the ability JSON and picks the leveling entry that best looks like
+            primary damage. Free, and it covers 142 champions today.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="tier-num">2</span>
+        <div class="tier-body">
+          <div class="tier-title">A slot map of archetypes</div>
+          <p>
+            The classifier guessed wrong, or the kit matches an existing shape (stat-buff ultimate,
+            option-dispatched Q, %maxHP on-hit, toggle DoT). A new file that is mostly
+            <code>slotlib</code> factory calls, plus one registry line. Ahri's E is this:
+            <code>simple_damage(dmg_type="magic")</code> — generic apart from pinning the type.
+          </p>
+        </div>
+      </li>
+      <li>
+        <span class="tier-num">3</span>
+        <div class="tier-body">
+          <div class="tier-title">Custom slot functions</div>
+          <p>
+            Genuinely unique mechanics — multi-part output shapes, prose-regex values, cross-slot
+            dependencies. Still a slot map; the custom function just sits beside the archetype
+            calls. Ahri's W is one: three flames at two damage tiers, emitted as two
+            <code>DamagePart</code>s so each flame mitigates separately.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="callout">
+      <span class="callout-label">Trust boundary</span>
+      <p>
+        Generic-path output is an <em>estimate</em>, never a cited number. The record so far is
+        unambiguous: every champion anyone has actually sat down and analyzed has needed a module.
+        Aurora's generic parse misread her passive's monster damage cap as a flat 200 on-hit and
+        missed the Q recast entirely. Start at tier 1 anyway — verifying what generic already gets
+        right is what scopes the module down to the parts that genuinely need custom handling.
+      </p>
+    </div>
+
+    <h3>The contract between layers</h3>
+    <p>
+      <code>ability_spec.py</code> is a dependency-free leaf that both the champion layer and the
+      fight engine import, and which imports neither. A <code>DamagePart</code> carries the amount
+      and count per mitigation unit, plus the handful of fields a timeline mechanic needs. Champion
+      modules put <em>all</em> ability arithmetic there; the engine evaluates parts generically.
+    </p>
+    <p>
+      That boundary is enforced, not merely documented: every key an emitted entry may carry is
+      whitelisted, and an unknown key <em>raises at parse time</em>. A typo like
+      <code>mr_reduction_flatt</code> would otherwise silently shred nothing and quietly
+      understate a champion forever. The same instinct as the item-value rule — the cheapest bug
+      to fix is the one that refuses to run.
+    </p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <h2>Verification</h2>
+    </div>
+
+    <p>
+      Patch resilience is only worth anything if we can tell when it fails. Three gates, with
+      genuinely different jobs:
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Gate</th><th>Catches</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>pytest</code> <span class="verdict">1,679 tests</span></td>
+            <td>Hand-validated expected values per champion and per item, plus engine-core and generic-path roster coverage. Test layout mirrors source, so a champion module and its test are one filename apart.</td>
+          </tr>
+          <tr>
+            <td><code>pylint src/</code></td>
+            <td>Gates any code change.</td>
+          </tr>
+          <tr>
+            <td><code>golden_snapshot.py compare</code></td>
+            <td>The one with non-obvious semantics. Locks whole-pipeline numeric output — every champion, both fight modes, a per-item sweep — to two decimals. <strong>A refactor must show zero diffs. A behavior fix re-captures the baseline with every diff explained in the commit.</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The golden snapshot is what makes patch day tractable. Re-pulling data changes numbers by
+      design, so a green test suite alone proves nothing; the snapshot turns "did anything else
+      move?" into a diff you read in a minute, and a champion that moved without a patch note is
+      the signal that a parse quietly broke.
+    </p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">07</span>
+      <h2>Known limits</h2>
+    </div>
+
+    <p>These are deliberate, and worth knowing before trusting an edge case:</p>
+    <ul>
+      <li>
+        <strong>Four castable slots.</strong> Multi-kit champions — Aphelios' weapons, Hwei's
+        subspells, transformers — parse correctly, but the rotation engine and cast-order
+        validation assume Q/W/E/R. A future workstream.
+      </li>
+      <li>
+        <strong>Half-parsed gimmick scalings.</strong> A handful of abilities come back from the
+        wiki with values intact but units empty, so the generic path cannot attribute them —
+        Aurelion Sol's Stardust stacks, Bard's Chimes, K'Sante's W resistances, Zeri's execute
+        range, among others. Each needs a champion module for its stack mechanic regardless, so
+        the parse fix belongs to that work rather than to patch day.
+      </li>
+      <li>
+        <strong>Gnar's Mega form.</strong> The worst case — its wiki leveling data is entirely
+        empty, so the Mega stat bonuses live as tested constants. On a patch update those are
+        verified against the game files (Community Dragon <code>gnarbig.bin.json</code> minus
+        <code>gnar.bin.json</code>), not the wiki, whose Mega stat box has shipped wrong before.
+      </li>
+      <li>
+        <strong>Vendored scraper.</strong> <code>vendor/lolstaticdata/</code> is external code.
+        Minimal targeted fixes when a parser crash blocks a champion; no refactoring.
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    Source of truth for module homes: <code>architecture.md</code> · rules and domain constants:
+    <code>CLAUDE.md</code> · patch-day judgment: the <code>patch-update</code> skill · adding a
+    champion: the <code>add-champion</code> skill.
+  </footer>
+
+</div>
