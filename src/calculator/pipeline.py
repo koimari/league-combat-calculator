@@ -6,10 +6,14 @@ champion-agnostic fight engine; data fetching remains with each consumer.
 """
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Mapping
 
-from .champions import RESERVED_OPTION_KEYS, parse_champion_abilities
+from .champions import (
+    RESERVED_OPTION_KEYS,
+    get_champion_cast_order,
+    parse_champion_abilities,
+)
 from .damage import (
     FightConfig,
     calculate_fight_damage,
@@ -225,6 +229,12 @@ def run_fight(
     # as the champion's stats so the UI panel shows the fight-effective
     # values, not the pre-buff base+items snapshot.
     fight_stats = dict(champion_stats)
+    # A champion may declare its own rotation order (Jayce transforms
+    # before he casts). An explicit caller-supplied order still wins.
+    if params.cast_order is None:
+        declared = get_champion_cast_order(champion_data.get("name", ""))
+        if declared is not None:
+            params = replace(params, cast_order=declared)
     result = calculate_fight_damage(fight_stats, ability_damages, items, params)
     result["champion_stats"] = fight_stats
     auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])

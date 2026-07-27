@@ -45,6 +45,10 @@ PASSIVE_MIN_DAMAGE = 20.0
 PASSIVE_COOLDOWN_BREAKPOINTS = ((16, 3.0), (11, 4.0), (6, 5.0), (1, 6.0))
 
 
+# Dragon Strike inflicts "armor reduction for 3 seconds".
+Q_SHRED_DURATION = 3.0
+
+
 def _passive_cooldown(level: int) -> float:
     """Martial Cadence per-target cooldown at a champion level."""
     for min_level, cooldown in PASSIVE_COOLDOWN_BREAKPOINTS:
@@ -94,7 +98,10 @@ def _dragon_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     # after Q's own damage, so post-Q hits see the reduced armor.
     shred = extract_value(ability, "Armor Reduction", rank)
     if ctx.options.get("q_armor_shred", True) and shred > 0:
-        entry["target_debuff"] = {"armor_reduction_percent": shred}
+        entry["target_debuff"] = {
+            "armor_reduction_percent": shred,
+            "duration": Q_SHRED_DURATION,
+        }
     return entry
 
 

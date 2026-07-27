@@ -60,6 +60,7 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Dr. Mundo": "dr_mundo",
     "Gnar": "gnar",
     "Jarvan IV": "jarvan_iv",
+    "Jayce": "jayce",
     "Kog'Maw": "kogmaw",
     "Vayne": "vayne",
 }
@@ -160,6 +161,27 @@ def parse_champion_abilities(
         target_stats=target_stats,
         champion_options=champion_options,
     )
+
+
+def get_champion_cast_order(champion_name: str) -> list[str] | None:
+    """The champion's own rotation order, or ``None`` for the default.
+
+    A module declares ``CAST_ORDER`` when the engine's
+    ``(Q, Q2, W, E, R)`` misrepresents how the kit is actually used —
+    Jayce transforms INTO Cannon stance and only then casts its
+    abilities, so his R (and the resistance shred its empowered attack
+    applies) has to be resolved before Q/W, not after them.
+
+    Returns:
+        The declared order, or ``None`` when the champion has no module
+        or does not override the default.
+    """
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return None
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    declared = getattr(module, "CAST_ORDER", None)
+    return list(declared) if declared else None
 
 
 def get_champion_options_meta(champion_name: str) -> dict[str, list]:

@@ -90,6 +90,7 @@ _ALLOWED_DEBUFF_KEYS = frozenset(
         "armor_reduction_flat",
         "mr_reduction_flat",
         "stacks",  # ramp the reduction one share per hit, up to N
+        "duration",  # seconds the shred lasts; absent = rest of the fight
     }
 )
 

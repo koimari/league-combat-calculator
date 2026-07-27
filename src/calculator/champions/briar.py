@@ -54,6 +54,10 @@ P_BLEED_EXTRA_STACK_EFFECTIVENESS = 0.25  # stacks beyond the first
 R_RESIST_PER_TOTAL_AD = 0.20  # armor AND MR gained, as % of total AD
 
 
+# Head Rush shreds "for 5 seconds" — not the rest of the fight.
+Q_SHRED_DURATION = 5.0
+
+
 def _missing_hp_fraction(ctx: SlotCtx) -> float:
     """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
     pct = float(ctx.options.get("target_missing_hp_pct", 50))
@@ -128,6 +132,7 @@ def _head_rush(ctx: SlotCtx) -> dict[str, Any] | None:
         entry["target_debuff"] = {
             "armor_reduction_percent": shred,
             "mr_reduction_percent": shred,
+            "duration": Q_SHRED_DURATION,
         }
     return entry
 

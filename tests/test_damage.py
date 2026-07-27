@@ -1682,7 +1682,9 @@ class TestEmpoweredSwingAttribution:
     def test_one_rotation_mode_is_untouched(self, dr_mundo_data) -> None:
         """Zero-auto mode already carried the swing; it must not double."""
         result = self._fight(dr_mundo_data, fight_mode="one_rotation")
-        assert result["breakdown"]["E"]["total_damage"] == pytest.approx(239.0, rel=1e-3)
+        assert result["breakdown"]["E"]["total_damage"] == pytest.approx(
+            239.0, rel=1e-3
+        )
         assert result["breakdown"]["auto_attacks"]["count"] == 0
 
     def test_multi_swing_ability_moves_every_swing(self, chogath_data) -> None:

@@ -38,6 +38,10 @@ from .slotlib import (
     simple_damage,
 )
 
+# Caustic Spittle's shred lasts 4s ("reduces their armor and magic
+# resistance for 4 seconds") — it is not permanent.
+Q_SHRED_DURATION = 4.0
+
 
 def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: magic damage + bonus-AS stat buff + resistance shred debuff."""
@@ -71,6 +75,7 @@ def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
         entry["target_debuff"] = {
             "armor_reduction_percent": shred,
             "mr_reduction_percent": shred,
+            "duration": Q_SHRED_DURATION,
         }
     return entry
 

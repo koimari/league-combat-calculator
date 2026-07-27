@@ -139,6 +139,7 @@ class TestHeadRush:
         assert q5["target_debuff"] == {
             "armor_reduction_percent": 20.0,
             "mr_reduction_percent": 20.0,
+            "duration": 5.0,
         }
         q1 = _parse(briar_data, 18, ranks={"Q": 1})["Q"]
         assert q1["target_debuff"]["armor_reduction_percent"] == 10.0

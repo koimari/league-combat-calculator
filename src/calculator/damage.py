@@ -117,6 +117,7 @@ import math
 import random
 from collections import Counter
 from dataclasses import dataclass, field
+from collections.abc import Sequence
 from typing import Any, Callable
 
 from . import item_effects
@@ -1313,6 +1314,12 @@ class RotationResult:
     # stream (one-rotation, or timed at zero uptime). These are real
     # attacks: they consume spellblade charges like any auto.
     forced_basic_attacks: int = 0
+    # How many CASTS forced those attacks. A spellblade charge is armed
+    # per ability cast, so one cast spends at most one however many
+    # attacks it forces: Jayce's single Hyper Charge cast fires 3 attacks
+    # but cannot proc Essence Reaver three times, while Camille's Q1 and
+    # Q2 are two casts and legitimately proc twice.
+    forced_swing_casts: int = 0
     total_muramana_procs: int = 0  # one per cast; multi-cast R counts each
     first_ability_damage: float = 0.0  # Horizon Focus trigger (not amped)
     has_navori: bool = False
@@ -1338,6 +1345,41 @@ def _empower_hits(empower: Any) -> int:
     return int(empower.get("hits", 1)) if isinstance(empower, dict) else 1
 
 
+def _empower_cooldown_delay(empower: Any) -> float:
+    """Seconds an empowered burst runs BEFORE its cooldown starts.
+
+    An ability whose ``empowers_next_auto`` declares
+    ``cooldown_starts_after_hits`` does not begin its timer on cast —
+    consuming the last empowered attack does (Jayce's Hyper Charge). The
+    burst's own duration is therefore dead time on the ability's cycle,
+    which both delays the recast and means those attacks cannot refund
+    this ability's cooldown (Navori) — it is not running yet. Zero for
+    every other empowered auto, whose cooldown starts on cast.
+    """
+    if not isinstance(empower, dict):
+        return 0.0
+    if not empower.get("cooldown_starts_after_hits"):
+        return 0.0
+    rate = _empower_burst_attack_speed(empower)
+    return _empower_hits(empower) / rate if rate > 0 else 0.0
+
+
+def _empower_burst_attack_speed(empower: Any) -> float:
+    """Rate the empowered swings fire at, or 0 when they ride the fight's.
+
+    An ``empowers_next_auto`` dict may declare ``attack_speed``: its hits
+    are fired at THAT rate rather than the champion's ordinary one
+    (Jayce's Hyper Charge caps his attack speed for exactly 3 attacks).
+    Such a burst is self-supplying — the cast forces its attacks whatever
+    the ambient auto stream is doing — and it costs the fight only the
+    little time those attacks occupy, leaving the rest of the fight
+    running at the ordinary rate. Absent, the swings are ordinary autos.
+    """
+    if not isinstance(empower, dict):
+        return 0.0
+    return float(empower.get("attack_speed", 0.0))
+
+
 def _ability_mr(resists: Resists, ult_cast: bool, vile_decay_stacks: int) -> float:
     """Effective MR one ability's magic damage is mitigated by.
 
@@ -1358,6 +1400,44 @@ def _ability_mr(resists: Resists, ult_cast: bool, vile_decay_stacks: int) -> flo
         resists.magic_pen_flat,
         resists.ability_magic_pen_percent,
     )
+
+
+def _debuff_coverage(
+    cast_times: Sequence[float],
+    duration: float,
+    fight_duration: float,
+) -> float:
+    """Share of the fight a duration-limited ``target_debuff`` is up.
+
+    Every shred in the game expires (Kog'Maw Q 4s, Jayce R 5s, ...), but
+    resistances here are one scalar for the whole fight. Rather than
+    re-price every consumer per instant, the shred is applied
+    time-weighted by this coverage: a debuff up for half the fight
+    shreds half as much. That is exact at full and zero coverage, and
+    within a fraction of a percent between (resistance -> damage is
+    mildly non-linear), while a champion who REFRESHES the debuff before
+    it lapses tiles the fight and keeps the full shred.
+
+    Overlapping windows count once — refreshing a debuff extends it, it
+    does not stack.
+    """
+    if duration <= 0 or fight_duration <= 0:
+        return 1.0
+    windows = sorted(
+        (start, min(start + duration, fight_duration))
+        for start in cast_times
+        if start < fight_duration
+    )
+    covered = 0.0
+    open_start = open_end = 0.0
+    for start, end in windows:
+        if open_end == 0.0 or start > open_end:
+            covered += open_end - open_start
+            open_start, open_end = start, end
+        else:
+            open_end = max(open_end, end)
+    covered += open_end - open_start
+    return min(1.0, covered / fight_duration)
 
 
 def _apply_target_shred(
@@ -1412,12 +1492,23 @@ class _ShredRamp:
         _apply_target_shred(self.resists, self.debuff, 1.0 / self.stacks)
         return self.ability_mr()
 
-    def apply_remainder(self) -> None:
-        """Apply whatever share of the reduction never staged."""
-        if self.fired < self.stacks:
-            _apply_target_shred(
-                self.resists, self.debuff, (self.stacks - self.fired) / self.stacks
-            )
+    def apply_remainder(self, coverage: float = 1.0) -> None:
+        """Top the shred up to its lasting share of the reduction.
+
+        The stages that already fired did so DURING the ability's own
+        hits, when the debuff is freshly applied and so at full strength.
+        ``coverage`` is the share that outlives the ability (see
+        ``_debuff_coverage``), so this SETTLES the total at it rather
+        than adding a flat remainder — at full coverage that is exactly
+        the old ``(stacks - fired) / stacks``. The settlement is signed:
+        a debuff that fully staged during its own ticks but expires
+        before the fight ends hands part of the reduction back, which is
+        exact for the flat shreds ramps actually use (Corki's Gatling
+        Gun is the only one) and approximate for a percent one.
+        """
+        _apply_target_shred(
+            self.resists, self.debuff, coverage - self.fired / self.stacks
+        )
 
 
 def _make_shred_ramp(
@@ -1595,6 +1686,14 @@ def _schedule_shared_casts(
         for key in keys
     }
     cast_times = {key: state.ability_damages[key].get("cast_time", 0.0) for key in keys}
+    # Dead time between the cast finishing and its cooldown starting: an
+    # empowered burst whose timer only begins once its attacks are spent.
+    cooldown_delays = {
+        key: _empower_cooldown_delay(
+            state.ability_damages[key].get("empowers_next_auto")
+        )
+        for key in keys
+    }
     single_cast = {key for key in keys if key == "R" or cooldowns[key] <= 0}
 
     times: dict[str, list[float]] = {key: [] for key in keys}
@@ -1617,9 +1716,54 @@ def _schedule_shared_casts(
         if key in single_cast:
             pending.remove(key)
         else:
-            next_ready[key] = now + cast_times[key] + cooldowns[key]
+            next_ready[key] = (
+                now + cast_times[key] + cooldown_delays[key] + cooldowns[key]
+            )
         now += cast_times[key]
     return times
+
+
+def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
+    """Re-time the auto stream around empowered bursts that set their rate.
+
+    A burst declaring ``attack_speed`` (Jayce's Hyper Charge) fires its
+    hits at the cap instead of the champion's ordinary rate, so it costs
+    the fight only ``hits / burst_as`` seconds. The rest of the fight
+    still runs at the ordinary rate, which means the burst does not just
+    re-price attacks — it BUYS extra ordinary autos with the time it
+    saved. Total attacks become ``normal autos in the leftover time`` plus
+    the burst swings themselves (which the breakdown later moves onto the
+    ability's own row).
+
+    A fight with no auto stream is left alone: those casts force their
+    own swings onto their ability row instead (see the empowered-auto
+    branch in the rotation).
+    """
+    if state.num_auto_attacks <= 0 or state.auto_attack_uptime <= 0:
+        return
+
+    burst_swings = 0
+    burst_seconds = 0.0
+    for ability_key in state.cast_order:
+        ability_info = state.ability_damages.get(ability_key)
+        if not ability_info:
+            continue
+        empower = ability_info.get("empowers_next_auto")
+        burst_as = _empower_burst_attack_speed(empower) if empower else 0.0
+        if burst_as <= 0:
+            continue
+        swings = plan.counts.get(ability_key, 0) * _empower_hits(empower)
+        if swings <= 0:
+            continue
+        burst_swings += swings
+        burst_seconds += swings / burst_as
+
+    if burst_swings <= 0:
+        return
+
+    leftover = max(0.0, state.fight_duration_seconds - burst_seconds)
+    normal_autos = math.floor(state.attack_speed * leftover * state.auto_attack_uptime)
+    state.num_auto_attacks = normal_autos + burst_swings
 
 
 @dataclass(frozen=True)
@@ -1681,7 +1825,14 @@ def _resolve_cast_plan(
                 # no auto stream at all (zero uptime), each cast forces
                 # its own attack(s) instead.
                 empower = ability_info.get("empowers_next_auto")
-                if empower and state.num_auto_attacks > 0:
+                # A burst that fires at its OWN rate supplies the attacks
+                # it needs (Jayce's Hyper Charge), so the ambient auto
+                # count never limits it — only its cooldown does.
+                if (
+                    empower
+                    and state.num_auto_attacks > 0
+                    and not _empower_burst_attack_speed(empower)
+                ):
                     scheduled = scheduled[
                         : state.num_auto_attacks // _empower_hits(empower)
                     ]
@@ -2005,6 +2156,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     # both it and the DoT integration afterwards read this one plan.
     plan = _resolve_cast_plan(state, schedule)
     result.last_cast_time = plan.last_cast_time
+    # An empowered burst that sets its own attack speed re-times the auto
+    # stream — do it before anything prices an auto or counts an on-hit.
+    _apply_empowered_burst_autos(state, plan)
     state.stack_timeline = _build_stack_timeline(state, plan)
     timeline = state.stack_timeline
 
@@ -2065,9 +2219,12 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # replacing the default expected-crit swing (Camille Q: the
         # whole attack cannot crit and may convert to true damage).
         empower = ability_info.get("empowers_next_auto")
+        forced_swings = 0
         if empower and num_casts > 0 and state.num_auto_attacks == 0:
             hits = _empower_hits(empower)
-            result.forced_basic_attacks += num_casts * hits
+            forced_swings = num_casts * hits
+            result.forced_basic_attacks += forced_swings
+            result.forced_swing_casts += num_casts
             if isinstance(empower, dict) and "swing_parts" in empower:
                 parts = parts + tuple(empower["swing_parts"])
             else:
@@ -2119,6 +2276,17 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             "total_damage": ability_total,
             "damage_type": damage_type,
         }
+        # With no auto row to report them, the basic attacks this cast
+        # forced — and the crit riding them — are otherwise invisible:
+        # the UI's "N casts" text says nothing about the swings folded
+        # into this row. Crit here is priced as an EXPECTED value, so
+        # state the rate rather than inventing an integer crit count.
+        if forced_swings > 0:
+            detail = f"{num_casts} cast{'' if num_casts == 1 else 's'}"
+            detail += f", {forced_swings} attack{'' if forced_swings == 1 else 's'}"
+            if state.crit_chance > 0:
+                detail += f" @ {round(state.crit_chance * 100)}% crit"
+            breakdown[ability_key]["detail"] = detail
         if damage_type == "mixed":
             # Exact composition for the physical/magic/true split (the
             # ability amp scales every part uniformly).
@@ -2192,10 +2360,26 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # hits; only its unfired remainder lands here.
         target_debuff = ability_info.get("target_debuff")
         if target_debuff and num_casts > 0:
+            # A shred that expires is applied time-weighted by how much
+            # of the fight its windows actually cover (see
+            # ``_debuff_coverage``); one with no declared duration lasts
+            # the fight, as it always has.
+            # One-rotation mode is a burst: the whole combo lands well
+            # inside any shred window, and its ``fight_duration_seconds``
+            # is only a nominal cap — weighting by it would be arbitrary.
+            coverage = (
+                1.0
+                if state.one_rotation
+                else _debuff_coverage(
+                    plan.times.get(ability_key, ()),
+                    target_debuff.get("duration", 0.0),
+                    state.fight_duration_seconds,
+                )
+            )
             if shred_ramp is not None:
-                shred_ramp.apply_remainder()
+                shred_ramp.apply_remainder(coverage)
             else:
-                _apply_target_shred(resists, target_debuff)
+                _apply_target_shred(resists, target_debuff, coverage)
 
     # Update effective MR for non-ability damage using final Vile Decay stacks.
     # Non-ability damage occurs during/after the full rotation, so use
@@ -3205,11 +3389,19 @@ def _add_spellblade_damage(
             raw_sb, source.damage_type, resists, state.magic_amp
         )
 
-        # Number of procs: limited by ability casts and cooldown
+        # Number of procs: limited by ability casts and cooldown. With no
+        # auto stream the only attacks are the ones casts forced, and a
+        # charge is armed per cast — so a cast that forces a whole burst
+        # (Jayce's 3 Hyper Charge attacks) still spends just one.
+        attack_limit = (
+            consuming_attacks
+            if state.num_auto_attacks > 0
+            else rotation.forced_swing_casts
+        )
         result.procs = min(
             rotation.total_ability_casts,
             1 + int(state.fight_duration_seconds / effective_sb_cd),
-            consuming_attacks,
+            attack_limit,
         )
 
         # True-damage conversion (Camille Q2): an entry flagged

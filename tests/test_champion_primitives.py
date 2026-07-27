@@ -7,7 +7,9 @@ rank resolution (champions.skill_orders).
 
 import pytest
 
+from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.common import calculate_ability_damage
+from src.calculator.data_fetcher import get_champion
 from src.calculator.damage import effective_cooldown
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.champions.slotlib import extract_cast_time
@@ -116,3 +118,31 @@ class TestExtractCastTime:
     def test_pure_windup_text_is_instant(self) -> None:
         assert extract_cast_time({"castTime": "Attack Windup Time"}) == 0.0
         assert extract_cast_time({"castTime": "Basic attack timer"}) == 0.0
+
+
+class TestTargetDebuffDurations:
+    """Every resistance shred in the game expires — none is permanent.
+
+    An undeclared duration means "rest of the fight", which over-shreds
+    any timed fight longer than the debuff. These are the real in-game
+    durations, read from each ability's own wiki description.
+    """
+
+    # (champion, slot, level, expected duration in seconds)
+    _SHREDS = [
+        ("Kog'Maw", "Q", 18, 4.0),  # "for 4 seconds"
+        ("Briar", "Q", 18, 5.0),  # "for 5 seconds"
+        ("Jarvan IV", "Q", 18, 3.0),  # "for 3 seconds"
+        ("Jayce", "R", 18, 5.0),  # "for 5 seconds"
+        # Corki's stacks last 2s but REFRESH through his 4s channel, so
+        # the shred is up from the cast until 2s after the last tick.
+        ("Corki", "E", 18, 6.0),
+    ]
+
+    @pytest.mark.parametrize("champion,slot,level,duration", _SHREDS)
+    def test_shred_declares_its_duration(self, champion, slot, level, duration) -> None:
+        abilities = parse_champion_abilities(
+            get_champion(champion), level, 100.0, champion_stats={}
+        )
+        debuff = abilities[slot]["target_debuff"]
+        assert debuff["duration"] == pytest.approx(duration)

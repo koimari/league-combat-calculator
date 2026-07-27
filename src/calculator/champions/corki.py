@@ -69,6 +69,10 @@ _W_TICKS = 5
 _W_DURATION = 2.5
 _E_TICKS = 16
 _E_DURATION = 4.0
+# Each Gatling stack lasts 2s but REFRESHES on every tick, so the
+# shred is up until 2s after the last one ("applying a stack ... for
+# 2 seconds, refreshing with subsequent hits").
+_E_SHRED_LINGER = 2.0
 # E: "applying a stack ... stacking up to 4 times", one per tick.
 _E_MAX_SHRED_STACKS = 4
 # R: "up to a maximum of 4" charges; "every third missile ... is a Big
@@ -186,6 +190,7 @@ def _gatling_gun(ctx: SlotCtx) -> dict[str, Any] | None:
             "armor_reduction_flat": shred,
             "mr_reduction_flat": shred,
             "stacks": stacks,
+            "duration": _E_DURATION + _E_SHRED_LINGER,
         }
         entry["detail"] = (
             f"{ticks} tick(s) over {_E_DURATION:g}s; shreds {shred:g} armor and "

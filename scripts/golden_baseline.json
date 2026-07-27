@@ -2601,6 +2601,7 @@
           "rank": 3,
           "target_debuff": {
             "armor_reduction_percent": 15.0,
+            "duration": 5.0,
             "mr_reduction_percent": 15.0
           },
           "total_raw": 110.0
@@ -3338,6 +3339,7 @@
           "rank": 3,
           "target_debuff": {
             "armor_reduction_flat": 16.0,
+            "duration": 6.0,
             "mr_reduction_flat": 16.0,
             "stacks": 4
           },
@@ -6755,7 +6757,8 @@
           ],
           "rank": 5,
           "target_debuff": {
-            "armor_reduction_percent": 26.0
+            "armor_reduction_percent": 26.0,
+            "duration": 3.0
           },
           "total_raw": 250.0
         },
@@ -7000,36 +7003,46 @@
     },
     "Jayce": {
       "abilities_level_11": {
-        "E": {
-          "cast_time": 0.25,
-          "cooldown": 20.0,
-          "damage_type": "magic",
-          "name": "Thundering Blow",
-          "parts": [
-            "DamagePart(magic, amount=160.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
-          ],
-          "rank": 1,
-          "total_raw": 160.0
-        },
         "Q": {
           "cooldown": 8.0,
           "damage_type": "physical",
-          "name": "To the Skies!",
+          "name": "Shock Blast",
           "parts": [
-            "DamagePart(physical, amount=260.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=399.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
           ],
-          "rank": 5,
-          "total_raw": 260.0
+          "rank": 6,
+          "total_raw": 399.0
+        },
+        "R": {
+          "cooldown": 6.0,
+          "damage_type": "physical",
+          "detail": "No direct damage \u2014 the next basic attack reduces the target's armor and magic resist by 30% for 5s",
+          "name": "Transform Mercury Cannon",
+          "parts": [
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+          ],
+          "rank": 1,
+          "target_debuff": {
+            "armor_reduction_percent": 30.0,
+            "duration": 5.0,
+            "mr_reduction_percent": 30.0
+          },
+          "total_raw": 0.0
         },
         "W": {
-          "cooldown": 10.0,
-          "damage_type": "magic",
-          "name": "Lightning Field",
+          "cooldown": 8.2,
+          "damage_type": "physical",
+          "empowers_next_auto": {
+            "attack_speed": 3.0,
+            "cooldown_starts_after_hits": true,
+            "hits": 3
+          },
+          "name": "Hyper Charge",
           "parts": [
-            "DamagePart(magic, amount=65.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=-5.760000000000005, count=3, hp_scaled=no, crit_effectiveness=1.0, basic_damage=yes, bonus_ad_ratio=-0.06000000000000005)"
           ],
-          "rank": 3,
-          "total_raw": 65.0
+          "rank": 4,
+          "total_raw": 270.72
         }
       },
       "stats": {
@@ -9043,6 +9056,7 @@
           },
           "target_debuff": {
             "armor_reduction_percent": 24.0,
+            "duration": 4.0,
             "mr_reduction_percent": 24.0
           },
           "total_raw": 170.0
@@ -29742,12 +29756,12 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "ec8a0a029ec10e01d9bb84b823594ce9f4881582",
+    "git_head": "75cf4f61dc77ae69fc8cc11f96e92241235e38df",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,
     "patch_last_changed_max": "26.14",
-    "registered_champion_count": 31
+    "registered_champion_count": 32
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -33774,9 +33788,9 @@
             "R": 580.3,
             "W": 128.57,
             "auto_attacks": 0.0,
-            "spellblade_Trinity Force": 282.67
+            "spellblade_Trinity Force": 141.33
           },
-          "total_damage": 2059.45
+          "total_damage": 1918.11
         },
         "sustained": {
           "magic_build": {
@@ -33865,9 +33879,9 @@
             "R": 779.3,
             "W": 200.0,
             "auto_attacks": 0.0,
-            "spellblade_Trinity Force": 373.33
+            "spellblade_Trinity Force": 186.67
           },
-          "total_damage": 2742.07
+          "total_damage": 2555.4
         },
         "sustained": {
           "magic_build": {
@@ -33966,50 +33980,50 @@
             "breakdown_totals": {
               "E": 132.03,
               "Q": 545.6,
-              "R": 507.46,
+              "R": 504.45,
               "W": 650.4,
-              "auto_attacks": 220.9,
+              "auto_attacks": 219.58,
               "auto_attacks_true_damage": 59.2,
-              "proc_Luden's Echo": 178.17,
-              "shadowflame_Shadowflame": 47.47
+              "proc_Luden's Echo": 176.87,
+              "shadowflame_Shadowflame": 47.21
             },
-            "total_damage": 2341.22
+            "total_damage": 2335.34
           },
           "no_items": {
             "breakdown_totals": {
               "E": 132.03,
               "Q": 171.43,
-              "R": 507.46,
+              "R": 504.45,
               "W": 107.14,
-              "auto_attacks": 220.9,
+              "auto_attacks": 219.58,
               "auto_attacks_true_damage": 59.2
             },
-            "total_damage": 1198.16
+            "total_damage": 1193.83
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 446.43,
               "Q": 309.82,
-              "R": 988.53,
+              "R": 984.34,
               "W": 328.57,
-              "auto_attacks": 1547.3,
+              "auto_attacks": 1540.74,
               "auto_attacks_true_damage": 377.85,
-              "on_hit_Kraken Slayer": 133.2
+              "on_hit_Kraken Slayer": 132.53
             },
-            "total_damage": 4131.7
+            "total_damage": 4120.28
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 327.43,
               "Q": 270.54,
-              "R": 789.1,
+              "R": 784.42,
               "W": 265.71,
-              "auto_attacks": 914.65,
+              "auto_attacks": 909.22,
               "auto_attacks_true_damage": 245.13,
-              "spellblade_Trinity Force": 220.9,
+              "spellblade_Trinity Force": 219.58,
               "spellblade_Trinity Force_bonus_true": 59.2
             },
-            "total_damage": 3092.65
+            "total_damage": 3081.22
           }
         }
       },
@@ -34061,50 +34075,50 @@
             "breakdown_totals": {
               "E": 210.74,
               "Q": 545.6,
-              "R": 769.23,
+              "R": 763.36,
               "W": 890.4,
-              "auto_attacks": 289.23,
+              "auto_attacks": 287.02,
               "auto_attacks_true_damage": 75.2,
-              "proc_Luden's Echo": 184.95,
-              "shadowflame_Shadowflame": 52.03
+              "proc_Luden's Echo": 183.21,
+              "shadowflame_Shadowflame": 51.68
             },
-            "total_damage": 3017.38
+            "total_damage": 3007.21
           },
           "no_items": {
             "breakdown_totals": {
               "E": 210.74,
               "Q": 171.43,
-              "R": 769.23,
+              "R": 763.36,
               "W": 321.43,
-              "auto_attacks": 289.23,
+              "auto_attacks": 287.02,
               "auto_attacks_true_damage": 75.2
             },
-            "total_damage": 1837.26
+            "total_damage": 1829.18
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 537.03,
               "Q": 309.82,
-              "R": 1277.82,
+              "R": 1270.91,
               "W": 542.86,
-              "auto_attacks": 2071.13,
+              "auto_attacks": 2059.93,
               "auto_attacks_true_damage": 495.0,
-              "on_hit_Kraken Slayer": 397.57
+              "on_hit_Kraken Slayer": 394.71
             },
-            "total_damage": 5631.23
+            "total_damage": 5610.25
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 411.24,
               "Q": 270.54,
-              "R": 1059.54,
+              "R": 1051.45,
               "W": 480.0,
-              "auto_attacks": 1259.77,
+              "auto_attacks": 1250.15,
               "auto_attacks_true_damage": 327.54,
-              "spellblade_Trinity Force": 289.23,
+              "spellblade_Trinity Force": 287.02,
               "spellblade_Trinity Force_bonus_true": 75.2
             },
-            "total_damage": 4173.05
+            "total_damage": 4153.14
           }
         }
       }
@@ -34897,45 +34911,45 @@
             "breakdown_totals": {
               "E": 410.88,
               "Q": 166.67,
-              "R": 237.23,
-              "auto_attacks": 328.47,
-              "on_hit_ability_passive": 116.79,
+              "R": 228.55,
+              "auto_attacks": 316.46,
+              "on_hit_ability_passive": 112.52,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 31.07
             },
-            "total_damage": 1446.46
+            "total_damage": 1421.5
           },
           "no_items": {
             "breakdown_totals": {
               "E": 114.29,
               "Q": 166.67,
-              "R": 237.23,
-              "auto_attacks": 328.47,
-              "on_hit_ability_passive": 116.79
+              "R": 228.55,
+              "auto_attacks": 316.46,
+              "on_hit_ability_passive": 112.52
             },
-            "total_damage": 963.43
+            "total_damage": 938.48
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 114.29,
               "Q": 358.3,
-              "R": 486.9,
-              "auto_attacks": 1955.26,
-              "on_hit_Kraken Slayer": 388.06,
-              "on_hit_ability_passive": 128.98
+              "R": 473.99,
+              "auto_attacks": 1903.4,
+              "on_hit_Kraken Slayer": 374.57,
+              "on_hit_ability_passive": 125.56
             },
-            "total_damage": 3431.79
+            "total_damage": 3350.1
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 114.29,
               "Q": 273.97,
-              "R": 383.07,
-              "auto_attacks": 1360.78,
-              "on_hit_ability_passive": 158.65,
-              "spellblade_Trinity Force": 262.77
+              "R": 369.06,
+              "auto_attacks": 1311.02,
+              "on_hit_ability_passive": 155.49,
+              "spellblade_Trinity Force": 253.16
             },
-            "total_damage": 2553.52
+            "total_damage": 2476.98
           }
         }
       },
@@ -34982,45 +34996,209 @@
             "breakdown_totals": {
               "E": 474.88,
               "Q": 166.67,
-              "R": 328.47,
-              "auto_attacks": 503.65,
-              "on_hit_ability_passive": 207.15,
+              "R": 316.46,
+              "auto_attacks": 485.23,
+              "on_hit_ability_passive": 200.51,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 31.07
             },
-            "total_damage": 1867.25
+            "total_damage": 1830.17
           },
           "no_items": {
             "breakdown_totals": {
               "E": 171.43,
               "Q": 166.67,
-              "R": 328.47,
-              "auto_attacks": 503.65,
-              "on_hit_ability_passive": 207.15
+              "R": 316.46,
+              "auto_attacks": 485.23,
+              "on_hit_ability_passive": 200.51
             },
-            "total_damage": 1377.36
+            "total_damage": 1340.29
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 171.43,
               "Q": 358.3,
-              "R": 587.67,
-              "auto_attacks": 2513.91,
-              "on_hit_Kraken Slayer": 486.8,
-              "on_hit_ability_passive": 145.1
+              "R": 572.08,
+              "auto_attacks": 2447.23,
+              "on_hit_Kraken Slayer": 469.59,
+              "on_hit_ability_passive": 141.25
             },
-            "total_damage": 4263.2
+            "total_damage": 4159.88
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 171.43,
               "Q": 273.97,
-              "R": 474.31,
-              "auto_attacks": 1748.61,
-              "on_hit_ability_passive": 150.18,
-              "spellblade_Trinity Force": 335.77
+              "R": 456.96,
+              "auto_attacks": 1684.67,
+              "on_hit_ability_passive": 147.62,
+              "spellblade_Trinity Force": 323.49
             },
-            "total_damage": 3154.26
+            "total_damage": 3058.14
+          }
+        }
+      }
+    },
+    "Jayce": {
+      "11": {
+        "magic_build": {
+          "breakdown_totals": {
+            "Q": 295.56,
+            "R": 0.0,
+            "W": 200.53,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 171.86
+          },
+          "total_damage": 667.95
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "Q": 295.56,
+            "R": 0.0,
+            "W": 200.53,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 496.09
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "Q": 554.87,
+            "R": 0.0,
+            "W": 951.45,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 1506.32
+        },
+        "spellblade_build": {
+          "breakdown_totals": {
+            "Q": 445.2,
+            "R": 0.0,
+            "W": 572.93,
+            "auto_attacks": 0.0,
+            "spellblade_Trinity Force": 142.22
+          },
+          "total_damage": 1160.35
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "Q": 295.56,
+              "R": 0.0,
+              "W": 200.53,
+              "auto_attacks": 213.33,
+              "proc_Luden's Echo": 171.86
+            },
+            "total_damage": 881.28
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "Q": 295.56,
+              "R": 0.0,
+              "W": 200.53,
+              "auto_attacks": 213.33
+            },
+            "total_damage": 709.42
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "Q": 554.87,
+              "R": 0.0,
+              "W": 951.45,
+              "auto_attacks": 1349.57,
+              "on_hit_Kraken Slayer": 315.74
+            },
+            "total_damage": 3171.63
+          },
+          "spellblade_build": {
+            "breakdown_totals": {
+              "Q": 445.2,
+              "R": 0.0,
+              "W": 572.93,
+              "auto_attacks": 812.67,
+              "spellblade_Trinity Force": 284.44
+            },
+            "total_damage": 2115.24
+          }
+        }
+      },
+      "18": {
+        "magic_build": {
+          "breakdown_totals": {
+            "Q": 301.13,
+            "R": 0.0,
+            "W": 326.26,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 174.95
+          },
+          "total_damage": 802.35
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "Q": 301.13,
+            "R": 0.0,
+            "W": 326.26,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 627.4
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "Q": 562.31,
+            "R": 0.0,
+            "W": 1285.67,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 1847.98
+        },
+        "spellblade_build": {
+          "breakdown_totals": {
+            "Q": 453.6,
+            "R": 0.0,
+            "W": 798.6,
+            "auto_attacks": 0.0,
+            "spellblade_Trinity Force": 197.74
+          },
+          "total_damage": 1449.94
+        },
+        "sustained": {
+          "magic_build": {
+            "breakdown_totals": {
+              "Q": 301.13,
+              "R": 0.0,
+              "W": 326.26,
+              "auto_attacks": 296.6,
+              "proc_Luden's Echo": 174.95
+            },
+            "total_damage": 1098.95
+          },
+          "no_items": {
+            "breakdown_totals": {
+              "Q": 301.13,
+              "R": 0.0,
+              "W": 326.26,
+              "auto_attacks": 296.6
+            },
+            "total_damage": 924.0
+          },
+          "physical_build": {
+            "breakdown_totals": {
+              "Q": 562.31,
+              "R": 0.0,
+              "W": 1285.67,
+              "auto_attacks": 1947.99,
+              "on_hit_Kraken Slayer": 401.86
+            },
+            "total_damage": 4197.83
+          },
+          "spellblade_build": {
+            "breakdown_totals": {
+              "Q": 453.6,
+              "R": 0.0,
+              "W": 798.6,
+              "auto_attacks": 1210.0,
+              "spellblade_Trinity Force": 395.47
+            },
+            "total_damage": 2857.67
           }
         }
       }
@@ -35071,51 +35249,51 @@
         "sustained": {
           "magic_build": {
             "breakdown_totals": {
-              "E": 309.62,
+              "E": 304.55,
               "Q": 454.24,
-              "R": 361.9,
+              "R": 355.4,
               "W": 0.0,
-              "auto_attacks": 255.07,
-              "on_hit_ability_W": 875.56,
-              "proc_Luden's Echo": 168.28,
-              "shadowflame_Shadowflame": 208.77
+              "auto_attacks": 250.71,
+              "on_hit_ability_W": 861.23,
+              "proc_Luden's Echo": 165.53,
+              "shadowflame_Shadowflame": 205.35
             },
-            "total_damage": 2633.45
+            "total_damage": 2597.03
           },
           "no_items": {
             "breakdown_totals": {
-              "E": 53.68,
+              "E": 52.9,
               "Q": 121.43,
-              "R": 115.2,
+              "R": 113.49,
               "W": 0.0,
-              "auto_attacks": 255.07,
-              "on_hit_ability_W": 368.1
+              "auto_attacks": 250.71,
+              "on_hit_ability_W": 362.76
             },
-            "total_damage": 913.48
+            "total_damage": 901.29
           },
           "physical_build": {
             "breakdown_totals": {
-              "E": 53.68,
+              "E": 52.9,
               "Q": 121.43,
-              "R": 210.85,
+              "R": 207.73,
               "W": 0.0,
-              "auto_attacks": 1607.66,
-              "on_hit_Kraken Slayer": 138.69,
-              "on_hit_ability_W": 460.12
+              "auto_attacks": 1587.8,
+              "on_hit_Kraken Slayer": 136.56,
+              "on_hit_ability_W": 453.45
             },
-            "total_damage": 2592.43
+            "total_damage": 2559.85
           },
           "spellblade_build": {
             "breakdown_totals": {
-              "E": 53.68,
+              "E": 52.9,
               "Q": 121.43,
-              "R": 183.7,
+              "R": 180.98,
               "W": 0.0,
-              "auto_attacks": 1146.41,
-              "on_hit_ability_W": 552.15,
-              "spellblade_Trinity Force": 255.07
+              "auto_attacks": 1126.82,
+              "on_hit_ability_W": 544.14,
+              "spellblade_Trinity Force": 250.71
             },
-            "total_damage": 2312.44
+            "total_damage": 2276.97
           }
         }
       },
@@ -35165,51 +35343,51 @@
         "sustained": {
           "magic_build": {
             "breakdown_totals": {
-              "E": 461.05,
+              "E": 450.77,
               "Q": 526.24,
-              "R": 476.62,
+              "R": 464.57,
               "W": 0.0,
-              "auto_attacks": 425.37,
-              "on_hit_ability_W": 1125.67,
-              "proc_Luden's Echo": 173.08,
-              "shadowflame_Shadowflame": 259.75
+              "auto_attacks": 415.45,
+              "on_hit_ability_W": 1100.56,
+              "proc_Luden's Echo": 169.22,
+              "shadowflame_Shadowflame": 253.96
             },
-            "total_damage": 3447.79
+            "total_damage": 3380.77
           },
           "no_items": {
             "breakdown_totals": {
-              "E": 180.82,
+              "E": 177.25,
               "Q": 185.71,
-              "R": 163.12,
+              "R": 159.7,
               "W": 0.0,
-              "auto_attacks": 425.37,
-              "on_hit_ability_W": 471.7
+              "auto_attacks": 415.45,
+              "on_hit_ability_W": 462.39
             },
-            "total_damage": 1426.72
+            "total_damage": 1400.51
           },
           "physical_build": {
             "breakdown_totals": {
-              "E": 180.82,
+              "E": 177.25,
               "Q": 185.71,
-              "R": 268.47,
+              "R": 262.83,
               "W": 0.0,
-              "auto_attacks": 2181.08,
-              "on_hit_Kraken Slayer": 405.36,
-              "on_hit_ability_W": 566.04
+              "auto_attacks": 2144.55,
+              "on_hit_Kraken Slayer": 397.8,
+              "on_hit_ability_W": 554.87
             },
-            "total_damage": 3787.48
+            "total_damage": 3723.02
           },
           "spellblade_build": {
             "breakdown_totals": {
-              "E": 180.82,
+              "E": 177.25,
               "Q": 185.71,
-              "R": 238.56,
+              "R": 233.56,
               "W": 0.0,
-              "auto_attacks": 1557.37,
-              "on_hit_ability_W": 660.38,
-              "spellblade_Trinity Force": 340.3
+              "auto_attacks": 1521.05,
+              "on_hit_ability_W": 647.35,
+              "spellblade_Trinity Force": 332.36
             },
-            "total_damage": 3163.14
+            "total_damage": 3097.28
           }
         }
       }

@@ -28,6 +28,17 @@ def growth_stat(base: float, growth: float, level: int) -> float:
     return base + growth * (level - 1) * (0.7025 + 0.0175 * (level - 1))
 
 
+# The game clamps a unit's TOTAL attack speed to 3.003 (one basic attack
+# per 0.333s); the floor is 0.2. See
+# https://wiki.leagueoflegends.com/en-us/Attack_speed
+# NOTE: ``calculate_attack_speed`` deliberately does NOT clamp — applying
+# the cap fight-wide would move every attack-speed champion's numbers at
+# once. Today only a burst that is *designed* to reach the cap reads it
+# (Jayce's Hyper Charge: 360% on his 0.658 ratio lands at 3.027, which is
+# why the in-game tooltip reads "maximum Attack Speed" and not a percent).
+ATTACK_SPEED_CAP = 3.003
+
+
 def calculate_attack_speed(
     base_attack_speed: float,
     attack_speed_ratio: float,

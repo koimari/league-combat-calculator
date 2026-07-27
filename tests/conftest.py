@@ -81,6 +81,7 @@ dr_mundo_data = _champion_fixture("DrMundo")
 gnar_data = _champion_fixture("Gnar")
 # Data key differs from the display/dispatcher name "Jarvan IV".
 jarvan_iv_data = _champion_fixture("JarvanIV")
+jayce_data = _champion_fixture("Jayce")
 # Data key differs from the display/dispatcher name "Kog'Maw".
 kogmaw_data = _champion_fixture("KogMaw")
 vayne_data = _champion_fixture("Vayne")

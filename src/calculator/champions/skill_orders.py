@@ -109,6 +109,19 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "W", "Q", "W", "Q", "R", "Q",
         "Q", "E", "E", "R", "E", "E",
     ],
+    # ── NO "R" ON PURPOSE — do not "fix" this by adding one ──
+    # Jayce starts with Transform at rank 1 and can never level it, so
+    # all 18 skill points go to Q/W/E, which therefore have SIX ranks
+    # each (the JSON values arrays confirm: 6 entries, not 5). An "R"
+    # here would both steal a basic-ability rank and make
+    # get_ability_rank("R", ...) return a rank Jayce cannot have.
+    # ``jayce.py``'s R slot ignores rank entirely and keys off level.
+    # Q max first (level 8), then W (13), then E (18).
+    "Jayce": [
+        "Q", "W", "E", "Q", "Q", "Q",
+        "Q", "Q", "W", "W", "W", "W",
+        "W", "E", "E", "E", "E", "E",
+    ],
     # ── Q max first, then W ──
     "Vayne": [
         "Q", "W", "E", "Q", "Q", "R",

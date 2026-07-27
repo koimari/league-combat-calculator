@@ -72,7 +72,10 @@ class TestQDragonStrike:
             champion_stats=dict(NO_AD),
         )
         debuff = abilities["Q"]["target_debuff"]
-        assert debuff == {"armor_reduction_percent": pytest.approx(18.0)}
+        assert debuff == {
+            "armor_reduction_percent": pytest.approx(18.0),
+            "duration": pytest.approx(3.0),
+        }
 
     def test_q_armor_shred_scales_with_rank(self, jarvan_iv_data) -> None:
         """Armor reduction: 10/18/26% at ranks 1/3/5."""
