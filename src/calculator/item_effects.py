@@ -269,6 +269,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # 1% max HP every 0.5s for 3s = 6% max HP total
         "max_hp_ratio_total": 0.06,
         "duration": 3.0,
+        "tick_interval": 0.5,
         # Suffering: 2% increased damage per second, up to 6%
         "damage_amp_per_second": 0.02,
         "damage_amp_max": 0.06,
@@ -281,6 +282,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "base_total": 60.0,
         "ap_ratio_total": 0.06,
         "duration": 3.0,
+        "tick_interval": 0.5,
         # 4% bonus AP per burning champion
         "ap_amp_per_target": 0.04,
     },
@@ -783,6 +785,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
 
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Blade of the Ruined King": frozenset({"min_damage"}),
+    "Blackfire Torch": frozenset({"tick_interval"}),
     "Experimental Hexplate": frozenset({"bonus_attack_speed_percent"}),
     "Hexdrinker": frozenset(
         {
@@ -798,6 +801,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Hextech Gunblade": frozenset({"base_min", "base_max", "cooldown"}),
     "Hextech Rocketbelt": frozenset({"cooldown"}),
     "Malignance": frozenset({"base", "ap_ratio", "duration"}),
+    "Liandry's Torment": frozenset({"tick_interval"}),
     "Maw of Malmortius": frozenset(
         {
             "health_threshold",
@@ -1037,6 +1041,7 @@ class BurnEffect:
 
     source: DamageSource
     duration: float
+    tick_interval: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -1497,7 +1502,11 @@ def _compile_burn(item_name: str, values: Mapping[str, Any]) -> BurnEffect:
         suffix="burn",
         breakdown_key=f"burn_{item_name}",
     )
-    return BurnEffect(source, required.number("duration"))
+    return BurnEffect(
+        source,
+        required.number("duration"),
+        required.number("tick_interval"),
+    )
 
 
 def _compile_immolate(item_name: str, values: Mapping[str, Any]) -> DamageSource:

@@ -411,6 +411,48 @@ class TestTargetIncomingDamageModifiers:
             "total_damage"
         ] == pytest.approx(60.0)
 
+    def test_burn_ticks_keep_timing_and_respect_lifeline_expiry(
+        self, fight, attacker_stats
+    ):
+        from src.calculator.data_fetcher import get_item_by_name
+
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Shield trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 350.0,
+                    "parts": (DamagePart("magic", 350.0),),
+                }
+            },
+            items=[get_item_by_name("Blackfire Torch")],
+            target_magic_resistance=0.0,
+            target_threshold_shield_amount=500.0,
+            target_threshold_shield_health_ratio=0.90,
+            target_threshold_shield_duration=0.75,
+        )
+
+        burn = result["breakdown"]["burn_Blackfire Torch"]
+        assert [event["time"] for event in burn["damage_events"]] == [
+            0.5,
+            1.0,
+            1.5,
+            2.0,
+            2.5,
+            3.0,
+        ]
+        assert [event["damage"] for event in burn["damage_events"]] == pytest.approx(
+            [10.0] * 6
+        )
+        # Q consumes 350 shield and the 0.5s tick consumes 10 more. The
+        # remaining shield expires before the five later ticks.
+        assert result["total_damage"] == pytest.approx(410.0)
+        assert result["threshold_shield_absorbed"] == pytest.approx(360.0)
+        assert result["health_damage"] == pytest.approx(50.0)
+
 
 class TestBorkCurrentHpSimulation:
     """Tests for Blade of the Ruined King current-HP iterative simulation."""

@@ -4155,6 +4155,42 @@ def _add_spellblade_damage(
     return result
 
 
+def _periodic_damage_events(
+    total_damage: float,
+    damage_type: str,
+    duration: float,
+    interval: float,
+) -> list[dict[str, float | str]]:
+    """Split an aggregate periodic total into timestamped full/partial ticks."""
+    if total_damage <= 0 or duration <= 0 or interval <= 0:
+        return []
+    events: list[dict[str, float | str]] = []
+    full_ticks = int(duration / interval + 1e-9)
+    damage_rate = total_damage / duration
+    for index in range(full_ticks):
+        events.append(
+            {
+                "time": (index + 1) * interval,
+                "damage_type": damage_type,
+                "damage": damage_rate * interval,
+            }
+        )
+    remainder = duration - full_ticks * interval
+    if remainder > 1e-9:
+        events.append(
+            {
+                "time": duration,
+                "damage_type": damage_type,
+                "damage": damage_rate * remainder,
+            }
+        )
+    if events:
+        # Eliminate floating-point drift while preserving every tick's timing.
+        emitted = sum(float(event["damage"]) for event in events)
+        events[-1]["damage"] = float(events[-1]["damage"]) + total_damage - emitted
+    return events
+
+
 def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
     """Add burn/DoT item damage: burns, Immolate, and Unending Despair.
 
@@ -4221,6 +4257,13 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             "name": source.display_name,
             "total_damage": burn_mitigated,
             "damage_type": source.damage_type,
+            "damage_events": _periodic_damage_events(
+                burn_mitigated,
+                source.damage_type,
+                effective_burn_time,
+                effect.tick_interval,
+            ),
+            "event_phase": "effect",
         }
         state.total_damage += burn_mitigated
 
