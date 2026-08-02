@@ -1997,6 +1997,39 @@ select:focus-visible {
     border-bottom: none;
 }
 
+.champion-sources {
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+.champion-sources > span {
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.champion-sources ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 4px;
+}
+
+.champion-sources li {
+    border: 0;
+    padding: 0;
+}
+
+.champion-sources a {
+    color: var(--teal);
+    font-size: 0.74rem;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
 .event-timeline summary {
     align-items: center;
     cursor: pointer;

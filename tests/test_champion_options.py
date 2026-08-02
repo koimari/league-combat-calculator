@@ -55,6 +55,7 @@ class TestGetChampionOptionsMeta:
         assert get_champion_options_meta("Garen") == {
             "options": [],
             "assumptions": [],
+            "sources": [],
         }
 
     def test_registered_champion_without_options(self) -> None:
@@ -62,7 +63,21 @@ class TestGetChampionOptionsMeta:
         assert get_champion_options_meta("Ahri") == {
             "options": [],
             "assumptions": [],
+            "sources": [],
         }
+
+    def test_revision_backed_champion_exposes_sources(self) -> None:
+        meta = get_champion_options_meta("Soraka")
+
+        assert [source["label"] for source in meta["sources"]] == [
+            "Starcall",
+            "Equinox",
+        ]
+        assert all(source["url"].startswith("https://") for source in meta["sources"])
+        assert all(source["revision_id"] > 0 for source in meta["sources"])
+        assert all(
+            source["revision_timestamp"].endswith("Z") for source in meta["sources"]
+        )
 
 
 class TestChampionOptionsMetaMap:
@@ -78,6 +93,12 @@ class TestChampionOptionsMetaMap:
         meta_map = champion_options_meta_map()
         assert meta_map["Alistar"]["options"] == []
         assert len(meta_map["Alistar"]["assumptions"]) > 0
+
+    def test_includes_revision_backed_champions(self) -> None:
+        meta_map = champion_options_meta_map()
+
+        assert len(meta_map["Lissandra"]["sources"]) == 4
+        assert len(meta_map["Soraka"]["sources"]) == 2
 
     def test_excludes_champions_with_empty_meta(self) -> None:
         meta_map = champion_options_meta_map()
@@ -100,6 +121,18 @@ class TestOptionsDeclarationValidity:
                 )
                 if "min" in opt and "max" in opt:
                     assert opt["min"] <= opt["default"] <= opt["max"], (name, opt)
+
+    def test_sources_shape(self) -> None:
+        """Every declared source is a revision-pinned Wiki page."""
+        required = {"label", "url", "revision_id", "revision_timestamp"}
+        for name in _CHAMPION_MODULES:
+            for source in get_champion_options_meta(name)["sources"]:
+                assert set(source) == required, (name, source)
+                assert source["url"].startswith("https://wiki.leagueoflegends.com/"), (
+                    name,
+                    source,
+                )
+                assert isinstance(source["revision_id"], int), (name, source)
 
     def test_no_option_key_collides_with_a_reserved_key(self) -> None:
         """Reserved keys are pipeline-owned (``RESERVED_OPTION_KEYS``).

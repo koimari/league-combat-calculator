@@ -515,6 +515,12 @@ def test_config_exposes_all_request_defaults():
         "auto_attack_uptime": 0.8,
         "one_rotation_duration_seconds": 5.0,
     }
+    assert data["champion_options"]["Soraka"]["sources"][1] == {
+        "label": "Equinox",
+        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Soraka/Equinox",
+        "revision_id": 3907153,
+        "revision_timestamp": "2025-06-06T18:23:34Z",
+    }
     assert data["input_limits"] == {
         "fight_duration": [1.0, 10.0],
         "auto_attack_uptime": [0.0, 1.0],

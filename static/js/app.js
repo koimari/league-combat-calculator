@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Champion option/assumption metadata, declared as OPTIONS/ASSUMPTIONS
     // beside each champion module's SLOTS (src/calculator/champions/).
     // Shape: { "<champion>": { options: [{key, type, default, label,
-    // min?, max?, step?}], assumptions: ["..."] } } — champions absent
+    // min?, max?, step?}], assumptions: ["..."], sources: [...] } } — champions absent
     // from the map have no special options (the generic path).
     let championOptionsMeta = {};
     let hasCalculated = false;
@@ -1775,18 +1775,34 @@ document.addEventListener("DOMContentLoaded", () => {
         // them on panel A only so Compare mode doesn't repeat them.
         const assumptionsGroup = panel.querySelector(".champion-assumptions");
         const meta = championOptionsMeta[championSelect.value];
-        const showAssumptions =
-            build === "a" && meta && meta.assumptions && meta.assumptions.length > 0;
-        if (showAssumptions) {
+        const showChampionModel = build === "a" && meta && (
+            (meta.assumptions && meta.assumptions.length > 0)
+            || (meta.sources && meta.sources.length > 0)
+        );
+        if (showChampionModel) {
             const assumptionsList = field("champion-assumptions-list");
             assumptionsList.innerHTML = "";
-            meta.assumptions.forEach((text) => {
+            (meta.assumptions || []).forEach((text) => {
                 const li = document.createElement("li");
                 li.textContent = text;
                 assumptionsList.appendChild(li);
             });
+            const sources = field("champion-sources");
+            const sourcesList = field("champion-sources-list");
+            sourcesList.innerHTML = "";
+            (meta.sources || []).forEach((source) => {
+                const li = document.createElement("li");
+                const link = document.createElement("a");
+                link.href = source.url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.textContent = `${source.label} · rev ${source.revision_id}`;
+                li.appendChild(link);
+                sourcesList.appendChild(li);
+            });
+            sources.classList.toggle("hidden", !meta.sources || meta.sources.length === 0);
         }
-        assumptionsGroup.classList.toggle("hidden", !showAssumptions);
+        assumptionsGroup.classList.toggle("hidden", !showChampionModel);
     }
 
     function renderComparisonVerdict(builds, results) {

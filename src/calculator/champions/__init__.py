@@ -63,7 +63,9 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Jarvan IV": "jarvan_iv",
     "Jayce": "jayce",
     "Kog'Maw": "kogmaw",
+    "Lissandra": "lissandra",
     "Orianna": "orianna",
+    "Soraka": "soraka",
     "Syndra": "syndra",
     "Vayne": "vayne",
     "Ziggs": "ziggs",
@@ -194,31 +196,37 @@ def get_champion_options_meta(champion_name: str) -> dict[str, list]:
     Registered modules declare ``OPTIONS`` (a list of option dicts:
     ``key``, ``type`` ("bool"/"int"/"float"), ``default``, ``label``,
     plus ``min``/``max``/``step`` for numeric inputs) and
-    ``ASSUMPTIONS`` (prose strings shown in the UI) beside their
-    ``SLOTS``. Champions without a module have neither — the generic
-    path takes no options.
+    ``ASSUMPTIONS`` (prose strings shown in the UI), and optionally
+    revision-pinned ``SOURCES`` beside their ``SLOTS``. Champions without a
+    module have none of these — the generic path takes no options.
 
     Returns:
-        ``{"options": [...], "assumptions": [...]}`` (JSON-safe).
+        ``{"options": [...], "assumptions": [...], "sources": [...]}``
+        (JSON-safe). A source row contains ``label``, ``url``,
+        ``revision_id``, and ``revision_timestamp``.
     """
     module_name = _CHAMPION_MODULES.get(champion_name)
     if module_name is None:
-        return {"options": [], "assumptions": []}
+        return {"options": [], "assumptions": [], "sources": []}
     module = importlib.import_module(f".{module_name}", package=__name__)
-    return {"options": list(module.OPTIONS), "assumptions": list(module.ASSUMPTIONS)}
+    return {
+        "options": list(module.OPTIONS),
+        "assumptions": list(module.ASSUMPTIONS),
+        "sources": list(getattr(module, "SOURCES", [])),
+    }
 
 
 def champion_options_meta_map() -> dict[str, dict[str, list]]:
-    """Option/assumption metadata for every champion that has any.
+    """Option, assumption, and source metadata for every champion with any.
 
     The shape /api/config serves: champions absent from the map have no
-    options and no assumptions (the frontend shows its generic "no
-    special options" placeholder).
+    options, assumptions, or sources (the frontend shows its generic
+    "no special options" placeholder).
     """
     result = {}
     for name in _CHAMPION_MODULES:
         meta = get_champion_options_meta(name)
-        if meta["options"] or meta["assumptions"]:
+        if meta["options"] or meta["assumptions"] or meta["sources"]:
             result[name] = meta
     return result
 
