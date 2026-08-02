@@ -3,6 +3,17 @@ const DDRAGON = "https://ddragon.leagueoflegends.com/cdn/16.15.1/img";
 let DATA;
 let pickerContext = null;
 let bisContext = null;
+const engine = {
+  ready: false,
+  reviewed: new Set(),
+  availability: new Map(),
+  itemOptions: {},
+  championOptions: {},
+  pendingTimer: null,
+  requestId: 0,
+  responses: null,
+  pending: false,
+};
 
 const state = {
   attacker: {
@@ -41,6 +52,7 @@ const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (char) => ({ "&":
 
 function invalidateOptimization() {
   if (!state.optimizer.running) state.optimizer.summary = null;
+  engine.responses = null;
 }
 
 function getChampion(name) {
@@ -639,11 +651,284 @@ function renderDamageBreakdown(aResult, bResult) {
     <div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${comparisonHead}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage dealt</strong><small>After selected enemy resistances</small></td><td>${fmt(aResult.cumulative)}</td>${comparisonTotal}</tr></tbody></table></div>`;
 }
 
+function engineItemOptions(ids, stacks = []) {
+  const options = {};
+  ids.forEach((id, index) => {
+    const item = getItem(id);
+    const definition = item && engine.itemOptions[item.name];
+    if (!item || !definition?.options?.glory_stacks) return;
+    options[item.name] = { glory_stacks: Number(stacks[index] || 0) };
+  });
+  return options;
+}
+
+function engineBuild(side) {
+  const ids = buildIdsForSide(side).filter(Boolean);
+  const stacks = buildStacksForSide(side);
+  const bootId = ids.find((id) => ALL_ROLE_BOOTS.has(Number(id))) || 0;
+  const itemIds = ids.filter((id) => Number(id) !== Number(bootId));
+  const itemStacks = itemIds.map((id) => {
+    const originalIndex = ids.indexOf(id);
+    return stacks[originalIndex] || 0;
+  });
+  return {
+    boots: bootId ? itemName(bootId) : "",
+    items: itemIds.map((id) => itemName(id)).filter(Boolean),
+    item_options: engineItemOptions(itemIds, itemStacks),
+  };
+}
+
+function engineChampionOptions() {
+  const champion = state.attacker.champion;
+  const definition = engine.championOptions[champion];
+  if (!definition?.options) return {};
+  const options = {};
+  definition.options.forEach((option) => {
+    if (option.key === "passive_procs" && activeAbilityKit().some((ability) => ability.slot === "P")) {
+      options[option.key] = abilityInput("P").casts;
+    } else if (option.key === "mines_hit" && activeAbilityKit().some((ability) => ability.slot === "E")) {
+      options[option.key] = abilityInput("E").hits;
+    } else if (option.key === "r_sweet_spot" && activeAbilityKit().some((ability) => ability.slot === "R")) {
+      options[option.key] = abilityInput("R").variant === 0;
+    }
+  });
+  return options;
+}
+
+function engineAbilityRanks() {
+  const requested = {};
+  activeAbilityKit().forEach((ability) => {
+    if (ability.slot === "P") return;
+    const input = abilityInput(ability.slot);
+    const levelCap = ability.slot === "R"
+      ? (state.attacker.level >= 16 ? 3 : state.attacker.level >= 11 ? 2 : state.attacker.level >= 6 ? 1 : 0)
+      : Math.min(5, Math.floor((state.attacker.level + 1) / 2));
+    requested[ability.slot] = Math.max(0, Math.min(ability.maxRank, levelCap, Number(input.rank) || 0));
+  });
+  let remaining = Math.min(state.attacker.level, 18);
+  const ranks = {};
+  // Preserve the user's allocation as far as the level budget allows, then
+  // trim the last-ranked basics first. Every request reaching the engine is
+  // therefore legal even while a user is clicking through a new level.
+  const slots = ["Q", "W", "E", "R"];
+  slots.forEach((slot) => {
+    ranks[slot] = Math.min(requested[slot] || 0, remaining);
+    remaining -= ranks[slot];
+  });
+  return ranks;
+}
+
+function engineTarget(target) {
+  return {
+    champion: target.champion,
+    level: target.level,
+    items: target.items.filter(Boolean).map((id) => itemName(id)).filter(Boolean),
+    item_options: engineItemOptions(target.items.filter(Boolean), target.itemStacks),
+    role: "",
+    role_quest_complete: false,
+  };
+}
+
+function engineFightPayload(side) {
+  const build = engineBuild(side);
+  const payload = {
+    champion: state.attacker.champion,
+    level: state.attacker.level,
+    ...build,
+    target_health: 1000,
+    target_bonus_health: 0,
+    target_armor: 100,
+    target_mr: 100,
+    enemies: state.targets.filter((target) => target.champion).map(engineTarget),
+    allies: [],
+    role: state.attacker.role || "",
+    role_quest_complete: state.attacker.roleQuestComplete,
+    include_actives: true,
+    include_crossover: state.attacker.comparisonEnabled || state.fight.rotations > 1,
+    champion_options: engineChampionOptions(),
+    ability_ranks: engineAbilityRanks(),
+  };
+  if (state.fight.aaUptime > 0) {
+    payload.fight_mode = "time_based";
+    payload.fight_duration = Math.max(1, state.fight.duration * state.fight.rotations);
+    payload.include_auto_attacks = true;
+    payload.auto_attack_uptime = state.fight.aaUptime;
+  } else {
+    payload.fight_mode = "one_rotation";
+    payload.fight_duration = state.fight.duration;
+    payload.include_auto_attacks = false;
+    payload.auto_attack_uptime = 0;
+  }
+  return payload;
+}
+
+function exactStatMatrix(result) {
+  const stats = result?.champion_stats;
+  if (!stats) return null;
+  return {
+    baseHp: Number(stats.base_health || 0),
+    bonusHp: Number(stats.bonus_health || 0),
+    hp: Number(stats.health || 0),
+    mana: Number(stats.max_mana || 0),
+    ad: Number(stats.attack_damage || 0),
+    ap: Number(stats.ability_power || 0),
+    armor: Number(stats.armor || 0),
+    mr: Number(stats.magic_resistance || 0),
+    haste: Number(stats.ability_haste || 0),
+    pen: Number(stats.magic_penetration_flat || 0),
+    percentPen: Number(stats.magic_penetration_percent || 0),
+    lethality: Number(stats.lethality || 0),
+    percentArmorPen: Number(stats.armor_penetration_percent || 0),
+    attackSpeed: Number(stats.attack_speed || 0),
+    crit: Number(stats.critical_strike_chance || 0),
+    moveSpeed: Number(stats.move_speed || 0),
+  };
+}
+
+function renderEngineUnavailable() {
+  const availability = engine.availability.get(state.attacker.champion) || {};
+  const reason = availability.blockers?.[0] || "This champion has no reviewed event-ordered combat model yet.";
+  $("resultContext").textContent = "Engine unavailable";
+  $("winnerVisual").innerHTML = `<div class="result-empty-mark">—</div><div><span>Calculation withheld</span><strong>${escapeHtml(state.attacker.champion)}</strong><b>Reviewed model required</b></div>`;
+  $("scoreGrid").innerHTML = `<div class="empty-score single-score">${escapeHtml(reason)}</div>`;
+  $("why").textContent = "The calculator does not substitute a stat-only estimate for an unreviewed mechanic.";
+  $("threshold").innerHTML = "<span>Crossover</span><strong>Unavailable until the attacker is reviewed</strong>";
+  $("resistanceOutput").innerHTML = "";
+  $("mechanicsOutput").innerHTML = "";
+  $("rotationTable").innerHTML = "";
+  $("damageBreakdown").innerHTML = "";
+}
+
+function exactPoint(result) {
+  const curve = Array.isArray(result?.comparison_curve) ? result.comparison_curve : [];
+  const selected = curve.find((row) => Number(row.rotation) === Number(state.fight.rotations));
+  return selected || { total_damage: Number(result?.total_damage || 0), dps: Number(result?.total_damage || 0) / Math.max(1, state.fight.duration) };
+}
+
+function exactBreakdown(result) {
+  return Object.values(result?.breakdown || {}).map((entry) => ({
+    source: entry.name || entry.slot || "Damage source",
+    detail: entry.casts ? `${entry.casts} cast${entry.casts === 1 ? "" : "s"}` : entry.count ? `${entry.count} hit${entry.count === 1 ? "" : "s"}` : "Event-ordered output",
+    damage: Number(entry.total_damage || 0),
+  }));
+}
+
+function renderExactStatMatrix(aResult, bResult) {
+  const host = document.querySelector(".hero-matrix");
+  if (!host) return;
+  const aStats = exactStatMatrix(aResult);
+  if (!aStats) return;
+  host.innerHTML = `<div class="matrix-head"><strong>Complete champion stats</strong><span>${bResult ? "Build A / Build B" : "Build A"}</span></div>${statMatrix(aStats, bResult ? exactStatMatrix(bResult) : null)}`;
+}
+
+function renderExactResistance(aResult, bResult) {
+  const rows = (aResult?.targets || []).map((entry, index) => {
+    const target = entry.target || {};
+    const result = entry.result || {};
+    const other = bResult?.targets?.[index]?.result;
+    const armor = `${one(result.effective_armor)}${other ? ` / ${one(other.effective_armor)}` : ""}`;
+    const mr = `${one(result.effective_mr)}${other ? ` / ${one(other.effective_mr)}` : ""}`;
+    const shield = Number(target.starting_defenses?.magic_shield || 0);
+    return `<tr><td>${escapeHtml(target.champion || "Target")}</td><td>${armor}</td><td>${mr}${shield ? ` · ${fmt(shield)} shield` : ""}</td></tr>`;
+  }).join("");
+  $("resistanceOutput").innerHTML = rows ? `<div class="resistance-head"><span>Effective defenses</span><b>After build penetration</b></div><div class="resistance-table-wrap"><table><thead><tr><th>Enemy</th><th>Armor${bResult ? " · A / B" : ""}</th><th>MR${bResult ? " · A / B" : ""}</th></tr></thead><tbody>${rows}</tbody></table></div>` : "";
+}
+
+function renderExactBreakdown(aResult, bResult) {
+  const rows = new Map();
+  const ingest = (result, side) => exactBreakdown(result).forEach((entry) => {
+    const key = `${entry.source}:${entry.detail}`;
+    const row = rows.get(key) || { ...entry, a: 0, b: 0 };
+    row[side] += entry.damage;
+    rows.set(key, row);
+  });
+  ingest(aResult, "a");
+  if (bResult) ingest(bResult, "b");
+  const body = [...rows.values()].map((row) => `<tr><td><strong>${escapeHtml(row.source)}</strong><small>${escapeHtml(row.detail)}</small></td><td>${fmt(row.a)}</td>${bResult ? `<td>${fmt(row.b)}</td><td>${Math.abs(row.a - row.b) < .5 ? "—" : `${row.a > row.b ? "+" : ""}${fmt(row.a - row.b)}`}</td>` : ""}</tr>`).join("");
+  const totalB = bResult ? `<td>${fmt(bResult.total_damage)}</td><td>${Math.abs(aResult.total_damage - bResult.total_damage) < .5 ? "—" : `${aResult.total_damage > bResult.total_damage ? "+" : ""}${fmt(aResult.total_damage - bResult.total_damage)}`}</td>` : "";
+  $("damageBreakdown").innerHTML = `<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage dealt</strong><small>After shields and selected enemy defenses</small></td><td>${fmt(aResult.total_damage)}</td>${totalB}</tr></tbody></table></div>`;
+}
+
+function renderExactMechanics(aResult, bResult) {
+  const result = aResult;
+  const coverage = result?.timeline_coverage || {};
+  const events = (result?.cast_timeline || []).slice(0, 8).map((event) => `${one(event.time)}s ${event.name || event.slot}`).join(" · ");
+  const notes = [...(result?.notes || []), coverage.note].filter(Boolean);
+  $("mechanicsOutput").innerHTML = `<div class="mechanics-head"><span>Engine output</span><b>${escapeHtml(coverage.certification || "event ordered")}</b></div><article class="mechanic-row"><div><strong>Fight order</strong><p>${escapeHtml(events || "No cast timeline returned")}</p></div><span class="modelled">Calculated</span></article>${notes.map((note) => `<article class="mechanic-row"><div><strong>Model note</strong><p>${escapeHtml(note)}</p></div><span class="text-only">Boundary</span></article>`).join("")}`;
+}
+
+function renderExactResults(aResult, bResult) {
+  const aPoint = exactPoint(aResult);
+  const bPoint = bResult ? exactPoint(bResult) : null;
+  const aTotal = Number(aPoint.total_damage || 0);
+  const bTotal = bPoint ? Number(bPoint.total_damage || 0) : 0;
+  const tied = bResult && Math.abs(aTotal - bTotal) < .5;
+  const aWins = !bResult || aTotal > bTotal;
+  const winner = bResult ? (aWins ? "Build A" : "Build B") : "Build A";
+  const edge = bResult && Math.min(aTotal, bTotal) > 0 ? Math.abs(aTotal / bTotal - 1) * 100 : 0;
+  $("resultContext").textContent = `${state.targets.length} ${plural(state.targets.length, "enemy")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
+  $("winnerVisual").innerHTML = tied ? `<div></div><div><span>Engine output</span><strong>Tie</strong><b>Less than 1 damage apart</b></div>` : `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${bResult ? "Better here" : "Engine output"}</span><strong>${winner}</strong><b>${bResult ? `${percent(edge)} more total damage` : "Event-ordered result"}</b></div>`;
+  $("scoreGrid").innerHTML = [{ name: "Build A", total: aTotal, point: aPoint, winner: aWins && !tied }, ...(bResult ? [{ name: "Build B", total: bTotal, point: bPoint, winner: !aWins && !tied }] : [])].map((entry) => `<div class="score ${entry.winner ? "winner" : ""} ${bResult ? "" : "single-score"}"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>${entry.name}</span></header><strong>${fmt(entry.total)}</strong><small>TDD · ${fmt(entry.point.dps || entry.total / Math.max(1, state.fight.duration))} DPS</small></div>`).join("");
+  renderExactStatMatrix(aResult, bResult);
+  renderExactResistance(aResult, bResult);
+  const certification = aResult.timeline_coverage?.certification || "event ordered";
+  const shield = Number(aResult.shield_absorbed || 0);
+  const resource = Number(aResult.resource_remaining || 0);
+  $("why").innerHTML = `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed · ${fmt(resource)} resource remaining.`;
+  $("threshold").innerHTML = `<span>Crossover</span><strong>${bResult ? (tied ? "No meaningful difference at this window" : `${escapeHtml(winner)} leads at the selected window`) : `${fmt(aTotal)} event-ordered damage`}</strong>`;
+  const aCurve = aResult.comparison_curve || [{ rotation: state.fight.rotations, total_damage: aTotal }];
+  const bCurve = bResult?.comparison_curve || [];
+  $("tableA").textContent = "Build A";
+  $("tableB").textContent = bResult ? "Build B" : "—";
+  $("rotationTable").innerHTML = aCurve.map((row, index) => {
+    const other = bCurve[index];
+    const lead = other ? (Math.abs(row.total_damage - other.total_damage) < .5 ? "Tie" : row.total_damage > other.total_damage ? "Build A" : "Build B") : "Build A";
+    return `<tr><td>${row.rotation}</td><td>${fmt(row.total_damage)}</td><td>${other ? fmt(other.total_damage) : "—"}</td><td>${lead}</td></tr>`;
+  }).join("");
+  renderExactMechanics(aResult, bResult);
+  renderExactBreakdown(aResult, bResult);
+}
+
+function scheduleEngineCalculation() {
+  if (engine.pendingTimer) clearTimeout(engine.pendingTimer);
+  if (!engine.ready || !state.attacker.champion || !state.targets.length || !state.targets.every((target) => target.champion)) return;
+  if (!engine.reviewed.has(state.attacker.champion)) return;
+  engine.pendingTimer = setTimeout(() => {
+    const requestId = ++engine.requestId;
+    engine.pending = true;
+    const builds = state.attacker.comparisonEnabled ? ["A", "B"] : ["A"];
+    Promise.all(builds.map((side) => fetch("/api/calculate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(engineFightPayload(side)),
+    }).then((response) => response.json())))
+      .then((results) => {
+        if (requestId !== engine.requestId) return;
+        const failure = results.find((result) => result.error);
+        if (failure) {
+          $("resultContext").textContent = "Engine boundary";
+          $("why").textContent = failure.error;
+          return;
+        }
+        engine.responses = { a: results[0], b: results[1] || null };
+        renderExactResults(engine.responses.a, engine.responses.b);
+      })
+      .catch((error) => {
+        if (requestId === engine.requestId) $("why").textContent = `Engine request failed: ${error.message}`;
+      })
+      .finally(() => { if (requestId === engine.requestId) engine.pending = false; });
+  }, 40);
+}
+
 function renderResults() {
   $("resultFootnote").textContent = `DPS uses ${one(state.fight.duration)}s per rotation · autos use ${Math.round(state.fight.aaUptime * 100)}% uptime · TDD sums selected targets.`;
   const scenarioReady = state.attacker.champion && state.targets.length && state.targets.every((target) => target.champion);
   const hasA = buildAIds().some(Boolean);
   const hasB = state.attacker.comparisonEnabled && buildBIds().some(Boolean);
+  if (engine.ready && state.attacker.champion && !engine.reviewed.has(state.attacker.champion)) {
+    renderEngineUnavailable();
+    return;
+  }
   if (!scenarioReady || !hasA) {
     $("resultContext").textContent = "Waiting for scenario";
     $("winnerVisual").innerHTML = `<div class="result-empty-mark">+</div><div><span>Nothing calculated</span><strong>Build a scenario</strong><b>Champion · builds · enemies</b></div>`;
@@ -782,6 +1067,7 @@ function render() {
   renderBuilder();
   renderResults();
   $("scenarioSentence").innerHTML = scenarioSentence();
+  scheduleEngineCalculation();
 }
 
 function openPicker(type, path) {
@@ -1195,6 +1481,7 @@ document.addEventListener("input", (event) => {
   if (autoCount) autoCount.innerHTML = `<i class="legend-a"></i>A ${autoAttacksForStats(statsA)}${state.attacker.comparisonEnabled ? ` <i class="legend-b"></i>B ${autoAttacksForStats(statsB)}` : ""}`;
   renderResults();
   $("scenarioSentence").innerHTML = scenarioSentence();
+  scheduleEngineCalculation();
 });
 
 document.addEventListener("change", (event) => {
@@ -1209,7 +1496,20 @@ $("bis").addEventListener("click", (event) => { if (event.target === $("bis")) c
 for (const id of ["baseDamage", "apRatio", "physicalDamage", "adRatio"]) $(id).addEventListener("input", updateDamagePackage);
 $("themeToggle").addEventListener("click", () => { document.documentElement.dataset.theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; });
 
-fetch("/static/data.json")
-  .then((response) => { if (!response.ok) throw new Error("Patch snapshot failed to load"); return response.json(); })
-  .then((data) => { DATA = data; render(); })
+Promise.all([
+  fetch("/static/data.json").then((response) => { if (!response.ok) throw new Error("Patch snapshot failed to load"); return response.json(); }),
+  fetch("/api/champions").then((response) => { if (!response.ok) throw new Error("Champion availability failed to load"); return response.json(); }),
+  fetch("/api/config").then((response) => { if (!response.ok) throw new Error("Calculator config failed to load"); return response.json(); }),
+])
+  .then(([data, championAvailability, config]) => {
+    DATA = data;
+    championAvailability.forEach((entry) => {
+      engine.availability.set(entry.name, entry.availability || {});
+      if (entry.availability?.ready) engine.reviewed.add(entry.name);
+    });
+    engine.itemOptions = config.item_options || {};
+    engine.championOptions = config.champion_options || {};
+    engine.ready = true;
+    render();
+  })
   .catch(() => { $("builder").innerHTML = `<p class="empty-roster">The patch snapshot could not load. Refresh to try again.</p>`; });

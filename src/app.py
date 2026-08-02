@@ -1,6 +1,10 @@
 """Flask web application for the LoL Damage Calculator."""
 
 import hmac
+import base64
+import binascii
+import hashlib
+import html
 import ipaddress
 import json
 import math
@@ -9,6 +13,7 @@ import secrets
 import sqlite3
 import sys
 import tempfile
+import time
 from datetime import datetime, timezone
 from collections.abc import Mapping
 from dataclasses import replace
@@ -18,7 +23,7 @@ from urllib.parse import urlsplit
 # Ensure the src directory is on the path so calculator imports work
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from flask import Flask, Response, jsonify, render_template, request
+from flask import Flask, Response, jsonify, redirect, render_template, request, url_for
 
 from calculator.data_fetcher import (
     fetch_champion_data,
@@ -68,6 +73,9 @@ app.config.update(
     RATE_LIMIT_ENABLED=True,
 )
 
+_AUTH_COOKIE = "scryglass_session"
+_AUTH_TTL_SECONDS = 7 * 24 * 60 * 60
+
 _RATE_LIMIT_POLICIES = {
     "calculate": (40, 20.0),
     # Worst max-valid optimizer request measured at 1.81 CPU seconds locally.
@@ -113,6 +121,141 @@ _SECURITY_HEADERS = {
 _rate_limiter = TokenBucketStore(
     Path(tempfile.gettempdir()) / "lol-calculator-rate-limits.sqlite3"
 )
+
+
+def _auth_enabled() -> bool:
+    """Return whether the deployment requires an approved X session."""
+    return os.environ.get("SCRYGLASS_AUTH_REQUIRED", "0").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+def _auth_secret() -> bytes:
+    """Return the cookie-signing secret; production must provide one."""
+    secret = os.environ.get("SCRYGLASS_AUTH_SECRET", "").strip()
+    if not secret and _auth_enabled():
+        raise RuntimeError("SCRYGLASS_AUTH_SECRET is required when auth is enabled")
+    return (secret or "local-development-only-secret").encode("utf-8")
+
+
+def _pack_signed(value: Mapping[str, object]) -> str:
+    """Sign a compact JSON cookie without storing OAuth tokens server-side."""
+    raw = json.dumps(value, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    payload = base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
+    signature = hmac.new(_auth_secret(), payload.encode("ascii"), hashlib.sha256).digest()
+    signed = base64.urlsafe_b64encode(signature).rstrip(b"=").decode("ascii")
+    return f"{payload}.{signed}"
+
+
+def _unpack_signed(value: str | None) -> dict | None:
+    """Validate one signed cookie and reject malformed or expired payloads."""
+    if not value or "." not in value:
+        return None
+    payload, supplied_signature = value.split(".", 1)
+    expected_signature = base64.urlsafe_b64encode(
+        hmac.new(_auth_secret(), payload.encode("ascii"), hashlib.sha256).digest()
+    ).rstrip(b"=").decode("ascii")
+    if not hmac.compare_digest(supplied_signature, expected_signature):
+        return None
+    try:
+        padded = payload + "=" * (-len(payload) % 4)
+        result = json.loads(base64.urlsafe_b64decode(padded).decode("utf-8"))
+    except (ValueError, TypeError, binascii.Error, json.JSONDecodeError):
+        return None
+    if not isinstance(result, dict) or float(result.get("exp", 0)) < time.time():
+        return None
+    return result
+
+
+def _current_session() -> dict | None:
+    """Read the stateless approved-user session."""
+    try:
+        return _unpack_signed(request.cookies.get(_AUTH_COOKIE))
+    except RuntimeError:
+        return None
+
+
+def _auth_users() -> dict[str, str]:
+    """Load the explicit username -> scrypt password-hash map."""
+    raw = os.environ.get("SCRYGLASS_AUTH_USERS", "").strip()
+    if not raw:
+        raise RuntimeError("SCRYGLASS_AUTH_USERS is required when auth is enabled")
+    try:
+        users = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("SCRYGLASS_AUTH_USERS must be valid JSON") from exc
+    if not isinstance(users, dict) or not users or any(
+        not isinstance(username, str)
+        or not username.strip()
+        or not isinstance(password_hash, str)
+        or not password_hash.startswith("scrypt$")
+        for username, password_hash in users.items()
+    ):
+        raise RuntimeError(
+            "SCRYGLASS_AUTH_USERS must map account names to scrypt$ password hashes"
+        )
+    return {username: password_hash for username, password_hash in users.items()}
+
+
+def _verify_password(password: str, encoded: str) -> bool:
+    """Verify an encoded scrypt password without exposing password material."""
+    try:
+        _, n_text, r_text, p_text, salt_text, digest_text = encoded.split("$", 5)
+        n, r, p = int(n_text), int(r_text), int(p_text)
+        salt = base64.urlsafe_b64decode(
+            (salt_text + "=" * (-len(salt_text) % 4)).encode("ascii")
+        )
+        expected = base64.urlsafe_b64decode(
+            (digest_text + "=" * (-len(digest_text) % 4)).encode("ascii")
+        )
+        actual = hashlib.scrypt(
+            password.encode("utf-8"), salt=salt, n=n, r=r, p=p, dklen=len(expected)
+        )
+    except (ValueError, TypeError, binascii.Error):
+        return False
+    return hmac.compare_digest(actual, expected)
+
+
+def _safe_next_path(value: str | None) -> str:
+    """Accept only local paths after login; reject open redirects."""
+    path = value or "/"
+    return path if path.startswith("/") and not path.startswith("//") else "/"
+
+
+def _auth_error(message: str, status: int = 503):
+    """Return a concise setup/error response without leaking password data."""
+    return jsonify({"error": message}), status
+
+
+def _login_page(message: str = "", status: int = 200, next_path: str = "/"):
+    """Render the tiny access gate without depending on protected assets."""
+    notice = (
+        f'<p style="color:#a33" role="alert">{html.escape(message)}</p>'
+        if message
+        else ""
+    )
+    page = f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scryglass · Private calculator</title>
+<style>body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#eee9df;color:#2c2a27;font:16px/1.5 Georgia,serif}}main{{width:min(420px,calc(100% - 40px));padding:32px;background:#f8f5ed;border:1px solid #c9c0b1;box-shadow:0 16px 50px #2c2a2718}}h1{{margin:0 0 8px;font-size:28px}}p{{margin:8px 0 22px}}label{{display:grid;gap:6px;margin:14px 0;font:12px/1.2 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}}input{{box-sizing:border-box;width:100%;padding:12px;border:1px solid #bdb4a6;background:#fffdf8;color:inherit;font:16px Georgia,serif}}button{{margin-top:8px;width:100%;padding:12px;border:0;background:#bd5f26;color:#fff;font:12px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;cursor:pointer}}</style></head>
+<body><main><p style="font:11px ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#bd5f26">Private calculator</p><h1>Sign in to Scryglass</h1><p>This page is restricted to approved research accounts.</p>{notice}<form method="post" action="/auth/login"><input type="hidden" name="next" value="{html.escape(next_path, quote=True)}"><label>Username<input name="username" autocomplete="username" required autofocus></label><label>Password<input type="password" name="password" autocomplete="current-password" required></label><button type="submit">Enter calculator</button></form></main></body></html>"""
+    return Response(page, status=status, mimetype="text/html")
+
+
+@app.before_request
+def _enforce_authentication():
+    """Gate the UI, assets, and APIs when the deployment enables X auth."""
+    if not _auth_enabled():
+        return None
+    if request.path == "/healthz" or request.path.startswith("/auth/"):
+        return None
+    if _current_session():
+        return None
+    next_path = request.full_path.rstrip("?") if request.full_path else "/"
+    return redirect(url_for("auth_login", next=next_path))
 
 
 def _spend_rate_limit(scope: str):
@@ -662,6 +805,51 @@ def _run_data_update():
     from calculator.data_updater import update_data
 
     return update_data()
+
+
+@app.route("/auth/login", methods=["GET", "POST"])
+def auth_login():
+    """Authenticate one of the explicitly configured private accounts."""
+    try:
+        _auth_secret()
+        users = _auth_users()
+    except RuntimeError as exc:
+        return _auth_error(str(exc))
+    next_path = _safe_next_path(request.form.get("next") if request.method == "POST" else request.args.get("next"))
+    if request.method == "GET":
+        return _login_page(next_path=next_path)
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+    encoded = users.get(username)
+    if not encoded or not _verify_password(password, encoded):
+        return _login_page("Username or password was not recognised.", 401, next_path)
+    session = _pack_signed({"username": username, "exp": time.time() + _AUTH_TTL_SECONDS})
+    response = redirect(next_path)
+    response.set_cookie(
+        _AUTH_COOKIE,
+        session,
+        max_age=_AUTH_TTL_SECONDS,
+        httponly=True,
+        secure=request.is_secure or os.environ.get("VERCEL") == "1",
+        samesite="Lax",
+        path="/",
+    )
+    return response
+
+
+@app.route("/auth/logout", methods=["GET", "POST"])
+def auth_logout():
+    """End the local approved-user session."""
+    response = redirect("/")
+    response.delete_cookie(_AUTH_COOKIE, path="/")
+    return response
+
+
+@app.route("/auth/status")
+def auth_status():
+    """Expose only the current local identity."""
+    session = _current_session()
+    return jsonify({"required": _auth_enabled(), "authenticated": bool(session), "user": session or None})
 
 
 @app.route("/")
