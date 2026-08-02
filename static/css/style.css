@@ -251,6 +251,9 @@ td:last-child { color: var(--olive); }
 .complete-build-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 11px; }
 .complete-build-head strong { font: 500 16px var(--serif); }
 .complete-build-head span { color: var(--muted); font: 7px var(--mono); text-transform: uppercase; }
+.boots-toggle { margin-left: auto; padding: 5px 8px; border: 1px solid var(--line-strong); background: transparent; color: var(--muted); font: 7px var(--mono); text-transform: uppercase; cursor: pointer; }
+.boots-toggle.active { border-color: var(--accent); color: var(--accent); }
+.target-card > .boots-toggle { margin: 0 0 7px; }
 .quest-item, .utility-slot { min-width: 66px; padding-left: 11px; border-left: 1px dashed var(--line-strong); }
 .quest-item > span, .utility-slot > span { display: block; height: 10px; margin: -2px 0 4px; color: var(--accent); font: 6px var(--mono); text-transform: uppercase; }
 .utility-slot b { display: grid; place-items: center; width: 54px; height: 54px; border: 1px dashed var(--olive); color: var(--olive); background: color-mix(in srgb, var(--olive) 6%, transparent); font: 16px var(--serif); }

@@ -209,6 +209,24 @@ def _evaluate_build(
                 and event.get("damage_type") == "magic"
                 and float(event.get("time", 0.0)) <= cutoff
             )
+        if objective == "total_damage":
+            # ``total_damage`` is the ordinary public objective name, but a
+            # coupled team-fight build is not allowed to win by being dead
+            # for the rest of the window.  Add the sourced main-participant
+            # effective-health pool to the alive-time output; the receipt
+            # still exposes both components separately.
+            main_participant = next(
+                (
+                    row
+                    for row in combat.get("participants", [])
+                    if row.get("participant_id") == "main"
+                ),
+                None,
+            )
+            effective_health = float(
+                (main_participant or {}).get("survival", {}).get("effective_health", 0.0)
+            )
+            return float(main_row.get("total_damage", 0.0)) + effective_health
         return float(main_row.get("total_damage", 0.0))
     results: list[dict[str, Any]] = []
     for target_params in targets:
@@ -511,6 +529,7 @@ def optimize_build(
     require_complete_timeline: bool = False,
     enemy_loadouts: list[Any] | None = None,
     ally_loadouts: list[Any] | None = None,
+    include_boots: bool = True,
 ) -> dict[str, Any]:
     """Find the optimal item build for a champion.
 
@@ -567,6 +586,7 @@ def optimize_build(
             else None
         ),
     }
+    coupled_objective = bool(enemy_loadouts or ally_loadouts)
 
     # Build item pools.  Keep the complete legal lists for the public coverage
     # receipt, but only score candidates whose outgoing-damage mechanics are
@@ -590,6 +610,8 @@ def optimize_build(
     resolved_locked_boots = None
     boots_locked = False
     if locked_boots:
+        if not include_boots:
+            raise ValueError("locked_boots cannot be used when include_boots is false")
         resolved_locked_boots = get_item_by_name(locked_boots)
         require_optimizer_item_coverage(resolved_locked_boots)
         boots_locked = True
@@ -619,7 +641,7 @@ def optimize_build(
     # How many legendary slots still need filling (locked items may already
     # fill every slot — never negative)
     slots_to_fill = max(0, max_legendary_slots - len(resolved_locked))
-    fill_boots = not boots_locked
+    fill_boots = include_boots and not boots_locked
 
     # Filter pool to exclude already-locked items
     pool = [i for i in all_legendaries if i["name"] not in locked_names]
@@ -812,6 +834,7 @@ def optimize_build(
                 "items": [item["name"] for item in legendaries],
                 "boots": boots["name"] if boots else None,
                 "total_damage": round(score, 1),
+                "team_fight_value": round(score, 1) if coupled_objective else None,
                 "dps": round(score / duration, 1),
                 "gold": _build_gold(build_items),
                 "timeline_coverage": _build_timeline_coverage(
@@ -838,6 +861,7 @@ def optimize_build(
         "items": legendary_names,
         "boots": boots_name,
         "total_damage": round(ranked[0][2], 1),
+        "team_fight_value": round(ranked[0][2], 1) if coupled_objective else None,
         "objective": objective,
         "max_legendary_slots": max_legendary_slots,
         "optimization_time_ms": round(elapsed * 1000, 1),

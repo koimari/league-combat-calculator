@@ -26,7 +26,7 @@ from .damage import (
 )
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import derive_self_healing
-from .role_quests import validate_role
+from .role_quests import max_champion_level, validate_role
 from .stats import calculate_total_stats
 
 DEFAULT_TARGET: dict[str, float] = {
@@ -212,6 +212,10 @@ class FightParams(FightConfig):
         three-rank ultimate layout. Transformation and auto-levelled kits fail
         closed until their individual allocation rules are represented.
         """
+        if level > max_champion_level(self.role, self.role_quest_complete):
+            raise ValueError(
+                f"Level {level} requires the completed top role quest"
+            )
         supported_modes = get_supported_fight_modes(champion_name)
         requested_mode = (
             "one_rotation"

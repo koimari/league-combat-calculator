@@ -73,6 +73,8 @@ def _main_combatant(
             {
                 "role": params.role,
                 "role_quest_complete": params.role_quest_complete,
+                "ability_ranks": params.ability_ranks,
+                "champion_options": params.champion_options,
             },
         )(),
     )
@@ -118,9 +120,10 @@ def _actor_params(base: FightParams, actor: Combatant) -> FightParams:
         role=getattr(request, "role", "") or "",
         role_quest_complete=bool(getattr(request, "role_quest_complete", False)),
         # Roster rank/option controls are not yet part of the loadout schema;
-        # use each champion's sourced legal level-derived defaults.
-        ability_ranks=None,
-        champion_options=None,
+        # omitted values intentionally stay None so each champion module uses
+        # its sourced legal level-derived defaults.
+        ability_ranks=getattr(request, "ability_ranks", None) or None,
+        champion_options=getattr(request, "champion_options", None),
         ally_stat_bonuses=None,
     )
 
@@ -256,8 +259,15 @@ def build_participant_timeline(
     main_defenses: Any,
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
+    focus_participant_id: str = "main",
 ) -> dict[str, Any]:
-    """Compose all selected actors and return the coupled combat receipt."""
+    """Compose all selected actors and return the coupled combat receipt.
+
+    ``focus_participant_id`` is used by BIS candidate evaluation.  The
+    visible calculate response keeps the default focus on the main champion,
+    while ally/enemy slot optimization can score the selected roster member
+    without creating a fake one-attacker scenario.
+    """
     main = _main_combatant(
         champion_data,
         level,
@@ -322,26 +332,31 @@ def build_participant_timeline(
                         }
                     )
                 if attacker.participant_id not in support_attached:
-                    for effect in derive_ally_effects(
-                        attacker.champion_data,
-                        attacker.level,
-                        result.get("champion_stats", attacker.stats),
-                        list(result.get("cast_timeline", [])),
-                    ):
-                        if not effect.get("target_self") and attacker.team != "ally":
-                            continue
-                        target_id = (
-                            attacker.participant_id
-                            if effect.get("target_self")
-                            else main.participant_id
-                        )
-                        support_effects[target_id].append(
-                            {
-                                **effect,
-                                "attacker": attacker.participant_id,
-                                "target": target_id,
-                            }
-                        )
+                    effects_enabled = (
+                        attacker.team != "ally"
+                        or getattr(attacker.request, "ally_effects_enabled", False)
+                    )
+                    if effects_enabled:
+                        for effect in derive_ally_effects(
+                            attacker.champion_data,
+                            attacker.level,
+                            result.get("champion_stats", attacker.stats),
+                            list(result.get("cast_timeline", [])),
+                        ):
+                            if not effect.get("target_self") and attacker.team != "ally":
+                                continue
+                            target_id = (
+                                attacker.participant_id
+                                if effect.get("target_self")
+                                else main.participant_id
+                            )
+                            support_effects[target_id].append(
+                                {
+                                    **effect,
+                                    "attacker": attacker.participant_id,
+                                    "target": target_id,
+                                }
+                            )
                     support_attached.add(attacker.participant_id)
                 row = breakdown[attacker.participant_id]
                 row.update(
@@ -402,6 +417,21 @@ def build_participant_timeline(
                 "sources": list(row.get("sources", {}).values()),
             }
         )
+    focus_row = next(
+        (row for row in public_breakdown if row["participant_id"] == focus_participant_id),
+        None,
+    )
+    focus_survival = survival.get(focus_participant_id)
+    focus_support = sum(
+        float(event.get("amount", 0.0))
+        for events in support_effects.values()
+        for event in events
+        if event.get("attacker") == focus_participant_id
+    )
+    focus_healing = sum(
+        float(event.get("amount", 0.0))
+        for event in healing.get(focus_participant_id, [])
+    )
     return {
         "duration": float(params.fight_duration_seconds),
         "participants": [
@@ -470,6 +500,14 @@ def build_participant_timeline(
                 if actor.team in {"main", "ally"}
                 and survival[actor.participant_id]["survived_window"]
             ),
+            "focus_participant_id": focus_participant_id,
+            "focus_damage_before_death": round(
+                float(focus_row.get("total_damage", 0.0)) if focus_row else 0.0,
+                1,
+            ),
+            "focus_survival": focus_survival,
+            "focus_support_value": round(focus_support, 1),
+            "focus_healing": round(focus_healing, 1),
         },
         "timeline_coverage": combine_timeline_coverages(
             coverage_reports,

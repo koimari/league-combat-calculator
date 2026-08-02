@@ -122,3 +122,78 @@ def test_coupled_timeline_stops_output_after_main_champion_is_defeated():
     # The enemy's later event stream is not counted as if Aatrox remained
     # alive for the whole rotation.
     assert next(row for row in combat["breakdown"] if row["participant_id"] == "main")["total_damage"] <= 138.5
+
+
+def _bis_request(subject_team: str) -> dict:
+    return {
+        "champion": "Aatrox",
+        "level": 18,
+        "items": ["Infinity Edge", "Bloodthirster"],
+        "boots": "Plated Steelcaps",
+        "role": "top",
+        "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+        "fight_mode": "time_based",
+        "fight_duration": 10,
+        "include_auto_attacks": True,
+        "auto_attack_uptime": 0.3,
+        "subject_team": subject_team,
+        "subject_index": 0,
+        "slot_index": 0,
+        "slot_kind": "item",
+        "enemies": [
+            {
+                "champion": "Ambessa",
+                "level": 18,
+                "items": [],
+                "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+            }
+        ],
+        "allies": [
+            {
+                "champion": "Lulu",
+                "level": 18,
+                "items": [],
+                "role": "support",
+                "ally_effects_enabled": True,
+                "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+            }
+        ],
+    }
+
+
+def test_bis_endpoint_scores_main_from_damage_and_effective_health():
+    app.config["TESTING"] = True
+    response = app.test_client().post("/api/bis", json=_bis_request("main"))
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["candidate_count"] > 0
+    assert body["candidates"]
+    top = body["candidates"][0]
+    assert top["metric"] == "main TTD + effective health"
+    assert top["components"]["effective_health"] > 0
+
+
+def test_bis_endpoint_keeps_ally_and_enemy_in_the_same_timeline():
+    app.config["TESTING"] = True
+    client = app.test_client()
+    ally = client.post("/api/bis", json=_bis_request("ally"))
+    enemy = client.post("/api/bis", json=_bis_request("enemy"))
+    assert ally.status_code == enemy.status_code == 200
+    ally_top = ally.get_json()["candidates"][0]
+    enemy_top = enemy.get_json()["candidates"][0]
+    assert "main_team_damage_before_death" in ally_top["components"]
+    assert "effective_health" in ally_top["components"]
+    assert enemy_top["metric"] == "enemy TTD + survival pool"
+    assert enemy_top["components"]["effective_health"] > 0
+
+
+def test_explicitly_disabled_ally_effects_are_not_injected_into_ehp():
+    app.config["TESTING"] = True
+    payload = _bis_request("main")
+    payload["allies"][0]["ally_effects_enabled"] = False
+    response = app.test_client().post("/api/calculate", json=payload)
+    assert response.status_code == 200
+    assert not any(
+        event["attacker"] == "ally:Lulu"
+        for event in response.get_json()["combat"]["support_events"]
+    )

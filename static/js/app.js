@@ -31,6 +31,8 @@ const state = {
     buildBStacks: [0, 0, 0, 0, 0, 0],
     questBootA: 0,
     questBootB: 0,
+    includeBootsA: true,
+    includeBootsB: true,
     comparisonEnabled: false,
     baseDamage: 0,
     apRatio: 0,
@@ -210,8 +212,8 @@ function stackValue(path) {
   const parts = path.split(".");
   if (parts[0] === "attacker" && parts[1] === "buildA") return state.attacker.buildAStacks[Number(parts[2])] || 0;
   if (parts[0] === "attacker" && parts[1] === "buildB") return state.attacker.buildBStacks[Number(parts[2])] || 0;
-  if (parts[0] === "targets") return state.targets[Number(parts[1])]?.itemStacks?.[Number(parts[3])] || 0;
-  if (parts[0] === "allies") return state.allies[Number(parts[1])]?.itemStacks?.[Number(parts[3])] || 0;
+  if (parts[0] === "targets" && parts[2] === "items") return state.targets[Number(parts[1])]?.itemStacks?.[Number(parts[3])] || 0;
+  if (parts[0] === "allies" && parts[2] === "items") return state.allies[Number(parts[1])]?.itemStacks?.[Number(parts[3])] || 0;
   return 0;
 }
 
@@ -219,8 +221,8 @@ function setStackValue(path, value) {
   const parts = path.split(".");
   if (parts[0] === "attacker" && parts[1] === "buildA") state.attacker.buildAStacks[Number(parts[2])] = value;
   else if (parts[0] === "attacker" && parts[1] === "buildB") state.attacker.buildBStacks[Number(parts[2])] = value;
-  else if (parts[0] === "targets") state.targets[Number(parts[1])].itemStacks[Number(parts[3])] = value;
-  else if (parts[0] === "allies") state.allies[Number(parts[1])].itemStacks[Number(parts[3])] = value;
+  else if (parts[0] === "targets" && parts[2] === "items") state.targets[Number(parts[1])].itemStacks[Number(parts[3])] = value;
+  else if (parts[0] === "allies" && parts[2] === "items") state.allies[Number(parts[1])].itemStacks[Number(parts[3])] = value;
   invalidateOptimization();
 }
 
@@ -286,8 +288,17 @@ function usesQuestBootSlot() {
   return state.attacker.roleQuestComplete && ["mid", "bottom"].includes(state.attacker.role);
 }
 
-function ordinarySlotCount() {
-  return state.attacker.role === "mid" && state.attacker.roleQuestComplete ? 5 : 6;
+function attackerLevelCap() {
+  return state.attacker.role === "top" && state.attacker.roleQuestComplete ? 20 : 18;
+}
+
+function ordinarySlotCount(side = "A") {
+  if (state.attacker.role === "bottom" && state.attacker.roleQuestComplete) return 6;
+  return includeBootsForSide(side) ? 5 : 6;
+}
+
+function includeBootsForSide(side) {
+  return side === "B" ? state.attacker.includeBootsB : state.attacker.includeBootsA;
 }
 
 function questBootIds() {
@@ -394,13 +405,16 @@ function rosterCard(loadout, index, kind) {
   const isAlly = kind === "ally";
   const root = isAlly ? "allies" : "targets";
   const label = isAlly ? "ally" : "enemy";
-  const stats = championStats(loadout.champion, loadout.level, loadout.items, loadout.itemStacks);
+  const statItemIds = loadout.items.slice(0, loadout.includeBoots ? 5 : 6);
+  if (loadout.includeBoots && loadout.boots) statItemIds.push(loadout.boots);
+  const stats = championStats(loadout.champion, loadout.level, statItemIds, loadout.itemStacks);
   const champion = getChampion(loadout.champion);
   const effectToggle = isAlly
     ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
     : "";
   const path = `${root}.${index}`;
   const rosterReady = Boolean(loadout.champion && bisReadyForPath(path));
+  const itemSlotCount = loadout.includeBoots ? 5 : 6;
   return `<article class="target-card ${isAlly ? "ally-card" : ""}">
     <header>
       <button class="target-pick ${champion ? "" : "empty-pick"}" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(loadout.champion)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(loadout.champion)}" alt="" />` : "+"}</button>
@@ -408,7 +422,8 @@ function rosterCard(loadout, index, kind) {
       <div class="target-level"><button type="button" data-level="${root}.${index}.level" data-delta="-1" aria-label="Decrease level">−</button><output>Lv ${loadout.level}</output><button type="button" data-level="${root}.${index}.level" data-delta="1" aria-label="Increase level">+</button></div>
       <button class="remove-target" type="button" ${isAlly ? `data-remove-ally="${index}"` : `data-remove-target="${index}"`} aria-label="Remove ${escapeHtml(loadout.champion || `${label} slot`)}">×</button>
     </header>
-    <div class="target-build">${loadout.items.map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true, true)).join("")}</div>
+    <div class="target-build">${loadout.items.slice(0, itemSlotCount).map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true, true)).join("")}${loadout.includeBoots ? itemSlot(`${root}.${index}.boots`, loadout.boots, true, true) : ""}</div>
+    <button class="boots-toggle ${loadout.includeBoots ? "active" : ""}" type="button" data-include-roster-boots="${root}.${index}" aria-pressed="${Boolean(loadout.includeBoots)}">${loadout.includeBoots ? "Boots included" : "No boots"}</button>
     <div class="roster-build-actions"><button class="optimize-build roster-optimize" type="button" data-optimize-roster="${path}" ${rosterReady && !state.optimizer.running ? "" : "disabled"}>Optimize build</button></div>
     ${rosterAbilityRankControls(loadout, index, root)}
     ${effectToggle}
@@ -478,6 +493,7 @@ function roleQuestNote() {
   if (!state.attacker.roleQuestComplete) return "Role quest not completed.";
   if (state.attacker.role === "mid") return "+8% bonus AD and AP · Tier 3 boots use one of six slots.";
   if (state.attacker.role === "bottom") return "Six item slots · boots move into the dedicated quest slot.";
+  if (state.attacker.role === "top") return "+600 XP · +12.5% future XP · level cap 20.";
   if (state.attacker.role === "support") return "Reserved ward / support quest slot · excluded from damage scoring.";
   return "No item-slot change for this role.";
 }
@@ -505,15 +521,15 @@ function questBootPath(side) {
 
 function renderBuildStrip(side) {
   const build = buildArray(side);
-  const normalSlots = Array.from({ length: ordinarySlotCount() }, (_, index) => itemSlot(`attacker.build${side}.${index}`, build[index], false, true)).join("");
-  const boot = usesQuestBootSlot()
-    ? `<div class="quest-item"><span>${state.attacker.role === "mid" ? "Tier 3 boots" : "Boots slot"}</span>${itemSlot(questBootPath(side), state.attacker[`questBoot${side}`], false, true)}</div>`
+  const normalSlots = Array.from({ length: ordinarySlotCount(side) }, (_, index) => itemSlot(`attacker.build${side}.${index}`, build[index], false, true)).join("");
+  const boot = includeBootsForSide(side)
+    ? `<div class="quest-item"><span>${state.attacker.role === "mid" && usesQuestBootSlot() ? "Tier 3 boots" : "Boots"}</span>${itemSlot(questBootPath(side), state.attacker[`questBoot${side}`], false, true)}</div>`
     : "";
   const support = state.attacker.role === "support" && state.attacker.roleQuestComplete
     ? `<div class="utility-slot" title="This slot is not included in damage scoring"><span>Quest / wards</span><b>◆</b><small>Utility</small></div>`
     : "";
   return `<div class="complete-build build-${side.toLowerCase()}">
-    <div class="complete-build-head"><strong>Build ${side}</strong><span>${ordinarySlotCount() + (usesQuestBootSlot() ? 1 : 0)} combat ${plural(ordinarySlotCount() + (usesQuestBootSlot() ? 1 : 0), "slot")}${support ? " + utility" : ""}</span></div>
+    <div class="complete-build-head"><strong>Build ${side}</strong><span>${ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0)} combat ${plural(ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0), "slot")}${support ? " + utility" : ""}</span><button class="boots-toggle ${includeBootsForSide(side) ? "active" : ""}" type="button" data-include-boots="${side}" aria-pressed="${includeBootsForSide(side)}">${includeBootsForSide(side) ? "Boots included" : "No boots"}</button></div>
     <div class="hero-slots">${normalSlots}${boot}${support}</div>
   </div>`;
 }
@@ -741,14 +757,20 @@ function calculateBuild(buildIds, rotations = state.fight.rotations, stackCounts
 }
 
 function buildIdsForSide(side) {
-  const ids = buildArray(side).slice(0, ordinarySlotCount());
-  if (usesQuestBootSlot()) ids.push(state.attacker[`questBoot${side}`]);
+  const ids = buildArray(side)
+    .slice(0, ordinarySlotCount(side))
+    .filter((id) => id && !ALL_ROLE_BOOTS.has(Number(id)));
+  if (includeBootsForSide(side) && state.attacker[`questBoot${side}`]) {
+    ids.push(state.attacker[`questBoot${side}`]);
+  }
   return ids;
 }
 
 function buildStacksForSide(side) {
-  const stacks = buildStackArray(side).slice(0, ordinarySlotCount());
-  if (usesQuestBootSlot()) stacks.push(0);
+  const stacks = buildStackArray(side)
+    .slice(0, ordinarySlotCount(side))
+    .filter((_, index) => !ALL_ROLE_BOOTS.has(Number(buildArray(side)[index])));
+  if (includeBootsForSide(side) && state.attacker[`questBoot${side}`]) stacks.push(0);
   return stacks;
 }
 
@@ -848,16 +870,19 @@ function engineItemOptions(ids, stacks = []) {
 }
 
 function engineBuild(side) {
-  const ids = buildIdsForSide(side).filter(Boolean);
+  const ids = buildArray(side).slice(0, ordinarySlotCount(side)).filter(Boolean);
   const stacks = buildStacksForSide(side);
-  const bootId = ids.find((id) => ALL_ROLE_BOOTS.has(Number(id))) || 0;
-  const itemIds = ids.filter((id) => Number(id) !== Number(bootId));
+  const bootId = includeBootsForSide(side)
+    ? (state.attacker[`questBoot${side}`] || ids.find((id) => ALL_ROLE_BOOTS.has(Number(id))) || 0)
+    : 0;
+  const itemIds = ids.filter((id) => !ALL_ROLE_BOOTS.has(Number(id)));
   const itemStacks = itemIds.map((id) => {
     const originalIndex = ids.indexOf(id);
     return stacks[originalIndex] || 0;
   });
   return {
     boots: bootId ? itemName(bootId) : "",
+    include_boots: includeBootsForSide(side),
     items: itemIds.map((id) => itemName(id)).filter(Boolean),
     item_options: engineItemOptions(itemIds, itemStacks),
   };
@@ -904,13 +929,21 @@ function engineAbilityRanks() {
 }
 
 function engineTarget(target) {
+  const selectedBoot = Number(target.boots || 0);
+  const itemIds = target.items
+    .slice(0, target.includeBoots ? 5 : 6)
+    .filter(Boolean)
+    .filter((id) => !ALL_ROLE_BOOTS.has(Number(id)));
   return {
     champion: target.champion,
     level: target.level,
-    items: target.items.filter(Boolean).map((id) => itemName(id)).filter(Boolean),
-    item_options: engineItemOptions(target.items.filter(Boolean), target.itemStacks),
+    items: itemIds.map((id) => itemName(id)).filter(Boolean),
+    boots: target.includeBoots && selectedBoot ? itemName(selectedBoot) : "",
+    include_boots: Boolean(target.includeBoots),
+    item_options: engineItemOptions(itemIds, target.itemStacks),
     role: "",
     role_quest_complete: false,
+    ability_ranks: Object.fromEntries(Object.entries(target.abilityRanks || {}).map(([slot, rank]) => [slot, Number(rank) || 0])),
   };
 }
 
@@ -1343,8 +1376,12 @@ function renderPicker(query) {
   const entries = (pickerContext.type === "champion" ? DATA.champions : DATA.items).filter((entry) => {
     if (!entry.name.toLowerCase().includes(normalized)) return false;
     if (pickerContext.type !== "item") return true;
+    if (pickerContext.path.endsWith(".boots") || pickerContext.path.includes("questBoot")) {
+      return ALL_ROLE_BOOTS.has(entry.id);
+    }
+    if (pickerContext.path.includes(".items.")) return !ALL_ROLE_BOOTS.has(entry.id);
     if (pickerContext.path.includes("questBoot")) return questBootIds().includes(entry.id);
-    if (usesQuestBootSlot() && pickerContext.path.match(/^attacker\.build[AB]\./)) return !ALL_ROLE_BOOTS.has(entry.id);
+    if (pickerContext.path.match(/^attacker\.build[AB]\./)) return !ALL_ROLE_BOOTS.has(entry.id);
     return true;
   });
   const grid = $("pickerGrid");
@@ -1363,7 +1400,7 @@ function closePicker() {
 
 function idsForBis(path, candidateId) {
   const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
-  const ids = buildArray(side).slice(0, ordinarySlotCount());
+  const ids = buildArray(side).slice(0, ordinarySlotCount(side));
   if (path.match(/^attacker\.build[AB]\./)) ids[Number(path.split(".").at(-1))] = candidateId;
   if (usesQuestBootSlot()) ids.push(path.includes("questBoot") ? candidateId : state.attacker[`questBoot${side}`]);
   return ids;
@@ -1371,7 +1408,7 @@ function idsForBis(path, candidateId) {
 
 function stacksForBis(path, candidateId) {
   const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
-  const paths = Array.from({ length: ordinarySlotCount() }, (_, index) => `attacker.build${side}.${index}`);
+  const paths = Array.from({ length: ordinarySlotCount(side) }, (_, index) => `attacker.build${side}.${index}`);
   const stacks = paths.map((itemPath) => itemPath === path && Number(pathValue(path)) !== Number(candidateId) ? 0 : stackValue(itemPath));
   if (usesQuestBootSlot()) stacks.push(0);
   return stacks;
@@ -1760,35 +1797,81 @@ function bisItemMatchesRole(item, role, path = "") {
   return Boolean(offensive || defensive);
 }
 
-function openRosterBis(path) {
-  const context = rosterBisContext(path);
-  if (!context || !bisReadyForPath(path)) return;
-  const profile = bisChampionProfile(context.combatant);
-  const model = statOnlyProfile(context.combatant);
-  const ranked = rosterBisCandidates(path, profile).filter((item) => legalOptimizerBuild(rosterBisIds(path, item.id).filter(Boolean))).map((item) => {
-    const buildIds = rosterBisIds(path, item.id);
-    const result = bisBuildScore(buildIds, context.combatant, context.opponents, path);
-    return { item, result, total: result.score };
-  }).sort((a, b) => b.total - a.total).slice(0, 12);
-  const baselineId = Number(pathValue(path)) || 0;
-  const baseline = bisBuildScore(rosterBisIds(path, baselineId), context.combatant, context.opponents, path).score;
-  const role = context.root === "allies" ? "Ally" : "Enemy";
-  const slot = Number(String(path).split(".").at(-1)) + 1;
-  $("bisTitle").textContent = `Best item for ${role} ${context.combatant.champion} · slot ${slot}`;
-  const top = ranked[0]?.result;
-  const eventSummary = top?.eventOrder?.length ? ` · ${top.eventOrder.slice(0, 2).join(" → ")}` : "";
-  $("bisSummary").textContent = `${model.label} · ${context.opponents.length} ${plural(context.opponents.length, "opponent")}${eventSummary}`;
-  $("bisList").innerHTML = ranked.map((entry, index) => {
-    const gain = baseline > 0 ? (entry.total / baseline - 1) * 100 : 0;
-    const detail = entry.result.metric === "trade output + survival window"
-      ? `${itemStatsLine(entry.item)} · ${fmt(entry.result.tradeOutput)} trade output · ${one(entry.result.survivalSeconds)}s survival`
-      : entry.result.metric === "estimated 10s output" && (entry.result.liandry || entry.result.antiHeal)
-      ? `${itemStatsLine(entry.item)} · ${entry.result.liandry ? `Liandry +${fmt(entry.result.liandry)}` : ""}${entry.result.antiHeal ? ` Wounds value +${fmt(entry.result.antiHeal)}` : ""}`
-      : itemStatsLine(entry.item);
-    return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${itemImage(entry.item.id)}" alt="" /><div><strong>${escapeHtml(entry.item.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.total)}</strong><span>${escapeHtml(entry.result.metric)} · ${gain >= 0 ? "+" : ""}${one(gain)}%</span></p><button type="button" data-bis-value="${entry.item.id}">Use</button></article>`;
-  }).join("") || `<p class="picker-empty">No valid completed items match the Wiki-derived ${escapeHtml(model.roles?.[0]?.toLowerCase() || "champion")} model.</p>`;
+function bisBackendPayload(path) {
+  const parts = String(path).split(".");
+  const payload = { ...engineFightPayload("A") };
+  if (parts[0] === "attacker") {
+    const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
+    Object.assign(payload, engineFightPayload(side));
+    payload.subject_team = "main";
+    payload.subject_index = 0;
+    payload.slot_kind = parts[1]?.startsWith("questBoot") ? "boots" : "item";
+    payload.slot_index = parts[1]?.startsWith("questBoot") ? 0 : Number(parts.at(-1));
+    return payload;
+  }
+  if ((parts[0] !== "allies" && parts[0] !== "targets") || parts.length < 3) return null;
+  payload.subject_team = parts[0] === "allies" ? "ally" : "enemy";
+  payload.subject_index = Number(parts[1]);
+  payload.slot_kind = parts[2] === "boots" ? "boots" : "item";
+  payload.slot_index = payload.slot_kind === "boots" ? 0 : Number(parts[3]);
+  return payload;
+}
+
+function bisMetricLabel(value) {
+  return String(value || "team-fight value")
+    .replaceAll("effective health", "eHP")
+    .replaceAll("before defeat", "before defeat")
+    .replaceAll("sourced", "sourced");
+}
+
+function bisComponentLine(components) {
+  return Object.entries(components || {})
+    .filter(([, value]) => Number.isFinite(Number(value)) && Number(value) !== 0)
+    .slice(0, 3)
+    .map(([key, value]) => `${key.replaceAll("_", " ")} ${fmt(value)}`)
+    .join(" · ");
+}
+
+async function openBackendBis(path) {
+  if (!bisReadyForPath(path)) return;
+  const payload = bisBackendPayload(path);
+  if (!payload) return;
+  const isMain = payload.subject_team === "main";
+  const subject = isMain
+    ? state.attacker
+    : state[payload.subject_team === "ally" ? "allies" : "targets"][payload.subject_index];
+  if (!subject?.champion) return;
+  const subjectLabel = isMain ? "" : `${payload.subject_team === "ally" ? "Ally" : "Enemy"} `;
+  const slotLabel = payload.slot_kind === "boots" ? "boots" : `slot ${payload.slot_index + 1}`;
+  $("bisTitle").textContent = `Best ${payload.slot_kind === "boots" ? "boots" : "item"} for ${subjectLabel}${subject.champion} · ${slotLabel}`;
+  $("bisSummary").textContent = "Scoring the simultaneous event timeline · loading sourced candidates…";
+  $("bisList").innerHTML = `<p class="picker-empty">Scoring every legal candidate against the selected team-fight…</p>`;
   bisContext = { path };
   $("bis").showModal();
+  try {
+    const response = await fetch("/api/bis", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
+    const rows = result.candidates || [];
+    const coverage = result.coverage?.complete ? "complete sourced coverage" : "partial source coverage shown";
+    $("bisSummary").textContent = `${subject.champion} · ${rows.length} of ${result.candidate_count || rows.length} legal candidates · ${coverage}`;
+    $("bisList").innerHTML = rows.map((entry, index) => {
+      const item = DATA.items.find((candidate) => candidate.name === entry.name);
+      const detail = `${item ? itemStatsLine(item) : "Sourced item stats"} · ${bisComponentLine(entry.components)}`;
+      return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.score)}</strong><span>${escapeHtml(bisMetricLabel(entry.metric))}</span></p><button type="button" data-bis-value="${item ? item.id : ""}" ${item ? "" : "disabled"}>Use</button></article>`;
+    }).join("") || `<p class="picker-empty">No legal candidate has complete sourced mechanics for this timeline.</p>`;
+  } catch (error) {
+    $("bisSummary").textContent = "BIS unavailable";
+    $("bisList").innerHTML = `<p class="picker-empty">${escapeHtml(error.message)}</p>`;
+  }
+}
+
+function openRosterBis(path) {
+  return openBackendBis(path);
 }
 
 function optimizerDamagePackageReady() {
@@ -1937,7 +2020,7 @@ function optimizeFullBuild() {
   if (["enchanter", "warden", "tank", "support"].includes(role)) return optimizeRoleAwareBuild(role);
   const targetStats = state.targets.map((target) => championStats(target.champion, target.level, target.items, target.itemStacks));
   const pool = optimizerCandidatePool(profile, targetStats);
-  const slotCount = ordinarySlotCount();
+  const slotCount = ordinarySlotCount("A");
   if (pool.length < slotCount) throw new Error("Not enough completed damage items for this package.");
   const ids = pool.map((entry) => entry.item.id);
   const boots = usesQuestBootSlot() ? questBootIds() : [0];
@@ -2057,7 +2140,45 @@ function rosterOptimizationPaths(rootOrPath) {
   return (state[rootOrPath] || []).map((loadout, index) => `${rootOrPath}.${index}`).filter((path) => bisReadyForPath(path));
 }
 
-function startRosterOptimization(rootOrPath) {
+async function requestBis(path) {
+  const payload = bisBackendPayload(path);
+  if (!payload) throw new Error("Invalid roster optimization path");
+  const response = await fetch("/api/bis", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json();
+  if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
+  return result;
+}
+
+async function optimizeRosterPathFromTimeline(path) {
+  let tested = 0;
+  const [root, indexText] = path.split(".");
+  const loadout = state[root][Number(indexText)];
+  if (loadout.includeBoots) {
+    const bootResult = await requestBis(`${path}.boots`);
+    tested += Number(bootResult.candidate_count || 0);
+    const boot = bootResult.candidates?.[0] && DATA.items.find((entry) => entry.name === bootResult.candidates[0].name);
+    if (boot) loadout.boots = boot.id;
+  }
+  // Greedy slot passes keep every candidate on the same complete team
+  // timeline.  Re-running after each slot lets item interactions and deaths
+  // change the next slot's result instead of freezing a stat-only estimate.
+  for (let slot = 0; slot < (loadout.includeBoots ? 5 : 6); slot += 1) {
+    const result = await requestBis(`${path}.items.${slot}`);
+    tested += Number(result.candidate_count || 0);
+    const candidate = result.candidates?.[0];
+    const item = candidate && DATA.items.find((entry) => entry.name === candidate.name);
+    if (!item) continue;
+    setPath(`${path}.items.${slot}`, item.id);
+    state[root][Number(indexText)].itemStacks[slot] = 0;
+  }
+  return tested;
+}
+
+async function startRosterOptimization(rootOrPath) {
   if (state.optimizer.running) return;
   const paths = rosterOptimizationPaths(rootOrPath);
   if (!paths.length) return;
@@ -2065,47 +2186,42 @@ function startRosterOptimization(rootOrPath) {
   state.optimizer.scope = String(rootOrPath).includes(".") ? "roster" : rootOrPath;
   state.optimizer.summary = null;
   renderBuilder();
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    const started = performance.now();
+  const started = performance.now();
+  let tested = 0;
+  try {
     const changed = [];
-    let tested = 0;
-    try {
-      paths.forEach((path) => {
-        const result = optimizeRosterBuild(path);
-        applyRosterBuild(path, result);
-        tested += result.tested;
-        const attackerResult = reoptimizeAttackerAfterRosterChange();
-        const [root, indexText] = path.split(".");
-        changed.push({ champion: state[root][Number(indexText)].champion, attacker: Boolean(attackerResult) });
-      });
-      const names = changed.map((entry) => entry.champion).filter(Boolean);
-      const scope = paths.length === 1 ? `${names[0]} build` : `${rootOrPath === "targets" ? "all enemy" : "all ally"} builds`;
-      state.optimizer.summary = {
-        tested,
-        elapsedMs: performance.now() - started,
-        label: `${scope} optimized in sequence; Build A was rebalanced after each roster change.`,
-      };
-    } catch (error) {
-      state.optimizer.summary = { tested, elapsedMs: performance.now() - started, label: `Optimization stopped: ${error.message}` };
-    } finally {
-      state.optimizer.running = false;
-      state.optimizer.scope = null;
-      render();
+    for (const path of paths) {
+      tested += await optimizeRosterPathFromTimeline(path);
+      // The main build is deliberately re-solved after each roster change;
+      // an ally/enemy build can change the main champion's best response.
+      if (state.attacker.champion && optimizerDamagePackageReady() && state.targets.length && state.targets.every((target) => target.champion)) {
+        const mainResult = await optimizeMainBuildFromBackend();
+        tested += Number(mainResult?.evaluations || 0);
+      }
+      const [root, indexText] = path.split(".");
+      changed.push(state[root][Number(indexText)].champion);
     }
-  }));
+    const scope = paths.length === 1 ? `${changed[0]} build` : `${rootOrPath === "targets" ? "all enemy" : "all ally"} builds`;
+    state.optimizer.summary = {
+      tested,
+      elapsedMs: performance.now() - started,
+      label: `${scope} optimized from the coupled event timeline; Build A was rebalanced after each roster change.`,
+    };
+  } catch (error) {
+    state.optimizer.summary = { tested, elapsedMs: performance.now() - started, label: `Optimization stopped: ${error.message}` };
+  } finally {
+    state.optimizer.running = false;
+    state.optimizer.scope = null;
+    render();
+  }
 }
 
-async function startOptimizeBuild() {
-  if (state.optimizer.running || !state.attacker.champion || !optimizerDamagePackageReady() || !state.targets.length || !state.targets.every((target) => target.champion)) return;
-  state.optimizer.running = true;
-  state.optimizer.summary = null;
-  renderBuilder();
-  try {
+async function optimizeMainBuildFromBackend() {
     const payload = engineFightPayload("A");
     payload.objective = "total_damage";
     payload.locked_items = [];
     payload.locked_boots = "";
-    payload.max_legendary_slots = ordinarySlotCount();
+    payload.max_legendary_slots = ordinarySlotCount("A");
     const response = await fetch("/api/optimize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2124,6 +2240,16 @@ async function startOptimizeBuild() {
         ? "Coupled event-ordered BIS: TTD is counted only while the champion is alive."
         : "Coupled BIS applied; event-order coverage remains partial for one or more sourced effects.",
     };
+    return result;
+}
+
+async function startOptimizeBuild() {
+  if (state.optimizer.running || !state.attacker.champion || !optimizerDamagePackageReady() || !state.targets.length || !state.targets.every((target) => target.champion)) return;
+  state.optimizer.running = true;
+  state.optimizer.summary = null;
+  renderBuilder();
+  try {
+    await optimizeMainBuildFromBackend();
   } catch (error) {
     state.optimizer.summary = { tested: 0, elapsedMs: 0, label: `Optimization stopped: ${error.message}` };
   } finally {
@@ -2133,32 +2259,7 @@ async function startOptimizeBuild() {
 }
 
 function openBis(path) {
-  if (!bisReadyForPath(path)) return;
-  if (!String(path).startsWith("attacker.")) return openRosterBis(path);
-  bisContext = { path };
-  const profile = bisProfile();
-  const wikiMode = Boolean(profile?.wiki) || String(profile?.label || "").startsWith("Wiki-derived");
-  const ranked = bisCandidates(path, profile).filter((item) => legalOptimizerBuild(idsForBis(path, item.id).filter(Boolean))).map((item) => {
-    const ids = idsForBis(path, item.id);
-    const result = wikiMode
-      ? bisBuildScore(ids, state.attacker, state.targets, path)
-      : calculateBuild(ids, state.fight.rotations, stacksForBis(path, item.id), { profile });
-    return { item, result, total: wikiMode ? result.score : result.cumulative };
-  }).sort((a, b) => b.total - a.total).slice(0, 12);
-  const baselineId = Number(pathValue(path)) || 0;
-  const baselineResult = wikiMode
-    ? bisBuildScore(idsForBis(path, baselineId), state.attacker, state.targets, path)
-    : calculateBuild(idsForBis(path, baselineId), state.fight.rotations, stacksForBis(path, baselineId), { profile });
-  const baseline = wikiMode ? baselineResult.score : baselineResult.cumulative;
-  const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
-  $("bisTitle").textContent = path.includes("questBoot") ? `Best boots for Build ${side}` : `Best item for Build ${side} · slot ${Number(path.split(".").at(-1)) + 1}`;
-  $("bisSummary").textContent = `${state.attacker.champion} · ${profile.label} · ${state.targets.length} ${plural(state.targets.length, "enemy")}`;
-  $("bisList").innerHTML = ranked.map((entry, index) => {
-    const gain = baseline > 0 ? (entry.total / baseline - 1) * 100 : 0;
-    const metric = wikiMode ? entry.result.metric : "TDD";
-    return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${itemImage(entry.item.id)}" alt="" /><div><strong>${escapeHtml(entry.item.name)}</strong><small>${escapeHtml(itemStatsLine(entry.item))}</small></div><p><strong>${fmt(entry.total)}</strong><span>${escapeHtml(metric)} · ${gain >= 0 ? "+" : ""}${one(gain)}%</span></p><button type="button" data-bis-value="${entry.item.id}">Use</button></article>`;
-  }).join("") || `<p class="picker-empty">No valid completed items match this damage package.</p>`;
-  $("bis").showModal();
+  return openBackendBis(path);
 }
 
 function closeBis() {
@@ -2186,6 +2287,7 @@ document.addEventListener("click", (event) => {
     state.attacker.role = roleButton.dataset.role;
     state.attacker.questBootA = 0;
     state.attacker.questBootB = 0;
+    state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     invalidateOptimization();
     return render();
   }
@@ -2193,6 +2295,7 @@ document.addEventListener("click", (event) => {
     state.attacker.roleQuestComplete = !state.attacker.roleQuestComplete;
     state.attacker.questBootA = 0;
     state.attacker.questBootB = 0;
+    state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     invalidateOptimization();
     return render();
   }
@@ -2209,9 +2312,29 @@ document.addEventListener("click", (event) => {
   if (pickerButton) return openPicker(pickerButton.dataset.picker, pickerButton.dataset.path);
   const bisButton = event.target.closest("[data-bis-path]");
   if (bisButton) return openBis(bisButton.dataset.bisPath);
+  const bootsButton = event.target.closest("[data-include-boots]");
+  if (bootsButton) {
+    const side = bootsButton.dataset.includeBoots;
+    const key = side === "B" ? "includeBootsB" : "includeBootsA";
+    state.attacker[key] = !state.attacker[key];
+    if (!state.attacker[key]) state.attacker[`questBoot${side}`] = 0;
+    invalidateOptimization();
+    return render();
+  }
+  const rosterBootsButton = event.target.closest("[data-include-roster-boots]");
+  if (rosterBootsButton) {
+    const [root, indexText] = rosterBootsButton.dataset.includeRosterBoots.split(".");
+    const loadout = state[root]?.[Number(indexText)];
+    if (!loadout) return;
+    loadout.includeBoots = !loadout.includeBoots;
+    if (!loadout.includeBoots) loadout.boots = 0;
+    invalidateOptimization();
+    return render();
+  }
   const levelButton = event.target.closest("[data-level]");
   if (levelButton) {
-    setPath(levelButton.dataset.level, Math.max(1, Math.min(18, Number(pathValue(levelButton.dataset.level)) + Number(levelButton.dataset.delta))));
+    const cap = levelButton.dataset.level === "attacker.level" ? attackerLevelCap() : 18;
+    setPath(levelButton.dataset.level, Math.max(1, Math.min(cap, Number(pathValue(levelButton.dataset.level)) + Number(levelButton.dataset.delta))));
     return render();
   }
   const rosterRankButton = event.target.closest("[data-roster-rank]");
@@ -2297,7 +2420,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.targets.length < 5) {
       const index = state.targets.length;
-      state.targets.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], abilityRanks: {} });
+      state.targets.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {} });
       render();
       return openPicker("champion", `targets.${index}.champion`);
     }
@@ -2313,7 +2436,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.allies.length < 4) {
       const index = state.allies.length;
-      state.allies.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], abilityRanks: {}, allyEffectsEnabled: false });
+      state.allies.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {}, allyEffectsEnabled: false });
       render();
       return openPicker("champion", `allies.${index}.champion`);
     }

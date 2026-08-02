@@ -13,8 +13,9 @@ from .defensive_effects import StartingDefenses, resolve_starting_defenses
 from .item_effects import validate_item_input_options
 from .item_coverage import target_build_coverage
 from .loadout_rules import validate_resolved_loadout
-from .role_quests import validate_role
+from .role_quests import max_champion_level, validate_role
 from .stats import MAX_LEVEL, calculate_total_stats
+from .champions.skill_orders import get_ability_rank
 
 MAX_ENEMIES = 5
 MAX_ALLIES = 4
@@ -44,6 +45,7 @@ class ChampionLoadout:
     role: str = ""
     role_quest_complete: bool = False
     ally_effects_enabled: bool = False
+    ability_ranks: dict[str, int] = dataclass_field(default_factory=dict)
 
     @classmethod
     def from_request(cls, value: object, *, field: str) -> "ChampionLoadout":
@@ -79,9 +81,37 @@ class ChampionLoadout:
             raise ValueError(f"{field}.role_quest_complete must be true or false")
         if role_quest_complete and not role:
             raise ValueError(f"{field}.role is required when role quest is complete")
-        ally_effects_enabled = value.get("ally_effects_enabled", False)
+        if level > max_champion_level(role, role_quest_complete):
+            raise ValueError(
+                f"{field}.level {level} requires the completed top role quest"
+            )
+        # Historical API callers omitted this field; keep their sourced ally
+        # effects active.  The browser sends an explicit false when the user
+        # turns the opt-in toggle off.
+        ally_effects_enabled = value.get("ally_effects_enabled", True)
         if not isinstance(ally_effects_enabled, bool):
             raise ValueError(f"{field}.ally_effects_enabled must be true or false")
+
+        raw_ranks = value.get("ability_ranks")
+        if raw_ranks is None:
+            ability_ranks = {}
+        elif not isinstance(raw_ranks, Mapping):
+            raise ValueError(f"{field}.ability_ranks must be an object")
+        else:
+            unknown = set(raw_ranks) - {"Q", "W", "E", "R"}
+            if unknown:
+                raise ValueError(
+                    f"{field}.ability_ranks contains unknown key {sorted(unknown)[0]}"
+                )
+            ability_ranks = {}
+            for slot, rank in raw_ranks.items():
+                if isinstance(rank, bool) or not isinstance(rank, int):
+                    raise ValueError(f"{field}.ability_ranks.{slot} must be an integer")
+                if not 0 <= rank <= (3 if slot == "R" else 6):
+                    raise ValueError(
+                        f"{field}.ability_ranks.{slot} is outside the legal rank range"
+                    )
+                ability_ranks[slot] = rank
 
         equipped_names = (*items, *((boots,) if boots else ()))
         if len(set(equipped_names)) != len(equipped_names):
@@ -96,11 +126,18 @@ class ChampionLoadout:
             role=role,
             role_quest_complete=role_quest_complete,
             ally_effects_enabled=ally_effects_enabled,
+            ability_ranks=ability_ranks,
         )
 
     def resolve(self) -> "ResolvedLoadout":
         """Resolve cached Wiki data and calculate the complete stat matrix."""
         champion_data = get_champion(self.champion)
+        _validate_ability_ranks(
+            champion_data,
+            self.level,
+            self.ability_ranks,
+            field="loadout.ability_ranks",
+        )
         ordinary_items = tuple(get_item_by_name(name) for name in self.items)
         boots_data = get_item_by_name(self.boots) if self.boots else None
         validate_resolved_loadout(
@@ -151,10 +188,56 @@ class ResolvedLoadout:
             "role": self.request.role,
             "role_quest_complete": self.request.role_quest_complete,
             "ally_effects_enabled": self.request.ally_effects_enabled,
+            "ability_ranks": dict(self.request.ability_ranks),
             "stats": dict(self.stats),
             "starting_defenses": self.defenses.public_summary(),
             "target_model_coverage": target_build_coverage(list(self.item_data)),
         }
+
+
+def _ability_max_rank(champion_data: Mapping[str, Any], slot: str) -> int:
+    """Read the authored rank cardinality, including six-rank kits such as Jayce."""
+    entries = champion_data.get("abilities", {}).get(slot, [])
+    maximum = 0
+    for ability in entries:
+        if not isinstance(ability, Mapping):
+            continue
+        for effect in ability.get("effects", []):
+            for leveling in effect.get("leveling", []):
+                for modifier in leveling.get("modifiers", []):
+                    maximum = max(maximum, len(modifier.get("values", [])))
+    if maximum:
+        return maximum
+    return 3 if slot == "R" else 5
+
+
+def _validate_ability_ranks(
+    champion_data: Mapping[str, Any],
+    level: int,
+    supplied: Mapping[str, int],
+    *,
+    field: str,
+) -> None:
+    """Validate manual roster ranks; omitted ranks stay sourced level defaults."""
+    if not supplied:
+        return
+    name = str(champion_data.get("name", ""))
+    effective = {
+        slot: int(supplied.get(slot, get_ability_rank(slot, level, name)))
+        for slot in ("Q", "W", "E", "R")
+    }
+    for slot, rank in effective.items():
+        maximum = _ability_max_rank(champion_data, slot)
+        if rank < 0 or rank > maximum:
+            raise ValueError(f"{field}.{slot} rank {rank} exceeds the authored maximum {maximum}")
+        if slot == "R":
+            minimum_level = (0, 6, 11, 16)[min(rank, 3)]
+        else:
+            minimum_level = max(1, 2 * rank - 1) if rank else 0
+        if rank and level < minimum_level:
+            raise ValueError(f"{field}.{slot} rank {rank} requires champion level {minimum_level}")
+    if sum(effective.values()) > min(level, 18):
+        raise ValueError(f"{field} spends more skill points than champion level {level} allows")
 
 
 def parse_roster(
