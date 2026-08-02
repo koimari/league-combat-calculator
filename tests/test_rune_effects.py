@@ -89,6 +89,42 @@ class TestElectrocuteFormula:
             rune_effects.resolve_keystone("Electrocute")
 
 
+class TestFirstStrike:
+    def test_first_strike_resolves_to_window_amp_effect(self):
+        effect = rune_effects.resolve_keystone("First Strike")
+        assert isinstance(effect, rune_effects.KeystoneWindowAmpEffect)
+        assert effect.keystone_name == "First Strike"
+        assert effect.breakdown_key == "keystone_First Strike"
+        assert effect.window_seconds == 3.0
+        assert effect.bonus_damage_ratio == pytest.approx(0.07)
+        assert effect.activation_gold == 10.0
+
+    def test_gold_conversion_is_melee_ranged_split(self):
+        effect = rune_effects.resolve_keystone("First Strike")
+        assert effect.gold_conversion(is_melee=True) == pytest.approx(0.50)
+        assert effect.gold_conversion(is_melee=False) == pytest.approx(0.35)
+
+    def test_missing_registry_key_raises_with_context(self, monkeypatch):
+        broken = {
+            name: (
+                {
+                    **entry,
+                    "effects": {
+                        k: v
+                        for k, v in entry["effects"].items()
+                        if k != "melee_ranged_ratios"
+                    },
+                }
+                if name == "First Strike"
+                else entry
+            )
+            for name, entry in rune_effects.RUNE_EFFECTS.items()
+        }
+        monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
+        with pytest.raises(KeyError, match="First Strike.*melee_ranged_ratios"):
+            rune_effects.resolve_keystone("First Strike")
+
+
 class TestKeystoneCatalog:
     def test_all_keystones_listed_with_coverage_flags(self):
         catalog = rune_effects.keystone_catalog()
@@ -96,6 +132,7 @@ class TestKeystoneCatalog:
         by_name = {entry["name"]: entry for entry in catalog}
         assert by_name["Electrocute"]["implemented"] is True
         assert by_name["Electrocute"]["path"] == "Domination"
+        assert by_name["First Strike"]["implemented"] is True
         assert by_name["Dark Harvest"]["implemented"] is False
         assert all(entry["path"] for entry in catalog)
         assert all(entry["icon"] for entry in catalog)

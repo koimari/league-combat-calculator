@@ -60,6 +60,35 @@ class KeystoneProcEffect:
     damage_type: Callable[[Mapping[str, float]], str]
 
 
+@dataclass(frozen=True, slots=True)
+class KeystoneWindowAmpEffect:
+    """A combat-opening damage-window keystone (First Strike-class).
+
+    Post-mitigation damage dealt inside the opening window gains
+    ``bonus_damage_ratio`` as bonus true damage; activation grants flat
+    gold plus a melee/ranged share of the bonus damage as gold. Window
+    summation lives in the fight engine, which owns the damage ledger.
+    A continuous fight activates the buff exactly once, so the rune's
+    out-of-combat cooldown never gates anything the engine models.
+    """
+
+    keystone_name: str
+    breakdown_key: str
+    display_name: str
+    window_seconds: float
+    bonus_damage_ratio: float
+    activation_gold: float
+    gold_conversion_melee: float
+    gold_conversion_ranged: float
+
+    def gold_conversion(self, is_melee: bool) -> float:
+        """The share of bonus damage returned as gold for this range class."""
+        return self.gold_conversion_melee if is_melee else self.gold_conversion_ranged
+
+
+KeystoneEffect = KeystoneProcEffect | KeystoneWindowAmpEffect
+
+
 class _RequiredRuneValues:
     """Typed, contextual reads from one rune registry record."""
 
@@ -123,12 +152,32 @@ def _compile_electrocute(entry: Mapping[str, Any]) -> KeystoneProcEffect:
     )
 
 
-_KEYSTONE_COMPILERS: dict[str, Callable[[Mapping[str, Any]], KeystoneProcEffect]] = {
+def _compile_first_strike(entry: Mapping[str, Any]) -> KeystoneWindowAmpEffect:
+    """Compile First Strike: 7% bonus true damage in a 3s opening window."""
+    name = "First Strike"
+    effects = _RequiredRuneValues(name, entry.get("effects", {}))
+    melee_ratio, ranged_ratio = (
+        float(value) for value in effects.value("melee_ranged_ratios")
+    )
+    return KeystoneWindowAmpEffect(
+        keystone_name=name,
+        breakdown_key=f"keystone_{name}",
+        display_name=f"{name} (keystone)",
+        window_seconds=effects.number("buff_duration_seconds"),
+        bonus_damage_ratio=effects.number("bonus_true_damage_ratio"),
+        activation_gold=effects.number("flat_gold"),
+        gold_conversion_melee=melee_ratio,
+        gold_conversion_ranged=ranged_ratio,
+    )
+
+
+_KEYSTONE_COMPILERS: dict[str, Callable[[Mapping[str, Any]], KeystoneEffect]] = {
     "Electrocute": _compile_electrocute,
+    "First Strike": _compile_first_strike,
 }
 
 
-def resolve_keystone(name: str) -> KeystoneProcEffect | None:
+def resolve_keystone(name: str) -> KeystoneEffect | None:
     """Compile the selected keystone, failing closed on anything unmodeled."""
     if not name:
         return None

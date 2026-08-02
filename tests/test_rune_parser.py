@@ -35,6 +35,17 @@ PRESS_THE_ATTACK_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Press 
 }}"""
 
 
+FIRST_STRIKE_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|First Strike|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2022
+|path         = Inspiration
+|slot         = Keystone
+|description  = {{sbc|Passive:}} Initiating [[combat]] with an enemy {{tip|champion}} within the first {{fd|0.25}} seconds of champion combat grants {{g|10}} and ''First Strike'' for 3 seconds, causing all of your {{tt|post-mitigation damage|Damage calculated after modifiers}} dealt against champions to deal {{as|7% '''bonus''' true damage}}. Afterwards, you are granted {{g|gold}} equal to {{rd|50%|35%}} of all '''bonus''' damage dealt within the duration.
+|description2 = ''First Strike'' will be placed on full cooldown without activating its effects after being struck by an enemy champion before you strike them.
+|range        =
+|cooldown     = 25 to 15
+}}"""
+
+
 class TestParseRuneTemplate:
     def test_named_params_extracted(self):
         params = parse_rune_template(ELECTROCUTE_WIKITEXT)
@@ -116,6 +127,32 @@ class TestRunePayload:
         effects = rune_payload("Electrocute", text)["effects"]
         assert "bonus_ad_ratio" not in effects
         assert effects["ad_ratio"] == pytest.approx(0.30)
+
+
+class TestFirstStrikePayload:
+    def test_first_strike_effects_complete(self):
+        payload = rune_payload("First Strike", FIRST_STRIKE_WIKITEXT)
+        assert payload["path"] == "Inspiration"
+        # "25 to 15" is level-scaling text the cooldown parser does not
+        # claim to read; absence (null) is the honest value.
+        assert payload["cooldown"] is None
+        effects = payload["effects"]
+        assert effects["bonus_true_damage_ratio"] == pytest.approx(0.07)
+        assert effects["buff_duration_seconds"] == 3.0
+        assert effects["flat_gold"] == 10.0
+        assert effects["melee_ranged_ratios"] == [
+            pytest.approx(0.50),
+            pytest.approx(0.35),
+        ]
+        # {{fd|0.25}} here is the initiation window, not a proc delay.
+        assert "proc_delay_seconds" not in effects
+
+    def test_electrocute_gains_no_first_strike_keys(self):
+        effects = rune_payload("Electrocute", ELECTROCUTE_WIKITEXT)["effects"]
+        assert "bonus_true_damage_ratio" not in effects
+        assert "flat_gold" not in effects
+        assert "melee_ranged_ratios" not in effects
+        assert "buff_duration_seconds" not in effects
 
 
 class TestDuplicateRatioWarning:

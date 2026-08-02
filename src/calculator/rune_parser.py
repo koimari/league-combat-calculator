@@ -7,7 +7,11 @@ numbers appear in a small set of template forms:
 - ``{{pp|60 + 10 * x|1 to 20 by 1}}`` — a leveling formula over champion level
 - ``{{as|(+ 10% '''bonus''' AD)}}`` / ``{{as|(+ 5% AP)}}`` — scaling ratios
 - ``{{fd|0.25}}-second delay`` — fixed decimals
+- ``{{as|7% '''bonus''' true damage}}`` — a post-mitigation true-damage ratio
+- ``{{g|10}}`` — flat gold grants
+- ``{{rd|50%|35%}}`` — a melee/ranged value split (melee first, per Template:Rd)
 - prose stack rules — "Applying 3 stacks to a target within a 3 second period"
+- prose buff windows — "grants ... for 3 seconds, causing"
 
 This module is pure parsing: no network, no file writes. ``data_updater``
 fetches the wikitext and writes the resulting payloads to ``data/runes.json``;
@@ -25,6 +29,10 @@ _AS_RATIO = re.compile(
     r"\{\{as\|\(\+\s*([\d.]+)%\s*(?:('''bonus'''|bonus)\s*)?(AD|AP)\)"
 )
 _STACK_RULE = re.compile(r"Applying (\d+) stacks? to a target within a ([\d.]+) second")
+_BONUS_TRUE_DAMAGE = re.compile(r"\{\{as\|([\d.]+)%\s*'''bonus'''\s*true damage\}\}")
+_FLAT_GOLD = re.compile(r"\{\{g\|([\d.]+)\}\}")
+_MELEE_RANGED_SPLIT = re.compile(r"\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}")
+_BUFF_WINDOW = re.compile(r"for ([\d.]+) seconds, causing")
 _PROC_DELAY = re.compile(r"\{\{fd\|([\d.]+)\}\}-second delay")
 _TT_TEMPLATE = re.compile(r"\{\{tt\|([^|}]+)")
 _RANGE_SPEC = re.compile(r"^([\d.]+)\s+to\s+([\d.]+)(?:\s+by\s+([\d.]+))?$")
@@ -150,7 +158,7 @@ def parse_cooldown(value: str | None) -> float | None:
         return None
 
 
-def _parse_effects(description: str) -> tuple[dict[str, Any], list[str]]:
+def parse_effects(description: str) -> tuple[dict[str, Any], list[str]]:
     """Extract the numeric effect values a description carries.
 
     Returns the effects dict plus parse warnings. Keys are only present
@@ -158,7 +166,16 @@ def _parse_effects(description: str) -> tuple[dict[str, Any], list[str]]:
     """
     effects: dict[str, Any] = {}
     warnings: list[str] = []
+    _parse_leveling(description, effects, warnings)
+    _parse_scalar_templates(description, effects, warnings)
+    _parse_prose_rules(description, effects)
+    return effects, warnings
 
+
+def _parse_leveling(
+    description: str, effects: dict[str, Any], warnings: list[str]
+) -> None:
+    """Evaluate every ``{{pp}}`` template into a per-level value list."""
     leveling = []
     for pp_body in _PP_TEMPLATE.findall(description):
         parts = [part for part in pp_body.split("|") if "=" not in part]
@@ -171,21 +188,48 @@ def _parse_effects(description: str) -> tuple[dict[str, Any], list[str]]:
     if leveling:
         effects["leveling"] = leveling
 
+
+def _parse_scalar_templates(
+    description: str, effects: dict[str, Any], warnings: list[str]
+) -> None:
+    """Read the single-value template forms: ratios, gold, range splits."""
+
+    def record(key: str, value: Any) -> None:
+        # A rune whose text matches the same key twice (Summon Aery's
+        # damage AND shield ratios) would silently keep the last value —
+        # a plausible-looking wrong number. Record the ambiguity so the
+        # implementer sees it in data/runes.json.
+        if key in effects and effects[key] != value:
+            warnings.append(f"{key} matched more than once: {effects[key]}, {value}")
+        effects[key] = value
+
     for percent, bonus_marker, stat in _AS_RATIO.findall(description):
-        ratio = float(percent) / 100.0
         if stat == "AP":
             key = "ap_ratio"
         elif bonus_marker:
             key = "bonus_ad_ratio"
         else:
             key = "ad_ratio"
-        # A rune with several scaling effects (Summon Aery's damage AND
-        # shield) matches the same ratio key twice; a silent last-wins
-        # scalar would be a plausible-looking wrong number. Record the
-        # ambiguity so the implementer sees it in data/runes.json.
-        if key in effects and effects[key] != ratio:
-            warnings.append(f"{key} matched more than once: {effects[key]}, {ratio}")
-        effects[key] = ratio
+        record(key, float(percent) / 100.0)
+
+    for percent in _BONUS_TRUE_DAMAGE.findall(description):
+        record("bonus_true_damage_ratio", float(percent) / 100.0)
+
+    for amount in _FLAT_GOLD.findall(description):
+        record("flat_gold", float(amount))
+
+    for melee_percent, ranged_percent in _MELEE_RANGED_SPLIT.findall(description):
+        record(
+            "melee_ranged_ratios",
+            [float(melee_percent) / 100.0, float(ranged_percent) / 100.0],
+        )
+
+
+def _parse_prose_rules(description: str, effects: dict[str, Any]) -> None:
+    """Read the prose-form rules: buff windows, stack rules, proc delays."""
+    window_match = _BUFF_WINDOW.search(description)
+    if window_match:
+        effects["buff_duration_seconds"] = float(window_match.group(1))
 
     stack_match = _STACK_RULE.search(description)
     if stack_match:
@@ -196,8 +240,6 @@ def _parse_effects(description: str) -> tuple[dict[str, Any], list[str]]:
     if delay_match:
         effects["proc_delay_seconds"] = float(delay_match.group(1))
 
-    return effects, warnings
-
 
 def rune_payload(name: str, wikitext: str, icon: str = "") -> dict[str, Any]:
     """Build one ``data/runes.json`` entry from a rune's template wikitext."""
@@ -205,7 +247,7 @@ def rune_payload(name: str, wikitext: str, icon: str = "") -> dict[str, Any]:
     description = "\n".join(
         params.get(key, "") for key in ("description", "description2")
     ).strip()
-    effects, warnings = _parse_effects(description)
+    effects, warnings = parse_effects(description)
     payload: dict[str, Any] = {
         "name": name,
         "path": params.get("path", ""),

@@ -20,6 +20,7 @@ from src.calculator.damage import (
     calculate_fight_damage,
     split_auto_vs_ability,
     split_by_damage_type,
+    _event_timeline_coverage,
     _ordered_damage_events,
     _simulate_current_health_on_hit,
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
@@ -159,9 +160,7 @@ class TestTimelineCoverage:
 
         assert "proc_Luden's Echo" not in result["breakdown"]
 
-    def test_luden_reprocs_only_on_a_ready_damaging_cast(
-        self, fight, attacker_stats
-    ):
+    def test_luden_reprocs_only_on_a_ready_damaging_cast(self, fight, attacker_stats):
         ability = self._test_spell()
         ability["Q"]["cooldown"] = 4.0
         result = fight(
@@ -446,9 +445,7 @@ class TestTargetIncomingDamageModifiers:
                     "damage_type": "physical",
                     "total_raw": 200.0,
                     "parts": (
-                        DamagePart(
-                            "physical", 100.0, count=2, basic_damage=True
-                        ),
+                        DamagePart("physical", 100.0, count=2, basic_damage=True),
                     ),
                 }
             },
@@ -472,9 +469,7 @@ class TestTargetIncomingDamageModifiers:
                     "cooldown": 10.0,
                     "damage_type": "physical",
                     "total_raw": 100.0,
-                    "parts": (
-                        DamagePart("physical", 100.0, crit_effectiveness=1.0),
-                    ),
+                    "parts": (DamagePart("physical", 100.0, crit_effectiveness=1.0),),
                 }
             },
             target_armor=0.0,
@@ -495,9 +490,7 @@ class TestTargetIncomingDamageModifiers:
                     "cooldown": 10.0,
                     "damage_type": "true",
                     "total_raw": 100.0,
-                    "parts": (
-                        DamagePart("true", 100.0, crit_effectiveness=1.0),
-                    ),
+                    "parts": (DamagePart("true", 100.0, crit_effectiveness=1.0),),
                 }
             },
             target_critical_strike_damage_multiplier=0.70,
@@ -619,9 +612,7 @@ class TestTargetIncomingDamageModifiers:
             }
         ]
         assert result["timeline_coverage"]["complete"] is True
-        assert "shadowflame_Shadowflame" in result["timeline_coverage"][
-            "exact_sources"
-        ]
+        assert "shadowflame_Shadowflame" in result["timeline_coverage"]["exact_sources"]
 
     def test_burn_ticks_keep_timing_and_respect_lifeline_expiry(
         self, fight, attacker_stats
@@ -725,9 +716,9 @@ class TestTargetIncomingDamageModifiers:
         )
         assert result["target_healing_received"] == pytest.approx(180.0)
         assert result["timeline_coverage"]["complete"] is False
-        assert "target_Protoplasm Harness" in result["timeline_coverage"][
-            "coarse_sources"
-        ]
+        assert (
+            "target_Protoplasm Harness" in result["timeline_coverage"]["coarse_sources"]
+        )
 
     def test_protoplasm_health_can_delay_shadowflame_threshold(
         self, fight, attacker_stats
@@ -1183,6 +1174,28 @@ class TestNavoriEffectiveCd:
         assert abs(reduced - 4.945) < 0.01
 
 
+def test_coupled_auto_sources_are_coarse_in_coverage_itself():
+    """A cast row whose hits ride the ambient auto stream (Shen Q) is not
+    event-order certified: the downgrade must come out of
+    _event_timeline_coverage directly, so every consumer — the fight
+    report AND window-sum effects like First Strike — sees one
+    definition of "certified"."""
+    breakdown = {"Q": {"name": "Q", "total_damage": 100.0, "casts": 1}}
+    ability_damages = {"Q": {"requires_auto_timeline_coupling": True}}
+    coverage = _event_timeline_coverage(
+        breakdown, ability_damages, ["Q"], num_auto_attacks=3
+    )
+    assert coverage["complete"] is False
+    assert coverage["certification"] == "partial_event_order"
+    assert coverage["coarse_sources"] == ["Q"]
+    assert "ambient auto stream" in coverage["note"]
+    # Without autos there is no coupling to certify — Q stays exact.
+    no_autos = _event_timeline_coverage(
+        breakdown, ability_damages, ["Q"], num_auto_attacks=0
+    )
+    assert no_autos["exact_sources"] == ["Q"]
+
+
 class TestSplitAutoVsAbility:
     """Tests for split_auto_vs_ability — auto vs ability damage attribution.
 
@@ -1245,6 +1258,23 @@ class TestSplitAutoVsAbility:
         auto, ability = split_auto_vs_ability(breakdown)
         assert auto == 360.0
         assert ability == 40.0
+
+    def test_declared_auto_fraction_splits_a_mixed_source_row(self) -> None:
+        """A row that knows its own composition (First Strike's window
+        bonus spans autos and abilities) declares auto_attack_fraction;
+        the split honors it instead of guessing a bucket by key name."""
+        breakdown = {
+            "Q": {"name": "Q", "total_damage": 100.0},
+            "auto_attacks": {"name": "Auto Attacks", "total_damage": 100.0},
+            "keystone_First Strike": {
+                "name": "First Strike (keystone)",
+                "total_damage": 14.0,
+                "auto_attack_fraction": 0.5,
+            },
+        }
+        auto, ability = split_auto_vs_ability(breakdown)
+        assert auto == pytest.approx(107.0)
+        assert ability == pytest.approx(107.0)
 
     def test_informational_entries_skipped(self) -> None:
         # Entries marked informational (e.g. Actualizer's amp summary)

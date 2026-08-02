@@ -434,7 +434,7 @@ class FightState:
     crit_chance: float = 0.0
     crit_multiplier: float = BASE_CRIT_MULTIPLIER
     # ── Keystone rune (compiled proc; None when no keystone equipped) ─────
-    keystone_effect: "rune_effects.KeystoneProcEffect | None" = None
+    keystone_effect: "rune_effects.KeystoneEffect | None" = None
     # ── Fight timeline (built by the rotation, read by later steps) ───────
     # When stacking-DoT stacks land and which mid-fight buff windows they
     # open — the ONE home every stack-aware step reads (Case 4 and 5).
@@ -1170,8 +1170,16 @@ def _event_timeline_coverage(
     breakdown: dict[str, Any],
     ability_damages: dict[str, dict[str, Any]],
     cast_order: list[str],
+    *,
+    num_auto_attacks: int = 0,
 ) -> dict[str, Any]:
-    """Certify which active rows have authored or cast-boundary ordering."""
+    """Certify which active rows have authored or cast-boundary ordering.
+
+    This is the one definition of "certified": rows whose damage rides
+    the ambient auto stream (``requires_auto_timeline_coupling``) are
+    downgraded here — not by consumers — so the fight report and
+    window-sum effects can never disagree about the same source.
+    """
     exact: list[str] = []
     coarse: list[str] = []
     cast_keys = set(cast_order)
@@ -1203,7 +1211,7 @@ def _event_timeline_coverage(
             continue
         coarse.append(key)
     complete = not coarse
-    return {
+    coverage = {
         "complete": complete,
         "certification": (
             "event_order_certified" if complete else "partial_event_order"
@@ -1219,6 +1227,29 @@ def _event_timeline_coverage(
             )
         ),
     }
+    coupled_auto_sources = {
+        key
+        for key, info in ability_damages.items()
+        if info.get("requires_auto_timeline_coupling")
+        and num_auto_attacks > 0
+        and int(breakdown.get(key, {}).get("casts", 0)) > 0
+    }
+    if coupled_auto_sources:
+        coverage["complete"] = False
+        coverage["certification"] = "partial_event_order"
+        coverage["exact_sources"] = sorted(
+            set(coverage["exact_sources"]) - coupled_auto_sources
+        )
+        coverage["coarse_sources"] = sorted(
+            set(coverage["coarse_sources"]) | coupled_auto_sources
+        )
+        names = ", ".join(sorted(coupled_auto_sources))
+        coverage["note"] = (
+            f"{names} modifies attacks on the ambient auto stream; its bonus "
+            "damage is included, but per-hit auto coupling is not yet "
+            "event-order certified."
+        )
+    return coverage
 
 
 @dataclass
@@ -5022,7 +5053,7 @@ def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
     as a timestamped damage event for the ledger and timeline consumers.
     """
     effect = state.keystone_effect
-    if effect is None:
+    if not isinstance(effect, rune_effects.KeystoneProcEffect):
         return
     proc_times: list[float] = []
     live_stacks: list[float] = []
@@ -5065,6 +5096,94 @@ def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
         ],
     }
     state.total_damage += total
+
+
+def _add_keystone_window_amp_damage(
+    state: FightState, rotation: RotationResult
+) -> None:
+    """Add opening-window keystone bonus damage (First Strike-class).
+
+    The buff activates once at combat start — a continuous fight never
+    re-enters combat, so the rune's out-of-combat cooldown is moot. Its
+    bonus is a sourced ratio of the post-mitigation damage dealt inside
+    the opening window, read from the ordered damage ledger, and lands
+    as true damage. The gold it generates (flat activation gold plus the
+    melee/ranged share of the bonus) is reported on the breakdown row
+    and in the fight notes; gold is not damage and never joins the total.
+
+    Runs after every damage row exists and before fight-wide amplifiers:
+    amp rows carry no event times, so the window is summed pre-amp — a
+    conservative understatement whenever an amplifier is active.
+    """
+    effect = state.keystone_effect
+    if not isinstance(effect, rune_effects.KeystoneWindowAmpEffect):
+        return
+    # Only sources with certified event times can be placed inside the
+    # window. Coarse-timed rows (DoTs whose totals resolve past their
+    # cast, item effects without authored events, auto-coupled casts)
+    # are excluded and disclosed — omitting a source can only understate
+    # the bonus, never overstate it.
+    events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
+    coverage = _event_timeline_coverage(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        num_auto_attacks=state.num_auto_attacks,
+    )
+    certified = set(coverage["exact_sources"])
+    contributing = [
+        event
+        for event in events
+        if event["source_key"] in certified and event["time"] < effect.window_seconds
+    ]
+    window_damage = sum(event["damage"] for event in contributing)
+
+    bonus = effect.bonus_damage_ratio * window_damage
+    gold = effect.activation_gold + effect.gold_conversion(state.is_melee) * bonus
+    if window_damage > 0:
+        auto_stream_damage = sum(
+            event["damage"]
+            for event in contributing
+            if _is_auto_stream_key(event["source_key"])
+        )
+        state.breakdown[effect.breakdown_key] = {
+            "name": effect.display_name,
+            "total_damage": bonus,
+            "damage_type": "true",
+            "count": 1,
+            "event_phase": "effect",
+            "gold_generated": gold,
+            "auto_attack_fraction": auto_stream_damage / window_damage,
+            "damage_events": [
+                {
+                    "time": event["time"],
+                    "damage": effect.bonus_damage_ratio * event["damage"],
+                    "damage_type": "true",
+                }
+                for event in contributing
+            ],
+        }
+        state.total_damage += bonus
+    # The activation itself (and its flat gold) does not depend on any
+    # window damage being certified — the notes always surface.
+    state.notes.append(
+        f"{effect.keystone_name} assumes you initiate combat; it generated "
+        f"{gold:.0f} gold ({effect.activation_gold:.0f} on activation plus "
+        f"{effect.gold_conversion(state.is_melee) * 100:.0f}% of "
+        f"{bonus:.0f} bonus true damage)."
+    )
+    excluded_sources = coverage["coarse_sources"]
+    if excluded_sources:
+        state.notes.append(
+            f"{effect.keystone_name} window excludes sources without "
+            f"certified event times ({', '.join(sorted(excluded_sources))}); "
+            "its bonus is a floor, not an estimate."
+        )
 
 
 def _add_item_active_damage(state: FightState) -> None:
@@ -5661,6 +5780,9 @@ def calculate_fight_damage(
     _add_shadowflame_cinderbloom(state, config, rotation)
     _add_expose_weakness(state, autos, spellblade)
 
+    # ── Keystone opening-window bonus (First Strike-class) ──────────────
+    _add_keystone_window_amp_damage(state, rotation)
+
     # ── Fight-wide damage amplifiers ────────────────────────────────────
     _apply_damage_amplifiers(state, rotation)
 
@@ -5675,30 +5797,11 @@ def calculate_fight_damage(
 
     shield_outcome = _resolve_starting_shield_outcome(state, config, rotation)
     timeline_coverage = _event_timeline_coverage(
-        state.breakdown, state.ability_damages, state.cast_order
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        num_auto_attacks=state.num_auto_attacks,
     )
-    coupled_auto_sources = {
-        key
-        for key, info in state.ability_damages.items()
-        if info.get("requires_auto_timeline_coupling")
-        and state.num_auto_attacks > 0
-        and int(state.breakdown.get(key, {}).get("casts", 0)) > 0
-    }
-    if coupled_auto_sources:
-        timeline_coverage["complete"] = False
-        timeline_coverage["certification"] = "partial_event_order"
-        timeline_coverage["exact_sources"] = sorted(
-            set(timeline_coverage["exact_sources"]) - coupled_auto_sources
-        )
-        timeline_coverage["coarse_sources"] = sorted(
-            set(timeline_coverage["coarse_sources"]) | coupled_auto_sources
-        )
-        names = ", ".join(sorted(coupled_auto_sources))
-        timeline_coverage["note"] = (
-            f"{names} modifies attacks on the ambient auto stream; its bonus "
-            "damage is included, but per-hit auto coupling is not yet "
-            "event-order certified."
-        )
     if (
         shield_outcome["threshold_health_triggered"]
         and config.target_threshold_health_heal > 0
@@ -5830,6 +5933,20 @@ def _resolve_starting_shield_outcome(
     }
 
 
+def _is_auto_stream_key(key: str) -> bool:
+    """Whether a breakdown key belongs to the auto-attack damage stream.
+
+    The stream itself plus champion riders on it (e.g. Corki's
+    true-damage instance) share the ``auto_attacks`` prefix; on-hit,
+    spellblade, and Fiendhunter rows ride the swings too.
+    """
+    return (
+        key.startswith("auto_attacks")
+        or key == "fiendhunter_true_damage"
+        or key.startswith(("on_hit_", "spellblade_"))
+    )
+
+
 def split_auto_vs_ability(
     breakdown: dict[str, dict[str, Any]],
 ) -> tuple[float, float]:
@@ -5841,10 +5958,10 @@ def split_auto_vs_ability(
       zero or already counted in other rows (the engine marks its amp
       summaries, the execute-threshold row, and the Sundered Sky row
       this way) — so they are skipped.
-    - keys prefixed ``auto_attacks`` (the stream itself plus champion
-      riders on it, e.g. Corki's true-damage instance),
-      ``fiendhunter_true_damage``, ``on_hit_``, or ``spellblade_`` count
-      as auto-attack damage.
+    - Rows that declare ``auto_attack_fraction`` know their own
+      composition (First Strike's window bonus spans both streams) and
+      are split by it.
+    - ``_is_auto_stream_key`` rows count as auto-attack damage.
     - ``damage_amp_<source>`` rows amplify both buckets, so their damage
       is redistributed proportionally to the pre-amp auto/ability ratio
       (dropped entirely if that total is zero).
@@ -5854,17 +5971,15 @@ def split_auto_vs_ability(
     ability_damage = 0.0
     redistributed_damage = 0.0  # damage_amp_<source> rows
 
-    on_hit_prefixes = ("on_hit_", "spellblade_")
-
     for key, entry in breakdown.items():
         dmg = entry.get("total_damage", 0.0)
         if entry.get("informational"):
             continue
-        if (
-            key.startswith("auto_attacks")
-            or key == "fiendhunter_true_damage"
-            or key.startswith(on_hit_prefixes)
-        ):
+        if "auto_attack_fraction" in entry:
+            fraction = float(entry["auto_attack_fraction"])
+            auto_attack_damage += dmg * fraction
+            ability_damage += dmg * (1.0 - fraction)
+        elif _is_auto_stream_key(key):
             auto_attack_damage += dmg
         elif key.startswith("damage_amp_"):
             # Amplifiers scale both buckets — redistribute proportionally

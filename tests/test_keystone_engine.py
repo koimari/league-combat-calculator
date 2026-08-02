@@ -1,8 +1,15 @@
-"""Fight-engine tests for keystone rune procs (Electrocute).
+"""Fight-engine tests for keystone runes (Electrocute, First Strike).
 
-The engine counts damage instances on the real fight timeline — one per
-accepted ability cast plus one per simulated auto swing — applies the
-sourced stack window, and gates re-procs behind the keystone cooldown.
+Electrocute: the engine counts damage instances on the real fight
+timeline — one per accepted ability cast plus one per simulated auto
+swing — applies the sourced stack window, and gates re-procs behind the
+keystone cooldown.
+
+First Strike: the engine sums the post-mitigation damage that sources
+with certified event times deal inside the opening buff window and adds
+the sourced ratio as bonus true damage, reporting the gold generated.
+Uncertified (coarse-timed) sources are excluded and disclosed — the
+bonus is a floor, never an estimate.
 """
 
 import pytest
@@ -180,3 +187,159 @@ class TestElectrocuteProcs:
     def test_unknown_keystone_raises(self, fight, attacker_stats):
         with pytest.raises(ValueError, match="Fake Rune"):
             fight(attacker_stats(), _spell(), keystone="Fake Rune")
+
+
+def _first_strike_row(result):
+    return result["breakdown"].get("keystone_First Strike")
+
+
+class TestFirstStrike:
+    def test_whole_fight_inside_window_amps_all_damage(self, fight, attacker_stats):
+        # A 3-second fight sits entirely inside the 3-second buff: every
+        # certified point of post-mitigation damage earns the 7% bonus.
+        result = fight(
+            attacker_stats(),
+            _spell("Q", damage=300.0),
+            keystone="First Strike",
+            fight_duration_seconds=3.0,
+        )
+        row = _first_strike_row(result)
+        assert row is not None
+        mitigated_q = 300.0 * 100.0 / (100.0 + 100.0)
+        expected_bonus = 0.07 * mitigated_q
+        assert row["total_damage"] == pytest.approx(expected_bonus)
+        assert row["damage_type"] == "true"
+        assert result["total_damage"] == pytest.approx(mitigated_q + expected_bonus)
+
+    def test_gold_reported_with_melee_conversion(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            _spell("Q", damage=300.0),
+            keystone="First Strike",
+            fight_duration_seconds=3.0,
+        )
+        row = _first_strike_row(result)
+        expected_bonus = 0.07 * 150.0
+        assert row["gold_generated"] == pytest.approx(10.0 + 0.50 * expected_bonus)
+
+    def test_long_fight_counts_only_damage_inside_the_window(
+        self, fight, attacker_stats
+    ):
+        # Autos land at t = 0, 1, 2, ... — only the swings before the
+        # 3-second buff expires (t = 0, 1, 2) earn the 7% bonus.
+        result = fight(
+            attacker_stats(),
+            {},
+            keystone="First Strike",
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        row = _first_strike_row(result)
+        assert row is not None
+        auto_mitigated = 100.0 * 100.0 / (100.0 + 100.0)
+        assert row["total_damage"] == pytest.approx(0.07 * 3 * auto_mitigated)
+        # Every contributing point of damage came from auto attacks, and
+        # the row says so for the auto-vs-ability split.
+        assert row["auto_attack_fraction"] == pytest.approx(1.0)
+
+    def test_coarse_timed_sources_are_excluded_and_disclosed(
+        self, fight, attacker_stats
+    ):
+        # W is a DoT: its damage has no certified event times inside the
+        # window, so it must not inflate the bonus — excluded, with a
+        # note, never prorated.
+        dot = {
+            "W": {
+                "name": "Test DoT",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+                "parts": (DamagePart("magic", 300.0),),
+                "dot_duration": 4.0,
+            }
+        }
+        result = fight(
+            attacker_stats(),
+            {**_spell("Q", damage=300.0), **dot},
+            keystone="First Strike",
+            fight_duration_seconds=10.0,
+        )
+        row = _first_strike_row(result)
+        mitigated_q = 300.0 * 100.0 / (100.0 + 100.0)
+        assert row["total_damage"] == pytest.approx(0.07 * mitigated_q)
+        assert any("First Strike" in note and "W" in note for note in result["notes"])
+
+    def test_all_coarse_fight_still_discloses_the_exclusion(
+        self, fight, attacker_stats
+    ):
+        # Every damage source is a DoT: nothing is certified in-window,
+        # so there is no bonus row — but silence would be dishonest. The
+        # exclusion note (and the activation itself) must still surface.
+        dot = {
+            "W": {
+                "name": "Test DoT",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+                "parts": (DamagePart("magic", 300.0),),
+                "dot_duration": 4.0,
+            }
+        }
+        result = fight(
+            attacker_stats(),
+            dot,
+            keystone="First Strike",
+            fight_duration_seconds=3.0,
+        )
+        assert _first_strike_row(result) is None
+        assert any("First Strike" in note and "W" in note for note in result["notes"])
+
+    def test_coupled_auto_stream_sources_are_not_certified_in_window(
+        self, fight, attacker_stats
+    ):
+        # Shen-class abilities place their row damage at cast time but
+        # actually deal it across later auto swings — the engine cannot
+        # certify how much lands inside the window, so the source is
+        # excluded, matching what timeline_coverage reports for it.
+        coupled = {
+            "Q": {
+                "name": "Test empowered swings",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+                "parts": (DamagePart("magic", 300.0),),
+                "requires_auto_timeline_coupling": True,
+            }
+        }
+        result = fight(
+            attacker_stats(),
+            coupled,
+            keystone="First Strike",
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+        )
+        row = _first_strike_row(result)
+        assert row is not None
+        # Only the certified auto swings at t = 0, 1, 2 contribute.
+        auto_mitigated = 100.0 * 100.0 / (100.0 + 100.0)
+        assert row["total_damage"] == pytest.approx(0.07 * 3 * auto_mitigated)
+        assert any("First Strike" in note and "Q" in note for note in result["notes"])
+
+    def test_gold_uses_ranged_conversion_for_ranged_attackers(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(is_melee=False),
+            _spell("Q", damage=300.0),
+            keystone="First Strike",
+            fight_duration_seconds=3.0,
+        )
+        row = _first_strike_row(result)
+        expected_bonus = 0.07 * 150.0
+        assert row["gold_generated"] == pytest.approx(10.0 + 0.35 * expected_bonus)

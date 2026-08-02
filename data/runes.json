@@ -49,7 +49,16 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
     "description": "{{Unique|Energized|Moving and basic attacking generates ''Charges'', up to 100.}}\nAt 100 ''Charges'', become {{tip|Energized}}, empowering your next {{tip|basic attack}} to {{tip|heal}} you for {{rd|10+(120/17)*(x-1)*(0.7025+0.0175*(x-1)) for 20|10*0.6+((120*0.6)/17)*(x-1)*(0.7025+0.0175*(x-1)) for 20|color=heal|pp=true}} {{as|(+ {{rd|10%|6%}} '''bonus''' AD)}} {{as|(+ {{rd|5%|3%}} AP)}} and grant {{as|{{rd|20%|15%}}|ms}} {{sti|{{as|'''bonus''' movement speed}}}} for 1 second. Against {{tip|minion|minions}}, the healing is 15% effective.",
-    "effects": {}
+    "effects": {
+      "melee_ranged_ratios": [
+        0.2,
+        0.15
+      ]
+    },
+    "parse_warnings": [
+      "melee_ranged_ratios matched more than once: [0.1, 0.06], [0.05, 0.03]",
+      "melee_ranged_ratios matched more than once: [0.05, 0.03], [0.2, 0.15]"
+    ]
   },
   "Conqueror": {
     "name": "Conqueror",
@@ -58,7 +67,12 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Conqueror/Conqueror.png",
     "description": "{{sbc|Passive:}} Dealing damage to enemy {{tip|champions}} generates {{tip|stacks}} of ''Conqueror'', lasting for 5 seconds, refreshing on subsequent damage against champions, and stacking up to 12 times. Gain {{rd|2|1}} stacks for {{tip|basic damage}} {{tip|on-hit}}. Otherwise, gain 2 stacks for any damage that is neither {{tip|basic damage|basic}} nor non-{{tip|pet damage|pet}} {{tip|proc damage}}, up to once every 4 seconds per {{tip|cast instance}}.\nEach stack of ''Conqueror'' grants {{adaptive|1.8 + (4-1.8)/17*(x-1)|20}}, up to {{adaptive|1.8*12 + (4*12-1.8*12)/17*(x-1)|20}} at maximum stacks, at which you also {{tip|heal}} for {{rd|8%|5%}} of the {{tt|post-mitigation damage|Damage calculated after modifiers}} dealt against enemy champions.",
-    "effects": {}
+    "effects": {
+      "melee_ranged_ratios": [
+        0.08,
+        0.05
+      ]
+    }
   },
   "Electrocute": {
     "name": "Electrocute",
@@ -121,7 +135,11 @@
     "description": "{{sbc|Passive:}} Starting an {{tip|attack windup}} against an enemy {{tip|champion}} triggers ''Hail of Blades'', and if the windup completes, you gain 2 stacks of the effect for 3 seconds, with the duration refreshing on basic attacks {{tip|on-attack}} against enemy champions until all stacks are consumed. Stacks are consumed per basic attack on-attack and you generate an additional stack of the effect each time you activate an effect that has a {{tip|basic attack reset}}, up to 2 times.\nWhile ''Hail of Blades'' is active, you gain {{as|{{rd|120%|60%}} {{sti|'''bonus''' attack speed}}|as}}, are allowed to exceed the {{tt|attack speed cap|normally 3.003 attacks per second}}, and basic attacks deal {{pp|4 + (20-4)/17*(x-1) for 20|color=true damage}} {{as|(+ 8% '''bonus''' AD)}} {{as|(+ 6% AP)}} {{as|{{sti|'''bonus''' true damage}}}}.<br><br>''The triggering attack benefits from Hail of Blades.''",
     "effects": {
       "bonus_ad_ratio": 0.08,
-      "ap_ratio": 0.06
+      "ap_ratio": 0.06,
+      "melee_ranged_ratios": [
+        1.2,
+        0.6
+      ]
     },
     "parse_warnings": [
       "pp formula '4 + (20-4)/17*(x-1) for 20' has no level range"
@@ -253,7 +271,12 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/PhaseRush/StormraidersSurgeRuneIcon2.png",
     "description": "{{sbc|Passive:}} Dealing {{tt|damage|post-mitigation damage}} to an enemy champion equal to {{as|25% of their '''maximum''' health}} within 3 seconds grants you {{as|{{rd|48%|36%}} '''bonus''' movement speed}} and 50% {{tip|slow resist}} for 4 seconds.",
-    "effects": {}
+    "effects": {
+      "melee_ranged_ratios": [
+        0.48,
+        0.36
+      ]
+    }
   },
   "Deathfire Touch": {
     "name": "Deathfire Touch",
@@ -328,6 +351,14 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png",
     "description": "{{sbc|Passive:}} Initiating [[combat]] with an enemy {{tip|champion}} within the first {{fd|0.25}} seconds of champion combat grants {{g|10}} and ''First Strike'' for 3 seconds, causing all of your {{tt|post-mitigation damage|Damage calculated after modifiers}} dealt against champions to deal {{as|7% '''bonus''' true damage}}. Afterwards, you are granted {{g|gold}} equal to {{rd|50%|35%}} of all '''bonus''' damage dealt within the duration.\n''First Strike'' will be placed on full cooldown without activating its effects after being struck by an enemy champion before you strike them.",
-    "effects": {}
+    "effects": {
+      "bonus_true_damage_ratio": 0.07,
+      "flat_gold": 10.0,
+      "melee_ranged_ratios": [
+        0.5,
+        0.35
+      ],
+      "buff_duration_seconds": 3.0
+    }
   }
 }
