@@ -206,6 +206,31 @@ function setPath(path, nextValue) {
   const parts = path.split(".");
   const last = parts.pop();
   const parent = parts.reduce((value, part) => value[Number.isNaN(Number(part)) ? part : Number(part)], state);
+  // Keep boots in the dedicated field even if a stale browser state or an
+  // older picker path tries to write a boots id into an ordinary item slot.
+  // The backend rejects that inventory, so normalize it before any request
+  // can reach the coupled optimizer.
+  if (parts.at(-1) === "items" && ALL_ROLE_BOOTS.has(Number(nextValue))) {
+    const index = Number(parts[1]);
+    if (parts[0] === "targets" || parts[0] === "allies") {
+      const loadout = state[parts[0]]?.[index];
+      if (loadout) {
+        loadout.boots = Number(nextValue);
+        loadout.includeBoots = true;
+        parent[Number(last)] = 0;
+        invalidateOptimization();
+        return;
+      }
+    }
+  }
+  if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB") && ALL_ROLE_BOOTS.has(Number(nextValue))) {
+    const side = parts[1].slice(-1);
+    state.attacker[`questBoot${side}`] = Number(nextValue);
+    state.attacker[`includeBoots${side}`] = true;
+    parent[Number(last)] = 0;
+    invalidateOptimization();
+    return;
+  }
   parent[Number.isNaN(Number(last)) ? last : Number(last)] = nextValue;
   invalidateOptimization();
 }
@@ -1110,9 +1135,10 @@ function renderExactBreakdown(aResult, bResult) {
   const combatRows = (aResult?.combat?.breakdown || []).map((entry) => {
     const survival = (aResult.combat.participants || []).find((participant) => participant.participant_id === entry.participant_id)?.survival || {};
     const status = survival.survived_window ? "alive at window end" : `defeated at ${one(survival.death_time)}s`;
-    return `<tr><td><strong>${escapeHtml(`${entry.champion} · ${entry.team}`)}</strong><small>${escapeHtml(status)} · ${fmt(survival.effective_health || 0)} eHP · ${fmt(survival.healing_received || 0)} healing</small></td><td>${fmt(entry.total_damage)}</td>${bResult ? `<td>—</td><td>—</td>` : ""}</tr>`;
+    const appliedIncoming = Number(survival.health_damage || 0) + Number(survival.shield_absorbed || 0);
+    return `<tr><td><strong>${escapeHtml(`${entry.champion} · ${entry.team}`)}</strong><small>${escapeHtml(status)} · ${fmt(survival.effective_health || 0)} eHP · ${fmt(survival.healing_received || 0)} healing</small></td><td>${fmt(entry.total_damage)}</td><td>${fmt(appliedIncoming)}</td>${bResult ? `<td>—</td><td>—</td>` : ""}</tr>`;
   }).join("");
-  const combatSection = combatRows ? `<section class="combat-participant-ledger"><header><div><p class="eyebrow">Team-fight ledger</p><h2>Every selected champion participates</h2></div><span>Event-ordered damage · eHP · survival</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Participant</th><th><i class="legend-a"></i>Output before defeat</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${combatRows}</tbody></table></div></section>` : "";
+  const combatSection = combatRows ? `<section class="combat-participant-ledger"><header><div><p class="eyebrow">Team-fight ledger</p><h2>Every selected champion participates</h2></div><span>Event-ordered output · applied incoming damage · eHP</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Participant</th><th><i class="legend-a"></i>Output before defeat</th><th>Applied incoming damage</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${combatRows}</tbody></table></div></section>` : "";
   $("damageBreakdown").innerHTML = `${combatSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage before defeat</strong><small>Post-mitigation output from the coupled participant timeline</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
 }
 
