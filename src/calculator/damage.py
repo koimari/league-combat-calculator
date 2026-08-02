@@ -122,7 +122,7 @@ Might): the same entry may declare::
 import math
 import random
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from collections.abc import Sequence
 from typing import Any, Callable
 
@@ -1890,6 +1890,26 @@ def _empower_burst_attack_speed(empower: Any) -> float:
     return float(empower.get("attack_speed", 0.0))
 
 
+def _empower_authored_timing(empower: Any) -> tuple[float, float] | None:
+    """Return module-authored first-hit delay and interval for a burst.
+
+    The timing is used only when the ability must force its own attacks
+    because no ambient auto stream exists. Timed fights with an auto stream
+    keep those attacks on that stream; a champion module can mark that case
+    as requiring explicit coupling before its timeline is certified.
+    """
+    if not isinstance(empower, dict):
+        return None
+    timing = empower.get("authored_timing")
+    if not isinstance(timing, dict):
+        return None
+    first = float(timing.get("first_attack_delay", 0.0))
+    interval = float(timing.get("attack_interval", 0.0))
+    if first < 0 or interval < 0:
+        raise ValueError("Empowered attack timing cannot be negative")
+    return first, interval
+
+
 def _ability_mr(resists: Resists, ult_cast: bool, vile_decay_stacks: int) -> float:
     """Effective MR one ability's magic damage is mitigated by.
 
@@ -2957,9 +2977,41 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             forced_swings = num_casts * hits
             result.forced_basic_attacks += forced_swings
             result.forced_swing_casts += num_casts
+            authored_timing = _empower_authored_timing(empower)
+            if authored_timing is not None:
+                first_delay, attack_interval = authored_timing
+                parts = tuple(
+                    replace(
+                        part,
+                        time_offset=first_delay,
+                        hit_interval=(attack_interval if part.count > 1 else None),
+                    )
+                    if part.count == hits and part.time_offset is None
+                    else part
+                    for part in parts
+                )
             if isinstance(empower, dict) and "swing_parts" in empower:
-                parts = parts + tuple(empower["swing_parts"])
+                swing_parts = tuple(empower["swing_parts"])
+                if authored_timing is not None:
+                    first_delay, attack_interval = authored_timing
+                    swing_parts = tuple(
+                        replace(
+                            part,
+                            time_offset=first_delay,
+                            hit_interval=(
+                                attack_interval if part.count > 1 else None
+                            ),
+                        )
+                        if part.count == hits and part.time_offset is None
+                        else part
+                        for part in swing_parts
+                    )
+                parts = parts + swing_parts
             else:
+                first_delay = None
+                attack_interval = None
+                if authored_timing is not None:
+                    first_delay, attack_interval = authored_timing
                 swing = DamagePart(
                     "physical",
                     state.champion_stats.get("attack_damage", 0.0),
@@ -2969,6 +3021,8 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                     # A basic attack is 100% total AD, so a mid-fight
                     # bonus-AD steroid raises the forced swing 1:1.
                     bonus_ad_ratio=1.0,
+                    time_offset=first_delay,
+                    hit_interval=(attack_interval if hits > 1 else None),
                 )
                 parts = parts + (swing,)
         # A ramped shred (Corki E) stacks up across this ability's own
@@ -3039,12 +3093,17 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             if state.crit_chance > 0:
                 detail += f" @ {round(state.crit_chance * 100)}% crit"
             breakdown[ability_key]["detail"] = detail
-        if damage_type == "mixed":
-            # Exact composition for the physical/magic/true split (the
-            # ability amp scales every part uniformly).
+        active_damage_types = {
+            dtype for dtype, amount in ability_by_type.items() if amount > 0
+        }
+        if damage_type == "mixed" or len(active_damage_types) > 1:
+            # Exact composition for the physical/magic/true split. This also
+            # covers an empowered magic on-hit whose forced basic-attack swing
+            # adds a physical part to the same visible row (Shen Q).
             breakdown[ability_key]["damage_by_type"] = {
                 dtype: amount * state.ability_amp
                 for dtype, amount in ability_by_type.items()
+                if amount > 0
             }
         # Champion-minted display text (e.g. Aurelion Sol E's execute
         # threshold) rides the entry onto its breakdown row untouched.
@@ -5403,6 +5462,28 @@ def calculate_fight_damage(
     timeline_coverage = _event_timeline_coverage(
         state.breakdown, state.ability_damages, state.cast_order
     )
+    coupled_auto_sources = {
+        key
+        for key, info in state.ability_damages.items()
+        if info.get("requires_auto_timeline_coupling")
+        and state.num_auto_attacks > 0
+        and int(state.breakdown.get(key, {}).get("casts", 0)) > 0
+    }
+    if coupled_auto_sources:
+        timeline_coverage["complete"] = False
+        timeline_coverage["certification"] = "partial_event_order"
+        timeline_coverage["exact_sources"] = sorted(
+            set(timeline_coverage["exact_sources"]) - coupled_auto_sources
+        )
+        timeline_coverage["coarse_sources"] = sorted(
+            set(timeline_coverage["coarse_sources"]) | coupled_auto_sources
+        )
+        names = ", ".join(sorted(coupled_auto_sources))
+        timeline_coverage["note"] = (
+            f"{names} modifies attacks on the ambient auto stream; its bonus "
+            "damage is included, but per-hit auto coupling is not yet "
+            "event-order certified."
+        )
     if (
         shield_outcome["threshold_health_triggered"]
         and config.target_threshold_health_heal > 0

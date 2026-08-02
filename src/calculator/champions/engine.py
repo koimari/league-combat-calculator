@@ -77,6 +77,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "auto_attack_conversion",
         "double_shot",
         "target_max_health_sensitive",
+        "requires_auto_timeline_coupling",
         "detail",  # display text copied onto the ability's breakdown row
         "unit",  # count label for a proc row ("cleaves"); default is "hits"
         # producer diagnostics / display metadata
