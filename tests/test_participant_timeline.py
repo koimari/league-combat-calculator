@@ -276,7 +276,7 @@ def test_bis_endpoint_scores_main_from_damage_and_effective_health():
     assert body["candidate_count"] > 0
     assert body["candidates"]
     top = body["candidates"][0]
-    assert top["metric"] == "main TTD + effective health"
+    assert top["metric"] == "main TTD (survival-coupled)"
     assert top["components"]["effective_health"] > 0
 
 
@@ -290,7 +290,7 @@ def test_bis_endpoint_keeps_ally_and_enemy_in_the_same_timeline():
     enemy_top = enemy.get_json()["candidates"][0]
     assert "main_team_damage_before_death" in ally_top["components"]
     assert "effective_health" in ally_top["components"]
-    assert enemy_top["metric"] == "enemy TTD + survival pool"
+    assert enemy_top["metric"] == "enemy TTD (survival-coupled)"
     assert enemy_top["components"]["effective_health"] > 0
 
 

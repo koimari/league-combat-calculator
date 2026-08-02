@@ -320,8 +320,8 @@
           "damage_type": "magic",
           "name": "Perfect Execution",
           "parts": [
-            "DamagePart(magic, amount=220.0, count=1, hp_scaled=no, crit_effectiveness=0.0)",
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=220.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.25)",
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0, time_offset=2.75)"
           ],
           "rank": 2,
           "resource_cost": 0.0,
@@ -344,7 +344,34 @@
           "total_raw": 0.0
         },
         "passive": {
+          "damage_events": [
+            {
+              "damage": 89.0,
+              "damage_type": "magic",
+              "event_precision": "phase_order",
+              "time": 0.0
+            },
+            {
+              "damage": 89.0,
+              "damage_type": "magic",
+              "event_precision": "phase_order",
+              "time": 0.0
+            },
+            {
+              "damage": 89.0,
+              "damage_type": "magic",
+              "event_precision": "phase_order",
+              "time": 0.0
+            },
+            {
+              "damage": 89.0,
+              "damage_type": "magic",
+              "event_precision": "phase_order",
+              "time": 0.0
+            }
+          ],
           "damage_type": "magic",
+          "event_phase": "effect",
           "name": "Assassin's Mark",
           "parts": [
             "DamagePart(magic, amount=89.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -34263,7 +34290,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "cd10a6d5ff79471789a2b880965d3e0b2532e1e6",
+    "git_head": "9512956cd3466c05a0f52f107244884962b7254a",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785669778.9014,
@@ -34636,9 +34663,9 @@
             "auto_attacks": 0.0,
             "passive": 1062.72,
             "proc_Luden's Echo": 155.36,
-            "shadowflame_Shadowflame": 307.42
+            "shadowflame_Shadowflame": 310.7
           },
-          "total_damage": 3175.22
+          "total_damage": 3178.5
         },
         "no_items": {
           "breakdown_totals": {
@@ -34683,9 +34710,9 @@
               "auto_attacks": 242.67,
               "passive": 1062.72,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 568.68
+              "shadowflame_Shadowflame": 569.24
             },
-            "total_damage": 4985.43
+            "total_damage": 4985.99
           },
           "no_items": {
             "breakdown_totals": {
@@ -34781,9 +34808,9 @@
               "auto_attacks": 314.67,
               "passive": 1360.32,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 744.24
+              "shadowflame_Shadowflame": 760.88
             },
-            "total_damage": 6088.35
+            "total_damage": 6104.99
           },
           "no_items": {
             "breakdown_totals": {

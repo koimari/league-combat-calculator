@@ -695,6 +695,7 @@ def proc_damage(
     count_option: str = "passive_procs",
     default_count: int = 4,
     name: str | None = None,
+    phase_order_events: bool = False,
 ) -> SlotParser:
     """Passive that procs N times per fight (Akali/Ambessa/Akshan P).
 
@@ -729,13 +730,28 @@ def proc_damage(
         if per_proc_damage <= 0:
             return None
 
-        return {
+        result = {
             "name": name or ability.get("name", f"Ability {ctx.slot}"),
             "damage_type": dmg_type,
             "total_raw": per_proc_damage * count,
             "parts": (DamagePart(dmg_type, per_proc_damage),),
             "proc_count": count,
         }
+        if phase_order_events:
+            # Only modules with an explicit sourced post-ability trigger
+            # order opt into this ledger. Other fixed-count passives remain
+            # partial and are withheld by BIS rather than guessed.
+            result["event_phase"] = "effect"
+            result["damage_events"] = [
+                {
+                    "time": 0.0,
+                    "damage_type": dmg_type,
+                    "damage": per_proc_damage,
+                    "event_precision": "phase_order",
+                }
+                for _ in range(count)
+            ]
+        return result
 
     parse.phase = DAMAGE
     return parse

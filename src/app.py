@@ -1532,10 +1532,12 @@ def api_bis():
                 if row["participant_id"] == ("main" if subject_team == "main" else subject_id)
             )
             if subject_team == "main":
-                score = float(objective["focus_damage_before_death"]) + float(
-                    focus["survival"]["effective_health"]
-                )
-                metric = "main TTD + effective health"
+                # TTD is already truncated at the focus participant's death
+                # in the shared event timeline.  Adding raw eHP here would
+                # count the same survival twice and makes an assassin's BIS
+                # drift toward pure-health items.
+                score = float(objective["focus_damage_before_death"])
+                metric = "main TTD (survival-coupled)"
                 components = {
                     "damage_before_death": objective["focus_damage_before_death"],
                     "effective_health": focus["survival"]["effective_health"],
@@ -1554,10 +1556,8 @@ def api_bis():
                     "effective_health": focus["survival"]["effective_health"],
                 }
             else:
-                score = float(objective["focus_damage_before_death"]) + float(
-                    focus["survival"]["effective_health"]
-                )
-                metric = "enemy TTD + survival pool"
+                score = float(objective["focus_damage_before_death"])
+                metric = "enemy TTD (survival-coupled)"
                 components = {
                     "damage_before_death": objective["focus_damage_before_death"],
                     "effective_health": focus["survival"]["effective_health"],

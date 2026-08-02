@@ -3463,7 +3463,26 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
             "total_damage": proc_total,
             "damage_type": dtype,
         }
-        if coupled_to_autos and state.num_auto_attacks > 0:
+        declared_events = info.get("damage_events")
+        if isinstance(declared_events, list) and len(declared_events) == proc_count:
+            # Champion modules may provide a sourced phase-order ledger for
+            # fixed-count procs (for example Akali's passive).  Re-price each
+            # declared event with the same mitigation used for the aggregate
+            # row while preserving its authored ordering metadata.
+            state.breakdown[key]["damage_events"] = [
+                {
+                    **event,
+                    "damage_type": dtype,
+                    "damage": per_proc,
+                    "raw_damage": sum(part.amount * part.count for part in parts),
+                }
+                for event in declared_events
+                if isinstance(event, dict)
+            ]
+            state.breakdown[key]["event_phase"] = str(
+                info.get("event_phase", "effect")
+            )
+        elif coupled_to_autos and state.num_auto_attacks > 0:
             autos_per_second = state.attack_speed * state.auto_attack_uptime
             interval = 1.0 / autos_per_second if autos_per_second > 0 else 0.0
             state.breakdown[key]["damage_events"] = [
