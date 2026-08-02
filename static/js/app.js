@@ -1163,6 +1163,27 @@ function renderExactBreakdown(aResult, bResult) {
   });
   ingest(aResult, "a");
   if (bResult) ingest(bResult, "b");
+  // The legacy per-target breakdown is scoped to the selected main attacker.
+  // A coupled fight also has sourced output from every selected ally and
+  // enemy.  Surface those participant/source pairs here so the detailed
+  // table cannot silently look like a one-sided calculation when the ledger
+  // above already contains a bidirectional event timeline.
+  const ingestCombatSources = (result, side) => (result?.combat?.breakdown || []).forEach((participant) => {
+    (participant.sources || []).forEach((source) => {
+      const participantLabel = `${participant.champion || "Participant"} · ${participant.team || ""}`.trim();
+      const sourceLabel = `${participantLabel} · ${source.name || "Damage source"}`;
+      const detail = "Event-ordered output before defeat";
+      const key = `${sourceLabel}:${detail}`;
+      const row = rows.get(key) || { source: sourceLabel, detail, damage: 0, a: 0, b: 0 };
+      row[side] += Number(source.total_damage || 0);
+      rows.set(key, row);
+    });
+  });
+  // Keep the exact main-attacker rows above for backwards-compatible naming,
+  // then add the coupled participant rows (including main) with explicit
+  // ownership labels.  The UI deduplicates only identical source/detail keys.
+  ingestCombatSources(aResult, "a");
+  if (bResult) ingestCombatSources(bResult, "b");
   const body = [...rows.values()].map((row) => `<tr><td><strong>${escapeHtml(row.source)}</strong><small>${escapeHtml(row.detail)}</small></td><td>${fmt(row.a)}</td>${bResult ? `<td>${fmt(row.b)}</td><td>${Math.abs(row.a - row.b) < .5 ? "—" : `${row.a > row.b ? "+" : ""}${fmt(row.a - row.b)}`}</td>` : ""}</tr>`).join("");
   const mainTotal = (result) => Number(result?.combat?.breakdown?.find((entry) => entry.participant_id === "main")?.total_damage ?? result?.total_damage ?? 0);
   const aMainTotal = mainTotal(aResult);
@@ -1178,7 +1199,7 @@ function renderExactBreakdown(aResult, bResult) {
   const labels = new Map((aResult?.combat?.participants || []).map((participant) => [participant.participant_id, `${participant.champion} · ${participant.team}`]));
   const eventRows = (aResult?.combat?.events || []).filter((event) => Number(event.damage || 0) > 0 || event.skipped_reason).map((event) => `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(labels.get(event.target) || event.target || "Target")} · ${escapeHtml(event.source || "event")} · ${escapeHtml(event.event_precision || "exact")}${event.skipped_reason ? ` · ${escapeHtml(event.skipped_reason)}` : ""}</small></td><td>${fmt(event.damage || 0)}</td></tr>`).join("");
   const eventSection = eventRows ? `<section class="combat-event-ledger"><header><div><p class="eyebrow">Event order</p><h2>Outgoing and incoming events</h2></div><span>Every selected champion · timestamped</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Event</th><th>Applied damage</th></tr></thead><tbody>${eventRows}</tbody></table></div></section>` : "";
-  $("damageBreakdown").innerHTML = `${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage before defeat</strong><small>Post-mitigation output from the coupled participant timeline</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
+  $("damageBreakdown").innerHTML = `${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn · all participants</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output from the coupled participant timeline</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
 }
 
 function fightOrderAbility(slot) {
