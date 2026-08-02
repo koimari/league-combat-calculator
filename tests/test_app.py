@@ -24,16 +24,16 @@ def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contra
     page = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "Scryglass — Combat calculator" in page
-    assert 'class="header-brand" href="https://scryglass.xyz/"' in page
-    assert '<h1>Combat calculator</h1>' in page
+    assert "Scryglass — Item calculator" in page
+    assert 'class="brand" href="https://scryglass.xyz/"' in page
+    assert '<h1>Item calculator</h1>' in page
     for required_id in (
-        "champion-select",
-        "build-row-a",
-        "comparison-verdict",
-        "ally-roster",
-        "enemy-roster",
-        "optimize-btn",
+        "builder",
+        "winnerVisual",
+        "scoreGrid",
+        "resistanceOutput",
+        "damageBreakdown",
+        "rotationTable",
     ):
         assert f'id="{required_id}"' in page
 

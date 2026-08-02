@@ -1,682 +1,107 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#e8e3d7">
-    <meta name="description" content="Compare League of Legends builds against a complete enemy roster.">
-    <title>Scryglass — Combat calculator</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#e8e3d7" />
+    <meta name="description" content="Compare League of Legends item builds against a complete target roster." />
+    <title>Scryglass — Item calculator</title>
+    <link rel="preconnect" href="https://ddragon.leagueoflegends.com" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
     <header class="site-header">
-        <div class="header-inner">
-            <a class="header-brand" href="https://scryglass.xyz/" aria-label="Scryglass home">
-                <span class="header-mark" aria-hidden="true"></span>
-                <strong>Scryglass</strong>
-            </a>
-            <nav class="primary-nav" aria-label="Primary">
-                <a href="https://scryglass.xyz/articles">Articles</a>
-                <a href="https://scryglass.xyz/elo">Ratings</a>
-                <a href="https://scryglass.xyz/browse">Matches</a>
-                <a class="active" href="/">Calculator</a>
-            </nav>
-            <div class="header-actions">
-                <span id="data-freshness" class="data-freshness">Loading patch…</span>
-                <button id="share-scenario" class="btn-update" type="button">Copy scenario</button>
-                <select id="theme-select" class="btn-update" aria-label="Colour theme">
-                    <option value="system">System</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                </select>
-                <button id="update-btn" class="btn-update hidden">Update data</button>
-            </div>
-        </div>
+      <div class="header-inner">
+        <a class="brand" href="https://scryglass.xyz/" aria-label="Scryglass home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <strong>Scryglass</strong>
+        </a>
+        <nav aria-label="Primary">
+          <a href="https://scryglass.xyz/articles">Articles</a>
+          <a href="https://scryglass.xyz/elo">Ratings</a>
+          <a href="https://scryglass.xyz/browse">Matches</a>
+          <a class="active" href="/">Calculator</a>
+        </nav>
+        <span class="patch"><i></i>26.15</span>
+        <button class="icon-button" id="themeToggle" type="button" aria-label="Toggle colour theme">◐</button>
+      </div>
     </header>
 
-    <!-- Update Progress Modal -->
-    <div id="update-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="update-modal-title">
-        <div class="modal-content" tabindex="-1">
-            <h3 id="update-modal-title">Updating Data</h3>
-            <p id="update-status">Initializing...</p>
-            <div class="progress-bar-container">
-                <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
-            </div>
-            <p id="update-detail" class="update-detail"></p>
-            <button id="update-close-btn" class="btn-modal-close hidden">Close</button>
+    <main>
+      <header class="page-head">
+        <div>
+          <p class="eyebrow">Scenario lab</p>
+          <h1>Item calculator</h1>
         </div>
-    </div>
+        <p id="scenarioSentence" class="scenario-sentence" aria-live="polite"></p>
+      </header>
 
-    <!-- Champion Picker Modal -->
-    <div id="champion-picker-overlay" class="picker-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="champion-picker-title">
-        <div class="picker-modal picker-modal-wide" tabindex="-1">
-            <div class="picker-header">
-                <h3 id="champion-picker-title">Select champion</h3>
-                <button id="champion-picker-close" class="picker-close-btn" aria-label="Close champion picker">&times;</button>
+      <div class="calculator-grid">
+        <section id="builder" class="builder" aria-label="Scenario builder"></section>
+
+        <aside class="result-panel" aria-live="polite">
+          <div class="result-topline">
+            <span>Result</span>
+            <span id="resultContext"></span>
+          </div>
+          <div id="winnerVisual" class="winner-visual"></div>
+          <div class="score-grid" id="scoreGrid"></div>
+          <div class="resistance-output" id="resistanceOutput"></div>
+          <p class="why" id="why"></p>
+          <div class="threshold" id="threshold"></div>
+          <div class="mechanics-output" id="mechanicsOutput"></div>
+          <details class="rotation-details">
+            <summary>Rotation by rotation <span>Open table</span></summary>
+            <div class="rotation-table-wrap">
+              <table>
+                <thead><tr><th>Rot.</th><th id="tableA">Build A</th><th id="tableB">Build B</th><th>Lead</th></tr></thead>
+                <tbody id="rotationTable"></tbody>
+              </table>
             </div>
-            <div class="picker-search-wrap">
-                <svg class="picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B5A56" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                <input type="text" id="champion-picker-search" class="picker-search" placeholder="Search champions..." autocomplete="off">
-            </div>
-            <div id="champion-picker-grid" class="picker-grid"></div>
+          </details>
+          <p class="result-footnote" id="resultFootnote">DPS uses the selected window per rotation. TDD sums every selected target.</p>
+        </aside>
+      </div>
+
+      <section id="damageBreakdown" class="damage-breakdown" aria-live="polite"></section>
+
+      <details class="method">
+        <summary>Damage package &amp; calculation boundary</summary>
+        <div class="method-grid">
+          <label>Magic base damage<input id="baseDamage" type="number" min="0" step="1" value="0" /></label>
+          <label>Total AP ratio<input id="apRatio" type="number" min="0" step="0.05" value="0" /></label>
+          <label>Physical base damage<input id="physicalDamage" type="number" min="0" step="1" value="0" /></label>
+          <label>Total AD ratio<input id="adRatio" type="number" min="0" step="0.05" value="0" /></label>
+          <p>Champion growth and item stats are patch-pinned. Item-specific conditions appear in the output; unmodelled passives, runes and shields are never silently assumed.</p>
         </div>
-    </div>
-
-    <!-- Item Picker Modal -->
-    <div id="item-picker-overlay" class="picker-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="picker-title">
-        <div class="picker-modal" tabindex="-1">
-            <div class="picker-header">
-                <h3 id="picker-title">Select Item</h3>
-                <button id="picker-close" class="picker-close-btn" aria-label="Close item picker">&times;</button>
-            </div>
-            <div class="picker-search-wrap">
-                <svg class="picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B5A56" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                <input type="text" id="picker-search" class="picker-search" placeholder="Search items..." autocomplete="off">
-            </div>
-            <div id="picker-grid" class="picker-grid"></div>
-        </div>
-    </div>
-
-    <main class="container">
-        <header class="page-intro">
-            <div>
-                <p class="page-kicker">Scenario lab</p>
-                <h1>Combat calculator</h1>
-            </div>
-            <p>Choose the damage champion, build the teams, then compare complete builds or find the highest total damage.</p>
-        </header>
-        <!-- Left Column: Configuration -->
-        <section class="config-panel">
-
-            <!-- Champion Selection -->
-            <div class="config-group champion-section">
-                <div class="champion-selector" id="champion-selector">
-                    <div class="champion-portrait-wrap clickable" id="champion-portrait-btn" title="Click to select champion">
-                        <img id="champion-icon" class="champion-portrait" src="" alt="">
-                        <div id="champion-placeholder" class="champion-portrait-placeholder">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3C3B37" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>
-                        </div>
-                        <button id="champion-options-btn" class="champion-options-btn hidden" title="Champion-specific options">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                        </button>
-                    </div>
-                    <div class="champion-info">
-                        <!-- Hidden select to keep value state for the calculate payload -->
-                        <select id="champion-select" class="hidden">
-                            <option value="">Select Champion</option>
-                        </select>
-                        <div class="champion-name-display" id="champion-name-display" title="Click to change champion">
-                            <span id="champion-name-text">Select Champion</span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-                        </div>
-                        <div class="level-control">
-                            <label for="level-slider">Level <span id="level-display" class="level-badge">1</span></label>
-                            <input type="range" id="level-slider" min="1" max="{{ max_level }}" value="1">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Champion Specific Options (injected per-champion) -->
-            <div id="champion-options-panel" class="config-group champion-options-panel hidden">
-                <div class="section-header">
-                    <h3>Champion Options</h3>
-                    <button id="champion-options-close" class="champion-options-close-btn" title="Close">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                <div id="champion-options-content" class="champion-options-content">
-                    <p class="champion-options-empty">No special options for this champion.</p>
-                </div>
-            </div>
-
-            <!-- Abilities -->
-            <div class="config-group">
-                <div class="section-header">
-                    <h3>Abilities</h3>
-                    <label class="toggle-label">
-                        <input type="checkbox" id="auto-rank" checked>
-                        <span class="toggle-text">Auto</span>
-                    </label>
-                </div>
-                <div class="abilities-bar" id="abilities-bar">
-                    <div class="ability-slot" data-key="P">
-                        <img class="ability-icon" id="ability-icon-P" src="" alt="P">
-                        <span class="ability-key">P</span>
-                    </div>
-                    <div class="ability-slot" data-key="Q">
-                        <img class="ability-icon" id="ability-icon-Q" src="" alt="Q">
-                        <span class="ability-key">Q</span>
-                        <select id="rank-Q" class="rank-select">
-                            <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-                        </select>
-                    </div>
-                    <div class="ability-slot" data-key="W">
-                        <img class="ability-icon" id="ability-icon-W" src="" alt="W">
-                        <span class="ability-key">W</span>
-                        <select id="rank-W" class="rank-select">
-                            <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-                        </select>
-                    </div>
-                    <div class="ability-slot" data-key="E">
-                        <img class="ability-icon" id="ability-icon-E" src="" alt="E">
-                        <span class="ability-key">E</span>
-                        <select id="rank-E" class="rank-select">
-                            <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-                        </select>
-                    </div>
-                    <div class="ability-slot" data-key="R">
-                        <img class="ability-icon" id="ability-icon-R" src="" alt="R">
-                        <span class="ability-key">R</span>
-                        <select id="rank-R" class="rank-select">
-                            <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Item Build -->
-            <div class="config-group">
-                <div class="section-header">
-                    <div class="section-header-left">
-                        <h3>Build</h3>
-                        <button id="build-clear-btn" class="build-clear-btn" title="Clear all items">&times;</button>
-                    </div>
-                    <label class="toggle-label">
-                        <input type="checkbox" id="compare-mode">
-                        <span class="toggle-text">Compare</span>
-                    </label>
-                </div>
-                <!-- Build B is cloned from this row by app.js at startup -->
-                <div class="build-row" id="build-row-a" data-build="a">
-                    <span class="build-row-tag hidden">Build A</span>
-                    <div class="item-build-bar">
-                    <div class="item-slot boots-slot" data-slot="boots" title="Boots">
-                        <img class="item-slot-icon hidden" src="" alt="">
-                        <div class="item-slot-empty">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3C3B37" stroke-width="1.5"><path d="M7 21l3-9-4-1 2-9h5l-1 5h4l-6 14"/></svg>
-                        </div>
-                        <button class="item-remove-btn hidden" title="Remove">&times;</button>
-                        <span class="item-slot-label">Boots</span>
-                    </div>
-                    <div class="build-divider"></div>
-                    <div class="item-slot" data-slot="1" title="Item 1">
-                        <img class="item-slot-icon hidden" src="" alt="">
-                        <div class="item-slot-empty">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3C3B37" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
-                        </div>
-                        <button class="item-remove-btn hidden" title="Remove">&times;</button>
-                    </div>
-                    <div class="item-slot" data-slot="2" title="Item 2">
-                        <img class="item-slot-icon hidden" src="" alt="">
-                        <div class="item-slot-empty">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3C3B37" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
-                        </div>
-                        <button class="item-remove-btn hidden" title="Remove">&times;</button>
-                    </div>
-                    <div class="item-slot" data-slot="3" title="Item 3">
-                        <img class="item-slot-icon hidden" src="" alt="">
-                        <div class="item-slot-empty">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3C3B37" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
-                        </div>
-                        <button class="item-remove-btn hidden" title="Remove">&times;</button>
-                    </div>
-                    <div class="item-slot" data-slot="4" title="Item 4">
-                        <img class="item-slot-icon hidden" src="" alt="">
-                        <div class="item-slot-empty">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3C3B37" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
-                        </div>
-                        <button class="item-remove-btn hidden" title="Remove">&times;</button>
-                    </div>
-                    <div class="item-slot" data-slot="5" title="Item 5">
-                        <img class="item-slot-icon hidden" src="" alt="">
-                        <div class="item-slot-empty">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3C3B37" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
-                        </div>
-                        <button class="item-remove-btn hidden" title="Remove">&times;</button>
-                    </div>
-                    <div class="item-slot quest-extra-slot hidden" data-slot="6" title="Bottom quest item slot">
-                        <img class="item-slot-icon hidden" src="" alt="">
-                        <div class="item-slot-empty">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3C3B37" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
-                        </div>
-                        <button class="item-remove-btn hidden" title="Remove">&times;</button>
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            <!-- Enemy Target -->
-            <div class="config-group" id="manual-target-group">
-                <h3>Custom Target</h3>
-                <p class="manual-target-note">Used only when no enemy champion cards are selected below.</p>
-                <div class="enemy-stats-row">
-                    <div class="enemy-stat">
-                        <label for="target-base-health">
-                            <span class="stat-icon-inline" data-stat="hp"></span>
-                            Base HP
-                        </label>
-                        <input type="number" id="target-base-health" value="{{ default_target.health | int }}" min="{{ input_limits.target_health[0] | int }}" max="{{ input_limits.target_health[1] | int }}" step="50">
-                    </div>
-                    <div class="enemy-stat">
-                        <label for="target-bonus-health">
-                            <span class="stat-icon-inline" data-stat="hp"></span>
-                            Bonus HP
-                        </label>
-                        <input type="number" id="target-bonus-health" value="{{ default_target.bonus_health | int }}" min="{{ input_limits.target_bonus_health[0] | int }}" max="{{ input_limits.target_bonus_health[1] | int }}" step="50">
-                    </div>
-                    <div class="enemy-stat">
-                        <label>
-                            <span class="stat-icon-inline" data-stat="hp"></span>
-                            Total HP
-                        </label>
-                        <span class="enemy-total-hp" id="target-total-health">{{ (default_target.health + default_target.bonus_health) | int }}</span>
-                    </div>
-                </div>
-                <div class="enemy-stats-row">
-                    <div class="enemy-stat">
-                        <label for="target-armor">
-                            <span class="stat-icon-inline" data-stat="armor"></span>
-                            Armor
-                        </label>
-                        <input type="number" id="target-armor" value="{{ default_target.armor | int }}" min="{{ input_limits.target_armor[0] | int }}" max="{{ input_limits.target_armor[1] | int }}" step="5">
-                    </div>
-                    <div class="enemy-stat">
-                        <label for="target-mr">
-                            <span class="stat-icon-inline" data-stat="mr"></span>
-                            MR
-                        </label>
-                        <input type="number" id="target-mr" value="{{ default_target.mr | int }}" min="{{ input_limits.target_mr[0] | int }}" max="{{ input_limits.target_mr[1] | int }}" step="5">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fight Settings -->
-            <div class="config-group">
-                <h3>Fight Settings</h3>
-                <div class="fight-mode-tabs">
-                    <label class="fight-tab active">
-                        <input type="radio" name="fight-mode" value="one_rotation" checked>
-                        <span>One Rotation</span>
-                    </label>
-                    <label class="fight-tab">
-                        <input type="radio" name="fight-mode" value="time_based">
-                        <span>Time Based</span>
-                    </label>
-                </div>
-                <p id="fight-mode-note" class="optimizer-hint hidden"></p>
-
-                <div id="time-based-options" class="time-options hidden">
-                    <div class="slider-row">
-                        <label for="fight-duration">Duration</label>
-                        <span class="slider-value"><span id="duration-display">{{ default_fight_duration | int }}</span>s</span>
-                        <input type="range" id="fight-duration" min="{{ input_limits.fight_duration[0] | int }}" max="{{ input_limits.fight_duration[1] | int }}" value="{{ default_fight_duration | int }}" step="1">
-                    </div>
-
-                    <div class="toggle-row">
-                        <label class="toggle-label compact">
-                            <input type="checkbox" id="include-autos">
-                            <span class="toggle-text">Include Auto Attacks</span>
-                        </label>
-                        <label class="toggle-label compact">
-                            <input type="checkbox" id="auto-attacks-only">
-                            <span class="toggle-text">Auto Attacks Only</span>
-                        </label>
-                    </div>
-
-                    <div id="uptime-options" class="hidden">
-                        <div class="slider-row">
-                            <label for="auto-uptime">AA Uptime</label>
-                            <span class="slider-value"><span id="uptime-display">{{ (default_auto_attack_uptime * 100) | int }}</span>%</span>
-                            <input type="range" id="auto-uptime" min="0" max="100" value="{{ (default_auto_attack_uptime * 100) | int }}" step="5">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Active Items Toggle -->
-            <div class="config-group">
-                <label class="toggle-label compact">
-                    <input type="checkbox" id="include-actives" checked>
-                    <span class="toggle-text">Include Active Items</span>
-                </label>
-            </div>
-
-            <button id="calculate-btn" class="btn-calculate">
-                <span class="btn-text">Calculate</span>
-                <span class="btn-loading hidden">
-                    <svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                </span>
-            </button>
-
-            <!-- Build Optimizer -->
-            <div class="config-group optimizer-group">
-                <div class="section-header">
-                    <h3>Build Optimizer</h3>
-                </div>
-                <div class="optimizer-controls">
-                    <div class="optimizer-row">
-                        <label for="attacker-role">Role</label>
-                        <select id="attacker-role" class="optimizer-select">
-                            <option value="">Unspecified</option>
-                            <option value="top">Top</option>
-                            <option value="jungle">Jungle</option>
-                            <option value="mid">Mid</option>
-                            <option value="bottom">Bottom</option>
-                            <option value="support">Support</option>
-                        </select>
-                    </div>
-                    <label class="toggle-label compact role-quest-toggle">
-                        <input type="checkbox" id="role-quest-complete">
-                        <span class="toggle-text">Role quest complete</span>
-                    </label>
-                    <p id="role-quest-hint" class="optimizer-hint">Select a role to apply its quest rules.</p>
-                    <div class="optimizer-row">
-                        <label for="optimize-objective">Maximize</label>
-                        <select id="optimize-objective" class="optimizer-select">
-                            <option value="total_damage">Total Damage</option>
-                            <option value="physical_damage">Physical Damage</option>
-                            <option value="magic_damage">Magic Damage</option>
-                        </select>
-                    </div>
-                    <div class="optimizer-row">
-                        <label for="optimize-slots">Legendary Items</label>
-                        <select id="optimize-slots" class="optimizer-select">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5" selected>5 (Standard)</option>
-                            <option value="6">6 (Bot Lane)</option>
-                        </select>
-                    </div>
-                    <div class="optimizer-row">
-                        <label for="gold-budget">Gold budget</label>
-                        <input id="gold-budget" class="optimizer-select" type="number" min="1" max="30000" step="50" placeholder="No limit">
-                    </div>
-                    <label class="toggle-label compact">
-                        <input type="checkbox" id="keep-selected-items">
-                        <span class="toggle-text">Keep selected items</span>
-                    </label>
-                    <p class="optimizer-hint">Off searches a new build. On locks the items already selected.</p>
-                </div>
-                <button id="optimize-btn" class="btn-optimize">
-                    <span class="btn-text">Optimize Build</span>
-                    <span class="btn-loading hidden">
-                        <svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                    </span>
-                </button>
-                <p id="optimize-status" class="optimizer-status hidden"></p>
-                <details id="optimizer-coverage" class="optimizer-coverage hidden">
-                    <summary id="optimizer-coverage-summary"></summary>
-                    <ul id="optimizer-coverage-list"></ul>
-                </details>
-            </div>
-        </section>
-
-        <!-- Right Column: Results. All value targets are data-field (not id)
-             so app.js can clone this panel for Compare mode (Build B). -->
-        <section class="results-panel" id="results-panel-a">
-            <div class="results-placeholder">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2B2A27" stroke-width="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                <p>Select a champion and click Calculate</p>
-            </div>
-
-            <!-- Error display (outside results-content so it shows before first calc) -->
-            <div class="error-display result-group hidden">
-                <p class="error-text" data-field="error-message"></p>
-            </div>
-
-            <div class="results-content hidden">
-                <!-- Build Summary (Compare mode only) -->
-                <div class="result-group build-summary hidden">
-                    <h3 data-field="build-summary-title">Build A</h3>
-                    <div class="build-summary-items" data-field="build-summary-items"></div>
-                </div>
-
-                <!-- Champion Stats -->
-                <div class="result-group">
-                    <h3>Champion Stats</h3>
-                    <div class="stats-grid">
-                        <div class="stat-card" data-stat="hp">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-hp">-</span>
-                            <span class="stat-card-label">Health</span>
-                        </div>
-                        <div class="stat-card" data-stat="mana">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-mana">-</span>
-                            <span class="stat-card-label">Mana</span>
-                        </div>
-                        <div class="stat-card" data-stat="ad">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-ad">-</span>
-                            <span class="stat-card-label">Attack Damage</span>
-                        </div>
-                        <div class="stat-card" data-stat="ap">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-ap">-</span>
-                            <span class="stat-card-label">Ability Power</span>
-                        </div>
-                        <div class="stat-card" data-stat="as">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-as">-</span>
-                            <span class="stat-card-label">Attack Speed</span>
-                        </div>
-                        <div class="stat-card" data-stat="armor">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-armor">-</span>
-                            <span class="stat-card-label">Armor</span>
-                        </div>
-                        <div class="stat-card" data-stat="mr">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-mr">-</span>
-                            <span class="stat-card-label">Magic Resist</span>
-                        </div>
-                        <div class="stat-card" data-stat="crit">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-crit">-</span>
-                            <span class="stat-card-label">Crit Chance</span>
-                        </div>
-                        <div class="stat-card" data-stat="ah">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-ah">-</span>
-                            <span class="stat-card-label">Ability Haste</span>
-                        </div>
-                        <div class="stat-card" data-stat="lethality">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-lethality">-</span>
-                            <span class="stat-card-label">Lethality</span>
-                        </div>
-                        <div class="stat-card" data-stat="mpen">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-mpen">-</span>
-                            <span class="stat-card-label">Magic Pen</span>
-                        </div>
-                        <div class="stat-card" data-stat="armor-pen">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-armor-pen">-</span>
-                            <span class="stat-card-label">% Armor Pen</span>
-                        </div>
-                        <div class="stat-card" data-stat="mpen-pct">
-                            <div class="stat-icon-wrap"><div class="stat-icon-img"></div></div>
-                            <span class="stat-card-value" data-field="stat-mpen-pct">-</span>
-                            <span class="stat-card-label">% Magic Pen</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Damage Summary -->
-                <div class="result-group">
-                    <div class="total-damage-card">
-                        <span class="total-label">Total Damage</span>
-                        <span class="total-value" data-field="total-damage-value">0</span>
-                        <span class="total-subvalue" data-field="damage-rate-value">0 DPS</span>
-                    </div>
-                    <div class="damage-split">
-                        <div class="split-card physical-split">
-                            <span class="split-label">Physical Damage</span>
-                            <span class="split-value" data-field="physical-damage-value">0</span>
-                        </div>
-                        <div class="split-card magic-split">
-                            <span class="split-label">Magic Damage</span>
-                            <span class="split-value" data-field="magic-damage-value">0</span>
-                        </div>
-                        <div class="split-card true-split hidden" data-field="true-damage-card">
-                            <span class="split-label">True Damage</span>
-                            <span class="split-value" data-field="true-damage-value">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Per-target scenario results -->
-                <div class="result-group target-results hidden" data-field="target-results">
-                    <div class="section-header">
-                        <h3>Damage by Target</h3>
-                        <span class="result-context" data-field="target-result-context"></span>
-                    </div>
-                    <div class="table-scroll">
-                        <table class="breakdown-table target-results-table">
-                            <thead>
-                                <tr>
-                                    <th>Target</th>
-                                    <th class="col-right">HP</th>
-                                    <th class="col-right">Armor</th>
-                                    <th class="col-right">MR</th>
-                                    <th class="col-right">TDD</th>
-                                    <th class="col-right">To health</th>
-                                    <th class="col-right">Shield</th>
-                                    <th class="col-right">Healing</th>
-                                    <th class="col-right">End HP</th>
-                                </tr>
-                            </thead>
-                            <tbody data-field="target-results-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Effective Resistances -->
-                <div class="result-group">
-                    <h3>Effective Enemy Resistances</h3>
-                    <div class="resistance-row">
-                        <div class="resistance-card">
-                            <span class="stat-icon-inline" data-stat="armor"></span>
-                            <span class="resistance-value" data-field="eff-armor">-</span>
-                            <span class="resistance-label">Armor</span>
-                        </div>
-                        <div class="resistance-card">
-                            <span class="stat-icon-inline" data-stat="mr"></span>
-                            <span class="resistance-value" data-field="eff-mr">-</span>
-                            <span class="resistance-label">Magic Resist</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Damage Breakdown -->
-                <div class="result-group">
-                    <h3>Damage Breakdown</h3>
-                    <table class="breakdown-table">
-                        <thead>
-                            <tr>
-                                <th>Source</th>
-                                <th>Detail</th>
-                                <th class="col-right">Damage</th>
-                            </tr>
-                        </thead>
-                        <tbody data-field="breakdown-body">
-                        </tbody>
-                    </table>
-                </div>
-
-                <details class="result-group event-timeline hidden" data-field="event-timeline">
-                    <summary>
-                        <span>Fight order</span>
-                        <span class="result-context" data-field="timeline-order-summary"></span>
-                    </summary>
-                    <p class="timeline-coverage-note" data-field="timeline-coverage-note"></p>
-                    <ol data-field="event-timeline-list"></ol>
-                </details>
-
-                <!-- Champion model notes and provenance -->
-                <div class="result-group champion-assumptions hidden">
-                    <h3>Champion Model</h3>
-                    <ul data-field="champion-assumptions-list"></ul>
-                    <div class="champion-sources hidden" data-field="champion-sources">
-                        <span>Wiki sources</span>
-                        <ul data-field="champion-sources-list"></ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="comparison-verdict" class="comparison-verdict hidden" aria-live="polite">
-            <div class="comparison-verdict-head">
-                <span class="comparison-kicker">Build read</span>
-                <strong id="comparison-summary"></strong>
-            </div>
-            <p id="comparison-explanation"></p>
-            <details class="crossover-details">
-                <summary id="crossover-summary">See crossover windows</summary>
-                <div class="table-scroll">
-                    <table class="breakdown-table crossover-table">
-                        <caption>Each row recomputes cooldowns, resources, autos, burns, shields, and defenses over a continuous fight.</caption>
-                        <thead>
-                            <tr>
-                                <th>Rotation window</th>
-                                <th class="col-right">Build A TDD</th>
-                                <th class="col-right">Build B TDD</th>
-                                <th class="col-right">Lead</th>
-                            </tr>
-                        </thead>
-                        <tbody id="crossover-body"></tbody>
-                    </table>
-                </div>
-            </details>
-        </section>
-
-        <!-- Full-width scenario builder. The focused damage champion remains
-             above; these cards supply champion-derived ally and enemy context. -->
-        <section class="scenario-panel">
-            <div class="scenario-heading">
-                <div>
-                    <span class="scenario-kicker">Combat scenario</span>
-                    <h2>Build the teams</h2>
-                    <p>Every card derives its complete stats from champion level and items. Selected enemies replace the manual target above.</p>
-                </div>
-                <span id="roster-count" class="scenario-count">0 allies · 0 enemies</span>
-            </div>
-            <div class="scenario-columns">
-                <div class="roster-column ally-column">
-                    <div class="roster-column-header">
-                        <div>
-                            <span class="roster-eyebrow">Your side</span>
-                            <h3>Allies</h3>
-                        </div>
-                        <button type="button" id="add-ally-btn" class="btn-roster-add">+ Add ally</button>
-                    </div>
-                    <p class="roster-note">Ally effects are counted only when the engine has an explicit tested rule.</p>
-                    <div id="ally-roster" class="roster-list">
-                        <div class="roster-empty">No allies selected</div>
-                    </div>
-                </div>
-                <div class="roster-column enemy-column">
-                    <div class="roster-column-header">
-                        <div>
-                            <span class="roster-eyebrow">Opposing side</span>
-                            <h3>Enemies hit</h3>
-                        </div>
-                        <button type="button" id="add-enemy-btn" class="btn-roster-add">+ Add enemy</button>
-                    </div>
-                    <p class="roster-note">The selected damage package is scored into each enemy card and summed as total damage dealt.</p>
-                    <div id="enemy-roster" class="roster-list">
-                        <div class="roster-empty">No enemies selected — using the manual target</div>
-                    </div>
-                </div>
-            </div>
-        </section>
+      </details>
     </main>
 
+    <dialog id="picker" class="picker">
+      <div class="picker-shell">
+        <header>
+          <div><p class="eyebrow" id="pickerKind">Choose</p><h2 id="pickerTitle">Select</h2></div>
+          <button class="picker-close" id="pickerClose" type="button" aria-label="Close picker">×</button>
+        </header>
+        <label class="search-box">
+          <span aria-hidden="true">⌕</span>
+          <input id="pickerSearch" type="search" autocomplete="off" placeholder="Search" aria-label="Search choices" />
+        </label>
+        <div id="pickerGrid" class="picker-grid"></div>
+      </div>
+    </dialog>
+
+    <dialog id="bis" class="picker bis-dialog">
+      <div class="picker-shell">
+        <header>
+          <div><p class="eyebrow">Best in slot · damage</p><h2 id="bisTitle">Rank this slot</h2></div>
+          <button class="picker-close" id="bisClose" type="button" aria-label="Close Best in Slot">×</button>
+        </header>
+        <div class="bis-intro"><strong id="bisSummary"></strong><span>Every candidate is scored into the complete selected enemy roster.</span></div>
+        <div id="bisList" class="bis-list"></div>
+      </div>
+    </dialog>
+
     <script src="/static/js/app.js"></script>
-</body>
+  </body>
 </html>
