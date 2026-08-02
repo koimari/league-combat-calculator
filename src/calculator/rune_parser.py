@@ -174,11 +174,18 @@ def _parse_effects(description: str) -> tuple[dict[str, Any], list[str]]:
     for percent, bonus_marker, stat in _AS_RATIO.findall(description):
         ratio = float(percent) / 100.0
         if stat == "AP":
-            effects["ap_ratio"] = ratio
+            key = "ap_ratio"
         elif bonus_marker:
-            effects["bonus_ad_ratio"] = ratio
+            key = "bonus_ad_ratio"
         else:
-            effects["ad_ratio"] = ratio
+            key = "ad_ratio"
+        # A rune with several scaling effects (Summon Aery's damage AND
+        # shield) matches the same ratio key twice; a silent last-wins
+        # scalar would be a plausible-looking wrong number. Record the
+        # ambiguity so the implementer sees it in data/runes.json.
+        if key in effects and effects[key] != ratio:
+            warnings.append(f"{key} matched more than once: {effects[key]}, {ratio}")
+        effects[key] = ratio
 
     stack_match = _STACK_RULE.search(description)
     if stack_match:

@@ -160,6 +160,23 @@ class TestElectrocuteProcs:
         assert row is not None
         assert row["count"] == 1
 
+    def test_zero_damage_casts_never_stack(self, fight, attacker_stats):
+        # Two damaging casts plus a zero-damage utility cast: in game the
+        # utility cast applies no stack, so Electrocute must not proc.
+        buff_ult = {
+            "W": {
+                "name": "Test buff",
+                "rank": 1,
+                "cooldown": 60.0,
+                "damage_type": "magic",
+                "total_raw": 0.0,
+                "parts": (),
+            }
+        }
+        abilities = {**_spell("Q"), **buff_ult, **_spell("E")}
+        result = fight(attacker_stats(), abilities, keystone="Electrocute")
+        assert _keystone_row(result) is None
+
     def test_unknown_keystone_raises(self, fight, attacker_stats):
         with pytest.raises(ValueError, match="Fake Rune"):
             fight(attacker_stats(), _spell(), keystone="Fake Rune")

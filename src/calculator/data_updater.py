@@ -366,6 +366,11 @@ def _process_runes(
     ``error`` field instead of silently dropping from the roster.
     """
     icons = _rune_icon_map(latest_version)
+    if not icons:
+        yield {
+            "phase": "runes",
+            "status": "Warning: rune icons unavailable from Data Dragon",
+        }
     runes: dict[str, Any] = {}
     for index, name in enumerate(KEYSTONE_NAMES, start=1):
         try:
@@ -386,15 +391,18 @@ def _process_runes(
 
 
 def update_rune_data() -> dict[str, Any]:
-    """Fetch, parse, and cache keystone rune data as one standalone step."""
-    latest_version = get_latest_patch_version()
-    rune_gen = _process_runes(latest_version)
-    runes: dict[str, Any] = {}
-    try:
-        while True:
-            next(rune_gen)
-    except StopIteration as stop:
-        runes = stop.value or {}
+    """Runes-only refresh for maintenance (wiki rune-template fixes).
+
+    Not wired to any route — patch day goes through ``update_data``,
+    which covers runes alongside champions and items.
+    """
+    rune_generator = _process_runes(get_latest_patch_version())
+    while True:
+        try:
+            next(rune_generator)
+        except StopIteration as stop:
+            runes = stop.value or {}
+            break
     _write_cache(DEFAULT_DATA_DIR, "runes.json", runes)
     return runes
 
@@ -472,13 +480,7 @@ def update_data() -> Generator[dict[str, Any], None, None]:
 
         # --- Runes (keystones) ---
         yield {"phase": "runes", "status": "Updating keystone runes..."}
-        rune_gen = _process_runes(latest_version)
-        runes: dict[str, Any] = {}
-        try:
-            while True:
-                yield next(rune_gen)
-        except StopIteration as stop:
-            runes = stop.value or {}
+        runes = yield from _process_runes(latest_version)
         _write_cache(DEFAULT_DATA_DIR, "runes.json", runes)
         failed_runes = [name for name, entry in runes.items() if "error" in entry]
         rune_status = f"Saved {len(runes) - len(failed_runes)} keystones"

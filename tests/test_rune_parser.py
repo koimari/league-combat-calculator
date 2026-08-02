@@ -116,3 +116,13 @@ class TestRunePayload:
         effects = rune_payload("Electrocute", text)["effects"]
         assert "bonus_ad_ratio" not in effects
         assert effects["ad_ratio"] == pytest.approx(0.30)
+
+
+class TestDuplicateRatioWarning:
+    def test_second_ap_ratio_is_recorded_as_a_warning(self):
+        text = ELECTROCUTE_WIKITEXT.replace(
+            "{{as|(+ 5% AP)}}", "{{as|(+ 5% AP)}} and a shield of {{as|(+ 40% AP)}}"
+        )
+        payload = rune_payload("Electrocute", text)
+        assert payload["effects"]["ap_ratio"] == pytest.approx(0.40)
+        assert any("ap_ratio" in warning for warning in payload["parse_warnings"])

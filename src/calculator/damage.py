@@ -4987,13 +4987,25 @@ def _keystone_instance_times(
 ) -> list[float]:
     """Chronological damage-instance times the keystone stack counter sees.
 
-    One instance per accepted ability cast (wiki: up to one stack per cast
-    instance) plus one per simulated auto swing. Item-effect instances are
-    not counted — most item procs are explicitly excluded by the wiki rule,
-    and the ones that do stack lack authored timestamps; omitting them can
-    only delay a proc, never invent one.
+    One instance per accepted DAMAGING ability cast (wiki: up to one stack
+    per cast instance; zero-damage casts like stat-buff ultimates must not
+    stack) plus one per simulated auto swing. Instances the engine cannot
+    timestamp or certify are not counted — item-effect applications,
+    forced basic attacks, recast instances beyond the first, and pure
+    crowd-control casts (CC application stacks in game, but the engine
+    carries no CC metadata). Omitting an instance can only delay a proc,
+    never invent one.
     """
-    times = [float(event.get("time", 0.0)) for event in rotation.cast_events]
+    damaging_slots = {
+        slot
+        for slot, entry in state.ability_damages.items()
+        if float(entry.get("total_raw", 0.0)) > 0
+    }
+    times = [
+        float(event["time"])
+        for event in rotation.cast_events
+        if event.get("slot") in damaging_slots
+    ]
     times.extend(_auto_attack_timestamps(state))
     return sorted(times)
 
