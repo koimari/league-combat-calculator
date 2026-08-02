@@ -116,9 +116,25 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
 }
 
 _TARGET_ONE_ROTATION_REASONS: dict[str, str] = {
+    "Hexdrinker": (
+        "Lifeline's level-scaled 30%-health magic shield is modeled for one "
+        "rotation. Timed auto and item-effect timestamps are not certified yet."
+    ),
     "Immortal Shieldbow": (
         "Lifeline's level-scaled 30%-health shield is modeled for one rotation. "
         "Timed auto and item-effect timestamps are not certified yet."
+    ),
+    "Maw of Malmortius": (
+        "Lifeline's bonus-AD-scaled 30%-health magic shield is modeled for one "
+        "rotation. Timed auto and item-effect timestamps are not certified yet."
+    ),
+    "Seraph's Embrace": (
+        "Lifeline's maximum-mana-scaled 30%-health shield is modeled for one "
+        "rotation. Timed auto and item-effect timestamps are not certified yet."
+    ),
+    "Sterak's Gage": (
+        "Lifeline's bonus-health-scaled 30%-health shield is modeled for one "
+        "rotation. Timed auto and item-effect timestamps are not certified yet."
     ),
 }
 
@@ -146,20 +162,16 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Guardian Angel": "Rebirth is not modelled in target health damage.",
     "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
     "Heartsteel": "Permanent Colossal Consumption health stacks are not modelled.",
-    "Hexdrinker": "Lifeline's low-health magic shield is not modelled.",
     "Immortal Shieldbow": "Lifeline's low-health shield is not modelled.",
     "Jak'Sho, The Protean": "Voidborn Resilience's combat resist stacks are not modelled.",
     "Knight's Vow": "Pledge damage redirection and healing are not modelled.",
     "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",
-    "Maw of Malmortius": "Lifeline's low-health magic shield is not modelled.",
     "Mikael's Blessing": "Purify's activated heal is not modelled.",
     "Protoplasm Harness": "Lifeline's low-health shield is not modelled.",
     "Redemption": "Intervention's activated target healing is not modelled.",
     "Rod of Ages": "Timeless health stacks are not exposed as target state.",
     "Seeker's Armguard": "Time Stop's stasis is not modelled.",
-    "Seraph's Embrace": "Lifeline's low-health mana shield is not modelled.",
     "Spectre's Cowl": "Incorporeal's post-damage regeneration is not modelled.",
-    "Sterak's Gage": "Lifeline's low-health shield is not modelled.",
     "Sundered Sky": "Lightshield Strike's target-side healing is not modelled.",
     "Thornmail": "Thorns' reactive damage and attacker survival are not modelled.",
     "Unending Despair": "Anguish's periodic combat healing is not modelled.",

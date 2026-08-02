@@ -125,6 +125,46 @@ _IMMORTAL_SHIELDBOW_SOURCE = DefenseSource(
     revision_timestamp="2026-06-15T20:45:46Z",
 )
 
+_HEXDRINKER_SOURCE = DefenseSource(
+    label="Hexdrinker — Lifeline",
+    source_url=(
+        "https://wiki.leagueoflegends.com/en-us/"
+        "Module:ItemData/data/Hexdrinker"
+    ),
+    revision_id=3905721,
+    revision_timestamp="2025-06-04T01:19:48Z",
+)
+
+_MAW_SOURCE = DefenseSource(
+    label="Maw of Malmortius — Lifeline",
+    source_url=(
+        "https://wiki.leagueoflegends.com/en-us/"
+        "Module:ItemData/data/Maw_of_Malmortius"
+    ),
+    revision_id=3905768,
+    revision_timestamp="2025-06-04T01:58:07Z",
+)
+
+_SERAPHS_SOURCE = DefenseSource(
+    label="Seraph's Embrace — Lifeline",
+    source_url=(
+        "https://wiki.leagueoflegends.com/en-us/"
+        "Module:ItemData/data/Seraph%27s_Embrace"
+    ),
+    revision_id=3905841,
+    revision_timestamp="2025-06-04T02:29:36Z",
+)
+
+_STERAKS_SOURCE = DefenseSource(
+    label="Sterak's Gage — Lifeline",
+    source_url=(
+        "https://wiki.leagueoflegends.com/en-us/"
+        "Module:ItemData/data/Sterak%27s_Gage"
+    ),
+    revision_id=3905864,
+    revision_timestamp="2025-06-04T02:46:55Z",
+)
+
 
 def _shieldbow_shield_amount(level: int) -> float:
     effect = ITEM_EFFECTS["Immortal Shieldbow"]
@@ -136,6 +176,62 @@ def _shieldbow_shield_amount(level: int) -> float:
         return base
     increments = end - start + 1
     return min(maximum, base + (maximum - base) * (level - start + 1) / increments)
+
+
+def _linear_level_value(minimum: float, maximum: float, level: int) -> float:
+    """Interpolate a Wiki ``X to Y based on level`` value across levels 1–18."""
+    return minimum + (maximum - minimum) * (level - 1) / 17.0
+
+
+def _lifeline_defense(
+    name: str, level: int, stats: Mapping[str, float]
+) -> tuple[float, float, float, str, str, DefenseSource]:
+    """Resolve one mutually exclusive Lifeline item's ready shield."""
+    effect = ITEM_EFFECTS[name]
+    is_melee = bool(stats.get("is_melee", False))
+    if name == "Immortal Shieldbow":
+        amount = _shieldbow_shield_amount(level)
+        source = _IMMORTAL_SHIELDBOW_SOURCE
+    elif name == "Hexdrinker":
+        prefix = "melee" if is_melee else "ranged"
+        amount = _linear_level_value(
+            float(effect[f"shield_{prefix}_min"]),
+            float(effect[f"shield_{prefix}_max"]),
+            level,
+        )
+        source = _HEXDRINKER_SOURCE
+    elif name == "Maw of Malmortius":
+        prefix = "melee" if is_melee else "ranged"
+        amount = float(effect[f"shield_{prefix}_base"]) + float(
+            effect[f"shield_{prefix}_bonus_ad_ratio"]
+        ) * float(stats.get("bonus_attack_damage", 0.0))
+        source = _MAW_SOURCE
+    elif name == "Seraph's Embrace":
+        amount = float(effect["shield_max_mana_ratio"]) * float(
+            stats.get("max_mana", 0.0)
+        )
+        source = _SERAPHS_SOURCE
+    elif name == "Sterak's Gage":
+        amount = float(effect["shield_bonus_health_ratio"]) * float(
+            stats.get("bonus_health", 0.0)
+        )
+        source = _STERAKS_SOURCE
+    else:  # pragma: no cover - private helper is called from a closed registry
+        raise KeyError(f"Unsupported Lifeline item: {name}")
+    damage_type = str(effect.get("damage_type", "all"))
+    qualifier = " magic" if damage_type == "magic" else ""
+    assumption = (
+        f"{name}'s Lifeline is ready and triggers before{qualifier} damage "
+        "that would leave the target below 30% maximum health."
+    )
+    return (
+        amount,
+        float(effect["health_threshold"]),
+        float(effect["duration"]),
+        damage_type,
+        assumption,
+        source,
+    )
 
 
 def _galio_starting_defenses(level: int, maximum_health: float) -> StartingDefenses:
@@ -193,17 +289,31 @@ def resolve_starting_defenses(
         )
         sources.append(_KAENIC_SOURCE)
 
-    if "Immortal Shieldbow" in names:
-        effect = ITEM_EFFECTS["Immortal Shieldbow"]
-        threshold_shield_amount = _shieldbow_shield_amount(level)
-        threshold_shield_health_ratio = float(effect["health_threshold"])
-        threshold_shield_duration = float(effect["duration"])
-        threshold_shield_damage_type = "all"
-        assumptions.append(
-            "Lifeline is ready and triggers before damage that would leave the "
-            "target below 30% maximum health."
-        )
-        sources.append(_IMMORTAL_SHIELDBOW_SOURCE)
+    lifeline_name = next(
+        (
+            name
+            for name in (
+                "Immortal Shieldbow",
+                "Hexdrinker",
+                "Maw of Malmortius",
+                "Seraph's Embrace",
+                "Sterak's Gage",
+            )
+            if name in names
+        ),
+        None,
+    )
+    if lifeline_name:
+        (
+            threshold_shield_amount,
+            threshold_shield_health_ratio,
+            threshold_shield_duration,
+            threshold_shield_damage_type,
+            lifeline_assumption,
+            lifeline_source,
+        ) = _lifeline_defense(lifeline_name, level, stats)
+        assumptions.append(lifeline_assumption)
+        sources.append(lifeline_source)
 
     has_shield = (
         magic_shield > 0

@@ -624,10 +624,6 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "stat_conversion",
         "bonus_mana_to_ap_ratio": 0.01,
     },
-    "Seraph's Embrace": {
-        "type": "stat_conversion",
-        "bonus_mana_to_ap_ratio": 0.02,
-    },
     "Dawncore": {
         "type": "stat_conversion",
         "ap_per_mana_regen_unit": 10.0,
@@ -645,10 +641,6 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Staff of Flowing Water": {
         "type": "stat_conversion",
         "rapids_bonus_ap": 40.0,
-    },
-    "Sterak's Gage": {
-        "type": "stat_conversion",
-        "base_ad_to_bonus_ad_ratio": 0.45,
     },
     "Warmog's Armor": {
         "type": "stat_conversion",
@@ -684,6 +676,42 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "shield_scale_start_level": 9,
         "shield_scale_end_level": 18,
         "duration": 3.0,
+    },
+    "Hexdrinker": {
+        "type": "target_threshold_shield",
+        "health_threshold": 0.30,
+        "shield_melee_min": 110.0,
+        "shield_melee_max": 280.0,
+        "shield_ranged_min": 82.5,
+        "shield_ranged_max": 210.0,
+        "duration": 2.5,
+        "damage_type": "magic",
+    },
+    "Maw of Malmortius": {
+        "type": "stat_conversion",
+        "health_threshold": 0.30,
+        "shield_melee_base": 200.0,
+        "shield_melee_bonus_ad_ratio": 1.50,
+        "shield_ranged_base": 150.0,
+        "shield_ranged_bonus_ad_ratio": 1.125,
+        "duration": 3.0,
+        "damage_type": "magic",
+    },
+    "Seraph's Embrace": {
+        "type": "stat_conversion",
+        "bonus_mana_to_ap_ratio": 0.02,
+        "health_threshold": 0.30,
+        "shield_max_mana_ratio": 0.18,
+        "duration": 3.0,
+        "damage_type": "all",
+    },
+    "Sterak's Gage": {
+        "type": "stat_conversion",
+        "base_ad_to_bonus_ad_ratio": 0.45,
+        "health_threshold": 0.30,
+        "shield_bonus_health_ratio": 0.60,
+        "duration": 4.5,
+        "damage_type": "all",
     },
     "Stormrazor": {
         "type": "on_hit_once",
@@ -756,15 +784,41 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Blade of the Ruined King": frozenset({"min_damage"}),
     "Experimental Hexplate": frozenset({"bonus_attack_speed_percent"}),
+    "Hexdrinker": frozenset(
+        {
+            "health_threshold",
+            "shield_melee_min",
+            "shield_melee_max",
+            "shield_ranged_min",
+            "shield_ranged_max",
+            "duration",
+        }
+    ),
     "Hexoptics C44": frozenset({"melee_assumed_distance"}),
     "Hextech Gunblade": frozenset({"base_min", "base_max", "cooldown"}),
     "Hextech Rocketbelt": frozenset({"cooldown"}),
     "Malignance": frozenset({"base", "ap_ratio", "duration"}),
+    "Maw of Malmortius": frozenset(
+        {
+            "health_threshold",
+            "shield_melee_base",
+            "shield_melee_bonus_ad_ratio",
+            "shield_ranged_base",
+            "shield_ranged_bonus_ad_ratio",
+            "duration",
+        }
+    ),
     "Muramana": frozenset(
         {"max_mana_ratio_ability_melee", "max_mana_ratio_ability_ranged"}
     ),
     "Profane Hydra": frozenset({"cooldown"}),
     "Ravenous Hydra": frozenset({"cooldown"}),
+    "Seraph's Embrace": frozenset(
+        {"health_threshold", "shield_max_mana_ratio", "duration"}
+    ),
+    "Sterak's Gage": frozenset(
+        {"health_threshold", "shield_bonus_health_ratio", "duration"}
+    ),
     "Stridebreaker": frozenset({"cooldown"}),
     "Titanic Hydra": frozenset({"active_cooldown"}),
 }

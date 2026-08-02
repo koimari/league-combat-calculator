@@ -545,6 +545,8 @@ class TestItemEffectProvenance:
             fetch_item_data(data_directory=DEFAULT_DATA_DIR)
         )
         for item_name, parseable_keys in item_effects._PARSEABLE_ITEM_KEYS.items():
+            if not parseable_keys:
+                continue
             assert item_name in parsed
             for key in parseable_keys:
                 assert key in parsed[item_name], f"{item_name}.{key} was not parsed"

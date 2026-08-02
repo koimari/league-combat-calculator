@@ -107,6 +107,10 @@ def test_optimizer_rejects_a_locked_item_with_unmodeled_damage_mechanics():
         ("Warden's Mail", "modeled"),
         ("Randuin's Omen", "modeled"),
         ("Immortal Shieldbow", "modeled_one_rotation"),
+        ("Hexdrinker", "modeled_one_rotation"),
+        ("Maw of Malmortius", "modeled_one_rotation"),
+        ("Seraph's Embrace", "modeled_one_rotation"),
+        ("Sterak's Gage", "modeled_one_rotation"),
         ("Void Staff", "not_target_relevant"),
     ],
 )
@@ -117,8 +121,18 @@ def test_target_item_coverage_is_mechanic_specific(item_name, status):
     assert coverage["calculation_eligible"] is (status != "blocked")
 
 
-def test_shieldbow_target_coverage_requires_one_rotation():
-    items = [get_item_by_name("Immortal Shieldbow")]
+@pytest.mark.parametrize(
+    "item_name",
+    [
+        "Immortal Shieldbow",
+        "Hexdrinker",
+        "Maw of Malmortius",
+        "Seraph's Embrace",
+        "Sterak's Gage",
+    ],
+)
+def test_lifeline_target_coverage_requires_one_rotation(item_name):
+    items = [get_item_by_name(item_name)]
 
     require_target_item_coverage(items, one_rotation=True)
     with pytest.raises(ValueError, match="supported only for one rotation"):
