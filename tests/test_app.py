@@ -560,6 +560,15 @@ class TestIconUrlsAreHttps:
 
         assert {"Ruby Crystal", "Dark Seal", "Doran's Ring"} <= names
 
+    def test_item_apis_expose_optimizer_coverage(self):
+        client = app_module.app.test_client()
+        items = {item["name"]: item for item in client.get("/api/items").get_json()}
+        boots = {item["name"]: item for item in client.get("/api/boots").get_json()}
+
+        assert items["Runaan's Hurricane"]["model_coverage"]["status"] == "blocked"
+        assert items["Void Staff"]["model_coverage"]["status"] == "stats_only"
+        assert boots["Immortal Path"]["model_coverage"]["status"] == "blocked"
+
     def test_boot_api_marks_role_quest_tiers(self):
         boots = app_module.app.test_client().get("/api/boots").get_json()
         assert {boot["tier"] for boot in boots} == {2, 3}
@@ -809,6 +818,23 @@ def test_optimize_rejects_more_locked_items_than_slots(monkeypatch):
 
     assert response.status_code == 400
     assert "locked" in response.get_json()["error"].lower()
+
+
+def test_optimize_rejects_locked_item_with_unmodeled_damage_effect():
+    response = app_module.app.test_client().post(
+        "/api/optimize",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "max_legendary_slots": 1,
+            "locked_items": ["Runaan's Hurricane"],
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"].startswith(
+        "Runaan's Hurricane cannot be locked into BIS search yet"
+    )
 
 
 @pytest.mark.parametrize(

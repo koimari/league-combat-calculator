@@ -2195,3 +2195,32 @@ select:focus-visible {
 .optimizer-status.hidden {
     display: none;
 }
+
+.optimizer-coverage {
+    margin-top: var(--gap-xs);
+    border-top: 1px solid var(--border-dark);
+    padding-top: var(--gap-xs);
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+}
+
+.optimizer-coverage.hidden {
+    display: none;
+}
+
+.optimizer-coverage summary {
+    color: var(--gold-dim);
+    cursor: pointer;
+    text-align: center;
+}
+
+.optimizer-coverage ul {
+    display: grid;
+    gap: 0.28rem;
+    margin-top: var(--gap-xs);
+    padding-left: 1rem;
+}
+
+.optimizer-coverage strong {
+    color: var(--text-primary);
+}

@@ -26,6 +26,7 @@ from calculator.data_fetcher import (
     get_item_by_name,
 )
 from calculator.item_effects import item_input_options_meta, refresh_item_effects
+from calculator.item_coverage import item_model_coverage
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import validate_resolved_loadout
 from calculator.champions import champion_options_meta_map, registered_champion_names
@@ -663,7 +664,11 @@ def api_items():
     """Return ordinary build items for manual attacker/roster loadouts."""
     result = sorted(
         [
-            {"name": item["name"], "icon": _https_icon(item.get("icon", ""))}
+            {
+                "name": item["name"],
+                "icon": _https_icon(item.get("icon", "")),
+                "model_coverage": item_model_coverage(item),
+            }
             for item in get_selectable_items()
         ],
         key=lambda i: i["name"],
@@ -680,6 +685,7 @@ def api_boots():
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
                 "tier": item.get("tier"),
+                "model_coverage": item_model_coverage(item),
             }
             for item in get_eligible_boots(tier=None)
         ],

@@ -22,6 +22,7 @@ League Wiki cache
 - `stats.py` applies level growth, item stats, role-quest modifiers, and external ally stat effects.
 - `resistance.py` owns armor, magic resistance, and penetration order.
 - `item_effects.py` owns item values and effect formulas. Item-specific numbers do not belong in routes or the interface.
+- `item_coverage.py` classifies each optimizer candidate as modelled, reviewed stats-only, blocked, or pending review. New passive or active text fails closed until it is explicitly classified.
 - `champions/<name>.py` owns reviewed champion formulas, options, and assumptions. The generic parser is useful for development coverage but is not a public exactness claim.
 - `loadout_rules.py` validates inventory capacity, boot tiers, duplicate items, and mutually exclusive item groups for both manual builds and optimization.
 - `defensive_effects.py` resolves champion-owned defenses that are assumed ready when combat begins. Unregistered defenses remain explicitly outside the model.
@@ -45,7 +46,7 @@ The same selected damage package is evaluated against every selected enemy. Targ
 
 `optimizer.py` scores legal builds through the same `run_fight` pipeline used by manual calculations. The objective is modeled TDD unless the user explicitly selects physical or magic damage.
 
-An open one-item slot is searched exhaustively and may be labeled certified BIS. A complete build is found with multi-start greedy search and hill climbing; it is labeled `Best found`, not BIS. The response includes the search guarantee, build count, gold cost, and a distinct runner-up. Build A and Build B may never be identical.
+A one-item opening is searched exhaustively across modelled candidates. It is certified as best in slot only when candidate coverage is complete. If any available candidate is withheld, the result is labelled `Best modelled` and includes the excluded items and reasons. Complete builds use multi-start greedy search and hill climbing and are never labelled certified best in slot. The response includes the search guarantee, candidate-coverage receipt, build count, gold cost, and a distinct runner-up. Build A and Build B may never be identical.
 
 ## Public boundary
 

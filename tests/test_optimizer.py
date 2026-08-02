@@ -119,7 +119,38 @@ def test_optimizer_respects_gold_budget():
     assert all(build["gold"] <= 7_000 for build in result["ranked_builds"])
 
 
-def test_one_open_slot_is_exhaustively_certified_and_has_distinct_runner_up():
+def test_one_open_slot_is_exhaustive_for_modeled_items_and_has_runner_up():
+    result = optimize_build(
+        "Ahri",
+        get_champion("Ahri"),
+        level=18,
+        max_legendary_slots=2,
+        locked_items=["Rabadon's Deathcap"],
+        locked_boots="Sorcerer's Shoes",
+    )
+
+    assert result["is_certified_best"] is False
+    assert result["search_guarantee"] == "exhaustive_modeled_candidates"
+    assert result["candidate_coverage"]["excluded_count"] > 0
+    assert len(result["ranked_builds"]) == 2
+    assert result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
+
+
+def test_one_open_slot_is_certified_only_when_candidate_coverage_is_complete(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_candidate_coverage",
+        lambda items: {
+            "eligible_candidates": len(items),
+            "scored_candidates": len(items),
+            "excluded_count": 0,
+            "complete": True,
+            "excluded": [],
+            "note": "Every available candidate is fully modelled.",
+        },
+    )
+
     result = optimize_build(
         "Ahri",
         get_champion("Ahri"),
@@ -131,8 +162,6 @@ def test_one_open_slot_is_exhaustively_certified_and_has_distinct_runner_up():
 
     assert result["is_certified_best"] is True
     assert result["search_guarantee"] == "exhaustive_legal_candidates"
-    assert len(result["ranked_builds"]) == 2
-    assert result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
 
 
 def test_optimizer_is_champion_specific_for_orianna_auto_uptime():

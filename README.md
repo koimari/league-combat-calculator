@@ -8,10 +8,12 @@ A roster-aware League of Legends damage and build calculator. Choose one attacke
 - post-mitigation damage with League's penetration order;
 - cooldown-limited casts, resource costs, regeneration, auto-attack uptime, burns, procs, shields, and per-skill attribution;
 - per-target and roster-wide TDD, health damage, DPS, and two distinct build results;
-- an exhaustive best-in-slot result when one legendary slot is open;
+- an exhaustive one-slot result among fully modelled candidates, promoted to certified best in slot only when no available candidate is withheld;
 - a clearly labeled heuristic search for complete builds.
 
 The public attacker picker enables only champion modules with reviewed formulas. All 173 cached champions remain available as allies or enemies because base stats and item stats are calculated separately. Unmodeled attacker kits fail closed; unmodeled ally or defensive effects are shown as assumptions instead of being presented as zero.
+
+The optimizer withholds any candidate whose damage-relevant passive, active, or state is not yet modelled. The API names each withheld item and the missing mechanic; the interface labels the result `Best modelled` rather than silently treating that item as a plain stat block.
 
 ## Run locally
 

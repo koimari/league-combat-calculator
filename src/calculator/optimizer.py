@@ -10,6 +10,11 @@ from dataclasses import replace
 from typing import Any
 
 from .data_fetcher import fetch_item_data, get_item_by_name
+from .item_coverage import (
+    optimizer_candidate_coverage,
+    optimizer_supported_items,
+    require_optimizer_item_coverage,
+)
 from .loadout_rules import (
     ITEM_EXCLUSIVITY_GROUPS,
     ITEM_TO_EXCLUSIVITY_GROUPS,
@@ -28,6 +33,7 @@ ITEM_BLOCKLIST = {
     "Bounty of Worlds",
     "Ghostcrawlers",
     "Hellfire Hatchet",
+    "Multitool",
     "Perplexity",
     "Rite of Ruin",
     "Spectral Cutlass",
@@ -416,9 +422,13 @@ def optimize_build(
         "gold_budget": gold_budget,
     }
 
-    # Build item pools
-    all_legendaries = get_eligible_legendaries()
-    all_boots = get_eligible_boots(tier=boots_tier)
+    # Build item pools.  Keep the complete legal lists for the public coverage
+    # receipt, but only score candidates whose outgoing-damage mechanics are
+    # represented by the fight model.
+    legal_legendaries = get_eligible_legendaries()
+    legal_boots = get_eligible_boots(tier=boots_tier)
+    all_legendaries = optimizer_supported_items(legal_legendaries)
+    all_boots = optimizer_supported_items(legal_boots)
 
     # Resolve locked items
     resolved_locked = []
@@ -427,6 +437,7 @@ def optimize_build(
         for name in locked_items:
             if name:
                 item = get_item_by_name(name)
+                require_optimizer_item_coverage(item)
                 resolved_locked.append(item)
                 locked_names.add(name)
 
@@ -434,6 +445,7 @@ def optimize_build(
     boots_locked = False
     if locked_boots:
         resolved_locked_boots = get_item_by_name(locked_boots)
+        require_optimizer_item_coverage(resolved_locked_boots)
         boots_locked = True
 
     validate_resolved_loadout(
@@ -655,6 +667,12 @@ def optimize_build(
         for rank, (legendaries, boots, score) in enumerate(ranked[:2], start=1)
     ]
 
+    coverage_candidates = list(legal_legendaries)
+    if not boots_locked:
+        coverage_candidates.extend(legal_boots)
+    candidate_coverage = optimizer_candidate_coverage(coverage_candidates)
+    certified_best = exact_mode and candidate_coverage["complete"]
+
     return {
         "items": legendary_names,
         "boots": boots_name,
@@ -666,8 +684,15 @@ def optimize_build(
         "target_count": len(fight_params) if isinstance(fight_params, tuple) else 1,
         "ranked_builds": public_ranked,
         "search_guarantee": (
-            "exhaustive_legal_candidates" if exact_mode else "local_search"
+            (
+                "exhaustive_legal_candidates"
+                if certified_best
+                else "exhaustive_modeled_candidates"
+            )
+            if exact_mode
+            else "local_search"
         ),
-        "is_certified_best": exact_mode,
+        "is_certified_best": certified_best,
+        "candidate_coverage": candidate_coverage,
         "gold_budget": gold_budget,
     }

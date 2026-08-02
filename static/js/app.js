@@ -1931,6 +1931,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const optimizeBtnText = optimizeBtn.querySelector(".btn-text");
     const optimizeBtnLoading = optimizeBtn.querySelector(".btn-loading");
     const optimizeStatus = document.getElementById("optimize-status");
+    const optimizerCoverage = document.getElementById("optimizer-coverage");
+    const optimizerCoverageSummary = document.getElementById("optimizer-coverage-summary");
+    const optimizerCoverageList = document.getElementById("optimizer-coverage-list");
     const optimizeObjective = document.getElementById("optimize-objective");
     const optimizeSlots = document.getElementById("optimize-slots");
 
@@ -1994,6 +1997,24 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
     }
 
+    function renderOptimizerCoverage(data) {
+        const coverage = data.candidate_coverage;
+        const excluded = Array.isArray(coverage?.excluded) ? coverage.excluded : [];
+        optimizerCoverage.classList.toggle("hidden", excluded.length === 0);
+        optimizerCoverageList.replaceChildren();
+        if (excluded.length === 0) return;
+
+        optimizerCoverageSummary.textContent =
+            `${excluded.length} item${excluded.length === 1 ? "" : "s"} withheld`;
+        excluded.forEach((entry) => {
+            const item = document.createElement("li");
+            const name = document.createElement("strong");
+            name.textContent = entry.name;
+            item.append(name, document.createTextNode(` — ${entry.reason}`));
+            optimizerCoverageList.appendChild(item);
+        });
+    }
+
     function findBestNextItem(build, button) {
         const champion = championSelect.value;
         if (!champion) {
@@ -2051,6 +2072,12 @@ document.addEventListener("DOMContentLoaded", () => {
                         itemIconMap[data.boots] || ""
                     );
                 }
+                const excluded = Number(data.candidate_coverage?.excluded_count || 0);
+                optimizeStatus.textContent = excluded > 0
+                    ? `Best modelled item: ${bestItem} · ${excluded} withheld`
+                    : `Certified BIS item: ${bestItem}`;
+                optimizeStatus.classList.remove("hidden");
+                renderOptimizerCoverage(data);
             })
             .catch(() => showError("BIS search failed. Please try again."))
             .finally(() => {
@@ -2096,6 +2123,7 @@ document.addEventListener("DOMContentLoaded", () => {
         optimizeBtnLoading.classList.remove("hidden");
         optimizeBtn.disabled = true;
         optimizeStatus.classList.add("hidden");
+        optimizerCoverage.classList.add("hidden");
 
         fetch("/api/optimize", {
             method: "POST",
@@ -2129,9 +2157,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 compareCheckbox.dispatchEvent(new Event("change"));
 
                 // Show status
+                const excluded = Number(data.candidate_coverage?.excluded_count || 0);
+                const resultLabel = data.is_certified_best
+                    ? "Certified BIS"
+                    : excluded > 0 ? "Best modelled result" : "Best found";
                 optimizeStatus.textContent =
-                    `${data.is_certified_best ? "Certified BIS" : "Best found"}: ${ranked[0].total_damage.toLocaleString()} TDD · runner-up ${ranked[1].total_damage.toLocaleString()} · ${data.evaluations.toLocaleString()} builds`;
+                    `${resultLabel}: ${ranked[0].total_damage.toLocaleString()} TDD · runner-up ${ranked[1].total_damage.toLocaleString()} · ${data.evaluations.toLocaleString()} builds`;
                 optimizeStatus.classList.remove("hidden");
+                renderOptimizerCoverage(data);
 
                 // Trigger a full calculate to show the damage breakdown
                 doCalculate();
