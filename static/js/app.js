@@ -951,12 +951,45 @@ function renderExactBreakdown(aResult, bResult) {
   $("damageBreakdown").innerHTML = `<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage dealt</strong><small>After shields and selected enemy defenses</small></td><td>${fmt(aResult.total_damage)}</td>${totalB}</tr></tbody></table></div>`;
 }
 
+function fightOrderAbility(slot) {
+  const champion = getChampion(state.attacker.champion);
+  return (champion?.abilities || []).find((ability) => ability.slot === slot)
+    || (champion?.ingestedAbilities || []).find((ability) => ability.slot === slot)
+    || null;
+}
+
+function fightOrderTimeline(result) {
+  const duration = Math.max(1, Number(state.fight.duration) || 10);
+  const events = (result?.cast_timeline || []).map((event) => ({ ...event, time: Math.min(Number(event.time) || 0, duration) }));
+  if (!events.length) return "";
+  const laneGap = 13; // % of track width a cast occupies before neighbours stack upward
+  const laneEnds = [];
+  const chips = events.map((event) => {
+    const pct = (event.time / duration) * 100;
+    let lane = laneEnds.findIndex((end) => pct - end >= laneGap);
+    if (lane === -1) lane = laneEnds.push(pct) - 1;
+    else laneEnds[lane] = pct;
+    const ability = fightOrderAbility(event.slot);
+    const icon = ability ? abilityImage(ability) : "";
+    const name = event.name || ability?.name || event.slot;
+    return `<span class="fight-cast" style="--x:${pct.toFixed(2)}%;--lane:${lane}" title="${escapeHtml(name)} · ${one(event.time)}s">${icon ? `<img src="${icon}" alt="${escapeHtml(name)}" />` : `<i>${escapeHtml(String(event.slot || "?").charAt(0))}</i>`}<b>${escapeHtml(event.slot || "")}</b></span>`;
+  }).join("");
+  const labelGap = 7; // % of axis width between time labels before the later one is dropped
+  const labels = [];
+  [...events.map((event) => event.time), duration].forEach((time) => {
+    const pct = (time / duration) * 100;
+    if (!labels.some((label) => Math.abs(label.pct - pct) < labelGap)) labels.push({ time, pct });
+  });
+  const axis = labels.map((label) => `<span style="--x:${label.pct.toFixed(2)}%"><i></i>${one(label.time)}s</span>`).join("");
+  return `<div class="fight-timeline" style="--lane-count:${laneEnds.length}"><div class="fight-lanes">${chips}</div><div class="fight-axis">${axis}</div></div><small class="fight-caption">One rotation · ${one(duration)}s window</small>`;
+}
+
 function renderExactMechanics(aResult, bResult) {
   const result = aResult;
   const coverage = result?.timeline_coverage || {};
-  const events = (result?.cast_timeline || []).slice(0, 8).map((event) => `${one(event.time)}s ${event.name || event.slot}`).join(" · ");
+  const timeline = fightOrderTimeline(result);
   const notes = [...(result?.notes || []), coverage.note].filter(Boolean);
-  $("mechanicsOutput").innerHTML = `<div class="mechanics-head"><span>Engine output</span><b>${escapeHtml(coverage.certification || "event ordered")}</b></div><article class="mechanic-row"><div><strong>Fight order</strong><p>${escapeHtml(events || "No cast timeline returned")}</p></div><span class="modelled">Calculated</span></article>${notes.map((note) => `<article class="mechanic-row"><div><strong>Model note</strong><p>${escapeHtml(note)}</p></div><span class="text-only">Boundary</span></article>`).join("")}`;
+  $("mechanicsOutput").innerHTML = `<div class="mechanics-head"><span>Engine output</span><b>${escapeHtml(coverage.certification || "event ordered")}</b></div><article class="mechanic-row"><div><strong>Fight order</strong>${timeline || "<p>No cast timeline returned</p>"}</div><span class="modelled">Calculated</span></article>${notes.map((note) => `<article class="mechanic-row"><div><strong>Model note</strong><p>${escapeHtml(note)}</p></div><span class="text-only">Boundary</span></article>`).join("")}`;
 }
 
 function renderExactResults(aResult, bResult) {
