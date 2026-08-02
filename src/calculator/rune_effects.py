@@ -19,14 +19,25 @@ from .item_effects import DamageInputs
 
 
 def _load_rune_effects() -> dict[str, dict[str, Any]]:
-    """Load the parsed rune registry; an absent cache means no runes."""
+    """Load the parsed rune registry; an absent cache means no runes.
+
+    Copies the fetched mapping: the data layer serves its parsed-JSON
+    cache by reference, and ``refresh_rune_effects`` clears this dict in
+    place — clearing the shared cache object would erase the source.
+    """
     try:
-        return fetch_rune_data()
+        return dict(fetch_rune_data())
     except (FileNotFoundError, ValueError):
         return {}
 
 
 RUNE_EFFECTS: dict[str, dict[str, Any]] = _load_rune_effects()
+
+
+def refresh_rune_effects() -> None:
+    """Re-read data/runes.json in place after a data update."""
+    RUNE_EFFECTS.clear()
+    RUNE_EFFECTS.update(_load_rune_effects())
 
 
 @dataclass(frozen=True, slots=True)

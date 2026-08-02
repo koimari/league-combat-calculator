@@ -116,3 +116,17 @@ class TestValidateKeystoneRequest:
     def test_unimplemented_rejected(self):
         with pytest.raises(ValueError, match="not modeled"):
             rune_effects.validate_keystone_request("Summon Aery")
+
+
+class TestRefreshRuneEffects:
+    def test_refresh_rereads_the_cache_in_place(self, monkeypatch):
+        try:
+            monkeypatch.setattr(
+                rune_effects, "_load_rune_effects", lambda: {"Stub": {"name": "Stub"}}
+            )
+            rune_effects.refresh_rune_effects()
+            assert set(rune_effects.RUNE_EFFECTS) == {"Stub"}
+        finally:
+            monkeypatch.undo()
+            rune_effects.refresh_rune_effects()
+        assert "Electrocute" in rune_effects.RUNE_EFFECTS

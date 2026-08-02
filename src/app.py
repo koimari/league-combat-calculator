@@ -31,7 +31,7 @@ from calculator.data_fetcher import (
     get_item_by_name,
 )
 from calculator.item_effects import item_input_options_meta, refresh_item_effects
-from calculator.rune_effects import keystone_catalog
+from calculator.rune_effects import keystone_catalog, refresh_rune_effects
 from calculator.item_coverage import item_model_coverage, require_target_item_coverage
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import validate_resolved_loadout
@@ -1462,9 +1462,10 @@ def api_update_data():
     def generate():
         for event in _run_data_update():
             yield f"data: {json.dumps(event)}\n\n"
-        # Fresh item JSON is now on disk — re-parse ITEM_EFFECTS in place
-        # so in-memory effects reflect the newly fetched patch data.
+        # Fresh item and rune JSON is now on disk — re-parse the in-memory
+        # registries so effects reflect the newly fetched patch data.
         refresh_item_effects()
+        refresh_rune_effects()
 
     return Response(generate(), mimetype="text/event-stream")
 
