@@ -53,6 +53,8 @@ from .slotlib import (
 # https://wiki.leagueoflegends.com/en-us/Dr._Mundo
 W_CHARGE_TICKS = 12
 W_DURATION = 3.0  # seconds the field ticks; item burns ride the whole tail
+W_TICK_INTERVAL = 0.25
+W_DETONATION_TIME = 3.0
 
 # HARDCODED: verify on patch updates — E's bonus damage reaches its
 # maximum amp at 70% missing health, NOT 100%. The wiki ability page only
@@ -251,7 +253,12 @@ def _infected_bonesaw(ctx: SlotCtx) -> dict[str, Any] | None:
         max(percent * target_max, minimum),
         "magic",
     )
-    entry["parts"] = (DamagePart("magic", hp_scaled_damage=current_health_damage),)
+    # Q is one impact, but its current-health formula must still be repriced
+    # against the live target HP.  An authored zero offset makes that impact
+    # an exact event rather than an uncertified cast-boundary aggregate.
+    entry["parts"] = (
+        DamagePart("magic", hp_scaled_damage=current_health_damage, time_offset=0.0),
+    )
     entry["target_max_health_sensitive"] = True
     entry["detail"] = "Current-health damage with rank-scaled minimum floor"
     return entry
@@ -287,6 +294,19 @@ def _heart_zapper(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         per_tick * W_CHARGE_TICKS + detonation,
         "magic",
+    )
+    # The packet gives both timings explicitly: one charge tick every 0.25s
+    # and an automatic recast at the end of the 3s duration.  Preserve them
+    # as separate events so this source is eligible for coupled ordering.
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            per_tick,
+            count=W_CHARGE_TICKS,
+            time_offset=W_TICK_INTERVAL,
+            hit_interval=W_TICK_INTERVAL,
+        ),
+        DamagePart("magic", detonation, time_offset=W_DETONATION_TIME),
     )
     # Item burns (Liandry's, Blackfire Torch) stay refreshed through the
     # whole channel, not just to the cast instant (the Cassiopeia rule).

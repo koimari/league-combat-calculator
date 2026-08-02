@@ -155,17 +155,32 @@ def _evaluate_build(
         defenses = resolve_starting_defenses(
             champion_data["name"], level, stats, items
         )
-        combat = build_participant_timeline(
-            champion_data,
-            level,
-            items,
-            base_params,
-            main_stats=stats,
-            main_defenses=defenses,
-            enemies=list(combat_context.get("enemies", [])),
-            allies=list(combat_context.get("allies", [])),
-            pair_result_cache=combat_context.get("pair_result_cache"),
-        )
+        try:
+            combat = build_participant_timeline(
+                champion_data,
+                level,
+                items,
+                base_params,
+                main_stats=stats,
+                main_defenses=defenses,
+                enemies=list(combat_context.get("enemies", [])),
+                allies=list(combat_context.get("allies", [])),
+                pair_result_cache=combat_context.get("pair_result_cache"),
+            )
+        except ValueError as exc:
+            # A candidate can introduce a target-state interaction that is
+            # deliberately fail-closed by the fight engine (for example,
+            # Protoplasm's temporary maximum-health expiry combined with an
+            # enemy max-health ability).  That makes this candidate ineligible
+            # for this exact search; it must not abort every other legal build.
+            # Keep unrelated validation errors visible to the API caller.
+            if "Protoplasm Harness" not in str(exc):
+                raise
+            if timeline_audit is not None:
+                timeline_audit["evaluations"] += 1
+                timeline_audit["partial_evaluations"] += 1
+                timeline_audit["coarse_sources"].add("target_Protoplasm Harness")
+            return float("-inf")
         coverage = combat.get("timeline_coverage", {})
         if timeline_audit is not None:
             timeline_audit["evaluations"] += 1
