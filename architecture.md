@@ -32,7 +32,7 @@ League Wiki cache
 
 `pipeline.py` validates ranks and request bounds, calculates stats, parses the selected champion, and calls the fight engine.
 
-`damage.py` owns the fight state. It schedules casts, applies resource costs and regeneration, prices typed damage parts, updates mitigation, simulates auto attacks, and applies item effects. A shared ordered-damage ledger reconstructs accepted casts and exact typed row composition for threshold and shield consumers; it explicitly labels autos and item effects as the engine's current coarse post-rotation phases. Results include the accepted cast timeline, resource spent and remaining, per-source damage, TDD, health damage, shield absorption, and effective resistances.
+`damage.py` owns the fight state. It schedules casts, applies resource costs and regeneration, prices typed damage parts, updates mitigation, simulates auto attacks, and applies item effects. A shared ordered-damage ledger reconstructs accepted casts and exact typed row composition for threshold and shield consumers. Auto attacks carry their simulated per-swing times and damage; item effects without authored events remain explicitly coarse. Results include the accepted cast timeline, resource spent and remaining, per-source damage, TDD, health damage, shield absorption, and effective resistances.
 
 The cast schedule is chronological. Some legacy damage layers still aggregate repeated casts by source after scheduling; those outputs must not be described as event-perfect until their mechanic has a dedicated timeline rule.
 

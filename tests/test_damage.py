@@ -116,6 +116,35 @@ class TestOrderedDamageEvents:
         assert [event["source_key"] for event in events] == ["Q", "W", "Q"]
         assert [event["damage"] for event in events] == [100.0, 60.0, 100.0]
 
+    def test_engine_authored_auto_events_keep_times_and_per_hit_damage(self):
+        events = _ordered_damage_events(
+            {
+                "auto_attacks": {
+                    "count": 2,
+                    "total_damage": 300.0,
+                    "damage_type": "physical",
+                    "event_phase": "auto",
+                    "damage_events": [
+                        {
+                            "time": 0.0,
+                            "damage_type": "physical",
+                            "damage": 100.0,
+                        },
+                        {
+                            "time": 0.5,
+                            "damage_type": "physical",
+                            "damage": 200.0,
+                        },
+                    ],
+                }
+            },
+            {},
+            [],
+        )
+
+        assert [event["time"] for event in events] == [0.0, 0.5]
+        assert [event["damage"] for event in events] == [100.0, 200.0]
+
     def test_mixed_cast_instances_keep_their_exact_damage_types(self):
         events = _ordered_damage_events(
             {
@@ -329,6 +358,58 @@ class TestTargetIncomingDamageModifiers:
         assert result["total_damage"] == pytest.approx(1000.0)
         assert result["threshold_shield_absorbed"] == pytest.approx(400.0)
         assert result["health_damage"] == pytest.approx(600.0)
+
+    def test_timed_auto_events_allow_threshold_shield_to_expire(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(attack_damage=400.0, attack_speed=2.0),
+            one_rotation=False,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=1.0,
+            target_armor=0.0,
+            target_threshold_shield_amount=500.0,
+            target_threshold_shield_health_ratio=0.90,
+            target_threshold_shield_duration=0.20,
+        )
+
+        # Autos land at 0.0s and 0.5s. The first consumes 400 shield; the
+        # remaining 100 expires before the second swing instead of absorbing it.
+        assert result["total_damage"] == pytest.approx(800.0)
+        assert result["threshold_shield_absorbed"] == pytest.approx(400.0)
+        assert result["health_damage"] == pytest.approx(400.0)
+
+    def test_timed_autos_cross_shadowflame_threshold_before_later_cast(
+        self, fight, attacker_stats
+    ):
+        from src.calculator.data_fetcher import get_item_by_name
+
+        result = fight(
+            attacker_stats(attack_damage=160.0, attack_speed=1.0),
+            {
+                "Q": {
+                    "name": "Timed spell",
+                    "rank": 1,
+                    "cooldown": 2.0,
+                    "damage_type": "magic",
+                    "total_raw": 300.0,
+                    "parts": (DamagePart("magic", 300.0),),
+                }
+            },
+            items=[get_item_by_name("Shadowflame")],
+            one_rotation=False,
+            fight_duration_seconds=3.0,
+            auto_attack_uptime=1.0,
+            target_health=1000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+        )
+
+        # Q at 0s, then autos at 0s and 1s leave 380 HP. Q's 2s recast
+        # therefore receives Cinderbloom's 20% bonus (60 damage).
+        assert result["breakdown"]["shadowflame_Shadowflame"][
+            "total_damage"
+        ] == pytest.approx(60.0)
 
 
 class TestBorkCurrentHpSimulation:

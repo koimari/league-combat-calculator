@@ -1015,6 +1015,32 @@ def _ordered_damage_events(
         )
         sequence += 1
 
+    def add_declared_events(
+        source_key: str,
+        entry: dict[str, Any],
+        *,
+        default_phase: str,
+    ) -> bool:
+        """Append an engine-authored event list, returning whether it existed."""
+        declared = entry.get("damage_events")
+        if not isinstance(declared, list):
+            return False
+        phase = str(entry.get("event_phase", default_phase))
+        if phase not in {"ability", "auto", "effect", "amplifier"}:
+            phase = default_phase
+        for ordinal, event in enumerate(declared, start=1):
+            if not isinstance(event, dict):
+                continue
+            add(
+                source_key,
+                str(event.get("damage_type", "")),
+                float(event.get("damage", 0.0)),
+                time=float(event.get("time", 0.0)),
+                ordinal=ordinal,
+                phase=phase,
+            )
+        return True
+
     timeline_by_slot: dict[str, list[dict[str, Any]]] = {}
     for event in cast_events or []:
         timeline_by_slot.setdefault(str(event.get("slot", "")), []).append(event)
@@ -1050,22 +1076,25 @@ def _ordered_damage_events(
 
     auto = breakdown.get("auto_attacks")
     if auto and not auto.get("informational"):
-        hits = max(1, int(auto.get("count", 1)))
-        for dtype, amount in _row_damage_parts(auto):
-            for hit_index in range(hits):
-                add(
-                    "auto_attacks",
-                    dtype,
-                    amount / hits,
-                    time=last_ability_time,
-                    ordinal=hit_index + 1,
-                    phase="auto",
-                )
+        if not add_declared_events("auto_attacks", auto, default_phase="auto"):
+            hits = max(1, int(auto.get("count", 1)))
+            for dtype, amount in _row_damage_parts(auto):
+                for hit_index in range(hits):
+                    add(
+                        "auto_attacks",
+                        dtype,
+                        amount / hits,
+                        time=last_ability_time,
+                        ordinal=hit_index + 1,
+                        phase="auto",
+                    )
 
     skipped = set(cast_order) | {"auto_attacks", "execute"}
     untyped: list[tuple[str, float]] = []
     for key, entry in breakdown.items():
         if key in skipped or entry.get("informational"):
+            continue
+        if add_declared_events(key, entry, default_phase="effect"):
             continue
         parts = _row_damage_parts(entry)
         if parts:
@@ -3044,6 +3073,40 @@ class AutoAttackResult:
     double_shot_info: dict[str, Any] | None = None
 
 
+def _auto_attack_timestamps(state: FightState) -> list[float]:
+    """Return the same per-swing schedule used to derive the auto count.
+
+    A normal stream starts at time zero and advances at attack speed times
+    uptime. Ultimate attack-speed windows use their buffed rate first, then
+    hand the remaining swings to the ordinary rate. Keeping this schedule next
+    to the count calculation prevents threshold defenses from treating a
+    multi-second auto stream as one post-rotation burst.
+    """
+    if state.num_auto_attacks <= 0 or state.auto_attack_uptime <= 0:
+        return []
+    normal_rate = state.attack_speed * state.auto_attack_uptime
+    if normal_rate <= 0:
+        return []
+    buff = state.damage_effects.ultimate_auto_buff
+    empowered = state.empowered_autos if buff is not None else 0
+    if empowered <= 0:
+        return [index / normal_rate for index in range(state.num_auto_attacks)]
+
+    buffed_rate = (
+        state.attack_speed
+        + state.attack_speed_ratio * buff.bonus_attack_speed_percent / 100.0
+    ) * state.auto_attack_uptime
+    if buffed_rate <= 0:
+        return [index / normal_rate for index in range(state.num_auto_attacks)]
+    times = [index / buffed_rate for index in range(empowered)]
+    normal_start = empowered / buffed_rate
+    times.extend(
+        normal_start + index / normal_rate
+        for index in range(state.num_auto_attacks - empowered)
+    )
+    return times
+
+
 def _find_auto_attack_override(
     ability_damages: dict[str, dict[str, Any]],
 ) -> dict[str, Any] | None:
@@ -3215,8 +3278,13 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     # timestamp saw. Without such a buff every swing_ad below is exactly
     # ``attack_damage``, as it always was.
     swing_bonus_ad = _auto_swing_bonus_ad(state, damage_ratio)
+    auto_times = _auto_attack_timestamps(state)
+    auto_events: list[dict[str, Any]] = []
+    fiendhunter_events: list[dict[str, Any]] = []
+    passive_true_events: list[dict[str, Any]] = []
 
     for i in range(num_auto_attacks):
+        attack_time = auto_times[i] if i < len(auto_times) else 0.0
         swing_ad = attack_damage + swing_bonus_ad(i)
         if override_replace_raw is not None:
             # Full auto replacement (Azir W): flat raw per attack, the
@@ -3229,6 +3297,13 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             )
             auto_physical_total += mitigated
             non_crit_damage_per_hit = mitigated
+            auto_events.append(
+                {
+                    "time": attack_time,
+                    "damage_type": override_damage_type,
+                    "damage": mitigated,
+                }
+            )
             continue
         is_empowered = ultimate_auto_buff is not None and i < empowered_autos
         is_sundered = first_auto_crit is not None and i == 0
@@ -3345,10 +3420,33 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                 )
             sundered_sky_damage_diff = mitigated - normal_mitigated
         auto_physical_total += mitigated
+        auto_events.append(
+            {
+                "time": attack_time,
+                "damage_type": "physical",
+                "damage": mitigated,
+            }
+        )
+        if raw_true > 0:
+            fiendhunter_events.append(
+                {
+                    "time": attack_time,
+                    "damage_type": "true",
+                    "damage": raw_true * basic_amp,
+                }
+            )
         # Champion rider: a share of this swing's PRE-mitigation damage
         # again as true damage (Corki P). Riding raw_phys carries the
         # attack's crit multiplier, exactly as the wiki describes.
         passive_true_total += raw_phys * passive_true_ratio
+        if raw_phys * passive_true_ratio > 0:
+            passive_true_events.append(
+                {
+                    "time": attack_time,
+                    "damage_type": "true",
+                    "damage": raw_phys * passive_true_ratio * basic_amp,
+                }
+            )
 
         # Track per-hit damage for crits vs non-crits (last value wins;
         # all crits deal the same and all non-crits deal the same)
@@ -3386,6 +3484,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         "damage_per_hit": auto_damage_per_hit,
         "total_damage": auto_total,
         "damage_type": auto_damage_type,
+        "damage_events": auto_events,
+        "event_phase": "auto",
     }
     if ultimate_auto_buff is not None and empowered_autos > 0:
         breakdown["auto_attacks"]["empowered_count"] = empowered_autos
@@ -3418,6 +3518,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             "count": empowered_autos,
             "total_damage": fiendhunter_true_total,
             "damage_type": "true",
+            "damage_events": fiendhunter_events,
+            "event_phase": "auto",
         }
 
     if passive_true_total > 0:
@@ -3427,6 +3529,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             "damage_per_hit": passive_true_total / num_auto_attacks,
             "total_damage": passive_true_total,
             "damage_type": "true",
+            "damage_events": passive_true_events,
+            "event_phase": "auto",
         }
 
     # Add basic damage amp breakdown entry (informational — already applied)
