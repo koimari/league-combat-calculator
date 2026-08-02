@@ -338,6 +338,7 @@ td:last-child { color: var(--olive); }
 .ability-step button:disabled { opacity: .3; cursor: default; }
 .ability-step output, .ability-step.fixed strong { color: var(--ink); font: 9px var(--mono); text-align: center; }
 .ability-step.fixed strong { color: var(--accent); }
+.ability-source { display: block; margin-top: 7px; color: var(--muted); font: 7px var(--mono); text-transform: uppercase; }
 .ability-withheld { background: color-mix(in srgb, var(--canvas) 45%, transparent); }
 .ability-withheld .ability-name { margin-bottom: 7px; }
 .ability-withheld .ability-name small { color: var(--accent); }

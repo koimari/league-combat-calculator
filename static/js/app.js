@@ -75,11 +75,76 @@ function mergeAbilityCatalog(catalog) {
       formulaReviewed: formulaBySlot.has(ability.slot),
       source: catalog.source,
     }));
+    champion.abilities = (champion.abilities || []).map((ability) => ({
+      ...ability,
+      formulaSource: ability.formulaSource || "Patch client formula graph",
+    }));
   });
 }
 
+function wikiDamageType(type) {
+  const normalized = String(type || "").toUpperCase();
+  if (normalized.includes("TRUE")) return "true";
+  if (normalized.includes("MAGIC")) return "magical";
+  if (normalized.includes("PHYSICAL")) return "physical";
+  return null;
+}
+
+function wikiFallbackVariant(form) {
+  const packets = (form?.packets || []).filter((packet) => wikiDamageType(packet?.damageType));
+  const primary = [...packets].sort((a, b) => {
+    const aHasBase = Array.isArray(a.base) && a.base.some((value) => Number(value) > 0);
+    const bHasBase = Array.isArray(b.base) && b.base.some((value) => Number(value) > 0);
+    return Number(bHasBase) - Number(aHasBase) || Number(b.priority || 0) - Number(a.priority || 0);
+  })[0];
+  const ratios = primary?.ratios || {};
+  const levelScaled = Array.isArray(primary?.base) && primary.base.length > 6;
+  const targetScale = Object.keys(ratios).find((key) => /^target(?:Max|Current|Missing)Hp$/.test(key));
+  return {
+    name: form?.name || "Wiki-derived form",
+    levelBase: levelScaled ? primary.base : undefined,
+    base: levelScaled ? undefined : (primary?.base || []),
+    ap: ratios.ap,
+    ad: ratios.ad,
+    bonusAd: ratios.bonusAd,
+    packets: packets.map((packet) => ({
+      type: wikiDamageType(packet.damageType),
+      targetScale: Object.keys(packet.ratios || {}).find((key) => /^target(?:Max|Current|Missing)Hp$/.test(key)),
+    })),
+    targetScale,
+  };
+}
+
+function wikiFallbackAbility(slot, forms, metadata) {
+  const normalized = (forms || []).map(wikiFallbackVariant);
+  const first = normalized[0] || { name: metadata?.name || slot, packets: [] };
+  return {
+    slot,
+    name: metadata?.name || first.name || slot,
+    icon: metadata?.icon || "",
+    maxRank: Math.max(...(forms || []).map((form) => Number(form.maxRank) || (slot === "R" ? 3 : slot === "P" ? 1 : 5)), slot === "R" ? 3 : slot === "P" ? 1 : 5),
+    variants: normalized.length ? normalized : [first],
+    formulaSource: "Wiki-derived local cache",
+    wikiDescription: metadata?.description || metadata?.blurb || "",
+  };
+}
+
 function mergeBisProfiles(profiles) {
-  if (profiles?.champions && typeof profiles.champions === "object") BIS_PROFILES = profiles.champions;
+  if (!profiles?.champions || typeof profiles.champions !== "object") return;
+  BIS_PROFILES = profiles.champions;
+  if (!DATA?.champions?.length) return;
+  DATA.champions.forEach((champion) => {
+    const profile = BIS_PROFILES[champion.name];
+    if (!profile?.abilities) return;
+    const existing = new Map((champion.abilities || []).map((ability) => [ability.slot, ability]));
+    const metadata = new Map((champion.ingestedAbilities || []).map((ability) => [ability.slot, ability]));
+    Object.entries(profile.abilities).forEach(([slot, forms]) => {
+      if (existing.has(slot)) return;
+      existing.set(slot, wikiFallbackAbility(slot, forms, metadata.get(slot)));
+    });
+    champion.abilities = ABILITY_SLOTS.map((slot) => existing.get(slot)).filter(Boolean);
+    champion.wikiAbilitySlots = champion.abilities.filter((ability) => ability.formulaSource === "Wiki-derived local cache").map((ability) => ability.slot);
+  });
 }
 
 function mergeEffectCatalog(catalog) {
@@ -379,7 +444,7 @@ function renderAbilityPackage(champion) {
     if (!ability) {
       const description = ingested?.blurb || ingested?.description || "Ability metadata was ingested, but its exact combat formula is not reviewed yet.";
       return `<article class="ability-row ability-withheld" title="${escapeHtml(ingested?.description || description)}">
-        <div class="ability-name"><img src="${abilityImage(ingested)}" alt="" /><b>${slot}</b><span><strong>${escapeHtml(ingested?.name || slot)}</strong><small>Ingested · exact formula withheld</small></span></div>
+        <div class="ability-name"><img src="${abilityImage(ingested)}" alt="" /><b>${slot}</b><span><strong>${escapeHtml(ingested?.name || slot)}</strong><small>Wiki description ingested · numeric packet pending</small></span></div>
         <p class="ability-note">${escapeHtml(description)}</p>
       </article>`;
     }
@@ -392,16 +457,20 @@ function renderAbilityPackage(champion) {
       ? stepper("Mines hit", input.hits, `data-ability-hits="${ability.slot}"`, input.hits <= 1, input.hits >= ability.maxHits)
       : "";
     const variants = ability.variants.length > 1 ? `<div class="ability-variants">${ability.variants.map((variant, index) => `<button type="button" data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</div>` : `<small>${escapeHtml(ability.variants[0].name)}</small>`;
+    const sourceLabel = ability.formulaSource === "Wiki-derived local cache" ? "Wiki-derived formula" : "Reviewed formula";
     return `<article class="ability-row">
       <div class="ability-name"><img src="${abilityImage(ability)}" alt="" /><b>${ability.slot}</b><span><strong>${escapeHtml(ability.name)}</strong>${variants}</span></div>
       ${rankControl}
       ${stepper(ability.slot === "P" ? "Procs" : "Casts", input.casts, `data-ability-casts="${ability.slot}"`, input.casts <= 0, input.casts >= 10)}
       ${hitControl}
+      <small class="ability-source">${sourceLabel}</small>
     </article>`;
   }).join("");
-  const sourced = coverage?.supported ?? formulaBySlot.size;
-  const withheld = coverage?.withheld?.length ? ` · withheld ${coverage.withheld.join("/")}` : "";
-  return `<div class="ability-package"><div class="ability-package-head"><div><strong>Ability catalogue</strong><span>${sourced} reviewed formulas · ${ingestedBySlot.size}/5 metadata ingested${withheld}</span></div><small>${escapeHtml(champion.ingestedAbilities?.[0]?.source?.kind || champion.source?.label || "Patch data")}</small></div><div class="ability-rows" style="--ability-count:5">${rows}</div></div>`;
+  const reviewed = [...formulaBySlot.values()].filter((ability) => ability.formulaSource !== "Wiki-derived local cache").length;
+  const wikiFormulas = [...formulaBySlot.values()].filter((ability) => ability.formulaSource === "Wiki-derived local cache" && ability.variants?.some((variant) => variant.packets?.length)).length;
+  const wikiDescriptions = [...formulaBySlot.values()].filter((ability) => ability.formulaSource === "Wiki-derived local cache" && !ability.variants?.some((variant) => variant.packets?.length)).length;
+  const withheld = coverage?.withheld?.filter((slot) => !formulaBySlot.has(slot)).length ? ` · pending ${coverage.withheld.filter((slot) => !formulaBySlot.has(slot)).join("/")}` : "";
+  return `<div class="ability-package"><div class="ability-package-head"><div><strong>Ability catalogue</strong><span>${reviewed} reviewed formulas · ${wikiFormulas} Wiki formulas · ${wikiDescriptions} Wiki descriptions · ${ingestedBySlot.size}/5 metadata ingested${withheld}</span></div><small>${escapeHtml(champion.ingestedAbilities?.[0]?.source?.kind || champion.source?.label || "Patch data")}</small></div><div class="ability-rows" style="--ability-count:5">${rows}</div></div>`;
 }
 
 function roleQuestNote() {
@@ -1270,7 +1339,11 @@ function stacksForBis(path, candidateId) {
 
 function bisProfile() {
   const selectedAbilities = activeAbilityKit().filter((ability) => abilityInput(ability.slot).casts > 0 && (ability.slot === "P" || abilityInput(ability.slot).rank > 0));
-  if (selectedAbilities.length) return { baseDamage: 0, apRatio: 0, physicalDamage: 0, adRatio: 0, useAbilities: true, label: "Selected skill rotation", exact: true };
+  if (selectedAbilities.length) {
+    const wikiSelected = selectedAbilities.some((ability) => ability.formulaSource === "Wiki-derived local cache");
+    if (wikiSelected) return { ...statOnlyProfile(state.attacker), useAbilities: true, exact: false, wiki: true };
+    return { baseDamage: 0, apRatio: 0, physicalDamage: 0, adRatio: 0, useAbilities: true, label: "Selected skill rotation", exact: true };
+  }
   const exact = state.attacker.baseDamage > 0 || state.attacker.apRatio > 0 || state.attacker.physicalDamage > 0 || state.attacker.adRatio > 0;
   if (exact) return { ...state.attacker, label: "Exact damage package", exact: true };
   return statOnlyProfile(state.attacker);
@@ -1516,10 +1589,7 @@ function bisBuildScore(buildIds, combatant, opponents, path) {
   const teamUtility = effects.reduce((sum, effect, index) => sum + (effect.aura ? 38 : 0) + (effect.active ? 42 : 0) + (effect.healing ? 24 : 0), 0);
   let score;
   let metric;
-  if (path.startsWith("targets.")) {
-    score = effectiveHealth + ownAbilityDamage * 0.25 + autos.raw * 0.1 + hasHealing * 0.4;
-    metric = "effective health";
-  } else if (role === "tank" || role === "warden") {
+  if (role === "tank" || role === "warden") {
     const allyUtilityWeight = role === "warden" && path.startsWith("allies.") ? 34 : 8;
     score = effectiveHealth * (role === "warden" && path.startsWith("allies.") ? 0.72 : 1) + teamUtility * allyUtilityWeight + stats.haste * 10 + hasHealing * 0.8 + ownShields * 1.1 + ownAbilityDamage * 0.18;
     metric = "effective health + team utility";
@@ -1593,19 +1663,20 @@ function rosterBisCandidates(path, profile) {
   const role = bisRole(profile);
   return DATA.items.filter((item) => {
     const completed = item.price >= 2200 && item.into.length === 0;
-    const categories = new Set(item.categories || []);
-    const effect = bisItemEffects(item);
-    const defensive = effect.defensive || item.haste || categories.has("AbilityHaste") || categories.has("Aura") || categories.has("Active");
-    const offensive = item.ad || item.ap || item.attackSpeed || item.crit || item.pen || item.percentPen || item.lethality || item.percentArmorPen || categories.has("OnHit");
-    const relevant = role === "tank" || role === "warden"
-      ? defensive
-      : role === "enchanter" || role === "support"
-        ? (defensive || item.ap || effect.healing)
-        : role === "marksman"
-          ? Boolean(offensive)
-          : Boolean(offensive || defensive);
-    return completed && relevant && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
+    return completed && bisItemMatchesRole(item, role) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
   });
+}
+
+function bisItemMatchesRole(item, role) {
+  const categories = new Set(item.categories || []);
+  const effect = bisItemEffects(item);
+  const defensive = effect.defensive || item.hp || item.haste || categories.has("AbilityHaste") || categories.has("Aura") || categories.has("Active");
+  const offensive = item.ad || item.ap || item.attackSpeed || item.crit || item.pen || item.percentPen || item.lethality || item.percentArmorPen || categories.has("OnHit");
+  if (role === "tank" || role === "warden") return Boolean(defensive || (item.ad && item.hp));
+  if (role === "enchanter" || role === "support") return Boolean(defensive || item.ap || effect.healing);
+  if (role === "marksman") return Boolean(offensive);
+  if (role === "mage" || role === "assassin") return Boolean(item.ap || item.pen || item.percentPen || item.haste || effect.burn || effect.antiHeal);
+  return Boolean(offensive || defensive);
 }
 
 function openRosterBis(path) {
@@ -1647,11 +1718,15 @@ function optimizerDamagePackageReady() {
 }
 
 function bisCandidates(path, profile) {
+  const wikiMode = Boolean(profile?.wiki) || String(profile?.label || "").startsWith("Wiki-derived");
   const selectedTypes = profile.useAbilities ? activeAbilityKit().flatMap((ability) => ability.variants.flatMap((variant) => variant.packets?.map((packet) => typeof packet === "string" ? packet : packet.type) || [variant.type])) : [];
   const physical = profile.physicalDamage > 0 || profile.adRatio > 0 || selectedTypes.includes("physical");
   const magical = profile.baseDamage > 0 || profile.apRatio > 0 || selectedTypes.includes("magical");
   const currentIds = idsForBis(path, 0).filter(Boolean);
   if (path.includes("questBoot")) return DATA.items.filter((item) => questBootIds().includes(item.id) && !currentIds.includes(item.id));
+  if (wikiMode && state.attacker.champion) {
+    return DATA.items.filter((item) => item.price >= 2200 && item.into.length === 0 && bisItemMatchesRole(item, bisRole(bisChampionProfile(state.attacker))) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id));
+  }
   return DATA.items.filter((item) => {
     const completed = item.price >= 2200 && item.into.length === 0;
     const relevant = (magical && (item.ap || item.pen || item.percentPen || [6653, 6655].includes(item.id))) || (physical && (item.ad || item.lethality || item.percentArmorPen));
@@ -1771,18 +1846,26 @@ function openBis(path) {
   if (!String(path).startsWith("attacker.")) return openRosterBis(path);
   bisContext = { path };
   const profile = bisProfile();
+  const wikiMode = Boolean(profile?.wiki) || String(profile?.label || "").startsWith("Wiki-derived");
   const ranked = bisCandidates(path, profile).filter((item) => legalOptimizerBuild(idsForBis(path, item.id).filter(Boolean))).map((item) => {
-    const result = calculateBuild(idsForBis(path, item.id), state.fight.rotations, stacksForBis(path, item.id), { profile });
-    return { item, result, total: result.cumulative };
+    const ids = idsForBis(path, item.id);
+    const result = wikiMode
+      ? bisBuildScore(ids, state.attacker, state.targets, path)
+      : calculateBuild(ids, state.fight.rotations, stacksForBis(path, item.id), { profile });
+    return { item, result, total: wikiMode ? result.score : result.cumulative };
   }).sort((a, b) => b.total - a.total).slice(0, 12);
   const baselineId = Number(pathValue(path)) || 0;
-  const baseline = calculateBuild(idsForBis(path, baselineId), state.fight.rotations, stacksForBis(path, baselineId), { profile }).cumulative;
+  const baselineResult = wikiMode
+    ? bisBuildScore(idsForBis(path, baselineId), state.attacker, state.targets, path)
+    : calculateBuild(idsForBis(path, baselineId), state.fight.rotations, stacksForBis(path, baselineId), { profile });
+  const baseline = wikiMode ? baselineResult.score : baselineResult.cumulative;
   const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
   $("bisTitle").textContent = path.includes("questBoot") ? `Best boots for Build ${side}` : `Best item for Build ${side} · slot ${Number(path.split(".").at(-1)) + 1}`;
   $("bisSummary").textContent = `${state.attacker.champion} · ${profile.label} · ${state.targets.length} ${plural(state.targets.length, "enemy")}`;
   $("bisList").innerHTML = ranked.map((entry, index) => {
     const gain = baseline > 0 ? (entry.total / baseline - 1) * 100 : 0;
-    return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${itemImage(entry.item.id)}" alt="" /><div><strong>${escapeHtml(entry.item.name)}</strong><small>${escapeHtml(itemStatsLine(entry.item))}</small></div><p><strong>${fmt(entry.total)}</strong><span>TDD · ${gain >= 0 ? "+" : ""}${one(gain)}%</span></p><button type="button" data-bis-value="${entry.item.id}">Use</button></article>`;
+    const metric = wikiMode ? entry.result.metric : "TDD";
+    return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${itemImage(entry.item.id)}" alt="" /><div><strong>${escapeHtml(entry.item.name)}</strong><small>${escapeHtml(itemStatsLine(entry.item))}</small></div><p><strong>${fmt(entry.total)}</strong><span>${escapeHtml(metric)} · ${gain >= 0 ? "+" : ""}${one(gain)}%</span></p><button type="button" data-bis-value="${entry.item.id}">Use</button></article>`;
   }).join("") || `<p class="picker-empty">No valid completed items match this damage package.</p>`;
   $("bis").showModal();
 }
