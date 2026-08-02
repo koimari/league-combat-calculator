@@ -1,5 +1,6 @@
 """Patch-ingestion boundary tests for the vendored Wiki adapter."""
 
+import json
 from unittest.mock import Mock
 
 import requests
@@ -36,3 +37,34 @@ def test_non_404_ability_source_failure_still_fails_closed(monkeypatch):
         assert caught is error
     else:  # pragma: no cover - assertion branch
         raise AssertionError("non-404 source failure must remain fatal")
+
+
+def test_reparse_cached_rune_effects_recomputes_without_network(tmp_path):
+    """Parser improvements reach data/runes.json from cached descriptions."""
+    cached = {
+        "First Strike": {
+            "name": "First Strike",
+            "path": "Inspiration",
+            "slot": "Keystone",
+            "cooldown": None,
+            "icon": "http://x/fs.png",
+            "description": (
+                "grants {{g|10}} and ''First Strike'' for 3 seconds, causing "
+                "damage to deal {{as|7% '''bonus''' true damage}}. Afterwards "
+                "gold equal to {{rd|50%|35%}} of all bonus damage."
+            ),
+            "effects": {},
+        }
+    }
+    (tmp_path / "runes.json").write_text(json.dumps(cached), encoding="utf-8")
+
+    updated = data_updater.reparse_cached_rune_effects(tmp_path)
+
+    effects = updated["First Strike"]["effects"]
+    assert effects["bonus_true_damage_ratio"] == 0.07
+    assert effects["flat_gold"] == 10.0
+    assert effects["melee_ranged_ratios"] == [0.50, 0.35]
+    assert effects["buff_duration_seconds"] == 3.0
+    on_disk = json.loads((tmp_path / "runes.json").read_text(encoding="utf-8"))
+    assert on_disk["First Strike"]["effects"] == effects
+    assert on_disk["First Strike"]["icon"] == "http://x/fs.png"

@@ -32,6 +32,9 @@ def test_config_serves_keystone_roster_with_coverage():
     by_name = {entry["name"]: entry for entry in keystones}
     assert by_name["Electrocute"]["implemented"] is True
     assert by_name["Electrocute"]["path"] == "Domination"
+    assert by_name["First Strike"]["implemented"] is True
+    assert by_name["Press the Attack"]["implemented"] is True
+    assert by_name["Arcane Comet"]["implemented"] is True
     assert by_name["Dark Harvest"]["implemented"] is False
     assert all(entry["icon"] for entry in keystones)
     # Paths arrive grouped in wiki order for direct picker rendering.
@@ -54,6 +57,93 @@ def test_calculate_includes_electrocute_breakdown_row():
         without_keystone.get_json()["total_damage"] + row["total_damage"],
         rel=1e-6,
     )
+
+
+def test_calculate_includes_first_strike_breakdown_row():
+    client = app_module.app.test_client()
+    with_keystone = client.post(
+        "/api/calculate", json=_payload(keystone="First Strike")
+    )
+    without_keystone = client.post("/api/calculate", json=_payload())
+
+    assert with_keystone.status_code == 200
+    result = with_keystone.get_json()
+    baseline = without_keystone.get_json()
+    row = result["breakdown"].get("keystone_First Strike")
+    assert row is not None
+    assert row["name"] == "First Strike (keystone)"
+    assert row["total_damage"] > 0
+    assert result["total_damage"] == pytest.approx(
+        baseline["total_damage"] + row["total_damage"],
+        rel=1e-6,
+    )
+    # The bonus is true damage: it lands in the typed split, and the
+    # gold it generated reaches the user through the fight notes.
+    assert result["damage_by_type"]["true"] == pytest.approx(
+        baseline["damage_by_type"]["true"] + row["total_damage"],
+        rel=1e-3,
+    )
+    assert any("First Strike" in note and "gold" in note for note in result["notes"])
+
+
+def test_calculate_includes_press_the_attack_rows():
+    # Press the Attack stacks only on basic attacks, so the fight must
+    # simulate autos (the ability-only one-rotation default never procs).
+    fight = {
+        "fight_mode": "time_based",
+        "include_auto_attacks": True,
+        "fight_duration": 8.0,
+        "auto_attack_uptime": 1.0,
+    }
+    client = app_module.app.test_client()
+    with_keystone = client.post(
+        "/api/calculate", json=_payload(keystone="Press the Attack", **fight)
+    )
+    without_keystone = client.post("/api/calculate", json=_payload(**fight))
+
+    assert with_keystone.status_code == 200
+    result = with_keystone.get_json()
+    baseline = without_keystone.get_json()
+    proc_row = result["breakdown"].get("keystone_Press the Attack")
+    amp_row = result["breakdown"].get("keystone_Press the Attack amp")
+    assert proc_row is not None
+    assert proc_row["name"] == "Press the Attack (keystone)"
+    assert proc_row["total_damage"] > 0
+    assert amp_row is not None
+    assert amp_row["name"] == "Press the Attack amp (keystone)"
+    assert amp_row["total_damage"] > 0
+    assert result["total_damage"] == pytest.approx(
+        baseline["total_damage"] + proc_row["total_damage"] + amp_row["total_damage"],
+        rel=1e-6,
+    )
+    # The amp preserves each source's damage type — unlike First Strike,
+    # Press the Attack never converts anything to true damage. The
+    # tolerance only absorbs the route's 0.1 per-type rounding; the
+    # engine-level exclusion test carries the exact assertion.
+    assert result["damage_by_type"]["true"] == pytest.approx(
+        baseline["damage_by_type"]["true"], abs=0.11
+    )
+
+
+def test_calculate_includes_arcane_comet_breakdown_row():
+    client = app_module.app.test_client()
+    with_keystone = client.post(
+        "/api/calculate", json=_payload(keystone="Arcane Comet")
+    )
+    without_keystone = client.post("/api/calculate", json=_payload())
+
+    assert with_keystone.status_code == 200
+    result = with_keystone.get_json()
+    row = result["breakdown"].get("keystone_Arcane Comet")
+    assert row is not None
+    assert row["name"] == "Arcane Comet (keystone)"
+    assert row["total_damage"] > 0
+    assert result["total_damage"] == pytest.approx(
+        without_keystone.get_json()["total_damage"] + row["total_damage"],
+        rel=1e-6,
+    )
+    # The assumed flight distance reaches the user through the notes.
+    assert any("Arcane Comet" in note and "375" in note for note in result["notes"])
 
 
 @pytest.mark.parametrize(

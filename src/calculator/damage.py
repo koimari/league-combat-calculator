@@ -434,7 +434,7 @@ class FightState:
     crit_chance: float = 0.0
     crit_multiplier: float = BASE_CRIT_MULTIPLIER
     # ── Keystone rune (compiled proc; None when no keystone equipped) ─────
-    keystone_effect: "rune_effects.KeystoneProcEffect | None" = None
+    keystone_effect: "rune_effects.KeystoneEffect | None" = None
     # ── Fight timeline (built by the rotation, read by later steps) ───────
     # When stacking-DoT stacks land and which mid-fight buff windows they
     # open — the ONE home every stack-aware step reads (Case 4 and 5).
@@ -1241,8 +1241,16 @@ def _event_timeline_coverage(
     breakdown: dict[str, Any],
     ability_damages: dict[str, dict[str, Any]],
     cast_order: list[str],
+    *,
+    num_auto_attacks: int = 0,
 ) -> dict[str, Any]:
-    """Certify which active rows have authored or cast-boundary ordering."""
+    """Certify which active rows have authored or cast-boundary ordering.
+
+    This is the one definition of "certified": rows whose damage rides
+    the ambient auto stream (``requires_auto_timeline_coupling``) are
+    downgraded here — not by consumers — so the fight report and
+    window-sum effects can never disagree about the same source.
+    """
     exact: list[str] = []
     coarse: list[str] = []
     cast_keys = set(cast_order)
@@ -1281,7 +1289,7 @@ def _event_timeline_coverage(
             continue
         coarse.append(key)
     complete = not coarse
-    return {
+    coverage = {
         "complete": complete,
         "certification": (
             "event_order_certified" if complete else "partial_event_order"
@@ -1297,6 +1305,29 @@ def _event_timeline_coverage(
             )
         ),
     }
+    coupled_auto_sources = {
+        key
+        for key, info in ability_damages.items()
+        if info.get("requires_auto_timeline_coupling")
+        and num_auto_attacks > 0
+        and int(breakdown.get(key, {}).get("casts", 0)) > 0
+    }
+    if coupled_auto_sources:
+        coverage["complete"] = False
+        coverage["certification"] = "partial_event_order"
+        coverage["exact_sources"] = sorted(
+            set(coverage["exact_sources"]) - coupled_auto_sources
+        )
+        coverage["coarse_sources"] = sorted(
+            set(coverage["coarse_sources"]) | coupled_auto_sources
+        )
+        names = ", ".join(sorted(coupled_auto_sources))
+        coverage["note"] = (
+            f"{names} modifies attacks on the ambient auto stream; its bonus "
+            "damage is included, but per-hit auto coupling is not yet "
+            "event-order certified."
+        )
+    return coverage
 
 
 @dataclass
@@ -5125,67 +5156,56 @@ def _add_item_proc_damage(
         state.total_damage += ult_proc_mitigated
 
 
-def _keystone_instance_times(
-    state: FightState, rotation: RotationResult
-) -> list[float]:
-    """Chronological damage-instance times the keystone stack counter sees.
+def _damaging_cast_times(state: FightState, rotation: RotationResult) -> list[float]:
+    """Chronological cast times of accepted DAMAGING ability casts.
 
-    One instance per accepted DAMAGING ability cast (wiki: up to one stack
-    per cast instance; zero-damage casts like stat-buff ultimates must not
-    stack) plus one per simulated auto swing. Instances the engine cannot
+    Zero-damage casts (stat-buff ultimates) are excluded — they apply no
+    keystone stacks and hurl no comets. Instances the engine cannot
     timestamp or certify are not counted — item-effect applications,
-    forced basic attacks, recast instances beyond the first, and pure
-    crowd-control casts (CC application stacks in game, but the engine
-    carries no CC metadata). Omitting an instance can only delay a proc,
-    never invent one.
+    recast instances beyond the first, and pure crowd-control casts (CC
+    application stacks in game, but the engine carries no CC metadata).
+    Omitting an instance can only delay a proc, never invent one.
     """
     damaging_slots = {
         slot
         for slot, entry in state.ability_damages.items()
         if float(entry.get("total_raw", 0.0)) > 0
     }
-    times = [
+    return sorted(
         float(event["time"])
         for event in rotation.cast_events
         if event.get("slot") in damaging_slots
-    ]
+    )
+
+
+def _keystone_instance_times(
+    state: FightState, rotation: RotationResult
+) -> list[float]:
+    """Chronological damage-instance times the keystone stack counter sees.
+
+    One instance per accepted damaging ability cast (wiki: up to one
+    stack per cast instance) plus one per simulated auto swing.
+    """
+    times = _damaging_cast_times(state, rotation)
     times.extend(_auto_attack_timestamps(state))
     return sorted(times)
 
 
-def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
-    """Add keystone rune proc damage from the fight's real instance stream.
+def _record_keystone_proc_row(
+    state: FightState,
+    effect: (
+        "rune_effects.KeystoneProcEffect"
+        " | rune_effects.KeystoneProcAmpEffect"
+        " | rune_effects.KeystoneAbilityProcEffect"
+    ),
+    proc_times: list[float],
+) -> None:
+    """Price one keystone's proc damage and record its breakdown row.
 
-    Walks the timestamped instances with the keystone's sourced stack
-    window: a stack expires ``stack_window_seconds`` after it was applied,
-    so reaching ``stacks_required`` live stacks means that many instances
-    landed within one window. Procs start the cooldown, clear the stacks,
-    and suppress new stacks until the keystone is ready again (runes do
-    not stack while on cooldown). Each proc is priced once and recorded
-    as a timestamped damage event for the ledger and timeline consumers.
+    Every proc-class keystone row looks alike — leveled adaptive damage
+    priced once, mitigated, one timestamped event per proc — so the
+    shape lives here, shared by every stack-walking keystone.
     """
-    effect = state.keystone_effect
-    if effect is None:
-        return
-    proc_times: list[float] = []
-    live_stacks: list[float] = []
-    ready_at = 0.0
-    for instance_time in _keystone_instance_times(state, rotation):
-        if instance_time < ready_at:
-            continue
-        live_stacks = [
-            applied
-            for applied in live_stacks
-            if instance_time - applied < effect.stack_window_seconds
-        ]
-        live_stacks.append(instance_time)
-        if len(live_stacks) >= effect.stacks_required:
-            proc_times.append(instance_time + effect.proc_delay_seconds)
-            ready_at = instance_time + effect.cooldown_seconds
-            live_stacks = []
-    if not proc_times:
-        return
-
     raw_per_proc = effect.raw_damage(_damage_inputs(state))
     damage_type = effect.damage_type(state.champion_stats)
     mitigated_per_proc = _mitigate(
@@ -5208,6 +5228,295 @@ def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
         ],
     }
     state.total_damage += total
+
+
+def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
+    """Add keystone rune proc damage from the fight's real instance stream.
+
+    Walks the timestamped instances with the keystone's sourced stack
+    window: a stack expires ``stack_window_seconds`` after it was applied,
+    so reaching ``stacks_required`` live stacks means that many instances
+    landed within one window. Procs start the cooldown, clear the stacks,
+    and suppress new stacks until the keystone is ready again (runes do
+    not stack while on cooldown). Each proc is priced once and recorded
+    as a timestamped damage event for the ledger and timeline consumers.
+    """
+    effect = state.keystone_effect
+    if not isinstance(effect, rune_effects.KeystoneProcEffect):
+        return
+    proc_times: list[float] = []
+    live_stacks: list[float] = []
+    ready_at = 0.0
+    for instance_time in _keystone_instance_times(state, rotation):
+        if instance_time < ready_at:
+            continue
+        live_stacks = [
+            applied
+            for applied in live_stacks
+            if instance_time - applied < effect.stack_window_seconds
+        ]
+        live_stacks.append(instance_time)
+        if len(live_stacks) >= effect.stacks_required:
+            proc_times.append(instance_time + effect.proc_delay_seconds)
+            ready_at = instance_time + effect.cooldown_seconds
+            live_stacks = []
+    if not proc_times:
+        return
+    _record_keystone_proc_row(state, effect, proc_times)
+
+
+def _add_keystone_ability_proc_damage(
+    state: FightState, rotation: RotationResult
+) -> None:
+    """Add ability-cast keystone proc damage (Arcane Comet-class).
+
+    Every accepted damaging ability cast hurls the proc when the rune is
+    off its leveled cooldown; the damage event lands after the sourced
+    flight delay. Basic attacks never trigger this class, and the
+    engine's DoT ticks are not cast instances — damage over time neither
+    triggers nor extends anything here (unlike the Liandry's burn
+    family). Each proc is priced at the compiled assumed travel distance
+    and assumed to land; both assumptions are disclosed in the notes.
+    """
+    effect = state.keystone_effect
+    if not isinstance(effect, rune_effects.KeystoneAbilityProcEffect):
+        return
+    cooldown = effect.cooldown_at(state.level)
+    proc_times: list[float] = []
+    ready_at = 0.0
+    for cast_time in _damaging_cast_times(state, rotation):
+        if cast_time < ready_at:
+            continue
+        proc_times.append(cast_time + effect.proc_delay_seconds)
+        ready_at = cast_time + cooldown
+    if not proc_times:
+        # A selected keystone that never fires must say so — only
+        # damaging ability casts trigger it, so autos-only fights get zero.
+        state.notes.append(
+            f"{effect.keystone_name} never procced: the simulated fight "
+            "cast no damaging abilities."
+        )
+        return
+    _record_keystone_proc_row(state, effect, proc_times)
+    state.notes.append(
+        f"{effect.keystone_name} assumes every comet lands after a "
+        f"{effect.assumed_travel_distance:g}-unit flight "
+        f"(+{effect.distance_amp_ratio * 100:.0f}% distance damage), never dodged."
+    )
+
+
+def _certified_ledger(
+    state: FightState, rotation: RotationResult
+) -> tuple[list[dict[str, Any]], set[str], list[str]]:
+    """The ordered damage events plus the certified/coarse source split.
+
+    Window and lasting-amp keystones must agree with the fight report
+    about which sources carry certified event times; both read this one
+    helper so ``_event_timeline_coverage``'s definition of "certified"
+    stays structural rather than by convention.
+    """
+    events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
+    coverage = _event_timeline_coverage(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        num_auto_attacks=state.num_auto_attacks,
+    )
+    return events, set(coverage["exact_sources"]), coverage["coarse_sources"]
+
+
+def _add_keystone_window_amp_damage(
+    state: FightState, rotation: RotationResult
+) -> None:
+    """Add opening-window keystone bonus damage (First Strike-class).
+
+    The buff activates once at combat start — a continuous fight never
+    re-enters combat, so the rune's out-of-combat cooldown is moot. Its
+    bonus is a sourced ratio of the post-mitigation damage dealt inside
+    the opening window, read from the ordered damage ledger, and lands
+    as true damage. The gold it generates (flat activation gold plus the
+    melee/ranged share of the bonus) is reported on the breakdown row
+    and in the fight notes; gold is not damage and never joins the total.
+
+    Runs after every damage row exists and before fight-wide amplifiers:
+    amp rows carry no event times, so the window is summed pre-amp — a
+    conservative understatement whenever an amplifier is active.
+    """
+    effect = state.keystone_effect
+    if not isinstance(effect, rune_effects.KeystoneWindowAmpEffect):
+        return
+    # Only sources with certified event times can be placed inside the
+    # window. Coarse-timed rows (DoTs whose totals resolve past their
+    # cast, item effects without authored events, auto-coupled casts)
+    # are excluded and disclosed — omitting a source can only understate
+    # the bonus, never overstate it.
+    events, certified, coarse_sources = _certified_ledger(state, rotation)
+    contributing = [
+        event
+        for event in events
+        if event["source_key"] in certified and event["time"] < effect.window_seconds
+    ]
+    window_damage = sum(event["damage"] for event in contributing)
+
+    bonus = effect.bonus_damage_ratio * window_damage
+    gold = effect.activation_gold + effect.gold_conversion(state.is_melee) * bonus
+    if window_damage > 0:
+        auto_stream_damage = sum(
+            event["damage"]
+            for event in contributing
+            if _is_auto_stream_key(event["source_key"])
+        )
+        state.breakdown[effect.breakdown_key] = {
+            "name": effect.display_name,
+            "total_damage": bonus,
+            "damage_type": "true",
+            "count": 1,
+            "event_phase": "effect",
+            "gold_generated": gold,
+            "auto_attack_fraction": auto_stream_damage / window_damage,
+            "damage_events": [
+                {
+                    "time": event["time"],
+                    "damage": effect.bonus_damage_ratio * event["damage"],
+                    "damage_type": "true",
+                }
+                for event in contributing
+            ],
+        }
+        state.total_damage += bonus
+    # The activation itself (and its flat gold) does not depend on any
+    # window damage being certified — the notes always surface.
+    state.notes.append(
+        f"{effect.keystone_name} assumes you initiate combat; it generated "
+        f"{gold:.0f} gold ({effect.activation_gold:.0f} on activation plus "
+        f"{effect.gold_conversion(state.is_melee) * 100:.0f}% of "
+        f"{bonus:.0f} bonus true damage)."
+    )
+    if coarse_sources:
+        state.notes.append(
+            f"{effect.keystone_name} window excludes sources without "
+            f"certified event times ({', '.join(sorted(coarse_sources))}); "
+            "its bonus is a floor, not an estimate."
+        )
+
+
+def _refreshing_stack_proc_times(
+    state: FightState, effect: "rune_effects.KeystoneProcAmpEffect"
+) -> tuple[list[float], bool]:
+    """Walk the simulated auto swings with a refreshing stack rule.
+
+    Only basic attacks stack this keystone class — ability casts never
+    do. Every application refreshes all stacks, so the count survives
+    while consecutive swings land within ``stack_duration_seconds`` of
+    each other. Reaching the required stacks procs on that swing and
+    clears them. Stacks are assumed not to build during the per-target
+    cooldown — the wiki does not document this either way, and the
+    assumption can only delay a proc, never invent one. Returns the
+    proc times plus whether that assumption gated any swing, so the
+    caller can disclose it.
+    """
+    proc_times: list[float] = []
+    stacks = 0
+    last_stack_time = float("-inf")
+    ready_at = 0.0
+    cooldown_gated = False
+    for swing_time in _auto_attack_timestamps(state):
+        if swing_time < ready_at:
+            cooldown_gated = True
+            continue
+        if swing_time - last_stack_time >= effect.stack_duration_seconds:
+            stacks = 0
+        stacks += 1
+        last_stack_time = swing_time
+        if stacks >= effect.stacks_required:
+            proc_times.append(swing_time)
+            ready_at = swing_time + effect.cooldown_seconds
+            stacks = 0
+    return proc_times, cooldown_gated
+
+
+def _add_keystone_proc_amp_damage(state: FightState, rotation: RotationResult) -> None:
+    """Add Press the Attack-class proc damage and its lasting amplifier.
+
+    The stacked proc prices leveled adaptive damage per proc, exactly
+    like an Electrocute-class row. From the first proc onward the buff
+    amplifies every certified non-true damage event by the sourced
+    ratio until combat ends — a continuous fight never drops it. The
+    triggering swing and the first proc itself predate the buff, so
+    only events strictly after the first proc time are amplified;
+    coarse-timed sources are excluded and disclosed, keeping the amp a
+    floor, never an estimate.
+    """
+    effect = state.keystone_effect
+    if not isinstance(effect, rune_effects.KeystoneProcAmpEffect):
+        return
+    proc_times, cooldown_gated = _refreshing_stack_proc_times(state, effect)
+    if not proc_times:
+        # A selected keystone that never fires must say so — only basic
+        # attacks stack it, so ability-only or slow-swing fights get zero.
+        state.notes.append(
+            f"{effect.keystone_name} never procced: the simulated fight "
+            f"never landed {effect.stacks_required} basic attacks within "
+            f"its {effect.stack_duration_seconds:g}s stack duration."
+        )
+        return
+    _record_keystone_proc_row(state, effect, proc_times)
+    if cooldown_gated:
+        state.notes.append(
+            f"{effect.keystone_name} stacks are assumed not to build during "
+            f"its {effect.cooldown_seconds:g}s per-target cooldown (the wiki "
+            "does not document this); re-procs may land late, so the proc "
+            "count is a floor."
+        )
+
+    # The amp reads the ledger after the proc row exists, so later procs
+    # (adaptive, never true damage) are amplified while the first — which
+    # lands the same instant the buff turns on — is excluded by the
+    # strictly-after cut, matching the wiki's triggering-attack rule.
+    amp_start = proc_times[0]
+    events, certified, coarse_sources = _certified_ledger(state, rotation)
+    amplified = [
+        event
+        for event in events
+        if event["source_key"] in certified
+        and event["time"] > amp_start
+        and event["damage_type"] != "true"
+    ]
+    if amplified:
+        amp_by_type: dict[str, float] = {}
+        for event in amplified:
+            bonus = effect.damage_amp_ratio * event["damage"]
+            amp_by_type[event["damage_type"]] = (
+                amp_by_type.get(event["damage_type"], 0.0) + bonus
+            )
+        amp_total = sum(amp_by_type.values())
+        state.breakdown[effect.amp_breakdown_key] = {
+            "name": effect.amp_display_name,
+            "total_damage": amp_total,
+            "damage_by_type": amp_by_type,
+            "count": 1,
+            "event_phase": "effect",
+            "damage_events": [
+                {
+                    "time": event["time"],
+                    "damage": effect.damage_amp_ratio * event["damage"],
+                    "damage_type": event["damage_type"],
+                }
+                for event in amplified
+            ],
+        }
+        state.total_damage += amp_total
+    if coarse_sources:
+        state.notes.append(
+            f"{effect.keystone_name} amp excludes sources without "
+            f"certified event times ({', '.join(sorted(coarse_sources))}); "
+            "its bonus is a floor, not an estimate."
+        )
 
 
 def _add_item_active_damage(state: FightState) -> None:
@@ -5796,6 +6105,9 @@ def calculate_fight_damage(
     # ── Keystone rune proc (Electrocute-class stack triggers) ───────────
     _add_keystone_damage(state, rotation)
 
+    # ── Keystone ability-cast proc (Arcane Comet-class) ─────────────────
+    _add_keystone_ability_proc_damage(state, rotation)
+
     # ── Active item damage ──────────────────────────────────────────────
     _add_item_active_damage(state)
 
@@ -5803,6 +6115,12 @@ def calculate_fight_damage(
     _add_single_proc_on_hits(state, rotation, autos, on_hits, spellblade)
     _add_shadowflame_cinderbloom(state, config, rotation)
     _add_expose_weakness(state, autos, spellblade)
+
+    # ── Keystone opening-window bonus (First Strike-class) ──────────────
+    _add_keystone_window_amp_damage(state, rotation)
+
+    # ── Keystone stacked proc plus lasting amp (Press the Attack-class) ─
+    _add_keystone_proc_amp_damage(state, rotation)
 
     # ── Fight-wide damage amplifiers ────────────────────────────────────
     _apply_damage_amplifiers(state, rotation)
@@ -5818,30 +6136,11 @@ def calculate_fight_damage(
 
     shield_outcome = _resolve_starting_shield_outcome(state, config, rotation)
     timeline_coverage = _event_timeline_coverage(
-        state.breakdown, state.ability_damages, state.cast_order
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        num_auto_attacks=state.num_auto_attacks,
     )
-    coupled_auto_sources = {
-        key
-        for key, info in state.ability_damages.items()
-        if info.get("requires_auto_timeline_coupling")
-        and state.num_auto_attacks > 0
-        and int(state.breakdown.get(key, {}).get("casts", 0)) > 0
-    }
-    if coupled_auto_sources:
-        timeline_coverage["complete"] = False
-        timeline_coverage["certification"] = "partial_event_order"
-        timeline_coverage["exact_sources"] = sorted(
-            set(timeline_coverage["exact_sources"]) - coupled_auto_sources
-        )
-        timeline_coverage["coarse_sources"] = sorted(
-            set(timeline_coverage["coarse_sources"]) | coupled_auto_sources
-        )
-        names = ", ".join(sorted(coupled_auto_sources))
-        timeline_coverage["note"] = (
-            f"{names} modifies attacks on the ambient auto stream; its bonus "
-            "damage is included, but per-hit auto coupling is not yet "
-            "event-order certified."
-        )
     if (
         shield_outcome["threshold_health_triggered"]
         and config.target_threshold_health_heal > 0
@@ -5983,6 +6282,20 @@ def _resolve_starting_shield_outcome(
     }
 
 
+def _is_auto_stream_key(key: str) -> bool:
+    """Whether a breakdown key belongs to the auto-attack damage stream.
+
+    The stream itself plus champion riders on it (e.g. Corki's
+    true-damage instance) share the ``auto_attacks`` prefix; on-hit,
+    spellblade, and Fiendhunter rows ride the swings too.
+    """
+    return (
+        key.startswith("auto_attacks")
+        or key == "fiendhunter_true_damage"
+        or key.startswith(("on_hit_", "spellblade_"))
+    )
+
+
 def split_auto_vs_ability(
     breakdown: dict[str, dict[str, Any]],
 ) -> tuple[float, float]:
@@ -5994,10 +6307,10 @@ def split_auto_vs_ability(
       zero or already counted in other rows (the engine marks its amp
       summaries, the execute-threshold row, and the Sundered Sky row
       this way) — so they are skipped.
-    - keys prefixed ``auto_attacks`` (the stream itself plus champion
-      riders on it, e.g. Corki's true-damage instance),
-      ``fiendhunter_true_damage``, ``on_hit_``, or ``spellblade_`` count
-      as auto-attack damage.
+    - Rows that declare ``auto_attack_fraction`` know their own
+      composition (First Strike's window bonus spans both streams) and
+      are split by it.
+    - ``_is_auto_stream_key`` rows count as auto-attack damage.
     - ``damage_amp_<source>`` rows amplify both buckets, so their damage
       is redistributed proportionally to the pre-amp auto/ability ratio
       (dropped entirely if that total is zero).
@@ -6007,17 +6320,15 @@ def split_auto_vs_ability(
     ability_damage = 0.0
     redistributed_damage = 0.0  # damage_amp_<source> rows
 
-    on_hit_prefixes = ("on_hit_", "spellblade_")
-
     for key, entry in breakdown.items():
         dmg = entry.get("total_damage", 0.0)
         if entry.get("informational"):
             continue
-        if (
-            key.startswith("auto_attacks")
-            or key == "fiendhunter_true_damage"
-            or key.startswith(on_hit_prefixes)
-        ):
+        if "auto_attack_fraction" in entry:
+            fraction = float(entry["auto_attack_fraction"])
+            auto_attack_damage += dmg * fraction
+            ability_damage += dmg * (1.0 - fraction)
+        elif _is_auto_stream_key(key):
             auto_attack_damage += dmg
         elif key.startswith("damage_amp_"):
             # Amplifiers scale both buckets — redistribute proportionally

@@ -95,8 +95,8 @@ from lolstaticdata.champions.pull_champions_dragons import get_ability_url
 from lolstaticdata.champions.__main__ import get_ability_filenames
 from lolstaticdata.items.__main__ import main as run_items_generator
 
-from .data_fetcher import DEFAULT_DATA_DIR, _write_cache
-from .rune_parser import rune_payload
+from .data_fetcher import DEFAULT_DATA_DIR, _read_cache, _write_cache
+from .rune_parser import parse_effects, rune_payload
 
 # Only one update can run at a time
 _update_lock = threading.Lock()
@@ -404,6 +404,30 @@ def update_rune_data() -> dict[str, Any]:
             runes = stop.value or {}
             break
     _write_cache(DEFAULT_DATA_DIR, "runes.json", runes)
+    return runes
+
+
+def reparse_cached_rune_effects(data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
+    """Recompute every cached rune's effects from its stored description.
+
+    ``data/runes.json`` keeps each rune's verbatim template text, so a
+    parser improvement can reach the cache deterministically and offline —
+    no wiki pull, no unrelated patch-day diffs. Entries without a
+    description (failed downloads) are left untouched.
+    """
+    runes = {
+        name: dict(entry) for name, entry in _read_cache(data_dir, "runes.json").items()
+    }
+    for entry in runes.values():
+        description = entry.get("description")
+        if not description:
+            continue
+        effects, warnings = parse_effects(description)
+        entry["effects"] = effects
+        entry.pop("parse_warnings", None)
+        if warnings:
+            entry["parse_warnings"] = warnings
+    _write_cache(data_dir, "runes.json", runes)
     return runes
 
 
