@@ -161,6 +161,7 @@ def _simulate_survival(
         }
 
     actions: list[tuple[float, int, str, dict[str, Any]]] = []
+    damage_event_status: dict[str, str] = {}
     for participant_id, events in support_effects.items():
         for event in events:
             # A sourced ally shield is a pre-damage barrier.  A sourced heal
@@ -185,6 +186,13 @@ def _simulate_survival(
 
     for event_time, phase, participant_id, event in actions:
         state = states[participant_id]
+        trigger_id = event.get("_trigger_event_id")
+        if phase == 1 and trigger_id is not None:
+            # A heal whose damage event was skipped because its target was
+            # already dead must not survive as an unconnected recovery tick.
+            if damage_event_status.get(str(trigger_id)) != "applied":
+                event["skipped_reason"] = "trigger_event_skipped"
+                continue
         if state["death_time"] is not None:
             # Preserve the scheduled source in the receipt, but do not let
             # a dead target contribute post-death damage to TTD/BIS.
@@ -223,6 +231,9 @@ def _simulate_survival(
             continue
 
         amount = max(0.0, float(event.get("damage", 0.0)))
+        event_id = event.get("_event_id")
+        if event_id is not None:
+            damage_event_status[str(event_id)] = "applied"
         original_amount = amount
         raw_formula = event.get("raw_formula")
         raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
@@ -378,15 +389,42 @@ def build_participant_timeline(
                         "attacker": attacker.participant_id,
                         "target": defender.participant_id,
                     }
+                    event_index = len(outgoing[attacker.participant_id])
+                    enriched["_event_id"] = (
+                        f"{attacker.participant_id}:{defender.participant_id}:{event_index}"
+                    )
                     outgoing[attacker.participant_id].append(enriched)
                     incoming[defender.participant_id].append(enriched)
+                event_ids_by_key = {
+                    (
+                        str(event.get("source_key", "")),
+                        round(float(event.get("time", 0.0)), 9),
+                        int(event.get("sequence", 0) or 0),
+                    ): event.get("_event_id")
+                    for event in outgoing[attacker.participant_id]
+                    if event.get("target") == defender.participant_id
+                }
                 for event in result.get("self_healing_events", []):
-                    healing[attacker.participant_id].append(
-                        {
-                            **event,
-                            "attacker": attacker.participant_id,
-                        }
+                    enriched_heal = {**event, "attacker": attacker.participant_id}
+                    trigger_key = (
+                        str(event.get("_trigger_source", "")),
+                        round(float(event.get("_trigger_time", 0.0)), 9),
+                        int(event.get("_trigger_sequence", 0) or 0),
                     )
+                    trigger_id = event_ids_by_key.get(trigger_key)
+                    if trigger_id is not None:
+                        enriched_heal["_trigger_event_id"] = trigger_id
+                    if event.get("actor_wide"):
+                        duplicate = any(
+                            existing.get("actor_wide")
+                            and existing.get("source") == event.get("source")
+                            and float(existing.get("time", 0.0))
+                            == float(event.get("time", 0.0))
+                            for existing in healing[attacker.participant_id]
+                        )
+                        if duplicate:
+                            continue
+                    healing[attacker.participant_id].append(enriched_heal)
                 if attacker.participant_id not in support_attached:
                     effects_enabled = (
                         attacker.team != "ally"
@@ -531,6 +569,11 @@ def build_participant_timeline(
                 "attacker": event.get("attacker"),
                 "source": event.get("source", ""),
                 "amount": round(float(event.get("amount", 0.0)), 1),
+                **(
+                    {"skipped_reason": str(event["skipped_reason"])}
+                    if event.get("skipped_reason")
+                    else {}
+                ),
             }
             for events in healing.values()
             for event in events

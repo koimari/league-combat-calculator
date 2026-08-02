@@ -9,7 +9,10 @@ ledger for the participant simulator.
 from __future__ import annotations
 
 import re
+import math
 from typing import Any, Iterable
+
+from .champions.slotlib import extract_named
 
 
 def _leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float:
@@ -58,11 +61,52 @@ def _attributed_events(
     return [event for event in events if predicate(_event_source(event), event)]
 
 
+def _rank(ability_damages: dict[str, dict[str, Any]], slot: str) -> int:
+    """Use the parser's sourced rank; omitted ranks are already level-derived."""
+    try:
+        return max(0, int(ability_damages.get(slot, {}).get("rank", 0) or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _trigger_fields(event: dict[str, Any]) -> dict[str, Any]:
+    """Carry a stable internal receipt for the damage that caused a heal."""
+    fields: dict[str, Any] = {
+        "_trigger_source": _event_source(event),
+        "_trigger_time": float(event.get("time", 0.0)),
+    }
+    if event.get("sequence") is not None:
+        fields["_trigger_sequence"] = int(event["sequence"])
+    return fields
+
+
+def _heal_from_damage(
+    healing: list[dict[str, Any]],
+    event: dict[str, Any],
+    amount: float,
+    source: str,
+) -> None:
+    amount = max(0.0, float(amount))
+    if amount <= 0.0 or float(event.get("damage", 0.0)) <= 0.0:
+        return
+    healing.append(
+        {
+            "time": float(event.get("time", 0.0)),
+            "amount": amount,
+            "source": source,
+            "kind": "champion_ability",
+            **_trigger_fields(event),
+        }
+    )
+
+
 def derive_self_healing(
     champion_data: dict[str, Any],
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
     damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
 ) -> list[dict[str, Any]]:
     """Return sourced self-heal events in the engine's event order.
 
@@ -107,6 +151,7 @@ def derive_self_healing(
                         "amount": amount,
                         "source": "Deathbringer Stance",
                         "kind": "champion_passive",
+                        **_trigger_fields(event),
                     }
                 )
 
@@ -124,6 +169,7 @@ def derive_self_healing(
                         "amount": amount,
                         "source": "Umbral Dash",
                         "kind": "champion_passive",
+                        **_trigger_fields(event),
                     }
                 )
 
@@ -144,6 +190,114 @@ def derive_self_healing(
                             "amount": amount,
                             "source": "Public Execution",
                             "kind": "champion_passive",
+                            **_trigger_fields(event),
+                        }
+                    )
+
+    # The following packets are deliberately formula-only.  They do not use
+    # a class/archetype multiplier and are emitted only when the triggering
+    # ability event exists in the ordered damage ledger.
+    elif name == "Warwick":
+        q = _ability(champion_data, "Q")
+        q_rank = _rank(ability_damages, "Q")
+        q_ratio = extract_named(q, "Healing Percentage", q_rank, champion_stats, {})
+        for event in damage_events:
+            source = _event_source(event)
+            if source == "Q":
+                _heal_from_damage(healing, event, float(event.get("damage", 0.0)) * q_ratio / 100.0, "Jaws of the Beast")
+            elif source == "R":
+                # Infinite Duress explicitly heals for 100% of all
+                # post-mitigation damage dealt to its target.
+                _heal_from_damage(healing, event, float(event.get("damage", 0.0)), "Infinite Duress")
+
+    elif name == "Dr. Mundo":
+        # Maximum Dosage is an actor-wide regeneration stream, independent of
+        # which enemy pair produced the current damage result.  The timeline
+        # layer deduplicates this receipt across multiple defenders.
+        r = _ability(champion_data, "R")
+        r_rank = _rank(ability_damages, "R")
+        per_tick = extract_named(
+            r, "Health Regenerated per 0.5 Seconds", r_rank, champion_stats, {}
+        )
+        duration = max(0.0, float(fight_duration_seconds or 0.0))
+        if per_tick > 0.0 and duration > 0.0:
+            for cast in cast_timeline or []:
+                if cast.get("slot") != "R":
+                    continue
+                start = float(cast.get("time", 0.0)) + 0.5
+                end = min(duration, start - 0.5 + 10.0)
+                tick = start
+                while tick <= end + 1e-9:
+                    healing.append(
+                        {
+                            "time": tick,
+                            "amount": float(per_tick),
+                            "source": "Maximum Dosage",
+                            "kind": "champion_ability",
+                            "actor_wide": True,
+                        }
+                    )
+                    tick += 0.5
+
+    elif name == "Irelia":
+        ability = _ability(champion_data, "Q")
+        rank = _rank(ability_damages, "Q")
+        amount = extract_named(ability, "Heal", rank, champion_stats, {})
+        for event in damage_events:
+            if _event_source(event) == "Q":
+                _heal_from_damage(healing, event, amount, "Bladesurge")
+
+    elif name == "Renekton":
+        ability = _ability(champion_data, "Q")
+        rank = _rank(ability_damages, "Q")
+        amount = extract_named(ability, "Champion Healing", rank, champion_stats, {})
+        for event in damage_events:
+            if _event_source(event) == "Q":
+                _heal_from_damage(healing, event, amount, "Cull the Meek")
+
+    elif name == "Soraka":
+        ability = _ability(champion_data, "Q")
+        rank = _rank(ability_damages, "Q")
+        per_tick = extract_named(ability, "Heal per Tick", rank, champion_stats, {})
+        total = extract_named(ability, "Total Heal", rank, champion_stats, {})
+        tick_count = (
+            max(1, min(100, int(round(total / per_tick))))
+            if per_tick > 0.0 and total > 0.0
+            else 0
+        )
+        for event in damage_events:
+            if _event_source(event) != "Q" or tick_count <= 0:
+                continue
+            trigger = _trigger_fields(event)
+            for index in range(1, tick_count + 1):
+                healing.append(
+                    {
+                        "time": float(event.get("time", 0.0)) + index * 0.2,
+                        "amount": float(per_tick),
+                        "source": "Starcall · Rejuvenation",
+                        "kind": "champion_ability",
+                        **trigger,
+                    }
+                )
+
+    elif name == "Briar":
+        ability = _ability(champion_data, "E")
+        rank = _rank(ability_damages, "E")
+        per_tick = extract_named(ability, "Heal Per Tick", rank, champion_stats, {})
+        maximum = extract_named(ability, "Maximum Heal", rank, champion_stats, {})
+        if per_tick > 0.0 and maximum > 0.0:
+            for event in damage_events:
+                if _event_source(event) != "E":
+                    continue
+                ticks = max(1, min(4, int(math.ceil(maximum / per_tick))))
+                for index in range(1, ticks + 1):
+                    healing.append(
+                        {
+                            "time": float(event.get("time", 0.0)) + index * 0.25,
+                            "amount": min(float(per_tick), max(0.0, maximum - per_tick * (index - 1))),
+                            "source": "Chilling Scream",
+                            "kind": "champion_ability",
+                            **_trigger_fields(event),
                         }
                     )
 

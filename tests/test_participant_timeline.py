@@ -42,6 +42,44 @@ def test_ambessa_self_healing_uses_public_execution_formula():
     )
 
 
+def test_warwick_and_irelia_use_explicit_wiki_heal_attributes():
+    for champion, source in (("Warwick", "Jaws of the Beast"), ("Irelia", "Bladesurge")):
+        result = run_fight(get_champion(champion), 18, [], _timed_params())
+        assert result["self_healing"] > 0
+        assert any(event["source"] == source for event in result["self_healing_events"])
+
+
+def test_mundo_regeneration_is_actor_wide_and_deduplicated_in_a_roster():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Dr. Mundo",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 5,
+            "include_auto_attacks": False,
+            "enemies": [
+                {"champion": "Aphelios", "level": 18, "items": []},
+                {"champion": "Ambessa", "level": 18, "items": []},
+            ],
+        },
+    )
+    assert response.status_code == 200
+    healing = [
+        event
+        for event in response.get_json()["combat"]["healing_events"]
+        if event["source"] == "Maximum Dosage"
+    ]
+    # R is cast at 0.25s; the sourced 0.5s cadence yields nine ticks in a
+    # five-second window, regardless of the number of enemy pairs.
+    assert len(healing) == 9
+    assert [event["time"] for event in healing] == [
+        round(0.75 + index * 0.5, 3) for index in range(9)
+    ]
+
+
 def test_fight_result_promotes_the_same_ordered_damage_ledger_used_by_shields():
     result = run_fight(get_champion("Aatrox"), 18, [], _timed_params())
 

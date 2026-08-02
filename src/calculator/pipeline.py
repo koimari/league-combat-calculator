@@ -348,6 +348,8 @@ def run_fight(
         fight_stats,
         ability_damages,
         list(result.get("damage_events", [])),
+        list(result.get("cast_timeline", [])),
+        params.fight_duration_seconds,
     )
     result["self_healing"] = sum(
         float(event.get("amount", 0.0))
