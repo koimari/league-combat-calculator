@@ -21,6 +21,7 @@ from .loadout_rules import (
     conflicts_with_groups,
     exclusivity_groups,
     occupied_groups,
+    role_scoped_shop_items,
     validate_resolved_loadout,
 )
 from .pipeline import FightParams, run_fight
@@ -595,7 +596,14 @@ def optimize_build(
     # represented by the fight model.
     legal_legendaries = get_eligible_legendaries()
     legal_boots = get_eligible_boots(tier=boots_tier)
-    all_legendaries = optimizer_supported_items(legal_legendaries)
+    base_params = fight_params[0] if isinstance(fight_params, tuple) else fight_params
+    # The main champion uses the same sourced role-shop boundary already used
+    # by roster BIS.  Previously only /api/bis applied this filter, allowing a
+    # top-lane main search to rank support-only items such as Shurelya's
+    # Battlesong.  No archetype or stat heuristic is added here.
+    all_legendaries = role_scoped_shop_items(
+        optimizer_supported_items(legal_legendaries), base_params.role
+    )
     all_boots = optimizer_supported_items(legal_boots)
 
     # Resolve locked items
@@ -854,6 +862,8 @@ def optimize_build(
             }
         )
 
+    # Keep the receipt over every legal item packet, including role-filtered
+    # entries, so coverage never claims the unsearched shop scope is complete.
     coverage_candidates = list(legal_legendaries)
     if not boots_locked:
         coverage_candidates.extend(legal_boots)

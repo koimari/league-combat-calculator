@@ -95,6 +95,35 @@ def required_boots_tier(role: str, role_quest_complete: bool) -> int:
     return 3 if parsed_role == "mid" and role_quest_complete else 2
 
 
+def role_scoped_shop_items(
+    items: Iterable[dict[str, Any]], role: str
+) -> list[dict[str, Any]]:
+    """Return completed items in the selected role's sourced shop scope.
+
+    Role tags are an item-shop legality boundary for the optimizer.  They are
+    deliberately not a champion archetype or stat heuristic: the remaining
+    candidates are still evaluated with the champion-specific event model.
+    An omitted role keeps the historical, unrestricted engine contract.
+    """
+    parsed_role = validate_role(role)
+    candidates = list(items)
+    if parsed_role == "support":
+        return [
+            item
+            for item in candidates
+            if "SUPPORT"
+            in {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
+        ]
+    if parsed_role in {"top", "jungle", "mid", "bottom"}:
+        return [
+            item
+            for item in candidates
+            if "SUPPORT"
+            not in {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
+        ]
+    return candidates
+
+
 def validate_resolved_loadout(
     ordinary_items: Iterable[dict[str, Any]],
     *,
