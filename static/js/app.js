@@ -2001,18 +2001,25 @@ async function openBackendBis(path) {
     });
     const result = await response.json();
     if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
-    const rows = result.candidates || [];
+    const certifiedRows = result.candidates || [];
+    const partialRows = result.partial_candidates || [];
+    const rows = certifiedRows.length ? certifiedRows : partialRows;
+    const showingPartialPreview = certifiedRows.length === 0 && partialRows.length > 0;
     const coverage = result.coverage?.complete
       ? "complete sourced coverage"
-      : "BIS withheld until event order is complete";
+      : showingPartialPreview
+        ? "BIS withheld · partial event-order preview"
+        : "BIS withheld until event order is complete";
     const candidateScope = result.candidate_scope?.startsWith("role-tagged:")
       ? `${result.candidate_scope.slice("role-tagged:".length)} role-compatible`
       : "all supported";
-    $("bisSummary").textContent = `${subject.champion} · ${rows.length} of ${result.candidate_count || rows.length} ${candidateScope} candidates · ${coverage}`;
+    $("bisSummary").textContent = `${subject.champion} · ${certifiedRows.length} certified of ${result.candidate_count || rows.length} ${candidateScope} candidates · ${coverage}`;
     $("bisList").innerHTML = rows.map((entry, index) => {
       const item = DATA.items.find((candidate) => candidate.name === entry.name);
       const detail = `${item ? itemStatsLine(item) : "Sourced item stats"} · ${bisComponentLine(entry.components)}`;
-      return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.score)}</strong><span>${escapeHtml(bisMetricLabel(entry.metric))}</span></p><button type="button" data-bis-value="${item ? item.id : ""}" ${item ? "" : "disabled"}>Use</button></article>`;
+      const partialClass = showingPartialPreview ? " partial" : "";
+      const partialLabel = showingPartialPreview ? " · partial event order" : "";
+      return `<article class="bis-row${partialClass}"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(detail)}${escapeHtml(partialLabel)}</small></div><p><strong>${fmt(entry.score)}</strong><span>${escapeHtml(bisMetricLabel(entry.metric))}</span></p><button type="button" data-bis-value="${item ? item.id : ""}" ${item && !showingPartialPreview ? "" : "disabled"}>${showingPartialPreview ? "Preview" : "Use"}</button></article>`;
     }).join("") || `<p class="picker-empty">${escapeHtml(result.coverage?.note || "No legal candidate has complete sourced mechanics for this timeline.")}</p>`;
   } catch (error) {
     $("bisSummary").textContent = "BIS unavailable";
