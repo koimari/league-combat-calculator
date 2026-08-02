@@ -227,6 +227,8 @@ def test_public_bounds_accept_the_existing_ui_maxima():
         json={
             "champion": "Aatrox",
             "level": 20,
+            "role": "top",
+            "role_quest_complete": True,
             "fight_mode": "timed",
             "fight_duration": 10,
             "include_auto_attacks": True,
@@ -576,6 +578,8 @@ def test_public_post_routes_reject_unverified_champions_before_compute(
     payload = {
         "champion": "Kled",
         "level": 20,
+        "role": "top",
+        "role_quest_complete": True,
         "fight_mode": "timed",
         "fight_duration": 10,
         "include_auto_attacks": True,
@@ -1191,3 +1195,43 @@ class TestBreakdownProcRowShape:
         for key, row in response.get_json()["breakdown"].items():
             assert "procs" not in row, key
             assert "damage_per_proc" not in row, key
+
+
+def test_attacker_above_level_18_requires_completed_top_quest(monkeypatch):
+    """Levels 19-20 are top-quest rewards; every other role caps at 18."""
+    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+
+    def fake_run_fight(data, level, items, params):
+        return {
+            "champion_stats": {},
+            "breakdown": {},
+            "total_damage": 0.0,
+            "auto_attack_damage": 0.0,
+            "ability_damage": 0.0,
+            "damage_by_type": {"physical": 0.0, "magic": 0.0, "true": 0.0},
+            "effective_mr": params.target_magic_resistance,
+            "effective_armor": params.target_armor,
+            "notes": [],
+        }
+
+    monkeypatch.setattr(app_module, "run_fight", fake_run_fight)
+    monkeypatch.setattr(
+        app_module,
+        "optimize_build",
+        lambda **_kwargs: {"items": [], "total_damage": 0.0},
+    )
+    client = app_module.app.test_client()
+
+    cases = [
+        ({}, 400),
+        ({"role": "mid", "role_quest_complete": True}, 400),
+        ({"role": "top", "role_quest_complete": False}, 400),
+        ({"role": "top", "role_quest_complete": True}, 200),
+    ]
+    for extra, expected in cases:
+        for endpoint in ("/api/calculate", "/api/optimize"):
+            payload = {"champion": "Ahri", "level": 19, **extra}
+            response = client.post(endpoint, json=payload)
+            assert response.status_code == expected, (endpoint, extra)
+            if expected == 400:
+                assert "top" in response.get_json()["error"]

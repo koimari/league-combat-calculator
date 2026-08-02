@@ -48,7 +48,7 @@ from calculator.optimizer import (
 )
 from calculator.stats import MAX_LEVEL
 from calculator.scenario import MAX_ALLIES, MAX_ENEMIES, ChampionLoadout, parse_roster
-from calculator.role_quests import role_quest_meta
+from calculator.role_quests import require_level_within_cap, role_quest_meta
 from calculator.timeline_coverage import combine_timeline_coverages
 from calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
@@ -1070,6 +1070,9 @@ def api_calculate():
         item_names = _request_string_list(data, "items", maximum=6)
         boots_name = _request_string(data, "boots")
         fight_params = FightParams.from_request(data)
+        require_level_within_cap(
+            level, fight_params.role, fight_params.role_quest_complete
+        )
         include_crossover = data.get("include_crossover", False)
         if not isinstance(include_crossover, bool):
             raise ValueError("include_crossover must be true or false")
@@ -1271,6 +1274,9 @@ def api_optimize():
             else None
         )
         fight_params = FightParams.from_request(data, deterministic=True)
+        require_level_within_cap(
+            level, fight_params.role, fight_params.role_quest_complete
+        )
         enemy_requests = parse_roster(data, "enemies", maximum=MAX_ENEMIES)
         ally_requests = parse_roster(data, "allies", maximum=MAX_ALLIES)
     except ValueError as exc:

@@ -13,7 +13,7 @@ from .defensive_effects import StartingDefenses, resolve_starting_defenses
 from .item_effects import validate_item_input_options
 from .item_coverage import target_build_coverage
 from .loadout_rules import validate_resolved_loadout
-from .role_quests import validate_role
+from .role_quests import require_level_within_cap, validate_role
 from .stats import MAX_LEVEL, calculate_total_stats
 
 MAX_ENEMIES = 5
@@ -79,6 +79,9 @@ class ChampionLoadout:
             raise ValueError(f"{field}.role_quest_complete must be true or false")
         if role_quest_complete and not role:
             raise ValueError(f"{field}.role is required when role quest is complete")
+        require_level_within_cap(
+            level, role, role_quest_complete, field=f"{field}.level"
+        )
         ally_effects_enabled = value.get("ally_effects_enabled", False)
         if not isinstance(ally_effects_enabled, bool):
             raise ValueError(f"{field}.ally_effects_enabled must be true or false")
