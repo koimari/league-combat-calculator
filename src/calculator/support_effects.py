@@ -27,14 +27,27 @@ def derive_ally_effects(
     level: int,
     stats: dict[str, float],
     cast_timeline: list[dict[str, Any]],
+    ability_ranks: dict[str, int] | None = None,
 ) -> list[dict[str, Any]]:
-    """Return only explicit shield/heal packets and their sourced cast times."""
+    """Return explicit shield/heal packets and their sourced cast times.
+
+    The timeline has no player cursor/target selection, so packets carry a
+    sourced target scope for the coupled resolver to apply deterministically:
+    ``self``, one selected teammate, or all selected teammates.  A missing
+    scope is never silently treated as an area effect.
+    """
     effects: list[dict[str, Any]] = []
+    requested_ranks = ability_ranks or {}
     for slot in ("Q", "W", "E", "R"):
         ability = _ability(champion_data, slot)
         if not ability:
             continue
-        rank = get_ability_rank(slot, level, champion_data.get("name", ""))
+        default_rank = get_ability_rank(slot, level, champion_data.get("name", ""))
+        requested_rank = requested_ranks.get(slot, default_rank)
+        try:
+            rank = max(0, int(requested_rank))
+        except (TypeError, ValueError):
+            rank = default_rank
         if rank < 1:
             continue
         shield_attr = _first_attribute(ability, ("Shield Strength", "Shield"))
@@ -47,8 +60,31 @@ def derive_ally_effects(
         ).lower()
         target_self = any(
             marker in description
-            for marker in ("shields herself", "shields himself", "shields themselves", "shield themselves")
+            for marker in (
+                "shields herself",
+                "shields himself",
+                "shields themselves",
+                "shield themselves",
+                "heals herself",
+                "heals himself",
+                "heals themselves",
+                "to herself",
+                "to himself",
+                "to themselves",
+            )
         )
+        all_teammates = any(
+            marker in description
+            for marker in (
+                "all allied champions",
+                "all allied units",
+                "nearby allied champions",
+                "nearby allied units",
+                "nearby allies",
+                "all allies",
+            )
+        )
+        target_scope = "self" if target_self else "all_teammates" if all_teammates else "one_teammate"
         casts = [event for event in cast_timeline if event.get("slot") == slot]
         for cast in casts:
             if shield_attr is not None:
@@ -62,6 +98,8 @@ def derive_ally_effects(
                             "source": f"{ability.get('name', slot)} · {shield_attr}",
                             "slot": slot,
                             "target_self": target_self,
+                            "target_scope": target_scope,
+                            "rank": rank,
                         }
                     )
             if heal_attr is not None:
@@ -80,6 +118,8 @@ def derive_ally_effects(
                             "source": f"{ability.get('name', slot)} · {heal_attr}",
                             "slot": slot,
                             "target_self": False,
+                            "target_scope": target_scope,
+                            "rank": rank,
                         }
                     )
     return sorted(effects, key=lambda event: (event["time"], event["kind"]))

@@ -82,6 +82,8 @@ h1 { margin: 0; font: 500 clamp(32px, 4vw, 48px)/1 var(--serif); letter-spacing:
 .optimizer-summary { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding: 8px 10px; border-left: 2px solid var(--olive); background: color-mix(in srgb, var(--olive) 7%, transparent); }
 .optimizer-summary strong { color: var(--olive); font: 700 9px var(--mono); }
 .optimizer-summary span { color: var(--muted); font: 8px var(--mono); }
+.optimizer-summary.withheld { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, transparent); }
+.optimizer-summary.withheld strong { color: var(--accent); }
 .slots { display: flex; flex-wrap: wrap; gap: 7px; }
 .item-slot { position: relative; width: 54px; border: 0; padding: 0; background: transparent; cursor: pointer; text-align: center; }
 .item-icon { position: relative; display: grid; place-items: center; width: 54px; height: 54px; overflow: hidden; border: 1px solid var(--line-strong); background: var(--canvas); }
