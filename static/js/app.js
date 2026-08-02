@@ -541,8 +541,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const blocked = selectingAttacker && !champ.verified;
             el.className = blocked ? "picker-item unverified" : "picker-item";
             el.disabled = blocked;
+            const primaryBlocker = champ.availability?.blockers?.[0]?.label;
             const tooltip = blocked
-                ? `${champ.name} — damage module not yet verified`
+                ? `${champ.name} — ${primaryBlocker || "damage module not yet verified"}`
                 : champ.name;
             el.append(...createPickerContent(champ.icon, champ.name, tooltip));
             if (!blocked) {

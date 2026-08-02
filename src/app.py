@@ -29,6 +29,7 @@ from calculator.item_effects import item_input_options_meta, refresh_item_effect
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import validate_resolved_loadout
 from calculator.champions import champion_options_meta_map, registered_champion_names
+from calculator.champion_coverage import attacker_availability
 from calculator.optimizer import (
     exclusivity_groups,
     get_eligible_boots,
@@ -296,7 +297,9 @@ def _load_public_champion(name: str) -> dict:
     except KeyError as exc:
         raise LookupError(f"Champion '{name}' not found") from exc
     if champion["name"] not in _VERIFIED_CHAMPIONS:
-        raise ValueError(f"Champion '{champion['name']}' is not verified")
+        availability = attacker_availability(champion, _VERIFIED_CHAMPIONS)
+        reason = availability["blockers"][0]["label"]
+        raise ValueError(f"Champion '{champion['name']}' is not verified: {reason}")
     return champion
 
 
@@ -628,7 +631,7 @@ def health():
 
 @app.route("/api/champions")
 def api_champions():
-    """Return champion names, icons, and verified flags for the picker.
+    """Return champion identity and fail-closed attacker readiness.
 
     ``verified`` = has a module in src/calculator/champions/ (the registry
     is the source of truth). The picker greys out unverified champions —
@@ -636,15 +639,20 @@ def api_champions():
     Verified champions sort first, then unverified, A-Z within each group.
     """
     champions = fetch_champion_data()
-    result = sorted(
-        [
+    result = []
+    for champ_data in champions.values():
+        availability = attacker_availability(champ_data, _VERIFIED_CHAMPIONS)
+        result.append(
             {
                 "name": champ_data["name"],
                 "icon": _https_icon(champ_data.get("icon", "")),
-                "verified": champ_data["name"] in _VERIFIED_CHAMPIONS,
+                "verified": availability["ready"],
+                "availability": availability,
+                "patch_last_changed": champ_data.get("patchLastChanged"),
             }
-            for champ_data in champions.values()
-        ],
+        )
+    result = sorted(
+        result,
         key=lambda c: (not c["verified"], c["name"]),
     )
     return jsonify(result)

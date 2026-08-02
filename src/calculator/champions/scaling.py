@@ -177,3 +177,31 @@ def _normalize_per_100_stat(stat_name: str) -> str:
 def is_flat_unit(unit: str) -> bool:
     """Check if a unit string represents flat (non-scaling) damage."""
     return not unit or unit.strip() == ""
+
+
+def is_supported_scaling_unit(unit: str) -> bool:
+    """Whether the generic resolver has an explicit rule for ``unit``.
+
+    This is a certification predicate, not a damage calculation. It lets the
+    public coverage report fail closed when cached Wiki data introduces a
+    scaling expression that would otherwise resolve to zero.
+    """
+    unit_clean = (unit or "").strip()
+    if not unit_clean or unit_clean == "%":
+        return True
+    if unit_clean in _SIMPLE_UNITS or unit_clean in _PER_100_UNITS:
+        return True
+    probe_stats = {
+        "ability_power": 100.0,
+        "attack_damage": 100.0,
+        "bonus_attack_damage": 100.0,
+        "armor": 100.0,
+        "magic_resistance": 100.0,
+        "bonus_health": 100.0,
+        "health": 100.0,
+        "max_mana": 100.0,
+        "target_max_health": 100.0,
+        "target_current_health": 100.0,
+        "target_missing_health": 100.0,
+    }
+    return _parse_compound_unit(unit_clean, 1.0, probe_stats) is not None

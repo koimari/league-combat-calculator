@@ -363,7 +363,9 @@ def test_public_post_routes_reject_unverified_champions_before_compute(
     response = app_module.app.test_client().post(endpoint, json=payload)
 
     assert response.status_code == 422
-    assert response.get_json() == {"error": "Champion 'Kled' is not verified"}
+    assert response.get_json()["error"].startswith(
+        "Champion 'Kled' is not verified: Alternate forms or sub-spells"
+    )
     assert limiter.calls == 0
 
 
@@ -582,6 +584,24 @@ class TestChampionVerifiedFlags:
         assert by_name["Bel'Veth"] is True
         assert by_name["Kled"] is False
         assert by_name["Teemo"] is False
+
+    def test_unverified_champions_expose_specific_fail_closed_reasons(self):
+        champs = app_module.app.test_client().get("/api/champions").get_json()
+        by_name = {champion["name"]: champion for champion in champs}
+
+        assert by_name["Soraka"]["availability"] == {
+            "ready": True,
+            "verification": "reviewed_module",
+            "blockers": [],
+        }
+        teemo = by_name["Teemo"]
+        assert teemo["availability"]["ready"] is False
+        assert teemo["availability"]["verification"] == "blocked"
+        assert any(
+            blocker["code"] == "timed_stages"
+            for blocker in teemo["availability"]["blockers"]
+        )
+        assert teemo["patch_last_changed"]
 
     def test_verified_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
