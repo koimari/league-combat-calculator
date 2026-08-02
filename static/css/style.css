@@ -339,6 +339,10 @@ td:last-child { color: var(--olive); }
 .bis-row > button { padding: 7px 8px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; font: 700 8px var(--mono); text-transform: uppercase; }
 .bis-row:first-child { background: color-mix(in srgb, var(--olive) 7%, transparent); }
 .bis-row:first-child .bis-rank, .bis-row:first-child p strong { color: var(--olive); }
+.bis-row.partial { opacity: .72; background: color-mix(in srgb, var(--muted) 5%, transparent); }
+.bis-row.partial:first-child { background: color-mix(in srgb, var(--muted) 5%, transparent); }
+.bis-row.partial:first-child .bis-rank, .bis-row.partial:first-child p strong { color: var(--muted); }
+.bis-row.partial > button { border-color: var(--line-strong); color: var(--muted); cursor: not-allowed; }
 .method-grid { grid-template-columns: repeat(4, 125px) 1fr; }
 
 .ability-package { min-width: 0; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--paper-strong) 45%, transparent); }
