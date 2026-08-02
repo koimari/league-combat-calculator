@@ -84,7 +84,9 @@ jarvan_iv_data = _champion_fixture("JarvanIV")
 jayce_data = _champion_fixture("Jayce")
 # Data key differs from the display/dispatcher name "Kog'Maw".
 kogmaw_data = _champion_fixture("KogMaw")
+orianna_data = _champion_fixture("Orianna")
 vayne_data = _champion_fixture("Vayne")
+ziggs_data = _champion_fixture("Ziggs")
 
 
 # ---------------------------------------------------------------------------

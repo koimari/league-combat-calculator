@@ -35,7 +35,13 @@ on-hit system via two mechanisms:
     number of applications (Bard meeps: stock + recharge availability) —
     autos beyond the cap land without the on-hit damage. A ``ramping``
     flag (with ``stacks_required``) makes proc k deal k x the per-hit
-    damage (Bel'Veth R: stacks accumulate and never reset).
+    damage (Bel'Veth R: stacks accumulate and never reset). A
+    ``stack_ramp`` dict (``{"damage_per_stack", "max_stacks"}``) models
+    per-target attack stacks amplifying the on-hit damage itself
+    (Orianna P): each hit lands at the CURRENT stack count then adds a
+    stack, so hit k (0-indexed) deals ``damage_per_hit +
+    min(k, max_stacks) x damage_per_stack`` — the natural single-target
+    ramp, with stacks assumed never to drop mid-fight.
 
 **Case 3 — Abilities that apply ITEM on-hits** (e.g. Bel'Veth Q/E):
     Ability entries may declare::
@@ -3153,7 +3159,22 @@ def _layer_on_hit_effects(
 
         stacks_required = on_hit_data.get("stacks_required", 0)
         ramping = bool(on_hit_data.get("ramping"))
-        if ramping and stacks_required > 1:
+        stack_ramp = on_hit_data.get("stack_ramp")
+        if stack_ramp:
+            # Stack-ramped on-hit (Orianna P): each hit lands at the
+            # CURRENT stack count then adds a stack (capped), so hit k
+            # deals per_hit + min(k, max_stacks) x per_stack. Stacks are
+            # assumed never to drop mid-fight (sustained attacking).
+            per_stack = _mitigate(
+                float(stack_ramp["damage_per_stack"]) * on_hit_effectiveness,
+                dmg_type,
+                resists,
+                magic_amp,
+            )
+            max_stacks = int(stack_ramp["max_stacks"])
+            stacked_hits = sum(min(k, max_stacks) for k in range(hits))
+            ability_on_hit_damage = per_hit * hits + per_stack * stacked_hits
+        elif ramping and stacks_required > 1:
             # Ramping every-Nth proc (Bel'Veth R): proc k deals
             # k x per_hit — stacks accumulate and never reset, so the
             # total is per_hit x (1 + 2 + ... + procs).
@@ -3169,7 +3190,7 @@ def _layer_on_hit_effects(
             # Autos-only on-hit (e.g. Vayne W): smooth per-hit average.
             ability_on_hit_damage = per_hit * hits
         on_hit_total += ability_on_hit_damage
-        if max_procs is None and not ramping:
+        if max_procs is None and not ramping and not stack_ramp:
             static_share = per_hit
         elif on_hit_hits > 0:
             # Capped on-hits don't land on every auto — feed the HP
@@ -3202,10 +3223,14 @@ def _layer_on_hit_effects(
                 "unit": "procs",
             }
         else:
+            # Stack-ramped hits escalate, so their per-hit figure is the
+            # average (total / hits) rather than the 0-stack base.
             breakdown[f"on_hit_ability_{ability_key}"] = {
                 "name": ability_name,
                 "count": hits,
-                "damage_per_hit": per_hit,
+                "damage_per_hit": (
+                    ability_on_hit_damage / hits if stack_ramp and hits else per_hit
+                ),
                 "total_damage": ability_on_hit_damage,
                 "damage_type": dmg_type,
             }
