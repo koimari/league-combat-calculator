@@ -98,6 +98,7 @@ class TestChampionOptionsMetaMap:
         meta_map = champion_options_meta_map()
 
         assert len(meta_map["Lissandra"]["sources"]) == 4
+        assert len(meta_map["Rakan"]["sources"]) == 5
         assert len(meta_map["Soraka"]["sources"]) == 2
 
     def test_excludes_champions_with_empty_meta(self) -> None:
