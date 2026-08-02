@@ -1090,6 +1090,7 @@ def _ordered_damage_events(
                     )
 
     auto = breakdown.get("auto_attacks")
+    auto_event_times: list[float] = []
     if auto and not auto.get("informational"):
         if not add_declared_events("auto_attacks", auto, default_phase="auto"):
             hits = max(1, int(auto.get("count", 1)))
@@ -1103,6 +1104,11 @@ def _ordered_damage_events(
                         ordinal=hit_index + 1,
                         phase="auto",
                     )
+        auto_event_times = [
+            float(event.get("time", last_ability_time))
+            for event in events
+            if event.get("source_key") == "auto_attacks"
+        ]
 
     skipped = set(cast_order) | {"auto_attacks", "execute"}
     untyped: list[tuple[str, float]] = []
@@ -1111,6 +1117,39 @@ def _ordered_damage_events(
             continue
         if add_declared_events(key, entry, default_phase="effect"):
             continue
+        # A static ability on-hit row is exact when its count matches the
+        # engine-authored auto stream.  Align it to those swings instead of
+        # collapsing it to the end-of-rotation effect phase (Aatrox P and
+        # other one-per-attack champion passives rely on this boundary).
+        if (
+            key.startswith("on_hit_ability_")
+            and auto_event_times
+            and int(entry.get("count", 0)) == len(auto_event_times)
+        ):
+            parts = _row_damage_parts(entry)
+            if len(parts) == 1:
+                dtype, amount = parts[0]
+                per_hit = amount / len(auto_event_times)
+                aligned_events = []
+                for ordinal, event_time in enumerate(auto_event_times, start=1):
+                    aligned_events.append(
+                        {
+                            "time": event_time,
+                            "damage_type": dtype,
+                            "damage": per_hit,
+                        }
+                    )
+                    add(
+                        key,
+                        dtype,
+                        per_hit,
+                        time=event_time,
+                        ordinal=ordinal,
+                        phase="auto",
+                    )
+                entry["damage_events"] = aligned_events
+                entry["event_phase"] = "auto"
+                continue
         parts = _row_damage_parts(entry)
         if parts:
             for dtype, amount in parts:
@@ -3313,6 +3352,15 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
         proc_count = info.get("proc_count", 0)
         if proc_count <= 0:
             continue
+        coupled_to_autos = bool(info.get("requires_auto_timeline_coupling"))
+        if coupled_to_autos:
+            # A champion cannot consume more empowered-attack stacks than
+            # there are authored auto swings in this window.  The old fixed
+            # proc count made Ambessa's passive damage appear even with no
+            # attacks and overstated both damage and healing.
+            proc_count = min(int(proc_count), int(state.num_auto_attacks))
+            if proc_count <= 0:
+                continue
 
         parts = info["parts"]
         if any(part.hp_scaled_damage is not None for part in parts):
@@ -3343,6 +3391,18 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
             "total_damage": proc_total,
             "damage_type": dtype,
         }
+        if coupled_to_autos and state.num_auto_attacks > 0:
+            autos_per_second = state.attack_speed * state.auto_attack_uptime
+            interval = 1.0 / autos_per_second if autos_per_second > 0 else 0.0
+            state.breakdown[key]["damage_events"] = [
+                {
+                    "time": index * interval,
+                    "damage_type": dtype,
+                    "damage": per_proc,
+                }
+                for index in range(proc_count)
+            ]
+            state.breakdown[key]["event_phase"] = "auto"
         # Champion-minted display text (e.g. Braum P's cycle summary) and
         # count label (e.g. Diana's "cleaves") ride the entry onto its
         # breakdown row, as in the rotation.
@@ -5629,6 +5689,15 @@ def calculate_fight_damage(
             "Protoplasm Harness's sourced total healing is spread over five "
             "seconds; its internal heal tick cadence is not source-certified."
         )
+    # Keep the exact event ledger that the shield/temporary-health resolver
+    # just consumed.  Downstream team simulation uses this same ordered
+    # ledger; it must never reconstruct timing from aggregate breakdown rows.
+    damage_events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
     return {
         "breakdown": state.breakdown,
         "total_damage": state.total_damage,
@@ -5639,6 +5708,7 @@ def calculate_fight_damage(
         "resource_spent": rotation.resource_spent,
         "resource_remaining": rotation.resource_remaining,
         "timeline_coverage": timeline_coverage,
+        "damage_events": damage_events,
         **shield_outcome,
         # Exposed for champion-specific ability calculators (Case 1: stack
         # acceleration). Champions like Vayne can check which autos grant

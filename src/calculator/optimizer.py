@@ -24,6 +24,9 @@ from .loadout_rules import (
     validate_resolved_loadout,
 )
 from .pipeline import FightParams, run_fight
+from .defensive_effects import resolve_starting_defenses
+from .participant_timeline import build_participant_timeline
+from .stats import calculate_total_stats
 from .timeline_coverage import combine_timeline_coverages
 
 # Items unavailable on Summoner's Rift.
@@ -122,6 +125,7 @@ def _evaluate_build(
     gold_budget: int | None = None,
     timeline_audit: dict[str, Any] | None = None,
     require_complete_timeline: bool = False,
+    combat_context: dict[str, Any] | None = None,
 ) -> float:
     """Evaluate a build and return the damage score for the given objective.
 
@@ -130,6 +134,82 @@ def _evaluate_build(
     if gold_budget is not None and _build_gold(items) > gold_budget:
         return float("-inf")
     targets = fight_params if isinstance(fight_params, tuple) else (fight_params,)
+    if combat_context is not None and (
+        combat_context.get("enemies") or combat_context.get("allies")
+    ):
+        # Score the same event-ordered participant timeline exposed by
+        # /api/calculate.  A candidate's outgoing damage after its own death
+        # is excluded, so a glass-cannon build cannot win by living only on
+        # paper.  No role/archetype weight is introduced here.
+        base_params = targets[0]
+        stats = calculate_total_stats(
+            champion_data,
+            level,
+            items,
+            item_options=base_params.item_options,
+            role=base_params.role,
+            role_quest_complete=base_params.role_quest_complete,
+            external_stat_bonuses=base_params.ally_stat_bonuses,
+        )
+        defenses = resolve_starting_defenses(
+            champion_data["name"], level, stats, items
+        )
+        combat = build_participant_timeline(
+            champion_data,
+            level,
+            items,
+            base_params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=list(combat_context.get("enemies", [])),
+            allies=list(combat_context.get("allies", [])),
+        )
+        coverage = combat.get("timeline_coverage", {})
+        if timeline_audit is not None:
+            timeline_audit["evaluations"] += 1
+            timeline_audit["exact_sources"].update(coverage.get("exact_sources", []))
+            timeline_audit["coarse_sources"].update(coverage.get("coarse_sources", []))
+            if not coverage.get("complete", False):
+                timeline_audit["partial_evaluations"] += 1
+        # A coupled roster may contain a sourced champion effect whose exact
+        # sub-hit cadence is not yet certified.  Keep the candidate usable,
+        # but preserve the partial receipt so the result cannot be presented
+        # as a fully certified BIS claim.
+        main_row = next(
+            (row for row in combat.get("breakdown", []) if row.get("participant_id") == "main"),
+            None,
+        )
+        if main_row is None:
+            return float("-inf")
+        if objective == "physical_damage":
+            death_time = next(
+                row.get("survival", {}).get("death_time")
+                for row in combat.get("participants", [])
+                if row.get("participant_id") == "main"
+            )
+            cutoff = base_params.fight_duration_seconds if death_time is None else death_time
+            return sum(
+                float(event.get("damage", 0.0))
+                for event in combat.get("events", [])
+                if event.get("attacker") == "main"
+                and event.get("damage_type") == "physical"
+                and float(event.get("time", 0.0)) <= cutoff
+            )
+        if objective == "magic_damage":
+            death_time = next(
+                row.get("survival", {}).get("death_time")
+                for row in combat.get("participants", [])
+                if row.get("participant_id") == "main"
+            )
+            cutoff = base_params.fight_duration_seconds if death_time is None else death_time
+            return sum(
+                float(event.get("damage", 0.0))
+                for event in combat.get("events", [])
+                if event.get("attacker") == "main"
+                and event.get("damage_type") == "magic"
+                and float(event.get("time", 0.0)) <= cutoff
+            )
+        return float(main_row.get("total_damage", 0.0))
     results: list[dict[str, Any]] = []
     for target_params in targets:
         result = run_fight(champion_data, level, items, target_params)
@@ -429,6 +509,8 @@ def optimize_build(
     boots_tier: int = 2,
     gold_budget: int | None = None,
     require_complete_timeline: bool = False,
+    enemy_loadouts: list[Any] | None = None,
+    ally_loadouts: list[Any] | None = None,
 ) -> dict[str, Any]:
     """Find the optimal item build for a champion.
 
@@ -479,6 +561,11 @@ def optimize_build(
         "gold_budget": gold_budget,
         "timeline_audit": timeline_audit,
         "require_complete_timeline": require_complete_timeline,
+        "combat_context": (
+            {"enemies": list(enemy_loadouts or ()), "allies": list(ally_loadouts or ())}
+            if enemy_loadouts or ally_loadouts
+            else None
+        ),
     }
 
     # Build item pools.  Keep the complete legal lists for the public coverage

@@ -34,6 +34,8 @@ from calculator.item_effects import item_input_options_meta, refresh_item_effect
 from calculator.item_coverage import item_model_coverage, require_target_item_coverage
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import validate_resolved_loadout
+from calculator.defensive_effects import resolve_starting_defenses
+from calculator.participant_timeline import build_participant_timeline
 from calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
@@ -49,6 +51,7 @@ from calculator.optimizer import (
     optimize_build,
 )
 from calculator.stats import MAX_LEVEL
+from calculator.stats import calculate_total_stats
 from calculator.scenario import MAX_ALLIES, MAX_ENEMIES, ChampionLoadout, parse_roster
 from calculator.role_quests import role_quest_meta
 from calculator.timeline_coverage import combine_timeline_coverages
@@ -559,6 +562,28 @@ def _serialize_fight_result(result: Mapping[str, object]) -> dict:
         "resource_spent": round(result.get("resource_spent", 0.0), 1),
         "resource_remaining": round(result.get("resource_remaining", 0.0), 1),
         "timeline_coverage": dict(result.get("timeline_coverage", {})),
+        "damage_events": [
+            {
+                "time": round(float(event.get("time", 0.0)), 3),
+                "source": str(event.get("source_key", "")),
+                "damage_type": str(event.get("damage_type", "")),
+                "damage": round(float(event.get("damage", 0.0)), 1),
+                "phase": str(event.get("phase", "")),
+            }
+            for event in result.get("damage_events", [])
+            if isinstance(event, Mapping)
+        ],
+        "self_healing": round(float(result.get("self_healing", 0.0)), 1),
+        "self_healing_events": [
+            {
+                "time": round(float(event.get("time", 0.0)), 3),
+                "source": str(event.get("source", "")),
+                "kind": str(event.get("kind", "")),
+                "amount": round(float(event.get("amount", 0.0)), 1),
+            }
+            for event in result.get("self_healing_events", [])
+            if isinstance(event, Mapping)
+        ],
     }
 
 
@@ -1195,6 +1220,28 @@ def api_calculate():
                     },
                 }
             )
+        if isinstance(champion_data.get("stats"), Mapping):
+            main_stats = calculate_total_stats(
+                champion_data,
+                level,
+                items,
+                item_options=fight_params.item_options,
+                role=fight_params.role,
+                role_quest_complete=fight_params.role_quest_complete,
+                external_stat_bonuses=fight_params.ally_stat_bonuses,
+            )
+            response["combat"] = build_participant_timeline(
+                champion_data,
+                level,
+                items,
+                fight_params,
+                main_stats=main_stats,
+                main_defenses=resolve_starting_defenses(
+                    champion_data["name"], level, main_stats, items
+                ),
+                enemies=[],
+                allies=allies,
+            )
         return jsonify(response)
 
     target_results = []
@@ -1276,6 +1323,33 @@ def api_calculate():
         "certified": champion_data["name"] in _VERIFIED_CHAMPIONS,
         "mode": "reviewed_event_order",
     }
+    # The legacy aggregate is retained for compatibility.  ``combat`` is the
+    # coupled event-ordered receipt used by the UI/BIS objective: every
+    # selected ally and enemy is an active participant with survival/eHP and
+    # attributed output.
+    if isinstance(champion_data.get("stats"), Mapping):
+        main_stats = calculate_total_stats(
+            champion_data,
+            level,
+            items,
+            item_options=fight_params.item_options,
+            role=fight_params.role,
+            role_quest_complete=fight_params.role_quest_complete,
+            external_stat_bonuses=fight_params.ally_stat_bonuses,
+        )
+        main_defenses = resolve_starting_defenses(
+            champion_data["name"], level, main_stats, items
+        )
+        response["combat"] = build_participant_timeline(
+            champion_data,
+            level,
+            items,
+            fight_params,
+            main_stats=main_stats,
+            main_defenses=main_defenses,
+            enemies=enemies,
+            allies=allies,
+        )
     if include_crossover:
         _add_comparison_curve(
             response, champion_data, level, items, fight_params, enemies
@@ -1449,6 +1523,8 @@ def api_optimize():
             ),
             gold_budget=gold_budget,
             require_complete_timeline=True,
+            enemy_loadouts=enemies,
+            ally_loadouts=allies,
         )
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400

@@ -1037,8 +1037,17 @@ function renderExactBreakdown(aResult, bResult) {
   ingest(aResult, "a");
   if (bResult) ingest(bResult, "b");
   const body = [...rows.values()].map((row) => `<tr><td><strong>${escapeHtml(row.source)}</strong><small>${escapeHtml(row.detail)}</small></td><td>${fmt(row.a)}</td>${bResult ? `<td>${fmt(row.b)}</td><td>${Math.abs(row.a - row.b) < .5 ? "—" : `${row.a > row.b ? "+" : ""}${fmt(row.a - row.b)}`}</td>` : ""}</tr>`).join("");
-  const totalB = bResult ? `<td>${fmt(bResult.total_damage)}</td><td>${Math.abs(aResult.total_damage - bResult.total_damage) < .5 ? "—" : `${aResult.total_damage > bResult.total_damage ? "+" : ""}${fmt(aResult.total_damage - bResult.total_damage)}`}</td>` : "";
-  $("damageBreakdown").innerHTML = `<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage dealt</strong><small>After shields and selected enemy defenses</small></td><td>${fmt(aResult.total_damage)}</td>${totalB}</tr></tbody></table></div>`;
+  const mainTotal = (result) => Number(result?.combat?.breakdown?.find((entry) => entry.participant_id === "main")?.total_damage ?? result?.total_damage ?? 0);
+  const aMainTotal = mainTotal(aResult);
+  const bMainTotal = bResult ? mainTotal(bResult) : 0;
+  const totalB = bResult ? `<td>${fmt(bMainTotal)}</td><td>${Math.abs(aMainTotal - bMainTotal) < .5 ? "—" : `${aMainTotal > bMainTotal ? "+" : ""}${fmt(aMainTotal - bMainTotal)}`}</td>` : "";
+  const combatRows = (aResult?.combat?.breakdown || []).map((entry) => {
+    const survival = (aResult.combat.participants || []).find((participant) => participant.participant_id === entry.participant_id)?.survival || {};
+    const status = survival.survived_window ? "alive at window end" : `defeated at ${one(survival.death_time)}s`;
+    return `<tr><td><strong>${escapeHtml(`${entry.champion} · ${entry.team}`)}</strong><small>${escapeHtml(status)} · ${fmt(survival.effective_health || 0)} eHP · ${fmt(survival.healing_received || 0)} healing</small></td><td>${fmt(entry.total_damage)}</td>${bResult ? `<td>—</td><td>—</td>` : ""}</tr>`;
+  }).join("");
+  const combatSection = combatRows ? `<section class="combat-participant-ledger"><header><div><p class="eyebrow">Team-fight ledger</p><h2>Every selected champion participates</h2></div><span>Event-ordered damage · eHP · survival</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Participant</th><th><i class="legend-a"></i>Output before defeat</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${combatRows}</tbody></table></div></section>` : "";
+  $("damageBreakdown").innerHTML = `${combatSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage before defeat</strong><small>Post-mitigation output from the coupled participant timeline</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
 }
 
 function renderExactMechanics(aResult, bResult) {
@@ -1052,8 +1061,9 @@ function renderExactMechanics(aResult, bResult) {
 function renderExactResults(aResult, bResult) {
   const aPoint = exactPoint(aResult);
   const bPoint = bResult ? exactPoint(bResult) : null;
-  const aTotal = Number(aPoint.total_damage || 0);
-  const bTotal = bPoint ? Number(bPoint.total_damage || 0) : 0;
+  const participantTotal = (result, fallback) => Number(result?.combat?.breakdown?.find((entry) => entry.participant_id === "main")?.total_damage ?? fallback);
+  const aTotal = participantTotal(aResult, Number(aPoint.total_damage || 0));
+  const bTotal = bPoint ? participantTotal(bResult, Number(bPoint.total_damage || 0)) : 0;
   const tied = bResult && Math.abs(aTotal - bTotal) < .5;
   const aWins = !bResult || aTotal > bTotal;
   const winner = bResult ? (aWins ? "Build A" : "Build B") : "Build A";
@@ -1067,7 +1077,10 @@ function renderExactResults(aResult, bResult) {
   const certification = aResult.timeline_coverage?.certification || "event ordered";
   const shield = Number(aResult.shield_absorbed || 0);
   const resource = Number(aResult.resource_remaining || 0);
-  $("why").innerHTML = `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed · ${fmt(resource)} resource remaining.`;
+  const mainParticipant = (aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main");
+  const mainSurvival = mainParticipant?.survival;
+  const combatNote = mainSurvival ? ` · ${fmt(mainSurvival.effective_health || 0)} eHP · ${mainSurvival.survived_window ? "alive through the window" : `defeated at ${one(mainSurvival.death_time)}s`}` : "";
+  $("why").innerHTML = `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed · ${fmt(resource)} resource remaining${combatNote}.`;
   $("threshold").innerHTML = `<span>Crossover</span><strong>${bResult ? (tied ? "No meaningful difference at this window" : `${escapeHtml(winner)} leads at the selected window`) : `${fmt(aTotal)} event-ordered damage`}</strong>`;
   const aCurve = aResult.comparison_curve || [{ rotation: state.fight.rotations, total_damage: aTotal }];
   const bCurve = bResult?.comparison_curve || [];
@@ -2082,25 +2095,41 @@ function startRosterOptimization(rootOrPath) {
   }));
 }
 
-function startOptimizeBuild() {
+async function startOptimizeBuild() {
   if (state.optimizer.running || !state.attacker.champion || !optimizerDamagePackageReady() || !state.targets.length || !state.targets.every((target) => target.champion)) return;
   state.optimizer.running = true;
   state.optimizer.summary = null;
   renderBuilder();
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    try {
-      const result = optimizeFullBuild();
-      state.attacker.buildA = [...result.build, ...Array(Math.max(0, 6 - result.build.length)).fill(0)].slice(0, 6);
-      state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
-      state.attacker.questBootA = result.questBoot || 0;
-      state.optimizer.summary = result.roleAware
-        ? { ...result, label: `${result.role} build optimized with role-specific protection and utility scoring.` }
-        : result;
-    } finally {
-      state.optimizer.running = false;
-      render();
-    }
-  }));
+  try {
+    const payload = engineFightPayload("A");
+    payload.objective = "total_damage";
+    payload.locked_items = [];
+    payload.locked_boots = "";
+    payload.max_legendary_slots = ordinarySlotCount();
+    const response = await fetch("/api/optimize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok || result.error) throw new Error(result.error || "Optimizer unavailable");
+    const ids = (result.items || []).map((name) => DATA.items.find((item) => item.name === name)?.id || 0);
+    state.attacker.buildA = [...ids, ...Array(Math.max(0, 6 - ids.length)).fill(0)].slice(0, 6);
+    state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
+    state.attacker.questBootA = DATA.items.find((item) => item.name === result.boots)?.id || 0;
+    state.optimizer.summary = {
+      tested: Number(result.evaluations || 0),
+      elapsedMs: Number(result.optimization_time_ms || 0),
+      label: result.is_certified_best
+        ? "Coupled event-ordered BIS: TTD is counted only while the champion is alive."
+        : "Coupled BIS applied; event-order coverage remains partial for one or more sourced effects.",
+    };
+  } catch (error) {
+    state.optimizer.summary = { tested: 0, elapsedMs: 0, label: `Optimization stopped: ${error.message}` };
+  } finally {
+    state.optimizer.running = false;
+    render();
+  }
 }
 
 function openBis(path) {
