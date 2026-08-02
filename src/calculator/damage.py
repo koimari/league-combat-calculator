@@ -6343,17 +6343,79 @@ def _add_expose_weakness(
     state.total_damage += expose_bonus
 
 
-def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> None:
-    """Apply fight-wide damage amplifiers and their breakdown rows.
+def _amplifier_delta_events(
+    amped_events: list[dict[str, Any]],
+    bonus: float,
+) -> list[dict[str, Any]]:
+    """Author an amplifier row's bonus onto the exact events it amplified.
 
-    General amps (Lord Dominik's Regards, Riftmaker-class) multiply the
-    whole running total, one ``damage_amp_<source>`` row per source. The
-    Actualizer ability amp was already applied per-ability/per-proc, so
-    its row is informational only. Horizon Focus amplifies everything
-    except the first ability cast (the trigger).
+    A fight-wide amplifier prices its bonus as one fraction of the running
+    total, so its per-event delta is that same fraction of each amplified
+    event — expressed as a pro-rata share so the authored events sum
+    exactly to the row total. Each delta keeps its amplified event's time
+    and timeline order; the ``amplifier`` phase rank then places it
+    immediately after that event in the shared ledger.
     """
-    breakdown = state.breakdown
+    amped_total = sum(event["damage"] for event in amped_events)
+    if bonus <= 0 or amped_total <= 0:
+        return []
+    return [
+        {
+            "damage_type": event["damage_type"],
+            "damage": bonus * event["damage"] / amped_total,
+            "time": event["time"],
+            "timeline_order": event["order"],
+        }
+        for event in amped_events
+    ]
 
+
+def _hypershot_delta_events(
+    state: FightState,
+    rotation: RotationResult,
+    bonus: float,
+) -> list[dict[str, Any]]:
+    """Author Horizon Focus's amp onto every event after the trigger cast.
+
+    The first ability cast triggers Hypershot and is not amped, so its
+    ledger events are excluded from the attribution pool. If the trigger
+    cast cannot be isolated to events matching the rotation's recorded
+    trigger damage (e.g. a mixed-type opener whose non-triggering part is
+    amped), no events are authored and the row stays explicitly coarse.
+    """
+    events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
+    trigger_key = next((k for k in state.cast_order if k in state.breakdown), None)
+    trigger_times = [
+        event["time"] for event in events if event["source_key"] == trigger_key
+    ]
+    if trigger_key is None or not trigger_times:
+        return []
+    trigger_time = min(trigger_times)
+
+    def is_trigger(event: dict[str, Any]) -> bool:
+        return event["source_key"] == trigger_key and event["time"] == trigger_time
+
+    trigger_damage = sum(event["damage"] for event in events if is_trigger(event))
+    if not math.isclose(
+        trigger_damage, rotation.first_ability_damage, rel_tol=1e-6, abs_tol=1e-3
+    ):
+        return []
+    return _amplifier_delta_events(
+        [event for event in events if not is_trigger(event)], bonus
+    )
+
+
+def _apply_general_amplifiers(state: FightState, rotation: RotationResult) -> None:
+    """Apply whole-total amps (Lord Dominik's, Riftmaker, Liandry-class).
+
+    Each source gets one ``damage_amp_<source>`` row whose delta events
+    ride the pre-amp ledger's timestamps.
+    """
     amp_sources = [
         (
             effect.item_name,
@@ -6365,18 +6427,47 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
         for effect in state.damage_effects.damage_amplifiers
     ]
     amp = 1.0 + sum(source_amp for _, source_amp in amp_sources)
-    if amp > 1.0:
-        amp_bonus = state.total_damage * (amp - 1.0)
-        # Create per-source breakdown entries
-        for source_name, source_amp in amp_sources:
-            if source_amp > 0:
-                source_bonus = state.total_damage * source_amp
-                breakdown[f"damage_amp_{source_name}"] = {
-                    "name": f"Damage Amplification ({source_name})",
-                    "multiplier": 1.0 + source_amp,
-                    "total_damage": source_bonus,
-                }
-        state.total_damage += amp_bonus
+    if amp <= 1.0:
+        return
+    amp_bonus = state.total_damage * (amp - 1.0)
+    amped_events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
+    # Create per-source breakdown entries
+    for source_name, source_amp in amp_sources:
+        if source_amp > 0:
+            source_bonus = state.total_damage * source_amp
+            row = {
+                "name": f"Damage Amplification ({source_name})",
+                "multiplier": 1.0 + source_amp,
+                "total_damage": source_bonus,
+            }
+            delta_events = _amplifier_delta_events(amped_events, source_bonus)
+            if delta_events:
+                row["damage_events"] = delta_events
+                row["event_phase"] = "amplifier"
+            state.breakdown[f"damage_amp_{source_name}"] = row
+    state.total_damage += amp_bonus
+
+
+def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> None:
+    """Apply fight-wide damage amplifiers and their breakdown rows.
+
+    General amps (Lord Dominik's Regards, Riftmaker-class) multiply the
+    whole running total, one ``damage_amp_<source>`` row per source. The
+    Actualizer ability amp was already applied per-ability/per-proc, so
+    its row is informational only. Horizon Focus amplifies everything
+    except the first ability cast (the trigger). Each amp row authors its
+    delta back onto the events it amplified, at their times, so shield
+    and threshold accounting sees the amp when the damage landed; a row
+    whose amplified pool cannot be event-isolated stays coarse and rides
+    the ledger's explicit untyped fail-soft instead.
+    """
+    breakdown = state.breakdown
+    _apply_general_amplifiers(state, rotation)
 
     # Actualizer ability damage amp — show as separate breakdown entry.
     # The amp was already applied per-ability in the rotation and per-proc
@@ -6415,11 +6506,16 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
     if state.hypershot_amp > 1.0:
         amped_damage = state.total_damage - rotation.first_ability_damage
         hypershot_bonus = amped_damage * (state.hypershot_amp - 1.0)
-        breakdown["damage_amp_Horizon Focus"] = {
+        row = {
             "name": "Damage Amplification (Horizon Focus)",
             "multiplier": state.hypershot_amp,
             "total_damage": hypershot_bonus,
         }
+        delta_events = _hypershot_delta_events(state, rotation, hypershot_bonus)
+        if delta_events:
+            row["damage_events"] = delta_events
+            row["event_phase"] = "amplifier"
+        breakdown["damage_amp_Horizon Focus"] = row
         state.total_damage += hypershot_bonus
 
 

@@ -458,6 +458,101 @@ class TestOrderedDamageEvents:
         ) == pytest.approx(15.0)
 
 
+class TestAmplifierEventAttribution:
+    """damage_amp_<source> rows author their delta onto the amplified events."""
+
+    @staticmethod
+    def _test_spell(*, cooldown: float = 10.0) -> dict:
+        return {
+            "Q": {
+                "name": "Test spell",
+                "rank": 1,
+                "cooldown": cooldown,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+                "parts": (DamagePart("magic", 300.0),),
+            }
+        }
+
+    @pytest.fixture
+    def liandry_fight(self, fight, attacker_stats) -> dict:
+        """Timed fight where Liandry's Suffering amp has real events to ride."""
+        return fight(
+            attacker_stats(),
+            self._test_spell(),
+            items=[get_item_by_name("Liandry's Torment")],
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.5,
+        )
+
+    def test_general_amp_authors_delta_events_at_amplified_times(self, liandry_fight):
+        """The amp delta lands on the amplified events' own timestamps,
+        not lumped at one coarse stamp, and sums to the row total."""
+        amp_row = liandry_fight["breakdown"]["damage_amp_Liandry's Torment"]
+        amp_events = amp_row["damage_events"]
+        assert sum(event["damage"] for event in amp_events) == pytest.approx(
+            amp_row["total_damage"]
+        )
+        amp_times = {event["time"] for event in amp_events}
+        amplified_times = {
+            event["time"]
+            for event in liandry_fight["damage_events"]
+            if event["source_key"] != "damage_amp_Liandry's Torment"
+        }
+        assert amp_times <= amplified_times
+        assert len(amp_times) > 1
+
+    def test_general_amp_row_is_certified_exact(self, liandry_fight):
+        coverage = liandry_fight["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert "damage_amp_Liandry's Torment" in coverage["exact_sources"]
+
+    def test_amp_delta_mirrors_the_amplified_type_composition(self, liandry_fight):
+        """A fight-wide amp scales every type equally: the delta's per-type
+        split matches the pre-amp ledger's per-type split."""
+        amp_events = liandry_fight["breakdown"]["damage_amp_Liandry's Torment"][
+            "damage_events"
+        ]
+        amplified = [
+            event
+            for event in liandry_fight["damage_events"]
+            if event["source_key"] != "damage_amp_Liandry's Torment"
+        ]
+
+        def type_fraction(events: list, dtype: str) -> float:
+            total = sum(event["damage"] for event in events)
+            return sum(e["damage"] for e in events if e["damage_type"] == dtype) / total
+
+        for dtype in ("physical", "magic"):
+            assert type_fraction(amp_events, dtype) == pytest.approx(
+                type_fraction(amplified, dtype)
+            )
+
+    def test_hypershot_amp_excludes_the_trigger_cast(self, fight, attacker_stats):
+        """Horizon Focus amps everything except the first cast (the trigger):
+        its delta events cover every cast time but the first."""
+        result = fight(
+            attacker_stats(),
+            self._test_spell(cooldown=2.0),
+            items=[get_item_by_name("Horizon Focus")],
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.0,
+        )
+
+        amp_row = result["breakdown"]["damage_amp_Horizon Focus"]
+        amp_events = amp_row["damage_events"]
+        assert sum(event["damage"] for event in amp_events) == pytest.approx(
+            amp_row["total_damage"]
+        )
+        cast_times = {event["time"] for event in result["cast_timeline"]}
+        assert {event["time"] for event in amp_events} == cast_times - {min(cast_times)}
+        assert "damage_amp_Horizon Focus" in (
+            result["timeline_coverage"]["exact_sources"]
+        )
+
+
 class TestTargetIncomingDamageModifiers:
     """Target item defenses apply to their exact damage events."""
 
