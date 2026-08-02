@@ -628,7 +628,7 @@ function renderBuilder() {
   const optimizePackageReady = optimizerDamagePackageReady();
   const optimizeReady = Boolean(attacker.champion && optimizePackageReady && state.targets.length && state.targets.every((target) => target.champion));
   const optimizerSummary = state.optimizer.summary
-    ? `<div class="optimizer-summary"><strong>${state.optimizer.summary.tested.toLocaleString("en-US")} builds · ${one(state.optimizer.summary.elapsedMs)} ms</strong><span>${escapeHtml(state.optimizer.summary.label || "Build A now shows the complete highest-damage build.")}</span></div>`
+    ? `<div class="optimizer-summary ${state.optimizer.summary.withheld ? "withheld" : ""}" role="status" aria-live="polite"><strong>${state.optimizer.summary.tested.toLocaleString("en-US")} builds · ${one(state.optimizer.summary.elapsedMs)} ms${state.optimizer.summary.withheld ? " · NO BUILD APPLIED" : ""}</strong><span>${escapeHtml(state.optimizer.summary.label || "Build A now shows the complete highest-damage build.")}</span></div>`
     : "";
   $("builder").innerHTML = `
     <section class="board-section hero-section">
@@ -2385,7 +2385,8 @@ async function optimizeMainBuildFromBackend() {
       state.optimizer.summary = {
         tested: Number(result.evaluations || 0),
         elapsedMs: Number(result.optimization_time_ms || 0),
-        label: result.search_timeline_coverage?.note || "Optimization withheld: event-order coverage is incomplete.",
+        withheld: true,
+        label: `BIS withheld — no build applied. ${result.search_timeline_coverage?.note || "Event-order coverage is incomplete."}`,
       };
       return result;
     }
@@ -2409,7 +2410,7 @@ async function startOptimizeBuild() {
   try {
     await optimizeMainBuildFromBackend();
   } catch (error) {
-    state.optimizer.summary = { tested: 0, elapsedMs: 0, label: `Optimization stopped: ${error.message}` };
+    state.optimizer.summary = { tested: 0, elapsedMs: 0, withheld: true, label: `Optimization stopped — no build applied. ${error.message}` };
   } finally {
     state.optimizer.running = false;
     render();

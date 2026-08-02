@@ -140,6 +140,77 @@ def test_api_includes_sourced_lulu_ally_shield_in_main_ehp():
     assert main["survival"]["support_shield_received"] > 0
 
 
+def test_main_support_targets_selected_ally_and_uses_requested_rank():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Lulu",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": False,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+            "allies": [
+                {
+                    "champion": "Jinx",
+                    "level": 18,
+                    "items": [],
+                    "ally_effects_enabled": True,
+                }
+            ],
+            "enemies": [{"champion": "Ambessa", "level": 18, "items": []}],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    shield = next(
+        event
+        for event in combat["support_events"]
+        if event["attacker"] == "main" and event["source"].startswith("Help, Pix!")
+    )
+    assert shield["target"] == "ally:Jinx"
+    assert shield["target_policy"] == "first_selected_teammate"
+    assert shield["amount"] == 230.0
+    jinx = next(row for row in combat["participants"] if row["participant_id"] == "ally:Jinx")
+    assert jinx["survival"]["support_shield_received"] == 230.0
+
+
+def test_enemy_self_shield_is_present_in_the_coupled_timeline():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Aatrox",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": False,
+            "enemies": [
+                {
+                    "champion": "Orianna",
+                    "level": 6,
+                    "items": [],
+                    "ability_ranks": {"Q": 3, "W": 1, "E": 1, "R": 1},
+                }
+            ],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    shield = next(
+        event
+        for event in combat["support_events"]
+        if event["attacker"] == "enemy:Orianna"
+        and event["source"].startswith("Command: Protect")
+    )
+    assert shield["target"] == "enemy:Orianna"
+    assert shield["target_policy"] == "self"
+    assert shield["amount"] == 55.0
+
+
 def test_coupled_timeline_stops_output_after_main_champion_is_defeated():
     app.config["TESTING"] = True
     response = app.test_client().post(
