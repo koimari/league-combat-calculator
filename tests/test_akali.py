@@ -43,11 +43,16 @@ class TestQFivePointStrike:
 
 
 class TestWTwilightShroud:
-    """Tests for W (Twilight Shroud) — no damage, should be skipped."""
+    """Tests for W (Twilight Shroud) — a zero-damage resource event."""
 
-    def test_w_not_in_results(self, akali_data, parse_at) -> None:
+    def test_w_restores_and_temporarily_expands_energy(
+        self, akali_data, parse_at
+    ) -> None:
         _, abilities = parse_at(akali_data, 9)
-        assert "W" not in abilities
+        assert abilities["W"]["total_raw"] == 0
+        assert abilities["W"]["resource_restore"] == 100
+        assert abilities["W"]["resource_maximum_bonus"] == 100
+        assert abilities["W"]["resource_maximum_bonus_duration"] > 0
 
 
 class TestEShurikenFlip:

@@ -903,6 +903,9 @@ class DamageSource:
     damage_type: DamageType
     raw_damage: RawDamageFormula
     is_ability_damage: bool = False
+    multi_target_charges: int = 0
+    repeated_target_multiplier: float = 1.0
+    single_target_multiplier: float = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -1450,6 +1453,8 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         base = required.number("base_per_charge")
         ap_ratio = required.number("ap_ratio_per_charge")
         multiplier = required.number("single_target_multiplier")
+        charges = int(required.number("charges"))
+        repeated_target_multiplier = (multiplier - 1.0) / max(1, charges - 1)
 
         def raw(inputs: DamageInputs) -> float:
             ap = inputs.champion_stats.get("ability_power", 0.0)
@@ -1483,6 +1488,11 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         damage_type=required.value("damage_type"),
         raw_damage=raw,
         is_ability_damage=bool(values.get("is_ability_damage", False)),
+        multi_target_charges=charges if formula == "charged_ap" else 0,
+        repeated_target_multiplier=(
+            repeated_target_multiplier if formula == "charged_ap" else 1.0
+        ),
+        single_target_multiplier=(multiplier if formula == "charged_ap" else 1.0),
     )
     return CooldownProcEffect(
         source,

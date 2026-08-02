@@ -14,6 +14,7 @@ from .champions import (
     get_champion_cast_order,
     parse_champion_abilities,
 )
+from .champions.skill_orders import get_ability_rank
 from .damage import (
     FightConfig,
     calculate_fight_damage,
@@ -43,6 +44,7 @@ PUBLIC_INPUT_LIMITS: dict[str, tuple[float, float]] = {
     "target_mr": (0.0, 500.0),
 }
 _PUBLIC_FIGHT_MODES = frozenset({"one_rotation", "time_based", "timed", "auto_only"})
+_NONSTANDARD_RANK_CHAMPIONS = frozenset({"Elise", "Jayce", "Karma", "Nidalee", "Udyr"})
 
 
 def _bounded_request_float(data: Mapping[str, Any], key: str, default: float) -> float:
@@ -84,6 +86,7 @@ class FightParams(FightConfig):
     item_options: dict[str, dict[str, int]] | None = None
     role: str = ""
     role_quest_complete: bool = False
+    ally_stat_bonuses: dict[str, float] | None = None
 
     @classmethod
     def from_request(
@@ -195,6 +198,47 @@ class FightParams(FightConfig):
             "target_missing_health": 0.0,
         }
 
+    def validate_for_champion(self, champion_name: str, level: int) -> None:
+        """Reject a rank allocation that cannot exist at ``level``.
+
+        Rank-free requests use the champion's sourced default order. Manual
+        allocations are accepted only for the standard five-rank basic and
+        three-rank ultimate layout. Transformation and auto-levelled kits fail
+        closed until their individual allocation rules are represented.
+        """
+        if self.ability_ranks is None:
+            return
+        if champion_name in _NONSTANDARD_RANK_CHAMPIONS:
+            raise ValueError(
+                f"Manual ability ranks are unavailable for {champion_name}; "
+                "use the level-derived ranks"
+            )
+
+        effective = {
+            key: self.ability_ranks.get(
+                key, get_ability_rank(key, level, champion_name)
+            )
+            for key in ("Q", "W", "E", "R")
+        }
+        for key in ("Q", "W", "E"):
+            rank = effective[key]
+            minimum_level = max(1, 2 * rank - 1) if rank else 0
+            if rank and level < minimum_level:
+                raise ValueError(
+                    f"{key} rank {rank} requires champion level {minimum_level}"
+                )
+        ultimate_rank = effective["R"]
+        minimum_ultimate_level = (0, 6, 11, 16)[ultimate_rank]
+        if ultimate_rank and level < minimum_ultimate_level:
+            raise ValueError(
+                f"R rank {ultimate_rank} requires champion level "
+                f"{minimum_ultimate_level}"
+            )
+        if sum(effective.values()) > min(level, 18):
+            raise ValueError(
+                "Ability ranks spend more skill points than the champion level allows"
+            )
+
 
 def run_fight(
     champion_data: dict[str, Any],
@@ -203,6 +247,7 @@ def run_fight(
     params: FightParams,
 ) -> dict[str, Any]:
     """Run stats, champion ability parsing, and fight damage as one pipeline."""
+    params.validate_for_champion(champion_data.get("name", ""), level)
     champion_stats = calculate_total_stats(
         champion_data,
         level,
@@ -210,6 +255,7 @@ def run_fight(
         item_options=params.item_options,
         role=params.role,
         role_quest_complete=params.role_quest_complete,
+        external_stat_bonuses=params.ally_stat_bonuses,
     )
 
     # Reserved option keys are pipeline-owned: strip whatever the caller
@@ -254,7 +300,12 @@ def run_fight(
         declared = get_champion_cast_order(champion_data.get("name", ""))
         if declared is not None:
             params = replace(params, cast_order=declared)
-    result = calculate_fight_damage(fight_stats, ability_damages, items, params)
+    result = calculate_fight_damage(
+        fight_stats,
+        ability_damages,
+        items,
+        replace(params, enforce_resource_limits=True),
+    )
     result["champion_stats"] = fight_stats
     auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
     result["auto_attack_damage"] = auto_damage

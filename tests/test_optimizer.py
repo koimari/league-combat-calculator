@@ -106,6 +106,35 @@ def test_evaluate_build_sums_objective_across_target_roster(monkeypatch):
     assert score == 350
 
 
+def test_optimizer_respects_gold_budget():
+    result = optimize_build(
+        "Ahri",
+        get_champion("Ahri"),
+        level=18,
+        max_legendary_slots=2,
+        gold_budget=7_000,
+    )
+
+    assert result["ranked_builds"]
+    assert all(build["gold"] <= 7_000 for build in result["ranked_builds"])
+
+
+def test_one_open_slot_is_exhaustively_certified_and_has_distinct_runner_up():
+    result = optimize_build(
+        "Ahri",
+        get_champion("Ahri"),
+        level=18,
+        max_legendary_slots=2,
+        locked_items=["Rabadon's Deathcap"],
+        locked_boots="Sorcerer's Shoes",
+    )
+
+    assert result["is_certified_best"] is True
+    assert result["search_guarantee"] == "exhaustive_legal_candidates"
+    assert len(result["ranked_builds"]) == 2
+    assert result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
+
+
 def test_optimizer_is_champion_specific_for_orianna_auto_uptime():
     """High AA uptime must not collapse Orianna and Aatrox to one AD build."""
     shared = {
@@ -146,6 +175,17 @@ class TestOptimizerBasic:
             target_mr=40,
             max_legendary_slots=5,
         )
+
+        assert len(result["ranked_builds"]) == 2
+        assert (
+            result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
+        )
+        assert (
+            result["ranked_builds"][0]["total_damage"]
+            >= result["ranked_builds"][1]["total_damage"]
+        )
+        assert result["ranked_builds"][0]["dps"] > 0
+        assert result["is_certified_best"] is False
         assert "items" in result
         assert "boots" in result
         assert "total_damage" in result

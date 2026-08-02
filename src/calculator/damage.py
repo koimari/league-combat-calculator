@@ -359,6 +359,10 @@ class FightConfig:
     cast_order: list[str] | None = None
     auto_attacks_only: bool = False
     deterministic: bool = False
+    target_magic_shield: float = 0.0
+    target_physical_shield: float = 0.0
+    target_general_shield: float = 0.0
+    enforce_resource_limits: bool = False
 
 
 @dataclass
@@ -390,6 +394,7 @@ class FightState:
     deterministic: bool
     is_melee: bool
     level: int
+    enforce_resource_limits: bool
     # ── Resolved combat numbers ───────────────────────────────────────────
     resists: Resists
     magic_amp: float  # Abyssal Mask
@@ -1171,6 +1176,7 @@ def _resolve_combat_state(
         deterministic=config.deterministic,
         is_melee=is_melee,
         level=level,
+        enforce_resource_limits=config.enforce_resource_limits,
         resists=resists,
         magic_amp=damage_effects.magic_amp,
         ability_amp=(
@@ -1339,6 +1345,9 @@ class RotationResult:
     navori_refund: float = 0.0
     autos_per_second: float = 0.0
     last_cast_time: float = 0.0  # timed mode: when the final recast lands
+    cast_events: list[dict[str, Any]] = field(default_factory=list)
+    resource_spent: float = 0.0
+    resource_remaining: float = 0.0
     # Ability-carried item applications, in rotation order. They lead
     # the fight's shared counters — autos continue the same counters
     # afterwards (which counter a source advances is decided by the
@@ -1800,6 +1809,12 @@ class CastPlan:
     counts: dict[str, int]
     times: dict[str, tuple[float, ...]]
     last_cast_time: float
+    resource_spent: float = 0.0
+    resource_remaining: float = 0.0
+    omitted_for_resource: tuple[str, ...] = ()
+    resource_by_cast: dict[tuple[str, int], dict[str, float]] = field(
+        default_factory=dict
+    )
 
 
 def _resolve_cast_plan(
@@ -1826,6 +1841,7 @@ def _resolve_cast_plan(
             parent_key = ability_info.get("recast_of")
             if parent_key and parent_key in counts:
                 num_casts = counts[parent_key]
+                scheduled = list(times[parent_key])
             else:
                 scheduled = schedule[ability_key]
                 # Empowered-auto abilities (Vayne Q) only deal damage
@@ -1858,6 +1874,125 @@ def _resolve_cast_plan(
         times[ability_key] = tuple(scheduled) if scheduled else (0.0,) * num_casts
 
     return CastPlan(counts=counts, times=times, last_cast_time=last_cast_time)
+
+
+def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
+    """Drop casts that cannot be paid for on the shared cast timeline."""
+    if not state.enforce_resource_limits:
+        # Direct engine callers may provide an intentionally partial stat
+        # packet. The typed pipeline opts in after it has resolved the full
+        # champion stat and ability packets.
+        return plan
+    resource_types = {
+        str(info.get("resource_type", "NONE"))
+        for info in state.ability_damages.values()
+    }
+    resource_types.discard("NONE")
+    resource_types.discard("RAGE")
+    if not resource_types:
+        return plan
+    if len(resource_types) != 1:
+        state.notes.append("Resource limits unavailable: mixed resource types.")
+        return plan
+    resource_type = next(iter(resource_types))
+    if resource_type not in {"MANA", "ENERGY"}:
+        state.notes.append(
+            f"Resource limits unavailable for {resource_type.lower().replace('_', ' ')}."
+        )
+        return plan
+
+    base_maximum = float(state.champion_stats.get("max_mana", 0.0))
+    remaining = base_maximum
+    regen = float(state.champion_stats.get("resource_regen_per_second", 0.0))
+    events: list[tuple[float, int, int, str]] = []
+    order = {key: index for index, key in enumerate(state.cast_order)}
+    for key, times in plan.times.items():
+        events.extend(
+            (cast_time, order.get(key, len(order)), ordinal, key)
+            for ordinal, cast_time in enumerate(times)
+        )
+    events.sort()
+
+    accepted: dict[str, list[float]] = {key: [] for key in plan.times}
+    accepted_ordinals: dict[str, set[int]] = {key: set() for key in plan.times}
+    omitted: list[str] = []
+    spent = 0.0
+    previous_time = 0.0
+    maximum_bonus = 0.0
+    maximum_bonus_until = -1.0
+    resource_by_cast: dict[tuple[str, int], dict[str, float]] = {}
+
+    proc_restore = next(
+        (
+            info
+            for info in state.ability_damages.values()
+            if float(info.get("resource_restore_per_proc", 0.0)) > 0
+            and int(info.get("proc_count", 0)) > 0
+        ),
+        None,
+    )
+    proc_restores_left = int(proc_restore.get("proc_count", 0)) if proc_restore else 0
+    for cast_time, _order_index, ordinal, key in events:
+        maximum = base_maximum + (
+            maximum_bonus if cast_time < maximum_bonus_until else 0.0
+        )
+        remaining = min(
+            maximum, remaining + max(0.0, cast_time - previous_time) * regen
+        )
+        previous_time = cast_time
+        info = state.ability_damages[key]
+        parent = info.get("recast_of")
+        if parent and ordinal not in accepted_ordinals.get(parent, set()):
+            omitted.append(key)
+            continue
+        cost = float(info.get("resource_cost", 0.0))
+        if cost > remaining + _CAST_SCHEDULE_EPS:
+            omitted.append(key)
+            continue
+        before = remaining
+        remaining -= cost
+        spent += cost
+        cast_maximum_bonus = float(info.get("resource_maximum_bonus", 0.0))
+        if cast_maximum_bonus > 0:
+            maximum_bonus = max(maximum_bonus, cast_maximum_bonus)
+            maximum_bonus_until = max(
+                maximum_bonus_until,
+                cast_time + float(info.get("resource_maximum_bonus_duration", 0.0)),
+            )
+            maximum = base_maximum + maximum_bonus
+
+        restored = float(info.get("resource_restore", 0.0))
+        if proc_restore is not None and proc_restores_left > 0:
+            # A fixed-count proc entry represents those procs as having
+            # happened in this scenario. For Ambessa, each accepted ability
+            # cast mints one passive stack and the model weaves the selected
+            # empowered attacks between casts, so their energy restoration
+            # belongs on the same ordered resource timeline.
+            restored += float(proc_restore["resource_restore_per_proc"])
+            proc_restores_left -= 1
+        remaining = min(maximum, remaining + restored)
+        accepted_ordinal = len(accepted[key])
+        accepted[key].append(cast_time)
+        accepted_ordinals[key].add(ordinal)
+        resource_by_cast[(key, accepted_ordinal)] = {
+            "resource_before": before,
+            "resource_restored": restored,
+            "resource_after": remaining,
+        }
+
+    counts = {key: len(times) for key, times in accepted.items()}
+    last_cast_time = max(
+        (time for times in accepted.values() for time in times), default=0.0
+    )
+    return CastPlan(
+        counts=counts,
+        times={key: tuple(times) for key, times in accepted.items()},
+        last_cast_time=last_cast_time,
+        resource_spent=spent,
+        resource_remaining=remaining,
+        omitted_for_resource=tuple(omitted),
+        resource_by_cast=resource_by_cast,
+    )
 
 
 @dataclass(frozen=True)
@@ -2167,8 +2302,41 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     # Resolve WHEN everything casts before pricing anything: the stack
     # timeline (Case 4/5) must exist before the first cast is priced, and
     # both it and the DoT integration afterwards read this one plan.
-    plan = _resolve_cast_plan(state, schedule)
+    plan = _apply_resource_limits(state, _resolve_cast_plan(state, schedule))
     result.last_cast_time = plan.last_cast_time
+    result.resource_spent = plan.resource_spent
+    result.resource_remaining = plan.resource_remaining
+    cast_event_order = {slot: index for index, slot in enumerate(state.cast_order)}
+    result.cast_events = sorted(
+        (
+            {
+                "time": round(cast_time, 3),
+                "slot": ability_key,
+                "name": ability_damages[ability_key].get("name", ability_key),
+                "ordinal": ordinal + 1,
+                "resource_cost": float(
+                    ability_damages[ability_key].get("resource_cost", 0.0)
+                ),
+                **plan.resource_by_cast.get((ability_key, ordinal), {}),
+            }
+            for ability_key, times in plan.times.items()
+            for ordinal, cast_time in enumerate(times)
+        ),
+        key=lambda event: (
+            event["time"],
+            cast_event_order.get(event["slot"], len(cast_event_order)),
+            event["ordinal"],
+        ),
+    )
+    if plan.omitted_for_resource:
+        omitted_counts = {
+            key: plan.omitted_for_resource.count(key)
+            for key in dict.fromkeys(plan.omitted_for_resource)
+        }
+        detail = ", ".join(f"{key} x{count}" for key, count in omitted_counts.items())
+        state.notes.append(
+            f"Started at full resource; insufficient resource omitted {detail}."
+        )
     # An empowered burst that sets its own attack speed re-times the auto
     # stream — do it before anything prices an auto or counts an on-hit.
     _apply_empowered_burst_autos(state, plan)
@@ -3666,6 +3834,13 @@ def _add_item_proc_damage(state: FightState) -> None:
             "total_damage": proc_mitigated,
             "damage_type": source.damage_type,
         }
+        if source.multi_target_charges:
+            state.breakdown[source.breakdown_key]["targeting"] = {
+                "kind": "charged_bounce",
+                "charges": source.multi_target_charges,
+                "repeat_multiplier": source.repeated_target_multiplier,
+                "single_target_multiplier": source.single_target_multiplier,
+            }
         state.total_damage += proc_mitigated
 
     # ── Ultimate-triggered procs (Malignance) ──
@@ -4249,17 +4424,56 @@ def calculate_fight_damage(
     # ── Notes for conditional item assumptions ──────────────────────────
     _collect_fight_notes(state, rotation, on_hits)
 
+    shield_outcome = _resolve_starting_shield_outcome(state, config)
     return {
         "breakdown": state.breakdown,
         "total_damage": state.total_damage,
         "effective_mr": state.resists.effective_mr,
         "effective_armor": state.resists.effective_armor,
         "notes": state.notes,
+        "cast_timeline": rotation.cast_events,
+        "resource_spent": rotation.resource_spent,
+        "resource_remaining": rotation.resource_remaining,
+        **shield_outcome,
         # Exposed for champion-specific ability calculators (Case 1: stack
         # acceleration). Champions like Vayne can check which autos grant
         # double stacks to calculate ability procs more accurately.
         "phantom_hit_autos": on_hits.phantom_hit_autos,
         "phantom_hit_count": on_hits.phantom_hit_count,
+    }
+
+
+def _resolve_starting_shield_outcome(
+    state: FightState, config: FightConfig
+) -> dict[str, float]:
+    """Split post-mitigation TDD into shield absorption and health damage.
+
+    TDD remains damage dealt. Shields are reported as a separate defensive
+    outcome so the UI does not hide how much of that damage reached health.
+    """
+    damage_by_type = split_by_damage_type(state.breakdown)
+    magic_absorbed = min(
+        max(0.0, config.target_magic_shield), damage_by_type.get("magic", 0.0)
+    )
+    physical_absorbed = min(
+        max(0.0, config.target_physical_shield),
+        damage_by_type.get("physical", 0.0),
+    )
+    remaining_magic = max(0.0, damage_by_type.get("magic", 0.0) - magic_absorbed)
+    remaining_physical = max(
+        0.0, damage_by_type.get("physical", 0.0) - physical_absorbed
+    )
+    general_absorbed = min(
+        max(0.0, config.target_general_shield),
+        remaining_magic + remaining_physical + damage_by_type.get("true", 0.0),
+    )
+    absorbed = magic_absorbed + physical_absorbed + general_absorbed
+    return {
+        "shield_absorbed": absorbed,
+        "magic_shield_absorbed": magic_absorbed,
+        "physical_shield_absorbed": physical_absorbed,
+        "general_shield_absorbed": general_absorbed,
+        "health_damage": max(0.0, state.total_damage - absorbed),
     }
 
 

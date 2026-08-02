@@ -50,6 +50,12 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "rank",
         "cooldown",
         "cast_time",
+        "resource_cost",
+        "resource_type",
+        "resource_restore",
+        "resource_restore_per_proc",
+        "resource_maximum_bonus",
+        "resource_maximum_bonus_duration",
         "damage_type",
         "parts",
         "cast_instances",
@@ -166,6 +172,38 @@ def _stamp_cast_time(
         entry["cast_time"] = cast_time
 
 
+def _stamp_resource_cost(
+    entry: dict[str, Any],
+    ability_json: dict[str, Any] | None,
+    *,
+    rank: int,
+    level: int,
+    resource_type: str,
+) -> None:
+    """Stamp a cast's locally sourced resource cost onto its engine entry."""
+    if "resource_cost" in entry or ability_json is None:
+        return
+    if resource_type not in {"MANA", "ENERGY"} or "cooldown" not in entry:
+        return
+    entry["resource_type"] = resource_type
+    if entry.get("recast_of"):
+        entry["resource_cost"] = 0.0
+        return
+    modifiers = (ability_json.get("cost") or {}).get("modifiers", [])
+    if not modifiers:
+        entry["resource_cost"] = 0.0
+        return
+    values = modifiers[0].get("values", [])
+    if not values:
+        entry["resource_cost"] = 0.0
+        return
+    index = level - 1 if len(values) >= 18 else rank - 1
+    if index < 0:
+        entry["resource_cost"] = 0.0
+        return
+    entry["resource_cost"] = float(values[min(index, len(values) - 1)])
+
+
 def _validate_entry_keys(
     champion_name: str,
     result_key: str,
@@ -267,7 +305,15 @@ def build_parser(
             )
             entry = parser(ctx)
             if entry is not None:
-                _stamp_cast_time(entry, ctx.ability())
+                ability_json = ctx.ability()
+                _stamp_cast_time(entry, ability_json)
+                _stamp_resource_cost(
+                    entry,
+                    ability_json,
+                    rank=ctx.rank_for(),
+                    level=level,
+                    resource_type=str(champion_data.get("resource", "NONE")),
+                )
                 results[_result_key(slot)] = entry
 
         # Validate AFTER all phases: AMP parsers mutate earlier entries,

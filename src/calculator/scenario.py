@@ -9,7 +9,10 @@ from dataclasses import dataclass, field as dataclass_field
 from typing import Any, Mapping
 
 from .data_fetcher import get_champion, get_item_by_name
+from .defensive_effects import StartingDefenses, resolve_starting_defenses
 from .item_effects import validate_item_input_options
+from .loadout_rules import validate_resolved_loadout
+from .role_quests import validate_role
 from .stats import MAX_LEVEL, calculate_total_stats
 
 MAX_ENEMIES = 5
@@ -37,6 +40,9 @@ class ChampionLoadout:
     items: tuple[str, ...] = ()
     boots: str = ""
     item_options: dict[str, dict[str, int]] = dataclass_field(default_factory=dict)
+    role: str = ""
+    role_quest_complete: bool = False
+    ally_effects_enabled: bool = False
 
     @classmethod
     def from_request(cls, value: object, *, field: str) -> "ChampionLoadout":
@@ -66,6 +72,15 @@ class ChampionLoadout:
         )
         boots = _short_string(value.get("boots", ""), f"{field}.boots")
         item_options = validate_item_input_options(value.get("item_options"))
+        role = validate_role(value.get("role", ""))
+        role_quest_complete = value.get("role_quest_complete", False)
+        if not isinstance(role_quest_complete, bool):
+            raise ValueError(f"{field}.role_quest_complete must be true or false")
+        if role_quest_complete and not role:
+            raise ValueError(f"{field}.role is required when role quest is complete")
+        ally_effects_enabled = value.get("ally_effects_enabled", False)
+        if not isinstance(ally_effects_enabled, bool):
+            raise ValueError(f"{field}.ally_effects_enabled must be true or false")
 
         equipped_names = (*items, *((boots,) if boots else ()))
         if len(set(equipped_names)) != len(equipped_names):
@@ -77,24 +92,39 @@ class ChampionLoadout:
             items=items,
             boots=boots,
             item_options=item_options,
+            role=role,
+            role_quest_complete=role_quest_complete,
+            ally_effects_enabled=ally_effects_enabled,
         )
 
     def resolve(self) -> "ResolvedLoadout":
         """Resolve cached Wiki data and calculate the complete stat matrix."""
         champion_data = get_champion(self.champion)
-        item_names = (*((self.boots,) if self.boots else ()), *self.items)
-        item_data = tuple(get_item_by_name(name) for name in item_names)
+        ordinary_items = tuple(get_item_by_name(name) for name in self.items)
+        boots_data = get_item_by_name(self.boots) if self.boots else None
+        validate_resolved_loadout(
+            ordinary_items,
+            boots=boots_data,
+            role=self.role,
+            role_quest_complete=self.role_quest_complete,
+        )
+        item_data = (*((boots_data,) if boots_data else ()), *ordinary_items)
         stats = calculate_total_stats(
             champion_data,
             self.level,
             list(item_data),
             item_options=self.item_options,
+            role=self.role,
+            role_quest_complete=self.role_quest_complete,
         )
         return ResolvedLoadout(
             request=self,
             champion_data=champion_data,
             item_data=item_data,
             stats=stats,
+            defenses=resolve_starting_defenses(
+                champion_data["name"], self.level, stats
+            ),
         )
 
 
@@ -106,6 +136,7 @@ class ResolvedLoadout:
     champion_data: dict[str, Any]
     item_data: tuple[dict[str, Any], ...]
     stats: dict[str, float]
+    defenses: StartingDefenses
 
     def public_summary(self) -> dict[str, Any]:
         """Return the UI-safe identity, source images, build, and stat matrix."""
@@ -116,7 +147,11 @@ class ResolvedLoadout:
             "items": [item["name"] for item in self.item_data],
             "item_icons": [item.get("icon", "") for item in self.item_data],
             "item_options": dict(self.request.item_options),
+            "role": self.request.role,
+            "role_quest_complete": self.request.role_quest_complete,
+            "ally_effects_enabled": self.request.ally_effects_enabled,
             "stats": dict(self.stats),
+            "starting_defenses": self.defenses.public_summary(),
         }
 
 

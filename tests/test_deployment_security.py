@@ -30,10 +30,10 @@ def test_runtime_manifest_excludes_local_tools():
     assert "--hash=sha256:" in runtime_lock
 
 
-def test_ci_covers_both_release_branches_and_uses_immutable_actions():
+def test_ci_covers_net_new_main_branch_and_uses_immutable_actions():
     workflow = Path(".github/workflows/tests.yml").read_text(encoding="utf-8")
 
-    assert "branches: [master, prod]" in workflow
+    assert workflow.count("branches: [main]") == 2
     assert "pip-audit -r requirements.txt" in workflow
     assert "bandit -r src -ll" in workflow
     assert "docker build --tag lol-calculator:ci ." in workflow

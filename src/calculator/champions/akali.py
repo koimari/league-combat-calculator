@@ -10,7 +10,8 @@ Why each slot is non-generic:
   plus an R2 execute part whose ``hp_scaled_damage`` closure interpolates
   min→max with the target's missing HP — the engine evaluates it against
   the HP remaining after R1 and earlier casts in the rotation.
-- W (Twilight Shroud) deals no damage and is absent from the slot map.
+- W (Twilight Shroud) is a zero-damage resource event: it restores energy
+  and temporarily raises Akali's maximum energy.
 
 All numeric values are read from the champion JSON data.
 """
@@ -22,9 +23,35 @@ from .engine import SlotCtx, build_parser
 from .slotlib import (
     extract_cooldown,
     extract_named,
+    extract_value,
     proc_damage,
     simple_damage,
 )
+
+
+def _twilight_shroud(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: emit the sourced energy restore and temporary maximum increase."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    duration = extract_value(ability, "Shroud Duration", rank)
+    return {
+        "name": ability.get("name", "Twilight Shroud"),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "damage_type": "magic",
+        "parts": (),
+        "total_raw": 0.0,
+        # Wiki revision 4007406: restores 100 energy and raises maximum
+        # energy by 100 while the rank-scaled shroud remains active.
+        "resource_restore": 100.0,
+        "resource_maximum_bonus": 100.0,
+        "resource_maximum_bonus_duration": duration,
+        "detail": "Restores 100 energy and raises maximum energy by 100",
+    }
 
 
 def _assassins_mark_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -90,6 +117,7 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "W": _twilight_shroud,
     "E": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "R": _perfect_execution,
     "P": proc_damage(

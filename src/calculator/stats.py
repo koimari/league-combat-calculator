@@ -175,6 +175,7 @@ def calculate_total_stats(
     item_options: Mapping[str, Mapping[str, int]] | None = None,
     role: str = "",
     role_quest_complete: bool = False,
+    external_stat_bonuses: Mapping[str, float] | None = None,
 ) -> dict[str, float]:
     """Calculate total champion stats with items applied.
 
@@ -212,6 +213,10 @@ def calculate_total_stats(
         for key in total_item_stats:
             total_item_stats[key] += item_stats.get(key, 0.0)
 
+    external = external_stat_bonuses or {}
+    total_item_stats["ability_power"] += float(external.get("ability_power", 0.0))
+    total_item_stats["ability_haste"] += float(external.get("ability_haste", 0.0))
+
     # Mana first — stat conversions read it (Awe → AP, Muramana → AD)
     cdm = champion_data["stats"]
     base_mana = growth_stat(
@@ -220,6 +225,16 @@ def calculate_total_stats(
         level,
     )
     total_mana = base_mana + total_item_stats["mana"]
+    base_resource_regen_per_five = growth_stat(
+        cdm.get("manaRegen", {}).get("flat", 0),
+        cdm.get("manaRegen", {}).get("perLevel", 0),
+        level,
+    )
+    resource_regen_per_second = (
+        base_resource_regen_per_five
+        * (1.0 + total_item_stats["mana_regen_percent"] / 100.0)
+        / 5.0
+    )
     is_melee = champion_data.get("attackType", "MELEE") == "MELEE"
 
     # Every stat-granting item passive, compiled once. item_effects owns
@@ -342,6 +357,7 @@ def calculate_total_stats(
         "critical_strike_chance": total_item_stats["critical_strike_chance"],
         "max_mana": round(total_mana),
         "bonus_mana": round(total_item_stats["mana"]),
+        "resource_regen_per_second": resource_regen_per_second,
         "ability_haste": total_item_stats["ability_haste"],
         "basic_ability_haste": bonuses.basic_ability_haste,
         "level": level,

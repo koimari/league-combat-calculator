@@ -1,67 +1,41 @@
 # League Combat Calculator
 
-A source-backed League of Legends combat and build calculator. Start from an empty canvas, choose the champion being optimized, reconstruct both teams, select the exact damage package, and compare or optimize builds against the selected enemy roster.
+A roster-aware League of Legends damage and build calculator. Choose one attacker, reconstruct up to five enemies and four allies, then compare builds or search for the highest modeled total damage dealt (TDD).
 
-This net-new repository keeps the battle-tested engine and interface direction from [Skyway1111/lol-calculator](https://github.com/Skyway1111/lol-calculator) and merges in Scryglass's roster builder, full stat matrices, build comparison, BIS workflow, and provenance-first product rules.
+## What it calculates
 
-## Features
+- level-, rank-, item-, role-quest-, and stack-dependent stats;
+- post-mitigation damage with League's penetration order;
+- cooldown-limited casts, resource costs, regeneration, auto-attack uptime, burns, procs, shields, and per-skill attribution;
+- per-target and roster-wide TDD, health damage, DPS, and two distinct build results;
+- an exhaustive best-in-slot result when one legendary slot is open;
+- a clearly labeled heuristic search for complete builds.
 
-- **Empty, general scenario builder** — No hardcoded champion or matchup; add up to four allies and five enemies
-- **Full stat matrices** — Level- and item-derived base HP, bonus HP, total HP, defenses, offense, haste, speed, and penetration for every selected champion
-- **Champion stats** — Per-level stat calculations using the official growth formula
-- **Item builds** — Reconstruct components, starters, completed items, boots, and item-specific inputs such as Dark Seal or Mejai's stacks
-- **Ability damage** — Calculates Q/W/E/R damage at any rank with AP/AD/bonus scaling
-- **Fight simulation** — One rotation or a timed window with cooldowns, auto-attack uptime, active items, falling health, burns, and skill-by-skill attribution
-- **Roster-aware build optimizer** — Score legal candidate builds into every selected enemy and maximize summed post-mitigation total, physical, or magic damage
-- **Role quests** — Current mid quest AP/bonus-AD and tier-3 boots rules plus the bottom quest's extra inventory slot
-- **Allies** — Include allied champions and builds as sourced scenario context; ally buffs are counted only after an explicit tested rule exists
-- **Per-target output** — See each enemy's HP/armor/MR and damage received alongside aggregate TDD
-- **Item effects** — Supports on-hit (Nashor's, BotRK), spellblade (Lich Bane), burn (Liandry's), and more
-- **Auto-updating data** — Fetches champion and item data from the LoL Wiki for the latest patch
+The public attacker picker enables only champion modules with reviewed formulas. All 173 cached champions remain available as allies or enemies because base stats and item stats are calculated separately. Unmodeled attacker kits fail closed; unmodeled ally or defensive effects are shown as assumptions instead of being presented as zero.
 
-Only champions with a dedicated module are labeled verified attackers. Every champion can still be used as an ally or target because their level and item stats are derived independently. Unsupported attacker kits fail closed in the public UI instead of presenting generic parsing as exact.
+## Run locally
 
-## Setup
-
-Requires Python 3.10+.
+Requires Python 3.12. After starting the app, open `http://127.0.0.1:5000`.
 
 ```bash
-# Clone the repo
-git clone https://github.com/koimari/league-combat-calculator.git
-cd league-combat-calculator
-
-# Create virtual environment and install dependencies
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS/Linux
+source .venv/bin/activate
 pip install -r requirements.txt
-
-# Run the app
 python -m flask --app src.app run
 ```
 
-Then open http://localhost:5000 in your browser.
-
-The repository includes a tracked data cache. In local development, **Update to latest patch** refreshes that cache through the existing updater.
-
-## Running Tests
+## Verify
 
 ```bash
-python -m pytest
-pylint src/
+python -m pytest -q
+python -m pylint src/ --fail-under=9
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json
 ```
 
-## Credits
+## Data and provenance
 
-- **[lolstaticdata](https://github.com/meraki-analytics/lolstaticdata)** by Meraki Analytics — Champion and item data scraping library. This project vendors a copy of their code (`vendor/lolstaticdata/`) to pull accurate ability data from the wiki.
-- **[League of Legends Wiki](https://wiki.leagueoflegends.com)** — The source of truth for champion ability values, item effects, and game formulas.
-- **[Skyway1111/lol-calculator](https://github.com/Skyway1111/lol-calculator)** — Original calculator engine, champion-module architecture, test suite, and interface foundation retained in this repository's Git history.
-- **Scryglass** — Roster-first scenario design, stat-card presentation, comparison/BIS requirements, ally context, and source/provenance constraints.
+Champion and item data are read from the tracked League of Legends Wiki cache in `data/`. Patch refreshes run locally and enter production through reviewed commits. Revision-backed mechanics include their source metadata in the API where available.
 
-## Tech Stack
+The calculator combines the combat engine and tests from [Skyway1111/lol-calculator](https://github.com/Skyway1111/lol-calculator) with Scryglass's roster, comparison, optimizer, provenance, and interface work. The upstream repository has no licence file; redistribution remains closed until its author chooses a licence. See `NOTICE.md`.
 
-- **Backend:** Python / Flask
-- **Frontend:** Vanilla HTML, CSS, JavaScript
-- **Data:** Scraped from the League of Legends Wiki via [lolstaticdata](https://github.com/meraki-analytics/lolstaticdata)
-- **Tests:** pytest plus a full-pipeline numeric golden snapshot
+Deployment instructions are in `docs/deploy.md`; calculation boundaries and module ownership are in `architecture.md`.

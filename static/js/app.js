@@ -38,6 +38,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const attackerRole = document.getElementById("attacker-role");
     const roleQuestComplete = document.getElementById("role-quest-complete");
     const roleQuestHint = document.getElementById("role-quest-hint");
+    const goldBudget = document.getElementById("gold-budget");
+    const keepSelectedItems = document.getElementById("keep-selected-items");
+    const shareScenarioBtn = document.getElementById("share-scenario");
+    const themeSelect = document.getElementById("theme-select");
+    const dataFreshness = document.getElementById("data-freshness");
 
     // Build rows. Build B (Compare mode) is a clone of build A's row, made
     // before the slot click handlers are attached so both rows wire up
@@ -126,6 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let selectedItemOptions = { a: {}, b: {} };
     let activePicker = null; // { build, slot } while the item picker is open
     let activeChampionPicker = null;
+    let pickerReturnFocus = null;
+    let championPickerReturnFocus = null;
     let nextRosterId = 1;
     const rosters = { allies: [], enemies: [] };
 
@@ -172,6 +179,10 @@ document.addEventListener("DOMContentLoaded", () => {
             defaultTarget = data.default_target;
             championOptionsMeta = data.champion_options || {};
             itemOptionsMeta = data.item_options || {};
+            const fetched = data.data_snapshot?.fetched_at;
+            dataFreshness.textContent = fetched
+                ? `Wiki cache · ${new Date(fetched).toLocaleDateString()}`
+                : "Wiki cache · date unavailable";
             // Update Data is a local dev workflow (LOL_CALC_DEV=1); the
             // deployed site 404s the endpoint, so hide its button.
             document
@@ -188,7 +199,140 @@ document.addEventListener("DOMContentLoaded", () => {
             refreshBuildItemOptions("b");
             renderRosterTeam("allies");
             renderRosterTeam("enemies");
+            restoreScenarioFromUrl();
         });
+
+    function applyTheme(value) {
+        const resolved = value === "system"
+            ? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+            : value;
+        document.documentElement.dataset.theme = resolved;
+    }
+
+    themeSelect.value = localStorage.getItem("calculator-theme") || "system";
+    applyTheme(themeSelect.value);
+    themeSelect.addEventListener("change", () => {
+        localStorage.setItem("calculator-theme", themeSelect.value);
+        applyTheme(themeSelect.value);
+    });
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+        if (themeSelect.value === "system") applyTheme("system");
+    });
+
+    function encodeScenario(value) {
+        const bytes = new TextEncoder().encode(JSON.stringify(value));
+        let binary = "";
+        bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+        return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+    }
+
+    function decodeScenario(value) {
+        const padded = value.replaceAll("-", "+").replaceAll("_", "/") + "===".slice((value.length + 3) % 4);
+        const binary = atob(padded);
+        const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+        return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    function publicRoster(entry) {
+        return {
+            champion: entry.champion,
+            level: entry.level,
+            slots: entry.slots,
+            itemOptions: entry.itemOptions,
+            allyEffectsEnabled: entry.allyEffectsEnabled,
+        };
+    }
+
+    function currentScenario() {
+        return {
+            v: 1,
+            champion: championSelect.value,
+            level: parseInt(levelSlider.value, 10),
+            builds: selectedItems,
+            compare: compareCheckbox.checked,
+            fight: buildFightPayload(championSelect.value || ""),
+            goldBudget: goldBudget.value,
+            keepSelectedItems: keepSelectedItems.checked,
+            allies: rosters.allies.map(publicRoster),
+            enemies: rosters.enemies.map(publicRoster),
+        };
+    }
+
+    shareScenarioBtn.addEventListener("click", async () => {
+        const url = new URL(window.location.href);
+        url.hash = `scenario=${encodeScenario(currentScenario())}`;
+        await navigator.clipboard.writeText(url.toString());
+        const old = shareScenarioBtn.textContent;
+        shareScenarioBtn.textContent = "Copied";
+        window.setTimeout(() => { shareScenarioBtn.textContent = old; }, 1400);
+    });
+
+    let scenarioRestored = false;
+    function restoreScenarioFromUrl() {
+        if (scenarioRestored || !location.hash.startsWith("#scenario=")) return;
+        if (!championsData.length || !itemsData.length || !bootsData.length) {
+            window.setTimeout(restoreScenarioFromUrl, 50);
+            return;
+        }
+        try {
+            const state = decodeScenario(location.hash.slice(10));
+            if (state.v !== 1) throw new Error("Unsupported scenario version");
+            const champion = championsData.find((row) => row.name === state.champion);
+            if (champion?.verified) selectChampion(champion.name, champion.icon);
+            levelSlider.value = state.level || 1;
+            for (const build of ["a", "b"]) {
+                const source = state.builds?.[build] || emptyBuild();
+                Object.entries(source).forEach(([slot, name]) => {
+                    if (name) selectItem(build, slot, name, itemIconMap[name] || "");
+                });
+            }
+            compareCheckbox.checked = Boolean(state.compare);
+            compareCheckbox.dispatchEvent(new Event("change"));
+            goldBudget.value = state.goldBudget || "";
+            keepSelectedItems.checked = Boolean(state.keepSelectedItems);
+            const fight = state.fight || {};
+            attackerRole.value = fight.role || "";
+            roleQuestComplete.checked = Boolean(fight.role_quest_complete);
+            const restoredBonusHealth = fight.target_bonus_health || 0;
+            targetBaseHealth.value = fight.target_health
+                ? Math.max(1, fight.target_health - restoredBonusHealth)
+                : targetBaseHealth.value;
+            targetBonusHealth.value = restoredBonusHealth;
+            targetArmor.value = fight.target_armor ?? targetArmor.value;
+            targetMr.value = fight.target_mr ?? targetMr.value;
+            fightDuration.value = fight.fight_duration || fightDuration.value;
+            autoUptime.value = Math.round((fight.auto_attack_uptime ?? 0.8) * 100);
+            includeAutos.checked = Boolean(fight.include_auto_attacks);
+            autoAttacksOnly.checked = Boolean(fight.auto_attacks_only);
+            includeActives.checked = fight.include_actives !== false;
+            const restoredMode = fight.fight_mode === "time_based"
+                ? "time_based"
+                : "one_rotation";
+            const restoredRadio = document.querySelector(
+                `input[name="fight-mode"][value="${restoredMode}"]`
+            );
+            if (restoredRadio) restoredRadio.checked = true;
+            applyRoleQuestUi();
+            for (const team of ["allies", "enemies"]) {
+                rosters[team] = (state[team] || []).map((saved) => ({
+                    ...newRosterEntry(),
+                    champion: saved.champion || "",
+                    icon: championsData.find((row) => row.name === saved.champion)?.icon || "",
+                    level: saved.level || 1,
+                    slots: { ...emptyBuild(), ...(saved.slots || {}) },
+                    itemOptions: saved.itemOptions || {},
+                    allyEffectsEnabled: Boolean(saved.allyEffectsEnabled),
+                }));
+                renderRosterTeam(team);
+                rosters[team].forEach((entry) => queueRosterStats(team, entry.id));
+            }
+            updateRosterCount();
+            syncControlsFromInputs();
+            scenarioRestored = true;
+        } catch (_error) {
+            showError("This shared scenario link is invalid or out of date.");
+        }
+    }
 
     // === Champion selection ===
 
@@ -346,6 +490,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // === Champion Picker ===
 
     function openChampionPicker(context = { kind: "attacker" }) {
+        championPickerReturnFocus = document.activeElement;
         activeChampionPicker = context;
         champPickerSearch.value = "";
         renderChampionGrid(championsData);
@@ -356,6 +501,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function closeChampionPicker() {
         champPickerOverlay.classList.add("hidden");
         activeChampionPicker = null;
+        if (championPickerReturnFocus instanceof HTMLElement) {
+            championPickerReturnFocus.focus();
+        }
+        championPickerReturnFocus = null;
     }
 
     function createPickerContent(icon, name, tooltip) {
@@ -377,7 +526,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         champs.forEach((champ) => {
-            const el = document.createElement("div");
+            const el = document.createElement("button");
+            el.type = "button";
             // An attacker needs a verified champion-specific damage module.
             // Roster cards only derive defensive/stat context, so every
             // champion in the local cache is valid there.
@@ -385,6 +535,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 activeChampionPicker.kind === "attacker";
             const blocked = selectingAttacker && !champ.verified;
             el.className = blocked ? "picker-item unverified" : "picker-item";
+            el.disabled = blocked;
             const tooltip = blocked
                 ? `${champ.name} — damage module not yet verified`
                 : champ.name;
@@ -556,6 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function openItemPicker(build, slotKey) {
+        pickerReturnFocus = document.activeElement;
         activePicker = { kind: "build", build: build, slot: slotKey };
         const isBoot = slotKey === "boots";
         const sourceItems = isBoot ? activeBootsPool() : itemsData;
@@ -598,13 +750,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentInSlot = activeSlots[activePicker.slot] || "";
 
         items.forEach((item) => {
-            const el = document.createElement("div");
+            const el = document.createElement("button");
+            el.type = "button";
             const isUsed = selected.has(item.name) && item.name !== currentInSlot;
             const exclusivityBlock = !isUsed
                 ? getSlotExclusivityBlock(activeSlots, item.name, activePicker.slot)
                 : null;
             const isBlocked = isUsed || exclusivityBlock;
             el.className = "picker-item" + (isBlocked ? " picker-item-used" : "");
+            el.disabled = isBlocked;
             let tooltip = item.name;
             if (isUsed) tooltip += " (already selected)";
             else if (exclusivityBlock) tooltip += ` (${exclusivityBlock})`;
@@ -736,6 +890,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function closePicker() {
         pickerOverlay.classList.add("hidden");
         activePicker = null;
+        if (pickerReturnFocus instanceof HTMLElement) pickerReturnFocus.focus();
+        pickerReturnFocus = null;
     }
 
     pickerClose.addEventListener("click", closePicker);
@@ -770,6 +926,7 @@ document.addEventListener("DOMContentLoaded", () => {
             level: 1,
             slots: emptyBuild(),
             itemOptions: {},
+            allyEffectsEnabled: false,
             stats: null,
             statsError: "",
             refreshRevision: 0,
@@ -837,6 +994,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function openRosterItemPicker(team, id, slot) {
+        pickerReturnFocus = document.activeElement;
         activePicker = { kind: "roster", team: team, id: id, slot: slot };
         const isBoot = slot === "boots";
         pickerTitle.textContent = isBoot ? "Select Boots" : "Select Item";
@@ -857,6 +1015,7 @@ document.addEventListener("DOMContentLoaded", () => {
             boots: entry.slots.boots,
             items: items,
             item_options: entry.itemOptions,
+            ally_effects_enabled: entry.allyEffectsEnabled,
         };
     }
 
@@ -984,6 +1143,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
             <div class="roster-build">${itemSlots}</div>
+            ${team === "allies" ? `<label class="toggle-label compact roster-effect-toggle"><input type="checkbox" class="roster-effects-enabled" ${entry.allyEffectsEnabled ? "checked" : ""}><span class="toggle-text">Apply this ally's active buffs</span></label>` : ""}
             <div class="roster-item-options${optionRows ? "" : " hidden"}">${optionRows}</div>
             <div class="roster-stat-matrix">${rosterStatsMarkup(entry)}</div>`;
 
@@ -1025,6 +1185,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 scheduleRecalc();
             });
         });
+        const effectToggle = article.querySelector(".roster-effects-enabled");
+        if (effectToggle) {
+            effectToggle.addEventListener("change", () => {
+                entry.allyEffectsEnabled = effectToggle.checked;
+                scheduleRecalc();
+            });
+        }
         return article;
     }
 
@@ -1058,8 +1225,27 @@ document.addEventListener("DOMContentLoaded", () => {
     addEnemyBtn.addEventListener("click", () => addRosterEntry("enemies"));
     updateRosterCount();
 
-    // Escape key closes pickers
+    function trapDialogFocus(event, overlay) {
+        if (event.key !== "Tab" || overlay.classList.contains("hidden")) return;
+        const focusable = [...overlay.querySelectorAll(
+            'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )].filter((element) => element.offsetParent !== null);
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+
+    // Escape closes the active picker; Tab remains inside its dialog.
     document.addEventListener("keydown", (e) => {
+        trapDialogFocus(e, pickerOverlay);
+        trapDialogFocus(e, champPickerOverlay);
         if (e.key === "Escape") {
             if (!pickerOverlay.classList.contains("hidden")) closePicker();
             if (!champPickerOverlay.classList.contains("hidden")) closeChampionPicker();
@@ -1274,6 +1460,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 hideError();
                 builds.forEach((build, i) => displayResults(build, results[i]));
+                renderComparisonVerdict(builds, results);
 
                 if (!hasCalculated) {
                     hasCalculated = true;
@@ -1435,6 +1622,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // Damage summary — physical/magic/true split. The true-damage
         // card only shows when there is true damage to report.
         animateValue(field("total-damage-value"), Math.round(data.total_damage));
+        const modeledSeconds = document.querySelector('input[name="fight-mode"]:checked').value === "one_rotation"
+            ? 5
+            : parseInt(fightDuration.value, 10);
+        field("damage-rate-value").textContent =
+            `${Math.round(data.total_damage / modeledSeconds).toLocaleString()} DPS`;
         const byType = data.damage_by_type;
         field("physical-damage-value").textContent = Math.round(byType.physical);
         field("magic-damage-value").textContent = Math.round(byType.magic);
@@ -1469,6 +1661,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     row.target.stats.armor,
                     row.target.stats.magic_resistance,
                     row.result.total_damage,
+                    row.result.health_damage,
+                    row.result.shield_absorbed,
                 ];
                 values.forEach((value) => {
                     const td = document.createElement("td");
@@ -1540,6 +1734,37 @@ document.addEventListener("DOMContentLoaded", () => {
             tbody.appendChild(tr);
         }
 
+        const eventTimeline = field("event-timeline");
+        const events = Array.isArray(data.cast_timeline) ? data.cast_timeline : [];
+        eventTimeline.classList.toggle("hidden", events.length === 0);
+        if (events.length > 0) {
+            const list = field("event-timeline-list");
+            list.innerHTML = "";
+            events.forEach((event) => {
+                const item = document.createElement("li");
+                const time = document.createElement("span");
+                time.textContent = `${Number(event.time).toFixed(2)}s`;
+                const name = document.createElement("strong");
+                name.textContent = event.name;
+                const cost = document.createElement("span");
+                const paid = Number(event.resource_cost || 0);
+                const restored = Number(event.resource_restored || 0);
+                const after = Number(event.resource_after);
+                const changes = [];
+                if (paid > 0) changes.push(`−${Math.round(paid)}`);
+                if (restored > 0) changes.push(`+${Math.round(restored)}`);
+                cost.textContent = changes.length > 0
+                    ? `${changes.join(" / ")} resource${Number.isFinite(after) ? ` · ${Math.round(after)} left` : ""}`
+                    : "no resource cost";
+                item.append(time, name, cost);
+                list.appendChild(item);
+            });
+            const startingResource = Number(stats.max_mana || 0);
+            field("resource-summary").textContent = startingResource > 0
+                ? `${Math.round(data.resource_spent || 0)} spent · ${Math.round(data.resource_remaining || 0)} left`
+                : "";
+        }
+
         // Champion assumptions are champion-level, not build-level: show
         // them on panel A only so Compare mode doesn't repeat them.
         const assumptionsGroup = panel.querySelector(".champion-assumptions");
@@ -1556,6 +1781,34 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
         assumptionsGroup.classList.toggle("hidden", !showAssumptions);
+    }
+
+    function renderComparisonVerdict(builds, results) {
+        let verdict = document.getElementById("comparison-verdict");
+        if (!verdict) {
+            verdict = document.createElement("section");
+            verdict.id = "comparison-verdict";
+            verdict.className = "comparison-verdict hidden";
+            verdict.setAttribute("aria-live", "polite");
+            resultsPanelA.before(verdict);
+        }
+        if (builds.length !== 2) {
+            verdict.classList.add("hidden");
+            return;
+        }
+        const [a, b] = results;
+        const winner = a.total_damage >= b.total_damage ? "A" : "B";
+        const high = Math.max(a.total_damage, b.total_damage);
+        const low = Math.min(a.total_damage, b.total_damage);
+        const delta = high - low;
+        const percent = low > 0 ? delta / low * 100 : 0;
+        const seconds = document.querySelector('input[name="fight-mode"]:checked').value === "one_rotation"
+            ? 5
+            : parseInt(fightDuration.value, 10);
+        verdict.textContent = delta < 0.05
+            ? `Tie · ${Math.round(high).toLocaleString()} TDD over ${seconds}s`
+            : `Build ${winner} leads · +${Math.round(delta).toLocaleString()} TDD (${percent.toFixed(1)}%) over ${seconds}s`;
+        verdict.classList.remove("hidden");
     }
 
     // Simple animated counter for total damage
@@ -1738,8 +1991,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const maxSlots = parseInt(optimizeSlots.value, 10);
 
         // Collect locked items (non-empty slots)
-        const lockedItems = buildItemList("a");
-        const lockedBoots = selectedItems.a.boots || "";
+        const lockedItems = keepSelectedItems.checked ? buildItemList("a") : [];
+        const lockedBoots = keepSelectedItems.checked
+            ? selectedItems.a.boots || ""
+            : "";
 
         const payload = buildFightPayload(champion);
         payload.objective = optimizeObjective.value;
@@ -1747,6 +2002,7 @@ document.addEventListener("DOMContentLoaded", () => {
         payload.locked_boots = lockedBoots;
         payload.max_legendary_slots = maxSlots;
         payload.item_options = selectedItemOptions.a;
+        if (goldBudget.value) payload.gold_budget = parseInt(goldBudget.value, 10);
 
         // Show loading
         optimizeBtnText.textContent = "Optimizing...";
@@ -1766,31 +2022,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
 
-                // Fill empty legendary slots with optimized items
-                const optimizedItems = data.items || [];
-                // Figure out which items are new (not already locked)
-                const lockedSet = new Set(lockedItems);
-                const newItems = optimizedItems.filter((n) => !lockedSet.has(n));
-
-                let newIdx = 0;
-                for (let i = 1; i <= 6 && newIdx < newItems.length; i++) {
-                    if (!selectedItems.a[i]) {
-                        const name = newItems[newIdx];
-                        const icon = itemIconMap[name] || "";
-                        selectItem("a", String(i), name, icon);
-                        newIdx++;
+                const ranked = data.ranked_builds || [];
+                if (ranked.length < 2) {
+                    showError("A distinct second build was not found for this constraint set.");
+                    return;
+                }
+                const applyBuild = (build, result) => {
+                    Object.keys(selectedItems[build]).forEach((slot) => clearItemSlot(build, slot));
+                    if (result.boots) {
+                        selectItem(build, "boots", result.boots, itemIconMap[result.boots] || "");
                     }
-                }
-
-                // Fill boots if it was empty
-                if (!selectedItems.a.boots && data.boots) {
-                    const icon = itemIconMap[data.boots] || "";
-                    selectItem("a", "boots", data.boots, icon);
-                }
+                    result.items.forEach((name, index) => {
+                        selectItem(build, String(index + 1), name, itemIconMap[name] || "");
+                    });
+                };
+                applyBuild("a", ranked[0]);
+                applyBuild("b", ranked[1]);
+                compareCheckbox.checked = true;
+                compareCheckbox.dispatchEvent(new Event("change"));
 
                 // Show status
                 optimizeStatus.textContent =
-                    `Found in ${data.optimization_time_ms}ms (${data.evaluations} builds evaluated)`;
+                    `${data.is_certified_best ? "Certified BIS" : "Best found"}: ${ranked[0].total_damage.toLocaleString()} TDD · runner-up ${ranked[1].total_damage.toLocaleString()} · ${data.evaluations.toLocaleString()} builds`;
                 optimizeStatus.classList.remove("hidden");
 
                 // Trigger a full calculate to show the damage breakdown

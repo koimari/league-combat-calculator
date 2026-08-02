@@ -20,16 +20,25 @@
                 </svg>
                 <h1>Damage Calculator</h1>
             </div>
+            <div class="header-actions">
+            <span id="data-freshness" class="data-freshness">Loading data source…</span>
+            <button id="share-scenario" class="btn-update" type="button">Copy scenario</button>
+            <select id="theme-select" class="btn-update" aria-label="Colour theme">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
             <button id="update-btn" class="btn-update hidden">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
                 Update Data
             </button>
+            </div>
         </div>
     </header>
 
     <!-- Update Progress Modal -->
-    <div id="update-modal" class="modal-overlay hidden">
-        <div class="modal-content">
+    <div id="update-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="update-modal-title">
+        <div class="modal-content" tabindex="-1">
             <h3 id="update-modal-title">Updating Data</h3>
             <p id="update-status">Initializing...</p>
             <div class="progress-bar-container">
@@ -41,11 +50,11 @@
     </div>
 
     <!-- Champion Picker Modal -->
-    <div id="champion-picker-overlay" class="picker-overlay hidden">
-        <div class="picker-modal picker-modal-wide">
+    <div id="champion-picker-overlay" class="picker-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="champion-picker-title">
+        <div class="picker-modal picker-modal-wide" tabindex="-1">
             <div class="picker-header">
-                <h3>Select Champion</h3>
-                <button id="champion-picker-close" class="picker-close-btn">&times;</button>
+                <h3 id="champion-picker-title">Select champion</h3>
+                <button id="champion-picker-close" class="picker-close-btn" aria-label="Close champion picker">&times;</button>
             </div>
             <div class="picker-search-wrap">
                 <svg class="picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B5A56" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -56,11 +65,11 @@
     </div>
 
     <!-- Item Picker Modal -->
-    <div id="item-picker-overlay" class="picker-overlay hidden">
-        <div class="picker-modal">
+    <div id="item-picker-overlay" class="picker-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="picker-title">
+        <div class="picker-modal" tabindex="-1">
             <div class="picker-header">
                 <h3 id="picker-title">Select Item</h3>
-                <button id="picker-close" class="picker-close-btn">&times;</button>
+                <button id="picker-close" class="picker-close-btn" aria-label="Close item picker">&times;</button>
             </div>
             <div class="picker-search-wrap">
                 <svg class="picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B5A56" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -375,7 +384,15 @@
                             <option value="6">6 (Bot Lane)</option>
                         </select>
                     </div>
-                    <p class="optimizer-hint">Pre-selected items will be kept. Empty slots will be filled.</p>
+                    <div class="optimizer-row">
+                        <label for="gold-budget">Gold budget</label>
+                        <input id="gold-budget" class="optimizer-select" type="number" min="1" max="30000" step="50" placeholder="No limit">
+                    </div>
+                    <label class="toggle-label compact">
+                        <input type="checkbox" id="keep-selected-items">
+                        <span class="toggle-text">Keep selected items</span>
+                    </label>
+                    <p class="optimizer-hint">Off searches a new build. On locks the items already selected.</p>
                 </div>
                 <button id="optimize-btn" class="btn-optimize">
                     <span class="btn-text">Optimize Build</span>
@@ -484,6 +501,7 @@
                     <div class="total-damage-card">
                         <span class="total-label">Total Damage</span>
                         <span class="total-value" data-field="total-damage-value">0</span>
+                        <span class="total-subvalue" data-field="damage-rate-value">0 DPS</span>
                     </div>
                     <div class="damage-split">
                         <div class="split-card physical-split">
@@ -515,7 +533,9 @@
                                     <th class="col-right">HP</th>
                                     <th class="col-right">Armor</th>
                                     <th class="col-right">MR</th>
-                                    <th class="col-right">Damage</th>
+                                    <th class="col-right">TDD</th>
+                                    <th class="col-right">To health</th>
+                                    <th class="col-right">Shield</th>
                                 </tr>
                             </thead>
                             <tbody data-field="target-results-body"></tbody>
@@ -555,6 +575,14 @@
                         </tbody>
                     </table>
                 </div>
+
+                <details class="result-group event-timeline hidden" data-field="event-timeline">
+                    <summary>
+                        <span>Cast order</span>
+                        <span class="result-context" data-field="resource-summary"></span>
+                    </summary>
+                    <ol data-field="event-timeline-list"></ol>
+                </details>
 
                 <!-- Champion Assumptions -->
                 <div class="result-group champion-assumptions hidden">

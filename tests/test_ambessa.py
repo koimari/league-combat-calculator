@@ -278,6 +278,13 @@ class TestPassiveDrakehoundsStep:
         per_proc = parts_raw_total(abilities["passive"]["parts"], "physical")
         assert abs(abilities["passive"]["total_raw"] - per_proc * 6) < 0.1
 
+    @pytest.mark.parametrize(("level", "restored"), ((1, 40.0), (7, 55.0), (13, 70.0)))
+    def test_passive_energy_restore_breakpoints(
+        self, ambessa_data, parse_at, level, restored
+    ) -> None:
+        _, abilities = parse_at(ambessa_data, level)
+        assert abilities["passive"]["resource_restore_per_proc"] == restored
+
     def test_passive_zero_procs_excluded(self, ambessa_data, parse_at) -> None:
         """Setting passive_procs to 0 should exclude passive."""
         _, abilities = parse_at(

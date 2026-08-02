@@ -238,6 +238,62 @@ def test_optimizer_scores_every_selected_enemy(monkeypatch):
     assert targets[1].target_health == 1873
 
 
+def test_enabled_ally_staff_buff_changes_attacker_stats_and_damage():
+    client = app_module.app.test_client()
+    base = client.post(
+        "/api/calculate", json={"champion": "Ziggs", "level": 12}
+    ).get_json()
+    buffed_response = client.post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "allies": [
+                {
+                    "champion": "Nami",
+                    "level": 12,
+                    "items": ["Staff of Flowing Water"],
+                    "ally_effects_enabled": True,
+                }
+            ],
+        },
+    )
+
+    assert buffed_response.status_code == 200
+    buffed = buffed_response.get_json()
+    assert buffed["champion_stats"]["ability_power"] == 40
+    assert buffed["champion_stats"]["ability_haste"] == 15
+    assert buffed["total_damage"] > base["total_damage"]
+    assert buffed["scenario"]["ally_effects"]["modeled"] == [
+        "Staff of Flowing Water — Rapids"
+    ]
+
+
+def test_ludens_charges_are_shared_across_selected_targets():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "items": ["Luden's Echo"],
+            "enemies": [
+                {"champion": "Ahri", "level": 1},
+                {"champion": "Lux", "level": 1},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    targets = response.get_json()["targets"]
+    primary = targets[0]["result"]["breakdown"]["proc_Luden's Echo"]
+    secondary = targets[1]["result"]["breakdown"]["proc_Luden's Echo"]
+    # Two targets: primary + four repeated 20% charges = 1.8x; the
+    # secondary receives one full charge. Solo pricing is 2.0x.
+    assert primary["total_damage"] / secondary["total_damage"] == pytest.approx(
+        1.8, rel=0.02
+    )
+
+
 def test_optimize_rejects_unknown_locked_items_as_client_input():
     response = app_module.app.test_client().post(
         "/api/optimize",
@@ -702,6 +758,23 @@ def test_optimize_rejects_more_locked_items_than_slots(monkeypatch):
 
 
 @pytest.mark.parametrize(
+    "items",
+    [
+        ["Lich Bane", "Trinity Force"],
+        ["Dark Seal", "Mejai's Soulstealer"],
+    ],
+)
+def test_calculate_rejects_backend_illegal_item_groups(items):
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={"champion": "Ziggs", "level": 12, "items": items},
+    )
+
+    assert response.status_code == 400
+    assert "cannot be equipped together" in response.get_json()["error"]
+
+
+@pytest.mark.parametrize(
     "invalid_values",
     [
         {"cast_order": ["Q", "Q", "E", "R"]},
@@ -719,6 +792,22 @@ def test_calculate_and_optimize_reject_the_same_invalid_fight_params(invalid_val
     assert calculate.status_code == 400
     assert optimize.status_code == 400
     assert calculate.get_json() == optimize.get_json()
+
+
+def test_calculate_and_optimize_reject_level_impossible_ranks():
+    payload = {
+        "champion": "Ahri",
+        "level": 5,
+        "ability_ranks": {"Q": 3, "W": 1, "E": 0, "R": 1},
+    }
+    client = app_module.app.test_client()
+
+    calculate = client.post("/api/calculate", json=payload)
+    optimize = client.post("/api/optimize", json=payload)
+
+    assert calculate.status_code == 400
+    assert optimize.status_code == 400
+    assert "R rank 1 requires champion level 6" in calculate.get_json()["error"]
 
 
 class TestBreakdownProcRowShape:
