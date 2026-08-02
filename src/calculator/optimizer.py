@@ -210,23 +210,12 @@ def _evaluate_build(
                 and float(event.get("time", 0.0)) <= cutoff
             )
         if objective == "total_damage":
-            # ``total_damage`` is the ordinary public objective name, but a
-            # coupled team-fight build is not allowed to win by being dead
-            # for the rest of the window.  Add the sourced main-participant
-            # effective-health pool to the alive-time output; the receipt
-            # still exposes both components separately.
-            main_participant = next(
-                (
-                    row
-                    for row in combat.get("participants", [])
-                    if row.get("participant_id") == "main"
-                ),
-                None,
-            )
-            effective_health = float(
-                (main_participant or {}).get("survival", {}).get("effective_health", 0.0)
-            )
-            return float(main_row.get("total_damage", 0.0)) + effective_health
+            # The participant timeline already truncates the main actor's
+            # output at its event-ordered death time.  Effective health is a
+            # receipt component describing that survival window; adding it to
+            # damage here double-counts the same defensive value and causes
+            # glass-cannon candidates to lose to pure-health builds.
+            return float(main_row.get("total_damage", 0.0))
         return float(main_row.get("total_damage", 0.0))
     results: list[dict[str, Any]] = []
     for target_params in targets:
