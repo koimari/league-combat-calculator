@@ -84,7 +84,9 @@ class TestParseCooldown:
 
 class TestRunePayload:
     def test_electrocute_payload_complete(self):
-        payload = rune_payload("Electrocute", ELECTROCUTE_WIKITEXT, icon="http://x/e.png")
+        payload = rune_payload(
+            "Electrocute", ELECTROCUTE_WIKITEXT, icon="http://x/e.png"
+        )
         assert payload["name"] == "Electrocute"
         assert payload["path"] == "Domination"
         assert payload["slot"] == "Keystone"

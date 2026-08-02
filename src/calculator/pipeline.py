@@ -223,8 +223,7 @@ class FightParams(FightConfig):
         if supported_modes is not None and requested_mode not in supported_modes:
             reason = get_unsupported_fight_mode_reason(champion_name)
             raise ValueError(
-                reason
-                or f"{requested_mode} is not certified for {champion_name}"
+                reason or f"{requested_mode} is not certified for {champion_name}"
             )
 
         custom_order_reason = get_custom_cast_order_unavailable_reason(champion_name)

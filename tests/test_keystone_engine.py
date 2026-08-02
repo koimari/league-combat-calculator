@@ -53,9 +53,7 @@ class TestElectrocuteProcs:
         assert row["total_damage"] == pytest.approx(expected)
         assert result["total_damage"] >= expected
 
-    def test_cooldown_blocks_reproc_within_twenty_seconds(
-        self, fight, attacker_stats
-    ):
+    def test_cooldown_blocks_reproc_within_twenty_seconds(self, fight, attacker_stats):
         # 1.0 attack speed at full uptime: ten instances in ten seconds,
         # but the 20s cooldown allows exactly one proc.
         result = fight(

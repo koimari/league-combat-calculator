@@ -146,7 +146,9 @@ def _pack_signed(value: Mapping[str, object]) -> str:
     """Sign a compact JSON cookie without storing OAuth tokens server-side."""
     raw = json.dumps(value, separators=(",", ":"), sort_keys=True).encode("utf-8")
     payload = base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
-    signature = hmac.new(_auth_secret(), payload.encode("ascii"), hashlib.sha256).digest()
+    signature = hmac.new(
+        _auth_secret(), payload.encode("ascii"), hashlib.sha256
+    ).digest()
     signed = base64.urlsafe_b64encode(signature).rstrip(b"=").decode("ascii")
     return f"{payload}.{signed}"
 
@@ -156,9 +158,13 @@ def _unpack_signed(value: str | None) -> dict | None:
     if not value or "." not in value:
         return None
     payload, supplied_signature = value.split(".", 1)
-    expected_signature = base64.urlsafe_b64encode(
-        hmac.new(_auth_secret(), payload.encode("ascii"), hashlib.sha256).digest()
-    ).rstrip(b"=").decode("ascii")
+    expected_signature = (
+        base64.urlsafe_b64encode(
+            hmac.new(_auth_secret(), payload.encode("ascii"), hashlib.sha256).digest()
+        )
+        .rstrip(b"=")
+        .decode("ascii")
+    )
     if not hmac.compare_digest(supplied_signature, expected_signature):
         return None
     try:
@@ -188,12 +194,16 @@ def _auth_users() -> dict[str, str]:
         users = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise RuntimeError("SCRYGLASS_AUTH_USERS must be valid JSON") from exc
-    if not isinstance(users, dict) or not users or any(
-        not isinstance(username, str)
-        or not username.strip()
-        or not isinstance(password_hash, str)
-        or not password_hash.startswith("scrypt$")
-        for username, password_hash in users.items()
+    if (
+        not isinstance(users, dict)
+        or not users
+        or any(
+            not isinstance(username, str)
+            or not username.strip()
+            or not isinstance(password_hash, str)
+            or not password_hash.startswith("scrypt$")
+            for username, password_hash in users.items()
+        )
     ):
         raise RuntimeError(
             "SCRYGLASS_AUTH_USERS must map account names to scrypt$ password hashes"
@@ -529,9 +539,7 @@ def _serialize_fight_result(result: Mapping[str, object]) -> dict:
         "threshold_health_bonus_gained": round(
             result.get("threshold_health_bonus_gained", 0.0), 1
         ),
-        "target_healing_received": round(
-            result.get("target_healing_received", 0.0), 1
-        ),
+        "target_healing_received": round(result.get("target_healing_received", 0.0), 1),
         "target_ending_health": round(result.get("target_ending_health", 0.0), 1),
         "target_effective_max_health": round(
             result.get("target_effective_max_health", 0.0), 1
@@ -690,9 +698,7 @@ def _comparison_curve(
                     target_threshold_health_bonus=(
                         enemy.defenses.threshold_health_bonus
                     ),
-                    target_threshold_health_heal=(
-                        enemy.defenses.threshold_health_heal
-                    ),
+                    target_threshold_health_heal=(enemy.defenses.threshold_health_heal),
                     target_threshold_health_ratio=(
                         enemy.defenses.threshold_health_ratio
                     ),
@@ -816,7 +822,11 @@ def auth_login():
         users = _auth_users()
     except RuntimeError as exc:
         return _auth_error(str(exc))
-    next_path = _safe_next_path(request.form.get("next") if request.method == "POST" else request.args.get("next"))
+    next_path = _safe_next_path(
+        request.form.get("next")
+        if request.method == "POST"
+        else request.args.get("next")
+    )
     if request.method == "GET":
         return _login_page(next_path=next_path)
     username = request.form.get("username", "").strip()
@@ -824,7 +834,9 @@ def auth_login():
     encoded = users.get(username)
     if not encoded or not _verify_password(password, encoded):
         return _login_page("Username or password was not recognised.", 401, next_path)
-    session = _pack_signed({"username": username, "exp": time.time() + _AUTH_TTL_SECONDS})
+    session = _pack_signed(
+        {"username": username, "exp": time.time() + _AUTH_TTL_SECONDS}
+    )
     response = redirect(next_path)
     response.set_cookie(
         _AUTH_COOKIE,
@@ -850,7 +862,13 @@ def auth_logout():
 def auth_status():
     """Expose only the current local identity."""
     session = _current_session()
-    return jsonify({"required": _auth_enabled(), "authenticated": bool(session), "user": session or None})
+    return jsonify(
+        {
+            "required": _auth_enabled(),
+            "authenticated": bool(session),
+            "user": session or None,
+        }
+    )
 
 
 @app.route("/")
@@ -928,8 +946,12 @@ def api_champions():
                 "patch_last_changed": champ_data.get("patchLastChanged"),
                 "abilities": ability_slots,
                 "ability_ingestion": {
-                    "complete": all(entry["ingested"] for entry in ability_slots.values()),
-                    "slot_count": sum(entry["ingested"] for entry in ability_slots.values()),
+                    "complete": all(
+                        entry["ingested"] for entry in ability_slots.values()
+                    ),
+                    "slot_count": sum(
+                        entry["ingested"] for entry in ability_slots.values()
+                    ),
                     "source": "Local Wiki cache",
                 },
             }
@@ -1205,18 +1227,14 @@ def api_calculate():
             target_threshold_shield_health_ratio=(
                 enemy.defenses.threshold_shield_health_ratio
             ),
-            target_threshold_shield_duration=(
-                enemy.defenses.threshold_shield_duration
-            ),
+            target_threshold_shield_duration=(enemy.defenses.threshold_shield_duration),
             target_threshold_shield_damage_type=(
                 enemy.defenses.threshold_shield_damage_type
             ),
             target_threshold_health_bonus=enemy.defenses.threshold_health_bonus,
             target_threshold_health_heal=enemy.defenses.threshold_health_heal,
             target_threshold_health_ratio=enemy.defenses.threshold_health_ratio,
-            target_threshold_health_duration=(
-                enemy.defenses.threshold_health_duration
-            ),
+            target_threshold_health_duration=(enemy.defenses.threshold_health_duration),
         )
         serialized = _serialize_fight_result(
             run_fight(champion_data, level, items, target_params)
@@ -1391,18 +1409,14 @@ def api_optimize():
             target_threshold_shield_health_ratio=(
                 enemy.defenses.threshold_shield_health_ratio
             ),
-            target_threshold_shield_duration=(
-                enemy.defenses.threshold_shield_duration
-            ),
+            target_threshold_shield_duration=(enemy.defenses.threshold_shield_duration),
             target_threshold_shield_damage_type=(
                 enemy.defenses.threshold_shield_damage_type
             ),
             target_threshold_health_bonus=enemy.defenses.threshold_health_bonus,
             target_threshold_health_heal=enemy.defenses.threshold_health_heal,
             target_threshold_health_ratio=enemy.defenses.threshold_health_ratio,
-            target_threshold_health_duration=(
-                enemy.defenses.threshold_health_duration
-            ),
+            target_threshold_health_duration=(enemy.defenses.threshold_health_duration),
         )
         for target_index, enemy in enumerate(enemies)
     )

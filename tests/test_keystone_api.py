@@ -41,9 +41,7 @@ def test_config_serves_keystone_roster_with_coverage():
 
 def test_calculate_includes_electrocute_breakdown_row():
     client = app_module.app.test_client()
-    with_keystone = client.post(
-        "/api/calculate", json=_payload(keystone="Electrocute")
-    )
+    with_keystone = client.post("/api/calculate", json=_payload(keystone="Electrocute"))
     without_keystone = client.post("/api/calculate", json=_payload())
 
     assert with_keystone.status_code == 200
@@ -52,12 +50,9 @@ def test_calculate_includes_electrocute_breakdown_row():
     assert row is not None
     assert row["name"] == "Electrocute (keystone)"
     assert row["total_damage"] > 0
-    assert (
-        result["total_damage"]
-        == pytest.approx(
-            without_keystone.get_json()["total_damage"] + row["total_damage"],
-            rel=1e-6,
-        )
+    assert result["total_damage"] == pytest.approx(
+        without_keystone.get_json()["total_damage"] + row["total_damage"],
+        rel=1e-6,
     )
 
 

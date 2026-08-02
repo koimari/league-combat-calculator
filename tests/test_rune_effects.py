@@ -49,7 +49,9 @@ class TestElectrocuteFormula:
 
     def test_ratio_scaling(self):
         effect = rune_effects.resolve_keystone("Electrocute")
-        assert effect.raw_damage(_inputs(level=1, bonus_ad=100.0)) == pytest.approx(80.0)
+        assert effect.raw_damage(_inputs(level=1, bonus_ad=100.0)) == pytest.approx(
+            80.0
+        )
         assert effect.raw_damage(_inputs(level=1, ap=200.0)) == pytest.approx(80.0)
 
     def test_adaptive_type_prefers_larger_contribution(self):
@@ -61,14 +63,22 @@ class TestElectrocuteFormula:
 
     def test_adaptive_type_defaults_to_magic_on_tie_or_zero(self):
         effect = rune_effects.resolve_keystone("Electrocute")
-        assert effect.damage_type({"bonus_attack_damage": 0.0, "ability_power": 0.0}) == "magic"
+        assert (
+            effect.damage_type({"bonus_attack_damage": 0.0, "ability_power": 0.0})
+            == "magic"
+        )
         tie = {"bonus_attack_damage": 50.0, "ability_power": 100.0}  # 5 == 5
         assert effect.damage_type(tie) == "magic"
 
     def test_missing_registry_key_raises_with_context(self, monkeypatch):
         broken = {
             name: (
-                {**entry, "effects": {k: v for k, v in entry["effects"].items() if k != "ap_ratio"}}
+                {
+                    **entry,
+                    "effects": {
+                        k: v for k, v in entry["effects"].items() if k != "ap_ratio"
+                    },
+                }
                 if name == "Electrocute"
                 else entry
             )

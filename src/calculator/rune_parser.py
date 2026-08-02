@@ -24,9 +24,7 @@ _PP_TEMPLATE = re.compile(r"\{\{pp\|([^{}]+)\}\}")
 _AS_RATIO = re.compile(
     r"\{\{as\|\(\+\s*([\d.]+)%\s*(?:('''bonus'''|bonus)\s*)?(AD|AP)\)"
 )
-_STACK_RULE = re.compile(
-    r"Applying (\d+) stacks? to a target within a ([\d.]+) second"
-)
+_STACK_RULE = re.compile(r"Applying (\d+) stacks? to a target within a ([\d.]+) second")
 _PROC_DELAY = re.compile(r"\{\{fd\|([\d.]+)\}\}-second delay")
 _TT_TEMPLATE = re.compile(r"\{\{tt\|([^|}]+)")
 _RANGE_SPEC = re.compile(r"^([\d.]+)\s+to\s+([\d.]+)(?:\s+by\s+([\d.]+))?$")

@@ -978,7 +978,11 @@ def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
         ]
     dtype = entry.get("damage_type")
     damage = float(entry.get("total_damage", 0.0))
-    return [(dtype, damage)] if dtype in {"physical", "magic", "true"} and damage > 0 else []
+    return (
+        [(dtype, damage)]
+        if dtype in {"physical", "magic", "true"} and damage > 0
+        else []
+    )
 
 
 def _ordered_damage_events(
@@ -1134,9 +1138,7 @@ def _ordered_damage_events(
                 untyped.append((key, damage))
 
     typed_totals = {
-        dtype: sum(
-            event["damage"] for event in events if event["damage_type"] == dtype
-        )
+        dtype: sum(event["damage"] for event in events if event["damage_type"] == dtype)
         for dtype in ("physical", "magic", "true")
     }
     typed_total = sum(typed_totals.values())
@@ -1277,8 +1279,7 @@ class _ThresholdHealthState:
             or self.bonus_health <= 0
             or self.health_ratio <= 0
             or self.duration <= 0
-            or self.current_health - damage
-            >= self.maximum_health * self.health_ratio
+            or self.current_health - damage >= self.maximum_health * self.health_ratio
         ):
             return False
         self.triggered = True
@@ -1660,9 +1661,7 @@ def _resolve_combat_state(
         level=level,
         enforce_resource_limits=config.enforce_resource_limits,
         target_basic_damage_multiplier=config.target_basic_damage_multiplier,
-        target_basic_damage_flat_reduction=(
-            config.target_basic_damage_flat_reduction
-        ),
+        target_basic_damage_flat_reduction=(config.target_basic_damage_flat_reduction),
         target_basic_damage_flat_reduction_cap=(
             config.target_basic_damage_flat_reduction_cap
         ),
@@ -2168,9 +2167,7 @@ def _evaluate_cast_parts(
                 raw *= (
                     1.0
                     - crit_probability
-                    + crit_probability
-                    * state.crit_multiplier
-                    * target_crit_multiplier
+                    + crit_probability * state.crit_multiplier * target_crit_multiplier
                 )
             rock_solid_instances = int(
                 part.basic_damage
@@ -3062,13 +3059,15 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             if authored_timing is not None:
                 first_delay, attack_interval = authored_timing
                 parts = tuple(
-                    replace(
-                        part,
-                        time_offset=first_delay,
-                        hit_interval=(attack_interval if part.count > 1 else None),
+                    (
+                        replace(
+                            part,
+                            time_offset=first_delay,
+                            hit_interval=(attack_interval if part.count > 1 else None),
+                        )
+                        if part.count == hits and part.time_offset is None
+                        else part
                     )
-                    if part.count == hits and part.time_offset is None
-                    else part
                     for part in parts
                 )
             if isinstance(empower, dict) and "swing_parts" in empower:
@@ -3076,15 +3075,17 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 if authored_timing is not None:
                     first_delay, attack_interval = authored_timing
                     swing_parts = tuple(
-                        replace(
-                            part,
-                            time_offset=first_delay,
-                            hit_interval=(
-                                attack_interval if part.count > 1 else None
-                            ),
+                        (
+                            replace(
+                                part,
+                                time_offset=first_delay,
+                                hit_interval=(
+                                    attack_interval if part.count > 1 else None
+                                ),
+                            )
+                            if part.count == hits and part.time_offset is None
+                            else part
                         )
-                        if part.count == hits and part.time_offset is None
-                        else part
                         for part in swing_parts
                     )
                 parts = parts + swing_parts
@@ -3817,8 +3818,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         if deterministic_outcomes is not None:
             if i < converted_auto_limit:
                 mitigated = sum(
-                    weight
-                    * converted_swing_damage(outcome_raw, critical=critical)
+                    weight * converted_swing_damage(outcome_raw, critical=critical)
                     for weight, outcome_raw, critical in deterministic_outcomes
                 )
             else:
@@ -3830,9 +3830,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                     for weight, outcome_raw, critical in deterministic_outcomes
                 )
         else:
-            converted_critical = (
-                not override_crit_as_bonus
-                and (natural_crit or is_empowered or is_sundered)
+            converted_critical = not override_crit_as_bonus and (
+                natural_crit or is_empowered or is_sundered
             )
             if i < converted_auto_limit:
                 mitigated = converted_swing_damage(
@@ -3848,25 +3847,18 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
         if sundered_normal_raw is not None:
             if deterministic:
-                normal_mitigated = (
-                    crit_chance
-                    * (
-                        converted_swing_damage(
-                            swing_ad * crit_multiplier, critical=True
-                        )
-                        if i < converted_auto_limit
-                        else _mitigate_basic_attack_swing(
-                            state,
-                            swing_ad * crit_multiplier,
-                            critical_strike=True,
-                        )
+                normal_mitigated = crit_chance * (
+                    converted_swing_damage(swing_ad * crit_multiplier, critical=True)
+                    if i < converted_auto_limit
+                    else _mitigate_basic_attack_swing(
+                        state,
+                        swing_ad * crit_multiplier,
+                        critical_strike=True,
                     )
-                    + (1.0 - crit_chance)
-                    * (
-                        converted_swing_damage(swing_ad, critical=False)
-                        if i < converted_auto_limit
-                        else _mitigate_basic_attack_swing(state, swing_ad)
-                    )
+                ) + (1.0 - crit_chance) * (
+                    converted_swing_damage(swing_ad, critical=False)
+                    if i < converted_auto_limit
+                    else _mitigate_basic_attack_swing(state, swing_ad)
                 )
             else:
                 normal_mitigated = (
@@ -4053,16 +4045,11 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             ds_ad = attack_damage * ds_ratio
             if deterministic:
                 ds_crit = False
-                double_shot_total += (
-                    crit_chance
-                    * _mitigate_basic_attack_swing(
-                        state,
-                        ds_ad * crit_multiplier,
-                        critical_strike=True,
-                    )
-                    + (1.0 - crit_chance)
-                    * _mitigate_basic_attack_swing(state, ds_ad)
-                )
+                double_shot_total += crit_chance * _mitigate_basic_attack_swing(
+                    state,
+                    ds_ad * crit_multiplier,
+                    critical_strike=True,
+                ) + (1.0 - crit_chance) * _mitigate_basic_attack_swing(state, ds_ad)
                 continue
             else:
                 ds_crit = random.random() < crit_chance
@@ -4891,10 +4878,14 @@ def _charged_proc_target_share(
     target_index = max(0, state.roster_target_index)
     unique_targets = min(target_count, source.multi_target_charges)
     if target_index == 0:
-        desired_multiplier = 1.0 + max(
-            0,
-            source.multi_target_charges - unique_targets,
-        ) * source.repeated_target_multiplier
+        desired_multiplier = (
+            1.0
+            + max(
+                0,
+                source.multi_target_charges - unique_targets,
+            )
+            * source.repeated_target_multiplier
+        )
     elif target_index < unique_targets:
         desired_multiplier = 1.0
     else:
@@ -4991,7 +4982,9 @@ def _add_item_proc_damage(
         state.total_damage += ult_proc_mitigated
 
 
-def _keystone_instance_times(state: FightState, rotation: RotationResult) -> list[float]:
+def _keystone_instance_times(
+    state: FightState, rotation: RotationResult
+) -> list[float]:
     """Chronological damage-instance times the keystone stack counter sees.
 
     One instance per accepted ability cast (wiki: up to one stack per cast
@@ -5326,9 +5319,7 @@ def _add_shadowflame_cinderbloom(
         liandry_row = state.breakdown.get(_LIANDRY_BURN_KEY)
         if liandry_row is None:  # pragma: no cover - registry invariant
             raise RuntimeError("Liandry adjustment has no breakdown row")
-        liandry_row["total_damage"] = (
-            float(liandry_row["total_damage"]) + liandry_delta
-        )
+        liandry_row["total_damage"] = float(liandry_row["total_damage"]) + liandry_delta
         liandry_row["damage_events"] = adjustments["liandry_events"]
         state.total_damage += liandry_delta
     if shadowflame_bonus > 0:
@@ -5703,8 +5694,7 @@ def calculate_fight_damage(
         timeline_coverage["complete"] = False
         timeline_coverage["certification"] = "partial_event_order"
         timeline_coverage["coarse_sources"] = sorted(
-            set(timeline_coverage["coarse_sources"])
-            | {"target_Protoplasm Harness"}
+            set(timeline_coverage["coarse_sources"]) | {"target_Protoplasm Harness"}
         )
         timeline_coverage["note"] = (
             "Protoplasm Harness's sourced total healing is spread over five "
@@ -5755,8 +5745,8 @@ def _resolve_starting_shield_outcome(
     threshold_shield = 0.0
     threshold_shield_expires = -1.0
     threshold_triggered = False
-    threshold_hp = (
-        state.target_health * max(0.0, config.target_threshold_shield_health_ratio)
+    threshold_hp = state.target_health * max(
+        0.0, config.target_threshold_shield_health_ratio
     )
     for event in _ordered_damage_events(
         state.breakdown,
@@ -5809,10 +5799,7 @@ def _resolve_starting_shield_outcome(
         health_state.take_damage(remaining)
 
     absorbed = (
-        magic_absorbed
-        + physical_absorbed
-        + general_absorbed
-        + threshold_absorbed
+        magic_absorbed + physical_absorbed + general_absorbed + threshold_absorbed
     )
     return {
         "shield_absorbed": absorbed,
