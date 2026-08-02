@@ -8659,40 +8659,64 @@
         "E": {
           "cooldown": 0.5,
           "damage_type": "magic",
+          "detail": "5 selected ticks at 0.25-second intervals",
+          "dot_duration": 1.0,
           "name": "Defile",
           "parts": [
-            "DamagePart(magic, amount=7.5, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=7.5, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.5)",
+            "DamagePart(magic, amount=7.5, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.75)",
+            "DamagePart(magic, amount=7.5, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.0)",
+            "DamagePart(magic, amount=7.5, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.25)",
+            "DamagePart(magic, amount=7.5, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.5)"
           ],
           "rank": 1,
           "resource_cost": 30.0,
           "resource_type": "MANA",
-          "total_raw": 7.5
+          "total_raw": 37.5
         },
         "Q": {
           "cast_time": 0.25,
           "cooldown": 1.0,
           "damage_type": "magic",
+          "detail": "isolated double damage",
           "name": "Lay Waste",
           "parts": [
-            "DamagePart(magic, amount=116.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=232.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.25)"
           ],
           "rank": 5,
           "resource_cost": 40.0,
           "resource_type": "MANA",
-          "total_raw": 116.0
+          "total_raw": 232.0
         },
         "R": {
-          "cast_time": 0.25,
+          "cast_time": 3.25,
           "cooldown": 180.0,
           "damage_type": "magic",
+          "detail": "damage after the complete 3-second channel",
           "name": "Requiem",
           "parts": [
-            "DamagePart(magic, amount=350.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=350.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=3.75)"
           ],
           "rank": 2,
           "resource_cost": 100.0,
           "resource_type": "MANA",
           "total_raw": 350.0
+        },
+        "W": {
+          "cast_time": 0.25,
+          "cooldown": 15.0,
+          "damage_type": "magic",
+          "detail": "Target crosses the wall before the damaging sequence",
+          "name": "Wall of Pain",
+          "parts": [],
+          "rank": 3,
+          "resource_cost": 70.0,
+          "resource_type": "MANA",
+          "target_debuff": {
+            "duration": 5.0,
+            "mr_reduction_percent": 25.0
+          },
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -19066,27 +19090,49 @@
           "cast_time": 0.25,
           "cooldown": 14.0,
           "damage_type": "magic",
+          "detail": "initial eruption + 4 stone detonations",
           "name": "Unraveled Earth",
           "parts": [
-            "DamagePart(magic, amount=60.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=60.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)",
+            "DamagePart(magic, amount=25.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.042)",
+            "DamagePart(magic, amount=18.75, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.212)",
+            "DamagePart(magic, amount=12.5, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.3820000000000001)",
+            "DamagePart(magic, amount=6.25, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.552)"
           ],
           "rank": 1,
           "resource_cost": 90.0,
           "resource_type": "MANA",
-          "total_raw": 60.0
+          "total_raw": 122.5
         },
         "Q": {
           "cast_time": 0.25,
           "cooldown": 3.0,
           "damage_type": "magic",
+          "detail": "5 shards on one target at 800 range; later shards deal 40%",
           "name": "Threaded Volley",
           "parts": [
-            "DamagePart(magic, amount=125.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=125.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.002667142178083)",
+            "DamagePart(magic, amount=50.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.502667142178083)",
+            "DamagePart(magic, amount=50.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=2.0026671421780833)",
+            "DamagePart(magic, amount=50.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=2.2526671421780833)",
+            "DamagePart(magic, amount=50.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=2.5026671421780833)"
           ],
           "rank": 5,
           "resource_cost": 75.0,
           "resource_type": "MANA",
-          "total_raw": 125.0
+          "total_raw": 325.0
+        },
+        "W": {
+          "cast_time": 0.25,
+          "cooldown": 11.0,
+          "damage_type": "magic",
+          "detail": "Knockback used to trigger the selected E stones",
+          "name": "Seismic Shove",
+          "parts": [],
+          "rank": 3,
+          "resource_cost": 20.0,
+          "resource_type": "MANA",
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -31890,12 +31936,12 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "940ed9d33268b25e15a326ff0a1c632b07d18d2b",
+    "git_head": "b384d53cf1921a6cb338fde2fc76a764bd39d960",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785669778.9014,
     "patch_last_changed_max": "26.15",
-    "registered_champion_count": 43
+    "registered_champion_count": 45
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -37807,6 +37853,122 @@
         }
       }
     },
+    "Karthus": {
+      "11": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 128.7,
+            "Q": 470.78,
+            "R": 573.39,
+            "W": 0.0,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 168.87
+          },
+          "total_damage": 1341.74
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 28.85,
+            "Q": 178.46,
+            "R": 269.23,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 476.54
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 28.85,
+            "Q": 178.46,
+            "R": 269.23,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 476.54
+        },
+        "spellblade_build": {
+          "breakdown_totals": {
+            "E": 28.85,
+            "Q": 178.46,
+            "R": 269.23,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 476.54
+        },
+        "sustained": {
+          "magic_build": {
+            "error": "ValueError: Time-based Karthus calculations are withheld until Defile toggles, its mana drain, Lay Waste cadence, and Death Defied share one persistent cast timeline. Use One Rotation."
+          },
+          "no_items": {
+            "error": "ValueError: Time-based Karthus calculations are withheld until Defile toggles, its mana drain, Lay Waste cadence, and Death Defied share one persistent cast timeline. Use One Rotation."
+          },
+          "physical_build": {
+            "error": "ValueError: Time-based Karthus calculations are withheld until Defile toggles, its mana drain, Lay Waste cadence, and Death Defied share one persistent cast timeline. Use One Rotation."
+          },
+          "spellblade_build": {
+            "error": "ValueError: Time-based Karthus calculations are withheld until Defile toggles, its mana drain, Lay Waste cadence, and Death Defied share one persistent cast timeline. Use One Rotation."
+          }
+        }
+      },
+      "18": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 215.65,
+            "Q": 470.78,
+            "R": 703.83,
+            "W": 0.0,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 168.87
+          },
+          "total_damage": 1559.13
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 105.77,
+            "Q": 178.46,
+            "R": 384.62,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 668.85
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 105.77,
+            "Q": 178.46,
+            "R": 384.62,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 668.85
+        },
+        "spellblade_build": {
+          "breakdown_totals": {
+            "E": 105.77,
+            "Q": 178.46,
+            "R": 384.62,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 668.85
+        },
+        "sustained": {
+          "magic_build": {
+            "error": "ValueError: Time-based Karthus calculations are withheld until Defile toggles, its mana drain, Lay Waste cadence, and Death Defied share one persistent cast timeline. Use One Rotation."
+          },
+          "no_items": {
+            "error": "ValueError: Time-based Karthus calculations are withheld until Defile toggles, its mana drain, Lay Waste cadence, and Death Defied share one persistent cast timeline. Use One Rotation."
+          },
+          "physical_build": {
+            "error": "ValueError: Time-based Karthus calculations are withheld until Defile toggles, its mana drain, Lay Waste cadence, and Death Defied share one persistent cast timeline. Use One Rotation."
+          },
+          "spellblade_build": {
+            "error": "ValueError: Time-based Karthus calculations are withheld until Defile toggles, its mana drain, Lay Waste cadence, and Death Defied share one persistent cast timeline. Use One Rotation."
+          }
+        }
+      }
+    },
     "Kog'Maw": {
       "11": {
         "magic_build": {
@@ -39017,6 +39179,114 @@
               "spellblade_Trinity Force": 274.67
             },
             "total_damage": 2545.95
+          }
+        }
+      }
+    },
+    "Taliyah": {
+      "11": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 575.36,
+            "Q": 719.68,
+            "W": 0.0,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 1450.4
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 87.5,
+            "Q": 232.14,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 319.64
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 87.5,
+            "Q": 232.14,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 319.64
+        },
+        "spellblade_build": {
+          "breakdown_totals": {
+            "E": 87.5,
+            "Q": 232.14,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 319.64
+        },
+        "sustained": {
+          "magic_build": {
+            "error": "ValueError: Time-based Taliyah calculations are withheld until Worked Ground areas, overlapping volleys, and repeated knockback opportunities share one persistent terrain timeline. Use One Rotation."
+          },
+          "no_items": {
+            "error": "ValueError: Time-based Taliyah calculations are withheld until Worked Ground areas, overlapping volleys, and repeated knockback opportunities share one persistent terrain timeline. Use One Rotation."
+          },
+          "physical_build": {
+            "error": "ValueError: Time-based Taliyah calculations are withheld until Worked Ground areas, overlapping volleys, and repeated knockback opportunities share one persistent terrain timeline. Use One Rotation."
+          },
+          "spellblade_build": {
+            "error": "ValueError: Time-based Taliyah calculations are withheld until Worked Ground areas, overlapping volleys, and repeated knockback opportunities share one persistent terrain timeline. Use One Rotation."
+          }
+        }
+      },
+      "18": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 839.36,
+            "Q": 719.68,
+            "W": 0.0,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 1714.4
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 323.21,
+            "Q": 232.14,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 555.36
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 323.21,
+            "Q": 232.14,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 555.36
+        },
+        "spellblade_build": {
+          "breakdown_totals": {
+            "E": 323.21,
+            "Q": 232.14,
+            "W": 0.0,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 555.36
+        },
+        "sustained": {
+          "magic_build": {
+            "error": "ValueError: Time-based Taliyah calculations are withheld until Worked Ground areas, overlapping volleys, and repeated knockback opportunities share one persistent terrain timeline. Use One Rotation."
+          },
+          "no_items": {
+            "error": "ValueError: Time-based Taliyah calculations are withheld until Worked Ground areas, overlapping volleys, and repeated knockback opportunities share one persistent terrain timeline. Use One Rotation."
+          },
+          "physical_build": {
+            "error": "ValueError: Time-based Taliyah calculations are withheld until Worked Ground areas, overlapping volleys, and repeated knockback opportunities share one persistent terrain timeline. Use One Rotation."
+          },
+          "spellblade_build": {
+            "error": "ValueError: Time-based Taliyah calculations are withheld until Worked Ground areas, overlapping volleys, and repeated knockback opportunities share one persistent terrain timeline. Use One Rotation."
           }
         }
       }

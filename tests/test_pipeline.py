@@ -1,5 +1,6 @@
 """Tests for the shared stats -> abilities -> fight pipeline."""
 
+from copy import deepcopy
 from dataclasses import replace
 
 import pytest
@@ -185,8 +186,12 @@ def test_timed_rotation_omits_casts_after_mana_is_exhausted():
     params = FightParams.from_request(
         {"fight_mode": "timed", "fight_duration": 10}, deterministic=True
     )
+    # Keep this as an engine fixture rather than invoking Karthus's public
+    # module, whose sourced contract deliberately supports one rotation only.
+    champion = deepcopy(get_champion("Karthus"))
+    champion["name"] = "Resource Timeline Fixture"
 
-    result = run_fight(get_champion("Karthus"), 18, [], params)
+    result = run_fight(champion, 18, [], params)
 
     assert result["breakdown"]["Q"]["casts"] == 5
     assert result["breakdown"]["E"]["casts"] == 9

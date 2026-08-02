@@ -22,9 +22,9 @@ def _maximum_options(champion_name: str) -> dict[str, bool | int | float]:
 
 
 def main() -> None:
-    """Time one Bel'Veth request at every public maximum and report CPU share."""
+    """Time one exact Ezreal request at every public maximum and report CPU share."""
     payload = {
-        "champion": "Belveth",
+        "champion": "Ezreal",
         "level": 20,
         "fight_mode": "time_based",
         "fight_duration": 10,
@@ -34,8 +34,10 @@ def main() -> None:
         "target_bonus_health": 10_000,
         "target_armor": 500,
         "target_mr": 500,
+        "role": "bottom",
+        "role_quest_complete": True,
         "max_legendary_slots": 6,
-        "champion_options": _maximum_options("Bel'Veth"),
+        "champion_options": _maximum_options("Ezreal"),
     }
     app.config["RATE_LIMIT_ENABLED"] = False
     started_cpu = time.process_time()
