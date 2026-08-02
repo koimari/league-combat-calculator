@@ -90,33 +90,29 @@ function wikiDamageType(type) {
   return null;
 }
 
-function wikiFallbackVariant(form) {
-  const packets = (form?.packets || []).filter((packet) => wikiDamageType(packet?.damageType));
-  const primary = [...packets].sort((a, b) => {
-    const aHasBase = Array.isArray(a.base) && a.base.some((value) => Number(value) > 0);
-    const bHasBase = Array.isArray(b.base) && b.base.some((value) => Number(value) > 0);
-    return Number(bHasBase) - Number(aHasBase) || Number(b.priority || 0) - Number(a.priority || 0);
-  })[0];
-  const ratios = primary?.ratios || {};
-  const levelScaled = Array.isArray(primary?.base) && primary.base.length > 6;
-  const targetScale = Object.keys(ratios).find((key) => /^target(?:Max|Current|Missing)Hp$/.test(key));
+function wikiFallbackVariant(form, packet = null) {
+  const source = packet || (form?.packets || []).find((entry) => wikiDamageType(entry?.damageType));
+  const ratios = source?.ratios || {};
+  const levelScaled = Array.isArray(source?.base) && source.base.length > 6;
   return {
-    name: form?.name || "Wiki-derived form",
-    levelBase: levelScaled ? primary.base : undefined,
-    base: levelScaled ? undefined : (primary?.base || []),
+    name: packet?.attribute || form?.name || "Wiki-derived form",
+    levelBase: levelScaled ? source.base : undefined,
+    base: levelScaled ? undefined : (source?.base || []),
     ap: ratios.ap,
     ad: ratios.ad,
     bonusAd: ratios.bonusAd,
-    packets: packets.map((packet) => ({
-      type: wikiDamageType(packet.damageType),
-      targetScale: Object.keys(packet.ratios || {}).find((key) => /^target(?:Max|Current|Missing)Hp$/.test(key)),
-    })),
-    targetScale,
+    targetMaxHp: ratios.targetMaxHp,
+    targetCurrentHp: ratios.targetCurrentHp,
+    targetMissingHp: ratios.targetMissingHp,
+    packets: source ? [{ type: wikiDamageType(source.damageType) }] : [],
   };
 }
 
 function wikiFallbackAbility(slot, forms, metadata) {
-  const normalized = (forms || []).map(wikiFallbackVariant);
+  const normalized = (forms || []).flatMap((form) => {
+    const packets = (form.packets || []).filter((packet) => wikiDamageType(packet?.damageType));
+    return packets.length ? packets.map((packet) => wikiFallbackVariant(form, packet)) : [wikiFallbackVariant(form)];
+  });
   const first = normalized[0] || { name: metadata?.name || slot, packets: [] };
   return {
     slot,
@@ -608,7 +604,16 @@ function abilityDamageRows(attackerStats, targetStats) {
     const apRatio = rankedValue(variant.ap, rank, levelScaled);
     const adRatio = rankedValue(variant.ad, rank, levelScaled);
     const bonusAdRatio = rankedValue(variant.bonusAd, rank, levelScaled);
-    const oneHit = base + apRatio * attackerStats.ap + adRatio * attackerStats.ad + bonusAdRatio * Math.max(0, attackerStats.ad - baseChampion.ad);
+    const targetMaxHpRatio = rankedValue(variant.targetMaxHp, rank, levelScaled);
+    const targetCurrentHpRatio = rankedValue(variant.targetCurrentHp, rank, levelScaled);
+    const targetMissingHpRatio = rankedValue(variant.targetMissingHp, rank, levelScaled);
+    const oneHit = base
+      + apRatio * attackerStats.ap
+      + adRatio * attackerStats.ad
+      + bonusAdRatio * Math.max(0, attackerStats.ad - baseChampion.ad)
+      + targetMaxHpRatio * targetStats.hp
+      + targetCurrentHpRatio * targetStats.hp
+      + targetMissingHpRatio * Math.max(0, targetStats.hp * 0.15);
     const hits = ability.maxHits ? input.hits : 1;
     const hitFactor = ability.subsequentMultiplier ? 1 + Math.max(0, hits - 1) * ability.subsequentMultiplier : hits;
     const raw = oneHit * hitFactor * input.casts;
@@ -1090,10 +1095,6 @@ function renderResults() {
   const scenarioReady = state.attacker.champion && state.targets.length && state.targets.every((target) => target.champion);
   const hasA = buildAIds().some(Boolean);
   const hasB = state.attacker.comparisonEnabled && buildBIds().some(Boolean);
-  if (engine.ready && state.attacker.champion && !engine.reviewed.has(state.attacker.champion)) {
-    renderEngineUnavailable();
-    return;
-  }
   if (!scenarioReady || !hasA) {
     $("resultContext").textContent = "Waiting for scenario";
     $("winnerVisual").innerHTML = `<div class="result-empty-mark">+</div><div><span>Nothing calculated</span><strong>Build a scenario</strong><b>Champion · builds · enemies</b></div>`;
@@ -1106,6 +1107,7 @@ function renderResults() {
     $("rotationTable").innerHTML = "";
     return;
   }
+  const reviewedAttacker = engine.reviewed.has(state.attacker.champion);
   const aCurrent = calculateBuild(buildAIds(), state.fight.rotations, buildAStacks());
   const aAll = state.fight.rotations === 6 ? aCurrent : calculateBuild(buildAIds(), 6, buildAStacks());
   const aTotal = aCurrent.cumulative;
@@ -1113,10 +1115,12 @@ function renderResults() {
   $("resultContext").textContent = `${state.targets.length} ${plural(state.targets.length, "enemy")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
 
   if (!hasB) {
-    $("winnerVisual").innerHTML = `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>Modeled output</span><strong>Build A</strong><b>${buildAIds().filter(Boolean).length} items scored</b></div>`;
+    $("winnerVisual").innerHTML = `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${reviewedAttacker ? "Modeled output" : "Wiki-derived estimate"}</span><strong>Build A</strong><b>${buildAIds().filter(Boolean).length} items scored</b></div>`;
     $("scoreGrid").innerHTML = `<div class="score winner single-score"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>Build A</span></header><strong>${fmt(aTotal)}</strong><small>TDD · ${fmt(aTotal / seconds)} DPS</small></div>`;
     renderResistanceOutput(aCurrent.build, null);
-    $("why").innerHTML = `<strong>Build A</strong> is scored as one complete build. Enable Build B only for a full-build comparison.`;
+    $("why").innerHTML = reviewedAttacker
+      ? `<strong>Build A</strong> is scored as one complete build. Enable Build B only for a full-build comparison.`
+      : `<strong>Build A</strong> is scored with the Wiki-derived champion packets and item event catalogue. The exact registry has not yet certified this champion.`;
     $("threshold").innerHTML = `<span>Six-rotation total</span><strong>${fmt(aAll.cumulative)} modeled damage</strong>`;
     $("tableA").textContent = "Build A";
     $("tableB").textContent = "—";
@@ -1710,8 +1714,7 @@ function openRosterBis(path) {
 
 function optimizerDamagePackageReady() {
   const champion = getChampion(state.attacker.champion);
-  const coverage = champion?.abilityCoverage;
-  const completeSourcedKit = Boolean(coverage && coverage.supported === coverage.total && coverage.total > 0);
+  const completeSourcedKit = activeAbilityKit().filter((ability) => ["Q", "W", "E", "R"].includes(ability.slot)).length === 4;
   const selectedAbilities = completeSourcedKit && activeAbilityKit().some((ability) => abilityInput(ability.slot).casts > 0 && (ability.slot === "P" || abilityInput(ability.slot).rank > 0));
   const manualPackage = state.attacker.baseDamage > 0 || state.attacker.apRatio > 0 || state.attacker.physicalDamage > 0 || state.attacker.adRatio > 0;
   return selectedAbilities || manualPackage;
