@@ -1,55 +1,43 @@
-# LoL Damage Calculator
+# League Combat Calculator
 
-A web-based League of Legends damage calculator that lets you select a champion, equip items, configure fight parameters, and see exactly how much damage you'll deal to a target.
+A roster-aware League of Legends damage and build calculator. Choose one attacker, reconstruct up to five enemies and four allies, then compare builds or search for the highest modeled total damage dealt (TDD).
 
-## Features
+## What it calculates
 
-- **Champion stats** — Accurate per-level stat calculations using the official growth formula
-- **Item builds** — Equip up to 6 items + boots with correct stat stacking and passive effects
-- **Ability damage** — Calculates Q/W/E/R damage at any rank with AP/AD/bonus scaling
-- **Fight simulation** — Set a fight duration and see total damage accounting for ability cooldowns and auto-attack uptime
-- **Build optimizer** — Search legal item combinations for the strongest total, physical, or magic damage build
-- **Target configuration** — Set enemy health, armor, and magic resistance to see post-mitigation damage
-- **Item effects** — Supports on-hit (Nashor's, BotRK), spellblade (Lich Bane), burn (Liandry's), and more
-- **Auto-updating data** — Fetches champion and item data from the LoL Wiki for the latest patch
+- level-, rank-, item-, role-quest-, and stack-dependent stats;
+- post-mitigation damage with League's penetration order;
+- cooldown-limited casts, resource costs, regeneration, auto-attack uptime, burns, procs, shields, and per-skill attribution;
+- per-target and roster-wide TDD, health damage, DPS, and two distinct build results;
+- an exhaustive one-slot result among fully modelled candidates, promoted to certified best in slot only when no available candidate is withheld;
+- a clearly labeled heuristic search for complete builds.
 
-## Setup
+The public attacker picker enables only champion modules with reviewed formulas. All 173 cached champions remain available as allies or enemies because base stats and item stats are calculated separately. Unmodeled attacker kits fail closed; unmodeled ally or defensive effects are shown as assumptions instead of being presented as zero.
 
-Requires Python 3.10+.
+The optimizer withholds any candidate whose damage-relevant passive, active, or state is not yet modelled. The API names each withheld item and the missing mechanic; the interface labels the result `Best modelled` rather than silently treating that item as a plain stat block.
+
+## Run locally
+
+Requires Python 3.12. After starting the app, open `http://127.0.0.1:5000`.
 
 ```bash
-# Clone the repo
-git clone https://github.com/Skyway1111/lol-calculator.git
-cd lol-calculator
-
-# Create virtual environment and install dependencies
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS/Linux
+source .venv/bin/activate
 pip install -r requirements.txt
-
-# Run the app
 python -m flask --app src.app run
 ```
 
-Then open http://localhost:5000 in your browser.
-
-On first launch, click **"Update to latest patch"** to fetch champion and item data or after a patch.
-
-## Running Tests
+## Verify
 
 ```bash
-pytest
+python -m pytest -q
+python -m pylint src/ --fail-under=9
+python scripts/golden_snapshot.py compare scripts/golden_baseline.json
 ```
 
-## Credits
+## Data and provenance
 
-- **[lolstaticdata](https://github.com/meraki-analytics/lolstaticdata)** by Meraki Analytics — Champion and item data scraping library. This project vendors a copy of their code (`vendor/lolstaticdata/`) to pull accurate ability data from the wiki.
-- **[League of Legends Wiki](https://wiki.leagueoflegends.com)** — The source of truth for champion ability values, item effects, and game formulas.
+Champion and item data are read from the tracked League of Legends Wiki cache in `data/`. Patch refreshes run locally and enter production through reviewed commits. Revision-backed mechanics include their source metadata in the API where available.
 
-## Tech Stack
+The calculator combines the combat engine and tests from [Skyway1111/lol-calculator](https://github.com/Skyway1111/lol-calculator) with Scryglass's roster, comparison, optimizer, provenance, and interface work. The upstream repository has no licence file; redistribution remains closed until its author chooses a licence. See `NOTICE.md`.
 
-- **Backend:** Python / Flask
-- **Frontend:** Vanilla HTML, CSS, JavaScript
-- **Data:** Scraped from the League of Legends Wiki via [lolstaticdata](https://github.com/meraki-analytics/lolstaticdata)
-- **Tests:** pytest plus a full-pipeline numeric golden snapshot
+Deployment instructions are in `docs/deploy.md`; calculation boundaries and module ownership are in `architecture.md`.

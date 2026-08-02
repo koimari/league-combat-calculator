@@ -92,6 +92,31 @@ def _drakehounds_step_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     )
 
 
+def _drakehounds_step(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: damage plus the energy restored by each selected empowered attack."""
+    entry = proc_damage(_drakehounds_step_damage, "physical")(ctx)
+    if entry is None:
+        return None
+    # Wiki revision 4038211 supplies the 1/7/13 thresholds. The locally
+    # ingested champion JSON carries the three values in the passive prose.
+    description = " ".join(
+        effect.get("description", "")
+        for effect in (ctx.ability() or {}).get("effects", [])
+    )
+    match = re.search(
+        r"restore\s+(\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)\s*/\s*"
+        r"(\d+(?:\.\d+)?)\s*\(based on level\)\s*energy",
+        description,
+        flags=re.IGNORECASE,
+    )
+    if match is None:
+        raise ValueError("Ambessa passive energy restoration is unavailable")
+    values = tuple(float(value) for value in match.groups())
+    index = 0 if ctx.level < 7 else 1 if ctx.level < 13 else 2
+    entry["resource_restore_per_proc"] = values[index]
+    return entry
+
+
 def _q_cast(index: int) -> SlotParser:
     """Sweetspot-dispatched Q entry at *index* (0 = Q1, 1 = Q2)."""
     return by_option(
@@ -159,7 +184,7 @@ SLOTS = {
     "Q2": _sundering_slam,
     "W": simple_damage(attr="Increased Physical Damage", dmg_type="physical"),
     "E": simple_damage(attr="Total Physical Damage", dmg_type="physical"),
-    "P": proc_damage(_drakehounds_step_damage, "physical"),
+    "P": _drakehounds_step,
 }
 
 parse_abilities = build_parser(SLOTS, "Ambessa")

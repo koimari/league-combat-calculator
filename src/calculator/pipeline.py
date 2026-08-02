@@ -12,15 +12,20 @@ from typing import Any, Mapping
 from .champions import (
     RESERVED_OPTION_KEYS,
     get_champion_cast_order,
+    get_custom_cast_order_unavailable_reason,
+    get_supported_fight_modes,
+    get_unsupported_fight_mode_reason,
     parse_champion_abilities,
 )
+from .champions.skill_orders import get_ability_rank
 from .damage import (
     FightConfig,
     calculate_fight_damage,
     split_auto_vs_ability,
     split_by_damage_type,
 )
-from .item_effects import resolve_damage_effects
+from .item_effects import resolve_damage_effects, validate_item_input_options
+from .role_quests import validate_role
 from .stats import calculate_total_stats
 
 DEFAULT_TARGET: dict[str, float] = {
@@ -42,6 +47,7 @@ PUBLIC_INPUT_LIMITS: dict[str, tuple[float, float]] = {
     "target_mr": (0.0, 500.0),
 }
 _PUBLIC_FIGHT_MODES = frozenset({"one_rotation", "time_based", "timed", "auto_only"})
+_NONSTANDARD_RANK_CHAMPIONS = frozenset({"Elise", "Jayce", "Karma", "Nidalee", "Udyr"})
 
 
 def _bounded_request_float(data: Mapping[str, Any], key: str, default: float) -> float:
@@ -80,6 +86,10 @@ class FightParams(FightConfig):
 
     ability_ranks: dict[str, int] | None = None
     champion_options: dict[str, Any] | None = None
+    item_options: dict[str, dict[str, int]] | None = None
+    role: str = ""
+    role_quest_complete: bool = False
+    ally_stat_bonuses: dict[str, float] | None = None
 
     @classmethod
     def from_request(
@@ -117,6 +127,11 @@ class FightParams(FightConfig):
         champion_options = data.get("champion_options")
         if champion_options is not None and not isinstance(champion_options, Mapping):
             raise ValueError("champion_options must be an object")
+        item_options = validate_item_input_options(data.get("item_options"))
+        role = validate_role(data.get("role", ""))
+        role_quest_complete = _request_bool(data, "role_quest_complete", False)
+        if role_quest_complete and not role:
+            raise ValueError("role is required when role_quest_complete is true")
 
         params = cls(
             target_health=_bounded_request_float(
@@ -141,6 +156,9 @@ class FightParams(FightConfig):
             champion_options=(
                 dict(champion_options) if champion_options is not None else None
             ),
+            item_options=item_options or None,
+            role=role,
+            role_quest_complete=role_quest_complete,
             deterministic=deterministic,
         )
         params._validate_request_values()
@@ -181,7 +199,67 @@ class FightParams(FightConfig):
             "target_max_health": self.target_health,
             "target_current_health": self.target_health,
             "target_missing_health": 0.0,
+            "roster_target_index": float(self.roster_target_index),
+            "roster_target_count": float(self.roster_target_count),
         }
+
+    def validate_for_champion(self, champion_name: str, level: int) -> None:
+        """Reject a rank allocation that cannot exist at ``level``.
+
+        Rank-free requests use the champion's sourced default order. Manual
+        allocations are accepted only for the standard five-rank basic and
+        three-rank ultimate layout. Transformation and auto-levelled kits fail
+        closed until their individual allocation rules are represented.
+        """
+        supported_modes = get_supported_fight_modes(champion_name)
+        requested_mode = (
+            "one_rotation"
+            if self.one_rotation
+            else ("auto_only" if self.auto_attacks_only else "time_based")
+        )
+        if supported_modes is not None and requested_mode not in supported_modes:
+            reason = get_unsupported_fight_mode_reason(champion_name)
+            raise ValueError(
+                reason
+                or f"{requested_mode} is not certified for {champion_name}"
+            )
+
+        custom_order_reason = get_custom_cast_order_unavailable_reason(champion_name)
+        if self.cast_order is not None and custom_order_reason is not None:
+            raise ValueError(custom_order_reason)
+
+        if self.ability_ranks is None:
+            return
+        if champion_name in _NONSTANDARD_RANK_CHAMPIONS:
+            raise ValueError(
+                f"Manual ability ranks are unavailable for {champion_name}; "
+                "use the level-derived ranks"
+            )
+
+        effective = {
+            key: self.ability_ranks.get(
+                key, get_ability_rank(key, level, champion_name)
+            )
+            for key in ("Q", "W", "E", "R")
+        }
+        for key in ("Q", "W", "E"):
+            rank = effective[key]
+            minimum_level = max(1, 2 * rank - 1) if rank else 0
+            if rank and level < minimum_level:
+                raise ValueError(
+                    f"{key} rank {rank} requires champion level {minimum_level}"
+                )
+        ultimate_rank = effective["R"]
+        minimum_ultimate_level = (0, 6, 11, 16)[ultimate_rank]
+        if ultimate_rank and level < minimum_ultimate_level:
+            raise ValueError(
+                f"R rank {ultimate_rank} requires champion level "
+                f"{minimum_ultimate_level}"
+            )
+        if sum(effective.values()) > min(level, 18):
+            raise ValueError(
+                "Ability ranks spend more skill points than the champion level allows"
+            )
 
 
 def run_fight(
@@ -191,7 +269,16 @@ def run_fight(
     params: FightParams,
 ) -> dict[str, Any]:
     """Run stats, champion ability parsing, and fight damage as one pipeline."""
-    champion_stats = calculate_total_stats(champion_data, level, items)
+    params.validate_for_champion(champion_data.get("name", ""), level)
+    champion_stats = calculate_total_stats(
+        champion_data,
+        level,
+        items,
+        item_options=params.item_options,
+        role=params.role,
+        role_quest_complete=params.role_quest_complete,
+        external_stat_bonuses=params.ally_stat_bonuses,
+    )
 
     # Reserved option keys are pipeline-owned: strip whatever the caller
     # sent, then hand timed fights the fight window and auto uptime so
@@ -223,6 +310,15 @@ def run_fight(
         target_stats=params.target_stats(),
         champion_options=champion_options,
     )
+    if params.target_threshold_health_bonus > 0 and any(
+        ability.get("target_max_health_sensitive", False)
+        for ability in ability_damages.values()
+    ):
+        raise ValueError(
+            "This damage package scales from target maximum health and cannot "
+            "yet be certified against Protoplasm Harness's temporary maximum-"
+            "health change. Remove Protoplasm or choose another attacker."
+        )
 
     # The fight engine applies ability stat buffs (Mega Gnar's form
     # stats, Vayne/Aatrox R, ...) to this copy in place — report THESE
@@ -235,7 +331,12 @@ def run_fight(
         declared = get_champion_cast_order(champion_data.get("name", ""))
         if declared is not None:
             params = replace(params, cast_order=declared)
-    result = calculate_fight_damage(fight_stats, ability_damages, items, params)
+    result = calculate_fight_damage(
+        fight_stats,
+        ability_damages,
+        items,
+        replace(params, enforce_resource_limits=True),
+    )
     result["champion_stats"] = fight_stats
     auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
     result["auto_attack_damage"] = auto_damage

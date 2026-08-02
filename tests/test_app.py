@@ -91,6 +91,7 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
         ("/api/optimize", {"champion": "Aatrox", "target_health": "inf"}),
         ("/api/calculate", {"champion": "Aatrox", "ability_ranks": []}),
         ("/api/optimize", {"champion": "Aatrox", "champion_options": []}),
+        ("/api/calculate", {"champion": "Aatrox", "include_crossover": "yes"}),
         ("/api/calculate", {"champion": "Aatrox", "cast_order": [{}, "W", "E", "R"]}),
         ("/api/calculate", {"champion": "Aatrox", "ability_ranks": {"Q": 1.5}}),
         (
@@ -100,6 +101,14 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
         (
             "/api/calculate",
             {"champion": "Aatrox", "champion_options": {"sweetspot": "false"}},
+        ),
+        (
+            "/api/calculate",
+            {"champion": "Kai'Sa", "champion_options": {"q_evolved": "maybe"}},
+        ),
+        (
+            "/api/optimize",
+            {"champion": "Kai'Sa", "champion_options": {"w_evolved": 1}},
         ),
         ("/api/calculate", {"champion": "Aatrox", "items": "Kraken Slayer"}),
         (
@@ -147,6 +156,314 @@ def test_public_bounds_accept_the_existing_ui_maxima():
     assert response.status_code == 200
 
 
+def test_loadout_stats_returns_champion_derived_full_matrix():
+    response = app_module.app.test_client().post(
+        "/api/loadout-stats",
+        json={
+            "champion": "Galio",
+            "level": 12,
+            "items": ["Hollow Radiance"],
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["champion"] == "Galio"
+    assert data["stats"]["health"] == 2240
+    assert data["stats"]["base_health"] == 1840
+    assert data["stats"]["bonus_health"] == 400
+    assert data["stats"]["magic_resistance"] == 92
+
+
+def test_loadout_stats_exposes_target_item_coverage_without_hiding_the_card():
+    response = app_module.app.test_client().post(
+        "/api/loadout-stats",
+        json={"champion": "Galio", "level": 12, "items": ["Banshee's Veil"]},
+    )
+
+    assert response.status_code == 200
+    coverage = response.get_json()["target_model_coverage"]
+    assert coverage["complete"] is False
+    assert coverage["blocked"][0]["name"] == "Banshee's Veil"
+
+
+def test_calculate_withholds_an_unmodeled_enemy_spell_shield():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "enemies": [
+                {"champion": "Galio", "level": 12, "items": ["Banshee's Veil"]}
+            ],
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Banshee's Veil" in response.get_json()["error"]
+    assert "first-hostile-ability" in response.get_json()["error"]
+
+
+def test_calculate_applies_kaenic_starting_magic_shield():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "enemies": [
+                {"champion": "Kai'Sa", "level": 14, "items": ["Kaenic Rookern"]}
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    target = response.get_json()["targets"][0]
+    expected_shield = target["target"]["stats"]["health"] * 0.15
+    assert target["target"]["starting_defenses"]["magic_shield"] == pytest.approx(
+        expected_shield, abs=0.1
+    )
+    assert target["result"]["magic_shield_absorbed"] > 0
+
+
+def test_calculate_applies_shieldbow_lifeline_in_one_rotation():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 18,
+            "items": ["Rabadon's Deathcap", "Shadowflame"],
+            "enemies": [
+                {
+                    "champion": "Kai'Sa",
+                    "level": 18,
+                    "items": ["Immortal Shieldbow"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    target = response.get_json()["targets"][0]
+    assert target["target"]["starting_defenses"]["threshold_shield"]["amount"] == 700
+    assert target["result"]["threshold_shield_absorbed"] > 0
+
+
+def test_calculate_withholds_shieldbow_in_timed_mode():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 18,
+            "fight_mode": "timed",
+            "fight_duration": 8,
+            "enemies": [
+                {
+                    "champion": "Kai'Sa",
+                    "level": 18,
+                    "items": ["Immortal Shieldbow"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 400
+    assert "supported only for one rotation" in response.get_json()["error"]
+
+
+def test_calculate_can_sum_one_damage_package_across_enemy_roster():
+    client = app_module.app.test_client()
+    payload = {
+        "champion": "Ziggs",
+        "level": 12,
+        "items": ["Luden's Echo"],
+        "enemies": [
+            {
+                "champion": "Galio",
+                "level": 12,
+                "items": ["Hollow Radiance"],
+            },
+            {"champion": "Kai'Sa", "level": 14, "items": []},
+        ],
+        "allies": [{"champion": "Orianna", "level": 12, "items": []}],
+    }
+
+    response = client.post("/api/calculate", json=payload)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["scenario"]["target_count"] == 2
+    assert data["scenario"]["primary_target"] == "Galio"
+    assert [row["target"]["champion"] for row in data["targets"]] == [
+        "Galio",
+        "Kai'Sa",
+    ]
+    assert data["targets"][0]["target"]["stats"]["bonus_health"] == 400
+    assert data["allies"][0]["champion"] == "Orianna"
+    assert data["scenario"]["ally_effects"]["unmodeled"] == ["Orianna"]
+    assert data["total_damage"] == round(
+        sum(row["result"]["total_damage"] for row in data["targets"]), 1
+    )
+    assert data["damage_by_type"]["magic"] == round(
+        sum(row["result"]["damage_by_type"]["magic"] for row in data["targets"]),
+        1,
+    )
+    assert data["timeline_coverage"]["complete"] is False
+    assert "passive" in data["timeline_coverage"]["coarse_sources"]
+    assert "proc_Luden's Echo" in data["timeline_coverage"]["exact_sources"]
+    assert all("timeline_coverage" in row["result"] for row in data["targets"])
+
+
+def test_calculate_comparison_curve_recomputes_six_timed_windows():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "items": ["Liandry's Torment"],
+            "include_crossover": True,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 12,
+                    "items": ["Hollow Radiance"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    curve = response.get_json()["comparison_curve"]
+    assert [point["rotation"] for point in curve] == [1, 2, 3, 4, 5, 6]
+    assert [point["seconds"] for point in curve] == [5, 10, 15, 20, 25, 30]
+    assert all(point["total_damage"] > 0 for point in curve)
+    assert all(point["dps"] > 0 for point in curve)
+    assert curve[-1]["total_damage"] > curve[0]["total_damage"]
+
+
+def test_calculate_models_protoplasm_as_health_and_healing_not_a_shield():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "items": ["Liandry's Torment"],
+            "enemies": [
+                {
+                    "champion": "Shen",
+                    "level": 7,
+                    "items": ["Protoplasm Harness"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    target = response.get_json()["targets"][0]
+    defense = target["target"]["starting_defenses"]
+    assert defense["threshold_shield"]["amount"] == 0
+    assert defense["threshold_health"] == {
+        "bonus_health": 170.6,
+        "healing": 205.9,
+        "health_ratio": 0.3,
+        "duration": 5.0,
+    }
+    result = target["result"]
+    assert result["threshold_health_triggered"] is False
+    assert result["target_healing_received"] == 0
+    assert result["target_ending_health"] < target["target"]["stats"]["health"]
+
+
+def test_optimizer_scores_every_selected_enemy(monkeypatch):
+    captured = {}
+
+    def fake_optimize_build(**kwargs):
+        captured.update(kwargs)
+        return {"items": [], "boots": None, "total_damage": 0.0}
+
+    monkeypatch.setattr(app_module, "optimize_build", fake_optimize_build)
+    response = app_module.app.test_client().post(
+        "/api/optimize",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 12,
+                    "items": ["Hollow Radiance"],
+                },
+                {"champion": "Kai'Sa", "level": 14},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    targets = captured["target_fight_params"]
+    assert len(targets) == 2
+    assert targets[0].target_health == 2240
+    assert targets[0].target_bonus_health == 400
+    assert targets[0].target_magic_resistance == 92
+    assert targets[1].target_health == 1873
+    assert [target.roster_target_index for target in targets] == [0, 1]
+    assert [target.roster_target_count for target in targets] == [2, 2]
+
+
+def test_enabled_ally_staff_buff_changes_attacker_stats_and_damage():
+    client = app_module.app.test_client()
+    base = client.post(
+        "/api/calculate", json={"champion": "Ziggs", "level": 12}
+    ).get_json()
+    buffed_response = client.post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "allies": [
+                {
+                    "champion": "Nami",
+                    "level": 12,
+                    "items": ["Staff of Flowing Water"],
+                    "ally_effects_enabled": True,
+                }
+            ],
+        },
+    )
+
+    assert buffed_response.status_code == 200
+    buffed = buffed_response.get_json()
+    assert buffed["champion_stats"]["ability_power"] == 40
+    assert buffed["champion_stats"]["ability_haste"] == 15
+    assert buffed["total_damage"] > base["total_damage"]
+    assert buffed["scenario"]["ally_effects"]["modeled"] == [
+        "Staff of Flowing Water — Rapids"
+    ]
+
+
+def test_ludens_charges_are_shared_across_selected_targets():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "items": ["Luden's Echo"],
+            "enemies": [
+                {"champion": "Ahri", "level": 1},
+                {"champion": "Lux", "level": 1},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    targets = response.get_json()["targets"]
+    primary = targets[0]["result"]["breakdown"]["proc_Luden's Echo"]
+    secondary = targets[1]["result"]["breakdown"]["proc_Luden's Echo"]
+    # Two targets: primary + four repeated 20% charges = 1.8x; the
+    # secondary receives one full charge. Solo pricing is 2.0x.
+    assert primary["total_damage"] / secondary["total_damage"] == pytest.approx(
+        1.8, rel=0.02
+    )
+
+
 def test_optimize_rejects_unknown_locked_items_as_client_input():
     response = app_module.app.test_client().post(
         "/api/optimize",
@@ -188,7 +505,9 @@ def test_public_post_routes_reject_unverified_champions_before_compute(
     response = app_module.app.test_client().post(endpoint, json=payload)
 
     assert response.status_code == 422
-    assert response.get_json() == {"error": "Champion 'Kled' is not verified"}
+    assert response.get_json()["error"].startswith(
+        "Champion 'Kled' is not verified: Alternate forms or sub-spells"
+    )
     assert limiter.calls == 0
 
 
@@ -285,6 +604,16 @@ def test_security_headers_cover_html_json_and_errors(path):
     assert "unsafe-eval" not in policy
 
 
+def test_local_http_csp_does_not_upgrade_its_own_static_assets():
+    response = app_module.app.test_client().get(
+        "/", environ_base={"REMOTE_ADDR": "127.0.0.1", "wsgi.url_scheme": "http"}
+    )
+
+    assert (
+        "upgrade-insecure-requests" not in response.headers["Content-Security-Policy"]
+    )
+
+
 def test_picker_rendering_never_puts_api_strings_into_inner_html():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
@@ -330,6 +659,12 @@ def test_config_exposes_all_request_defaults():
         "auto_attack_uptime": 0.8,
         "one_rotation_duration_seconds": 5.0,
     }
+    assert data["champion_options"]["Soraka"]["sources"][1] == {
+        "label": "Equinox",
+        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Soraka/Equinox",
+        "revision_id": 3907153,
+        "revision_timestamp": "2025-06-06T18:23:34Z",
+    }
     assert data["input_limits"] == {
         "fight_duration": [1.0, 10.0],
         "auto_attack_uptime": [0.0, 1.0],
@@ -338,6 +673,11 @@ def test_config_exposes_all_request_defaults():
         "target_armor": [0.0, 500.0],
         "target_mr": [0.0, 500.0],
     }
+    assert data["item_options"]["Dark Seal"]["options"]["glory_stacks"]["max"] == 10
+    assert (
+        data["item_options"]["Mejai's Soulstealer"]["options"]["glory_stacks"]["max"]
+        == 25
+    )
 
 
 class TestIconUrlsAreHttps:
@@ -355,6 +695,25 @@ class TestIconUrlsAreHttps:
         icons = [c["icon"] for c in champs] + [i["icon"] for i in items + boots]
         assert icons
         assert not [u for u in icons if u.startswith("http://")]
+
+    def test_manual_item_api_includes_reconstructable_partial_builds(self):
+        items = app_module.app.test_client().get("/api/items").get_json()
+        names = {item["name"] for item in items}
+
+        assert {"Ruby Crystal", "Dark Seal", "Doran's Ring"} <= names
+
+    def test_item_apis_expose_optimizer_coverage(self):
+        client = app_module.app.test_client()
+        items = {item["name"]: item for item in client.get("/api/items").get_json()}
+        boots = {item["name"]: item for item in client.get("/api/boots").get_json()}
+
+        assert items["Runaan's Hurricane"]["model_coverage"]["status"] == "blocked"
+        assert items["Void Staff"]["model_coverage"]["status"] == "stats_only"
+        assert boots["Immortal Path"]["model_coverage"]["status"] == "blocked"
+
+    def test_boot_api_marks_role_quest_tiers(self):
+        boots = app_module.app.test_client().get("/api/boots").get_json()
+        assert {boot["tier"] for boot in boots} == {2, 3}
 
     def test_ability_icons_are_https(self):
         abilities = app_module.app.test_client().get("/api/abilities/Aatrox").get_json()
@@ -376,6 +735,24 @@ class TestChampionVerifiedFlags:
         assert by_name["Bel'Veth"] is True
         assert by_name["Kled"] is False
         assert by_name["Teemo"] is False
+
+    def test_unverified_champions_expose_specific_fail_closed_reasons(self):
+        champs = app_module.app.test_client().get("/api/champions").get_json()
+        by_name = {champion["name"]: champion for champion in champs}
+
+        assert by_name["Soraka"]["availability"] == {
+            "ready": True,
+            "verification": "reviewed_module",
+            "blockers": [],
+        }
+        teemo = by_name["Teemo"]
+        assert teemo["availability"]["ready"] is False
+        assert teemo["availability"]["verification"] == "blocked"
+        assert any(
+            blocker["code"] == "timed_stages"
+            for blocker in teemo["availability"]["blockers"]
+        )
+        assert teemo["patch_last_changed"]
 
     def test_verified_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
@@ -483,8 +860,8 @@ class TestUpdateDataDevGate:
         assert data["dev_mode"] is True
 
 
-@pytest.mark.parametrize("slot_count", [1, 2, 3, 4, 5, 6])
-def test_optimize_accepts_slot_counts_one_through_six(monkeypatch, slot_count):
+@pytest.mark.parametrize("slot_count", [1, 2, 3, 4, 5])
+def test_optimize_accepts_standard_slot_counts(monkeypatch, slot_count):
     monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
     monkeypatch.setattr(
         app_module,
@@ -496,6 +873,67 @@ def test_optimize_accepts_slot_counts_one_through_six(monkeypatch, slot_count):
     response = app_module.app.test_client().post("/api/optimize", json=payload)
 
     assert response.status_code == 200
+
+
+def test_optimize_accepts_six_items_only_after_bottom_quest(monkeypatch):
+    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+    captured = {}
+
+    def fake_optimize(**kwargs):
+        captured.update(kwargs)
+        return {"items": [], "total_damage": 0.0}
+
+    monkeypatch.setattr(app_module, "optimize_build", fake_optimize)
+    client = app_module.app.test_client()
+
+    rejected = client.post(
+        "/api/optimize",
+        json={"champion": "Ahri", "level": 18, "max_legendary_slots": 6},
+    )
+    accepted = client.post(
+        "/api/optimize",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "max_legendary_slots": 6,
+            "role": "bottom",
+            "role_quest_complete": True,
+        },
+    )
+
+    assert rejected.status_code == 400
+    assert accepted.status_code == 200
+    assert captured["max_legendary_slots"] == 6
+
+
+def test_optimize_uses_tier_three_boots_only_for_completed_mid_quest(monkeypatch):
+    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+    tiers = []
+
+    def fake_optimize(**kwargs):
+        tiers.append(kwargs["boots_tier"])
+        return {"items": [], "total_damage": 0.0}
+
+    monkeypatch.setattr(app_module, "optimize_build", fake_optimize)
+    client = app_module.app.test_client()
+    assert (
+        client.post("/api/optimize", json={"champion": "Ahri", "level": 18}).status_code
+        == 200
+    )
+    assert (
+        client.post(
+            "/api/optimize",
+            json={
+                "champion": "Ahri",
+                "level": 18,
+                "role": "mid",
+                "role_quest_complete": True,
+            },
+        ).status_code
+        == 200
+    )
+
+    assert tiers == [2, 3]
 
 
 @pytest.mark.parametrize("slot_count", [0, 7, -1])
@@ -524,6 +962,40 @@ def test_optimize_rejects_more_locked_items_than_slots(monkeypatch):
     assert "locked" in response.get_json()["error"].lower()
 
 
+def test_optimize_rejects_locked_item_with_unmodeled_damage_effect():
+    response = app_module.app.test_client().post(
+        "/api/optimize",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "max_legendary_slots": 1,
+            "locked_items": ["Runaan's Hurricane"],
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"].startswith(
+        "Runaan's Hurricane cannot be locked into BIS search yet"
+    )
+
+
+@pytest.mark.parametrize(
+    "items",
+    [
+        ["Lich Bane", "Trinity Force"],
+        ["Dark Seal", "Mejai's Soulstealer"],
+    ],
+)
+def test_calculate_rejects_backend_illegal_item_groups(items):
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={"champion": "Ziggs", "level": 12, "items": items},
+    )
+
+    assert response.status_code == 400
+    assert "cannot be equipped together" in response.get_json()["error"]
+
+
 @pytest.mark.parametrize(
     "invalid_values",
     [
@@ -544,6 +1016,22 @@ def test_calculate_and_optimize_reject_the_same_invalid_fight_params(invalid_val
     assert calculate.get_json() == optimize.get_json()
 
 
+def test_calculate_and_optimize_reject_level_impossible_ranks():
+    payload = {
+        "champion": "Ahri",
+        "level": 5,
+        "ability_ranks": {"Q": 3, "W": 1, "E": 0, "R": 1},
+    }
+    client = app_module.app.test_client()
+
+    calculate = client.post("/api/calculate", json=payload)
+    optimize = client.post("/api/optimize", json=payload)
+
+    assert calculate.status_code == 400
+    assert optimize.status_code == 400
+    assert "R rank 1 requires champion level 6" in calculate.get_json()["error"]
+
+
 class TestBreakdownProcRowShape:
     """Proc-style breakdown rows reach the UI in ONE shape:
     count / damage_per_hit / unit="procs" — the shape app.js's detail
@@ -552,8 +1040,9 @@ class TestBreakdownProcRowShape:
     an empty detail cell (the user-reported "no kraken procs")."""
 
     def test_kraken_counter_row_one_rotation_belveth(self):
-        """Bel'Veth one-rotation, bare Kraken: Q's 4 dashes + 8 slashes
-        (passive + Kraken AS) = 12 shared hits = 4 procs, rendered."""
+        """Bel'Veth 26.15, bare Kraken: Q's 4 dashes + 6 slashes
+        (20% passive + Kraken AS is below the next 40% E threshold) =
+        10 shared hits = 3 procs, rendered."""
         payload = {
             "champion": "Belveth",
             "level": 14,
@@ -563,7 +1052,7 @@ class TestBreakdownProcRowShape:
         response = app_module.app.test_client().post("/api/calculate", json=payload)
         assert response.status_code == 200
         row = response.get_json()["breakdown"]["on_hit_Kraken Slayer"]
-        assert row["count"] == 4
+        assert row["count"] == 3
         assert row["unit"] == "procs"
         assert row["damage_per_hit"] is not None and row["damage_per_hit"] > 0
 

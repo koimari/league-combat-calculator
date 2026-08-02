@@ -118,30 +118,30 @@ class TestBastionbreakerShapedCharge:
         return get_item_by_name("Bastionbreaker")
 
     def test_shaped_charge_ranged_damage(self) -> None:
-        """Ranged: 15 + 0.75 * 22 lethality = 31.5 true damage."""
+        """Ranged: 25 + 0.75 * 22 lethality = 41.5 true damage."""
         stats = {"lethality": 22.0}
         effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
         damage = effect.source.raw_damage(
             DamageInputs(stats, 18, False, 1000.0, 1000.0)
         )
-        assert abs(damage - 31.5) < 0.01
+        assert abs(damage - 41.5) < 0.01
 
     def test_shaped_charge_melee_damage(self) -> None:
-        """Melee: 30 + 1.5 * 22 lethality = 63 true damage."""
+        """Melee: 50 + 1.5 * 22 lethality = 83 true damage."""
         stats = {"lethality": 22.0}
         effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000.0, 1000.0))
-        assert abs(damage - 63.0) < 0.01
+        assert abs(damage - 83.0) < 0.01
 
     def test_shaped_charge_multiple_procs(self) -> None:
-        """45s cooldown: 50s fight = 2 procs."""
+        """20s cooldown: 50s fight = 3 procs."""
         stats = {"lethality": 22.0}
         effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
         per_proc = effect.source.raw_damage(
             DamageInputs(stats, 18, False, 1000.0, 1000.0)
         )
         damage = per_proc * (1 + int(50.0 / effect.cooldown))
-        expected = 31.5 * 2
+        expected = 41.5 * 3
         assert abs(damage - expected) < 0.01
 
     def test_ahri_full_fight_with_bastionbreaker(
@@ -151,7 +151,7 @@ class TestBastionbreakerShapedCharge:
     ) -> None:
         """Ahri level 18 with only Bastionbreaker, one rotation.
 
-        Shaped Charge should add ~32 true damage.
+        Shaped Charge should add ~42 true damage.
         """
         from src.calculator.stats import calculate_total_stats
 
@@ -173,8 +173,8 @@ class TestBastionbreakerShapedCharge:
         )
         sc = fight["breakdown"]["shaped_charge_Bastionbreaker"]
         assert (
-            abs(sc["total_damage"] - 32) <= 1
-        ), f"Shaped Charge {sc['total_damage']:.1f} expected ~32"
+            abs(sc["total_damage"] - 42) <= 1
+        ), f"Shaped Charge {sc['total_damage']:.1f} expected ~42"
 
 
 class TestRapidFirecannonSharpshooter:
@@ -553,6 +553,115 @@ class TestShadowflameCinderbloom:
         # W (200) dealt below threshold, gets 20% bonus = 40
         assert abs(bonus - 40.0) < 0.01
 
+    def test_magic_shield_delays_shadowflame_health_threshold(self) -> None:
+        """A ready magic shield must absorb events before health falls."""
+        from src.calculator.damage import _calculate_shadowflame_bonus
+
+        breakdown = {
+            slot: {
+                "name": slot,
+                "casts": 1,
+                "total_damage": 400.0,
+                "damage_type": "magic",
+            }
+            for slot in ("Q", "W", "E")
+        }
+        ability_damages = {
+            slot: {
+                "damage_type": "magic",
+                "magic_damage": 400.0,
+                "total_raw": 400.0,
+                "parts": (DamagePart("magic", 400.0),),
+            }
+            for slot in ("Q", "W", "E")
+        }
+
+        no_shield, _ = _calculate_shadowflame_bonus(
+            _shadowflame_effect(), breakdown, ability_damages, 1000.0
+        )
+        shielded, _ = _calculate_shadowflame_bonus(
+            _shadowflame_effect(),
+            breakdown,
+            ability_damages,
+            1000.0,
+            target_magic_shield=300.0,
+        )
+
+        assert no_shield == pytest.approx(80.0)
+        assert shielded == 0.0
+
+    def test_timed_cast_timeline_controls_threshold_crossing(self) -> None:
+        """Recasts must not be grouped ahead of intervening abilities."""
+        from src.calculator.damage import _calculate_shadowflame_bonus
+
+        breakdown = {
+            "Q": {
+                "name": "Repeat cast",
+                "casts": 2,
+                "total_damage": 1000.0,
+                "damage_type": "magic",
+            },
+            "W": {
+                "name": "Intervening cast",
+                "casts": 1,
+                "total_damage": 200.0,
+                "damage_type": "magic",
+            },
+        }
+        ability_damages = {
+            "Q": {"damage_type": "magic", "parts": (DamagePart("magic", 500),)},
+            "W": {"damage_type": "magic", "parts": (DamagePart("magic", 200),)},
+        }
+
+        bonus, _ = _calculate_shadowflame_bonus(
+            _shadowflame_effect(),
+            breakdown,
+            ability_damages,
+            1000.0,
+            cast_order=["Q", "W"],
+            cast_events=[
+                {"time": 0.0, "slot": "Q", "ordinal": 1},
+                {"time": 1.0, "slot": "W", "ordinal": 1},
+                {"time": 2.0, "slot": "Q", "ordinal": 2},
+            ],
+        )
+
+        # Q1 leaves 500 HP, W leaves 300 HP, so only Q2 lands below 40%.
+        assert bonus == pytest.approx(100.0)
+
+    def test_lifeline_shield_delays_shadowflame_health_threshold(self) -> None:
+        from src.calculator.damage import _calculate_shadowflame_bonus
+
+        breakdown = {
+            slot: {
+                "name": slot,
+                "casts": 1,
+                "total_damage": damage,
+                "damage_type": "magic",
+            }
+            for slot, damage in (("Q", 600.0), ("W", 200.0), ("E", 200.0))
+        }
+        abilities = {
+            slot: {"damage_type": "magic", "parts": (DamagePart("magic", damage),)}
+            for slot, damage in (("Q", 600.0), ("W", 200.0), ("E", 200.0))
+        }
+
+        no_lifeline, _ = _calculate_shadowflame_bonus(
+            _shadowflame_effect(), breakdown, abilities, 1000.0
+        )
+        lifeline, _ = _calculate_shadowflame_bonus(
+            _shadowflame_effect(),
+            breakdown,
+            abilities,
+            1000.0,
+            target_threshold_shield_amount=400.0,
+            target_threshold_shield_health_ratio=0.30,
+            target_threshold_shield_duration=3.0,
+        )
+
+        assert no_lifeline == pytest.approx(40.0)
+        assert lifeline == 0.0
+
     def test_physical_damage_not_affected(self) -> None:
         """Physical damage below threshold should not get Shadowflame bonus."""
         from src.calculator.damage import _calculate_shadowflame_bonus
@@ -778,68 +887,48 @@ class TestShadowflameCinderbloom:
         )
         assert abs(bonus - 60.0) < 0.01
 
-    def test_ambessa_q2_not_double_counted(
+    def test_ambessa_q2_and_luden_have_one_ledger_position(
         self,
         ambessa_data: dict,
         shadowflame: dict,
         parse_at,
     ) -> None:
-        """Ambessa (real synthetic Q2 row) + Shadowflame + Luden's Echo.
-
-        Target health is chosen so that whether the 40% threshold is crossed
-        before the fight's only magic event (the Luden's proc, last in event
-        order) depends on Q2 being counted once vs twice.  A probe run
-        against a huge target measures the per-row damages D (none scale
-        with target health here); we then pick
-
-            H = (sum of all rows before Luden's + D_Q2 / 2) / 0.6
-
-        With every row counted once, HP at the Luden's proc is
-        0.4*H + D_Q2/2 — above the threshold, so there is NO Cinderbloom
-        bonus.  Double-counting Q2 pushes it below and fabricates one.
-        """
+        """A real synthetic recast and a triggered proc each enter once."""
         from src.calculator.data_fetcher import get_item_by_name
+        from src.calculator.damage import _ordered_damage_events
 
         items = [shadowflame, get_item_by_name("Luden's Echo")]
         stats, abilities = parse_at(ambessa_data, 18, items=items)
 
-        def run(target_health: float) -> dict:
-            return calculate_fight_damage(
-                dict(stats),
-                abilities,
-                items,
-                FightConfig(
-                    target_health=target_health,
-                    target_armor=100,
-                    target_magic_resistance=100,
-                    fight_duration_seconds=5.0,
-                    auto_attack_uptime=0.0,
-                    one_rotation=True,
-                ),
-            )
+        fight = calculate_fight_damage(
+            dict(stats),
+            abilities,
+            items,
+            FightConfig(
+                target_health=100000.0,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
+        )
+        events = _ordered_damage_events(
+            fight["breakdown"],
+            abilities,
+            ["Q", "Q2", "W", "E", "R"],
+            cast_events=fight["cast_timeline"],
+        )
+        q2_events = [event for event in events if event["source_key"] == "Q2"]
+        luden_events = [
+            event for event in events if event["source_key"] == "proc_Luden's Echo"
+        ]
 
-        probe = run(100000.0)["breakdown"]
-        assert "Q2" in probe and probe["Q2"]["total_damage"] > 0
-        assert "shadowflame_Shadowflame" not in probe  # nothing crosses 40%
-        luden_key = "proc_Luden's Echo"
-        luden_damage = probe[luden_key]["total_damage"]
-        assert luden_damage > 0
-        before_luden = sum(
-            row["total_damage"] for key, row in probe.items() if key != luden_key
+        assert sum(event["damage"] for event in q2_events) == pytest.approx(
+            fight["breakdown"]["Q2"]["total_damage"]
         )
-        target_health = (before_luden + probe["Q2"]["total_damage"] / 2) / 0.6
-
-        fight = run(target_health)
-        # Guard: same per-row damages at the tuned target health.
-        assert fight["breakdown"]["Q2"]["total_damage"] == pytest.approx(
-            probe["Q2"]["total_damage"]
-        )
-        assert fight["breakdown"][luden_key]["total_damage"] == pytest.approx(
-            luden_damage
-        )
-        # With Q2 counted once, the threshold is never crossed before the
-        # only magic event — no Cinderbloom bonus row may exist.
-        assert "shadowflame_Shadowflame" not in fight["breakdown"]
+        assert len(luden_events) == 1
+        assert luden_events[0]["order"] == pytest.approx(0.5)
 
 
 class TestActualizerAmpRow:

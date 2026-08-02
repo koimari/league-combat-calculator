@@ -22,3 +22,8 @@ Desktop.ini
 # Local dev-server logs
 .app-server.stdout.log
 .app-server.stderr.log
+
+# Local browser-verification artifacts
+.playwright-cli/
+output/
+.vercel

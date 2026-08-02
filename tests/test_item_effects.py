@@ -259,8 +259,20 @@ class TestResolveDamageEffects:
 
         assert len(effects.shaped_charges) == 1
         effect = effects.shaped_charges[0]
-        assert effect.cooldown == 45.0
-        assert effect.source.raw_damage(inputs) == 60.0
+        assert effect.cooldown == 20.0
+        assert effect.source.raw_damage(inputs) == 80.0
+
+    def test_terminus_shadow_scales_with_bonus_ad_and_ap(self) -> None:
+        effect = resolve_damage_effects(_build("Terminus")).per_hits[0]
+        inputs = DamageInputs(
+            champion_stats={"bonus_attack_damage": 100.0, "ability_power": 200.0},
+            level=18,
+            is_melee=True,
+            target_max_health=1000.0,
+            target_current_health=1000.0,
+        )
+
+        assert effect.source.raw_damage(inputs) == pytest.approx(60.0)
 
 
 class TestResolveStatEffects:
@@ -284,6 +296,10 @@ class TestResolveStatEffects:
         assert bonuses.bonus_resists == 0.0
         assert bonuses.bonus_pen_percent == 0.0
         assert bonuses.basic_ability_haste == 0.0
+        assert bonuses.bonus_move_speed_percent == 0.0
+        assert bonuses.permanent_bonus_ap == 0.0
+        assert bonuses.permanent_ap_multiplier == 1.0
+        assert bonuses.permanent_bonus_ad == 0.0
 
     def test_combined_build_resolves_every_conversion(
         self, monkeypatch: pytest.MonkeyPatch
@@ -310,6 +326,27 @@ class TestResolveStatEffects:
         assert bonuses.bonus_ad == 30.0 + 45.0  # Muramana 2% of 1500 + Sterak's 45%
         assert bonuses.bonus_ap == 6.0  # Awe: 1% of 600 bonus mana
         assert bonuses.ap_multiplier == 1.30
+        assert bonuses.permanent_bonus_ap == 6.0
+        assert bonuses.permanent_ap_multiplier == 1.30
+        assert bonuses.permanent_bonus_ad == 75.0
+
+    def test_temporary_combat_ap_is_not_permanent_item_ap(self) -> None:
+        build = _build("Blackfire Torch", "Staff of Flowing Water")
+        bonuses = resolve_stat_effects(
+            build,
+            bonus_mana=0.0,
+            max_mana=500.0,
+            bonus_health=0.0,
+            base_attack_damage=100.0,
+            bonus_mana_regen_percent=0.0,
+            is_melee=False,
+            level=18,
+        )
+
+        assert bonuses.ap_multiplier == pytest.approx(1.04)
+        assert bonuses.permanent_ap_multiplier == 1.0
+        assert bonuses.bonus_ap == 40.0
+        assert bonuses.permanent_bonus_ap == 0.0
 
 
 class TestApMultiplier:
@@ -544,6 +581,8 @@ class TestItemEffectProvenance:
             fetch_item_data(data_directory=DEFAULT_DATA_DIR)
         )
         for item_name, parseable_keys in item_effects._PARSEABLE_ITEM_KEYS.items():
+            if not parseable_keys:
+                continue
             assert item_name in parsed
             for key in parseable_keys:
                 assert key in parsed[item_name], f"{item_name}.{key} was not parsed"
@@ -558,6 +597,26 @@ class TestItemEffectProvenance:
                 item_effects._STATIC_ITEM_EFFECTS[item_name]
             )
             assert frozenset(parsed[item_name]) <= classified
+
+
+class TestTargetDefenseParsing:
+    def test_shieldbow_lifeline_is_parser_backed(self) -> None:
+        from src.calculator.data_fetcher import DEFAULT_DATA_DIR, fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        parsed = parse_item_effect(
+            "Immortal Shieldbow",
+            fetch_item_data(data_directory=DEFAULT_DATA_DIR),
+        )
+
+        assert parsed == {
+            "health_threshold": 0.30,
+            "shield_base": 400.0,
+            "shield_max": 700.0,
+            "shield_scale_start_level": 9,
+            "shield_scale_end_level": 18,
+            "duration": 3.0,
+        }
 
 
 class TestRefreshItemEffects:

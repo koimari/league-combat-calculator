@@ -59,13 +59,22 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Diana": "diana",
     "Dr. Mundo": "dr_mundo",
     "Ezreal": "ezreal",
+    "Galio": "galio",
     "Gnar": "gnar",
     "Jarvan IV": "jarvan_iv",
     "Jayce": "jayce",
+    "Kai'Sa": "kaisa",
+    "Karthus": "karthus",
     "Kog'Maw": "kogmaw",
+    "Lissandra": "lissandra",
     "Orianna": "orianna",
+    "Rakan": "rakan",
+    "Shen": "shen",
+    "Soraka": "soraka",
     "Syndra": "syndra",
+    "Taliyah": "taliyah",
     "Vayne": "vayne",
+    "Vi": "vi",
     "Ziggs": "ziggs",
 }
 
@@ -188,37 +197,87 @@ def get_champion_cast_order(champion_name: str) -> list[str] | None:
     return list(declared) if declared else None
 
 
-def get_champion_options_meta(champion_name: str) -> dict[str, list]:
+def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
     """Return a champion's option/assumption metadata for the frontend.
 
     Registered modules declare ``OPTIONS`` (a list of option dicts:
     ``key``, ``type`` ("bool"/"int"/"float"), ``default``, ``label``,
     plus ``min``/``max``/``step`` for numeric inputs) and
-    ``ASSUMPTIONS`` (prose strings shown in the UI) beside their
-    ``SLOTS``. Champions without a module have neither — the generic
-    path takes no options.
+    ``ASSUMPTIONS`` (prose strings shown in the UI), and optionally
+    revision-pinned ``SOURCES`` beside their ``SLOTS``. Champions without a
+    module have none of these — the generic path takes no options.
 
     Returns:
-        ``{"options": [...], "assumptions": [...]}`` (JSON-safe).
+        ``{"options": [...], "assumptions": [...], "sources": [...]}``
+        (JSON-safe). A source row contains ``label``, ``url``,
+        ``revision_id``, and ``revision_timestamp``.
     """
     module_name = _CHAMPION_MODULES.get(champion_name)
     if module_name is None:
-        return {"options": [], "assumptions": []}
+        return {"options": [], "assumptions": [], "sources": []}
     module = importlib.import_module(f".{module_name}", package=__name__)
-    return {"options": list(module.OPTIONS), "assumptions": list(module.ASSUMPTIONS)}
+    result: dict[str, Any] = {
+        "options": list(module.OPTIONS),
+        "assumptions": list(module.ASSUMPTIONS),
+        "sources": list(getattr(module, "SOURCES", [])),
+    }
+    supported_modes = getattr(module, "SUPPORTED_FIGHT_MODES", None)
+    if supported_modes is not None:
+        result["supported_fight_modes"] = list(supported_modes)
+    return result
+
+
+def get_comparison_curve_unavailable_reason(champion_name: str) -> str | None:
+    """Why timed crossover windows are withheld for a champion, if at all."""
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return None
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    reason = getattr(module, "COMPARISON_CURVE_UNAVAILABLE_REASON", None)
+    return str(reason) if reason else None
+
+
+def get_supported_fight_modes(champion_name: str) -> tuple[str, ...] | None:
+    """Return a module's certified public fight modes, when restricted."""
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return None
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    modes = getattr(module, "SUPPORTED_FIGHT_MODES", None)
+    return tuple(str(mode) for mode in modes) if modes is not None else None
+
+
+def get_unsupported_fight_mode_reason(champion_name: str) -> str | None:
+    """Return the sourced fail-closed explanation for restricted modes."""
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return None
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    reason = getattr(module, "UNSUPPORTED_FIGHT_MODE_REASON", None)
+    return str(reason) if reason else None
+
+
+def get_custom_cast_order_unavailable_reason(champion_name: str) -> str | None:
+    """Explain why a module's certified cast sequence cannot be reordered."""
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return None
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    reason = getattr(module, "CUSTOM_CAST_ORDER_UNAVAILABLE_REASON", None)
+    return str(reason) if reason else None
 
 
 def champion_options_meta_map() -> dict[str, dict[str, list]]:
-    """Option/assumption metadata for every champion that has any.
+    """Option, assumption, and source metadata for every champion with any.
 
     The shape /api/config serves: champions absent from the map have no
-    options and no assumptions (the frontend shows its generic "no
-    special options" placeholder).
+    options, assumptions, or sources (the frontend shows its generic
+    "no special options" placeholder).
     """
     result = {}
     for name in _CHAMPION_MODULES:
         meta = get_champion_options_meta(name)
-        if meta["options"] or meta["assumptions"]:
+        if meta["options"] or meta["assumptions"] or meta["sources"]:
             result[name] = meta
     return result
 

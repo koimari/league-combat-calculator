@@ -20,16 +20,25 @@
                 </svg>
                 <h1>Damage Calculator</h1>
             </div>
+            <div class="header-actions">
+            <span id="data-freshness" class="data-freshness">Loading data source…</span>
+            <button id="share-scenario" class="btn-update" type="button">Copy scenario</button>
+            <select id="theme-select" class="btn-update" aria-label="Colour theme">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
             <button id="update-btn" class="btn-update hidden">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
                 Update Data
             </button>
+            </div>
         </div>
     </header>
 
     <!-- Update Progress Modal -->
-    <div id="update-modal" class="modal-overlay hidden">
-        <div class="modal-content">
+    <div id="update-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="update-modal-title">
+        <div class="modal-content" tabindex="-1">
             <h3 id="update-modal-title">Updating Data</h3>
             <p id="update-status">Initializing...</p>
             <div class="progress-bar-container">
@@ -41,11 +50,11 @@
     </div>
 
     <!-- Champion Picker Modal -->
-    <div id="champion-picker-overlay" class="picker-overlay hidden">
-        <div class="picker-modal picker-modal-wide">
+    <div id="champion-picker-overlay" class="picker-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="champion-picker-title">
+        <div class="picker-modal picker-modal-wide" tabindex="-1">
             <div class="picker-header">
-                <h3>Select Champion</h3>
-                <button id="champion-picker-close" class="picker-close-btn">&times;</button>
+                <h3 id="champion-picker-title">Select champion</h3>
+                <button id="champion-picker-close" class="picker-close-btn" aria-label="Close champion picker">&times;</button>
             </div>
             <div class="picker-search-wrap">
                 <svg class="picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B5A56" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -56,11 +65,11 @@
     </div>
 
     <!-- Item Picker Modal -->
-    <div id="item-picker-overlay" class="picker-overlay hidden">
-        <div class="picker-modal">
+    <div id="item-picker-overlay" class="picker-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="picker-title">
+        <div class="picker-modal" tabindex="-1">
             <div class="picker-header">
                 <h3 id="picker-title">Select Item</h3>
-                <button id="picker-close" class="picker-close-btn">&times;</button>
+                <button id="picker-close" class="picker-close-btn" aria-label="Close item picker">&times;</button>
             </div>
             <div class="picker-search-wrap">
                 <svg class="picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B5A56" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -221,7 +230,7 @@
                         </div>
                         <button class="item-remove-btn hidden" title="Remove">&times;</button>
                     </div>
-                    <div class="item-slot" data-slot="6" title="Item 6">
+                    <div class="item-slot quest-extra-slot hidden" data-slot="6" title="Bottom quest item slot">
                         <img class="item-slot-icon hidden" src="" alt="">
                         <div class="item-slot-empty">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3C3B37" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
@@ -233,8 +242,9 @@
             </div>
 
             <!-- Enemy Target -->
-            <div class="config-group">
-                <h3>Enemy Target</h3>
+            <div class="config-group" id="manual-target-group">
+                <h3>Custom Target</h3>
+                <p class="manual-target-note">Used only when no enemy champion cards are selected below.</p>
                 <div class="enemy-stats-row">
                     <div class="enemy-stat">
                         <label for="target-base-health">
@@ -289,6 +299,7 @@
                         <span>Time Based</span>
                     </label>
                 </div>
+                <p id="fight-mode-note" class="optimizer-hint hidden"></p>
 
                 <div id="time-based-options" class="time-options hidden">
                     <div class="slider-row">
@@ -340,6 +351,22 @@
                 </div>
                 <div class="optimizer-controls">
                     <div class="optimizer-row">
+                        <label for="attacker-role">Role</label>
+                        <select id="attacker-role" class="optimizer-select">
+                            <option value="">Unspecified</option>
+                            <option value="top">Top</option>
+                            <option value="jungle">Jungle</option>
+                            <option value="mid">Mid</option>
+                            <option value="bottom">Bottom</option>
+                            <option value="support">Support</option>
+                        </select>
+                    </div>
+                    <label class="toggle-label compact role-quest-toggle">
+                        <input type="checkbox" id="role-quest-complete">
+                        <span class="toggle-text">Role quest complete</span>
+                    </label>
+                    <p id="role-quest-hint" class="optimizer-hint">Select a role to apply its quest rules.</p>
+                    <div class="optimizer-row">
                         <label for="optimize-objective">Maximize</label>
                         <select id="optimize-objective" class="optimizer-select">
                             <option value="total_damage">Total Damage</option>
@@ -358,7 +385,15 @@
                             <option value="6">6 (Bot Lane)</option>
                         </select>
                     </div>
-                    <p class="optimizer-hint">Pre-selected items will be kept. Empty slots will be filled.</p>
+                    <div class="optimizer-row">
+                        <label for="gold-budget">Gold budget</label>
+                        <input id="gold-budget" class="optimizer-select" type="number" min="1" max="30000" step="50" placeholder="No limit">
+                    </div>
+                    <label class="toggle-label compact">
+                        <input type="checkbox" id="keep-selected-items">
+                        <span class="toggle-text">Keep selected items</span>
+                    </label>
+                    <p class="optimizer-hint">Off searches a new build. On locks the items already selected.</p>
                 </div>
                 <button id="optimize-btn" class="btn-optimize">
                     <span class="btn-text">Optimize Build</span>
@@ -367,6 +402,10 @@
                     </span>
                 </button>
                 <p id="optimize-status" class="optimizer-status hidden"></p>
+                <details id="optimizer-coverage" class="optimizer-coverage hidden">
+                    <summary id="optimizer-coverage-summary"></summary>
+                    <ul id="optimizer-coverage-list"></ul>
+                </details>
             </div>
         </section>
 
@@ -467,6 +506,7 @@
                     <div class="total-damage-card">
                         <span class="total-label">Total Damage</span>
                         <span class="total-value" data-field="total-damage-value">0</span>
+                        <span class="total-subvalue" data-field="damage-rate-value">0 DPS</span>
                     </div>
                     <div class="damage-split">
                         <div class="split-card physical-split">
@@ -481,6 +521,32 @@
                             <span class="split-label">True Damage</span>
                             <span class="split-value" data-field="true-damage-value">0</span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Per-target scenario results -->
+                <div class="result-group target-results hidden" data-field="target-results">
+                    <div class="section-header">
+                        <h3>Damage by Target</h3>
+                        <span class="result-context" data-field="target-result-context"></span>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="breakdown-table target-results-table">
+                            <thead>
+                                <tr>
+                                    <th>Target</th>
+                                    <th class="col-right">HP</th>
+                                    <th class="col-right">Armor</th>
+                                    <th class="col-right">MR</th>
+                                    <th class="col-right">TDD</th>
+                                    <th class="col-right">To health</th>
+                                    <th class="col-right">Shield</th>
+                                    <th class="col-right">Healing</th>
+                                    <th class="col-right">End HP</th>
+                                </tr>
+                            </thead>
+                            <tbody data-field="target-results-body"></tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -517,10 +583,89 @@
                     </table>
                 </div>
 
-                <!-- Champion Assumptions -->
+                <details class="result-group event-timeline hidden" data-field="event-timeline">
+                    <summary>
+                        <span>Fight order</span>
+                        <span class="result-context" data-field="timeline-order-summary"></span>
+                    </summary>
+                    <p class="timeline-coverage-note" data-field="timeline-coverage-note"></p>
+                    <ol data-field="event-timeline-list"></ol>
+                </details>
+
+                <!-- Champion model notes and provenance -->
                 <div class="result-group champion-assumptions hidden">
-                    <h3>Champion Assumptions</h3>
+                    <h3>Champion Model</h3>
                     <ul data-field="champion-assumptions-list"></ul>
+                    <div class="champion-sources hidden" data-field="champion-sources">
+                        <span>Wiki sources</span>
+                        <ul data-field="champion-sources-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="comparison-verdict" class="comparison-verdict hidden" aria-live="polite">
+            <div class="comparison-verdict-head">
+                <span class="comparison-kicker">Build read</span>
+                <strong id="comparison-summary"></strong>
+            </div>
+            <p id="comparison-explanation"></p>
+            <details class="crossover-details">
+                <summary id="crossover-summary">See crossover windows</summary>
+                <div class="table-scroll">
+                    <table class="breakdown-table crossover-table">
+                        <caption>Each row recomputes cooldowns, resources, autos, burns, shields, and defenses over a continuous fight.</caption>
+                        <thead>
+                            <tr>
+                                <th>Rotation window</th>
+                                <th class="col-right">Build A TDD</th>
+                                <th class="col-right">Build B TDD</th>
+                                <th class="col-right">Lead</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crossover-body"></tbody>
+                    </table>
+                </div>
+            </details>
+        </section>
+
+        <!-- Full-width scenario builder. The focused damage champion remains
+             above; these cards supply champion-derived ally and enemy context. -->
+        <section class="scenario-panel">
+            <div class="scenario-heading">
+                <div>
+                    <span class="scenario-kicker">Combat scenario</span>
+                    <h2>Build the teams</h2>
+                    <p>Every card derives its complete stats from champion level and items. Selected enemies replace the manual target above.</p>
+                </div>
+                <span id="roster-count" class="scenario-count">0 allies · 0 enemies</span>
+            </div>
+            <div class="scenario-columns">
+                <div class="roster-column ally-column">
+                    <div class="roster-column-header">
+                        <div>
+                            <span class="roster-eyebrow">Your side</span>
+                            <h3>Allies</h3>
+                        </div>
+                        <button type="button" id="add-ally-btn" class="btn-roster-add">+ Add ally</button>
+                    </div>
+                    <p class="roster-note">Ally effects are counted only when the engine has an explicit tested rule.</p>
+                    <div id="ally-roster" class="roster-list">
+                        <div class="roster-empty">No allies selected</div>
+                    </div>
+                </div>
+                <div class="roster-column enemy-column">
+                    <div class="roster-column-header">
+                        <div>
+                            <span class="roster-eyebrow">Opposing side</span>
+                            <h3>Enemies hit</h3>
+                        </div>
+                        <button type="button" id="add-enemy-btn" class="btn-roster-add">+ Add enemy</button>
+                    </div>
+                    <p class="roster-note">The selected damage package is scored into each enemy card and summed as total damage dealt.</p>
+                    <div id="enemy-roster" class="roster-list">
+                        <div class="roster-empty">No enemies selected — using the manual target</div>
+                    </div>
                 </div>
             </div>
         </section>

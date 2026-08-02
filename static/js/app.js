@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const fightModeRadios = document.querySelectorAll('input[name="fight-mode"]');
     const fightTabs = document.querySelectorAll(".fight-tab");
     const timeBasedOptions = document.getElementById("time-based-options");
+    const fightModeNote = document.getElementById("fight-mode-note");
     const fightDuration = document.getElementById("fight-duration");
     const durationDisplay = document.getElementById("duration-display");
     const includeAutos = document.getElementById("include-autos");
@@ -29,6 +30,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const compareCheckbox = document.getElementById("compare-mode");
     const container = document.querySelector("main.container");
     const optimizerGroup = document.querySelector(".optimizer-group");
+    const allyRosterEl = document.getElementById("ally-roster");
+    const enemyRosterEl = document.getElementById("enemy-roster");
+    const rosterCountEl = document.getElementById("roster-count");
+    const addAllyBtn = document.getElementById("add-ally-btn");
+    const addEnemyBtn = document.getElementById("add-enemy-btn");
+    const manualTargetGroup = document.getElementById("manual-target-group");
+    const attackerRole = document.getElementById("attacker-role");
+    const roleQuestComplete = document.getElementById("role-quest-complete");
+    const roleQuestHint = document.getElementById("role-quest-hint");
+    const goldBudget = document.getElementById("gold-budget");
+    const keepSelectedItems = document.getElementById("keep-selected-items");
+    const shareScenarioBtn = document.getElementById("share-scenario");
+    const themeSelect = document.getElementById("theme-select");
+    const dataFreshness = document.getElementById("data-freshness");
+    const comparisonVerdict = document.getElementById("comparison-verdict");
+    const comparisonSummary = document.getElementById("comparison-summary");
+    const comparisonExplanation = document.getElementById("comparison-explanation");
+    const crossoverSummary = document.getElementById("crossover-summary");
+    const crossoverBody = document.getElementById("crossover-body");
 
     // Build rows. Build B (Compare mode) is a clone of build A's row, made
     // before the slot click handlers are attached so both rows wire up
@@ -41,6 +61,16 @@ document.addEventListener("DOMContentLoaded", () => {
     buildRowB.querySelector(".build-row-tag").textContent = "Build B";
     buildRowB.querySelector(".build-row-tag").classList.remove("hidden");
     buildRowA.after(buildRowB);
+    [buildRowA, buildRowB].forEach((row) => {
+        const options = document.createElement("div");
+        options.className = "build-item-options hidden";
+        row.appendChild(options);
+        const bisButton = document.createElement("button");
+        bisButton.type = "button";
+        bisButton.className = "btn-build-bis";
+        bisButton.textContent = "BIS · Find best next item";
+        row.appendChild(bisButton);
+    });
 
     // Results panels. Panel B (Compare mode) is a clone of panel A —
     // everything inside is targeted by class/data-field, never id, so the
@@ -87,11 +117,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // shared with the Python backend, populated by the fetch below.
     let itemToGroups = {};   // item name -> list of exclusivity group names
     let defaultTarget = {};  // default target stats for empty inputs
+    let itemOptionsMeta = {};
     // Champion option/assumption metadata, declared as OPTIONS/ASSUMPTIONS
     // beside each champion module's SLOTS (src/calculator/champions/).
     // Shape: { "<champion>": { options: [{key, type, default, label,
-    // min?, max?, step?}], assumptions: ["..."] } } — champions absent
-    // from the map have no special options (the generic path).
+    // min?, max?, step?, choices?}], assumptions: ["..."], sources: [...],
+    // supported_fight_modes?: [...] } } — champions absent from the map
+    // have no special options (the generic path).
     let championOptionsMeta = {};
     let hasCalculated = false;
     let isCalculating = false;
@@ -103,7 +135,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return { boots: "", 1: "", 2: "", 3: "", 4: "", 5: "", 6: "" };
     }
     let selectedItems = { a: emptyBuild(), b: emptyBuild() };
+    let selectedItemOptions = { a: {}, b: {} };
     let activePicker = null; // { build, slot } while the item picker is open
+    let activeChampionPicker = null;
+    let pickerReturnFocus = null;
+    let championPickerReturnFocus = null;
+    let nextRosterId = 1;
+    const rosters = { allies: [], enemies: [] };
 
     // === Populate data ===
 
@@ -136,6 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
             data.forEach((item) => {
                 itemIconMap[item.name] = item.icon;
             });
+            applyRoleQuestUi();
         });
 
     // Config shared with the backend: item exclusivity groups (from
@@ -146,6 +185,11 @@ document.addEventListener("DOMContentLoaded", () => {
         .then((data) => {
             defaultTarget = data.default_target;
             championOptionsMeta = data.champion_options || {};
+            itemOptionsMeta = data.item_options || {};
+            const fetched = data.data_snapshot?.fetched_at;
+            dataFreshness.textContent = fetched
+                ? `Wiki cache · ${new Date(fetched).toLocaleDateString()}`
+                : "Wiki cache · date unavailable";
             // Update Data is a local dev workflow (LOL_CALC_DEV=1); the
             // deployed site 404s the endpoint, so hide its button.
             document
@@ -158,7 +202,172 @@ document.addEventListener("DOMContentLoaded", () => {
                     itemToGroups[name].push(group);
                 }
             }
+            refreshBuildItemOptions("a");
+            refreshBuildItemOptions("b");
+            renderRosterTeam("allies");
+            renderRosterTeam("enemies");
+            restoreScenarioFromUrl();
         });
+
+    function applyTheme(value) {
+        const resolved = value === "system"
+            ? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+            : value;
+        document.documentElement.dataset.theme = resolved;
+    }
+
+    themeSelect.value = localStorage.getItem("calculator-theme") || "system";
+    applyTheme(themeSelect.value);
+    themeSelect.addEventListener("change", () => {
+        localStorage.setItem("calculator-theme", themeSelect.value);
+        applyTheme(themeSelect.value);
+    });
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+        if (themeSelect.value === "system") applyTheme("system");
+    });
+
+    function encodeScenario(value) {
+        const bytes = new TextEncoder().encode(JSON.stringify(value));
+        let binary = "";
+        bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+        return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+    }
+
+    function decodeScenario(value) {
+        const padded = value.replaceAll("-", "+").replaceAll("_", "/") + "===".slice((value.length + 3) % 4);
+        const binary = atob(padded);
+        const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+        return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    function publicRoster(entry) {
+        return {
+            champion: entry.champion,
+            level: entry.level,
+            slots: entry.slots,
+            itemOptions: entry.itemOptions,
+            allyEffectsEnabled: entry.allyEffectsEnabled,
+        };
+    }
+
+    function currentScenario() {
+        return {
+            v: 1,
+            champion: championSelect.value,
+            level: parseInt(levelSlider.value, 10),
+            builds: selectedItems,
+            itemOptions: selectedItemOptions,
+            compare: compareCheckbox.checked,
+            fight: buildFightPayload(championSelect.value || ""),
+            goldBudget: goldBudget.value,
+            keepSelectedItems: keepSelectedItems.checked,
+            allies: rosters.allies.map(publicRoster),
+            enemies: rosters.enemies.map(publicRoster),
+        };
+    }
+
+    shareScenarioBtn.addEventListener("click", async () => {
+        const url = new URL(window.location.href);
+        url.hash = `scenario=${encodeScenario(currentScenario())}`;
+        await navigator.clipboard.writeText(url.toString());
+        const old = shareScenarioBtn.textContent;
+        shareScenarioBtn.textContent = "Copied";
+        window.setTimeout(() => { shareScenarioBtn.textContent = old; }, 1400);
+    });
+
+    let scenarioRestored = false;
+    function restoreScenarioFromUrl() {
+        if (scenarioRestored || !location.hash.startsWith("#scenario=")) return;
+        if (!championsData.length || !itemsData.length || !bootsData.length) {
+            window.setTimeout(restoreScenarioFromUrl, 50);
+            return;
+        }
+        try {
+            const state = decodeScenario(location.hash.slice(10));
+            if (state.v !== 1) throw new Error("Unsupported scenario version");
+            const champion = championsData.find((row) => row.name === state.champion);
+            if (champion?.verified) selectChampion(champion.name, champion.icon);
+            levelSlider.value = state.level || 1;
+            for (const build of ["a", "b"]) {
+                const source = state.builds?.[build] || emptyBuild();
+                Object.entries(source).forEach(([slot, name]) => {
+                    if (name) selectItem(build, slot, name, itemIconMap[name] || "");
+                });
+                selectedItemOptions[build] = {
+                    ...(state.itemOptions?.[build] || {}),
+                };
+                refreshBuildItemOptions(build);
+            }
+            compareCheckbox.checked = Boolean(state.compare);
+            compareCheckbox.dispatchEvent(new Event("change"));
+            goldBudget.value = state.goldBudget || "";
+            keepSelectedItems.checked = Boolean(state.keepSelectedItems);
+            const fight = state.fight || {};
+            attackerRole.value = fight.role || "";
+            roleQuestComplete.checked = Boolean(fight.role_quest_complete);
+            const restoredBonusHealth = fight.target_bonus_health || 0;
+            targetBaseHealth.value = fight.target_health
+                ? Math.max(1, fight.target_health - restoredBonusHealth)
+                : targetBaseHealth.value;
+            targetBonusHealth.value = restoredBonusHealth;
+            targetArmor.value = fight.target_armor ?? targetArmor.value;
+            targetMr.value = fight.target_mr ?? targetMr.value;
+            fightDuration.value = fight.fight_duration || fightDuration.value;
+            autoUptime.value = Math.round((fight.auto_attack_uptime ?? 0.8) * 100);
+            includeAutos.checked = Boolean(fight.include_auto_attacks);
+            autoAttacksOnly.checked = Boolean(fight.auto_attacks_only);
+            includeActives.checked = fight.include_actives !== false;
+            autoRankCheckbox.checked = !fight.ability_ranks;
+            abilitiesBar.classList.toggle("rank-disabled", autoRankCheckbox.checked);
+            for (const key of ["Q", "W", "E", "R"]) {
+                const rank = fight.ability_ranks?.[key];
+                if (rank !== undefined) {
+                    document.getElementById(`rank-${key}`).value = rank;
+                }
+            }
+            const savedChampionOptions = fight.champion_options || {};
+            const optionMeta = championOptionsMeta[champion?.name]?.options || [];
+            for (const opt of optionMeta) {
+                if (!(opt.key in savedChampionOptions)) continue;
+                const input = document.getElementById(championOptionInputId(opt.key));
+                if (!input) continue;
+                const saved = savedChampionOptions[opt.key];
+                if (opt.type === "bool") {
+                    input.checked = Boolean(saved);
+                } else if (opt.type === "select" && typeof saved === "boolean") {
+                    input.value = saved ? "evolved" : "base";
+                } else {
+                    input.value = saved;
+                }
+            }
+            const restoredMode = fight.fight_mode === "time_based"
+                ? "time_based"
+                : "one_rotation";
+            const restoredRadio = document.querySelector(
+                `input[name="fight-mode"][value="${restoredMode}"]`
+            );
+            if (restoredRadio) restoredRadio.checked = true;
+            applyRoleQuestUi();
+            for (const team of ["allies", "enemies"]) {
+                rosters[team] = (state[team] || []).map((saved) => ({
+                    ...newRosterEntry(),
+                    champion: saved.champion || "",
+                    icon: championsData.find((row) => row.name === saved.champion)?.icon || "",
+                    level: saved.level || 1,
+                    slots: { ...emptyBuild(), ...(saved.slots || {}) },
+                    itemOptions: saved.itemOptions || {},
+                    allyEffectsEnabled: Boolean(saved.allyEffectsEnabled),
+                }));
+                renderRosterTeam(team);
+                rosters[team].forEach((entry) => queueRosterStats(team, entry.id));
+            }
+            updateRosterCount();
+            syncControlsFromInputs();
+            scenarioRestored = true;
+        } catch (_error) {
+            showError("This shared scenario link is invalid or out of date.");
+        }
+    }
 
     // === Champion selection ===
 
@@ -175,8 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return "champ-opt-" + key;
     }
 
-    // Build the option controls: bool -> checkbox (recalc on change),
-    // int/float -> number input with min/max/step (recalc on input).
+    // Build option controls from module metadata.
     function renderChampionOptions(container, options) {
         container.innerHTML = "";
         options.forEach((opt, index) => {
@@ -188,7 +396,9 @@ document.addEventListener("DOMContentLoaded", () => {
             text.className = "toggle-text";
             text.textContent = opt.label;
 
-            const input = document.createElement("input");
+            const input = document.createElement(
+                opt.type === "select" ? "select" : "input"
+            );
             input.id = championOptionInputId(opt.key);
             if (opt.type === "bool") {
                 input.type = "checkbox";
@@ -196,6 +406,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 input.addEventListener("change", scheduleRecalc);
                 label.appendChild(input);
                 label.appendChild(text);
+            } else if (opt.type === "select") {
+                for (const choice of opt.choices || []) {
+                    const option = document.createElement("option");
+                    option.value = choice.value;
+                    option.textContent = choice.label;
+                    option.selected = choice.value === opt.default;
+                    input.appendChild(option);
+                }
+                input.style.cssText = OPTION_NUMBER_STYLE + "width:160px;";
+                input.addEventListener("change", scheduleRecalc);
+                label.appendChild(text);
+                label.appendChild(input);
             } else {
                 input.type = "number";
                 input.value = opt.default;
@@ -222,6 +444,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const el = document.getElementById(championOptionInputId(opt.key));
             if (opt.type === "bool") {
                 values[opt.key] = el ? el.checked : !!opt.default;
+            } else if (opt.type === "select") {
+                values[opt.key] = el?.value || opt.default;
             } else {
                 const parsed =
                     opt.type === "int"
@@ -246,6 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Update champion options panel content
         updateChampionOptionsContent(name);
+        applyChampionFightModes(name);
 
         // Show/hide the + button based on whether a champion is selected.
         // Auto-open the panel when the champion has custom options defined.
@@ -285,6 +510,31 @@ document.addEventListener("DOMContentLoaded", () => {
         scheduleRecalc();
     }
 
+    function applyChampionFightModes(champion) {
+        const supported = championOptionsMeta[champion]?.supported_fight_modes;
+        const restricted = Array.isArray(supported);
+        let selectedModeDisabled = false;
+        fightTabs.forEach((tab) => {
+            const radio = tab.querySelector('input[type="radio"]');
+            const disabled = restricted && !supported.includes(radio.value);
+            if (radio.checked && disabled) selectedModeDisabled = true;
+            radio.disabled = disabled;
+            tab.classList.toggle("mode-disabled", disabled);
+            tab.setAttribute("aria-disabled", String(disabled));
+        });
+        if (selectedModeDisabled) {
+            const oneRotation = document.querySelector(
+                'input[name="fight-mode"][value="one_rotation"]'
+            );
+            if (oneRotation) oneRotation.checked = true;
+        }
+        fightModeNote.textContent = restricted
+            ? "This champion is certified for One Rotation only."
+            : "";
+        fightModeNote.classList.toggle("hidden", !restricted);
+        syncControlsFromInputs();
+    }
+
     function updateChampionOptionsContent(championName) {
         const meta = championOptionsMeta[championName];
         if (meta && meta.options.length > 0) {
@@ -315,7 +565,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // === Champion Picker ===
 
-    function openChampionPicker() {
+    function openChampionPicker(context = { kind: "attacker" }) {
+        championPickerReturnFocus = document.activeElement;
+        activeChampionPicker = context;
         champPickerSearch.value = "";
         renderChampionGrid(championsData);
         champPickerOverlay.classList.remove("hidden");
@@ -324,6 +576,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function closeChampionPicker() {
         champPickerOverlay.classList.add("hidden");
+        activeChampionPicker = null;
+        if (championPickerReturnFocus instanceof HTMLElement) {
+            championPickerReturnFocus.focus();
+        }
+        championPickerReturnFocus = null;
     }
 
     function createPickerContent(icon, name, tooltip) {
@@ -345,15 +602,33 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         champs.forEach((champ) => {
-            const el = document.createElement("div");
-            // Unverified = no champion module yet (server-decided; see
-            // /api/champions): greyed out, tooltip explains, no click.
-            el.className = champ.verified ? "picker-item" : "picker-item unverified";
-            const tooltip = champ.verified ? champ.name : `${champ.name} — not yet verified`;
+            const el = document.createElement("button");
+            el.type = "button";
+            // An attacker needs a verified champion-specific damage module.
+            // Roster cards only derive defensive/stat context, so every
+            // champion in the local cache is valid there.
+            const selectingAttacker = !activeChampionPicker ||
+                activeChampionPicker.kind === "attacker";
+            const blocked = selectingAttacker && !champ.verified;
+            el.className = blocked ? "picker-item unverified" : "picker-item";
+            el.disabled = blocked;
+            const primaryBlocker = champ.availability?.blockers?.[0]?.label;
+            const tooltip = blocked
+                ? `${champ.name} — ${primaryBlocker || "damage module not yet verified"}`
+                : champ.name;
             el.append(...createPickerContent(champ.icon, champ.name, tooltip));
-            if (champ.verified) {
+            if (!blocked) {
                 el.addEventListener("click", () => {
-                    selectChampion(champ.name, champ.icon);
+                    if (selectingAttacker) {
+                        selectChampion(champ.name, champ.icon);
+                    } else {
+                        selectRosterChampion(
+                            activeChampionPicker.team,
+                            activeChampionPicker.id,
+                            champ.name,
+                            champ.icon
+                        );
+                    }
                     closeChampionPicker();
                 });
             }
@@ -362,8 +637,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Click portrait or name to open champion picker
-    championPortraitBtn.addEventListener("click", openChampionPicker);
-    championNameDisplay.addEventListener("click", openChampionPicker);
+    championPortraitBtn.addEventListener("click", () => openChampionPicker());
+    championNameDisplay.addEventListener("click", () => openChampionPicker());
 
     // Close champion picker
     champPickerClose.addEventListener("click", closeChampionPicker);
@@ -485,10 +760,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Returns the exclusivity reason if an item is blocked, or null if allowed.
     // Checked within one build only; currentSlot's own item is allowed.
     function getExclusivityBlock(build, itemName, currentSlot) {
+        return getSlotExclusivityBlock(
+            selectedItems[build], itemName, currentSlot
+        );
+    }
+
+    function getSlotExclusivityBlock(slots, itemName, currentSlot) {
         const groups = itemToGroups[itemName];
         if (!groups) return null;
 
-        for (const [slotKey, slotItem] of Object.entries(selectedItems[build])) {
+        for (const [slotKey, slotItem] of Object.entries(slots)) {
             if (!slotItem || slotKey === currentSlot) continue;
             if (slotItem === itemName) continue; // duplicate check handled elsewhere
             const slotGroups = itemToGroups[slotItem];
@@ -503,9 +784,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function openItemPicker(build, slotKey) {
-        activePicker = { build: build, slot: slotKey };
+        pickerReturnFocus = document.activeElement;
+        activePicker = { kind: "build", build: build, slot: slotKey };
         const isBoot = slotKey === "boots";
-        const sourceItems = isBoot ? bootsData : itemsData;
+        const sourceItems = isBoot ? activeBootsPool() : itemsData;
 
         pickerTitle.textContent = isBoot ? "Select Boots" : "Select Item";
         pickerSearch.value = "";
@@ -513,6 +795,16 @@ document.addEventListener("DOMContentLoaded", () => {
         renderPickerItems(sourceItems);
         pickerOverlay.classList.remove("hidden");
         pickerSearch.focus();
+    }
+
+    function activeBootsPool() {
+        const attackerPicker = activePicker && activePicker.kind === "build";
+        const tier = attackerPicker
+            && attackerRole.value === "mid"
+            && roleQuestComplete.checked
+            ? 3
+            : 2;
+        return bootsData.filter((item) => item.tier === tier);
     }
 
     function renderPickerItems(items) {
@@ -523,26 +815,48 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Get already-selected items in this build to mark as unavailable
-        const selected = getSelectedItemNames(activePicker.build);
+        const activeRosterEntry = activePicker.kind === "roster"
+            ? getRosterEntry(activePicker.team, activePicker.id)
+            : null;
+        // Get already-selected items in this build/loadout to mark unavailable.
+        const activeSlots = activeRosterEntry
+            ? activeRosterEntry.slots
+            : selectedItems[activePicker.build];
+        const selected = new Set(Object.values(activeSlots).filter(Boolean));
         // The item currently in this slot is allowed (replacing itself)
-        const currentInSlot = selectedItems[activePicker.build][activePicker.slot] || "";
+        const currentInSlot = activeSlots[activePicker.slot] || "";
 
         items.forEach((item) => {
-            const el = document.createElement("div");
+            const el = document.createElement("button");
+            el.type = "button";
             const isUsed = selected.has(item.name) && item.name !== currentInSlot;
             const exclusivityBlock = !isUsed
-                ? getExclusivityBlock(activePicker.build, item.name, activePicker.slot)
+                ? getSlotExclusivityBlock(activeSlots, item.name, activePicker.slot)
                 : null;
             const isBlocked = isUsed || exclusivityBlock;
             el.className = "picker-item" + (isBlocked ? " picker-item-used" : "");
+            el.disabled = isBlocked;
             let tooltip = item.name;
             if (isUsed) tooltip += " (already selected)";
             else if (exclusivityBlock) tooltip += ` (${exclusivityBlock})`;
             el.append(...createPickerContent(item.icon, item.name, tooltip));
             if (!isBlocked) {
                 el.addEventListener("click", () => {
-                    selectItem(activePicker.build, activePicker.slot, item.name, item.icon);
+                    if (activePicker.kind === "roster") {
+                        selectRosterItem(
+                            activePicker.team,
+                            activePicker.id,
+                            activePicker.slot,
+                            item.name
+                        );
+                    } else {
+                        selectItem(
+                            activePicker.build,
+                            activePicker.slot,
+                            item.name,
+                            item.icon
+                        );
+                    }
                     closePicker();
                 });
             }
@@ -550,8 +864,62 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function ensureItemOptions(store, itemName) {
+        const meta = itemOptionsMeta[itemName];
+        if (!meta || store[itemName]) return;
+        store[itemName] = {};
+        for (const [key, option] of Object.entries(meta.options || {})) {
+            store[itemName][key] = option.default;
+        }
+    }
+
+    function cleanUnusedItemOptions(store, slots, itemName) {
+        if (!itemName || Object.values(slots).includes(itemName)) return;
+        delete store[itemName];
+    }
+
+    function refreshBuildItemOptions(build) {
+        const container = document.querySelector(
+            `.build-row[data-build="${build}"] .build-item-options`
+        );
+        if (!container) return;
+        container.innerHTML = "";
+        const configuredNames = [...new Set(Object.values(selectedItems[build]))]
+            .filter((name) => name && itemOptionsMeta[name]);
+        container.classList.toggle("hidden", configuredNames.length === 0);
+        configuredNames.forEach((itemName) => {
+            ensureItemOptions(selectedItemOptions[build], itemName);
+            const meta = itemOptionsMeta[itemName];
+            for (const [key, option] of Object.entries(meta.options || {})) {
+                const label = document.createElement("label");
+                label.className = "item-option-control";
+                const text = document.createElement("span");
+                text.textContent = `${itemName} · ${option.label}`;
+                const input = document.createElement("input");
+                input.type = "number";
+                input.min = option.min;
+                input.max = option.max;
+                input.step = option.step;
+                input.value = selectedItemOptions[build][itemName][key];
+                input.addEventListener("input", () => {
+                    const value = Math.max(
+                        option.min,
+                        Math.min(option.max, parseInt(input.value, 10) || 0)
+                    );
+                    selectedItemOptions[build][itemName][key] = value;
+                    scheduleRecalc();
+                });
+                label.append(text, input);
+                container.appendChild(label);
+            }
+        });
+    }
+
     function selectItem(build, slotKey, name, icon) {
+        const previous = selectedItems[build][slotKey];
         selectedItems[build][slotKey] = name;
+        cleanUnusedItemOptions(selectedItemOptions[build], selectedItems[build], previous);
+        ensureItemOptions(selectedItemOptions[build], name);
 
         const slot = slotElement(build, slotKey);
         if (!slot) return;
@@ -569,11 +937,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const removeBtn = slot.querySelector(".item-remove-btn");
         if (removeBtn) removeBtn.classList.remove("hidden");
 
+        refreshBuildItemOptions(build);
         scheduleRecalc();
     }
 
     function clearItemSlot(build, slotKey) {
+        const previous = selectedItems[build][slotKey];
         selectedItems[build][slotKey] = "";
+        cleanUnusedItemOptions(selectedItemOptions[build], selectedItems[build], previous);
 
         const slot = slotElement(build, slotKey);
         if (!slot) return;
@@ -590,11 +961,14 @@ document.addEventListener("DOMContentLoaded", () => {
         // Hide remove button
         const removeBtn = slot.querySelector(".item-remove-btn");
         if (removeBtn) removeBtn.classList.add("hidden");
+        refreshBuildItemOptions(build);
     }
 
     function closePicker() {
         pickerOverlay.classList.add("hidden");
         activePicker = null;
+        if (pickerReturnFocus instanceof HTMLElement) pickerReturnFocus.focus();
+        pickerReturnFocus = null;
     }
 
     pickerClose.addEventListener("click", closePicker);
@@ -606,7 +980,7 @@ document.addEventListener("DOMContentLoaded", () => {
     pickerSearch.addEventListener("input", () => {
         const query = pickerSearch.value.toLowerCase().trim();
         const isBoot = activePicker && activePicker.slot === "boots";
-        const sourceItems = isBoot ? bootsData : itemsData;
+        const sourceItems = isBoot ? activeBootsPool() : itemsData;
 
         if (!query) {
             renderPickerItems(sourceItems);
@@ -619,8 +993,407 @@ document.addEventListener("DOMContentLoaded", () => {
         renderPickerItems(filtered);
     });
 
-    // Escape key closes pickers
+    // === Ally / enemy roster builder ===
+
+    function newRosterEntry() {
+        return {
+            id: nextRosterId++,
+            champion: "",
+            icon: "",
+            level: 1,
+            slots: emptyBuild(),
+            itemOptions: {},
+            allyEffectsEnabled: false,
+            stats: null,
+            startingDefenses: null,
+            targetCoverage: null,
+            statsError: "",
+            refreshRevision: 0,
+            refreshTimer: null,
+        };
+    }
+
+    function getRosterEntry(team, id) {
+        return rosters[team].find((entry) => entry.id === id) || null;
+    }
+
+    function addRosterEntry(team) {
+        const maximum = team === "allies" ? 4 : 5;
+        if (rosters[team].length >= maximum) return;
+        rosters[team].push(newRosterEntry());
+        renderRosterTeam(team);
+        updateRosterCount();
+    }
+
+    function removeRosterEntry(team, id) {
+        const entry = getRosterEntry(team, id);
+        if (entry && entry.refreshTimer) clearTimeout(entry.refreshTimer);
+        rosters[team] = rosters[team].filter((row) => row.id !== id);
+        renderRosterTeam(team);
+        updateRosterCount();
+        scheduleRecalc();
+    }
+
+    function selectRosterChampion(team, id, champion, icon) {
+        const entry = getRosterEntry(team, id);
+        if (!entry) return;
+        entry.champion = champion;
+        entry.icon = icon;
+        entry.stats = null;
+        entry.startingDefenses = null;
+        entry.targetCoverage = null;
+        entry.statsError = "";
+        renderRosterTeam(team);
+        updateRosterCount();
+        queueRosterStats(team, id);
+        scheduleRecalc();
+    }
+
+    function selectRosterItem(team, id, slot, itemName) {
+        const entry = getRosterEntry(team, id);
+        if (!entry) return;
+        const previous = entry.slots[slot];
+        entry.slots[slot] = itemName;
+        cleanUnusedItemOptions(entry.itemOptions, entry.slots, previous);
+        ensureItemOptions(entry.itemOptions, itemName);
+        entry.stats = null;
+        entry.startingDefenses = null;
+        entry.targetCoverage = null;
+        renderRosterTeam(team);
+        queueRosterStats(team, id);
+        scheduleRecalc();
+    }
+
+    function clearRosterItem(team, id, slot) {
+        const entry = getRosterEntry(team, id);
+        if (!entry) return;
+        const previous = entry.slots[slot];
+        entry.slots[slot] = "";
+        cleanUnusedItemOptions(entry.itemOptions, entry.slots, previous);
+        entry.stats = null;
+        entry.startingDefenses = null;
+        entry.targetCoverage = null;
+        renderRosterTeam(team);
+        queueRosterStats(team, id);
+        scheduleRecalc();
+    }
+
+    function openRosterItemPicker(team, id, slot) {
+        pickerReturnFocus = document.activeElement;
+        activePicker = { kind: "roster", team: team, id: id, slot: slot };
+        const isBoot = slot === "boots";
+        pickerTitle.textContent = isBoot ? "Select Boots" : "Select Item";
+        pickerSearch.value = "";
+        renderPickerItems(isBoot ? bootsData.filter((item) => item.tier === 2) : itemsData);
+        pickerOverlay.classList.remove("hidden");
+        pickerSearch.focus();
+    }
+
+    function rosterPayload(entry) {
+        const items = [];
+        for (let index = 1; index <= 6; index++) {
+            if (entry.slots[index]) items.push(entry.slots[index]);
+        }
+        return {
+            champion: entry.champion,
+            level: entry.level,
+            boots: entry.slots.boots,
+            items: items,
+            item_options: entry.itemOptions,
+            ally_effects_enabled: entry.allyEffectsEnabled,
+        };
+    }
+
+    function queueRosterStats(team, id) {
+        const entry = getRosterEntry(team, id);
+        if (!entry || !entry.champion) return;
+        if (entry.refreshTimer) clearTimeout(entry.refreshTimer);
+        const revision = ++entry.refreshRevision;
+        entry.refreshTimer = setTimeout(
+            () => refreshRosterStats(team, id, revision), 120
+        );
+    }
+
+    function refreshRosterStats(team, id, revision) {
+        const entry = getRosterEntry(team, id);
+        if (!entry || !entry.champion) return;
+        fetch("/api/loadout-stats", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(rosterPayload(entry)),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                const current = getRosterEntry(team, id);
+                if (!current || current.refreshRevision !== revision) return;
+                if (data.error) {
+                    current.statsError = data.error;
+                    current.stats = null;
+                    current.startingDefenses = null;
+                    current.targetCoverage = null;
+                } else {
+                    current.statsError = "";
+                    current.stats = data.stats;
+                    current.startingDefenses = data.starting_defenses || null;
+                    current.targetCoverage = data.target_model_coverage || null;
+                }
+                renderRosterTeam(team);
+            })
+            .catch(() => {
+                const current = getRosterEntry(team, id);
+                if (!current || current.refreshRevision !== revision) return;
+                current.statsError = "Could not load stats";
+                current.stats = null;
+                current.startingDefenses = null;
+                current.targetCoverage = null;
+                renderRosterTeam(team);
+            });
+    }
+
+    const ROSTER_STATS = [
+        ["Total HP", "health", 0],
+        ["Base HP", "base_health", 0],
+        ["Bonus HP", "bonus_health", 0],
+        ["Mana", "max_mana", 0],
+        ["Attack damage", "attack_damage", 0],
+        ["Ability power", "ability_power", 0],
+        ["Armor", "armor", 1],
+        ["Magic resist", "magic_resistance", 1],
+        ["Attack speed", "attack_speed", 3],
+        ["Move speed", "move_speed", 1],
+        ["Ability haste", "ability_haste", 0],
+        ["Magic pen", "magic_penetration_flat", 1],
+        ["% magic pen", "magic_penetration_percent", 1],
+        ["Lethality", "lethality", 1],
+        ["% armor pen", "armor_penetration_percent", 1],
+        ["Crit chance", "critical_strike_chance", 1],
+    ];
+
+    function rosterStatsMarkup(entry) {
+        if (!entry.champion) {
+            return '<div class="roster-stat-loading">Select a champion to derive stats.</div>';
+        }
+        if (entry.statsError) {
+            return `<div class="roster-stat-loading">${escapeHtml(entry.statsError)}</div>`;
+        }
+        if (!entry.stats) {
+            return '<div class="roster-stat-loading">Calculating complete stats…</div>';
+        }
+        return ROSTER_STATS.map(([label, key, precision]) => {
+            const raw = Number(entry.stats[key] || 0);
+            const value = raw.toFixed(precision);
+            const suffix = label.startsWith("%") || label === "Crit chance" ? "%" : "";
+            return `<div class="roster-stat-cell"><span class="roster-stat-label">${label}</span>` +
+                `<span class="roster-stat-value">${value}${suffix}</span></div>`;
+        }).join("");
+    }
+
+    function escapeHtml(value) {
+        const span = document.createElement("span");
+        span.textContent = value;
+        return span.innerHTML;
+    }
+
+    function rosterDefenseMarkup(entry, team) {
+        if (team !== "enemies" || !entry.stats) return "";
+        const blocked = entry.targetCoverage?.blocked || [];
+        if (blocked.length) {
+            const item = blocked[0];
+            return `<div class="roster-model-status blocked" role="alert"><strong>Calculation paused</strong>` +
+                `<span>${escapeHtml(item.name)} · ${escapeHtml(item.reason)}</span></div>`;
+        }
+        const defenses = entry.startingDefenses || {};
+        const shields = [
+            ["Magic shield", Number(defenses.magic_shield || 0)],
+            ["Physical shield", Number(defenses.physical_shield || 0)],
+            ["Shield", Number(defenses.general_shield || 0)],
+        ].filter(([, amount]) => amount > 0);
+        const incoming = defenses.incoming_damage || {};
+        const modifiers = [];
+        const basicMultiplier = Number(incoming.basic_damage_multiplier ?? 1);
+        const basicFlat = Number(incoming.basic_damage_flat_reduction || 0);
+        const basicCap = Number(incoming.basic_damage_flat_reduction_cap || 0);
+        const critMultiplier = Number(incoming.critical_strike_damage_multiplier ?? 1);
+        if (basicMultiplier < 1) {
+            modifiers.push(`${Math.round((1 - basicMultiplier) * 100)}% less basic damage`);
+        }
+        if (basicFlat > 0) {
+            modifiers.push(`−${Math.round(basicFlat)} basic damage (${Math.round(basicCap * 100)}% cap)`);
+        }
+        if (critMultiplier < 1) {
+            modifiers.push(`${Math.round((1 - critMultiplier) * 100)}% less critical-strike damage`);
+        }
+        const thresholdShield = defenses.threshold_shield || {};
+        const thresholdAmount = Number(thresholdShield.amount || 0);
+        const thresholdRatio = Number(thresholdShield.health_ratio || 0);
+        if (thresholdAmount > 0 && thresholdRatio > 0) {
+            modifiers.push(`Lifeline ${Math.round(thresholdAmount).toLocaleString()} at ${Math.round(thresholdRatio * 100)}% HP`);
+        }
+        const thresholdHealth = defenses.threshold_health || {};
+        const temporaryHealth = Number(thresholdHealth.bonus_health || 0);
+        const thresholdHealing = Number(thresholdHealth.healing || 0);
+        const thresholdHealthRatio = Number(thresholdHealth.health_ratio || 0);
+        if (temporaryHealth > 0 && thresholdHealthRatio > 0) {
+            modifiers.push(
+                `Lifeline +${Math.round(temporaryHealth).toLocaleString()} max HP + ` +
+                `${Math.round(thresholdHealing).toLocaleString()} healing at ` +
+                `${Math.round(thresholdHealthRatio * 100)}% HP`
+            );
+        }
+        const parts = shields
+            .map(([label, amount]) => `${label} ${Math.round(amount).toLocaleString()}`)
+            .concat(modifiers);
+        if (!parts.length) return "";
+        return `<div class="roster-model-status ready" role="status"><strong>Modeled defense</strong>` +
+            `<span>${escapeHtml(parts.join(" · "))}</span></div>`;
+    }
+
+    function rosterCard(entry, team) {
+        const article = document.createElement("article");
+        article.className = "roster-card";
+        article.dataset.rosterId = entry.id;
+
+        const itemSlots = ["boots", 1, 2, 3, 4, 5, 6].map((slot) => {
+            const name = entry.slots[slot];
+            const content = name
+                ? `<img src="${itemIconMap[name] || ""}" alt="${escapeHtml(name)}">`
+                : (slot === "boots" ? "B" : "+");
+            return `<button type="button" class="roster-item-slot" data-slot="${slot}" ` +
+                `title="${escapeHtml(name || (slot === "boots" ? "Boots" : `Item ${slot}`))}">${content}</button>`;
+        }).join("");
+
+        const optionRows = [...new Set(Object.values(entry.slots))]
+            .filter((name) => name && itemOptionsMeta[name])
+            .flatMap((itemName) => {
+                ensureItemOptions(entry.itemOptions, itemName);
+                return Object.entries(itemOptionsMeta[itemName].options || {}).map(
+                    ([key, option]) =>
+                        `<label class="item-option-control" data-item="${escapeHtml(itemName)}" data-key="${key}">` +
+                        `<span>${escapeHtml(itemName)} · ${escapeHtml(option.label)}</span>` +
+                        `<input type="number" min="${option.min}" max="${option.max}" step="${option.step}" ` +
+                        `value="${entry.itemOptions[itemName][key]}"></label>`
+                );
+            }).join("");
+
+        article.innerHTML = `
+            <div class="roster-card-head">
+                <div class="roster-card-identity">
+                    <img class="roster-champion-icon" src="${entry.icon}" alt="">
+                    <button type="button" class="roster-select-champion">${escapeHtml(entry.champion || "Select champion")}</button>
+                </div>
+                <div class="roster-level-control">
+                    <label>Lv</label>
+                    <input class="roster-level" type="number" min="1" max="20" value="${entry.level}">
+                    <button type="button" class="roster-remove" title="Remove champion">×</button>
+                </div>
+            </div>
+            <div class="roster-build">${itemSlots}</div>
+            ${rosterDefenseMarkup(entry, team)}
+            ${team === "allies" ? `<label class="toggle-label compact roster-effect-toggle"><input type="checkbox" class="roster-effects-enabled" ${entry.allyEffectsEnabled ? "checked" : ""}><span class="toggle-text">Apply this ally's active buffs</span></label>` : ""}
+            <div class="roster-item-options${optionRows ? "" : " hidden"}">${optionRows}</div>
+            <div class="roster-stat-matrix">${rosterStatsMarkup(entry)}</div>`;
+
+        article.querySelector(".roster-select-champion").addEventListener("click", () => {
+            openChampionPicker({ kind: "roster", team: team, id: entry.id });
+        });
+        article.querySelector(".roster-remove").addEventListener("click", () => {
+            removeRosterEntry(team, entry.id);
+        });
+        article.querySelector(".roster-level").addEventListener("input", (event) => {
+            const level = Math.max(1, Math.min(20, parseInt(event.target.value, 10) || 1));
+            entry.level = level;
+            entry.stats = null;
+            entry.startingDefenses = null;
+            entry.targetCoverage = null;
+            queueRosterStats(team, entry.id);
+            scheduleRecalc();
+        });
+        article.querySelectorAll(".roster-item-slot").forEach((slotEl) => {
+            const slot = slotEl.dataset.slot;
+            slotEl.addEventListener("click", () => {
+                openRosterItemPicker(team, entry.id, slot);
+            });
+            slotEl.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                if (entry.slots[slot]) clearRosterItem(team, entry.id, slot);
+            });
+        });
+        article.querySelectorAll(".roster-item-options .item-option-control").forEach((label) => {
+            const input = label.querySelector("input");
+            const itemName = label.dataset.item;
+            const key = label.dataset.key;
+            const option = itemOptionsMeta[itemName].options[key];
+            input.addEventListener("input", () => {
+                entry.itemOptions[itemName][key] = Math.max(
+                    option.min,
+                    Math.min(option.max, parseInt(input.value, 10) || 0)
+                );
+                entry.stats = null;
+                queueRosterStats(team, entry.id);
+                scheduleRecalc();
+            });
+        });
+        const effectToggle = article.querySelector(".roster-effects-enabled");
+        if (effectToggle) {
+            effectToggle.addEventListener("change", () => {
+                entry.allyEffectsEnabled = effectToggle.checked;
+                scheduleRecalc();
+            });
+        }
+        return article;
+    }
+
+    function renderRosterTeam(team) {
+        const element = team === "allies" ? allyRosterEl : enemyRosterEl;
+        const emptyText = team === "allies"
+            ? "No allies selected"
+            : "No enemies selected — using the manual target";
+        element.innerHTML = "";
+        if (rosters[team].length === 0) {
+            element.innerHTML = `<div class="roster-empty">${emptyText}</div>`;
+            return;
+        }
+        rosters[team].forEach((entry) => element.appendChild(rosterCard(entry, team)));
+    }
+
+    function updateRosterCount() {
+        const allyLabel = rosters.allies.length === 1 ? "ally" : "allies";
+        const enemyLabel = rosters.enemies.length === 1 ? "enemy" : "enemies";
+        rosterCountEl.textContent = `${rosters.allies.length} ${allyLabel} · ${rosters.enemies.length} ${enemyLabel}`;
+        addAllyBtn.disabled = rosters.allies.length >= 4;
+        addEnemyBtn.disabled = rosters.enemies.length >= 5;
+        const usingRosterTargets = rosters.enemies.some((entry) => entry.champion);
+        manualTargetGroup.classList.toggle("manual-target-disabled", usingRosterTargets);
+        [targetBaseHealth, targetBonusHealth, targetArmor, targetMr].forEach((input) => {
+            input.disabled = usingRosterTargets;
+        });
+    }
+
+    addAllyBtn.addEventListener("click", () => addRosterEntry("allies"));
+    addEnemyBtn.addEventListener("click", () => addRosterEntry("enemies"));
+    updateRosterCount();
+
+    function trapDialogFocus(event, overlay) {
+        if (event.key !== "Tab" || overlay.classList.contains("hidden")) return;
+        const focusable = [...overlay.querySelectorAll(
+            'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )].filter((element) => element.offsetParent !== null);
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+
+    // Escape closes the active picker; Tab remains inside its dialog.
     document.addEventListener("keydown", (e) => {
+        trapDialogFocus(e, pickerOverlay);
+        trapDialogFocus(e, champPickerOverlay);
         if (e.key === "Escape") {
             if (!pickerOverlay.classList.contains("hidden")) closePicker();
             if (!champPickerOverlay.classList.contains("hidden")) closeChampionPicker();
@@ -668,7 +1441,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Fight mode tabs
     fightTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
-            tab.querySelector('input[type="radio"]').checked = true;
+            const radio = tab.querySelector('input[type="radio"]');
+            if (radio.disabled) return;
+            radio.checked = true;
             syncControlsFromInputs();
             scheduleRecalc();
         });
@@ -748,6 +1523,8 @@ document.addEventListener("DOMContentLoaded", () => {
             auto_attack_uptime: parseFloat(autoUptime.value) / 100,
             auto_attacks_only: fightMode === "time_based" && autoAttacksOnly.checked,
             include_actives: includeActives.checked,
+            role: attackerRole.value,
+            role_quest_complete: roleQuestComplete.checked,
         };
 
         // Ability ranks
@@ -766,6 +1543,13 @@ document.addEventListener("DOMContentLoaded", () => {
             payload.champion_options = championOptions;
         }
 
+        payload.allies = rosters.allies
+            .filter((entry) => entry.champion)
+            .map(rosterPayload);
+        payload.enemies = rosters.enemies
+            .filter((entry) => entry.champion)
+            .map(rosterPayload);
+
         return payload;
     }
 
@@ -783,6 +1567,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const payload = buildFightPayload(champion);
         payload.boots = selectedItems[build].boots;
         payload.items = buildItemList(build);
+        payload.item_options = selectedItemOptions[build];
+        payload.include_crossover = compareCheckbox.checked;
         return fetch("/api/calculate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -825,6 +1611,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 hideError();
                 builds.forEach((build, i) => displayResults(build, results[i]));
+                renderComparisonVerdict(builds, results);
 
                 if (!hasCalculated) {
                     hasCalculated = true;
@@ -986,12 +1773,59 @@ document.addEventListener("DOMContentLoaded", () => {
         // Damage summary — physical/magic/true split. The true-damage
         // card only shows when there is true damage to report.
         animateValue(field("total-damage-value"), Math.round(data.total_damage));
+        const modeledSeconds = document.querySelector('input[name="fight-mode"]:checked').value === "one_rotation"
+            ? 5
+            : parseInt(fightDuration.value, 10);
+        field("damage-rate-value").textContent =
+            `${Math.round(data.total_damage / modeledSeconds).toLocaleString()} DPS`;
         const byType = data.damage_by_type;
         field("physical-damage-value").textContent = Math.round(byType.physical);
         field("magic-damage-value").textContent = Math.round(byType.magic);
         const trueDamage = Math.round(byType.true);
         field("true-damage-value").textContent = trueDamage;
         field("true-damage-card").classList.toggle("hidden", trueDamage <= 0);
+
+        // Multi-target scenario: TDD is the sum of the same selected damage
+        // package landing on each chosen enemy.  Keep each target visible so
+        // resistance and health differences never disappear into one number.
+        const targetResults = field("target-results");
+        const hasTargets = Array.isArray(data.targets) && data.targets.length > 0;
+        targetResults.classList.toggle("hidden", !hasTargets);
+        if (hasTargets) {
+            field("target-result-context").textContent =
+                `${data.targets.length} selected target${data.targets.length === 1 ? "" : "s"}`;
+            const targetBody = field("target-results-body");
+            targetBody.innerHTML = "";
+            data.targets.forEach((row) => {
+                const tr = document.createElement("tr");
+                const identity = document.createElement("td");
+                const icon = document.createElement("img");
+                icon.src = row.target.icon;
+                icon.alt = "";
+                const name = document.createElement("span");
+                name.textContent = `${row.target.champion} · Lv ${row.target.level}`;
+                identity.append(icon, name);
+                tr.appendChild(identity);
+
+                const values = [
+                    row.target.stats.health,
+                    row.target.stats.armor,
+                    row.target.stats.magic_resistance,
+                    row.result.total_damage,
+                    row.result.health_damage,
+                    row.result.shield_absorbed,
+                    row.result.target_healing_received,
+                    row.result.target_ending_health,
+                ];
+                values.forEach((value) => {
+                    const td = document.createElement("td");
+                    td.className = "col-right";
+                    td.textContent = Math.round(value).toLocaleString();
+                    tr.appendChild(td);
+                });
+                targetBody.appendChild(tr);
+            });
+        }
 
         // Effective resistances
         field("eff-armor").textContent = data.effective_armor;
@@ -1053,22 +1887,188 @@ document.addEventListener("DOMContentLoaded", () => {
             tbody.appendChild(tr);
         }
 
+        const eventTimeline = field("event-timeline");
+        const events = Array.isArray(data.cast_timeline) ? data.cast_timeline : [];
+        const timelineCoverage = data.timeline_coverage || null;
+        const hasTimelineReceipt = Boolean(timelineCoverage?.certification);
+        eventTimeline.classList.toggle(
+            "hidden",
+            events.length === 0 && !hasTimelineReceipt
+        );
+        const timelineList = field("event-timeline-list");
+        timelineList.replaceChildren();
+        timelineList.classList.toggle("hidden", events.length === 0);
+        if (events.length > 0) {
+            events.forEach((event) => {
+                const item = document.createElement("li");
+                const time = document.createElement("span");
+                time.textContent = `${Number(event.time).toFixed(2)}s`;
+                const name = document.createElement("strong");
+                name.textContent = event.name;
+                const cost = document.createElement("span");
+                const paid = Number(event.resource_cost || 0);
+                const restored = Number(event.resource_restored || 0);
+                const after = Number(event.resource_after);
+                const changes = [];
+                if (paid > 0) changes.push(`−${Math.round(paid)}`);
+                if (restored > 0) changes.push(`+${Math.round(restored)}`);
+                cost.textContent = changes.length > 0
+                    ? `${changes.join(" / ")} resource${Number.isFinite(after) ? ` · ${Math.round(after)} left` : ""}`
+                    : "no resource cost";
+                item.append(time, name, cost);
+                timelineList.appendChild(item);
+            });
+        }
+        const startingResource = Number(stats.max_mana || 0);
+        const resourceSummary = startingResource > 0
+            ? `${Math.round(data.resource_spent || 0)} spent · ${Math.round(data.resource_remaining || 0)} left`
+            : "";
+        const orderSummary = hasTimelineReceipt
+            ? timelineCoverage.complete ? "Exact damage order" : "Partial damage order"
+            : "";
+        field("timeline-order-summary").textContent = [orderSummary, resourceSummary]
+            .filter(Boolean)
+            .join(" · ");
+        const coarseNames = (timelineCoverage?.coarse_sources || []).map(
+            (key) => breakdown[key]?.name || key
+        );
+        field("timeline-coverage-note").textContent = timelineCoverage?.complete
+            ? timelineCoverage.note
+            : coarseNames.length > 0
+                ? `Still phase-ordered: ${coarseNames.join(", ")}.`
+                : timelineCoverage?.note || "";
+
         // Champion assumptions are champion-level, not build-level: show
         // them on panel A only so Compare mode doesn't repeat them.
         const assumptionsGroup = panel.querySelector(".champion-assumptions");
         const meta = championOptionsMeta[championSelect.value];
-        const showAssumptions =
-            build === "a" && meta && meta.assumptions && meta.assumptions.length > 0;
-        if (showAssumptions) {
+        const showChampionModel = build === "a" && meta && (
+            (meta.assumptions && meta.assumptions.length > 0)
+            || (meta.sources && meta.sources.length > 0)
+        );
+        if (showChampionModel) {
             const assumptionsList = field("champion-assumptions-list");
             assumptionsList.innerHTML = "";
-            meta.assumptions.forEach((text) => {
+            (meta.assumptions || []).forEach((text) => {
                 const li = document.createElement("li");
                 li.textContent = text;
                 assumptionsList.appendChild(li);
             });
+            const sources = field("champion-sources");
+            const sourcesList = field("champion-sources-list");
+            sourcesList.innerHTML = "";
+            (meta.sources || []).forEach((source) => {
+                const li = document.createElement("li");
+                const link = document.createElement("a");
+                link.href = source.url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.textContent = `${source.label} · rev ${source.revision_id}`;
+                li.appendChild(link);
+                sourcesList.appendChild(li);
+            });
+            sources.classList.toggle("hidden", !meta.sources || meta.sources.length === 0);
         }
-        assumptionsGroup.classList.toggle("hidden", !showAssumptions);
+        assumptionsGroup.classList.toggle("hidden", !showChampionModel);
+    }
+
+    function renderComparisonVerdict(builds, results) {
+        if (builds.length !== 2) {
+            comparisonVerdict.classList.add("hidden");
+            return;
+        }
+        const [a, b] = results;
+        const winner = a.total_damage >= b.total_damage ? "A" : "B";
+        const high = Math.max(a.total_damage, b.total_damage);
+        const low = Math.min(a.total_damage, b.total_damage);
+        const delta = high - low;
+        const percent = low > 0 ? delta / low * 100 : 0;
+        const seconds = document.querySelector('input[name="fight-mode"]:checked').value === "one_rotation"
+            ? 5
+            : parseInt(fightDuration.value, 10);
+        comparisonSummary.textContent = delta < 0.05
+            ? `Tie · ${Math.round(high).toLocaleString()} TDD over ${seconds}s`
+            : `Build ${winner} leads · +${Math.round(delta).toLocaleString()} TDD (${percent.toFixed(1)}%) over ${seconds}s`;
+
+        const winnerResult = winner === "A" ? a : b;
+        const loserResult = winner === "A" ? b : a;
+        const strongestSource = Object.entries(winnerResult.breakdown || {})
+            .map(([key, row]) => ({
+                name: row.name,
+                edge: Number(row.total_damage || 0) - Number(loserResult.breakdown?.[key]?.total_damage || 0),
+            }))
+            .filter((source) => source.edge > 0.05)
+            .sort((left, right) => right.edge - left.edge)[0];
+        const strongestStat = [
+            ["ability_power", "AP"],
+            ["attack_damage", "attack damage"],
+            ["ability_haste", "ability haste"],
+            ["magic_penetration_flat", "flat magic penetration"],
+            ["magic_penetration_percent", "% magic penetration"],
+            ["lethality", "lethality"],
+            ["armor_penetration_percent", "% armor penetration"],
+            ["attack_speed", "attack speed"],
+        ]
+            .map(([key, label]) => ({
+                label,
+                edge: Number(winnerResult.champion_stats?.[key] || 0) - Number(loserResult.champion_stats?.[key] || 0),
+            }))
+            .filter((stat) => stat.edge > 0.05)
+            .sort((left, right) => right.edge - left.edge)[0];
+
+        const curveA = Array.isArray(a.comparison_curve) ? a.comparison_curve : [];
+        const curveB = Array.isArray(b.comparison_curve) ? b.comparison_curve : [];
+        const curveAvailable = curveA.length > 0 && curveB.length > 0;
+        crossoverBody.innerHTML = "";
+        let openingLeader = null;
+        let crossover = null;
+        curveA.forEach((pointA, index) => {
+            const pointB = curveB[index];
+            if (!pointB) return;
+            const edge = Number(pointA.total_damage) - Number(pointB.total_damage);
+            const leader = Math.abs(edge) < 0.05 ? "Tie" : edge > 0 ? "A" : "B";
+            if (openingLeader === null && leader !== "Tie") openingLeader = leader;
+            if (!crossover && openingLeader && leader !== "Tie" && leader !== openingLeader) {
+                crossover = { rotation: pointA.rotation, seconds: pointA.seconds, leader };
+            }
+            const row = document.createElement("tr");
+            if (crossover && crossover.rotation === pointA.rotation) {
+                row.classList.add("crossover-row");
+            }
+            [
+                `${pointA.rotation} · ${pointA.seconds}s`,
+                Math.round(pointA.total_damage).toLocaleString(),
+                Math.round(pointB.total_damage).toLocaleString(),
+                leader === "Tie" ? "Tie" : `${leader} +${Math.round(Math.abs(edge)).toLocaleString()}`,
+            ].forEach((value, cellIndex) => {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                if (cellIndex > 0) cell.className = "col-right";
+                row.appendChild(cell);
+            });
+            crossoverBody.appendChild(row);
+        });
+
+        const unavailableReason =
+            a.comparison_curve_status?.reason || b.comparison_curve_status?.reason;
+        crossoverSummary.textContent = !curveAvailable
+            ? "Crossover withheld for this certified mode"
+            : crossover
+                ? `Lead changes at window ${crossover.rotation} (${crossover.seconds}s)`
+                : "No lead change through six rotation-length windows";
+        const sourceText = strongestSource
+            ? `${strongestSource.name} is the largest visible damage edge (+${Math.round(strongestSource.edge).toLocaleString()}).`
+            : "The visible damage sources are nearly even.";
+        const statText = strongestStat
+            ? ` Build ${winner}'s clearest stat edge is +${Number(strongestStat.edge.toFixed(1))} ${strongestStat.label}.`
+            : "";
+        const crossoverText = !curveAvailable
+            ? ` ${unavailableReason || "Timed crossover is not certified for this scenario."}`
+            : crossover
+                ? ` Build ${crossover.leader} moves ahead by ${crossover.seconds}s as cooldowns, resources, and persistent effects are recomputed.`
+                : " The same build stays ahead across the tested windows.";
+        comparisonExplanation.textContent = sourceText + statText + crossoverText;
+        comparisonVerdict.classList.remove("hidden");
     }
 
     // Simple animated counter for total damage
@@ -1104,10 +2104,175 @@ document.addEventListener("DOMContentLoaded", () => {
     const optimizeBtnText = optimizeBtn.querySelector(".btn-text");
     const optimizeBtnLoading = optimizeBtn.querySelector(".btn-loading");
     const optimizeStatus = document.getElementById("optimize-status");
+    const optimizerCoverage = document.getElementById("optimizer-coverage");
+    const optimizerCoverageSummary = document.getElementById("optimizer-coverage-summary");
+    const optimizerCoverageList = document.getElementById("optimizer-coverage-list");
     const optimizeObjective = document.getElementById("optimize-objective");
     const optimizeSlots = document.getElementById("optimize-slots");
 
     let isOptimizing = false;
+    const bisBuildsInFlight = new Set();
+
+    function applyRoleQuestUi() {
+        const role = attackerRole.value;
+        if (!role) {
+            roleQuestComplete.checked = false;
+        }
+        roleQuestComplete.disabled = !role;
+        const complete = Boolean(role) && roleQuestComplete.checked;
+        const bottomExtraSlot = role === "bottom" && complete;
+        const requiredBootTier = role === "mid" && complete ? 3 : 2;
+
+        const effectText = {
+            top: "Top quest has no direct damage stat modifier.",
+            jungle: "Jungle quest movement is positional and excluded from damage scoring.",
+            mid: "Mid quest applies +8% bonus AD, +8% AP, and tier-3 boots.",
+            bottom: "Bottom quest moves boots to the quest slot, opening a sixth item slot.",
+            support: "Support quest keeps wards separate; no extra damage-item slot.",
+        };
+        roleQuestHint.textContent = !role
+            ? "Select a role to apply its quest rules."
+            : complete
+                ? effectText[role]
+                : "Quest not complete — no quest reward is applied.";
+
+        document.querySelectorAll(".quest-extra-slot").forEach((slot) => {
+            slot.classList.toggle("hidden", !bottomExtraSlot);
+        });
+        const sixItems = optimizeSlots.querySelector('option[value="6"]');
+        sixItems.disabled = !bottomExtraSlot;
+        if (!bottomExtraSlot && optimizeSlots.value === "6") {
+            optimizeSlots.value = "5";
+        }
+
+        for (const build of ["a", "b"]) {
+            if (!bottomExtraSlot && selectedItems[build][6]) {
+                clearItemSlot(build, "6");
+            }
+            const selectedBoots = bootsData.find(
+                (item) => item.name === selectedItems[build].boots
+            );
+            if (selectedBoots && selectedBoots.tier !== requiredBootTier) {
+                clearItemSlot(build, "boots");
+            }
+        }
+        scheduleRecalc();
+    }
+
+    attackerRole.addEventListener("change", applyRoleQuestUi);
+    roleQuestComplete.addEventListener("change", applyRoleQuestUi);
+    applyRoleQuestUi();
+
+    function firstOpenItemSlot(build, maximum) {
+        for (let slot = 1; slot <= maximum; slot++) {
+            if (!selectedItems[build][slot]) return String(slot);
+        }
+        return null;
+    }
+
+    function renderOptimizerCoverage(data) {
+        const coverage = data.candidate_coverage;
+        const excluded = Array.isArray(coverage?.excluded) ? coverage.excluded : [];
+        optimizerCoverage.classList.toggle("hidden", excluded.length === 0);
+        optimizerCoverageList.replaceChildren();
+        if (excluded.length === 0) return;
+
+        optimizerCoverageSummary.textContent =
+            `${excluded.length} item${excluded.length === 1 ? "" : "s"} withheld`;
+        excluded.forEach((entry) => {
+            const item = document.createElement("li");
+            const name = document.createElement("strong");
+            name.textContent = entry.name;
+            item.append(name, document.createTextNode(` — ${entry.reason}`));
+            optimizerCoverageList.appendChild(item);
+        });
+    }
+
+    function findBestNextItem(build, button) {
+        const champion = championSelect.value;
+        if (!champion) {
+            showError("Please select a champion first.");
+            return;
+        }
+        if (bisBuildsInFlight.has(build)) return;
+
+        const capacity = attackerRole.value === "bottom"
+            && roleQuestComplete.checked ? 6 : 5;
+        const openSlot = firstOpenItemSlot(build, capacity);
+        if (!openSlot) {
+            showError(`Build ${build.toUpperCase()} has no open item slot.`);
+            return;
+        }
+
+        const lockedItems = buildItemList(build);
+        const payload = buildFightPayload(champion);
+        payload.objective = optimizeObjective.value;
+        payload.locked_items = lockedItems;
+        payload.locked_boots = selectedItems[build].boots || "";
+        payload.max_legendary_slots = lockedItems.length + 1;
+        payload.item_options = selectedItemOptions[build];
+
+        bisBuildsInFlight.add(build);
+        const oldText = button.textContent;
+        button.disabled = true;
+        button.textContent = "Finding BIS…";
+
+        fetch("/api/optimize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                const lockedSet = new Set(lockedItems);
+                const bestItem = (data.items || []).find(
+                    (name) => !lockedSet.has(name)
+                );
+                if (!bestItem) {
+                    showError("No legal damage item improved this build.");
+                    return;
+                }
+                selectItem(build, openSlot, bestItem, itemIconMap[bestItem] || "");
+                if (!selectedItems[build].boots && data.boots) {
+                    selectItem(
+                        build,
+                        "boots",
+                        data.boots,
+                        itemIconMap[data.boots] || ""
+                    );
+                }
+                const excluded = Number(data.candidate_coverage?.excluded_count || 0);
+                const timingPartial = data.search_timeline_coverage?.complete === false;
+                const timingWithheld = Number(data.timeline_withheld_evaluations || 0);
+                const timingLabel = timingWithheld > 0
+                    ? ` · ${timingWithheld.toLocaleString()} timing candidates withheld`
+                    : "";
+                optimizeStatus.textContent = data.is_certified_best
+                    ? `Certified BIS item: ${bestItem}`
+                    : excluded > 0
+                        ? `Best modelled item: ${bestItem} · ${excluded} withheld${timingLabel}`
+                        : timingPartial || timingWithheld > 0
+                            ? `Best event-ordered item: ${bestItem}${timingLabel}`
+                            : `Best found item: ${bestItem}`;
+                optimizeStatus.classList.remove("hidden");
+                renderOptimizerCoverage(data);
+            })
+            .catch(() => showError("BIS search failed. Please try again."))
+            .finally(() => {
+                bisBuildsInFlight.delete(build);
+                button.disabled = false;
+                button.textContent = oldText;
+            });
+    }
+
+    document.querySelectorAll(".btn-build-bis").forEach((button) => {
+        const build = button.closest(".build-row").dataset.build;
+        button.addEventListener("click", () => findBestNextItem(build, button));
+    });
 
     // The optimizer always works on build A; it's disabled in Compare mode
     optimizeBtn.addEventListener("click", () => {
@@ -1122,20 +2287,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const maxSlots = parseInt(optimizeSlots.value, 10);
 
         // Collect locked items (non-empty slots)
-        const lockedItems = buildItemList("a");
-        const lockedBoots = selectedItems.a.boots || "";
+        const lockedItems = keepSelectedItems.checked ? buildItemList("a") : [];
+        const lockedBoots = keepSelectedItems.checked
+            ? selectedItems.a.boots || ""
+            : "";
 
         const payload = buildFightPayload(champion);
         payload.objective = optimizeObjective.value;
         payload.locked_items = lockedItems;
         payload.locked_boots = lockedBoots;
         payload.max_legendary_slots = maxSlots;
+        payload.item_options = selectedItemOptions.a;
+        if (goldBudget.value) payload.gold_budget = parseInt(goldBudget.value, 10);
 
         // Show loading
         optimizeBtnText.textContent = "Optimizing...";
         optimizeBtnLoading.classList.remove("hidden");
         optimizeBtn.disabled = true;
         optimizeStatus.classList.add("hidden");
+        optimizerCoverage.classList.add("hidden");
 
         fetch("/api/optimize", {
             method: "POST",
@@ -1149,32 +2319,43 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
 
-                // Fill empty legendary slots with optimized items
-                const optimizedItems = data.items || [];
-                // Figure out which items are new (not already locked)
-                const lockedSet = new Set(lockedItems);
-                const newItems = optimizedItems.filter((n) => !lockedSet.has(n));
-
-                let newIdx = 0;
-                for (let i = 1; i <= 6 && newIdx < newItems.length; i++) {
-                    if (!selectedItems.a[i]) {
-                        const name = newItems[newIdx];
-                        const icon = itemIconMap[name] || "";
-                        selectItem("a", String(i), name, icon);
-                        newIdx++;
+                const ranked = data.ranked_builds || [];
+                if (ranked.length < 2) {
+                    showError("A distinct second build was not found for this constraint set.");
+                    return;
+                }
+                const applyBuild = (build, result) => {
+                    Object.keys(selectedItems[build]).forEach((slot) => clearItemSlot(build, slot));
+                    if (result.boots) {
+                        selectItem(build, "boots", result.boots, itemIconMap[result.boots] || "");
                     }
-                }
-
-                // Fill boots if it was empty
-                if (!selectedItems.a.boots && data.boots) {
-                    const icon = itemIconMap[data.boots] || "";
-                    selectItem("a", "boots", data.boots, icon);
-                }
+                    result.items.forEach((name, index) => {
+                        selectItem(build, String(index + 1), name, itemIconMap[name] || "");
+                    });
+                };
+                applyBuild("a", ranked[0]);
+                applyBuild("b", ranked[1]);
+                compareCheckbox.checked = true;
+                compareCheckbox.dispatchEvent(new Event("change"));
 
                 // Show status
+                const excluded = Number(data.candidate_coverage?.excluded_count || 0);
+                const timingPartial = data.search_timeline_coverage?.complete === false;
+                const timingWithheld = Number(data.timeline_withheld_evaluations || 0);
+                const timingLabel = timingWithheld > 0
+                    ? ` · ${timingWithheld.toLocaleString()} timing candidates withheld`
+                    : "";
+                const resultLabel = data.is_certified_best
+                    ? "Certified BIS"
+                    : excluded > 0
+                        ? `Best modelled result${timingLabel}`
+                        : timingPartial || timingWithheld > 0
+                            ? `Best event-ordered result${timingLabel}`
+                            : "Best found";
                 optimizeStatus.textContent =
-                    `Found in ${data.optimization_time_ms}ms (${data.evaluations} builds evaluated)`;
+                    `${resultLabel}: ${ranked[0].total_damage.toLocaleString()} TDD · runner-up ${ranked[1].total_damage.toLocaleString()} · ${data.evaluations.toLocaleString()} builds`;
                 optimizeStatus.classList.remove("hidden");
+                renderOptimizerCoverage(data);
 
                 // Trigger a full calculate to show the damage breakdown
                 doCalculate();

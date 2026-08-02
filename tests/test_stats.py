@@ -4,6 +4,7 @@ import pytest
 
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.stats import (
+    apply_movement_speed_soft_caps,
     growth_stat,
     calculate_attack_speed,
     get_champion_base_stats,
@@ -78,6 +79,53 @@ class TestCalculateAttackSpeed:
         # When ratio == base, equivalent to base * (1 + bonus%)
         result = calculate_attack_speed(0.625, 0.625, 50.0)
         assert abs(result - 0.625 * 1.50) < 0.001
+
+
+class TestMovementSpeed:
+    """Static item movement speed and the game's displayed soft caps."""
+
+    def test_flat_boots_and_percent_item_stack(self, ahri_data: dict) -> None:
+        boots = get_item_by_name("Boots of Swiftness")
+        cosmic_drive = get_item_by_name("Cosmic Drive")
+
+        stats = calculate_total_stats(ahri_data, 18, [boots, cosmic_drive])
+
+        # Ahri 330 base + 55 flat, then Cosmic Drive's 4% = 400.4.
+        assert stats["move_speed"] == pytest.approx(400.4)
+
+    @pytest.mark.parametrize(
+        ("raw", "displayed"),
+        [(200, 210), (415, 415), (450, 443), (500, 480)],
+    )
+    def test_soft_caps(self, raw: float, displayed: float) -> None:
+        assert apply_movement_speed_soft_caps(raw) == displayed
+
+    def test_mejais_ten_stacks_add_ap_and_move_speed(self, ahri_data: dict) -> None:
+        mejais = get_item_by_name("Mejai's Soulstealer")
+
+        stats = calculate_total_stats(
+            ahri_data,
+            18,
+            [mejais],
+            item_options={"Mejai's Soulstealer": {"glory_stacks": 10}},
+        )
+
+        assert stats["ability_power"] == 70
+        assert stats["move_speed"] == pytest.approx(363)
+
+    def test_dark_seal_stacks_are_multiplied_by_rabadons(self, ahri_data: dict) -> None:
+        dark_seal = get_item_by_name("Dark Seal")
+        rabadons = get_item_by_name("Rabadon's Deathcap")
+
+        stats = calculate_total_stats(
+            ahri_data,
+            18,
+            [dark_seal, rabadons],
+            item_options={"Dark Seal": {"glory_stacks": 10}},
+        )
+
+        # (15 base item AP + 40 Glory AP + 130 Deathcap AP) * 1.3.
+        assert stats["ability_power"] == 240
 
 
 class TestCalculateTotalStats:
@@ -530,6 +578,34 @@ class TestHealthComponents:
         assert built["bonus_health"] > 0
         assert built["health"] > naked["health"]
 
+    def test_warmogs_vitality_multiplies_all_item_health(self, ahri_data: dict) -> None:
+        items = [
+            get_item_by_name("Warmog's Armor"),
+            get_item_by_name("Ruby Crystal"),
+        ]
+        raw_item_health = sum(get_item_stats(item)["health"] for item in items)
+
+        stats = calculate_total_stats(ahri_data, 18, items)
+
+        assert stats["bonus_health"] == round(raw_item_health * 1.12)
+        assert stats["health"] == stats["base_health"] + stats["bonus_health"]
+
+    def test_bloodmail_reads_warmogs_effective_bonus_health(
+        self, ahri_data: dict
+    ) -> None:
+        items = [
+            get_item_by_name("Warmog's Armor"),
+            get_item_by_name("Overlord's Bloodmail"),
+        ]
+        raw_item_health = sum(get_item_stats(item)["health"] for item in items)
+        raw_item_ad = sum(get_item_stats(item)["attack_damage"] for item in items)
+
+        stats = calculate_total_stats(ahri_data, 18, items)
+
+        assert stats["bonus_attack_damage"] == round(
+            raw_item_ad + raw_item_health * 1.12 * 0.025
+        )
+
     @pytest.mark.parametrize("level", [1, 6, 11, 18, 20])
     def test_invariant_holds_across_levels(self, ahri_data: dict, level: int) -> None:
         stats = calculate_total_stats(ahri_data, level, [])
@@ -549,3 +625,37 @@ class TestHealthComponents:
         items = [get_item_by_name(name) for name in item_names]
         stats = calculate_total_stats(ahri_data, 18, items)
         assert stats["health"] == stats["base_health"] + stats["bonus_health"]
+
+
+class TestMidRoleQuestStats:
+    """V26.11 mid quest grants 8% bonus AD and 8% total AP."""
+
+    def test_mid_quest_ap_stacks_additively_with_rabadon(self, ahri_data: dict) -> None:
+        rabadon = get_item_by_name("Rabadon's Deathcap")
+        normal = calculate_total_stats(ahri_data, 18, [rabadon])
+        quest = calculate_total_stats(
+            ahri_data,
+            18,
+            [rabadon],
+            role="mid",
+            role_quest_complete=True,
+        )
+
+        assert normal["ability_power"] == round(130 * 1.30)
+        assert quest["ability_power"] == round(130 * 1.38)
+
+    def test_mid_quest_multiplies_only_bonus_ad(self, ahri_data: dict) -> None:
+        sword = get_item_by_name("B. F. Sword")
+        normal = calculate_total_stats(ahri_data, 18, [sword])
+        quest = calculate_total_stats(
+            ahri_data,
+            18,
+            [sword],
+            role="mid",
+            role_quest_complete=True,
+        )
+
+        assert quest["bonus_attack_damage"] == round(
+            normal["bonus_attack_damage"] * 1.08
+        )
+        assert quest["base_attack_damage"] == normal["base_attack_damage"]

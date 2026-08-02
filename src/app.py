@@ -9,7 +9,9 @@ import secrets
 import sqlite3
 import sys
 import tempfile
+from datetime import datetime, timezone
 from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -23,15 +25,26 @@ from calculator.data_fetcher import (
     get_champion,
     get_item_by_name,
 )
-from calculator.item_effects import refresh_item_effects
-from calculator.champions import champion_options_meta_map, registered_champion_names
+from calculator.item_effects import item_input_options_meta, refresh_item_effects
+from calculator.item_coverage import item_model_coverage, require_target_item_coverage
+from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
+from calculator.loadout_rules import validate_resolved_loadout
+from calculator.champions import (
+    champion_options_meta_map,
+    get_comparison_curve_unavailable_reason,
+    registered_champion_names,
+)
+from calculator.champion_coverage import attacker_availability
 from calculator.optimizer import (
     exclusivity_groups,
     get_eligible_boots,
-    get_eligible_legendaries,
+    get_selectable_items,
     optimize_build,
 )
 from calculator.stats import MAX_LEVEL
+from calculator.scenario import MAX_ALLIES, MAX_ENEMIES, ChampionLoadout, parse_roster
+from calculator.role_quests import role_quest_meta
+from calculator.timeline_coverage import combine_timeline_coverages
 from calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
     DEFAULT_FIGHT_DURATION,
@@ -140,6 +153,20 @@ def _request_too_large(_error):
 def _add_security_headers(response):
     """Apply browser protections consistently to pages, APIs, and errors."""
     for name, value in _SECURITY_HEADERS.items():
+        if (
+            name == "Content-Security-Policy"
+            and request.scheme == "http"
+            and request.remote_addr
+        ):
+            try:
+                if ipaddress.ip_address(request.remote_addr).is_loopback:
+                    # Local development has no TLS terminator. Upgrading
+                    # same-origin assets here would turn working http static
+                    # URLs into failed https requests in standards-compliant
+                    # browsers. Deployed responses retain the directive.
+                    value = value.replace("; upgrade-insecure-requests", "")
+            except ValueError:
+                pass
         response.headers[name] = value
     return response
 
@@ -248,6 +275,17 @@ def _validate_champion_options(champion_name: str, data: Mapping[str, object]) -
             if not isinstance(value, bool):
                 raise ValueError(f"champion_options.{key} must be true or false")
             continue
+        if option_type == "select":
+            if isinstance(value, bool) and option.get("legacy_bool"):
+                continue
+            if not isinstance(value, str):
+                raise ValueError(f"champion_options.{key} must be a string")
+            choices = {choice["value"] for choice in option["choices"]}
+            if value not in choices:
+                raise ValueError(
+                    f"champion_options.{key} must be one of {sorted(choices)}"
+                )
+            continue
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError(f"champion_options.{key} must be a number")
         if option_type == "int" and not isinstance(value, int):
@@ -276,8 +314,294 @@ def _load_public_champion(name: str) -> dict:
     except KeyError as exc:
         raise LookupError(f"Champion '{name}' not found") from exc
     if champion["name"] not in _VERIFIED_CHAMPIONS:
-        raise ValueError(f"Champion '{champion['name']}' is not verified")
+        availability = attacker_availability(champion, _VERIFIED_CHAMPIONS)
+        reason = availability["blockers"][0]["label"]
+        raise ValueError(f"Champion '{champion['name']}' is not verified: {reason}")
     return champion
+
+
+def _public_loadout_summary(loadout) -> dict:
+    """Sanitize one resolved loadout for the browser."""
+    summary = loadout.public_summary()
+    summary["icon"] = _https_icon(summary["icon"])
+    summary["item_icons"] = [_https_icon(icon) for icon in summary["item_icons"]]
+    summary["verified_attacker"] = summary["champion"] in _VERIFIED_CHAMPIONS
+    return summary
+
+
+def _serialize_fight_result(result: Mapping[str, object]) -> dict:
+    """Translate one engine result into the stable public response shape."""
+    breakdown = result.get("breakdown", {})
+    api_breakdown = {}
+    for key, entry in breakdown.items():
+        has_damage = entry.get("total_damage", 0.0) > 0
+        if not (has_damage or "detail" in entry):
+            continue
+        row = {
+            "name": entry.get("name", key),
+            "total_damage": round(entry.get("total_damage", 0.0), 1),
+            "casts": entry.get("casts", None),
+            "count": entry.get("count", None),
+            "unit": entry.get("unit", None),
+            "damage_per_hit": (
+                round(entry["damage_per_hit"], 1) if "damage_per_hit" in entry else None
+            ),
+            "num_crits": entry.get("num_crits", None),
+            "num_non_crits": entry.get("num_non_crits", None),
+            "crit_damage_per_hit": (
+                round(entry["crit_damage_per_hit"], 1)
+                if entry.get("crit_damage_per_hit") is not None
+                else None
+            ),
+            "non_crit_damage_per_hit": (
+                round(entry["non_crit_damage_per_hit"], 1)
+                if entry.get("non_crit_damage_per_hit") is not None
+                else None
+            ),
+        }
+        for display_key in ("detail", "damage_display"):
+            if display_key in entry:
+                row[display_key] = entry[display_key]
+        if "targeting" in entry:
+            row["targeting"] = dict(entry["targeting"])
+        api_breakdown[key] = row
+
+    return {
+        "champion_stats": result["champion_stats"],
+        "total_damage": round(result.get("total_damage", 0.0), 1),
+        "health_damage": round(result.get("health_damage", 0.0), 1),
+        "shield_absorbed": round(result.get("shield_absorbed", 0.0), 1),
+        "magic_shield_absorbed": round(result.get("magic_shield_absorbed", 0.0), 1),
+        "physical_shield_absorbed": round(
+            result.get("physical_shield_absorbed", 0.0), 1
+        ),
+        "general_shield_absorbed": round(result.get("general_shield_absorbed", 0.0), 1),
+        "threshold_shield_absorbed": round(
+            result.get("threshold_shield_absorbed", 0.0), 1
+        ),
+        "threshold_health_triggered": bool(
+            result.get("threshold_health_triggered", False)
+        ),
+        "threshold_health_bonus_gained": round(
+            result.get("threshold_health_bonus_gained", 0.0), 1
+        ),
+        "target_healing_received": round(
+            result.get("target_healing_received", 0.0), 1
+        ),
+        "target_ending_health": round(result.get("target_ending_health", 0.0), 1),
+        "target_effective_max_health": round(
+            result.get("target_effective_max_health", 0.0), 1
+        ),
+        "ability_damage": round(result["ability_damage"], 1),
+        "auto_attack_damage": round(result["auto_attack_damage"], 1),
+        "damage_by_type": {
+            dtype: round(amount, 1)
+            for dtype, amount in result["damage_by_type"].items()
+        },
+        "breakdown": api_breakdown,
+        "effective_mr": round(result.get("effective_mr", 0.0), 1),
+        "effective_armor": round(result.get("effective_armor", 0.0), 1),
+        "notes": list(result.get("notes", [])),
+        "cast_timeline": list(result.get("cast_timeline", [])),
+        "resource_spent": round(result.get("resource_spent", 0.0), 1),
+        "resource_remaining": round(result.get("resource_remaining", 0.0), 1),
+        "timeline_coverage": dict(result.get("timeline_coverage", {})),
+    }
+
+
+def _aggregate_timeline_coverage(results: list[dict]) -> dict:
+    """Combine per-target ordering receipts without overstating precision."""
+    return combine_timeline_coverages(
+        (result.get("timeline_coverage", {}) for result in results),
+        target_count=len(results),
+    )
+
+
+def _aggregate_public_results(results: list[dict]) -> dict:
+    """Sum the same selected damage package across every hit target."""
+    primary = results[0]
+    target_count = len(results)
+    timeline_coverage = _aggregate_timeline_coverage(results)
+    damage_types = {"physical": 0.0, "magic": 0.0, "true": 0.0}
+    breakdown = {}
+    for result in results:
+        for damage_type, amount in result["damage_by_type"].items():
+            damage_types[damage_type] = damage_types.get(damage_type, 0.0) + amount
+        for key, entry in result["breakdown"].items():
+            aggregate = breakdown.setdefault(
+                key,
+                {
+                    "name": entry["name"],
+                    "total_damage": 0.0,
+                    "casts": entry.get("casts"),
+                    "count": entry.get("count"),
+                    "unit": entry.get("unit"),
+                    "damage_per_hit": None,
+                    "num_crits": None,
+                    "num_non_crits": None,
+                    "crit_damage_per_hit": None,
+                    "non_crit_damage_per_hit": None,
+                },
+            )
+            aggregate["total_damage"] += entry["total_damage"]
+
+    for entry in breakdown.values():
+        entry["total_damage"] = round(entry["total_damage"], 1)
+        target_label = "target" if target_count == 1 else "targets"
+        entry["detail"] = f"Across {target_count} selected {target_label}"
+
+    return {
+        "champion_stats": primary["champion_stats"],
+        "total_damage": round(sum(result["total_damage"] for result in results), 1),
+        "health_damage": round(sum(result["health_damage"] for result in results), 1),
+        "shield_absorbed": round(
+            sum(result["shield_absorbed"] for result in results), 1
+        ),
+        "ability_damage": round(sum(result["ability_damage"] for result in results), 1),
+        "auto_attack_damage": round(
+            sum(result["auto_attack_damage"] for result in results), 1
+        ),
+        "damage_by_type": {
+            damage_type: round(amount, 1)
+            for damage_type, amount in damage_types.items()
+        },
+        "breakdown": breakdown,
+        # Existing result cards expect scalar effective defenses.  The first
+        # selected enemy is the primary target; every target's values are also
+        # available in the per-target table.
+        "effective_mr": primary["effective_mr"],
+        "effective_armor": primary["effective_armor"],
+        "cast_timeline": primary.get("cast_timeline", []),
+        "resource_spent": primary.get("resource_spent", 0.0),
+        "resource_remaining": primary.get("resource_remaining", 0.0),
+        "notes": list(primary.get("notes", [])),
+        "timeline_coverage": timeline_coverage,
+    }
+
+
+def _comparison_curve(
+    champion_data: dict,
+    level: int,
+    items: list[dict],
+    fight_params: FightParams,
+    enemies: list,
+) -> list[dict]:
+    """Score one build through six rotation-length timed windows.
+
+    A point is a continuous fight lasting ``ONE_ROTATION_DURATION`` times its
+    index. Cooldowns, resources, regeneration, autos, burns, shields, and
+    target-specific mitigation are therefore recomputed rather than multiplied
+    from the opening rotation.
+    """
+    points = []
+    for rotation in range(1, 7):
+        duration = ONE_ROTATION_DURATION * rotation
+        params = replace(
+            fight_params,
+            fight_duration_seconds=duration,
+            one_rotation=False,
+        )
+        if not enemies:
+            result = _serialize_fight_result(
+                run_fight(champion_data, level, items, params)
+            )
+        else:
+            target_results = []
+            for target_index, enemy in enumerate(enemies):
+                target_params = replace(
+                    params,
+                    roster_target_index=target_index,
+                    roster_target_count=len(enemies),
+                    target_health=enemy.stats["health"],
+                    target_bonus_health=enemy.stats["bonus_health"],
+                    target_armor=enemy.stats["armor"],
+                    target_magic_resistance=enemy.stats["magic_resistance"],
+                    target_magic_shield=enemy.defenses.magic_shield,
+                    target_physical_shield=enemy.defenses.physical_shield,
+                    target_general_shield=enemy.defenses.general_shield,
+                    target_basic_damage_multiplier=(
+                        enemy.defenses.basic_damage_multiplier
+                    ),
+                    target_basic_damage_flat_reduction=(
+                        enemy.defenses.basic_damage_flat_reduction
+                    ),
+                    target_basic_damage_flat_reduction_cap=(
+                        enemy.defenses.basic_damage_flat_reduction_cap
+                    ),
+                    target_critical_strike_damage_multiplier=(
+                        enemy.defenses.critical_strike_damage_multiplier
+                    ),
+                    target_threshold_shield_amount=(
+                        enemy.defenses.threshold_shield_amount
+                    ),
+                    target_threshold_shield_health_ratio=(
+                        enemy.defenses.threshold_shield_health_ratio
+                    ),
+                    target_threshold_shield_duration=(
+                        enemy.defenses.threshold_shield_duration
+                    ),
+                    target_threshold_shield_damage_type=(
+                        enemy.defenses.threshold_shield_damage_type
+                    ),
+                    target_threshold_health_bonus=(
+                        enemy.defenses.threshold_health_bonus
+                    ),
+                    target_threshold_health_heal=(
+                        enemy.defenses.threshold_health_heal
+                    ),
+                    target_threshold_health_ratio=(
+                        enemy.defenses.threshold_health_ratio
+                    ),
+                    target_threshold_health_duration=(
+                        enemy.defenses.threshold_health_duration
+                    ),
+                )
+                target_results.append(
+                    {
+                        "target": _public_loadout_summary(enemy),
+                        "result": _serialize_fight_result(
+                            run_fight(champion_data, level, items, target_params)
+                        ),
+                    }
+                )
+            result = _aggregate_public_results(
+                [target["result"] for target in target_results]
+            )
+        total = float(result["total_damage"])
+        points.append(
+            {
+                "rotation": rotation,
+                "seconds": duration,
+                "total_damage": round(total, 1),
+                "dps": round(total / duration, 1),
+                "ability_damage": round(float(result["ability_damage"]), 1),
+                "auto_attack_damage": round(float(result["auto_attack_damage"]), 1),
+            }
+        )
+    return points
+
+
+def _add_comparison_curve(
+    response: dict,
+    champion_data: dict,
+    level: int,
+    items: list[dict],
+    fight_params: FightParams,
+    enemies: list,
+) -> None:
+    """Attach crossover windows or an explicit fail-closed receipt."""
+    reason = get_comparison_curve_unavailable_reason(champion_data["name"])
+    if reason:
+        response["comparison_curve"] = []
+        response["comparison_curve_status"] = {
+            "available": False,
+            "reason": reason,
+        }
+        return
+    response["comparison_curve"] = _comparison_curve(
+        champion_data, level, items, fight_params, enemies
+    )
+    response["comparison_curve_status"] = {"available": True}
 
 
 def _dev_mode() -> bool:
@@ -361,7 +685,7 @@ def health():
 
 @app.route("/api/champions")
 def api_champions():
-    """Return champion names, icons, and verified flags for the picker.
+    """Return champion identity and fail-closed attacker readiness.
 
     ``verified`` = has a module in src/calculator/champions/ (the registry
     is the source of truth). The picker greys out unverified champions —
@@ -369,15 +693,20 @@ def api_champions():
     Verified champions sort first, then unverified, A-Z within each group.
     """
     champions = fetch_champion_data()
-    result = sorted(
-        [
+    result = []
+    for champ_data in champions.values():
+        availability = attacker_availability(champ_data, _VERIFIED_CHAMPIONS)
+        result.append(
             {
                 "name": champ_data["name"],
                 "icon": _https_icon(champ_data.get("icon", "")),
-                "verified": champ_data["name"] in _VERIFIED_CHAMPIONS,
+                "verified": availability["ready"],
+                "availability": availability,
+                "patch_last_changed": champ_data.get("patchLastChanged"),
             }
-            for champ_data in champions.values()
-        ],
+        )
+    result = sorted(
+        result,
         key=lambda c: (not c["verified"], c["name"]),
     )
     return jsonify(result)
@@ -385,15 +714,15 @@ def api_champions():
 
 @app.route("/api/items")
 def api_items():
-    """Return the optimizer-eligible legendaries (name + icon), sorted.
-
-    Delegates eligibility to the optimizer so the manual item picker and
-    the optimizer's candidate set can never diverge.
-    """
+    """Return ordinary build items for manual attacker/roster loadouts."""
     result = sorted(
         [
-            {"name": item["name"], "icon": _https_icon(item.get("icon", ""))}
-            for item in get_eligible_legendaries()
+            {
+                "name": item["name"],
+                "icon": _https_icon(item.get("icon", "")),
+                "model_coverage": item_model_coverage(item),
+            }
+            for item in get_selectable_items()
         ],
         key=lambda i: i["name"],
     )
@@ -402,11 +731,16 @@ def api_items():
 
 @app.route("/api/boots")
 def api_boots():
-    """Return the optimizer-eligible tier-2+ boots (name + icon), sorted."""
+    """Return tier-2 and quest-only tier-3 boots for the role-aware picker."""
     result = sorted(
         [
-            {"name": item["name"], "icon": _https_icon(item.get("icon", ""))}
-            for item in get_eligible_boots()
+            {
+                "name": item["name"],
+                "icon": _https_icon(item.get("icon", "")),
+                "tier": item.get("tier"),
+                "model_coverage": item_model_coverage(item),
+            }
+            for item in get_eligible_boots(tier=None)
         ],
         key=lambda i: i["name"],
     )
@@ -426,6 +760,16 @@ def api_config():
     synchronously on champion select.
     """
     local_dev = _local_dev_request()
+    cache_meta_path = (
+        Path(__file__).resolve().parent.parent / "data" / ".champions.json.meta"
+    )
+    try:
+        cache_meta = json.loads(cache_meta_path.read_text(encoding="utf-8"))
+        fetched_at = datetime.fromtimestamp(
+            float(cache_meta["fetched_at"]), tz=timezone.utc
+        ).isoformat()
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        fetched_at = None
     response = jsonify(
         {
             "exclusivity_groups": exclusivity_groups(),
@@ -438,7 +782,13 @@ def api_config():
             },
             "input_limits": PUBLIC_INPUT_LIMITS,
             "champion_options": champion_options_meta_map(),
+            "item_options": item_input_options_meta(),
             "dev_mode": local_dev,
+            "data_snapshot": {
+                "source": "League of Legends Wiki cache",
+                "fetched_at": fetched_at,
+                "champion_count": len(fetch_champion_data()),
+            },
         }
     )
     if local_dev:
@@ -477,6 +827,20 @@ def api_abilities(champion_name: str):
     return jsonify(result)
 
 
+@app.route("/api/loadout-stats", methods=["POST"])
+def api_loadout_stats():
+    """Return champion-derived stats for one level and item loadout."""
+    try:
+        data = _json_object()
+        loadout = ChampionLoadout.from_request(data, field="loadout").resolve()
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except KeyError as exc:
+        missing = exc.args[0] if exc.args else "requested data"
+        return jsonify({"error": f"'{missing}' not found"}), 404
+    return jsonify(_public_loadout_summary(loadout))
+
+
 @app.route("/api/calculate", methods=["POST"])
 def api_calculate():
     """Run the damage calculation and return results."""
@@ -487,6 +851,11 @@ def api_calculate():
         item_names = _request_string_list(data, "items", maximum=6)
         boots_name = _request_string(data, "boots")
         fight_params = FightParams.from_request(data)
+        include_crossover = data.get("include_crossover", False)
+        if not isinstance(include_crossover, bool):
+            raise ValueError("include_crossover must be true or false")
+        enemy_requests = parse_roster(data, "enemies", maximum=MAX_ENEMIES)
+        ally_requests = parse_roster(data, "allies", maximum=MAX_ALLIES)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -497,82 +866,173 @@ def api_calculate():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 422
     try:
+        fight_params.validate_for_champion(champion_data["name"], level)
         _validate_champion_options(champion_data["name"], data)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
-    # Resolve items
-    items = []
+    # Resolve and validate the inventory in the same backend contract used by BIS.
     try:
-        if boots_name:
-            items.append(_resolve_named_item(boots_name, kind="Boots"))
-        items.extend(_resolve_named_item(item_name) for item_name in item_names)
+        resolved_boots = (
+            _resolve_named_item(boots_name, kind="Boots") if boots_name else None
+        )
+        ordinary_items = [_resolve_named_item(item_name) for item_name in item_names]
+        validate_resolved_loadout(
+            ordinary_items,
+            boots=resolved_boots,
+            role=fight_params.role,
+            role_quest_complete=fight_params.role_quest_complete,
+        )
     except LookupError as exc:
         return jsonify({"error": str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    items = ([resolved_boots] if resolved_boots else []) + ordinary_items
+
+    try:
+        enemies = [loadout.resolve() for loadout in enemy_requests]
+        allies = [loadout.resolve() for loadout in ally_requests]
+        for enemy in enemies:
+            require_target_item_coverage(
+                list(enemy.item_data), one_rotation=fight_params.one_rotation
+            )
+    except KeyError as exc:
+        missing = exc.args[0] if exc.args else "requested data"
+        return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
 
     rate_limit_response = _spend_rate_limit("calculate")
     if rate_limit_response is not None:
         return rate_limit_response
 
-    result = run_fight(champion_data, level, items, fight_params)
+    ally_effects = tuple(
+        effect
+        for ally in allies
+        if ally.request.ally_effects_enabled
+        for effect in resolve_ally_stat_effects(ally.item_data)
+    )
+    if ally_effects:
+        fight_params = replace(
+            fight_params,
+            ally_stat_bonuses=combine_ally_stat_effects(ally_effects),
+        )
 
-    breakdown = result.get("breakdown", {})
-    auto_attack_damage = result["auto_attack_damage"]
-    ability_damage = result["ability_damage"]
-    total_damage = result.get("total_damage", 0.0)
+    if not enemies:
+        result = run_fight(champion_data, level, items, fight_params)
+        response = _serialize_fight_result(result)
+        if include_crossover:
+            _add_comparison_curve(
+                response, champion_data, level, items, fight_params, enemies
+            )
+        response["role_quest"] = (
+            role_quest_meta(fight_params.role, fight_params.role_quest_complete)
+            if fight_params.role
+            else None
+        )
+        if allies:
+            response.update(
+                {
+                    "allies": [_public_loadout_summary(ally) for ally in allies],
+                    "scenario": {
+                        "target_count": 1,
+                        "aggregation": "Manual target",
+                        "primary_target": "Manual target",
+                        "ally_effects": {
+                            "modeled": [effect.source for effect in ally_effects],
+                            "unmodeled": [
+                                ally.champion_data["name"] for ally in allies
+                            ],
+                            "note": (
+                                "Allies are included as sourced context; outgoing "
+                                "ally buffs are applied only when an explicit tested "
+                                "effect exists."
+                            ),
+                        },
+                    },
+                }
+            )
+        return jsonify(response)
 
-    # Build breakdown dict for JSON response
-    api_breakdown = {}
-    for key, entry in breakdown.items():
-        # Include damaging rows plus display-only rows carrying text
-        has_damage = entry.get("total_damage", 0.0) > 0
-        if not (has_damage or "detail" in entry):
-            continue
-        row = {
-            "name": entry.get("name", key),
-            "total_damage": round(entry.get("total_damage", 0.0), 1),
-            "casts": entry.get("casts", None),
-            "count": entry.get("count", None),
-            # Count label for the detail cell ("procs" vs default "hits")
-            "unit": entry.get("unit", None),
-            "damage_per_hit": (
-                round(entry["damage_per_hit"], 1) if "damage_per_hit" in entry else None
+    target_results = []
+    for target_index, enemy in enumerate(enemies):
+        target_params = replace(
+            fight_params,
+            roster_target_index=target_index,
+            roster_target_count=len(enemies),
+            target_health=enemy.stats["health"],
+            target_bonus_health=enemy.stats["bonus_health"],
+            target_armor=enemy.stats["armor"],
+            target_magic_resistance=enemy.stats["magic_resistance"],
+            target_magic_shield=enemy.defenses.magic_shield,
+            target_physical_shield=enemy.defenses.physical_shield,
+            target_general_shield=enemy.defenses.general_shield,
+            target_basic_damage_multiplier=enemy.defenses.basic_damage_multiplier,
+            target_basic_damage_flat_reduction=(
+                enemy.defenses.basic_damage_flat_reduction
             ),
-            "num_crits": entry.get("num_crits", None),
-            "num_non_crits": entry.get("num_non_crits", None),
-            "crit_damage_per_hit": (
-                round(entry["crit_damage_per_hit"], 1)
-                if entry.get("crit_damage_per_hit") is not None
-                else None
+            target_basic_damage_flat_reduction_cap=(
+                enemy.defenses.basic_damage_flat_reduction_cap
             ),
-            "non_crit_damage_per_hit": (
-                round(entry["non_crit_damage_per_hit"], 1)
-                if entry.get("non_crit_damage_per_hit") is not None
-                else None
+            target_critical_strike_damage_multiplier=(
+                enemy.defenses.critical_strike_damage_multiplier
             ),
-        }
-        # Display extras are minted by the engine and passed through
-        # untouched — adding a new one never requires editing this route.
-        for display_key in ("detail", "damage_display"):
-            if display_key in entry:
-                row[display_key] = entry[display_key]
-        api_breakdown[key] = row
+            target_threshold_shield_amount=enemy.defenses.threshold_shield_amount,
+            target_threshold_shield_health_ratio=(
+                enemy.defenses.threshold_shield_health_ratio
+            ),
+            target_threshold_shield_duration=(
+                enemy.defenses.threshold_shield_duration
+            ),
+            target_threshold_shield_damage_type=(
+                enemy.defenses.threshold_shield_damage_type
+            ),
+            target_threshold_health_bonus=enemy.defenses.threshold_health_bonus,
+            target_threshold_health_heal=enemy.defenses.threshold_health_heal,
+            target_threshold_health_ratio=enemy.defenses.threshold_health_ratio,
+            target_threshold_health_duration=(
+                enemy.defenses.threshold_health_duration
+            ),
+        )
+        serialized = _serialize_fight_result(
+            run_fight(champion_data, level, items, target_params)
+        )
+        target_results.append(
+            {"target": _public_loadout_summary(enemy), "result": serialized}
+        )
 
-    return jsonify(
+    response = _aggregate_public_results(
+        [target["result"] for target in target_results]
+    )
+    response.update(
         {
-            "champion_stats": result["champion_stats"],
-            "total_damage": round(total_damage, 1),
-            "ability_damage": round(ability_damage, 1),
-            "auto_attack_damage": round(auto_attack_damage, 1),
-            "damage_by_type": {
-                dtype: round(amount, 1)
-                for dtype, amount in result["damage_by_type"].items()
+            "targets": target_results,
+            "allies": [_public_loadout_summary(ally) for ally in allies],
+            "scenario": {
+                "target_count": len(target_results),
+                "aggregation": "Same selected damage package landed on every target",
+                "primary_target": target_results[0]["target"]["champion"],
+                "ally_effects": {
+                    "modeled": [effect.source for effect in ally_effects],
+                    "unmodeled": [ally.champion_data["name"] for ally in allies],
+                    "note": (
+                        "Allies are included as sourced context; outgoing ally buffs "
+                        "are applied only when an explicit tested effect exists."
+                    ),
+                },
             },
-            "breakdown": api_breakdown,
-            "effective_mr": round(result.get("effective_mr", 0.0), 1),
-            "effective_armor": round(result.get("effective_armor", 0.0), 1),
+            "role_quest": (
+                role_quest_meta(fight_params.role, fight_params.role_quest_complete)
+                if fight_params.role
+                else None
+            ),
         }
     )
+    if include_crossover:
+        _add_comparison_curve(
+            response, champion_data, level, items, fight_params, enemies
+        )
+    return jsonify(response)
 
 
 @app.route("/api/optimize", methods=["POST"])
@@ -586,7 +1046,14 @@ def api_optimize():
         locked_items = _request_string_list(data, "locked_items", maximum=6)
         locked_boots = _request_string(data, "locked_boots")
         max_legendary_slots = _request_int(data, "max_legendary_slots", 5, 1, 6)
+        gold_budget = (
+            _request_int(data, "gold_budget", 0, 1, 30_000)
+            if data.get("gold_budget") not in (None, "")
+            else None
+        )
         fight_params = FightParams.from_request(data, deterministic=True)
+        enemy_requests = parse_roster(data, "enemies", maximum=MAX_ENEMIES)
+        ally_requests = parse_roster(data, "allies", maximum=MAX_ALLIES)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -598,6 +1065,7 @@ def api_optimize():
         return jsonify({"error": str(exc)}), 422
 
     try:
+        fight_params.validate_for_champion(champion_data["name"], level)
         _validate_champion_options(champion_data["name"], data)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -618,27 +1086,124 @@ def api_optimize():
             400,
         )
 
+    allowed_slots = (
+        6 if fight_params.role == "bottom" and fight_params.role_quest_complete else 5
+    )
+    if max_legendary_slots > allowed_slots:
+        return (
+            jsonify(
+                {"error": ("Six ordinary items require a completed bottom role quest")}
+            ),
+            400,
+        )
+
     try:
-        for item_name in locked_items:
-            _resolve_named_item(item_name)
-        if locked_boots:
-            _resolve_named_item(locked_boots, kind="Boots")
+        resolved_locked = [_resolve_named_item(name) for name in locked_items]
+        resolved_boots = (
+            _resolve_named_item(locked_boots, kind="Boots") if locked_boots else None
+        )
+        validate_resolved_loadout(
+            resolved_locked,
+            boots=resolved_boots,
+            role=fight_params.role,
+            role_quest_complete=fight_params.role_quest_complete,
+        )
     except LookupError as exc:
         return jsonify({"error": str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    try:
+        enemies = [loadout.resolve() for loadout in enemy_requests]
+        allies = [loadout.resolve() for loadout in ally_requests]
+        for enemy in enemies:
+            require_target_item_coverage(
+                list(enemy.item_data), one_rotation=fight_params.one_rotation
+            )
+    except KeyError as exc:
+        missing = exc.args[0] if exc.args else "requested data"
+        return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    ally_effects = tuple(
+        effect
+        for ally in allies
+        if ally.request.ally_effects_enabled
+        for effect in resolve_ally_stat_effects(ally.item_data)
+    )
+    if ally_effects:
+        fight_params = replace(
+            fight_params,
+            ally_stat_bonuses=combine_ally_stat_effects(ally_effects),
+        )
+
+    target_fight_params = tuple(
+        replace(
+            fight_params,
+            roster_target_index=target_index,
+            roster_target_count=len(enemies),
+            target_health=enemy.stats["health"],
+            target_bonus_health=enemy.stats["bonus_health"],
+            target_armor=enemy.stats["armor"],
+            target_magic_resistance=enemy.stats["magic_resistance"],
+            target_magic_shield=enemy.defenses.magic_shield,
+            target_physical_shield=enemy.defenses.physical_shield,
+            target_general_shield=enemy.defenses.general_shield,
+            target_basic_damage_multiplier=enemy.defenses.basic_damage_multiplier,
+            target_basic_damage_flat_reduction=(
+                enemy.defenses.basic_damage_flat_reduction
+            ),
+            target_basic_damage_flat_reduction_cap=(
+                enemy.defenses.basic_damage_flat_reduction_cap
+            ),
+            target_critical_strike_damage_multiplier=(
+                enemy.defenses.critical_strike_damage_multiplier
+            ),
+            target_threshold_shield_amount=enemy.defenses.threshold_shield_amount,
+            target_threshold_shield_health_ratio=(
+                enemy.defenses.threshold_shield_health_ratio
+            ),
+            target_threshold_shield_duration=(
+                enemy.defenses.threshold_shield_duration
+            ),
+            target_threshold_shield_damage_type=(
+                enemy.defenses.threshold_shield_damage_type
+            ),
+            target_threshold_health_bonus=enemy.defenses.threshold_health_bonus,
+            target_threshold_health_heal=enemy.defenses.threshold_health_heal,
+            target_threshold_health_ratio=enemy.defenses.threshold_health_ratio,
+            target_threshold_health_duration=(
+                enemy.defenses.threshold_health_duration
+            ),
+        )
+        for target_index, enemy in enumerate(enemies)
+    )
 
     rate_limit_response = _spend_rate_limit("optimize")
     if rate_limit_response is not None:
         return rate_limit_response
 
-    result = optimize_build(
-        champion_data=champion_data,
-        level=level,
-        fight_params=fight_params,
-        objective=objective,
-        locked_items=locked_items if locked_items else None,
-        locked_boots=locked_boots if locked_boots else None,
-        max_legendary_slots=max_legendary_slots,
-    )
+    try:
+        result = optimize_build(
+            champion_data=champion_data,
+            level=level,
+            fight_params=fight_params,
+            objective=objective,
+            locked_items=locked_items if locked_items else None,
+            locked_boots=locked_boots if locked_boots else None,
+            max_legendary_slots=max_legendary_slots,
+            target_fight_params=target_fight_params or None,
+            boots_tier=(
+                3
+                if fight_params.role == "mid" and fight_params.role_quest_complete
+                else 2
+            ),
+            gold_budget=gold_budget,
+            require_complete_timeline=True,
+        )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
 
     return jsonify(result)
 

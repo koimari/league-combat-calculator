@@ -53,6 +53,10 @@ class DamagePart:
             stack timeline — no timeline means no stacks, so the part
             deals nothing and ``count`` is ignored. A champion that
             wants a fixed stack count says so with a plain part.
+        time_offset: authored seconds from cast start to the first hit.
+            ``None`` means the source has not certified sub-cast timing.
+        hit_interval: authored seconds between repeated hits. Required for
+            a repeated part to emit an exact event timeline.
     """
 
     damage_type: str
@@ -63,6 +67,8 @@ class DamagePart:
     basic_damage: bool = False
     bonus_ad_ratio: float = 0.0
     dot_stack_scaled: bool = False
+    time_offset: float | None = None
+    hit_interval: float | None = None
 
     def __post_init__(self) -> None:
         if self.damage_type not in _PART_DAMAGE_TYPES:
@@ -70,6 +76,10 @@ class DamagePart:
                 f"DamagePart damage_type must be one of "
                 f"{sorted(_PART_DAMAGE_TYPES)}, got {self.damage_type!r}"
             )
+        if self.time_offset is not None and self.time_offset < 0:
+            raise ValueError("DamagePart time_offset cannot be negative")
+        if self.hit_interval is not None and self.hit_interval < 0:
+            raise ValueError("DamagePart hit_interval cannot be negative")
 
     def __repr__(self) -> str:
         # Deterministic repr: the golden snapshot serializes entries via
@@ -82,6 +92,10 @@ class DamagePart:
             extras += f", bonus_ad_ratio={self.bonus_ad_ratio}"
         if self.dot_stack_scaled:
             extras += ", dot_stack_scaled=yes"
+        if self.time_offset is not None:
+            extras += f", time_offset={self.time_offset}"
+        if self.hit_interval is not None:
+            extras += f", hit_interval={self.hit_interval}"
         return (
             f"DamagePart({self.damage_type}, amount={self.amount}, "
             f"count={self.count}, hp_scaled={hp_scaled}, "

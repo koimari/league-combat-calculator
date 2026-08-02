@@ -20,11 +20,13 @@ from src.calculator.damage import (
     calculate_fight_damage,
     split_auto_vs_ability,
     split_by_damage_type,
+    _ordered_damage_events,
     _simulate_current_health_on_hit,
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
     _navori_effective_cd,
     _mitigate,
 )
+from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
 
 
@@ -84,6 +86,719 @@ class TestMitigate:
 
     def test_true_damage_ignores_resists_and_magic_amp(self, resists) -> None:
         assert _mitigate(300.0, "true", resists, 1.2) == 300.0
+
+
+class TestTimelineCoverage:
+    """Results say exactly which active damage sources are event-ordered."""
+
+    @staticmethod
+    def _test_spell() -> dict:
+        return {
+            "Q": {
+                "name": "Test spell",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+                "parts": (DamagePart("magic", 300.0),),
+            }
+        }
+
+    def test_cast_and_auto_events_are_certified(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            self._test_spell(),
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            auto_attack_uptime=1.0,
+        )
+
+        assert result["timeline_coverage"] == {
+            "complete": True,
+            "certification": "event_order_certified",
+            "exact_sources": ["Q", "auto_attacks"],
+            "coarse_sources": [],
+            "note": (
+                "Every active damage source has authored event or cast-boundary "
+                "order."
+            ),
+        }
+
+    def test_authored_blackfire_ticks_remain_certified(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            self._test_spell(),
+            items=[get_item_by_name("Blackfire Torch")],
+            target_magic_resistance=0.0,
+        )
+
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert "burn_Blackfire Torch" in coverage["exact_sources"]
+
+    def test_luden_proc_is_certified_on_its_triggering_cast(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            self._test_spell(),
+            items=[get_item_by_name("Luden's Echo")],
+            target_magic_resistance=0.0,
+        )
+
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert coverage["certification"] == "event_order_certified"
+        assert "proc_Luden's Echo" in coverage["exact_sources"]
+
+    def test_luden_requires_a_damaging_ability_trigger(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            items=[get_item_by_name("Luden's Echo")],
+        )
+
+        assert "proc_Luden's Echo" not in result["breakdown"]
+
+    def test_luden_reprocs_only_on_a_ready_damaging_cast(
+        self, fight, attacker_stats
+    ):
+        ability = self._test_spell()
+        ability["Q"]["cooldown"] = 4.0
+        result = fight(
+            attacker_stats(),
+            ability,
+            items=[get_item_by_name("Luden's Echo")],
+            one_rotation=False,
+            fight_duration_seconds=13.0,
+            target_magic_resistance=0.0,
+        )
+
+        proc = result["breakdown"]["proc_Luden's Echo"]
+        assert proc["total_damage"] == pytest.approx(300.0)
+        assert [event["time"] for event in proc["damage_events"]] == [0.0, 12.0]
+        assert result["timeline_coverage"]["complete"] is True
+        assert "proc_Luden's Echo" in result["timeline_coverage"]["exact_sources"]
+
+    def test_luden_crosses_shadowflame_threshold_before_the_follow_up(
+        self, fight, attacker_stats
+    ):
+        abilities = {
+            "Q": {
+                "name": "Opening spell",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 500.0,
+                "parts": (DamagePart("magic", 500.0),),
+            },
+            "W": {
+                "name": "Follow-up spell",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 200.0,
+                "parts": (DamagePart("magic", 200.0),),
+            },
+        }
+        result = fight(
+            attacker_stats(),
+            abilities,
+            items=[
+                get_item_by_name("Luden's Echo"),
+                get_item_by_name("Shadowflame"),
+            ],
+            target_magic_resistance=0.0,
+        )
+
+        # Q leaves 500 HP. Luden's 150 lands immediately after Q and leaves
+        # 350, so W starts below 40% and receives a 40-damage Cinderbloom
+        # bonus. Treating Luden as an end-of-rotation proc would yield 30.
+        assert result["breakdown"]["shadowflame_Shadowflame"][
+            "total_damage"
+        ] == pytest.approx(40.0)
+
+    @pytest.mark.parametrize(
+        ("target_index", "target_count", "expected_proc"),
+        [
+            (0, 1, 150.0),
+            (0, 2, 135.0),
+            (1, 2, 75.0),
+            (0, 7, 75.0),
+            (5, 7, 75.0),
+            (6, 7, 0.0),
+        ],
+    )
+    def test_luden_charges_are_allocated_inside_each_target_fight(
+        self,
+        fight,
+        attacker_stats,
+        target_index,
+        target_count,
+        expected_proc,
+    ):
+        result = fight(
+            attacker_stats(),
+            self._test_spell(),
+            items=[get_item_by_name("Luden's Echo")],
+            target_magic_resistance=0.0,
+            roster_target_index=target_index,
+            roster_target_count=target_count,
+        )
+
+        proc = result["breakdown"]["proc_Luden's Echo"]
+        assert proc["total_damage"] == pytest.approx(expected_proc)
+
+    def test_luden_target_share_resolves_before_lifeline_threshold(
+        self, fight, attacker_stats
+    ):
+        ability = self._test_spell()
+        ability["Q"]["total_raw"] = 600.0
+        ability["Q"]["parts"] = (DamagePart("magic", 600.0),)
+        common = {
+            "items": [get_item_by_name("Luden's Echo")],
+            "target_magic_resistance": 0.0,
+            "target_threshold_shield_amount": 500.0,
+            "target_threshold_shield_health_ratio": 0.30,
+            "target_threshold_shield_duration": 3.0,
+            "roster_target_count": 2,
+        }
+
+        primary = fight(
+            attacker_stats(),
+            ability,
+            roster_target_index=0,
+            **common,
+        )
+        secondary = fight(
+            attacker_stats(),
+            ability,
+            roster_target_index=1,
+            **common,
+        )
+
+        # Primary receives 135 Luden damage: 600 leaves 400 HP, then 135
+        # crosses the 300-HP Lifeline threshold and is absorbed. Secondary
+        # receives 75, remains at 325 HP, and never triggers the shield.
+        assert primary["threshold_shield_absorbed"] == pytest.approx(135.0)
+        assert primary["health_damage"] == pytest.approx(600.0)
+        assert secondary["threshold_shield_absorbed"] == 0.0
+        assert secondary["health_damage"] == pytest.approx(675.0)
+
+
+class TestOrderedDamageEvents:
+    """The shared ledger keeps cast order and exact typed composition."""
+
+    def test_timed_casts_are_interleaved_by_the_accepted_timeline(self):
+        events = _ordered_damage_events(
+            {
+                "Q": {
+                    "casts": 2,
+                    "total_damage": 200.0,
+                    "damage_type": "magic",
+                },
+                "W": {
+                    "casts": 1,
+                    "total_damage": 60.0,
+                    "damage_type": "physical",
+                },
+            },
+            {"Q": {}, "W": {}},
+            ["Q", "W"],
+            cast_events=[
+                {"time": 0.0, "slot": "Q", "ordinal": 1},
+                {"time": 1.0, "slot": "W", "ordinal": 1},
+                {"time": 2.0, "slot": "Q", "ordinal": 2},
+            ],
+        )
+
+        assert [event["source_key"] for event in events] == ["Q", "W", "Q"]
+        assert [event["damage"] for event in events] == [100.0, 60.0, 100.0]
+
+    def test_engine_authored_auto_events_keep_times_and_per_hit_damage(self):
+        events = _ordered_damage_events(
+            {
+                "auto_attacks": {
+                    "count": 2,
+                    "total_damage": 300.0,
+                    "damage_type": "physical",
+                    "event_phase": "auto",
+                    "damage_events": [
+                        {
+                            "time": 0.0,
+                            "damage_type": "physical",
+                            "damage": 100.0,
+                        },
+                        {
+                            "time": 0.5,
+                            "damage_type": "physical",
+                            "damage": 200.0,
+                        },
+                    ],
+                }
+            },
+            {},
+            [],
+        )
+
+        assert [event["time"] for event in events] == [0.0, 0.5]
+        assert [event["damage"] for event in events] == [100.0, 200.0]
+
+    def test_mixed_cast_instances_keep_their_exact_damage_types(self):
+        events = _ordered_damage_events(
+            {
+                "R": {
+                    "casts": 1,
+                    "total_damage": 180.0,
+                    "damage_type": "mixed",
+                    "damage_by_type": {"magic": 120.0, "true": 60.0},
+                }
+            },
+            {"R": {"cast_instances": 3}},
+            ["R"],
+        )
+
+        assert len(events) == 6
+        assert sum(
+            event["damage"] for event in events if event["damage_type"] == "magic"
+        ) == pytest.approx(120.0)
+        assert sum(
+            event["damage"] for event in events if event["damage_type"] == "true"
+        ) == pytest.approx(60.0)
+
+    def test_untyped_amplifier_is_redistributed_without_losing_damage(self):
+        events = _ordered_damage_events(
+            {
+                "Q": {
+                    "casts": 1,
+                    "total_damage": 75.0,
+                    "damage_type": "magic",
+                },
+                "auto_attacks": {
+                    "count": 1,
+                    "total_damage": 25.0,
+                    "damage_type": "physical",
+                },
+                "damage_amp_Test": {"total_damage": 20.0},
+            },
+            {"Q": {}},
+            ["Q"],
+        )
+
+        assert sum(event["damage"] for event in events) == pytest.approx(120.0)
+        assert sum(
+            event["damage"]
+            for event in events
+            if event["source_key"] == "damage_amp_Test"
+            and event["damage_type"] == "magic"
+        ) == pytest.approx(15.0)
+
+
+class TestTargetIncomingDamageModifiers:
+    """Target item defenses apply to their exact damage events."""
+
+    def test_plating_and_rock_solid_apply_after_armor(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(attack_damage=100.0, attack_speed=1.0),
+            one_rotation=False,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=1.0,
+            target_armor=100.0,
+            target_basic_damage_multiplier=0.90,
+            target_basic_damage_flat_reduction=15.0,
+            target_basic_damage_flat_reduction_cap=0.20,
+        )
+
+        # 100 raw -> 50 after armor -> 45 after Plating -> Rock Solid is
+        # capped at 20% of 45, so it removes 9 rather than the full 15.
+        assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
+            36.0
+        )
+
+    def test_randuin_reduces_only_the_critical_branch(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(
+                attack_damage=100.0,
+                attack_speed=1.0,
+                critical_strike_chance=50.0,
+            ),
+            one_rotation=False,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=1.0,
+            target_armor=0.0,
+            target_critical_strike_damage_multiplier=0.70,
+        )
+
+        # Deterministic EV: 50% x 100 + 50% x (200 x 0.7) = 120.
+        assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
+            120.0
+        )
+
+    def test_rock_solid_consumes_once_per_multihit_basic_cast(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Two-hit attack spell",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 200.0,
+                    "parts": (
+                        DamagePart(
+                            "physical", 100.0, count=2, basic_damage=True
+                        ),
+                    ),
+                }
+            },
+            target_armor=0.0,
+            target_basic_damage_multiplier=0.90,
+            target_basic_damage_flat_reduction=15.0,
+            target_basic_damage_flat_reduction_cap=0.20,
+        )
+
+        # Both hits receive Plating (180 total); only the first instance in
+        # the cast consumes Rock Solid (15), leaving 165.
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(165.0)
+
+    def test_randuin_reduces_ability_critical_strikes(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(critical_strike_chance=100.0),
+            {
+                "Q": {
+                    "name": "Critting ability",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 100.0,
+                    "parts": (
+                        DamagePart("physical", 100.0, crit_effectiveness=1.0),
+                    ),
+                }
+            },
+            target_armor=0.0,
+            target_critical_strike_damage_multiplier=0.70,
+        )
+
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(140.0)
+
+    def test_randuin_does_not_reduce_true_damage_critical_strikes(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(critical_strike_chance=100.0),
+            {
+                "Q": {
+                    "name": "True crit",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "true",
+                    "total_raw": 100.0,
+                    "parts": (
+                        DamagePart("true", 100.0, crit_effectiveness=1.0),
+                    ),
+                }
+            },
+            target_critical_strike_damage_multiplier=0.70,
+        )
+
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(200.0)
+
+    def test_plating_reduces_basic_tagged_item_damage(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(attack_damage=100.0, attack_speed=1.0),
+            one_rotation=False,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=1.0,
+            target_armor=0.0,
+            target_basic_damage_multiplier=0.90,
+            items=[{"name": "Heartsteel"}],
+        )
+
+        assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
+            90.0
+        )
+        assert result["breakdown"]["on_hit_once_Heartsteel"][
+            "total_damage"
+        ] == pytest.approx(171.0)
+
+    def test_threshold_shield_absorbs_the_triggering_damage(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                },
+                "W": {
+                    "name": "Follow up",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 200.0,
+                    "parts": (DamagePart("magic", 200.0),),
+                },
+            },
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_shield_amount=400.0,
+            target_threshold_shield_health_ratio=0.30,
+            target_threshold_shield_duration=3.0,
+        )
+
+        assert result["total_damage"] == pytest.approx(1000.0)
+        assert result["threshold_shield_absorbed"] == pytest.approx(400.0)
+        assert result["health_damage"] == pytest.approx(600.0)
+
+    def test_timed_auto_events_allow_threshold_shield_to_expire(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(attack_damage=400.0, attack_speed=2.0),
+            one_rotation=False,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=1.0,
+            target_armor=0.0,
+            target_threshold_shield_amount=500.0,
+            target_threshold_shield_health_ratio=0.90,
+            target_threshold_shield_duration=0.20,
+        )
+
+        # Autos land at 0.0s and 0.5s. The first consumes 400 shield; the
+        # remaining 100 expires before the second swing instead of absorbing it.
+        assert result["total_damage"] == pytest.approx(800.0)
+        assert result["threshold_shield_absorbed"] == pytest.approx(400.0)
+        assert result["health_damage"] == pytest.approx(400.0)
+
+    def test_timed_autos_cross_shadowflame_threshold_before_later_cast(
+        self, fight, attacker_stats
+    ):
+        from src.calculator.data_fetcher import get_item_by_name
+
+        result = fight(
+            attacker_stats(attack_damage=160.0, attack_speed=1.0),
+            {
+                "Q": {
+                    "name": "Timed spell",
+                    "rank": 1,
+                    "cooldown": 2.0,
+                    "damage_type": "magic",
+                    "total_raw": 300.0,
+                    "parts": (DamagePart("magic", 300.0),),
+                }
+            },
+            items=[get_item_by_name("Shadowflame")],
+            one_rotation=False,
+            fight_duration_seconds=3.0,
+            auto_attack_uptime=1.0,
+            target_health=1000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+        )
+
+        # Q at 0s, then autos at 0s and 1s leave 380 HP. Q's 2s recast
+        # therefore receives Cinderbloom's 20% bonus (60 damage).
+        assert result["breakdown"]["shadowflame_Shadowflame"][
+            "total_damage"
+        ] == pytest.approx(60.0)
+        cinderbloom = result["breakdown"]["shadowflame_Shadowflame"]
+        assert cinderbloom["timeline_events"] == [
+            {
+                "time": 2.0,
+                "damage": pytest.approx(60.0),
+                "damage_type": "magic",
+                "source_key": "shadowflame_Shadowflame",
+                "trigger_source": "Q",
+            }
+        ]
+        assert result["timeline_coverage"]["complete"] is True
+        assert "shadowflame_Shadowflame" in result["timeline_coverage"][
+            "exact_sources"
+        ]
+
+    def test_burn_ticks_keep_timing_and_respect_lifeline_expiry(
+        self, fight, attacker_stats
+    ):
+        from src.calculator.data_fetcher import get_item_by_name
+
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Shield trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 350.0,
+                    "parts": (DamagePart("magic", 350.0),),
+                }
+            },
+            items=[get_item_by_name("Blackfire Torch")],
+            target_magic_resistance=0.0,
+            target_threshold_shield_amount=500.0,
+            target_threshold_shield_health_ratio=0.90,
+            target_threshold_shield_duration=0.75,
+        )
+
+        burn = result["breakdown"]["burn_Blackfire Torch"]
+        assert [event["time"] for event in burn["damage_events"]] == [
+            0.5,
+            1.0,
+            1.5,
+            2.0,
+            2.5,
+            3.0,
+        ]
+        assert [event["damage"] for event in burn["damage_events"]] == pytest.approx(
+            [10.0] * 6
+        )
+        # Q consumes 350 shield and the 0.5s tick consumes 10 more. The
+        # remaining shield expires before the five later ticks.
+        assert result["total_damage"] == pytest.approx(410.0)
+        assert result["threshold_shield_absorbed"] == pytest.approx(360.0)
+        assert result["health_damage"] == pytest.approx(50.0)
+
+    def test_protoplasm_grants_health_before_triggering_damage(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                }
+            },
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert result["total_damage"] == pytest.approx(800.0)
+        assert result["threshold_health_triggered"] is True
+        assert result["threshold_health_bonus_gained"] == 200.0
+        assert result["target_effective_max_health"] == 1200.0
+        assert result["target_ending_health"] == pytest.approx(400.0)
+
+    def test_protoplasm_updates_later_liandry_max_health_ticks(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                }
+            },
+            items=[get_item_by_name("Liandry's Torment")],
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        burn = result["breakdown"]["burn_Liandry's Torment"]
+        assert burn["total_damage"] == pytest.approx(72.0)
+        assert [event["damage"] for event in burn["damage_events"]] == pytest.approx(
+            [12.0] * 6
+        )
+        assert result["target_healing_received"] == pytest.approx(180.0)
+        assert result["timeline_coverage"]["complete"] is False
+        assert "target_Protoplasm Harness" in result["timeline_coverage"][
+            "coarse_sources"
+        ]
+
+    def test_protoplasm_health_can_delay_shadowflame_threshold(
+        self, fight, attacker_stats
+    ):
+        abilities = {
+            "Q": {
+                "name": "Trigger",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 750.0,
+                "parts": (DamagePart("magic", 750.0),),
+            },
+            "W": {
+                "name": "Follow up",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 100.0,
+                "parts": (DamagePart("magic", 100.0),),
+            },
+        }
+        baseline = fight(
+            attacker_stats(),
+            abilities,
+            items=[get_item_by_name("Shadowflame")],
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+        )
+        protoplasm = fight(
+            attacker_stats(),
+            abilities,
+            items=[get_item_by_name("Shadowflame")],
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=300.0,
+            target_threshold_health_heal=400.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert baseline["breakdown"]["shadowflame_Shadowflame"][
+            "total_damage"
+        ] == pytest.approx(20.0)
+        assert "shadowflame_Shadowflame" not in protoplasm["breakdown"]
+
+    def test_protoplasm_fails_closed_at_unsourced_expiry_boundary(
+        self, fight, attacker_stats
+    ):
+        with pytest.raises(ValueError, match="temporary-health expiry"):
+            fight(
+                attacker_stats(),
+                {
+                    "Q": {
+                        "name": "Trigger and repeat",
+                        "rank": 1,
+                        "cooldown": 5.0,
+                        "damage_type": "magic",
+                        "total_raw": 800.0,
+                        "parts": (DamagePart("magic", 800.0),),
+                    }
+                },
+                one_rotation=False,
+                fight_duration_seconds=6.0,
+                target_health=1000.0,
+                target_magic_resistance=0.0,
+                target_threshold_health_bonus=200.0,
+                target_threshold_health_heal=300.0,
+                target_threshold_health_ratio=0.30,
+                target_threshold_health_duration=5.0,
+            )
 
 
 class TestBorkCurrentHpSimulation:

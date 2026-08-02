@@ -2,9 +2,9 @@ name: Tests and security
 
 on:
   push:
-    branches: [master, prod]
+    branches: [main]
   pull_request:
-    branches: [master, prod]
+    branches: [main]
 
 permissions:
   contents: read

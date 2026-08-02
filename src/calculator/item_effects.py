@@ -19,6 +19,112 @@ from typing import Any, Callable, Literal, Mapping, Sequence
 logger = logging.getLogger(__name__)
 
 
+# Public controls for stateful item stats.  Both validation metadata and the
+# sourced numeric mechanics live here so routes/UI never carry item constants.
+ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
+    "Dark Seal": {
+        "glory_stacks": {
+            "type": "int",
+            "label": "Glory stacks",
+            "default": 0,
+            "min": 0,
+            "max": 10,
+            "step": 1,
+        },
+        "bonus_ap_per_stack": 4.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Dark_Seal",
+        "source_revision_id": 4015213,
+    },
+    "Mejai's Soulstealer": {
+        "glory_stacks": {
+            "type": "int",
+            "label": "Glory stacks",
+            "default": 0,
+            "min": 0,
+            "max": 25,
+            "step": 1,
+        },
+        "bonus_ap_per_stack": 5.0,
+        "move_speed_threshold": 10,
+        "move_speed_percent": 10.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Mejai's_Soulstealer",
+        "source_revision_id": 3902926,
+    },
+}
+
+
+def item_input_options_meta() -> dict[str, dict[str, Any]]:
+    """Return the browser-safe controls and provenance for stateful items."""
+    return {
+        item_name: {
+            "options": {
+                "glory_stacks": dict(config["glory_stacks"]),
+            },
+            "source_url": config["source_url"],
+            "source_revision_id": config["source_revision_id"],
+        }
+        for item_name, config in ITEM_INPUT_OPTIONS.items()
+    }
+
+
+def validate_item_input_options(value: object) -> dict[str, dict[str, int]]:
+    """Validate the nested public item-option object."""
+    if value is None:
+        return {}
+    if not isinstance(value, Mapping):
+        raise ValueError("item_options must be an object")
+    unknown_items = set(value) - set(ITEM_INPUT_OPTIONS)
+    if unknown_items:
+        raise ValueError(f"Unknown item option target: {sorted(unknown_items)[0]}")
+
+    parsed: dict[str, dict[str, int]] = {}
+    for item_name, raw_options in value.items():
+        if not isinstance(raw_options, Mapping):
+            raise ValueError(f"item_options.{item_name} must be an object")
+        config = ITEM_INPUT_OPTIONS[item_name]
+        declared = {"glory_stacks"}
+        unknown_options = set(raw_options) - declared
+        if unknown_options:
+            raise ValueError(
+                f"Unknown option for {item_name}: {sorted(unknown_options)[0]}"
+            )
+        option = config["glory_stacks"]
+        stacks = raw_options.get("glory_stacks", option["default"])
+        if isinstance(stacks, bool) or not isinstance(stacks, int):
+            raise ValueError(
+                f"item_options.{item_name}.glory_stacks must be an integer"
+            )
+        if not option["min"] <= stacks <= option["max"]:
+            raise ValueError(
+                f"item_options.{item_name}.glory_stacks must be between "
+                f"{option['min']} and {option['max']}"
+            )
+        parsed[item_name] = {"glory_stacks": stacks}
+    return parsed
+
+
+def _input_option_stat_bonuses(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+) -> tuple[float, float]:
+    """Return bonus AP and percent move speed from equipped item state."""
+    if not item_options:
+        return 0.0, 0.0
+    equipped = _item_names(items)
+    bonus_ap = 0.0
+    move_speed_percent = 0.0
+    for item_name, options in item_options.items():
+        if item_name not in equipped or item_name not in ITEM_INPUT_OPTIONS:
+            continue
+        config = ITEM_INPUT_OPTIONS[item_name]
+        stacks = options.get("glory_stacks", 0)
+        bonus_ap += stacks * config["bonus_ap_per_stack"]
+        threshold = config.get("move_speed_threshold")
+        if threshold is not None and stacks >= threshold:
+            move_speed_percent += config["move_speed_percent"]
+    return bonus_ap, move_speed_percent
+
+
 # ---------------------------------------------------------------------------
 # Complete offline item effect snapshot
 # ---------------------------------------------------------------------------
@@ -49,9 +155,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Terminus": {
         "type": "on_hit",
-        "formula": "flat",
+        "formula": "flat_bonus_ad_ap",
         "damage_type": "magic",
         "base": 30.0,
+        "bonus_ad_ratio": 0.10,
+        "ap_ratio": 0.10,
         # Juxtaposition: alternating Light/Dark hits, each stacks up to 3 times.
         # Dark hits (2nd, 4th, 6th auto): 10% armor/magic pen per stack
         "dark_pen_per_stack": 0.10,
@@ -163,6 +271,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # 1% max HP every 0.5s for 3s = 6% max HP total
         "max_hp_ratio_total": 0.06,
         "duration": 3.0,
+        "tick_interval": 0.5,
         # Suffering: 2% increased damage per second, up to 6%
         "damage_amp_per_second": 0.02,
         "damage_amp_max": 0.06,
@@ -175,6 +284,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "base_total": 60.0,
         "ap_ratio_total": 0.06,
         "duration": 3.0,
+        "tick_interval": 0.5,
         # 4% bonus AP per burning champion
         "ap_amp_per_target": 0.04,
     },
@@ -198,6 +308,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Luden's Echo": {
         "type": "proc",
         "formula": "charged_ap",
+        "trigger": "ability_damage",
         "damage_type": "magic",
         # 6 charges, single target: primary + 5 × 20% = ×2.0 multiplier
         "base_per_charge": 75.0,
@@ -223,6 +334,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Stormsurge": {
         "type": "proc",
         "formula": "flat_ap",
+        "trigger": "damage_threshold",
         "repeat_on_cooldown": False,
         "damage_type": "magic",
         # 125 + 10% AP, 30s CD (triggers at 25% HP damage in 2.5s)
@@ -234,6 +346,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Zaz'Zak's Realmspike": {
         "type": "proc",
         "formula": "flat_ap_max_hp",
+        "trigger": "ability_damage",
         "damage_type": "magic",
         # 10 + 15% AP + 3% target max HP, 10s CD
         "base": 10.0,
@@ -390,12 +503,12 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Bastionbreaker": {
         "type": "shaped_charge",
         # Shaped Charge: next ability damage deals bonus true damage
-        # Melee: 30 + 1.5 per lethality, Ranged: 15 + 0.75 per lethality
-        "base_melee": 30.0,
-        "base_ranged": 15.0,
+        # Melee: 50 + 1.5 per lethality, Ranged: 25 + 0.75 per lethality
+        "base_melee": 50.0,
+        "base_ranged": 25.0,
         "lethality_ratio_melee": 1.5,
         "lethality_ratio_ranged": 0.75,
-        "cooldown": 45.0,
+        "cooldown": 20.0,
     },
     # ── Resistance Reduction ──────────────────────────────────────────────
     "Black Cleaver": {
@@ -469,6 +582,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "base": 70.0,
         "max_hp_ratio": 0.06,
         "cooldown": 30.0,
+        # Wiki Damage tags: this item proc is tagged BasicAttack.
+        "basic_damage": True,
     },
     "Hullbreaker": {
         "type": "on_hit_stacking",
@@ -504,6 +619,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "scaling_start_level": 9,
         "missing_hp_bonus_max": 0.75,
         "hits_required": 3,
+        # Wiki Damage tags: this item proc is tagged BasicAttack.
+        "basic_damage": True,
     },
     # ── Stat Conversion (passives that modify champion stats) ──────────────
     "Rabadon's Deathcap": {
@@ -513,10 +630,6 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Archangel's Staff": {
         "type": "stat_conversion",
         "bonus_mana_to_ap_ratio": 0.01,
-    },
-    "Seraph's Embrace": {
-        "type": "stat_conversion",
-        "bonus_mana_to_ap_ratio": 0.02,
     },
     "Dawncore": {
         "type": "stat_conversion",
@@ -536,9 +649,88 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "stat_conversion",
         "rapids_bonus_ap": 40.0,
     },
+    "Warmog's Armor": {
+        "type": "stat_conversion",
+        "item_bonus_health_ratio": 0.12,
+    },
+    # ── Starting defenses (consumed by defensive_effects.py) ─────────────
+    "Kaenic Rookern": {
+        "type": "defensive_start",
+        "magic_shield_max_health_ratio": 0.15,
+    },
+    "Spirit Visage": {
+        "type": "defensive_start",
+        "shield_received_multiplier": 1.25,
+    },
+    "Plated Steelcaps": {
+        "type": "target_mitigation",
+        "basic_damage_multiplier": 0.90,
+    },
+    "Warden's Mail": {
+        "type": "target_mitigation",
+        "basic_damage_flat_reduction": 15.0,
+        "basic_damage_flat_reduction_cap": 0.20,
+    },
+    "Randuin's Omen": {
+        "type": "target_mitigation",
+        "critical_strike_damage_multiplier": 0.70,
+    },
+    "Immortal Shieldbow": {
+        "type": "target_threshold_shield",
+        "health_threshold": 0.30,
+        "shield_base": 400.0,
+        "shield_max": 700.0,
+        "shield_scale_start_level": 9,
+        "shield_scale_end_level": 18,
+        "duration": 3.0,
+    },
+    "Hexdrinker": {
+        "type": "target_threshold_shield",
+        "health_threshold": 0.30,
+        "shield_melee_min": 110.0,
+        "shield_melee_max": 280.0,
+        "shield_ranged_min": 82.5,
+        "shield_ranged_max": 210.0,
+        "duration": 2.5,
+        "damage_type": "magic",
+    },
+    "Maw of Malmortius": {
+        "type": "stat_conversion",
+        "health_threshold": 0.30,
+        "shield_melee_base": 200.0,
+        "shield_melee_bonus_ad_ratio": 1.50,
+        "shield_ranged_base": 150.0,
+        "shield_ranged_bonus_ad_ratio": 1.125,
+        "duration": 3.0,
+        "damage_type": "magic",
+    },
+    "Seraph's Embrace": {
+        "type": "stat_conversion",
+        "bonus_mana_to_ap_ratio": 0.02,
+        "health_threshold": 0.30,
+        "shield_max_mana_ratio": 0.18,
+        "duration": 3.0,
+        "damage_type": "all",
+    },
     "Sterak's Gage": {
         "type": "stat_conversion",
         "base_ad_to_bonus_ad_ratio": 0.45,
+        "health_threshold": 0.30,
+        "shield_bonus_health_ratio": 0.60,
+        "duration": 4.5,
+        "damage_type": "all",
+    },
+    "Protoplasm Harness": {
+        "type": "target_threshold_health",
+        "health_threshold": 0.30,
+        "bonus_health_min": 100.0,
+        "bonus_health_max": 300.0,
+        "heal_min": 100.0,
+        "heal_max": 400.0,
+        "heal_bonus_armor_ratio": 1.75,
+        "heal_bonus_mr_ratio": 1.75,
+        "duration": 5.0,
+        "cooldown": 90.0,
     },
     "Stormrazor": {
         "type": "on_hit_once",
@@ -602,23 +794,66 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "phantom_hit",
         "uses_empowered_auto_count",
         "repeat_on_cooldown",
+        "trigger",
         "is_ability_damage",
         "double_on_hit",
+        "basic_damage",
     }
 )
 
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Blade of the Ruined King": frozenset({"min_damage"}),
+    "Blackfire Torch": frozenset({"tick_interval"}),
     "Experimental Hexplate": frozenset({"bonus_attack_speed_percent"}),
+    "Hexdrinker": frozenset(
+        {
+            "health_threshold",
+            "shield_melee_min",
+            "shield_melee_max",
+            "shield_ranged_min",
+            "shield_ranged_max",
+            "duration",
+        }
+    ),
     "Hexoptics C44": frozenset({"melee_assumed_distance"}),
     "Hextech Gunblade": frozenset({"base_min", "base_max", "cooldown"}),
     "Hextech Rocketbelt": frozenset({"cooldown"}),
     "Malignance": frozenset({"base", "ap_ratio", "duration"}),
+    "Liandry's Torment": frozenset({"tick_interval"}),
+    "Maw of Malmortius": frozenset(
+        {
+            "health_threshold",
+            "shield_melee_base",
+            "shield_melee_bonus_ad_ratio",
+            "shield_ranged_base",
+            "shield_ranged_bonus_ad_ratio",
+            "duration",
+        }
+    ),
     "Muramana": frozenset(
         {"max_mana_ratio_ability_melee", "max_mana_ratio_ability_ranged"}
     ),
     "Profane Hydra": frozenset({"cooldown"}),
+    "Protoplasm Harness": frozenset(
+        {
+            "health_threshold",
+            "bonus_health_min",
+            "bonus_health_max",
+            "heal_min",
+            "heal_max",
+            "heal_bonus_armor_ratio",
+            "heal_bonus_mr_ratio",
+            "duration",
+            "cooldown",
+        }
+    ),
     "Ravenous Hydra": frozenset({"cooldown"}),
+    "Seraph's Embrace": frozenset(
+        {"health_threshold", "shield_max_mana_ratio", "duration"}
+    ),
+    "Sterak's Gage": frozenset(
+        {"health_threshold", "shield_bonus_health_ratio", "duration"}
+    ),
     "Stridebreaker": frozenset({"cooldown"}),
     "Titanic Hydra": frozenset({"active_cooldown"}),
 }
@@ -797,6 +1032,10 @@ class DamageSource:
     damage_type: DamageType
     raw_damage: RawDamageFormula
     is_ability_damage: bool = False
+    multi_target_charges: int = 0
+    repeated_target_multiplier: float = 1.0
+    single_target_multiplier: float = 1.0
+    basic_damage: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -833,6 +1072,7 @@ class BurnEffect:
 
     source: DamageSource
     duration: float
+    tick_interval: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -851,6 +1091,7 @@ class CooldownProcEffect:
     cooldown: float
     repeat_on_cooldown: bool = True
     late_phase: bool = False
+    trigger: str = "coarse"
 
 
 @dataclass(frozen=True, slots=True)
@@ -1125,6 +1366,19 @@ def _compile_on_hit(
         def raw(inputs: DamageInputs) -> float:
             return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
 
+    elif formula == "flat_bonus_ad_ap":
+        base = required.number("base")
+        bonus_ad_ratio = required.number("bonus_ad_ratio")
+        ap_ratio = required.number("ap_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            stats = inputs.champion_stats
+            return (
+                base
+                + bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
+                + ap_ratio * stats.get("ability_power", 0.0)
+            )
+
     elif formula == "current_hp":
         melee_ratio = required.number("current_hp_ratio_melee")
         ranged_ratio = required.number("current_hp_ratio_ranged")
@@ -1293,7 +1547,11 @@ def _compile_burn(item_name: str, values: Mapping[str, Any]) -> BurnEffect:
         suffix="burn",
         breakdown_key=f"burn_{item_name}",
     )
-    return BurnEffect(source, required.number("duration"))
+    return BurnEffect(
+        source,
+        required.number("duration"),
+        required.number("tick_interval"),
+    )
 
 
 def _compile_immolate(item_name: str, values: Mapping[str, Any]) -> DamageSource:
@@ -1344,6 +1602,8 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         base = required.number("base_per_charge")
         ap_ratio = required.number("ap_ratio_per_charge")
         multiplier = required.number("single_target_multiplier")
+        charges = int(required.number("charges"))
+        repeated_target_multiplier = (multiplier - 1.0) / max(1, charges - 1)
 
         def raw(inputs: DamageInputs) -> float:
             ap = inputs.champion_stats.get("ability_power", 0.0)
@@ -1377,11 +1637,17 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         damage_type=required.value("damage_type"),
         raw_damage=raw,
         is_ability_damage=bool(values.get("is_ability_damage", False)),
+        multi_target_charges=charges if formula == "charged_ap" else 0,
+        repeated_target_multiplier=(
+            repeated_target_multiplier if formula == "charged_ap" else 1.0
+        ),
+        single_target_multiplier=(multiplier if formula == "charged_ap" else 1.0),
     )
     return CooldownProcEffect(
         source,
         required.number("cooldown"),
         bool(values.get("repeat_on_cooldown", True)),
+        trigger=str(values.get("trigger", "coarse")),
     )
 
 
@@ -1463,6 +1729,7 @@ def _explicit_damage_source(
         display_name=str(required.value("display_name")),
         damage_type=required.value("damage_type"),
         raw_damage=raw_damage,
+        basic_damage=bool(required.values.get("basic_damage", False)),
     )
 
 
@@ -1673,6 +1940,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "conditional_attack_speed",
         "crit_modifier",
         "damage_amp",
+        "defensive_start",
         "execute",
         "first_auto_crit",
         "hypershot_amp",
@@ -1689,6 +1957,9 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "shaped_charge",
         "spellblade",
         "stat_conversion",
+        "target_mitigation",
+        "target_threshold_health",
+        "target_threshold_shield",
         "ult_attack_speed_buff",
         "ult_empowered_autos",
         "ult_proc",
@@ -1936,6 +2207,19 @@ def _ap_multiplier(items: list[dict[str, Any]]) -> float:
     return 1.0 + bonus
 
 
+def _permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
+    """AP multiplier that counts as a permanent item-owned stat.
+
+    Rabadon's always applies. Blackfire Torch's per-burning-target increase is
+    a combat state and therefore cannot unlock Living Weapon.
+    """
+    if "Rabadon's Deathcap" not in _item_names(items):
+        return 1.0
+    return 1.0 + _required_effect_value(
+        "Rabadon's Deathcap", "ap_percent_increase"
+    )
+
+
 def _mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
     """Awe passives (Archangel's Staff, Seraph's Embrace): bonus mana → AP.
 
@@ -2140,6 +2424,13 @@ class StatBonuses:
     bonus_resists: float  # Terminus light stacks (armor AND MR)
     bonus_pen_percent: float  # Terminus dark stacks (armor AND magic pen)
     basic_ability_haste: float  # Spear of Shojin (Q/W/E only)
+    bonus_move_speed_percent: float  # Mejai's 10+ Glory
+    item_bonus_health_multiplier: float  # Warmog's Vitality (1.0 = none)
+    # Permanent item-owned subsets used by Kai'Sa's Living Weapon. These
+    # exclude temporary combat effects (Blackfire, Rapids, AS windows).
+    permanent_bonus_ap: float
+    permanent_ap_multiplier: float
+    permanent_bonus_ad: float
 
 
 def resolve_stat_effects(
@@ -2152,6 +2443,7 @@ def resolve_stat_effects(
     bonus_mana_regen_percent: float,
     is_melee: bool,
     level: int,
+    item_options: Mapping[str, Mapping[str, int]] | None = None,
 ) -> StatBonuses:
     """Compile the stat-granting passives of *items* into one bundle.
 
@@ -2162,20 +2454,32 @@ def resolve_stat_effects(
     a new import or call site.
     """
     terminus_resists, terminus_pen = _terminus_max_stack_bonuses(items, level)
+    input_bonus_ap, input_move_speed = _input_option_stat_bonuses(items, item_options)
+    item_bonus_health_multiplier = 1.0
+    if "Warmog's Armor" in _item_names(items):
+        item_bonus_health_multiplier += _required_effect_value(
+            "Warmog's Armor", "item_bonus_health_ratio"
+        )
+    effective_bonus_health = bonus_health * item_bonus_health_multiplier
+    mana_bonus_ap = _mana_to_ap_bonus(items, bonus_mana)
+    dawncore_bonus_ap = _dawncore_bonus_ap(items, bonus_mana_regen_percent)
+    permanent_bonus_ap = mana_bonus_ap + dawncore_bonus_ap + input_bonus_ap
+    permanent_bonus_ad = (
+        _muramana_bonus_ad(items, max_mana)
+        + bloodmail_bonus_ad(items, effective_bonus_health)
+        + steraks_bonus_ad(items, base_attack_damage)
+    )
     return StatBonuses(
-        bonus_ap=(
-            _mana_to_ap_bonus(items, bonus_mana)
-            + _dawncore_bonus_ap(items, bonus_mana_regen_percent)
-            + _flowing_water_bonus_ap(items)
-        ),
+        bonus_ap=permanent_bonus_ap + _flowing_water_bonus_ap(items),
         ap_multiplier=_ap_multiplier(items),
-        bonus_ad=(
-            _muramana_bonus_ad(items, max_mana)
-            + bloodmail_bonus_ad(items, bonus_health)
-            + steraks_bonus_ad(items, base_attack_damage)
-        ),
+        bonus_ad=permanent_bonus_ad,
         attack_speed_percent=_passive_attack_speed_bonus(items, is_melee),
         bonus_resists=terminus_resists,
         bonus_pen_percent=terminus_pen,
         basic_ability_haste=_basic_ability_haste(items),
+        bonus_move_speed_percent=input_move_speed,
+        item_bonus_health_multiplier=item_bonus_health_multiplier,
+        permanent_bonus_ap=permanent_bonus_ap,
+        permanent_ap_multiplier=_permanent_ap_multiplier(items),
+        permanent_bonus_ad=permanent_bonus_ad,
     )

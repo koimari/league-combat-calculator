@@ -1,8 +1,9 @@
 """Module for calculating champion stats at any level with items applied."""
 
-from typing import Any
+from typing import Any, Mapping
 
 from .item_effects import resolve_stat_effects
+from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
 
 # Level cap — 20 is top-lane-only as of this season, so this is
 # season-volatile. Single source of truth: the API guards and the UI
@@ -61,6 +62,17 @@ def calculate_attack_speed(
     return base_attack_speed + attack_speed_ratio * (bonus_percent / 100.0)
 
 
+def apply_movement_speed_soft_caps(raw_speed: float) -> float:
+    """Apply League's displayed movement-speed soft caps."""
+    if raw_speed > 490:
+        return raw_speed * 0.5 + 230
+    if raw_speed > 415:
+        return raw_speed * 0.8 + 83
+    if raw_speed < 220:
+        return raw_speed * 0.5 + 110
+    return raw_speed
+
+
 def get_champion_base_stats(
     champion_data: dict[str, Any], level: int
 ) -> dict[str, float]:
@@ -106,6 +118,7 @@ def get_champion_base_stats(
         "attack_speed": attack_speed,
         "magic_penetration_flat": 0.0,
         "magic_penetration_percent": 0.0,
+        "move_speed": stats["movespeed"]["flat"],
     }
 
 
@@ -150,6 +163,8 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "mana": get_flat("mana"),
         "ability_haste": get_flat("abilityHaste"),
         "mana_regen_percent": get_percent("manaRegen"),
+        "move_speed_flat": get_flat("movespeed"),
+        "move_speed_percent": get_percent("movespeed"),
     }
 
 
@@ -157,6 +172,10 @@ def calculate_total_stats(
     champion_data: dict[str, Any],
     level: int,
     items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None = None,
+    role: str = "",
+    role_quest_complete: bool = False,
+    external_stat_bonuses: Mapping[str, float] | None = None,
 ) -> dict[str, float]:
     """Calculate total champion stats with items applied.
 
@@ -185,12 +204,18 @@ def calculate_total_stats(
         "mana": 0.0,
         "ability_haste": 0.0,
         "mana_regen_percent": 0.0,
+        "move_speed_flat": 0.0,
+        "move_speed_percent": 0.0,
     }
 
     for item in items:
         item_stats = get_item_stats(item)
         for key in total_item_stats:
             total_item_stats[key] += item_stats.get(key, 0.0)
+
+    external = external_stat_bonuses or {}
+    total_item_stats["ability_power"] += float(external.get("ability_power", 0.0))
+    total_item_stats["ability_haste"] += float(external.get("ability_haste", 0.0))
 
     # Mana first — stat conversions read it (Awe → AP, Muramana → AD)
     cdm = champion_data["stats"]
@@ -200,6 +225,16 @@ def calculate_total_stats(
         level,
     )
     total_mana = base_mana + total_item_stats["mana"]
+    base_resource_regen_per_five = growth_stat(
+        cdm.get("manaRegen", {}).get("flat", 0),
+        cdm.get("manaRegen", {}).get("perLevel", 0),
+        level,
+    )
+    resource_regen_per_second = (
+        base_resource_regen_per_five
+        * (1.0 + total_item_stats["mana_regen_percent"] / 100.0)
+        / 5.0
+    )
     is_melee = champion_data.get("attackType", "MELEE") == "MELEE"
 
     # Every stat-granting item passive, compiled once. item_effects owns
@@ -213,6 +248,7 @@ def calculate_total_stats(
         bonus_mana_regen_percent=total_item_stats["mana_regen_percent"],
         is_melee=is_melee,
         level=level,
+        item_options=item_options,
     )
 
     # Ability power: base + items + converted AP, then the additive %AP
@@ -222,7 +258,13 @@ def calculate_total_stats(
         + total_item_stats["ability_power"]
         + bonuses.bonus_ap
     )
-    final_ability_power = raw_ability_power * bonuses.ap_multiplier
+    quest_ap_multiplier = (
+        MID_QUEST_AP_PERCENT / 100.0 if role == "mid" and role_quest_complete else 0.0
+    )
+    # Total AP modifiers stack additively with Rabadon's/Blackfire.
+    final_ability_power = raw_ability_power * (
+        bonuses.ap_multiplier + quest_ap_multiplier
+    )
 
     # Attack speed: base AS + (AS ratio × total bonus%)
     base_as = champion_data["stats"]["attackSpeed"]["flat"]
@@ -241,12 +283,41 @@ def calculate_total_stats(
     lethality = total_item_stats["lethality"]
     flat_armor_pen = lethality
 
-    total_ad = (
-        base_stats["attack_damage"]
-        + total_item_stats["attack_damage"]
-        + bonuses.bonus_ad
+    raw_bonus_ad = total_item_stats["attack_damage"] + bonuses.bonus_ad
+    quest_bonus_ad_multiplier = (
+        1.0 + MID_QUEST_BONUS_AD_PERCENT / 100.0
+        if role == "mid" and role_quest_complete
+        else 1.0
     )
-    total_health = base_stats["health"] + total_item_stats["health"]
+    final_bonus_ad = raw_bonus_ad * quest_bonus_ad_multiplier
+    total_ad = base_stats["attack_damage"] + final_bonus_ad
+    # Living Weapon counts permanent stats from items plus stat growth, but
+    # excludes level-1 stats, adaptive force, role quests, ally buffs, and
+    # temporary combat passives. Keep the three owned totals first-class so
+    # every optimizer candidate can resolve its own evolution state.
+    level_attack_damage_growth = (
+        base_stats["attack_damage"]
+        - champion_data["stats"]["attackDamage"]["flat"]
+    )
+    evolution_attack_damage = (
+        level_attack_damage_growth
+        + total_item_stats["attack_damage"]
+        + bonuses.permanent_bonus_ad
+    )
+    external_ability_power = float(external.get("ability_power", 0.0))
+    item_flat_ability_power = (
+        total_item_stats["ability_power"] - external_ability_power
+    )
+    evolution_ability_power = (
+        item_flat_ability_power + bonuses.permanent_bonus_ap
+    ) * bonuses.permanent_ap_multiplier
+    evolution_attack_speed_percent = (
+        level_as_bonus + total_item_stats["attack_speed_percent"]
+    )
+    effective_bonus_health = (
+        total_item_stats["health"] * bonuses.item_bonus_health_multiplier
+    )
+    total_health = base_stats["health"] + effective_bonus_health
 
     # Terminus max-stack display assumption: bonus resists to both armor
     # and MR, percent pen to both armor and magic.
@@ -265,8 +336,16 @@ def calculate_total_stats(
     final_magic_pen_percent = (
         total_item_stats["magic_penetration_percent"] + bonuses.bonus_pen_percent
     )
+    raw_move_speed = (
+        base_stats["move_speed"] + total_item_stats["move_speed_flat"]
+    ) * (
+        1
+        + (total_item_stats["move_speed_percent"] + bonuses.bonus_move_speed_percent)
+        / 100.0
+    )
+    final_move_speed = apply_movement_speed_soft_caps(raw_move_speed)
 
-    return {
+    result = {
         "health": round(total_health),
         "attack_damage": round(total_ad),
         "ability_power": round(final_ability_power),
@@ -281,10 +360,8 @@ def calculate_total_stats(
         "magic_penetration_flat": total_item_stats["magic_penetration_flat"],
         "magic_penetration_percent": final_magic_pen_percent,
         "base_attack_damage": round(base_stats["attack_damage"]),
-        "bonus_attack_damage": round(
-            total_item_stats["attack_damage"] + bonuses.bonus_ad
-        ),
-        "bonus_health": round(total_item_stats["health"]),
+        "bonus_attack_damage": round(final_bonus_ad),
+        "bonus_health": round(effective_bonus_health),
         # Base health = champion base stats + level growth, no items.
         # Derived as total - bonus rather than rounded on its own so
         # ``health == base_health + bonus_health`` holds by construction:
@@ -292,7 +369,7 @@ def calculate_total_stats(
         # base health lands on a .5 boundary (Ambessa/Karthus at 13).
         # Abilities scale off all three separately ("% base health",
         # "% bonus health", "% maximum health"), so each is first-class.
-        "base_health": round(total_health) - round(total_item_stats["health"]),
+        "base_health": round(total_health) - round(effective_bonus_health),
         # Bonus (non-base) resists — champion mechanics scaling off bonus
         # armor/MR (Braum W's 36%) and the "% bonus armor" /
         # "% bonus magic resistance" scaling units read these.
@@ -306,8 +383,19 @@ def calculate_total_stats(
         "critical_strike_chance": total_item_stats["critical_strike_chance"],
         "max_mana": round(total_mana),
         "bonus_mana": round(total_item_stats["mana"]),
+        "resource_regen_per_second": resource_regen_per_second,
         "ability_haste": total_item_stats["ability_haste"],
         "basic_ability_haste": bonuses.basic_ability_haste,
         "level": level,
         "is_melee": is_melee,
+        "move_speed": final_move_speed,
     }
+    if champion_data.get("name") == "Kai'Sa":
+        result.update(
+            {
+                "evolution_attack_damage": evolution_attack_damage,
+                "evolution_ability_power": evolution_ability_power,
+                "evolution_attack_speed_percent": evolution_attack_speed_percent,
+            }
+        )
+    return result

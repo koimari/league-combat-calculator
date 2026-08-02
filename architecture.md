@@ -1,157 +1,64 @@
 # Architecture
 
-Pipeline and module shape. One concept, one home — this file says which home.
+The calculator separates sourced data, combat rules, scenario composition, optimization, and presentation. A value or rule should have one owner.
 
-## The pipeline
+## Request path
 
-```
-wiki (vendor/lolstaticdata, external)
-  → data_updater.py      (network fetch, writes cache)      [writes]
-  → data/*.json          (cache; patch-stamped)
-  → data_fetcher.py      (all reads go through here)        [reads]
-       ├→ passive_parser.py → item_effects.py   (item knowledge)
-       └→ champions/                            (ability parsing)
-  → stats.py + resistance.py                    (champion math)
-  → pipeline.py → damage.py                     (full fight → fight engine)
-       ├→ app.py → static/js/app.js             (web UI)
-       └→ optimizer.py                          (build search)
+```text
+League Wiki cache
+  -> data_fetcher.py
+  -> scenario.py / stats.py
+  -> champions/* + item_effects.py
+  -> pipeline.py
+  -> damage.py
+  -> app.py
+  -> app.js
 ```
 
-## Module homes
+`src/calculator/data_updater.py` is the only network-writing path. Runtime calculations read the tracked cache through `data_fetcher.py`.
 
-**Data layer**
-- `vendor/lolstaticdata/` — external wiki-scraper code. Don't refactor; minimal targeted
-  fixes only. Its root also collects the scraper's own gitignored scratch output
-  (`__cache__/`, `champions/`, `items/`, `champions.json`, `items.json`) — never read at
-  runtime; see `vendor/README.md`.
-- `src/calculator/data_updater.py` — the ONLY module with network calls. Fetches wiki data,
-  writes the `data/` cache.
-- `src/calculator/data_fetcher.py` — the ONLY read path for cached data. No network.
-  Parsed JSON is cached by resolved path + file mtime, so optimizer requests reuse one
-  in-memory version and automatically observe updater replacements.
+## Rules and ownership
 
-**Item knowledge** — values and formulas compile before fight execution
-- `src/calculator/passive_parser.py` — wiki passive/active text → effect dicts (`_parse_*`
-  per item family). Parse-config keys use the exact cached JSON item names.
-- `src/calculator/item_effects.py` — `_STATIC_ITEM_EFFECTS` owns schema/unparseable values;
-  `_OFFLINE_ITEM_EFFECTS` is whole-parser recovery, never a per-key fallback. Parsed values
-  compile per build through two seams: `resolve_damage_effects()` (immutable, phase-aligned
-  fight specs) and `resolve_stat_effects()` (typed `StatBonuses` for stats.py — a
-  stat-converting item is added here only, never as a new stats.py import).
-  A missing required key raises with item+key context. `refresh_item_effects()` re-parses
-  in place after a data update.
+- `stats.py` applies level growth, item stats, role-quest modifiers, and external ally stat effects.
+- `resistance.py` owns armor, magic resistance, and penetration order.
+- `item_effects.py` owns item values and effect formulas. Item-specific numbers do not belong in routes or the interface.
+- `item_coverage.py` classifies each optimizer candidate as modelled, reviewed stats-only, blocked, or pending review. New passive or active text fails closed until it is explicitly classified.
+- `champions/<name>.py` owns reviewed champion formulas, options, and assumptions. The generic parser is useful for development coverage but is not a public exactness claim.
+- `loadout_rules.py` validates inventory capacity, boot tiers, duplicate items, and mutually exclusive item groups for both manual builds and optimization.
+- `defensive_effects.py` resolves defenses that are ready when combat begins. Starting shields, basic-damage modifiers, capped post-mitigation reductions, critical-strike reductions, and one-rotation threshold shields come from revision-backed Wiki mechanics. Timed threshold shields remain fail-closed until every auto and item-effect event has a certified timestamp; unregistered defenses remain explicitly outside the model.
+- `ally_effects.py` compiles opt-in outgoing ally effects only when a sourced, tested rule exists.
 
-**Champion↔engine contract**
-- `src/calculator/ability_spec.py` — dependency-free leaf between the champion
-  layer and the fight engine (both import it, neither imports the other).
-  `DamagePart` carries ALL ability damage arithmetic: amount/count per
-  mitigation unit, `hp_scaled_damage` closures for champion-unique scaling
-  (Akali R2, Kog'Maw R, Akshan R), reduced-effectiveness crit, and the two
-  fields a fight-timeline mechanic needs — `bonus_ad_ratio` (the part's
-  derivative in bonus AD, for mid-fight steroids) and `dot_stack_scaled`
-  (hits once per DoT stack on the target). The engine
-  evaluates parts generically and never branches on champion-specific keys;
-  `engine.py` validates entry keys at parse time (unknown key raises).
+## Combat model
 
-**Champion layer** — slot-archetype engine
-- `src/calculator/champions/__init__.py` — dispatcher. Registered names → champion module;
-  everyone else → `GENERIC_SLOTS` (auto-detect). Loaded champion objects enter through
-  `parse_champion_abilities()`, which dispatches on their display name. Also serves champion
-  OPTIONS/ASSUMPTIONS metadata to the frontend.
-- `src/calculator/champions/engine.py` — phase-ordered slot-map evaluation
-  (BUFF → DEBUFF → DAMAGE → ONHIT → AMP); buffs mutate the shared stats context before
-  damage slots read it.
-- `src/calculator/champions/slotlib.py` — the single JSON extraction core
-  (`extract_named` / `extract_auto` / `extract_value` / `extract_cooldown` /
-  `sum_modifiers` / `build_stats_context`), entry builders, and only genuinely
-  shared factories (`simple_damage`, `stat_buff`, `by_option`, callback-based
-  `proc_damage`, `on_hit_auto`). An archetype exists only with ≥2 real users.
-- `src/calculator/champions/<name>.py` — one champion, one file: `SLOTS` map, `OPTIONS`,
-  `ASSUMPTIONS`, custom slot fns for that champion's unique mechanics. Most champions have
-  NO file (generic path). Adding one: see the `/add-champion` skill.
-- `skill_orders.py`, `attribute_classifier.py`, `scaling.py` — rank schedules, damage-type
-  classification, stat-scaling resolution (engine infrastructure).
+`pipeline.py` validates ranks and request bounds, calculates stats, parses the selected champion, and calls the fight engine.
 
-**Champion math**
-- `src/calculator/stats.py` — level scaling + item stat aggregation. All
-  stat-granting item passives arrive through ONE seam
-  (`item_effects.resolve_stat_effects()` → typed `StatBonuses`); stats.py owns
-  only the application order. Owns `MAX_LEVEL` (served to the UI slider).
-- `src/calculator/resistance.py` — resistance/penetration formulas. Dependency-free
-  leaf. (Lethality needs no formula: it is 1:1 flat armor pen, applied in
-  stats.py. The ability-haste→CDR formula lives in damage.py, its only
-  consumer.)
+`damage.py` owns the fight state. It schedules casts, applies resource costs and regeneration, prices typed damage parts, updates mitigation, simulates auto attacks, and applies item effects. A shared ordered-damage ledger reconstructs accepted casts and exact typed row composition for threshold and shield consumers. Auto attacks carry their simulated per-swing times and damage; item effects without authored events remain explicitly coarse. Results include the accepted cast timeline, resource spent and remaining, per-source damage, TDD, health damage, shield absorption, and effective resistances.
 
-**Fight engine**
-- `src/calculator/pipeline.py` — canonical stats → ability parsing → fight orchestration.
-  Owns `FightParams` (a `FightConfig` subclass adding the parse-layer inputs
-  `ability_ranks`/`champion_options`), request-mode resolution, and every
-  fight/target default.
-- `src/calculator/damage.py` — owns `FightConfig`, the one spelling of a fight's
-  configuration; `calculate_fight_damage(champion_stats, ability_damages, items,
-  config)` is a pipeline of named step functions over `FightState`/`Resists`
-  (the body reads as the fight model). Ability haste is a champion stat, read
-  from `champion_stats` like its sibling `basic_ability_haste`.
-  `split_auto_vs_ability` and `split_by_damage_type` own breakdown-row
-  attribution (exposed to consumers via `run_fight`'s
-  `auto_attack_damage`/`ability_damage` and `damage_by_type` result keys);
-  mixed rows carry their exact `damage_by_type` composition, untyped amp rows
-  redistribute proportionally, and rows marked `informational` are
-  display-only. It consumes compiled item specs and
-  typed champion DamageParts, never registry dictionaries or name branches:
-  item VALUES/formulas live in `item_effects`, champion arithmetic in
-  `champions/<name>.py`; timing, mitigation, falling HP, stack cadence, and
-  the cooldown formula (`effective_cooldown`) stay here. "When does a stack
-  land" has ONE home: `StackTimeline`, built once per fight from the
-  `CastPlan` — the stacking-DoT integration, stack-triggered buff windows
-  (Darius' Noxian Might), and per-cast stack counts all read it. Breakdown display
-  text (`detail`/`damage_display`) is minted here and passed through app.py
-  and app.js untouched.
+The cast schedule is chronological. Some legacy damage layers still aggregate repeated casts by source after scheduling; those outputs must not be described as event-perfect until their mechanic has a dedicated timeline rule.
 
-**Consumers**
-- `src/calculator/optimizer.py` — enumerates builds through `pipeline.run_fight`.
-  Owns `_EXCLUSIVITY_GROUPS` (canonical; served to the frontend) and the
-  item-eligibility predicates (`get_eligible_legendaries`/`get_eligible_boots`)
-  the item-picker routes reuse.
-- `src/app.py` — thin Flask routes. Deployment (Docker image, `prod` branch
-  gate, dev-mode flag): `docs/deploy.md`. `/api/config` bootstraps the frontend (exclusivity
-  groups, fight/target defaults, champion options metadata); `/api/items` and
-  `/api/boots` delegate eligibility to the optimizer. No calculation logic in
-  routes; breakdown display extras pass through untouched.
-- `static/js/app.js` — presentation only. Domain data (groups, defaults, options) arrives
-  from `/api/config`; no formulas, no hand-maintained champion/item tables.
+## Scenarios
+
+`scenario.py` resolves up to five enemies and four allies. Each roster card owns its champion, level, boots, items, item state, role, and quest state. Base health and bonus health remain separate.
+
+The same selected damage package is evaluated against every selected enemy. Target-limited item procs are allocated once across the roster. Aggregate TDD is the sum of the resulting per-target damage, not a synthetic average target.
+
+## Optimization
+
+`optimizer.py` scores legal builds through the same `run_fight` pipeline used by manual calculations. The objective is modeled TDD unless the user explicitly selects physical or magic damage.
+
+A one-item opening is searched exhaustively across modelled candidates. It is certified as best in slot only when candidate coverage is complete. If any available candidate is withheld, the result is labelled `Best modelled` and includes the excluded items and reasons. Complete builds use multi-start greedy search and hill climbing and are never labelled certified best in slot. The response includes the search guarantee, candidate-coverage receipt, build count, gold cost, and a distinct runner-up. Build A and Build B may never be identical.
+
+## Public boundary
+
+`app.py` parses bounded requests and exposes stable JSON. `static/js/app.js` renders the scenario and results; it contains no champion or item formulas.
+
+Reviewed champion modules are enabled as attackers. Every cached champion can be used as an ally or target for independently derived base and item stats. Missing attacker mechanics fail closed. Missing ally or defensive mechanics are disclosed as unmodeled context.
 
 ## Verification
 
-- `pytest` — suite must be fully green; hand-validated expected values only change with
-  documented patch-drift derivations.
-- `scripts/golden_snapshot.py compare scripts/golden_baseline.json` — locks the numeric
-  behavior of the whole pipeline (all champions, sustained + one-rotation fights,
-  per-item sweep) to 2 decimals. Refactors must not move it; behavior fixes re-capture
-  it with every changed scenario explained.
-- `scripts/patch_update.py run` — patch-day pipeline: clears lolstaticdata caches,
-  re-pulls wiki data, audits new-vs-HEAD for registered champions / configured items /
-  shop deltas, then runs pytest + golden compare and re-captures the baseline on green
-  tests. Judgment steps live in the `patch-update` skill.
-- Test layout mirrors source: `test_item_effects.py` (accessors) / `test_item_damage.py`
-  (per-item fight behavior) / `test_resistance.py` / `test_damage.py` (engine core) /
-  `test_<champion>.py` (only champions with custom modules) / `test_generic_path.py`
-  (roster-wide generic coverage). `tests/conftest.py` owns the shared `attacker_stats`,
-  `fight`, champion-data factory, and display-name-aware `parse_at` test front doors.
+- `pytest` covers calculations and API contracts.
+- `pylint` enforces source quality.
+- `scripts/golden_snapshot.py` detects numerical drift across full-pipeline scenarios.
+- browser verification covers empty start, selection, level changes, roster builds, A/B comparison, optimization, sharing, themes, and responsive layout.
 
-## Dependencies
-
-- Root `requirements.txt` defines the local calculator, scraper, test, lint, and
-  security-scan environment. `requirements-runtime.in` is the small human-owned
-  production manifest; its hashed `requirements-runtime.txt` lock is what Docker
-  installs.
-- `vendor/lolstaticdata/requirements.txt` belongs to the vendored external project. Its
-  overlap with the root manifest is intentional; it is not a second calculator environment
-  definition.
-
-## Known limits (deliberate)
-
-- Multi-kit champions (Aphelios weapons, Hwei subspells, transformers) parse fine but the
-  rotation engine and cast-order validation assume four castable slots — a future
-  workstream.
-- `Notes.txt` holds the user's feature backlog (not architecture).
+Expected numerical changes require a sourced explanation and a reviewed golden-baseline update.

@@ -2,12 +2,14 @@
 
 import pytest
 
-from src.calculator.data_fetcher import get_champion
+from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.optimizer import (
+    _evaluate_build,
     exclusivity_groups,
     get_eligible_legendaries,
     get_eligible_boots,
     optimize_build as _optimize_build,
+    get_selectable_items,
     _SPELLBLADE_ITEMS,
 )
 from src.calculator.pipeline import FightParams
@@ -26,6 +28,8 @@ _FIGHT_PARAM_KEYS = {
     "include_actives",
     "cast_order",
     "champion_options",
+    "role",
+    "role_quest_complete",
 }
 
 
@@ -62,7 +66,178 @@ class TestItemPools:
     def test_eligible_boots_are_tier_2_plus(self):
         boots = get_eligible_boots()
         for boot in boots:
-            assert boot.get("tier", 0) >= 2
+            assert boot.get("tier") == 2
+
+    def test_mid_quest_boot_pool_is_tier_3(self):
+        boots = get_eligible_boots(tier=3)
+        assert boots
+        assert all(boot.get("tier") == 3 for boot in boots)
+
+    def test_manual_pool_includes_components_and_starters(self):
+        names = {item["name"] for item in get_selectable_items()}
+
+        assert "Ruby Crystal" in names
+        assert "Dark Seal" in names
+        assert "Doran's Ring" in names
+        assert "Boots of Swiftness" not in names
+
+
+def test_evaluate_build_sums_objective_across_target_roster(monkeypatch):
+    """One candidate build is scored into every selected enemy."""
+
+    def fake_run_fight(_champion, _level, _items, params):
+        damage = params.target_health / 10
+        return {
+            "total_damage": damage,
+            "breakdown": {
+                "spell": {
+                    "damage_type": "magic",
+                    "total_damage": damage,
+                }
+            },
+        }
+
+    monkeypatch.setattr("src.calculator.optimizer.run_fight", fake_run_fight)
+    first = FightParams.from_request({"target_health": 1000}, deterministic=True)
+    second = FightParams.from_request({"target_health": 2500}, deterministic=True)
+
+    score = _evaluate_build({}, 1, [], (first, second), "magic_damage")
+
+    assert score == 350
+
+
+def test_optimizer_respects_gold_budget():
+    result = optimize_build(
+        "Ahri",
+        get_champion("Ahri"),
+        level=18,
+        max_legendary_slots=2,
+        gold_budget=7_000,
+    )
+
+    assert result["ranked_builds"]
+    assert all(build["gold"] <= 7_000 for build in result["ranked_builds"])
+
+
+def test_one_open_slot_is_exhaustive_for_modeled_items_and_has_runner_up():
+    result = optimize_build(
+        "Ahri",
+        get_champion("Ahri"),
+        level=18,
+        max_legendary_slots=2,
+        locked_items=["Rabadon's Deathcap"],
+        locked_boots="Sorcerer's Shoes",
+    )
+
+    assert result["is_certified_best"] is False
+    assert result["search_guarantee"] == "exhaustive_modeled_candidates"
+    assert result["candidate_coverage"]["excluded_count"] > 0
+    assert len(result["ranked_builds"]) == 2
+    assert result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
+
+
+def test_candidate_item_coverage_alone_does_not_certify_partial_timelines(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_candidate_coverage",
+        lambda items: {
+            "eligible_candidates": len(items),
+            "scored_candidates": len(items),
+            "excluded_count": 0,
+            "complete": True,
+            "excluded": [],
+            "note": "Every available candidate is fully modelled.",
+        },
+    )
+
+    result = optimize_build(
+        "Ahri",
+        get_champion("Ahri"),
+        level=18,
+        max_legendary_slots=2,
+        locked_items=["Rabadon's Deathcap"],
+        locked_boots="Sorcerer's Shoes",
+    )
+
+    assert result["is_certified_best"] is False
+    assert result["search_guarantee"] == "exhaustive_legal_candidates"
+    assert result["search_timeline_coverage"]["complete"] is False
+    assert result["search_timeline_coverage"]["partial_evaluations"] > 0
+
+
+def test_one_open_slot_is_certified_when_candidates_and_timelines_are_complete(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_candidate_coverage",
+        lambda items: {
+            "eligible_candidates": len(items),
+            "scored_candidates": len(items),
+            "excluded_count": 0,
+            "complete": True,
+            "excluded": [],
+            "note": "Every available candidate is fully modelled.",
+        },
+    )
+
+    def exact_fight(_champion, _level, items, _params):
+        damage = float(len(items) * 100)
+        return {
+            "total_damage": damage,
+            "breakdown": {},
+            "timeline_coverage": {
+                "complete": True,
+                "certification": "event_order_certified",
+                "exact_sources": [],
+                "coarse_sources": [],
+                "note": "Every active damage source is event-ordered.",
+            },
+        }
+
+    monkeypatch.setattr("src.calculator.optimizer.run_fight", exact_fight)
+    result = optimize_build(
+        "Ahri",
+        get_champion("Ahri"),
+        level=18,
+        max_legendary_slots=2,
+        locked_items=["Rabadon's Deathcap"],
+        locked_boots="Sorcerer's Shoes",
+    )
+
+    assert result["is_certified_best"] is True
+    assert result["search_timeline_coverage"]["complete"] is True
+    assert result["timeline_coverage"]["complete"] is True
+    assert all(
+        build["timeline_coverage"]["complete"]
+        for build in result["ranked_builds"]
+    )
+
+
+def test_optimizer_is_champion_specific_for_orianna_auto_uptime():
+    """High AA uptime must not collapse Orianna and Aatrox to one AD build."""
+    shared = {
+        "level": 18,
+        "target_health": 2500,
+        "target_armor": 100,
+        "target_mr": 55,
+        "fight_mode": "time_based",
+        "fight_duration": 10,
+        "include_auto_attacks": True,
+        "auto_attack_uptime": 0.8,
+        "max_legendary_slots": 5,
+    }
+    orianna = optimize_build("Orianna", get_champion("Orianna"), **shared)
+    aatrox = optimize_build("Aatrox", get_champion("Aatrox"), **shared)
+
+    orianna_items = [get_item_by_name(name) for name in orianna["items"]]
+    ap_items = sum(
+        item.get("stats", {}).get("abilityPower", {}).get("flat", 0) > 0
+        for item in orianna_items
+    )
+
+    assert ap_items >= 3
+    assert orianna["items"] != aatrox["items"]
 
 
 class TestOptimizerBasic:
@@ -79,6 +254,17 @@ class TestOptimizerBasic:
             target_mr=40,
             max_legendary_slots=5,
         )
+
+        assert len(result["ranked_builds"]) == 2
+        assert (
+            result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
+        )
+        assert (
+            result["ranked_builds"][0]["total_damage"]
+            >= result["ranked_builds"][1]["total_damage"]
+        )
+        assert result["ranked_builds"][0]["dps"] > 0
+        assert result["is_certified_best"] is False
         assert "items" in result
         assert "boots" in result
         assert "total_damage" in result
@@ -237,9 +423,13 @@ class TestLockedItems:
 class TestExclusivityGroupsAccessor:
     """Tests for the JSON-safe exclusivity_groups() accessor (served to the UI)."""
 
-    def test_all_four_groups_present(self):
+    def test_all_groups_present(self):
         groups = exclusivity_groups()
-        assert set(groups) == {"Spellblade", "Hydra", "Blight", "Fatality"}
+        assert set(groups) == {"Glory", "Spellblade", "Hydra", "Blight", "Fatality"}
+
+    def test_glory_group_members(self):
+        groups = exclusivity_groups()
+        assert groups["Glory"] == ["Dark Seal", "Mejai's Soulstealer"]
 
     def test_spellblade_group_members(self):
         # Spellblade was missing from the old hand-copied app.js table;
