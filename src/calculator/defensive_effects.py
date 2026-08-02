@@ -28,6 +28,10 @@ class StartingDefenses:
     basic_damage_flat_reduction: float = 0.0
     basic_damage_flat_reduction_cap: float = 0.0
     critical_strike_damage_multiplier: float = 1.0
+    threshold_shield_amount: float = 0.0
+    threshold_shield_health_ratio: float = 0.0
+    threshold_shield_duration: float = 0.0
+    threshold_shield_damage_type: str = "all"
     assumptions: tuple[str, ...] = ()
     sources: tuple[DefenseSource, ...] = ()
     coverage: str = "base_and_items_only"
@@ -49,6 +53,12 @@ class StartingDefenses:
                 "critical_strike_damage_multiplier": round(
                     self.critical_strike_damage_multiplier, 3
                 ),
+            },
+            "threshold_shield": {
+                "amount": round(self.threshold_shield_amount, 1),
+                "health_ratio": round(self.threshold_shield_health_ratio, 3),
+                "duration": round(self.threshold_shield_duration, 1),
+                "damage_type": self.threshold_shield_damage_type,
             },
             "assumptions": list(self.assumptions),
             "sources": [
@@ -108,6 +118,25 @@ _RANDUINS_OMEN_SOURCE = DefenseSource(
     revision_timestamp="2026-05-21T14:21:13Z",
 )
 
+_IMMORTAL_SHIELDBOW_SOURCE = DefenseSource(
+    label="Immortal Shieldbow — Lifeline",
+    source_url="https://wiki.leagueoflegends.com/en-us/Immortal_Shieldbow",
+    revision_id=4030401,
+    revision_timestamp="2026-06-15T20:45:46Z",
+)
+
+
+def _shieldbow_shield_amount(level: int) -> float:
+    effect = ITEM_EFFECTS["Immortal Shieldbow"]
+    base = float(effect["shield_base"])
+    maximum = float(effect["shield_max"])
+    start = int(effect["shield_scale_start_level"])
+    end = int(effect["shield_scale_end_level"])
+    if level < start:
+        return base
+    increments = end - start + 1
+    return min(maximum, base + (maximum - base) * (level - start + 1) / increments)
+
 
 def _galio_starting_defenses(level: int, maximum_health: float) -> StartingDefenses:
     if get_ability_rank("W", level, "Galio") < 1:
@@ -146,6 +175,10 @@ def resolve_starting_defenses(
     critical_strike_damage_multiplier = (
         champion_defenses.critical_strike_damage_multiplier
     )
+    threshold_shield_amount = champion_defenses.threshold_shield_amount
+    threshold_shield_health_ratio = champion_defenses.threshold_shield_health_ratio
+    threshold_shield_duration = champion_defenses.threshold_shield_duration
+    threshold_shield_damage_type = champion_defenses.threshold_shield_damage_type
     assumptions = list(champion_defenses.assumptions)
     sources = list(champion_defenses.sources)
 
@@ -160,7 +193,24 @@ def resolve_starting_defenses(
         )
         sources.append(_KAENIC_SOURCE)
 
-    has_shield = magic_shield > 0 or physical_shield > 0 or general_shield > 0
+    if "Immortal Shieldbow" in names:
+        effect = ITEM_EFFECTS["Immortal Shieldbow"]
+        threshold_shield_amount = _shieldbow_shield_amount(level)
+        threshold_shield_health_ratio = float(effect["health_threshold"])
+        threshold_shield_duration = float(effect["duration"])
+        threshold_shield_damage_type = "all"
+        assumptions.append(
+            "Lifeline is ready and triggers before damage that would leave the "
+            "target below 30% maximum health."
+        )
+        sources.append(_IMMORTAL_SHIELDBOW_SOURCE)
+
+    has_shield = (
+        magic_shield > 0
+        or physical_shield > 0
+        or general_shield > 0
+        or threshold_shield_amount > 0
+    )
     if "Spirit Visage" in names and has_shield:
         multiplier = float(
             ITEM_EFFECTS["Spirit Visage"]["shield_received_multiplier"]
@@ -168,8 +218,9 @@ def resolve_starting_defenses(
         magic_shield *= multiplier
         physical_shield *= multiplier
         general_shield *= multiplier
+        threshold_shield_amount *= multiplier
         assumptions.append(
-            "Boundless Vitality increases every modeled starting shield by 25%."
+            "Boundless Vitality increases every modeled shield by 25%."
         )
         sources.append(_SPIRIT_VISAGE_SOURCE)
 
@@ -210,6 +261,10 @@ def resolve_starting_defenses(
         basic_damage_flat_reduction=basic_damage_flat_reduction,
         basic_damage_flat_reduction_cap=basic_damage_flat_reduction_cap,
         critical_strike_damage_multiplier=critical_strike_damage_multiplier,
+        threshold_shield_amount=threshold_shield_amount,
+        threshold_shield_health_ratio=threshold_shield_health_ratio,
+        threshold_shield_duration=threshold_shield_duration,
+        threshold_shield_damage_type=threshold_shield_damage_type,
         assumptions=tuple(assumptions),
         sources=tuple(sources),
         coverage="modeled_starting_defenses",

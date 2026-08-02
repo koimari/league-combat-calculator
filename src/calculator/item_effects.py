@@ -676,6 +676,15 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "target_mitigation",
         "critical_strike_damage_multiplier": 0.70,
     },
+    "Immortal Shieldbow": {
+        "type": "target_threshold_shield",
+        "health_threshold": 0.30,
+        "shield_base": 400.0,
+        "shield_max": 700.0,
+        "shield_scale_start_level": 9,
+        "shield_scale_end_level": 18,
+        "duration": 3.0,
+    },
     "Stormrazor": {
         "type": "on_hit_once",
         "formula": "flat",
@@ -1840,6 +1849,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "spellblade",
         "stat_conversion",
         "target_mitigation",
+        "target_threshold_shield",
         "ult_attack_speed_buff",
         "ult_empowered_autos",
         "ult_proc",

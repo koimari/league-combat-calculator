@@ -93,6 +93,35 @@ def test_target_items_resolve_sourced_incoming_damage_modifiers():
     }
 
 
+def test_shieldbow_resolves_level_scaled_threshold_shield():
+    level_eight = ChampionLoadout(
+        champion="Kai'Sa", level=8, items=("Immortal Shieldbow",)
+    ).resolve()
+    level_nine = ChampionLoadout(
+        champion="Kai'Sa", level=9, items=("Immortal Shieldbow",)
+    ).resolve()
+    level_eighteen = ChampionLoadout(
+        champion="Kai'Sa", level=18, items=("Immortal Shieldbow",)
+    ).resolve()
+
+    assert level_eight.defenses.threshold_shield_amount == 400
+    assert level_nine.defenses.threshold_shield_amount == 430
+    assert level_eighteen.defenses.threshold_shield_amount == 700
+    assert level_eighteen.defenses.threshold_shield_health_ratio == pytest.approx(0.30)
+    assert level_eighteen.defenses.threshold_shield_duration == 3
+    assert level_eighteen.defenses.sources[-1].revision_id == 4030401
+
+
+def test_spirit_visage_amplifies_shieldbow_lifeline():
+    loadout = ChampionLoadout(
+        champion="Kai'Sa",
+        level=18,
+        items=("Immortal Shieldbow", "Spirit Visage"),
+    ).resolve()
+
+    assert loadout.defenses.threshold_shield_amount == pytest.approx(875)
+
+
 def test_loadout_level_changes_derived_stats():
     level_one = ChampionLoadout(champion="Ziggs", level=1).resolve()
     level_twelve = ChampionLoadout(champion="Ziggs", level=12).resolve()

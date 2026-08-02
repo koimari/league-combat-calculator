@@ -366,6 +366,10 @@ class FightConfig:
     target_basic_damage_flat_reduction: float = 0.0
     target_basic_damage_flat_reduction_cap: float = 0.0
     target_critical_strike_damage_multiplier: float = 1.0
+    target_threshold_shield_amount: float = 0.0
+    target_threshold_shield_health_ratio: float = 0.0
+    target_threshold_shield_duration: float = 0.0
+    target_threshold_shield_damage_type: str = "all"
     enforce_resource_limits: bool = False
 
 
@@ -1120,6 +1124,10 @@ def _calculate_shadowflame_bonus(
     target_magic_shield: float = 0.0,
     target_physical_shield: float = 0.0,
     target_general_shield: float = 0.0,
+    target_threshold_shield_amount: float = 0.0,
+    target_threshold_shield_health_ratio: float = 0.0,
+    target_threshold_shield_duration: float = 0.0,
+    target_threshold_shield_damage_type: str = "all",
 ) -> tuple[float, dict[str, float]]:
     """Calculate bonus damage from Shadowflame's Cinderbloom passive.
 
@@ -1145,6 +1153,12 @@ def _calculate_shadowflame_bonus(
     magic_shield = max(0.0, target_magic_shield)
     physical_shield = max(0.0, target_physical_shield)
     general_shield = max(0.0, target_general_shield)
+    threshold_shield = 0.0
+    threshold_shield_expires = -1.0
+    threshold_triggered = False
+    lifeline_threshold_hp = target_health * max(
+        0.0, target_threshold_shield_health_ratio
+    )
     total_bonus = 0.0
     bonus_by_type: dict[str, float] = {}
 
@@ -1159,6 +1173,9 @@ def _calculate_shadowflame_bonus(
     for event in events:
         damage = event["damage"]
         dtype = event["damage_type"]
+        event_time = float(event["time"])
+        if threshold_shield > 0 and event_time > threshold_shield_expires:
+            threshold_shield = 0.0
         event_damage = damage
         if dtype in ("magic", "true") and current_hp < threshold_hp:
             bonus = damage * crit_bonus
@@ -1177,6 +1194,25 @@ def _calculate_shadowflame_bonus(
         if event_damage > 0:
             absorbed = min(general_shield, event_damage)
             general_shield -= absorbed
+            event_damage -= absorbed
+        trigger_matches = (
+            target_threshold_shield_damage_type == "all"
+            or target_threshold_shield_damage_type == dtype
+        )
+        if (
+            event_damage > 0
+            and not threshold_triggered
+            and target_threshold_shield_amount > 0
+            and lifeline_threshold_hp > 0
+            and trigger_matches
+            and current_hp - event_damage < lifeline_threshold_hp
+        ):
+            threshold_triggered = True
+            threshold_shield = target_threshold_shield_amount
+            threshold_shield_expires = event_time + target_threshold_shield_duration
+        if threshold_shield > 0 and event_damage > 0:
+            absorbed = min(threshold_shield, event_damage)
+            threshold_shield -= absorbed
             event_damage -= absorbed
         current_hp = max(0.0, current_hp - event_damage)
 
@@ -4416,6 +4452,14 @@ def _add_shadowflame_cinderbloom(
         target_magic_shield=config.target_magic_shield,
         target_physical_shield=config.target_physical_shield,
         target_general_shield=config.target_general_shield,
+        target_threshold_shield_amount=config.target_threshold_shield_amount,
+        target_threshold_shield_health_ratio=(
+            config.target_threshold_shield_health_ratio
+        ),
+        target_threshold_shield_duration=config.target_threshold_shield_duration,
+        target_threshold_shield_damage_type=(
+            config.target_threshold_shield_damage_type
+        ),
     )
     if shadowflame_bonus > 0:
         state.breakdown[f"shadowflame_{effect.item_name}"] = {
@@ -4782,12 +4826,23 @@ def _resolve_starting_shield_outcome(
     magic_absorbed = 0.0
     physical_absorbed = 0.0
     general_absorbed = 0.0
+    threshold_absorbed = 0.0
+    current_health = state.target_health
+    threshold_shield = 0.0
+    threshold_shield_expires = -1.0
+    threshold_triggered = False
+    threshold_hp = (
+        state.target_health * max(0.0, config.target_threshold_shield_health_ratio)
+    )
     for event in _ordered_damage_events(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
     ):
+        event_time = float(event["time"])
+        if threshold_shield > 0 and event_time > threshold_shield_expires:
+            threshold_shield = 0.0
         remaining = event["damage"]
         if event["damage_type"] == "magic":
             absorbed = min(magic_shield, remaining)
@@ -4802,12 +4857,43 @@ def _resolve_starting_shield_outcome(
         absorbed = min(general_shield, remaining)
         general_shield -= absorbed
         general_absorbed += absorbed
-    absorbed = magic_absorbed + physical_absorbed + general_absorbed
+        remaining -= absorbed
+
+        trigger_type = config.target_threshold_shield_damage_type
+        trigger_matches = trigger_type == "all" or trigger_type == event["damage_type"]
+        if (
+            remaining > 0
+            and not threshold_triggered
+            and config.target_threshold_shield_amount > 0
+            and threshold_hp > 0
+            and trigger_matches
+            and current_health - remaining < threshold_hp
+        ):
+            threshold_triggered = True
+            threshold_shield = config.target_threshold_shield_amount
+            threshold_shield_expires = (
+                event_time + config.target_threshold_shield_duration
+            )
+
+        if threshold_shield > 0 and remaining > 0:
+            absorbed = min(threshold_shield, remaining)
+            threshold_shield -= absorbed
+            threshold_absorbed += absorbed
+            remaining -= absorbed
+        current_health = max(0.0, current_health - remaining)
+
+    absorbed = (
+        magic_absorbed
+        + physical_absorbed
+        + general_absorbed
+        + threshold_absorbed
+    )
     return {
         "shield_absorbed": absorbed,
         "magic_shield_absorbed": magic_absorbed,
         "physical_shield_absorbed": physical_absorbed,
         "general_shield_absorbed": general_absorbed,
+        "threshold_shield_absorbed": threshold_absorbed,
         "health_damage": max(0.0, state.total_damage - absorbed),
     }
 

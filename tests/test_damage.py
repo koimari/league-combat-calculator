@@ -296,6 +296,40 @@ class TestTargetIncomingDamageModifiers:
             "total_damage"
         ] == pytest.approx(171.0)
 
+    def test_threshold_shield_absorbs_the_triggering_damage(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                },
+                "W": {
+                    "name": "Follow up",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 200.0,
+                    "parts": (DamagePart("magic", 200.0),),
+                },
+            },
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_shield_amount=400.0,
+            target_threshold_shield_health_ratio=0.30,
+            target_threshold_shield_duration=3.0,
+        )
+
+        assert result["total_damage"] == pytest.approx(1000.0)
+        assert result["threshold_shield_absorbed"] == pytest.approx(400.0)
+        assert result["health_damage"] == pytest.approx(600.0)
+
 
 class TestBorkCurrentHpSimulation:
     """Tests for Blade of the Ruined King current-HP iterative simulation."""

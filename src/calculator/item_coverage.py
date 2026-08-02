@@ -115,6 +115,13 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
     ),
 }
 
+_TARGET_ONE_ROTATION_REASONS: dict[str, str] = {
+    "Immortal Shieldbow": (
+        "Lifeline's level-scaled 30%-health shield is modeled for one rotation. "
+        "Timed auto and item-effect timestamps are not certified yet."
+    ),
+}
+
 _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Armored Advance": "Plating's incoming physical-damage reduction is not modelled.",
     "Banshee's Veil": (
@@ -177,6 +184,7 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     if ITEM_EFFECTS.get(name, {}).get("type") in {
         "defensive_start",
         "target_mitigation",
+        "target_threshold_shield",
     }:
         status: ItemCoverageStatus = "stats_only"
         reason = "The represented mechanic changes defense, not outgoing TDD."
@@ -214,6 +222,9 @@ def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     if name in _TARGET_MODELED_REASONS:
         status = "modeled"
         reason = _TARGET_MODELED_REASONS[name]
+    elif name in _TARGET_ONE_ROTATION_REASONS:
+        status = "modeled_one_rotation"
+        reason = _TARGET_ONE_ROTATION_REASONS[name]
     elif name in _TARGET_BLOCKED_REASONS:
         status = "blocked"
         reason = _TARGET_BLOCKED_REASONS[name]
@@ -251,8 +262,23 @@ def target_build_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def require_target_item_coverage(items: list[dict[str, Any]]) -> None:
+def require_target_item_coverage(
+    items: list[dict[str, Any]], *, one_rotation: bool | None = None
+) -> None:
     """Reject target inventories that would silently omit a defense."""
+    conditional = next(
+        (
+            str(item.get("name", ""))
+            for item in items
+            if str(item.get("name", "")) in _TARGET_ONE_ROTATION_REASONS
+        ),
+        None,
+    )
+    if conditional and one_rotation is not True:
+        raise ValueError(
+            f"Enemy item {conditional} is supported only for one rotation: "
+            "timed auto and item-effect timestamps are not certified yet."
+        )
     coverage = target_build_coverage(items)
     if coverage["blocked"]:
         blocked = coverage["blocked"][0]

@@ -561,6 +561,26 @@ class TestItemEffectProvenance:
             assert frozenset(parsed[item_name]) <= classified
 
 
+class TestTargetDefenseParsing:
+    def test_shieldbow_lifeline_is_parser_backed(self) -> None:
+        from src.calculator.data_fetcher import DEFAULT_DATA_DIR, fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        parsed = parse_item_effect(
+            "Immortal Shieldbow",
+            fetch_item_data(data_directory=DEFAULT_DATA_DIR),
+        )
+
+        assert parsed == {
+            "health_threshold": 0.30,
+            "shield_base": 400.0,
+            "shield_max": 700.0,
+            "shield_scale_start_level": 9,
+            "shield_scale_end_level": 18,
+            "duration": 3.0,
+        }
+
+
 class TestRefreshItemEffects:
     """refresh_item_effects must mutate the registry dict in place."""
 

@@ -106,6 +106,7 @@ def test_optimizer_rejects_a_locked_item_with_unmodeled_damage_mechanics():
         ("Plated Steelcaps", "modeled"),
         ("Warden's Mail", "modeled"),
         ("Randuin's Omen", "modeled"),
+        ("Immortal Shieldbow", "modeled_one_rotation"),
         ("Void Staff", "not_target_relevant"),
     ],
 )
@@ -114,6 +115,14 @@ def test_target_item_coverage_is_mechanic_specific(item_name, status):
 
     assert coverage["status"] == status
     assert coverage["calculation_eligible"] is (status != "blocked")
+
+
+def test_shieldbow_target_coverage_requires_one_rotation():
+    items = [get_item_by_name("Immortal Shieldbow")]
+
+    require_target_item_coverage(items, one_rotation=True)
+    with pytest.raises(ValueError, match="supported only for one rotation"):
+        require_target_item_coverage(items, one_rotation=False)
 
 
 def test_target_build_coverage_and_guard_name_the_omitted_defense():

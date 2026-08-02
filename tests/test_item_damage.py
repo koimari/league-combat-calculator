@@ -629,6 +629,39 @@ class TestShadowflameCinderbloom:
         # Q1 leaves 500 HP, W leaves 300 HP, so only Q2 lands below 40%.
         assert bonus == pytest.approx(100.0)
 
+    def test_lifeline_shield_delays_shadowflame_health_threshold(self) -> None:
+        from src.calculator.damage import _calculate_shadowflame_bonus
+
+        breakdown = {
+            slot: {
+                "name": slot,
+                "casts": 1,
+                "total_damage": damage,
+                "damage_type": "magic",
+            }
+            for slot, damage in (("Q", 600.0), ("W", 200.0), ("E", 200.0))
+        }
+        abilities = {
+            slot: {"damage_type": "magic", "parts": (DamagePart("magic", damage),)}
+            for slot, damage in (("Q", 600.0), ("W", 200.0), ("E", 200.0))
+        }
+
+        no_lifeline, _ = _calculate_shadowflame_bonus(
+            _shadowflame_effect(), breakdown, abilities, 1000.0
+        )
+        lifeline, _ = _calculate_shadowflame_bonus(
+            _shadowflame_effect(),
+            breakdown,
+            abilities,
+            1000.0,
+            target_threshold_shield_amount=400.0,
+            target_threshold_shield_health_ratio=0.30,
+            target_threshold_shield_duration=3.0,
+        )
+
+        assert no_lifeline == pytest.approx(40.0)
+        assert lifeline == 0.0
+
     def test_physical_damage_not_affected(self) -> None:
         """Physical damage below threshold should not get Shadowflame bonus."""
         from src.calculator.damage import _calculate_shadowflame_bonus

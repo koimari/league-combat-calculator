@@ -217,6 +217,51 @@ def test_calculate_applies_kaenic_starting_magic_shield():
     assert target["result"]["magic_shield_absorbed"] > 0
 
 
+def test_calculate_applies_shieldbow_lifeline_in_one_rotation():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 18,
+            "items": ["Rabadon's Deathcap", "Shadowflame"],
+            "enemies": [
+                {
+                    "champion": "Kai'Sa",
+                    "level": 18,
+                    "items": ["Immortal Shieldbow"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    target = response.get_json()["targets"][0]
+    assert target["target"]["starting_defenses"]["threshold_shield"]["amount"] == 700
+    assert target["result"]["threshold_shield_absorbed"] > 0
+
+
+def test_calculate_withholds_shieldbow_in_timed_mode():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 18,
+            "fight_mode": "timed",
+            "fight_duration": 8,
+            "enemies": [
+                {
+                    "champion": "Kai'Sa",
+                    "level": 18,
+                    "items": ["Immortal Shieldbow"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 400
+    assert "supported only for one rotation" in response.get_json()["error"]
+
+
 def test_calculate_can_sum_one_damage_package_across_enemy_roster():
     client = app_module.app.test_client()
     payload = {

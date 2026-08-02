@@ -1152,6 +1152,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (critMultiplier < 1) {
             modifiers.push(`${Math.round((1 - critMultiplier) * 100)}% less critical-strike damage`);
         }
+        const thresholdShield = defenses.threshold_shield || {};
+        const thresholdAmount = Number(thresholdShield.amount || 0);
+        const thresholdRatio = Number(thresholdShield.health_ratio || 0);
+        if (thresholdAmount > 0 && thresholdRatio > 0) {
+            modifiers.push(`Lifeline ${Math.round(thresholdAmount).toLocaleString()} at ${Math.round(thresholdRatio * 100)}% HP`);
+        }
         const parts = shields
             .map(([label, amount]) => `${label} ${Math.round(amount).toLocaleString()}`)
             .concat(modifiers);

@@ -360,6 +360,9 @@ def _serialize_fight_result(result: Mapping[str, object]) -> dict:
             result.get("physical_shield_absorbed", 0.0), 1
         ),
         "general_shield_absorbed": round(result.get("general_shield_absorbed", 0.0), 1),
+        "threshold_shield_absorbed": round(
+            result.get("threshold_shield_absorbed", 0.0), 1
+        ),
         "ability_damage": round(result["ability_damage"], 1),
         "auto_attack_damage": round(result["auto_attack_damage"], 1),
         "damage_by_type": {
@@ -535,6 +538,18 @@ def _comparison_curve(
                     ),
                     target_critical_strike_damage_multiplier=(
                         enemy.defenses.critical_strike_damage_multiplier
+                    ),
+                    target_threshold_shield_amount=(
+                        enemy.defenses.threshold_shield_amount
+                    ),
+                    target_threshold_shield_health_ratio=(
+                        enemy.defenses.threshold_shield_health_ratio
+                    ),
+                    target_threshold_shield_duration=(
+                        enemy.defenses.threshold_shield_duration
+                    ),
+                    target_threshold_shield_damage_type=(
+                        enemy.defenses.threshold_shield_damage_type
                     ),
                 )
                 target_results.append(
@@ -852,7 +867,9 @@ def api_calculate():
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
         for enemy in enemies:
-            require_target_item_coverage(list(enemy.item_data))
+            require_target_item_coverage(
+                list(enemy.item_data), one_rotation=fight_params.one_rotation
+            )
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
@@ -931,6 +948,16 @@ def api_calculate():
             ),
             target_critical_strike_damage_multiplier=(
                 enemy.defenses.critical_strike_damage_multiplier
+            ),
+            target_threshold_shield_amount=enemy.defenses.threshold_shield_amount,
+            target_threshold_shield_health_ratio=(
+                enemy.defenses.threshold_shield_health_ratio
+            ),
+            target_threshold_shield_duration=(
+                enemy.defenses.threshold_shield_duration
+            ),
+            target_threshold_shield_damage_type=(
+                enemy.defenses.threshold_shield_damage_type
             ),
         )
         serialized = _serialize_fight_result(
@@ -1057,7 +1084,9 @@ def api_optimize():
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
         for enemy in enemies:
-            require_target_item_coverage(list(enemy.item_data))
+            require_target_item_coverage(
+                list(enemy.item_data), one_rotation=fight_params.one_rotation
+            )
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
@@ -1095,6 +1124,16 @@ def api_optimize():
             ),
             target_critical_strike_damage_multiplier=(
                 enemy.defenses.critical_strike_damage_multiplier
+            ),
+            target_threshold_shield_amount=enemy.defenses.threshold_shield_amount,
+            target_threshold_shield_health_ratio=(
+                enemy.defenses.threshold_shield_health_ratio
+            ),
+            target_threshold_shield_duration=(
+                enemy.defenses.threshold_shield_duration
+            ),
+            target_threshold_shield_damage_type=(
+                enemy.defenses.threshold_shield_damage_type
             ),
         )
         for enemy in enemies

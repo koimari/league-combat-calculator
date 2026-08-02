@@ -1265,6 +1265,32 @@ def _parse_critical_resilience(text: str) -> dict[str, Any]:
     return {"critical_strike_damage_multiplier": 1.0 - reduction}
 
 
+def _parse_shieldbow_lifeline(text: str) -> dict[str, Any]:
+    """Parse Shieldbow's threshold, level-scaled shield, and duration."""
+    threshold_match = re.search(r"below[^\d]*(\d+(?:\.\d+)?)%", text, re.IGNORECASE)
+    shield_match = re.search(
+        r"\{\{rd\|(\d+(?:\.\d+)?) to (\d+(?:\.\d+)?) for \d+[^}]*"
+        r"levels=1;(\d+) to (\d+)",
+        text,
+        re.IGNORECASE,
+    )
+    duration_match = re.search(
+        r"damage for\s+(\d+(?:\.\d+)?)\s+seconds",
+        text,
+        re.IGNORECASE,
+    )
+    if not threshold_match or not shield_match or not duration_match:
+        return {}
+    return {
+        "health_threshold": float(threshold_match.group(1)) / 100.0,
+        "shield_base": float(shield_match.group(1)),
+        "shield_max": float(shield_match.group(2)),
+        "shield_scale_start_level": int(shield_match.group(3)),
+        "shield_scale_end_level": int(shield_match.group(4)),
+        "duration": float(duration_match.group(1)),
+    }
+
+
 def _parse_stormrazor_bolt(text: str) -> dict[str, Any]:
     """Parse Stormrazor Bolt: energized magic damage on first auto.
 
@@ -1844,6 +1870,9 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Warden's Mail": [("passive", "Rock Solid", _parse_rock_solid, {})],
     "Randuin's Omen": [
         ("passive", "Resilience", _parse_critical_resilience, {})
+    ],
+    "Immortal Shieldbow": [
+        ("passive", "Lifeline", _parse_shieldbow_lifeline, {})
     ],
     # ── Energized ──
     "Rapid Firecannon": [("passive", "Sharpshooter", _parse_simple_on_hit, {})],
