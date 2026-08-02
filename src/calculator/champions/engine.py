@@ -63,6 +63,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "empowers_next_auto",
         "stat_buff",
         "target_debuff",
+        "post_hit_proc",
         "on_hit",
         "proc_count",
         "dot_duration",
@@ -100,6 +101,16 @@ _ALLOWED_DEBUFF_KEYS = frozenset(
         "mr_reduction_flat",
         "stacks",  # ramp the reduction one share per hit, up to N
         "duration",  # seconds the shred lasts; absent = rest of the fight
+    }
+)
+
+_ALLOWED_POST_HIT_PROC_KEYS = frozenset(
+    {
+        "name",
+        "breakdown_key",
+        "parts",
+        "target_debuff",
+        "detail",
     }
 )
 
@@ -223,6 +234,18 @@ def _validate_entry_keys(
             set(entry.get("target_debuff", ())),
             _ALLOWED_DEBUFF_KEYS,
             "target_debuff",
+            "_ALLOWED_DEBUFF_KEYS",
+        ),
+        (
+            set(entry.get("post_hit_proc", ())),
+            _ALLOWED_POST_HIT_PROC_KEYS,
+            "post_hit_proc",
+            "_ALLOWED_POST_HIT_PROC_KEYS",
+        ),
+        (
+            set((entry.get("post_hit_proc") or {}).get("target_debuff", ())),
+            _ALLOWED_DEBUFF_KEYS,
+            "post_hit_proc.target_debuff",
             "_ALLOWED_DEBUFF_KEYS",
         ),
     ):

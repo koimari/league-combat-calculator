@@ -71,6 +71,7 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Soraka": "soraka",
     "Syndra": "syndra",
     "Vayne": "vayne",
+    "Vi": "vi",
     "Ziggs": "ziggs",
 }
 
@@ -193,7 +194,7 @@ def get_champion_cast_order(champion_name: str) -> list[str] | None:
     return list(declared) if declared else None
 
 
-def get_champion_options_meta(champion_name: str) -> dict[str, list]:
+def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
     """Return a champion's option/assumption metadata for the frontend.
 
     Registered modules declare ``OPTIONS`` (a list of option dicts:
@@ -212,11 +213,25 @@ def get_champion_options_meta(champion_name: str) -> dict[str, list]:
     if module_name is None:
         return {"options": [], "assumptions": [], "sources": []}
     module = importlib.import_module(f".{module_name}", package=__name__)
-    return {
+    result: dict[str, Any] = {
         "options": list(module.OPTIONS),
         "assumptions": list(module.ASSUMPTIONS),
         "sources": list(getattr(module, "SOURCES", [])),
     }
+    supported_modes = getattr(module, "SUPPORTED_FIGHT_MODES", None)
+    if supported_modes is not None:
+        result["supported_fight_modes"] = list(supported_modes)
+    return result
+
+
+def get_comparison_curve_unavailable_reason(champion_name: str) -> str | None:
+    """Why timed crossover windows are withheld for a champion, if at all."""
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return None
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    reason = getattr(module, "COMPARISON_CURVE_UNAVAILABLE_REASON", None)
+    return str(reason) if reason else None
 
 
 def champion_options_meta_map() -> dict[str, dict[str, list]]:

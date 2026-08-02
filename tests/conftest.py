@@ -93,6 +93,7 @@ shen_data = _champion_fixture("Shen")
 soraka_data = _champion_fixture("Soraka")
 syndra_data = _champion_fixture("Syndra")
 vayne_data = _champion_fixture("Vayne")
+vi_data = _champion_fixture("Vi")
 ziggs_data = _champion_fixture("Ziggs")
 
 

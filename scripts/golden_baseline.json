@@ -21306,23 +21306,40 @@
     "Vi": {
       "abilities_level_11": {
         "E": {
-          "cooldown": 1.0,
+          "applies_item_on_hits": {
+            "effectiveness": 1.0,
+            "hits": 1,
+            "triggers": [
+              "on_hit",
+              "on_attack"
+            ]
+          },
+          "cooldown": 12.0,
           "damage_type": "physical",
+          "detail": "primary empowered attack (attack reset)",
+          "empowers_next_auto": {
+            "authored_timing": {
+              "attack_interval": 1.0,
+              "first_attack_delay": 1.97
+            }
+          },
           "name": "Relentless Force",
           "parts": [
-            "DamagePart(physical, amount=113.4, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=19.4, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.9707792207792207)"
           ],
           "rank": 1,
           "resource_cost": 26.0,
           "resource_type": "MANA",
-          "total_raw": 113.4
+          "total_raw": 19.4
         },
         "Q": {
+          "cast_time": 1.25,
           "cooldown": 6.0,
           "damage_type": "physical",
+          "detail": "1.25s charge; 725 range at 1540 speed",
           "name": "Vault Breaker",
           "parts": [
-            "DamagePart(physical, amount=300.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=300.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.7207792207792207)"
           ],
           "rank": 5,
           "resource_cost": 90.0,
@@ -21333,22 +21350,15 @@
           "cast_time": 0.25,
           "cooldown": 115.0,
           "damage_type": "physical",
+          "detail": "primary grab",
           "name": "Cease and Desist",
           "parts": [
-            "DamagePart(physical, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=3.595779220779221)"
           ],
           "rank": 2,
           "resource_cost": 100.0,
           "resource_type": "MANA",
           "total_raw": 250.0
-        },
-        "W": {
-          "name": "Denting Blows",
-          "on_hit": {
-            "damage_per_hit": 120.0,
-            "damage_type": "physical",
-            "name": "Denting Blows (on-hit)"
-          }
         }
       },
       "stats": {
@@ -31865,12 +31875,12 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "15a7340a64de85bbbe83b3cfa96101f0b7a0cdb5",
+    "git_head": "412eafc63c788b6ff7a8b44918166f457889ae83",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,
     "patch_last_changed_max": "26.14",
-    "registered_champion_count": 41
+    "registered_champion_count": 42
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -39065,6 +39075,116 @@
               "spellblade_Trinity Force": 266.67
             },
             "total_damage": 3862.4
+          }
+        }
+      }
+    },
+    "Vi": {
+      "11": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 370.27,
+            "Q": 200.0,
+            "R": 166.67,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 892.29
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 75.6,
+            "Q": 200.0,
+            "R": 166.67,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 442.27
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 336.42,
+            "Q": 401.89,
+            "R": 293.96,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 1032.26
+        },
+        "spellblade_build": {
+          "breakdown_totals": {
+            "E": 201.42,
+            "Q": 311.0,
+            "R": 233.27,
+            "auto_attacks": 0.0,
+            "spellblade_Trinity Force": 250.67
+          },
+          "total_damage": 996.35
+        },
+        "sustained": {
+          "magic_build": {
+            "error": "ValueError: Time-based Vi calculations are withheld until Denting Blows can be interleaved with the ambient attack stream. Use One Rotation."
+          },
+          "no_items": {
+            "error": "ValueError: Time-based Vi calculations are withheld until Denting Blows can be interleaved with the ambient attack stream. Use One Rotation."
+          },
+          "physical_build": {
+            "error": "ValueError: Time-based Vi calculations are withheld until Denting Blows can be interleaved with the ambient attack stream. Use One Rotation."
+          },
+          "spellblade_build": {
+            "error": "ValueError: Time-based Vi calculations are withheld until Denting Blows can be interleaved with the ambient attack stream. Use One Rotation."
+          }
+        }
+      },
+      "18": {
+        "magic_build": {
+          "breakdown_totals": {
+            "E": 444.13,
+            "Q": 200.0,
+            "R": 233.33,
+            "auto_attacks": 0.0,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 1032.83
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "E": 149.47,
+            "Q": 200.0,
+            "R": 233.33,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 582.8
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "E": 435.09,
+            "Q": 401.89,
+            "R": 369.43,
+            "auto_attacks": 0.0
+          },
+          "total_damage": 1206.42
+        },
+        "spellblade_build": {
+          "breakdown_totals": {
+            "E": 282.3,
+            "Q": 311.0,
+            "R": 299.93,
+            "auto_attacks": 0.0,
+            "spellblade_Trinity Force": 325.33
+          },
+          "total_damage": 1218.57
+        },
+        "sustained": {
+          "magic_build": {
+            "error": "ValueError: Time-based Vi calculations are withheld until Denting Blows can be interleaved with the ambient attack stream. Use One Rotation."
+          },
+          "no_items": {
+            "error": "ValueError: Time-based Vi calculations are withheld until Denting Blows can be interleaved with the ambient attack stream. Use One Rotation."
+          },
+          "physical_build": {
+            "error": "ValueError: Time-based Vi calculations are withheld until Denting Blows can be interleaved with the ambient attack stream. Use One Rotation."
+          },
+          "spellblade_build": {
+            "error": "ValueError: Time-based Vi calculations are withheld until Denting Blows can be interleaved with the ambient attack stream. Use One Rotation."
           }
         }
       }

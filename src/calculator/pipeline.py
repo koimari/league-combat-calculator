@@ -196,6 +196,8 @@ class FightParams(FightConfig):
             "target_max_health": self.target_health,
             "target_current_health": self.target_health,
             "target_missing_health": 0.0,
+            "roster_target_index": float(self.roster_target_index),
+            "roster_target_count": float(self.roster_target_count),
         }
 
     def validate_for_champion(self, champion_name: str, level: int) -> None:
@@ -206,6 +208,19 @@ class FightParams(FightConfig):
         three-rank ultimate layout. Transformation and auto-levelled kits fail
         closed until their individual allocation rules are represented.
         """
+        if champion_name == "Vi":
+            if not self.one_rotation:
+                raise ValueError(
+                    "Time-based Vi calculations are withheld until Denting "
+                    "Blows can be interleaved with the ambient attack stream. "
+                    "Use One Rotation."
+                )
+            if self.cast_order is not None:
+                raise ValueError(
+                    "Vi uses the certified Q -> E -> R sequence; custom cast "
+                    "orders are not available yet."
+                )
+
         if self.ability_ranks is None:
             return
         if champion_name in _NONSTANDARD_RANK_CHAMPIONS:

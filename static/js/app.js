@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const fightModeRadios = document.querySelectorAll('input[name="fight-mode"]');
     const fightTabs = document.querySelectorAll(".fight-tab");
     const timeBasedOptions = document.getElementById("time-based-options");
+    const fightModeNote = document.getElementById("fight-mode-note");
     const fightDuration = document.getElementById("fight-duration");
     const durationDisplay = document.getElementById("duration-display");
     const includeAutos = document.getElementById("include-autos");
@@ -120,8 +121,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Champion option/assumption metadata, declared as OPTIONS/ASSUMPTIONS
     // beside each champion module's SLOTS (src/calculator/champions/).
     // Shape: { "<champion>": { options: [{key, type, default, label,
-    // min?, max?, step?}], assumptions: ["..."], sources: [...] } } — champions absent
-    // from the map have no special options (the generic path).
+    // min?, max?, step?}], assumptions: ["..."], sources: [...],
+    // supported_fight_modes?: [...] } } — champions absent from the map
+    // have no special options (the generic path).
     let championOptionsMeta = {};
     let hasCalculated = false;
     let isCalculating = false;
@@ -425,6 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Update champion options panel content
         updateChampionOptionsContent(name);
+        applyChampionFightModes(name);
 
         // Show/hide the + button based on whether a champion is selected.
         // Auto-open the panel when the champion has custom options defined.
@@ -462,6 +465,31 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         scheduleRecalc();
+    }
+
+    function applyChampionFightModes(champion) {
+        const supported = championOptionsMeta[champion]?.supported_fight_modes;
+        const restricted = Array.isArray(supported);
+        let selectedModeDisabled = false;
+        fightTabs.forEach((tab) => {
+            const radio = tab.querySelector('input[type="radio"]');
+            const disabled = restricted && !supported.includes(radio.value);
+            if (radio.checked && disabled) selectedModeDisabled = true;
+            radio.disabled = disabled;
+            tab.classList.toggle("mode-disabled", disabled);
+            tab.setAttribute("aria-disabled", String(disabled));
+        });
+        if (selectedModeDisabled) {
+            const oneRotation = document.querySelector(
+                'input[name="fight-mode"][value="one_rotation"]'
+            );
+            if (oneRotation) oneRotation.checked = true;
+        }
+        fightModeNote.textContent = restricted
+            ? "This champion is certified for One Rotation only."
+            : "";
+        fightModeNote.classList.toggle("hidden", !restricted);
+        syncControlsFromInputs();
     }
 
     function updateChampionOptionsContent(championName) {
@@ -1370,7 +1398,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Fight mode tabs
     fightTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
-            tab.querySelector('input[type="radio"]').checked = true;
+            const radio = tab.querySelector('input[type="radio"]');
+            if (radio.disabled) return;
+            radio.checked = true;
             syncControlsFromInputs();
             scheduleRecalc();
         });
@@ -1945,6 +1975,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const curveA = Array.isArray(a.comparison_curve) ? a.comparison_curve : [];
         const curveB = Array.isArray(b.comparison_curve) ? b.comparison_curve : [];
+        const curveAvailable = curveA.length > 0 && curveB.length > 0;
         crossoverBody.innerHTML = "";
         let openingLeader = null;
         let crossover = null;
@@ -1975,18 +2006,24 @@ document.addEventListener("DOMContentLoaded", () => {
             crossoverBody.appendChild(row);
         });
 
-        crossoverSummary.textContent = crossover
-            ? `Lead changes at window ${crossover.rotation} (${crossover.seconds}s)`
-            : "No lead change through six rotation-length windows";
+        const unavailableReason =
+            a.comparison_curve_status?.reason || b.comparison_curve_status?.reason;
+        crossoverSummary.textContent = !curveAvailable
+            ? "Crossover withheld for this certified mode"
+            : crossover
+                ? `Lead changes at window ${crossover.rotation} (${crossover.seconds}s)`
+                : "No lead change through six rotation-length windows";
         const sourceText = strongestSource
             ? `${strongestSource.name} is the largest visible damage edge (+${Math.round(strongestSource.edge).toLocaleString()}).`
             : "The visible damage sources are nearly even.";
         const statText = strongestStat
             ? ` Build ${winner}'s clearest stat edge is +${Number(strongestStat.edge.toFixed(1))} ${strongestStat.label}.`
             : "";
-        const crossoverText = crossover
-            ? ` Build ${crossover.leader} moves ahead by ${crossover.seconds}s as cooldowns, resources, and persistent effects are recomputed.`
-            : " The same build stays ahead across the tested windows.";
+        const crossoverText = !curveAvailable
+            ? ` ${unavailableReason || "Timed crossover is not certified for this scenario."}`
+            : crossover
+                ? ` Build ${crossover.leader} moves ahead by ${crossover.seconds}s as cooldowns, resources, and persistent effects are recomputed.`
+                : " The same build stays ahead across the tested windows.";
         comparisonExplanation.textContent = sourceText + statText + crossoverText;
         comparisonVerdict.classList.remove("hidden");
     }
@@ -2167,13 +2204,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 const excluded = Number(data.candidate_coverage?.excluded_count || 0);
                 const timingPartial = data.search_timeline_coverage?.complete === false;
-                const timingLabel = timingPartial ? " · timing partly ordered" : "";
+                const timingWithheld = Number(data.timeline_withheld_evaluations || 0);
+                const timingLabel = timingWithheld > 0
+                    ? ` · ${timingWithheld.toLocaleString()} timing candidates withheld`
+                    : "";
                 optimizeStatus.textContent = data.is_certified_best
                     ? `Certified BIS item: ${bestItem}`
                     : excluded > 0
                         ? `Best modelled item: ${bestItem} · ${excluded} withheld${timingLabel}`
-                        : timingPartial
-                            ? `Best exact-search item: ${bestItem} · timing partly ordered`
+                        : timingPartial || timingWithheld > 0
+                            ? `Best event-ordered item: ${bestItem}${timingLabel}`
                             : `Best found item: ${bestItem}`;
                 optimizeStatus.classList.remove("hidden");
                 renderOptimizerCoverage(data);
@@ -2258,13 +2298,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Show status
                 const excluded = Number(data.candidate_coverage?.excluded_count || 0);
                 const timingPartial = data.search_timeline_coverage?.complete === false;
-                const timingLabel = timingPartial ? " · timing partly ordered" : "";
+                const timingWithheld = Number(data.timeline_withheld_evaluations || 0);
+                const timingLabel = timingWithheld > 0
+                    ? ` · ${timingWithheld.toLocaleString()} timing candidates withheld`
+                    : "";
                 const resultLabel = data.is_certified_best
                     ? "Certified BIS"
                     : excluded > 0
                         ? `Best modelled result${timingLabel}`
-                        : timingPartial
-                            ? "Best found · timing partly ordered"
+                        : timingPartial || timingWithheld > 0
+                            ? `Best event-ordered result${timingLabel}`
                             : "Best found";
                 optimizeStatus.textContent =
                     `${resultLabel}: ${ranked[0].total_damage.toLocaleString()} TDD · runner-up ${ranked[1].total_damage.toLocaleString()} · ${data.evaluations.toLocaleString()} builds`;

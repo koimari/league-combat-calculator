@@ -1564,6 +1564,11 @@ select:focus-visible {
     color: var(--gold-light);
 }
 
+.fight-tab.mode-disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+}
+
 .fight-tab span {
     pointer-events: none;
 }

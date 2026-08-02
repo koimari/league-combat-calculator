@@ -29,7 +29,11 @@ from calculator.item_effects import item_input_options_meta, refresh_item_effect
 from calculator.item_coverage import item_model_coverage, require_target_item_coverage
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import validate_resolved_loadout
-from calculator.champions import champion_options_meta_map, registered_champion_names
+from calculator.champions import (
+    champion_options_meta_map,
+    get_comparison_curve_unavailable_reason,
+    registered_champion_names,
+)
 from calculator.champion_coverage import attacker_availability
 from calculator.optimizer import (
     exclusivity_groups,
@@ -566,6 +570,29 @@ def _comparison_curve(
     return points
 
 
+def _add_comparison_curve(
+    response: dict,
+    champion_data: dict,
+    level: int,
+    items: list[dict],
+    fight_params: FightParams,
+    enemies: list,
+) -> None:
+    """Attach crossover windows or an explicit fail-closed receipt."""
+    reason = get_comparison_curve_unavailable_reason(champion_data["name"])
+    if reason:
+        response["comparison_curve"] = []
+        response["comparison_curve_status"] = {
+            "available": False,
+            "reason": reason,
+        }
+        return
+    response["comparison_curve"] = _comparison_curve(
+        champion_data, level, items, fight_params, enemies
+    )
+    response["comparison_curve_status"] = {"available": True}
+
+
 def _dev_mode() -> bool:
     """True when LOL_CALC_DEV=1 (run_web.bat sets it; deployments don't).
 
@@ -884,8 +911,8 @@ def api_calculate():
         result = run_fight(champion_data, level, items, fight_params)
         response = _serialize_fight_result(result)
         if include_crossover:
-            response["comparison_curve"] = _comparison_curve(
-                champion_data, level, items, fight_params, enemies
+            _add_comparison_curve(
+                response, champion_data, level, items, fight_params, enemies
             )
         response["role_quest"] = (
             role_quest_meta(fight_params.role, fight_params.role_quest_complete)
@@ -991,8 +1018,8 @@ def api_calculate():
         }
     )
     if include_crossover:
-        response["comparison_curve"] = _comparison_curve(
-            champion_data, level, items, fight_params, enemies
+        _add_comparison_curve(
+            response, champion_data, level, items, fight_params, enemies
         )
     return jsonify(response)
 
@@ -1162,6 +1189,7 @@ def api_optimize():
                 else 2
             ),
             gold_budget=gold_budget,
+            require_complete_timeline=True,
         )
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400

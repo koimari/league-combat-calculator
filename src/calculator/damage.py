@@ -2217,6 +2217,80 @@ def _evaluate_cast_parts(
     return total, first_part_first_cast, by_type, damage_events
 
 
+def _apply_post_hit_proc(
+    state: "FightState",
+    trigger_key: str,
+    ability_info: dict[str, Any],
+    num_casts: int,
+    cast_times: tuple[float, ...],
+    running_damage: float,
+) -> float:
+    """Apply a proc that lands after its triggering hit.
+
+    Some passives cannot be flattened into their triggering spell without
+    breaking resistance order. Vi's Denting Blows, for example, deals its
+    third-stack damage at the old armor value and only then reduces armor for
+    later hits. A champion module attaches ``post_hit_proc`` to the ability
+    that completes the stack cycle; this hook prices the proc, records its
+    authored hit event, and applies its debuff afterwards. It is not counted
+    as a cast and therefore cannot invent Muramana, burn, or spell-effect
+    triggers.
+    """
+    spec = ability_info.get("post_hit_proc")
+    if not spec or num_casts <= 0:
+        return 0.0
+
+    parts = tuple(spec.get("parts", ()))
+    if not parts:
+        return 0.0
+    total, _, by_type, events = _evaluate_cast_parts(
+        state,
+        parts,
+        num_casts,
+        state.resists.effective_mr,
+        running_damage,
+        cast_times=cast_times,
+    )
+    if total <= 0:
+        return 0.0
+
+    row_key = str(spec.get("breakdown_key", f"post_hit_proc_{trigger_key}"))
+    row: dict[str, Any] = {
+        "name": str(spec.get("name", "Post-hit proc")),
+        "count": num_casts,
+        "damage_per_hit": total / num_casts,
+        "unit": "procs",
+        "total_damage": total,
+        **_damage_type_fields(by_type),
+    }
+    if spec.get("detail"):
+        row["detail"] = str(spec["detail"])
+    timing_is_authored = all(
+        part.time_offset is not None
+        and (part.count <= 1 or part.hit_interval is not None)
+        for part in parts
+    )
+    if timing_is_authored and events:
+        row["damage_events"] = events
+        row["event_phase"] = "proc"
+    state.breakdown[row_key] = row
+    state.total_damage += total
+
+    debuff = spec.get("target_debuff")
+    if debuff:
+        coverage = (
+            1.0
+            if state.one_rotation
+            else _debuff_coverage(
+                cast_times,
+                debuff.get("duration", 0.0),
+                state.fight_duration_seconds,
+            )
+        )
+        _apply_target_shred(state.resists, debuff, coverage)
+    return total
+
+
 def _effective_timed_cooldown(
     state: "FightState",
     result: "RotationResult",
@@ -3162,6 +3236,19 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                     **_damage_type_fields(applied_by_type),
                 }
                 state.total_damage += applied_total
+
+        # Stack/combo procs whose resistance debuff begins only AFTER the
+        # proc damage (Vi W) live between the triggering hit and the next
+        # ability. They are damage events, not additional casts.
+        post_hit_total = _apply_post_hit_proc(
+            state,
+            ability_key,
+            ability_info,
+            num_casts,
+            plan.times.get(ability_key, ()),
+            mitigated_damage_dealt,
+        )
+        mitigated_damage_dealt += post_hit_total
 
         # Apply target debuffs (e.g. Kog'Maw Q resistance shred) AFTER
         # computing this ability's own damage, so subsequent abilities

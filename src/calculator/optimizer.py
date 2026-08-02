@@ -121,6 +121,7 @@ def _evaluate_build(
     objective: str,
     gold_budget: int | None = None,
     timeline_audit: dict[str, Any] | None = None,
+    require_complete_timeline: bool = False,
 ) -> float:
     """Evaluate a build and return the damage score for the given objective.
 
@@ -133,13 +134,15 @@ def _evaluate_build(
     for target_params in targets:
         result = run_fight(champion_data, level, items, target_params)
         results.append(result)
+    coverage = _combined_build_timeline_coverage(results)
     if timeline_audit is not None:
-        coverage = _combined_build_timeline_coverage(results)
         timeline_audit["evaluations"] += 1
         timeline_audit["exact_sources"].update(coverage["exact_sources"])
         timeline_audit["coarse_sources"].update(coverage["coarse_sources"])
         if not coverage["complete"]:
             timeline_audit["partial_evaluations"] += 1
+    if require_complete_timeline and not coverage["complete"]:
+        return float("-inf")
 
     def included(entry: dict[str, Any]) -> bool:
         if objective == "physical_damage":
@@ -425,6 +428,7 @@ def optimize_build(
     target_fight_params: tuple[FightParams, ...] | None = None,
     boots_tier: int = 2,
     gold_budget: int | None = None,
+    require_complete_timeline: bool = False,
 ) -> dict[str, Any]:
     """Find the optimal item build for a champion.
 
@@ -438,6 +442,8 @@ def optimize_build(
         max_legendary_slots: Number of legendary item slots to fill (1-6).
         target_fight_params: Optional roster targets scored as summed TDD.
         boots_tier: 2 normally; 3 after the mid-lane role quest.
+        require_complete_timeline: Withhold any build whose damage is not
+            event-order certified. Public BIS requests enable this.
 
     Returns:
         Dict with optimized build, damage, and metadata.
@@ -472,6 +478,7 @@ def optimize_build(
         "objective": objective,
         "gold_budget": gold_budget,
         "timeline_audit": timeline_audit,
+        "require_complete_timeline": require_complete_timeline,
     }
 
     # Build item pools.  Keep the complete legal lists for the public coverage
@@ -699,8 +706,10 @@ def optimize_build(
     )
     if not ranked:
         constraint = f" within {gold_budget:,} gold" if gold_budget is not None else ""
+        qualifier = " event-ordered" if require_complete_timeline else ""
         raise ValueError(
-            f"No complete legal build fits the selected constraints{constraint}"
+            f"No complete legal{qualifier} build fits the selected "
+            f"constraints{constraint}"
         )
     duration = (
         fight_params[0].fight_duration_seconds
@@ -752,7 +761,12 @@ def optimize_build(
         "search_timeline_coverage": search_timeline_coverage,
         "search_guarantee": (
             (
-                "exhaustive_legal_candidates"
+                (
+                    "exhaustive_event_ordered_candidates"
+                    if require_complete_timeline
+                    and timeline_audit["partial_evaluations"] > 0
+                    else "exhaustive_legal_candidates"
+                )
                 if candidate_coverage["complete"]
                 else "exhaustive_modeled_candidates"
             )
@@ -761,5 +775,10 @@ def optimize_build(
         ),
         "is_certified_best": certified_best,
         "candidate_coverage": candidate_coverage,
+        "timeline_withheld_evaluations": (
+            timeline_audit["partial_evaluations"]
+            if require_complete_timeline
+            else 0
+        ),
         "gold_budget": gold_budget,
     }
