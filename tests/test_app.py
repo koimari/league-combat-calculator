@@ -82,7 +82,13 @@ def test_password_auth_accepts_only_configured_accounts(monkeypatch):
     assert good.status_code == 302
     assert good.headers["Location"].endswith("/")
     assert client.get("/auth/status").get_json()["user"]["username"] == "LSAccessAccount"
-    assert client.get("/").status_code == 200
+    page = client.get("/")
+    assert page.status_code == 200
+    body = page.get_data(as_text=True)
+    assert "Signed in as <strong>LSAccessAccount</strong>" in body
+    assert "/auth/logout" in body
+    assert "Articles" not in body and "Ratings" not in body and "Matches" not in body
+    assert 'data-theme="dark"' in body
 
     client = app_module.app.test_client()
     koi = client.post(
@@ -798,6 +804,17 @@ class TestIconUrlsAreHttps:
         abilities = app_module.app.test_client().get("/api/abilities/Aatrox").get_json()
 
         assert all(not a["icon"].startswith("http://") for a in abilities.values())
+        assert set(abilities) == {"P", "Q", "W", "E", "R"}
+        assert all(ability["ingested"] for ability in abilities.values())
+        assert abilities["Q"]["name"] == "The Darkin Blade"
+
+    def test_champion_api_exposes_all_ingested_slots_without_certifying_damage(self):
+        champions = app_module.app.test_client().get("/api/champions").get_json()
+
+        assert len(champions) == 173
+        assert all(champion["ability_ingestion"]["complete"] for champion in champions)
+        assert all(set(champion["abilities"]) == {"P", "Q", "W", "E", "R"} for champion in champions)
+        assert any(not champion["verified"] for champion in champions)
 
 
 class TestChampionVerifiedFlags:
