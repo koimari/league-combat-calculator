@@ -4781,11 +4781,43 @@ class SpellbladeResult:
     expose_weakness_ranged: float = 0.0
 
 
+def _spellblade_proc_times(
+    rotation: RotationResult,
+    effect: item_effects.SpellbladeEffect,
+    procs: int,
+) -> list[float]:
+    """Weave-timed spellblade proc times from the accepted cast timeline.
+
+    Each accepted cast arms one charge (the engine assumes charges
+    persist through the item cooldown, as its proc pricing already
+    does).  A charge is consumed one weave delay after the later of its
+    arming cast and the cooldown's end, and the cooldown restarts at the
+    consuming attack — matching the ``cooldown + weave_delay`` spacing
+    the proc count was priced with. Returns ``[]`` when the accepted
+    casts cannot reproduce the engine's priced proc count — the row then
+    stays coarse rather than carrying an event list that contradicts its
+    total.
+    """
+    if procs <= 0:
+        return []
+    cast_times = sorted(float(event["time"]) for event in rotation.cast_events)
+    times: list[float] = []
+    cooldown_ends = float("-inf")
+    for cast_time in cast_times:
+        if len(times) == procs:
+            break
+        proc_time = max(cast_time, cooldown_ends) + effect.weave_delay
+        times.append(proc_time)
+        cooldown_ends = proc_time + effect.cooldown
+    return times if len(times) == procs else []
+
+
 def _add_spellblade_true_rider(
     state: FightState,
     source: item_effects.DamageSource,
     raw_per_proc: float,
     procs: int,
+    proc_times: list[float],
 ) -> None:
     """Add a champion's true-damage rider on spellblade procs (Corki P).
 
@@ -4794,6 +4826,7 @@ def _add_spellblade_true_rider(
     PRE-mitigation damage again as true damage. This is ADDED ON TOP of
     the proc; its sibling ``spellblade_true_ratio`` (Camille Q2) instead
     CONVERTS that share of the proc out of the item's own damage type.
+    The rider shares the procs' weave-timed events when they exist.
     """
     ratio = max(
         (
@@ -4814,6 +4847,15 @@ def _add_spellblade_true_rider(
         "total_damage": rider_total,
         "damage_type": "true",
     }
+    if len(proc_times) == procs:
+        state.breakdown[f"{source.breakdown_key}_bonus_true"]["damage_events"] = [
+            {
+                "time": proc_time,
+                "damage": rider_total / procs,
+                "damage_type": "true",
+            }
+            for proc_time in proc_times
+        ]
     state.total_damage += rider_total
 
 
@@ -4911,6 +4953,12 @@ def _add_spellblade_damage(
         plain = result.procs - converted
         sb_total = result.damage_per_proc * plain + converted_per_proc * converted
 
+        # Weave-timed events: authored only when the accepted casts
+        # reproduce the priced proc count, and only for unconverted
+        # builds (the true-conversion split's proc-to-cast assignment
+        # is an assumption, not a certified order).
+        proc_times = _spellblade_proc_times(rotation, effect, result.procs)
+
         if plain > 0 or converted == 0:  # unconverted builds keep the row as-is
             state.breakdown[source.breakdown_key] = {
                 "name": source.display_name,
@@ -4920,6 +4968,15 @@ def _add_spellblade_damage(
                 "total_damage": result.damage_per_proc * plain,
                 "damage_type": source.damage_type,
             }
+            if converted == 0 and proc_times:
+                state.breakdown[source.breakdown_key]["damage_events"] = [
+                    {
+                        "time": proc_time,
+                        "damage": result.damage_per_proc,
+                        "damage_type": source.damage_type,
+                    }
+                    for proc_time in proc_times
+                ]
         if converted > 0:
             converted_by_type = {"true": raw_sb * converted_ratio * converted}
             if converted_ratio < 1.0:
@@ -4935,7 +4992,7 @@ def _add_spellblade_damage(
                 **_damage_type_fields(converted_by_type),
             }
         state.total_damage += sb_total
-        _add_spellblade_true_rider(state, source, raw_sb, result.procs)
+        _add_spellblade_true_rider(state, source, raw_sb, result.procs, proc_times)
 
     # ── Double on-hit from spellblade (Dusk and Dawn) ──
     if effect is not None and result.procs > 0:
@@ -5160,6 +5217,45 @@ def _ability_damage_proc_triggers(
     return proc_triggers
 
 
+def _damage_threshold_trigger_time(
+    state: FightState,
+    rotation: RotationResult,
+    effect: item_effects.CooldownProcEffect,
+) -> float | None:
+    """Time the rolling damage window first crosses the item's threshold.
+
+    Walks the certified ledger built so far (abilities at cast times,
+    autos at swing times, earlier authored item events) and returns the
+    moment a ``damage_threshold`` trigger (Stormsurge's Squall) first
+    held ``damage_threshold_ratio`` of the target's max health within
+    ``damage_threshold_window`` seconds. Returns ``None`` when the model
+    never crosses the threshold — the row then stays coarse (the engine
+    still prices the proc, but cannot certify when it fires).
+    """
+    ratio = effect.damage_threshold_ratio
+    window = effect.damage_threshold_window
+    if ratio <= 0 or window <= 0:
+        return None
+    threshold = ratio * state.target_health
+    events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
+    window_sum = 0.0
+    window_start = 0
+    for event in events:
+        event_time = float(event["time"])
+        window_sum += float(event["damage"])
+        while float(events[window_start]["time"]) < event_time - window - 1e-9:
+            window_sum -= float(events[window_start]["damage"])
+            window_start += 1
+        if window_sum + 1e-6 >= threshold:
+            return event_time
+    return None
+
+
 def _charged_proc_target_share(
     state: FightState,
     source: item_effects.DamageSource,
@@ -5213,6 +5309,14 @@ def _add_item_proc_damage(
                 else 1
             )
         )
+        # A damage-threshold trigger (Stormsurge) fires once, at the
+        # ledger moment the rolling burst window first fills.  Resolve
+        # the time before this row lands in the breakdown it walks.
+        threshold_time = (
+            _damage_threshold_trigger_time(state, rotation, effect)
+            if effect.trigger == "damage_threshold" and procs == 1
+            else None
+        )
         raw_per_proc = source.raw_damage(_damage_inputs(state))
         mitigated_per_proc = _mitigate(
             raw_per_proc, source.damage_type, resists, state.magic_amp
@@ -5238,6 +5342,14 @@ def _add_item_proc_damage(
                     "damage_type": source.damage_type,
                 }
                 for trigger in proc_triggers
+            ]
+        elif threshold_time is not None:
+            state.breakdown[source.breakdown_key]["damage_events"] = [
+                {
+                    "time": threshold_time,
+                    "damage": proc_mitigated,
+                    "damage_type": source.damage_type,
+                }
             ]
         if source.multi_target_charges:
             state.breakdown[source.breakdown_key]["targeting"] = {
@@ -5272,6 +5384,22 @@ def _add_item_proc_damage(
             "total_damage": ult_proc_mitigated,
             "damage_type": source.damage_type,
         }
+        # The zone opens at R1: stamp the proc at the cast timeline's
+        # first R cast.  Without a timestamped R cast the row stays
+        # coarse (a stat-only R never reaches here — r_info exists).
+        r_cast_times = [
+            float(event["time"])
+            for event in rotation.cast_events
+            if event.get("slot") == "R"
+        ]
+        if r_cast_times:
+            state.breakdown[source.breakdown_key]["damage_events"] = [
+                {
+                    "time": min(r_cast_times),
+                    "damage": ult_proc_mitigated,
+                    "damage_type": source.damage_type,
+                }
+            ]
         state.total_damage += ult_proc_mitigated
 
 
@@ -5638,11 +5766,18 @@ def _add_keystone_proc_amp_damage(state: FightState, rotation: RotationResult) -
         )
 
 
-def _add_item_active_damage(state: FightState) -> None:
-    """Add active-item damage (skipped when actives are excluded)."""
+def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None:
+    """Add active-item damage (skipped when actives are excluded).
+
+    Each active is cast once. The engine's standing assumption — the
+    same one the coarse ledger encoded — is that it fires with the end
+    of the rotation opener, so its event is stamped at the last accepted
+    damaging cast (fight start when there are no casts).
+    """
     if not state.include_actives:
         return
     resists = state.resists
+    active_time = max(_damaging_cast_times(state, rotation), default=0.0)
     for source in state.damage_effects.actives:
         raw_active = source.raw_damage(_damage_inputs(state))
         active_mitigated = _mitigate(
@@ -5653,6 +5788,13 @@ def _add_item_active_damage(state: FightState) -> None:
             "name": source.display_name,
             "total_damage": active_mitigated,
             "damage_type": source.damage_type,
+            "damage_events": [
+                {
+                    "time": active_time,
+                    "damage": active_mitigated,
+                    "damage_type": source.damage_type,
+                }
+            ],
         }
         state.total_damage += active_mitigated
 
@@ -5688,6 +5830,13 @@ def _add_single_proc_on_hits(
     num_auto_attacks = state.num_auto_attacks
     effectiveness = _on_hit_effectiveness(state)
 
+    # The auto stream's authored per-swing schedule.  Swing-riding procs
+    # stamp their events at these times; an empty list (no stream, or a
+    # count mismatch) keeps those rows coarse.
+    swing_times = _auto_attack_timestamps(state)
+    if len(swing_times) != num_auto_attacks:
+        swing_times = []
+
     if num_auto_attacks > 0:
         inputs = _damage_inputs(state)
         for effect in state.damage_effects.first_autos:
@@ -5707,6 +5856,17 @@ def _add_single_proc_on_hits(
                 "total_damage": mitigated,
                 "damage_type": source.damage_type,
             }
+            # First-hit procs ride the opening swings of the stream.
+            if swing_times:
+                breakdown[source.breakdown_key]["event_phase"] = "auto"
+                breakdown[source.breakdown_key]["damage_events"] = [
+                    {
+                        "time": swing_times[proc_index],
+                        "damage": mitigated / procs,
+                        "damage_type": source.damage_type,
+                    }
+                    for proc_index in range(procs)
+                ]
             state.total_damage += mitigated
 
     if num_auto_attacks > 0:
@@ -5731,6 +5891,27 @@ def _add_single_proc_on_hits(
                 "total_damage": mitigated,
                 "damage_type": source.damage_type,
             }
+            # Each empowered swing is the first one at/after the effect's
+            # cooldown gate.  Authored only when the swing schedule
+            # reproduces the priced proc count exactly.
+            proc_times: list[float] = []
+            ready = 0.0
+            for swing_time in swing_times:
+                if len(proc_times) == procs:
+                    break
+                if swing_time + 1e-9 >= ready:
+                    proc_times.append(swing_time)
+                    ready = swing_time + effect.cooldown
+            if len(proc_times) == procs:
+                breakdown[source.breakdown_key]["event_phase"] = "auto"
+                breakdown[source.breakdown_key]["damage_events"] = [
+                    {
+                        "time": proc_time,
+                        "damage": mitigated / procs,
+                        "damage_type": source.damage_type,
+                    }
+                    for proc_time in proc_times
+                ]
             state.total_damage += mitigated
 
     apps = rotation.ability_item_applications
@@ -5740,12 +5921,8 @@ def _add_single_proc_on_hits(
             other_on_hit_per_hit += on_hits.current_health_on_hit_avg
 
         # Auto-segment procs ride specific swings, whose times the auto
-        # stream already authored; ability-segment procs have no
-        # timestamps yet, so any of those keeps the row coarse.
-        swing_times = _auto_attack_timestamps(state)
-        if len(swing_times) != num_auto_attacks:
-            swing_times = []
-
+        # stream already authored (``swing_times`` above); ability-segment
+        # procs have no timestamps yet, so any of those keeps the row coarse.
         for effect in state.damage_effects.stacking_on_hits:
             source = effect.source
             # The item taxonomy decides which ability applications
@@ -6313,7 +6490,7 @@ def calculate_fight_damage(
     _add_keystone_ability_proc_damage(state, rotation)
 
     # ── Active item damage ──────────────────────────────────────────────
-    _add_item_active_damage(state)
+    _add_item_active_damage(state, rotation)
 
     # ── Single-proc on-hits, Shadowflame, and Expose Weakness ───────────
     _add_single_proc_on_hits(state, rotation, autos, on_hits, spellblade)

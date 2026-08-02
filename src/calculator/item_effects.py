@@ -341,6 +341,10 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "base": 125.0,
         "ap_ratio": 0.10,
         "cooldown": 30.0,
+        # Squall arms after this share of the target's max health is
+        # dealt within the rolling window below (Stormraider's trigger).
+        "damage_threshold_ratio": 0.25,
+        "damage_threshold_window": 2.5,
         "is_ability_damage": True,  # Amplified by Actualizer
     },
     "Zaz'Zak's Realmspike": {
@@ -867,6 +871,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Sterak's Gage": frozenset(
         {"health_threshold", "shield_bonus_health_ratio", "duration"}
     ),
+    "Stormsurge": frozenset({"damage_threshold_ratio", "damage_threshold_window"}),
     "Stridebreaker": frozenset({"cooldown"}),
     "Titanic Hydra": frozenset({"active_cooldown"}),
 }
@@ -1098,13 +1103,20 @@ class PeriodicEffect:
 
 @dataclass(frozen=True, slots=True)
 class CooldownProcEffect:
-    """Triggered damage with optional repeated cooldown applications."""
+    """Triggered damage with optional repeated cooldown applications.
+
+    ``damage_threshold_ratio`` / ``damage_threshold_window`` describe a
+    ``damage_threshold`` trigger: the proc arms once that share of the
+    target's max health is dealt within the rolling window (seconds).
+    """
 
     source: DamageSource
     cooldown: float
     repeat_on_cooldown: bool = True
     late_phase: bool = False
     trigger: str = "coarse"
+    damage_threshold_ratio: float = 0.0
+    damage_threshold_window: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -1656,11 +1668,19 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         ),
         single_target_multiplier=(multiplier if formula == "charged_ap" else 1.0),
     )
+    trigger = str(values.get("trigger", "coarse"))
+    threshold = trigger == "damage_threshold"
     return CooldownProcEffect(
         source,
         required.number("cooldown"),
         bool(values.get("repeat_on_cooldown", True)),
-        trigger=str(values.get("trigger", "coarse")),
+        trigger=trigger,
+        damage_threshold_ratio=(
+            required.number("damage_threshold_ratio") if threshold else 0.0
+        ),
+        damage_threshold_window=(
+            required.number("damage_threshold_window") if threshold else 0.0
+        ),
     )
 
 
