@@ -96,9 +96,44 @@ from lolstaticdata.champions.__main__ import get_ability_filenames
 from lolstaticdata.items.__main__ import main as run_items_generator
 
 from .data_fetcher import DEFAULT_DATA_DIR, _write_cache
+from .rune_parser import rune_payload
 
 # Only one update can run at a time
 _update_lock = threading.Lock()
+
+# Keystone runes, in wiki path order. The roster changes only on major
+# season reworks; each entry maps to one Template:Rune data <name> page.
+KEYSTONE_NAMES: tuple[str, ...] = (
+    # Precision
+    "Press the Attack",
+    "Lethal Tempo",
+    "Fleet Footwork",
+    "Conqueror",
+    # Domination
+    "Electrocute",
+    "Dark Harvest",
+    "Hail of Blades",
+    # Sorcery
+    "Summon Aery",
+    "Arcane Comet",
+    "Stormraider's Surge",
+    "Deathfire Touch",
+    # Resolve
+    "Grasp of the Undying",
+    "Aftershock",
+    "Guardian",
+    # Inspiration
+    "Glacial Augment",
+    "Unsealed Spellbook",
+    "First Strike",
+)
+
+_RUNE_TEMPLATE_URL = (
+    "https://wiki.leagueoflegends.com/en-us/Template:Rune_data_{name}?action=raw"
+)
+_RUNES_REFORGED_URL = (
+    "http://ddragon.leagueoflegends.com/cdn/{version}/data/en_US/runesReforged.json"
+)
 
 ABILITY_KEY_TO_IDENTIFIER = {
     "P": "passive",
@@ -307,6 +342,63 @@ def _process_items() -> dict[str, Any] | None:
     return None
 
 
+def _rune_icon_map(latest_version: str) -> dict[str, str]:
+    """Map rune names to Data Dragon icon URLs; icons are non-critical."""
+    try:
+        styles = download_json(_RUNES_REFORGED_URL.format(version=latest_version))
+        return {
+            perk["name"]: f"https://ddragon.leagueoflegends.com/cdn/img/{perk['icon']}"
+            for style in styles
+            for slot in style.get("slots", [])
+            for perk in slot.get("runes", [])
+        }
+    except Exception:
+        return {}
+
+
+def _process_runes(
+    latest_version: str,
+) -> Generator[dict[str, Any], None, dict[str, Any]]:
+    """Fetch and parse every keystone's wiki data template.
+
+    Yields progress events and returns the ``data/runes.json`` payload.
+    A keystone whose template fails to download is recorded with an
+    ``error`` field instead of silently dropping from the roster.
+    """
+    icons = _rune_icon_map(latest_version)
+    runes: dict[str, Any] = {}
+    for index, name in enumerate(KEYSTONE_NAMES, start=1):
+        try:
+            url = _RUNE_TEMPLATE_URL.format(name=name.replace(" ", "_"))
+            wikitext = _download_page(url)
+            runes[name] = rune_payload(name, wikitext, icon=icons.get(name, ""))
+            status = f"Parsed {name}"
+        except Exception as exc:
+            runes[name] = {"name": name, "error": str(exc)}
+            status = f"Failed {name}: {exc}"
+        yield {
+            "phase": "runes",
+            "status": status,
+            "current": index,
+            "total": len(KEYSTONE_NAMES),
+        }
+    return runes
+
+
+def update_rune_data() -> dict[str, Any]:
+    """Fetch, parse, and cache keystone rune data as one standalone step."""
+    latest_version = get_latest_patch_version()
+    rune_gen = _process_runes(latest_version)
+    runes: dict[str, Any] = {}
+    try:
+        while True:
+            next(rune_gen)
+    except StopIteration as stop:
+        runes = stop.value or {}
+    _write_cache(DEFAULT_DATA_DIR, "runes.json", runes)
+    return runes
+
+
 def update_data() -> Generator[dict[str, Any], None, None]:
     """Fetch fresh champion and item data from upstream sources.
 
@@ -377,6 +469,22 @@ def update_data() -> Generator[dict[str, Any], None, None]:
                 "phase": "items",
                 "status": "Warning: no items data generated",
             }
+
+        # --- Runes (keystones) ---
+        yield {"phase": "runes", "status": "Updating keystone runes..."}
+        rune_gen = _process_runes(latest_version)
+        runes: dict[str, Any] = {}
+        try:
+            while True:
+                yield next(rune_gen)
+        except StopIteration as stop:
+            runes = stop.value or {}
+        _write_cache(DEFAULT_DATA_DIR, "runes.json", runes)
+        failed_runes = [name for name, entry in runes.items() if "error" in entry]
+        rune_status = f"Saved {len(runes) - len(failed_runes)} keystones"
+        if failed_runes:
+            rune_status += f" (failed: {', '.join(failed_runes)})"
+        yield {"phase": "runes", "status": rune_status}
 
         yield {
             "phase": "done",

@@ -173,6 +173,37 @@ def fetch_item_data(
     return data
 
 
+def fetch_rune_data(
+    data_directory: Path = DEFAULT_DATA_DIR,
+) -> dict[str, Any]:
+    """Read keystone rune data from the local cache.
+
+    Args:
+        data_directory: Directory where cached data is stored.
+
+    Returns:
+        Dictionary of rune payloads keyed by rune name.
+
+    Raises:
+        FileNotFoundError: If no cached data exists.  Run the updater first.
+    """
+    filename = "runes.json"
+    cache_path = data_directory / filename
+
+    if not cache_path.exists():
+        raise FileNotFoundError(
+            "No rune data found. Click 'Update to latest patch' to fetch data."
+        )
+
+    data = _read_cache(data_directory, filename)
+    if not isinstance(data, dict) or not data:
+        raise ValueError("Rune data must be a non-empty dictionary")
+    sample = next(iter(data.values()))
+    if "name" not in sample:
+        raise ValueError("Rune data missing required field: 'name'")
+    return data
+
+
 def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
     """Get data for a specific champion by name.
 
