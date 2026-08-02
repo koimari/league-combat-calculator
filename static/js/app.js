@@ -1481,12 +1481,13 @@ function renderPicker(query) {
   const entries = source.filter((entry) => {
     if (!entry.name.toLowerCase().includes(normalized)) return false;
     if (pickerContext.type !== "item") return true;
+    const dedicatedBoot = ALL_ROLE_BOOTS.has(Number(entry.id));
     if (pickerContext.path.endsWith(".boots") || pickerContext.path.includes("questBoot")) {
-      return ALL_ROLE_BOOTS.has(entry.id);
+      return dedicatedBoot;
     }
-    if (pickerContext.path.includes(".items.")) return !ALL_ROLE_BOOTS.has(entry.id);
+    if (pickerContext.path.includes(".items.")) return !dedicatedBoot;
     if (pickerContext.path.includes("questBoot")) return questBootIds().includes(entry.id);
-    if (pickerContext.path.match(/^attacker\.build[AB]\./)) return !ALL_ROLE_BOOTS.has(entry.id);
+    if (pickerContext.path.match(/^attacker\.build[AB]\./)) return !dedicatedBoot;
     return true;
   });
   const grid = $("pickerGrid");
