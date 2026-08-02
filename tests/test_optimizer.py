@@ -106,6 +106,33 @@ def test_evaluate_build_sums_objective_across_target_roster(monkeypatch):
     assert score == 350
 
 
+def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):
+    """Survival-coupled output is already truncated at the main actor's death."""
+    monkeypatch.setattr(
+        "src.calculator.optimizer.build_participant_timeline",
+        lambda *args, **kwargs: {
+            "breakdown": [{"participant_id": "main", "total_damage": 125.0}],
+            "participants": [
+                {"participant_id": "main", "survival": {"effective_health": 4000.0}}
+            ],
+            "events": [],
+            "timeline_coverage": {"complete": True, "exact_sources": [], "coarse_sources": []},
+        },
+    )
+    params = FightParams.from_request({}, deterministic=True)
+
+    score = _evaluate_build(
+        get_champion("Aatrox"),
+        18,
+        [],
+        params,
+        "total_damage",
+        combat_context={"enemies": [object()], "allies": []},
+    )
+
+    assert score == 125.0
+
+
 def test_optimizer_respects_gold_budget():
     result = optimize_build(
         "Ahri",
