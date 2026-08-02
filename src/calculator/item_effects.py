@@ -805,6 +805,14 @@ class PerHitEffect:
 
     source: DamageSource
     tracks_current_health: bool = False
+    # The item ALSO deals per-ability-hit damage (Muramana Shock). Wiki
+    # rule: the on-hit and ability damage never stack on one ability
+    # hit — an ability that applies on-hit effects (Ezreal Q, Bel'Veth
+    # Q/E) deals only the ability-hit damage, which the rotation engine
+    # already procs once per cast. Ability-carried on-hit applications
+    # must therefore skip this per-hit component; real basic attacks
+    # (and their phantom hits) still apply it.
+    superseded_by_ability_proc: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -1150,7 +1158,12 @@ def _compile_on_hit(
         raise ValueError(f"Unsupported on-hit formula {formula!r} for {item_name!r}")
 
     source = _damage_source(item_name, damage_type, raw)
-    return PerHitEffect(source, tracks_current_health=formula == "current_hp")
+    return PerHitEffect(
+        source,
+        tracks_current_health=formula == "current_hp",
+        superseded_by_ability_proc=values.get("secondary_behavior")
+        == "per_ability_hit",
+    )
 
 
 def _compile_auto_cooldown(

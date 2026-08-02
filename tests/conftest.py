@@ -78,6 +78,7 @@ darius_data = _champion_fixture("Darius")
 diana_data = _champion_fixture("Diana")
 # Data key differs from the display/dispatcher name "Dr. Mundo".
 dr_mundo_data = _champion_fixture("DrMundo")
+ezreal_data = _champion_fixture("Ezreal")
 gnar_data = _champion_fixture("Gnar")
 # Data key differs from the display/dispatcher name "Jarvan IV".
 jarvan_iv_data = _champion_fixture("JarvanIV")
@@ -85,6 +86,7 @@ jayce_data = _champion_fixture("Jayce")
 # Data key differs from the display/dispatcher name "Kog'Maw".
 kogmaw_data = _champion_fixture("KogMaw")
 orianna_data = _champion_fixture("Orianna")
+syndra_data = _champion_fixture("Syndra")
 vayne_data = _champion_fixture("Vayne")
 ziggs_data = _champion_fixture("Ziggs")
 

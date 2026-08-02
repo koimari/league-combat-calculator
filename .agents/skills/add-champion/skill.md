@@ -283,9 +283,11 @@ Rules:
 - **Reserved keys** (`RESERVED_OPTION_KEYS` in `champions/__init__.py`)
   are pipeline-owned and must never appear in OPTIONS
   (`tests/test_champion_options.py` enforces this). Currently:
-  `fight_duration_seconds` — injected by `pipeline.run_fight` for timed
-  (non-one-rotation) fights so duration-driven mechanics can scale with
-  the fight window (Aurelion Sol's continuous Q channel). Read it with
+  `fight_duration_seconds` and `auto_attack_uptime` — injected together
+  by `pipeline.run_fight` for timed (non-one-rotation) fights so
+  duration/timeline-driven mechanics can scale with the fight window
+  (Aurelion Sol's continuous Q channel; Braum P walks the auto timeline
+  at `attack_speed x auto_attack_uptime`). Read them with
   `ctx.options.get("fight_duration_seconds")`: present -> model the whole
   fight (pin the entry's cooldown to 999 so it casts once); absent ->
   per-cast model (one-rotation mode and direct parse calls).

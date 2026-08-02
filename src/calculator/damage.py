@@ -469,7 +469,9 @@ def _ability_applied_on_hit_damage(
     summed here — the application is recorded on the fight's shared hit
     counter and its procs fire in ``_add_single_proc_on_hits``.
     On-ATTACK-only mechanics (energized procs, spellblade, phantom
-    hits) are attack-triggered and never apply here.
+    hits) are attack-triggered and never apply here. Per-hit components
+    marked ``superseded_by_ability_proc`` (Muramana) are skipped too —
+    their per-ability-cast damage already fired for this cast.
 
     Returns the application's damage per damage type; sum the values
     for the total.
@@ -477,6 +479,11 @@ def _ability_applied_on_hit_damage(
     inputs = _damage_inputs(state, target_current_health)
     by_type: dict[str, float] = {}
     for effect in state.damage_effects.per_hits:
+        if effect.superseded_by_ability_proc:
+            # Muramana: Shock's ability damage already procs once per
+            # cast (``per_ability_hits``); the on-hit component never
+            # stacks with it on one ability hit.
+            continue
         raw = effect.source.raw_damage(inputs) * effectiveness
         if raw <= 0:
             continue
@@ -3401,13 +3408,31 @@ def _add_spellblade_damage(
         result.expose_weakness_melee = effect.expose_weakness_melee
         result.expose_weakness_ranged = effect.expose_weakness_ranged
 
-    # A spellblade charge is consumed by any basic attack: the auto
+    # A spellblade charge is consumed by any basic attack — the auto
     # stream when one exists, plus attacks forced by empowered-auto
-    # casts when it doesn't (Camille Q, Blitzcrank E in one-rotation).
-    consuming_attacks = state.num_auto_attacks + rotation.forced_basic_attacks
+    # casts when it doesn't (Camille Q, Blitzcrank E in one-rotation) —
+    # and by ability hits that apply item on-hits (wiki: spellblade can
+    # be "applied by an ability that triggers on-hit effects" — Ezreal
+    # Q, Bel'Veth Q). Without those, an auto-less fight showed zero
+    # Sheen procs for the champions built around them.
+    onhit_applications = [a for a in rotation.ability_item_applications if a.on_hit]
+    consuming_attacks = (
+        state.num_auto_attacks + rotation.forced_basic_attacks + len(onhit_applications)
+    )
     if effect is not None and consuming_attacks > 0:
         source = effect.source
-        raw_sb = source.raw_damage(_damage_inputs(state)) * _on_hit_effectiveness(state)
+        sb_effectiveness = _on_hit_effectiveness(state)
+        if state.num_auto_attacks == 0 and onhit_applications:
+            # No auto stream: procs are consumed by the ability
+            # applications (and any forced attacks). Assume procs land
+            # on the highest-effectiveness consumers first — the same
+            # first-lands assumption the true-conversion accounting
+            # below makes.
+            sb_effectiveness = max(
+                [a.effectiveness for a in onhit_applications]
+                + ([sb_effectiveness] if rotation.forced_basic_attacks else [])
+            )
+        raw_sb = source.raw_damage(_damage_inputs(state)) * sb_effectiveness
         effective_sb_cd = effect.cooldown + effect.weave_delay
 
         result.damage_per_proc = _mitigate(
@@ -3415,13 +3440,15 @@ def _add_spellblade_damage(
         )
 
         # Number of procs: limited by ability casts and cooldown. With no
-        # auto stream the only attacks are the ones casts forced, and a
-        # charge is armed per cast — so a cast that forces a whole burst
-        # (Jayce's 3 Hyper Charge attacks) still spends just one.
+        # auto stream the consuming hits are the attacks casts forced —
+        # a charge is armed per cast, so a cast that forces a whole burst
+        # (Jayce's 3 Hyper Charge attacks) still spends just one — plus
+        # the on-hit ability applications (each is a real separate hit;
+        # the cast cap already stops a multi-hit cast from double-spending).
         attack_limit = (
             consuming_attacks
             if state.num_auto_attacks > 0
-            else rotation.forced_swing_casts
+            else rotation.forced_swing_casts + len(onhit_applications)
         )
         result.procs = min(
             rotation.total_ability_casts,

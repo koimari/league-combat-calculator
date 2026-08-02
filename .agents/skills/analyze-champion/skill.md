@@ -104,6 +104,17 @@ Check for these **specific pitfalls** that have caused bugs in past implementati
 
 12. **Abilities with both passive and active components**: Ambessa R has passive (armor pen) + active (damage). Both need handling. The passive stat should always be active if ranked.
 
+13. **Transform/form-swap champions** (Gnar, Nidalee, Jayce, Elise, Shyvana...): four coupled traps, all hit on Gnar —
+    - The alternate form's stat grants often parse as empty JSON. Source them from the **Community Dragon game files** (`<unit>.bin.json` CharacterRecords/Root, e.g. `gnarbig`), NOT the wiki stat box (it was stale for Gnar: 5.7 vs real 5.5 AD growth) and not ddragon (lists Gnar's AD growth as 0).
+    - Classify the grant **base vs bonus**: a form that is a separate in-game unit grants BASE stats (bonus-AD ratios like Gnar R must see 0 without items); ability steroids (Vayne/Aatrox R) grant BONUS AD.
+    - Base-stat grants interact with base-stat-converting items (Sterak's) — the `_apply_stat_buff_ultimates` hook handles it, but verify with the item equipped.
+    - Verify the UI stats panel (`run_fight()["champion_stats"]`) reflects the form toggle, not just the damage rows.
+
+14. **Ability "applies on-hit effects"**: on an on-hit-item champion (Bel'Veth, Kai'Sa-style builds) this is a top-tier damage source, not a footnote — Bel'Veth's Q/E item on-hits were 22% of her fight total. Three coupled requirements (engine supports all three via `applies_item_on_hits`):
+    - Item on-hit damage applies per application at the ability's stated effectiveness — never assumption-list it away.
+    - Counter-gated items (Kraken every-3rd, Hullbreaker every-5th) run on ONE shared hit sequence across autos + ability applications; procs fire at the triggering hit's effectiveness.
+    - Classify the ability's trigger scope from the wiki notes: on-hit only vs on-hit + on-attack (`triggers=`). The on-attack list is closed (`item_effects.ON_ATTACK_TRIGGER_ITEMS`: Guinsoo's, Navori, RFC, Runaan's, Voltaic, Yun Tal); spellblade is neither. Ask the user — wiki interaction notes can be stale (see Azir in bug-history).
+
 ### Step 5: Present Findings and Ask the User
 
 First, present your ability analysis as a text summary. For each ability show:
