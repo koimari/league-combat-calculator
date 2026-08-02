@@ -13,6 +13,7 @@ from src.calculator.optimizer import (
     _SPELLBLADE_ITEMS,
 )
 from src.calculator.pipeline import FightParams
+from src.calculator.loadout_rules import role_scoped_shop_items
 
 _FIGHT_PARAM_KEYS = {
     "target_health",
@@ -80,6 +81,35 @@ class TestItemPools:
         assert "Dark Seal" in names
         assert "Doran's Ring" in names
         assert "Boots of Swiftness" not in names
+
+    def test_main_optimizer_uses_the_sourced_role_shop_scope(self):
+        candidates = get_eligible_legendaries()
+        top = {item["name"] for item in role_scoped_shop_items(candidates, "top")}
+        support = {
+            item["name"] for item in role_scoped_shop_items(candidates, "support")
+        }
+
+        assert "Shurelya's Battlesong" not in top
+        assert "Shurelya's Battlesong" in support
+        assert "Warmog's Armor" in top
+        assert "Warmog's Armor" not in support
+
+    def test_top_search_never_evaluates_a_support_only_candidate(self, monkeypatch):
+        def fake_evaluate(_champion, _level, items, **_kwargs):
+            assert "Shurelya's Battlesong" not in {item["name"] for item in items}
+            return 1.0
+
+        monkeypatch.setattr("src.calculator.optimizer._evaluate_build", fake_evaluate)
+        params = FightParams.from_request({"role": "top"}, deterministic=True)
+        result = _optimize_build(
+            get_champion("Aatrox"),
+            6,
+            fight_params=params,
+            max_legendary_slots=1,
+            include_boots=False,
+        )
+
+        assert "Shurelya's Battlesong" not in result["items"]
 
 
 def test_evaluate_build_sums_objective_across_target_roster(monkeypatch):

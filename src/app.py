@@ -38,7 +38,7 @@ from calculator.item_coverage import (
     target_build_coverage,
 )
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
-from calculator.loadout_rules import validate_resolved_loadout
+from calculator.loadout_rules import role_scoped_shop_items, validate_resolved_loadout
 from calculator.defensive_effects import resolve_starting_defenses
 from calculator.participant_timeline import build_participant_timeline
 from calculator.champions import (
@@ -1447,20 +1447,7 @@ def _role_scoped_bis_candidates(
     candidate-legality boundary, not a champion archetype or damage heuristic;
     the surviving candidates are still scored by the coupled event timeline.
     """
-    normalized = str(role or "").strip().lower()
-    if normalized == "support":
-        return [
-            item
-            for item in candidates
-            if "SUPPORT" in {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
-        ]
-    if normalized in {"top", "jungle", "mid", "bottom"}:
-        return [
-            item
-            for item in candidates
-            if "SUPPORT" not in {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
-        ]
-    return candidates
+    return role_scoped_shop_items(candidates, role)
 
 
 def _bis_candidate_pool(
