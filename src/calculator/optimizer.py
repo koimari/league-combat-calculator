@@ -24,7 +24,7 @@ from .loadout_rules import (
     validate_resolved_loadout,
 )
 from .pipeline import FightParams, run_fight
-from .timeline_coverage import combine_timeline_coverages, downgrade_timeline_sources
+from .timeline_coverage import combine_timeline_coverages
 
 # Items unavailable on Summoner's Rift.
 ITEM_BLOCKLIST = {
@@ -159,32 +159,6 @@ def _evaluate_build(
         # whereas the breakdown can contain non-damage displays.
         total = sum(result.get("total_damage", 0.0) for result in results)
 
-    # A charged bounce is one proc shared across the roster, not one complete
-    # solo proc per enemy. Reweight each target's already-mitigated row.
-    keys = {
-        key
-        for result in results
-        for key, row in result.get("breakdown", {}).items()
-        if row.get("targeting", {}).get("kind") == "charged_bounce" and included(row)
-    }
-    for key in keys:
-        first = results[0]["breakdown"][key]
-        targeting = first["targeting"]
-        charges = int(targeting["charges"])
-        unique_targets = min(len(results), charges)
-        repeat = float(targeting["repeat_multiplier"])
-        solo = float(targeting["single_target_multiplier"])
-        for index, result in enumerate(results):
-            row = result["breakdown"].get(key)
-            if row is None:
-                continue
-            desired = (
-                1.0 + max(0, charges - unique_targets) * repeat
-                if index == 0
-                else (1.0 if index < unique_targets else 0.0)
-            )
-            original = row.get("total_damage", 0.0)
-            total += original * desired / solo - original
     return total
 
 
@@ -207,26 +181,10 @@ def _combined_build_timeline_coverage(
     results: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """Combine targets and fail partial on post-ledger charged allocation."""
-    coverage = combine_timeline_coverages(
+    return combine_timeline_coverages(
         (result.get("timeline_coverage", {}) for result in results),
         target_count=len(results),
     )
-    charged_sources = {
-        key
-        for result in results
-        for key, row in result.get("breakdown", {}).items()
-        if row.get("targeting", {}).get("kind") == "charged_bounce"
-    }
-    if len(results) > 1 and charged_sources:
-        coverage = downgrade_timeline_sources(
-            coverage,
-            charged_sources,
-            note=(
-                "Charged proc damage is allocated across targets after each "
-                "target's defensive event simulation."
-            ),
-        )
-    return coverage
 
 
 def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
@@ -492,9 +450,15 @@ def optimize_build(
         fight_params = replace(fight_params, deterministic=True)
 
     if target_fight_params:
+        target_count = len(target_fight_params)
         fight_params = tuple(
-            params if params.deterministic else replace(params, deterministic=True)
-            for params in target_fight_params
+            replace(
+                params,
+                deterministic=True,
+                roster_target_index=target_index,
+                roster_target_count=target_count,
+            )
+            for target_index, params in enumerate(target_fight_params)
         )
 
     timeline_audit = {

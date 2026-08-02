@@ -217,6 +217,73 @@ class TestTimelineCoverage:
             "total_damage"
         ] == pytest.approx(40.0)
 
+    @pytest.mark.parametrize(
+        ("target_index", "target_count", "expected_proc"),
+        [
+            (0, 1, 150.0),
+            (0, 2, 135.0),
+            (1, 2, 75.0),
+            (0, 7, 75.0),
+            (5, 7, 75.0),
+            (6, 7, 0.0),
+        ],
+    )
+    def test_luden_charges_are_allocated_inside_each_target_fight(
+        self,
+        fight,
+        attacker_stats,
+        target_index,
+        target_count,
+        expected_proc,
+    ):
+        result = fight(
+            attacker_stats(),
+            self._test_spell(),
+            items=[get_item_by_name("Luden's Echo")],
+            target_magic_resistance=0.0,
+            roster_target_index=target_index,
+            roster_target_count=target_count,
+        )
+
+        proc = result["breakdown"]["proc_Luden's Echo"]
+        assert proc["total_damage"] == pytest.approx(expected_proc)
+
+    def test_luden_target_share_resolves_before_lifeline_threshold(
+        self, fight, attacker_stats
+    ):
+        ability = self._test_spell()
+        ability["Q"]["total_raw"] = 600.0
+        ability["Q"]["parts"] = (DamagePart("magic", 600.0),)
+        common = {
+            "items": [get_item_by_name("Luden's Echo")],
+            "target_magic_resistance": 0.0,
+            "target_threshold_shield_amount": 500.0,
+            "target_threshold_shield_health_ratio": 0.30,
+            "target_threshold_shield_duration": 3.0,
+            "roster_target_count": 2,
+        }
+
+        primary = fight(
+            attacker_stats(),
+            ability,
+            roster_target_index=0,
+            **common,
+        )
+        secondary = fight(
+            attacker_stats(),
+            ability,
+            roster_target_index=1,
+            **common,
+        )
+
+        # Primary receives 135 Luden damage: 600 leaves 400 HP, then 135
+        # crosses the 300-HP Lifeline threshold and is absorbed. Secondary
+        # receives 75, remains at 325 HP, and never triggers the shield.
+        assert primary["threshold_shield_absorbed"] == pytest.approx(135.0)
+        assert primary["health_damage"] == pytest.approx(600.0)
+        assert secondary["threshold_shield_absorbed"] == 0.0
+        assert secondary["health_damage"] == pytest.approx(675.0)
+
 
 class TestOrderedDamageEvents:
     """The shared ledger keeps cast order and exact typed composition."""

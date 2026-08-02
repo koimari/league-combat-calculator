@@ -40,10 +40,7 @@ from calculator.optimizer import (
 from calculator.stats import MAX_LEVEL
 from calculator.scenario import MAX_ALLIES, MAX_ENEMIES, ChampionLoadout, parse_roster
 from calculator.role_quests import role_quest_meta
-from calculator.timeline_coverage import (
-    combine_timeline_coverages,
-    downgrade_timeline_sources,
-)
+from calculator.timeline_coverage import combine_timeline_coverages
 from calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
     DEFAULT_FIGHT_DURATION,
@@ -384,67 +381,6 @@ def _serialize_fight_result(result: Mapping[str, object]) -> dict:
     }
 
 
-def _allocate_target_limited_damage(target_results: list[dict]) -> None:
-    """Allocate one shared charged proc across legal roster targets once."""
-    if not target_results:
-        return
-    target_count = len(target_results)
-    keys = {
-        key
-        for target in target_results
-        for key, row in target["result"]["breakdown"].items()
-        if row.get("targeting", {}).get("kind") == "charged_bounce"
-    }
-    for key in keys:
-        first_row = target_results[0]["result"]["breakdown"].get(key, {})
-        targeting = first_row.get("targeting", {})
-        charges = int(targeting["charges"])
-        repeat = float(targeting["repeat_multiplier"])
-        solo_multiplier = float(targeting["single_target_multiplier"])
-        unique_targets = min(target_count, charges)
-        for index, target in enumerate(target_results):
-            result = target["result"]
-            row = result["breakdown"].get(key)
-            if row is None:
-                continue
-            desired_multiplier = (
-                1.0 + max(0, charges - unique_targets) * repeat
-                if index == 0
-                else (1.0 if index < unique_targets else 0.0)
-            )
-            old_damage = row["total_damage"]
-            new_damage = old_damage * desired_multiplier / solo_multiplier
-            delta = new_damage - old_damage
-            row["total_damage"] = round(new_damage, 1)
-            result["total_damage"] = round(result["total_damage"] + delta, 1)
-            result["ability_damage"] = round(result["ability_damage"] + delta, 1)
-            result["damage_by_type"]["magic"] = round(
-                result["damage_by_type"].get("magic", 0.0) + delta, 1
-            )
-            available_shield = float(
-                target["target"].get("starting_defenses", {}).get("magic_shield", 0.0)
-            )
-            magic_absorbed = min(
-                available_shield, result["damage_by_type"].get("magic", 0.0)
-            )
-            result["magic_shield_absorbed"] = round(magic_absorbed, 1)
-            result["shield_absorbed"] = round(magic_absorbed, 1)
-            result["health_damage"] = round(
-                max(0.0, result["total_damage"] - magic_absorbed), 1
-            )
-    if target_count > 1 and keys:
-        for target in target_results:
-            result = target["result"]
-            result["timeline_coverage"] = downgrade_timeline_sources(
-                result.get("timeline_coverage", {}),
-                keys,
-                note=(
-                    "Charged proc damage is allocated across targets after each "
-                    "target's defensive event simulation."
-                ),
-            )
-
-
 def _aggregate_timeline_coverage(results: list[dict]) -> dict:
     """Combine per-target ordering receipts without overstating precision."""
     return combine_timeline_coverages(
@@ -543,9 +479,11 @@ def _comparison_curve(
             )
         else:
             target_results = []
-            for enemy in enemies:
+            for target_index, enemy in enumerate(enemies):
                 target_params = replace(
                     params,
+                    roster_target_index=target_index,
+                    roster_target_count=len(enemies),
                     target_health=enemy.stats["health"],
                     target_bonus_health=enemy.stats["bonus_health"],
                     target_armor=enemy.stats["armor"],
@@ -586,7 +524,6 @@ def _comparison_curve(
                         ),
                     }
                 )
-            _allocate_target_limited_damage(target_results)
             result = _aggregate_public_results(
                 [target["result"] for target in target_results]
             )
@@ -955,9 +892,11 @@ def api_calculate():
         return jsonify(response)
 
     target_results = []
-    for enemy in enemies:
+    for target_index, enemy in enumerate(enemies):
         target_params = replace(
             fight_params,
+            roster_target_index=target_index,
+            roster_target_count=len(enemies),
             target_health=enemy.stats["health"],
             target_bonus_health=enemy.stats["bonus_health"],
             target_armor=enemy.stats["armor"],
@@ -993,7 +932,6 @@ def api_calculate():
             {"target": _public_loadout_summary(enemy), "result": serialized}
         )
 
-    _allocate_target_limited_damage(target_results)
     response = _aggregate_public_results(
         [target["result"] for target in target_results]
     )
@@ -1134,6 +1072,8 @@ def api_optimize():
     target_fight_params = tuple(
         replace(
             fight_params,
+            roster_target_index=target_index,
+            roster_target_count=len(enemies),
             target_health=enemy.stats["health"],
             target_bonus_health=enemy.stats["bonus_health"],
             target_armor=enemy.stats["armor"],
@@ -1162,7 +1102,7 @@ def api_optimize():
                 enemy.defenses.threshold_shield_damage_type
             ),
         )
-        for enemy in enemies
+        for target_index, enemy in enumerate(enemies)
     )
 
     rate_limit_response = _spend_rate_limit("optimize")

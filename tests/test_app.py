@@ -301,7 +301,7 @@ def test_calculate_can_sum_one_damage_package_across_enemy_roster():
     )
     assert data["timeline_coverage"]["complete"] is False
     assert "passive" in data["timeline_coverage"]["coarse_sources"]
-    assert "proc_Luden's Echo" in data["timeline_coverage"]["coarse_sources"]
+    assert "proc_Luden's Echo" in data["timeline_coverage"]["exact_sources"]
     assert all("timeline_coverage" in row["result"] for row in data["targets"])
 
 
@@ -363,6 +363,8 @@ def test_optimizer_scores_every_selected_enemy(monkeypatch):
     assert targets[0].target_bonus_health == 400
     assert targets[0].target_magic_resistance == 92
     assert targets[1].target_health == 1873
+    assert [target.roster_target_index for target in targets] == [0, 1]
+    assert [target.roster_target_count for target in targets] == [2, 2]
 
 
 def test_enabled_ally_staff_buff_changes_attacker_stats_and_damage():

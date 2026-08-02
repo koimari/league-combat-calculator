@@ -371,6 +371,8 @@ class FightConfig:
     target_threshold_shield_duration: float = 0.0
     target_threshold_shield_damage_type: str = "all"
     enforce_resource_limits: bool = False
+    roster_target_index: int = 0
+    roster_target_count: int = 1
 
 
 @dataclass
@@ -407,6 +409,8 @@ class FightState:
     target_basic_damage_flat_reduction: float
     target_basic_damage_flat_reduction_cap: float
     target_critical_strike_damage_multiplier: float
+    roster_target_index: int
+    roster_target_count: int
     # ── Resolved combat numbers ───────────────────────────────────────────
     resists: Resists
     magic_amp: float  # Abyssal Mask
@@ -1529,6 +1533,8 @@ def _resolve_combat_state(
         target_critical_strike_damage_multiplier=(
             config.target_critical_strike_damage_multiplier
         ),
+        roster_target_index=max(0, int(config.roster_target_index)),
+        roster_target_count=max(1, int(config.roster_target_count)),
         resists=resists,
         magic_amp=damage_effects.magic_amp,
         ability_amp=(
@@ -4421,6 +4427,28 @@ def _ability_damage_proc_triggers(
     return proc_triggers
 
 
+def _charged_proc_target_share(
+    state: FightState,
+    source: item_effects.DamageSource,
+) -> float:
+    """Return this roster target's share of one charged proc application."""
+    if source.multi_target_charges <= 0:
+        return 1.0
+    target_count = max(1, state.roster_target_count)
+    target_index = max(0, state.roster_target_index)
+    unique_targets = min(target_count, source.multi_target_charges)
+    if target_index == 0:
+        desired_multiplier = 1.0 + max(
+            0,
+            source.multi_target_charges - unique_targets,
+        ) * source.repeated_target_multiplier
+    elif target_index < unique_targets:
+        desired_multiplier = 1.0
+    else:
+        desired_multiplier = 0.0
+    return desired_multiplier / source.single_target_multiplier
+
+
 def _add_item_proc_damage(
     state: FightState,
     rotation: RotationResult,
@@ -4456,6 +4484,7 @@ def _add_item_proc_damage(
         # Stormsurge and Zaz'Zak deal ability damage — amplified by Actualizer
         if source.is_ability_damage:
             mitigated_per_proc *= state.ability_amp
+        mitigated_per_proc *= _charged_proc_target_share(state, source)
         proc_mitigated = mitigated_per_proc * procs
 
         state.breakdown[source.breakdown_key] = {

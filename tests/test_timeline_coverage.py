@@ -1,9 +1,6 @@
 """Contracts for combining fight-order precision receipts."""
 
-from src.calculator.timeline_coverage import (
-    combine_timeline_coverages,
-    downgrade_timeline_sources,
-)
+from src.calculator.timeline_coverage import combine_timeline_coverages
 
 
 def test_combined_receipt_stays_exact_when_every_target_is_exact():
@@ -61,22 +58,3 @@ def test_missing_target_receipt_fails_closed():
     assert receipt["complete"] is False
     assert receipt["coarse_sources"] == []
     assert "unavailable" in receipt["note"].lower()
-
-
-def test_later_cross_target_allocation_can_downgrade_one_exact_source():
-    receipt = downgrade_timeline_sources(
-        {
-            "complete": True,
-            "certification": "event_order_certified",
-            "exact_sources": ["Q", "proc_Luden's Echo"],
-            "coarse_sources": [],
-            "note": "Exact.",
-        },
-        ["proc_Luden's Echo"],
-        note="Charged damage is allocated later.",
-    )
-
-    assert receipt["complete"] is False
-    assert receipt["exact_sources"] == ["Q"]
-    assert receipt["coarse_sources"] == ["proc_Luden's Echo"]
-    assert receipt["note"] == "Charged damage is allocated later."
