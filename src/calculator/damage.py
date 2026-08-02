@@ -1401,6 +1401,61 @@ class _ThresholdHealthState:
         self.current_health = max(0.0, self.current_health - max(0.0, damage))
 
 
+@dataclass
+class _LifelineShieldState:
+    """One-rotation Lifeline threshold shield: trigger, absorb, expire.
+
+    The shield arms before damage that would drop the target below its
+    health threshold, absorbs only its own damage type ("all", "magic",
+    or "physical"), and expires on its sourced duration. Both ordered
+    damage walks (_calculate_shadowflame_bonus and
+    _resolve_starting_shield_outcome) share this one rule.
+    """
+
+    amount: float
+    threshold_hp: float
+    duration: float
+    damage_type: str
+    shield: float = 0.0
+    expires: float = -1.0
+    triggered: bool = False
+    absorbed_total: float = 0.0
+
+    def expire_at(self, event_time: float) -> None:
+        """Drop an active shield whose duration lapsed before this event."""
+        if self.shield > 0 and event_time > self.expires:
+            self.shield = 0.0
+
+    def absorb(
+        self,
+        remaining: float,
+        damage_type: str,
+        event_time: float,
+        current_health: float,
+    ) -> float:
+        """Trigger on a threshold-crossing hit, then absorb matching damage."""
+        if remaining <= 0 or not self._matches(damage_type):
+            return 0.0
+        if (
+            not self.triggered
+            and self.amount > 0
+            and self.threshold_hp > 0
+            and current_health - remaining < self.threshold_hp
+        ):
+            self.triggered = True
+            self.shield = self.amount
+            self.expires = event_time + self.duration
+        if self.shield <= 0:
+            return 0.0
+        absorbed = min(self.shield, remaining)
+        self.shield -= absorbed
+        self.absorbed_total += absorbed
+        return absorbed
+
+    def _matches(self, damage_type: str) -> bool:
+        return self.damage_type in ("all", damage_type)
+
+
 _LIANDRY_BURN_KEY = "burn_Liandry's Torment"
 
 
@@ -1465,11 +1520,11 @@ def _calculate_shadowflame_bonus(
     magic_shield = max(0.0, target_magic_shield)
     physical_shield = max(0.0, target_physical_shield)
     general_shield = max(0.0, target_general_shield)
-    threshold_shield = 0.0
-    threshold_shield_expires = -1.0
-    threshold_triggered = False
-    lifeline_threshold_hp = target_health * max(
-        0.0, target_threshold_shield_health_ratio
+    lifeline_shield = _LifelineShieldState(
+        amount=target_threshold_shield_amount,
+        threshold_hp=target_health * max(0.0, target_threshold_shield_health_ratio),
+        duration=target_threshold_shield_duration,
+        damage_type=target_threshold_shield_damage_type,
     )
     total_bonus = 0.0
     bonus_by_type: dict[str, float] = {}
@@ -1490,8 +1545,7 @@ def _calculate_shadowflame_bonus(
         dtype = event["damage_type"]
         event_time = float(event["time"])
         health_state.advance_to(event_time)
-        if threshold_shield > 0 and event_time > threshold_shield_expires:
-            threshold_shield = 0.0
+        lifeline_shield.expire_at(event_time)
         source_key = str(event.get("source_key", ""))
         if (
             source_key == _LIANDRY_BURN_KEY
@@ -1542,25 +1596,9 @@ def _calculate_shadowflame_bonus(
             absorbed = min(general_shield, event_damage)
             general_shield -= absorbed
             event_damage -= absorbed
-        trigger_matches = (
-            target_threshold_shield_damage_type == "all"
-            or target_threshold_shield_damage_type == dtype
+        event_damage -= lifeline_shield.absorb(
+            event_damage, dtype, event_time, health_state.current_health
         )
-        if (
-            event_damage > 0
-            and not threshold_triggered
-            and target_threshold_shield_amount > 0
-            and lifeline_threshold_hp > 0
-            and trigger_matches
-            and health_state.current_health - event_damage < lifeline_threshold_hp
-        ):
-            threshold_triggered = True
-            threshold_shield = target_threshold_shield_amount
-            threshold_shield_expires = event_time + target_threshold_shield_duration
-        if threshold_shield > 0 and event_damage > 0:
-            absorbed = min(threshold_shield, event_damage)
-            threshold_shield -= absorbed
-            event_damage -= absorbed
         health_state.trigger_before(event_damage, event_time)
         health_state.take_damage(event_damage)
 
@@ -2319,9 +2357,11 @@ def _evaluate_cast_parts(
                         if cast_times is not None and cast_index < len(cast_times)
                         else 0.0
                     )
-                    event_time = cast_time + (
-                        part.time_offset if part.time_offset is not None else 0.0
-                    ) + hit_index * (part.hit_interval or 0.0)
+                    event_time = (
+                        cast_time
+                        + (part.time_offset if part.time_offset is not None else 0.0)
+                        + hit_index * (part.hit_interval or 0.0)
+                    )
                     damage_events.append(
                         {
                             "time": event_time,
@@ -2329,9 +2369,11 @@ def _evaluate_cast_parts(
                             "damage": hit_damage,
                             "raw_damage": raw,
                             "raw_formula": part.hp_scaled_damage,
-                            "source_missing_ratio": missing_ratio
-                            if part.hp_scaled_damage is not None
-                            else None,
+                            "source_missing_ratio": (
+                                missing_ratio
+                                if part.hp_scaled_damage is not None
+                                else None
+                            ),
                             "event_precision": (
                                 "hit"
                                 if part.time_offset is not None
@@ -3510,9 +3552,7 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
                 for event in declared_events
                 if isinstance(event, dict)
             ]
-            state.breakdown[key]["event_phase"] = str(
-                info.get("event_phase", "effect")
-            )
+            state.breakdown[key]["event_phase"] = str(info.get("event_phase", "effect"))
         elif coupled_to_autos and state.num_auto_attacks > 0:
             autos_per_second = state.attack_speed * state.auto_attack_uptime
             interval = 1.0 / autos_per_second if autos_per_second > 0 else 0.0
@@ -6051,6 +6091,59 @@ def _reattribute_empowered_swings(state: FightState) -> None:
         auto_row["num_non_crits"] = remaining - crits
 
 
+def _apply_shield_reaver_venom(
+    config: FightConfig,
+    items: list[dict[str, Any]],
+    champion_stats: dict[str, float],
+) -> tuple[FightConfig, list[str]]:
+    """Cut the target's non-magic shields for the attacker's Shield Reaver.
+
+    Serpent's Fang's venom reduces the target's active shields on first
+    damage and any shields gained while the attacker keeps dealing damage —
+    a sustained rotation keeps the venom applied throughout. Magic-damage
+    shields (Hexdrinker, Maw of Malmortius, Kaenic Rookern, ability magic
+    shields) are unaffected, and Protoplasm Harness's temporary health and
+    healing are not shields.
+    """
+    is_melee = bool(champion_stats.get("is_melee", True))
+    fraction = item_effects.shield_reduction_fraction(items, is_melee=is_melee)
+    if fraction <= 0.0:
+        return config, []
+
+    keep = 1.0 - fraction
+    threshold_is_cuttable = (
+        config.target_threshold_shield_damage_type != "magic"
+        and config.target_threshold_shield_amount > 0
+    )
+    if (
+        config.target_physical_shield <= 0
+        and config.target_general_shield <= 0
+        and not threshold_is_cuttable
+    ):
+        return config, []
+
+    reduced = replace(
+        config,
+        target_physical_shield=config.target_physical_shield * keep,
+        target_general_shield=config.target_general_shield * keep,
+        target_threshold_shield_amount=(
+            config.target_threshold_shield_amount * keep
+            if threshold_is_cuttable
+            else config.target_threshold_shield_amount
+        ),
+    )
+    venom_seconds = float(
+        item_effects.required_effect_value("Serpent's Fang", "venom_duration")
+    )
+    note = (
+        f"Serpent's Fang: Shield Reaver cuts the target's non-magic shields "
+        f"by {fraction:.0%} ({'melee' if is_melee else 'ranged'}) — the "
+        f"rotation keeps its {venom_seconds:g}-second venom applied; "
+        "magic-damage shields are unaffected."
+    )
+    return reduced, [note]
+
+
 def calculate_fight_damage(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
@@ -6075,8 +6168,14 @@ def calculate_fight_damage(
     Returns:
         Dictionary with damage breakdown and total.
     """
+    # ── Shield Reaver venom cuts the target's non-magic shields ─────────
+    config, shield_reaver_notes = _apply_shield_reaver_venom(
+        config, items, champion_stats
+    )
+
     # ── Resolve resistances, penetration, amps, and attack timing ───────
     state = _resolve_combat_state(champion_stats, ability_damages, items, config)
+    state.notes.extend(shield_reaver_notes)
 
     # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
     _apply_stat_buff_ultimates(state)
@@ -6197,7 +6296,6 @@ def _resolve_starting_shield_outcome(
     magic_absorbed = 0.0
     physical_absorbed = 0.0
     general_absorbed = 0.0
-    threshold_absorbed = 0.0
     health_state = _ThresholdHealthState(
         base_max_health=state.target_health,
         current_health=state.target_health,
@@ -6206,11 +6304,12 @@ def _resolve_starting_shield_outcome(
         health_ratio=max(0.0, config.target_threshold_health_ratio),
         duration=max(0.0, config.target_threshold_health_duration),
     )
-    threshold_shield = 0.0
-    threshold_shield_expires = -1.0
-    threshold_triggered = False
-    threshold_hp = state.target_health * max(
-        0.0, config.target_threshold_shield_health_ratio
+    lifeline_shield = _LifelineShieldState(
+        amount=config.target_threshold_shield_amount,
+        threshold_hp=state.target_health
+        * max(0.0, config.target_threshold_shield_health_ratio),
+        duration=config.target_threshold_shield_duration,
+        damage_type=config.target_threshold_shield_damage_type,
     )
     for event in _ordered_damage_events(
         state.breakdown,
@@ -6220,8 +6319,7 @@ def _resolve_starting_shield_outcome(
     ):
         event_time = float(event["time"])
         health_state.advance_to(event_time)
-        if threshold_shield > 0 and event_time > threshold_shield_expires:
-            threshold_shield = 0.0
+        lifeline_shield.expire_at(event_time)
         remaining = event["damage"]
         if event["damage_type"] == "magic":
             absorbed = min(magic_shield, remaining)
@@ -6238,30 +6336,13 @@ def _resolve_starting_shield_outcome(
         general_absorbed += absorbed
         remaining -= absorbed
 
-        trigger_type = config.target_threshold_shield_damage_type
-        trigger_matches = trigger_type == "all" or trigger_type == event["damage_type"]
-        if (
-            remaining > 0
-            and not threshold_triggered
-            and config.target_threshold_shield_amount > 0
-            and threshold_hp > 0
-            and trigger_matches
-            and health_state.current_health - remaining < threshold_hp
-        ):
-            threshold_triggered = True
-            threshold_shield = config.target_threshold_shield_amount
-            threshold_shield_expires = (
-                event_time + config.target_threshold_shield_duration
-            )
-
-        if threshold_shield > 0 and remaining > 0:
-            absorbed = min(threshold_shield, remaining)
-            threshold_shield -= absorbed
-            threshold_absorbed += absorbed
-            remaining -= absorbed
+        remaining -= lifeline_shield.absorb(
+            remaining, event["damage_type"], event_time, health_state.current_health
+        )
         health_state.trigger_before(remaining, event_time)
         health_state.take_damage(remaining)
 
+    threshold_absorbed = lifeline_shield.absorbed_total
     absorbed = (
         magic_absorbed + physical_absorbed + general_absorbed + threshold_absorbed
     )

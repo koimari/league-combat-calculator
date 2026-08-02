@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 from .champions.skill_orders import get_ability_rank
-from .item_effects import ITEM_EFFECTS
+from .item_effects import ITEM_EFFECTS, required_effect_value
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,8 +138,7 @@ _IMMORTAL_SHIELDBOW_SOURCE = DefenseSource(
 _HEXDRINKER_SOURCE = DefenseSource(
     label="Hexdrinker — Lifeline",
     source_url=(
-        "https://wiki.leagueoflegends.com/en-us/"
-        "Module:ItemData/data/Hexdrinker"
+        "https://wiki.leagueoflegends.com/en-us/" "Module:ItemData/data/Hexdrinker"
     ),
     revision_id=3905721,
     revision_timestamp="2025-06-04T01:19:48Z",
@@ -168,8 +167,7 @@ _SERAPHS_SOURCE = DefenseSource(
 _STERAKS_SOURCE = DefenseSource(
     label="Sterak's Gage — Lifeline",
     source_url=(
-        "https://wiki.leagueoflegends.com/en-us/"
-        "Module:ItemData/data/Sterak%27s_Gage"
+        "https://wiki.leagueoflegends.com/en-us/" "Module:ItemData/data/Sterak%27s_Gage"
     ),
     revision_id=3905864,
     revision_timestamp="2025-06-04T02:46:55Z",
@@ -177,9 +175,7 @@ _STERAKS_SOURCE = DefenseSource(
 
 _PROTOPLASM_SOURCE = DefenseSource(
     label="Protoplasm Harness — Lifeline",
-    source_url=(
-        "https://wiki.leagueoflegends.com/en-us/" "Module:ItemData/data"
-    ),
+    source_url=("https://wiki.leagueoflegends.com/en-us/" "Module:ItemData/data"),
     revision_id=4046863,
     revision_timestamp="2026-07-28T22:43:08Z",
 )
@@ -238,7 +234,7 @@ def _lifeline_defense(
         source = _STERAKS_SOURCE
     else:  # pragma: no cover - private helper is called from a closed registry
         raise KeyError(f"Unsupported Lifeline item: {name}")
-    damage_type = str(effect.get("damage_type", "all"))
+    damage_type = str(required_effect_value(name, "damage_type"))
     qualifier = " magic" if damage_type == "magic" else ""
     assumption = (
         f"{name}'s Lifeline is ready and triggers before{qualifier} damage "
@@ -285,9 +281,7 @@ def resolve_starting_defenses(
     general_shield = champion_defenses.general_shield
     basic_damage_multiplier = champion_defenses.basic_damage_multiplier
     basic_damage_flat_reduction = champion_defenses.basic_damage_flat_reduction
-    basic_damage_flat_reduction_cap = (
-        champion_defenses.basic_damage_flat_reduction_cap
-    )
+    basic_damage_flat_reduction_cap = champion_defenses.basic_damage_flat_reduction_cap
     critical_strike_damage_multiplier = (
         champion_defenses.critical_strike_damage_multiplier
     )
@@ -303,9 +297,7 @@ def resolve_starting_defenses(
     sources = list(champion_defenses.sources)
 
     if "Kaenic Rookern" in names:
-        ratio = float(
-            ITEM_EFFECTS["Kaenic Rookern"]["magic_shield_max_health_ratio"]
-        )
+        ratio = float(ITEM_EFFECTS["Kaenic Rookern"]["magic_shield_max_health_ratio"])
         magic_shield += stats["health"] * ratio
         assumptions.append(
             "Magebane is ready because the target has not taken magic damage "
@@ -346,14 +338,16 @@ def resolve_starting_defenses(
             float(effect["bonus_health_max"]),
             level,
         )
-        threshold_health_heal = _linear_level_value(
-            float(effect["heal_min"]),
-            float(effect["heal_max"]),
-            level,
-        ) + float(effect["heal_bonus_armor_ratio"]) * float(
-            stats.get("bonus_armor", 0.0)
-        ) + float(effect["heal_bonus_mr_ratio"]) * float(
-            stats.get("bonus_magic_resistance", 0.0)
+        threshold_health_heal = (
+            _linear_level_value(
+                float(effect["heal_min"]),
+                float(effect["heal_max"]),
+                level,
+            )
+            + float(effect["heal_bonus_armor_ratio"])
+            * float(stats.get("bonus_armor", 0.0))
+            + float(effect["heal_bonus_mr_ratio"])
+            * float(stats.get("bonus_magic_resistance", 0.0))
         )
         threshold_health_ratio = float(effect["health_threshold"])
         threshold_health_duration = float(effect["duration"])
@@ -371,16 +365,12 @@ def resolve_starting_defenses(
         or threshold_shield_amount > 0
     )
     if "Spirit Visage" in names and has_shield:
-        multiplier = float(
-            ITEM_EFFECTS["Spirit Visage"]["shield_received_multiplier"]
-        )
+        multiplier = float(ITEM_EFFECTS["Spirit Visage"]["shield_received_multiplier"])
         magic_shield *= multiplier
         physical_shield *= multiplier
         general_shield *= multiplier
         threshold_shield_amount *= multiplier
-        assumptions.append(
-            "Boundless Vitality increases every modeled shield by 25%."
-        )
+        assumptions.append("Boundless Vitality increases every modeled shield by 25%.")
         sources.append(_SPIRIT_VISAGE_SOURCE)
 
     if "Spirit Visage" in names and threshold_health_heal > 0:

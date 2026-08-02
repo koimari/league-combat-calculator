@@ -550,6 +550,43 @@ class TestTargetIncomingDamageModifiers:
         assert result["threshold_shield_absorbed"] == pytest.approx(400.0)
         assert result["health_damage"] == pytest.approx(600.0)
 
+    def test_magic_threshold_shield_ignores_physical_damage(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Magic trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 350.0,
+                    "parts": (DamagePart("magic", 350.0),),
+                },
+                "W": {
+                    "name": "Physical follow up",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 200.0,
+                    "parts": (DamagePart("physical", 200.0),),
+                },
+            },
+            target_health=1000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            target_threshold_shield_amount=500.0,
+            target_threshold_shield_health_ratio=0.90,
+            target_threshold_shield_duration=3.0,
+            target_threshold_shield_damage_type="magic",
+        )
+
+        # Q triggers the magic-only Lifeline shield and consumes 350 of it.
+        # The remaining 150 must not absorb W's physical damage.
+        assert result["threshold_shield_absorbed"] == pytest.approx(350.0)
+        assert result["health_damage"] == pytest.approx(200.0)
+
     def test_timed_auto_events_allow_threshold_shield_to_expire(
         self, fight, attacker_stats
     ):
@@ -790,6 +827,124 @@ class TestTargetIncomingDamageModifiers:
                 target_threshold_health_ratio=0.30,
                 target_threshold_health_duration=5.0,
             )
+
+
+class TestShieldReaver:
+    """Serpent's Fang venom cuts the target's non-magic shields."""
+
+    _TRIGGER_Q = {
+        "Q": {
+            "name": "Magic trigger",
+            "rank": 1,
+            "cooldown": 10.0,
+            "damage_type": "magic",
+            "total_raw": 800.0,
+            "parts": (DamagePart("magic", 800.0),),
+        }
+    }
+
+    def _fang_fight(self, fight, attacker_stats, **overrides):
+        return fight(
+            attacker_stats(**overrides.pop("stats", {})),
+            self._TRIGGER_Q,
+            items=[get_item_by_name("Serpent's Fang")],
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            **overrides,
+        )
+
+    def test_melee_cuts_general_lifeline_shield_by_half(self, fight, attacker_stats):
+        result = self._fang_fight(
+            fight,
+            attacker_stats,
+            target_threshold_shield_amount=400.0,
+            target_threshold_shield_health_ratio=0.30,
+            target_threshold_shield_duration=3.0,
+            target_threshold_shield_damage_type="all",
+        )
+
+        assert result["threshold_shield_absorbed"] == pytest.approx(200.0)
+        assert result["health_damage"] == pytest.approx(600.0)
+        assert any("Shield Reaver" in note for note in result["notes"])
+
+    def test_ranged_cuts_general_lifeline_shield_by_35_percent(
+        self, fight, attacker_stats
+    ):
+        result = self._fang_fight(
+            fight,
+            attacker_stats,
+            stats={"is_melee": False},
+            target_threshold_shield_amount=400.0,
+            target_threshold_shield_health_ratio=0.30,
+            target_threshold_shield_duration=3.0,
+            target_threshold_shield_damage_type="all",
+        )
+
+        assert result["threshold_shield_absorbed"] == pytest.approx(260.0)
+
+    def test_magic_lifeline_shield_is_unaffected(self, fight, attacker_stats):
+        result = self._fang_fight(
+            fight,
+            attacker_stats,
+            target_threshold_shield_amount=400.0,
+            target_threshold_shield_health_ratio=0.30,
+            target_threshold_shield_duration=3.0,
+            target_threshold_shield_damage_type="magic",
+        )
+
+        assert result["threshold_shield_absorbed"] == pytest.approx(400.0)
+
+    def test_starting_magic_shield_immune_but_general_shield_cut(
+        self, fight, attacker_stats
+    ):
+        result = self._fang_fight(
+            fight,
+            attacker_stats,
+            target_magic_shield=300.0,
+            target_general_shield=200.0,
+        )
+
+        assert result["magic_shield_absorbed"] == pytest.approx(300.0)
+        assert result["general_shield_absorbed"] == pytest.approx(100.0)
+
+    def test_starting_physical_shield_is_cut(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Physical hit",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("physical", 800.0),),
+                }
+            },
+            items=[get_item_by_name("Serpent's Fang")],
+            target_health=1000.0,
+            target_armor=0.0,
+            target_physical_shield=300.0,
+        )
+
+        assert result["physical_shield_absorbed"] == pytest.approx(150.0)
+
+    def test_protoplasm_health_and_healing_are_not_shields(self, fight, attacker_stats):
+        result = self._fang_fight(
+            fight,
+            attacker_stats,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert result["threshold_health_bonus_gained"] == 200.0
+        assert result["target_effective_max_health"] == 1200.0
+
+    def test_no_note_without_target_shields(self, fight, attacker_stats):
+        result = self._fang_fight(fight, attacker_stats)
+
+        assert not any("Shield Reaver" in note for note in result["notes"])
 
 
 class TestBorkCurrentHpSimulation:

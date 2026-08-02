@@ -34,7 +34,6 @@ _BLOCKED_REASONS: dict[str, str] = {
     "Redemption": "Intervention's target-max-health true damage is not modelled.",
     "Rod of Ages": "Timeless minute stacks and level gain are not modelled.",
     "Runaan's Hurricane": "Wind's Fury multi-target bolts and copied on-hits are not modelled.",
-    "Serpent's Fang": "Shield Reaver's active and future shield reduction is not modelled.",
     "Swiftmarch": "Noxian Fervor's movement-speed-scaled adaptive force is not modelled.",
     "Thornmail": (
         "Thorns' reactive magic damage requires incoming attack events that are not modelled."
@@ -167,7 +166,6 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Guardian Angel": "Rebirth is not modelled in target health damage.",
     "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
     "Heartsteel": "Permanent Colossal Consumption health stacks are not modelled.",
-    "Immortal Shieldbow": "Lifeline's low-health shield is not modelled.",
     "Jak'Sho, The Protean": "Voidborn Resilience's combat resist stacks are not modelled.",
     "Knight's Vow": "Pledge damage redirection and healing are not modelled.",
     "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",

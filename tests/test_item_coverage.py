@@ -35,6 +35,7 @@ def test_every_current_optimizer_candidate_has_an_explicit_classification():
         ("Immortal Path", "blocked"),
         ("Mejai's Soulstealer", "modeled_state"),
         ("Rabadon's Deathcap", "modeled_effect"),
+        ("Serpent's Fang", "modeled_effect"),
         ("Kaenic Rookern", "stats_only"),
         ("Void Staff", "stats_only"),
     ],
@@ -112,6 +113,7 @@ def test_optimizer_rejects_a_locked_item_with_unmodeled_damage_mechanics():
         ("Seraph's Embrace", "modeled_one_rotation"),
         ("Sterak's Gage", "modeled_one_rotation"),
         ("Protoplasm Harness", "modeled_one_rotation"),
+        ("Serpent's Fang", "not_target_relevant"),
         ("Void Staff", "not_target_relevant"),
     ],
 )

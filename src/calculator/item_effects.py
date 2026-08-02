@@ -677,6 +677,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Immortal Shieldbow": {
         "type": "target_threshold_shield",
+        "damage_type": "all",
         "health_threshold": 0.30,
         "shield_base": 400.0,
         "shield_max": 700.0,
@@ -731,6 +732,15 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "heal_bonus_mr_ratio": 1.75,
         "duration": 5.0,
         "cooldown": 90.0,
+    },
+    # ── Shield reduction (attacker passives that cut the target's shields) ──
+    "Serpent's Fang": {
+        "type": "shield_reduction",
+        # Shield Reaver: dealing damage inflicts a 3-second venom cutting
+        # shields the target gains; magic-damage shields are unaffected.
+        "shield_reduction_melee": 0.50,
+        "shield_reduction_ranged": 0.35,
+        "venom_duration": 3.0,
     },
     "Stormrazor": {
         "type": "on_hit_once",
@@ -851,6 +861,9 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Seraph's Embrace": frozenset(
         {"health_threshold", "shield_max_mana_ratio", "duration"}
     ),
+    "Serpent's Fang": frozenset(
+        {"shield_reduction_melee", "shield_reduction_ranged", "venom_duration"}
+    ),
     "Sterak's Gage": frozenset(
         {"health_threshold", "shield_bonus_health_ratio", "duration"}
     ),
@@ -951,7 +964,7 @@ def refresh_item_effects() -> None:
 ITEM_EFFECTS: dict[str, dict[str, Any]] = _build_item_effects()
 
 
-def _required_effect_value(item_name: str, key: str) -> Any:
+def required_effect_value(item_name: str, key: str) -> Any:
     """Read a required key from an item's effect entry, failing loudly.
 
     A missing key means the parser omitted a required parser-owned value or
@@ -1955,6 +1968,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "periodic_aoe",
         "proc",
         "shaped_charge",
+        "shield_reduction",
         "spellblade",
         "stat_conversion",
         "target_mitigation",
@@ -2201,9 +2215,9 @@ def _ap_multiplier(items: list[dict[str, Any]]) -> float:
     names = _item_names(items)
     bonus = 0.0
     if "Rabadon's Deathcap" in names:
-        bonus += _required_effect_value("Rabadon's Deathcap", "ap_percent_increase")
+        bonus += required_effect_value("Rabadon's Deathcap", "ap_percent_increase")
     if "Blackfire Torch" in names:
-        bonus += _required_effect_value("Blackfire Torch", "ap_amp_per_target")
+        bonus += required_effect_value("Blackfire Torch", "ap_amp_per_target")
     return 1.0 + bonus
 
 
@@ -2215,9 +2229,7 @@ def _permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
     """
     if "Rabadon's Deathcap" not in _item_names(items):
         return 1.0
-    return 1.0 + _required_effect_value(
-        "Rabadon's Deathcap", "ap_percent_increase"
-    )
+    return 1.0 + required_effect_value("Rabadon's Deathcap", "ap_percent_increase")
 
 
 def _mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
@@ -2234,7 +2246,7 @@ def _mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
     total = 0.0
     for name in ("Archangel's Staff", "Seraph's Embrace"):
         if name in names:
-            total += _required_effect_value(name, "bonus_mana_to_ap_ratio") * bonus_mana
+            total += required_effect_value(name, "bonus_mana_to_ap_ratio") * bonus_mana
     return total
 
 
@@ -2253,8 +2265,8 @@ def _dawncore_bonus_ap(
     """
     if "Dawncore" not in _item_names(items):
         return 0.0
-    ap_per_unit = _required_effect_value("Dawncore", "ap_per_mana_regen_unit")
-    threshold = _required_effect_value("Dawncore", "mana_regen_threshold_percent")
+    ap_per_unit = required_effect_value("Dawncore", "ap_per_mana_regen_unit")
+    threshold = required_effect_value("Dawncore", "mana_regen_threshold_percent")
     return (bonus_mana_regen_percent / threshold) * ap_per_unit
 
 
@@ -2269,7 +2281,7 @@ def _flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
     """
     if "Staff of Flowing Water" not in _item_names(items):
         return 0.0
-    return _required_effect_value("Staff of Flowing Water", "rapids_bonus_ap")
+    return required_effect_value("Staff of Flowing Water", "rapids_bonus_ap")
 
 
 def _passive_attack_speed_bonus(
@@ -2293,10 +2305,10 @@ def _passive_attack_speed_bonus(
     bonus = 0.0
     if "Bandlepipes" in names:
         key = "bonus_attack_speed_melee" if is_melee else "bonus_attack_speed_ranged"
-        bonus += _required_effect_value("Bandlepipes", key)
+        bonus += required_effect_value("Bandlepipes", key)
     for name in ("Experimental Hexplate", "Yun Tal Wildarrows"):
         if name in names:
-            bonus += _required_effect_value(name, "bonus_attack_speed_percent")
+            bonus += required_effect_value(name, "bonus_attack_speed_percent")
     return bonus
 
 
@@ -2312,7 +2324,7 @@ def _muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
     """
     if "Muramana" not in _item_names(items):
         return 0.0
-    return _required_effect_value("Muramana", "max_mana_to_ad_ratio") * max_mana
+    return required_effect_value("Muramana", "max_mana_to_ad_ratio") * max_mana
 
 
 def bloodmail_bonus_ad(
@@ -2334,8 +2346,27 @@ def bloodmail_bonus_ad(
     """
     if "Overlord's Bloodmail" not in _item_names(items):
         return 0.0
-    ratio = _required_effect_value("Overlord's Bloodmail", "bonus_health_to_ad_ratio")
+    ratio = required_effect_value("Overlord's Bloodmail", "bonus_health_to_ad_ratio")
     return ratio * bonus_health
+
+
+def shield_reduction_fraction(items: list[dict[str, Any]], *, is_melee: bool) -> float:
+    """Serpent's Fang Shield Reaver: fraction cut from the target's shields.
+
+    The venom does not affect magic-damage shields; the caller applies the
+    cut only to non-magic shield pools.
+
+    Args:
+        items: The attacker's item data dicts.
+        is_melee: Whether the attacker is melee (50% cut) or ranged (35%).
+
+    Returns:
+        The reduction fraction, or 0.0 without the item.
+    """
+    if "Serpent's Fang" not in _item_names(items):
+        return 0.0
+    key = "shield_reduction_melee" if is_melee else "shield_reduction_ranged"
+    return float(required_effect_value("Serpent's Fang", key))
 
 
 def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
@@ -2350,9 +2381,7 @@ def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
     """
     if "Sterak's Gage" not in _item_names(items):
         return 0.0
-    return (
-        _required_effect_value("Sterak's Gage", "base_ad_to_bonus_ad_ratio") * base_ad
-    )
+    return required_effect_value("Sterak's Gage", "base_ad_to_bonus_ad_ratio") * base_ad
 
 
 def _terminus_max_stack_bonuses(
@@ -2376,16 +2405,16 @@ def _terminus_max_stack_bonuses(
     """
     if "Terminus" not in _item_names(items):
         return 0.0, 0.0
-    max_stacks = _required_effect_value("Terminus", "dark_max_stacks")
-    low_resist = _required_effect_value("Terminus", "light_resist_min")
-    high_resist = _required_effect_value("Terminus", "light_resist_max")
+    max_stacks = required_effect_value("Terminus", "dark_max_stacks")
+    low_resist = required_effect_value("Terminus", "light_resist_min")
+    high_resist = required_effect_value("Terminus", "light_resist_max")
     clamped_level = max(1, min(level, 18))
     resist_per_stack = (
         low_resist + (high_resist - low_resist) * (clamped_level - 1) / 17.0
     )
     bonus_resist = resist_per_stack * max_stacks
     pen_percent = (
-        _required_effect_value("Terminus", "dark_pen_per_stack") * max_stacks * 100.0
+        required_effect_value("Terminus", "dark_pen_per_stack") * max_stacks * 100.0
     )
     return bonus_resist, pen_percent
 
@@ -2401,7 +2430,7 @@ def _basic_ability_haste(items: list[dict[str, Any]]) -> float:
     """
     if "Spear of Shojin" not in _item_names(items):
         return 0.0
-    return _required_effect_value("Spear of Shojin", "basic_ability_haste")
+    return required_effect_value("Spear of Shojin", "basic_ability_haste")
 
 
 @dataclass(frozen=True)
@@ -2457,7 +2486,7 @@ def resolve_stat_effects(
     input_bonus_ap, input_move_speed = _input_option_stat_bonuses(items, item_options)
     item_bonus_health_multiplier = 1.0
     if "Warmog's Armor" in _item_names(items):
-        item_bonus_health_multiplier += _required_effect_value(
+        item_bonus_health_multiplier += required_effect_value(
             "Warmog's Armor", "item_bonus_health_ratio"
         )
     effective_bonus_health = bonus_health * item_bonus_health_multiplier
