@@ -23,8 +23,15 @@ Both of E's leveling entries are named "Bonus Magic Damage", so
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .slotlib import damage_entry, extract_cooldown, simple_damage, sum_modifiers
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    simple_damage,
+    sum_modifiers,
+)
 
 
 def _bonus_magic_damage_levelings(
@@ -70,6 +77,86 @@ def _twin_fang(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
+# The current Wiki packet supplies the actual poison cadence, rather than
+# merely a pre-summed display value. Keeping these ticks explicit lets the
+# coupled fight ledger order burns and incoming effects against Cassiopeia's
+# damage instead of marking Q/W as aggregate cast-boundary damage.
+_Q_TICKS = 7
+_Q_FIRST_TICK = 0.429
+_Q_TICK_INTERVAL = 0.429
+_Q_DURATION = 3.0
+_W_TICKS = 19
+_W_FIRST_TICK = 0.263
+_W_TICK_INTERVAL = 0.263
+_W_DURATION = 5.0
+
+
+def _noxious_blast(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: seven sourced poison ticks over the three-second duration."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    per_tick = extract_named(
+        ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
+    )
+    total = per_tick * _Q_TICKS
+    entry = damage_entry(
+        ability.get("name", "Noxious Blast"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "magic",
+    )
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            per_tick,
+            count=_Q_TICKS,
+            time_offset=_Q_FIRST_TICK,
+            hit_interval=_Q_TICK_INTERVAL,
+        ),
+    )
+    entry["dot_duration"] = _Q_DURATION
+    entry["detail"] = "7 poison ticks at 0.429s intervals"
+    return entry
+
+
+def _miasma(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: nineteen sourced zone ticks at 0.263-second intervals."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    per_tick = extract_named(
+        ability, "Magic Damage Per Second", rank, ctx.stats, ctx.target
+    ) / 4.0
+    total = per_tick * _W_TICKS
+    entry = damage_entry(
+        ability.get("name", "Miasma"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "magic",
+    )
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            per_tick,
+            count=_W_TICKS,
+            time_offset=_W_FIRST_TICK,
+            hit_interval=_W_TICK_INTERVAL,
+        ),
+    )
+    entry["dot_duration"] = _W_DURATION
+    entry["detail"] = "19 zone ticks at 0.263s intervals"
+    return entry
+
+
 OPTIONS: list[dict[str, Any]] = [
     {
         "key": "target_poisoned",
@@ -93,8 +180,8 @@ SLOTS = {
     # Q/W poison ticks are ability damage past the cast, so item burns
     # (Liandry's, Blackfire) stay refreshed for the DoT tail
     # (dot_duration, like Brand's Blaze): Q poisons 3s, W ticks 5s.
-    "Q": simple_damage(attr="Total Magic Damage", dmg_type="magic", dot_duration=3.0),
-    "W": simple_damage(attr="Total Magic Damage", dmg_type="magic", dot_duration=5.0),
+    "Q": _noxious_blast,
+    "W": _miasma,
     "E": _twin_fang,
     "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
 }
