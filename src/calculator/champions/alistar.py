@@ -54,12 +54,19 @@ def _extract_e_on_hit_damage(
             if len(values) >= level:
                 return float(values[level - 1])
 
+            # The wiki defines per-level arrays over levels 1-18; clamp
+            # top-quest levels 19-20 to the array's range so a short array
+            # falls back to its level-18 value instead of extrapolating.
+            scaling_level = min(level, 18)
+            if len(values) >= scaling_level:
+                return float(values[scaling_level - 1])
+
             # Interpolate: map level (1-18) into the values array.
             num_values = len(values)
             if num_values == 1:
                 return float(values[0])
 
-            fraction = (level - 1) / 17.0  # 0.0 at level 1, 1.0 at 18
+            fraction = (scaling_level - 1) / 17.0  # 0.0 at level 1, 1.0 at 18
             index_float = fraction * (num_values - 1)
             low_idx = int(index_float)
             high_idx = min(low_idx + 1, num_values - 1)

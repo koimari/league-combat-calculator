@@ -182,9 +182,14 @@ function buildStats(itemIds, stackCounts = []) {
   return total;
 }
 
+function attackerLevelCap() {
+  // Levels 19-20 are the top-lane role quest reward; everyone else caps at 18.
+  return state.attacker.role === "top" && state.attacker.roleQuestComplete ? 20 : 18;
+}
+
 function championStats(name, level, itemIds = [], stackCounts = []) {
   const champion = getChampion(name);
-  const boundedLevel = Math.max(1, Math.min(18, Number(level) || 1));
+  const boundedLevel = Math.max(1, Math.min(20, Number(level) || 1));
   const scale = (boundedLevel - 1) * (0.7025 + 0.0175 * (boundedLevel - 1));
   const build = buildStats(itemIds, stackCounts);
   const baseHp = (champion?.hp || 0) + (champion?.hpPerLevel || 0) * scale;
@@ -410,6 +415,7 @@ function roleQuestNote() {
   if (state.attacker.role === "mid") return "+8% bonus AD and AP · Tier 3 boots use one of six slots.";
   if (state.attacker.role === "bottom") return "Six item slots · boots move into the dedicated quest slot.";
   if (state.attacker.role === "support") return "Reserved ward / support quest slot · excluded from damage scoring.";
+  if (state.attacker.role === "top") return "Level cap raised to 20 · no item-slot change.";
   return "No item-slot change for this role.";
 }
 
@@ -1808,6 +1814,7 @@ document.addEventListener("click", (event) => {
     state.attacker.role = roleButton.dataset.role;
     state.attacker.questBootA = 0;
     state.attacker.questBootB = 0;
+    state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     invalidateOptimization();
     return render();
   }
@@ -1815,6 +1822,7 @@ document.addEventListener("click", (event) => {
     state.attacker.roleQuestComplete = !state.attacker.roleQuestComplete;
     state.attacker.questBootA = 0;
     state.attacker.questBootB = 0;
+    state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     invalidateOptimization();
     return render();
   }
@@ -1833,7 +1841,8 @@ document.addEventListener("click", (event) => {
   if (bisButton) return openBis(bisButton.dataset.bisPath);
   const levelButton = event.target.closest("[data-level]");
   if (levelButton) {
-    setPath(levelButton.dataset.level, Math.max(1, Math.min(18, Number(pathValue(levelButton.dataset.level)) + Number(levelButton.dataset.delta))));
+    const cap = levelButton.dataset.level === "attacker.level" ? attackerLevelCap() : 18;
+    setPath(levelButton.dataset.level, Math.max(1, Math.min(cap, Number(pathValue(levelButton.dataset.level)) + Number(levelButton.dataset.delta))));
     return render();
   }
   const rosterRankButton = event.target.closest("[data-roster-rank]");

@@ -190,3 +190,36 @@ class TestFightEngineIntegration:
             ),
         )
         assert result["total_damage"] > 0
+
+
+class TestEPastLevel18:
+    """Top-quest levels 19-20 must never crash on E's per-level wiki array.
+
+    Alistar's cached array already carries real level 19-20 entries, so
+    those are used directly; a hypothetical array that stops at 18 falls
+    back to its level-18 value instead of indexing out of range.
+    """
+
+    def test_e_empowered_auto_uses_real_level_20_entry(self, alistar_data) -> None:
+        e_ability = alistar_data["abilities"]["E"][0]
+        at_18 = _extract_e_on_hit_damage(e_ability, 18)
+        assert _extract_e_on_hit_damage(e_ability, 20) >= at_18
+
+    def test_e_empowered_auto_clamps_an_18_entry_array(self) -> None:
+        ability = {
+            "effects": [
+                {
+                    "leveling": [
+                        {
+                            "attribute": "Bonus Magic Damage",
+                            "modifiers": [
+                                {"values": [float(20 + 15 * i) for i in range(18)]}
+                            ],
+                        }
+                    ]
+                }
+            ]
+        }
+        assert _extract_e_on_hit_damage(ability, 20) == pytest.approx(
+            _extract_e_on_hit_damage(ability, 18)
+        )

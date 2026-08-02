@@ -80,7 +80,7 @@ def get_champion_base_stats(
 
     Args:
         champion_data: Champion data dictionary from the CDN.
-        level: Champion level (1-18).
+        level: Champion level (1-20; 19-20 need the completed top quest).
 
     Returns:
         Dictionary with stat names and their computed values.

@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.calculator.data_fetcher import get_champion
 from src.calculator.scenario import ChampionLoadout, parse_roster
 
 
@@ -56,9 +57,7 @@ def test_spirit_visage_amplifies_champion_and_kaenic_shields():
     # Spirit Visage itself adds health, so compare against the two shield
     # formulas evaluated from the final build rather than the other loadout.
     galio_percent = 7.5 + (13.5 - 7.5) * 11 / 17
-    expected_before_amp = with_visage.stats["health"] * (
-        galio_percent / 100 + 0.15
-    )
+    expected_before_amp = with_visage.stats["health"] * (galio_percent / 100 + 0.15)
     assert with_visage.defenses.magic_shield == pytest.approx(
         expected_before_amp * 1.25
     )
@@ -225,3 +224,43 @@ def test_parse_roster_enforces_team_size():
 
     with pytest.raises(ValueError, match="at most 5 champions"):
         parse_roster({"enemies": roster}, "enemies", maximum=5)
+
+
+def test_level_20_requires_a_completed_top_quest():
+    base = {"champion": "Galio", "level": 20}
+    for extra in (
+        {},
+        {"role": "mid", "role_quest_complete": True},
+        {"role": "top", "role_quest_complete": False},
+    ):
+        with pytest.raises(ValueError, match="top"):
+            ChampionLoadout.from_request({**base, **extra}, field="enemies[0]")
+
+    accepted = ChampionLoadout.from_request(
+        {**base, "role": "top", "role_quest_complete": True}, field="enemies[0]"
+    )
+    assert accepted.level == 20
+
+
+def test_level_21_is_rejected_even_with_a_completed_top_quest():
+    with pytest.raises(ValueError, match="level must be between"):
+        ChampionLoadout.from_request(
+            {
+                "champion": "Galio",
+                "level": 21,
+                "role": "top",
+                "role_quest_complete": True,
+            },
+            field="enemies[0]",
+        )
+
+
+def test_level_20_base_health_follows_the_growth_formula():
+    loadout = ChampionLoadout.from_request(
+        {"champion": "Galio", "level": 20, "role": "top", "role_quest_complete": True},
+        field="loadout",
+    ).resolve()
+
+    health = get_champion("Galio")["stats"]["health"]
+    expected = health["flat"] + health["perLevel"] * 19 * (0.7025 + 0.0175 * 19)
+    assert loadout.stats["base_health"] == pytest.approx(expected, abs=0.5)
