@@ -1,14 +1,11 @@
-"""Bel'Veth — slot map for the archetype engine.
+"""Bel'Veth — revision-backed 26.15 slot map for the archetype engine.
 
 Why each slot is non-generic:
-- P (Death in Lavender) is three stat/modifier components with no direct
-  damage: a 75% modifier on ALL basic-attack damage (base AD, crits, and
-  every on-hit rider) emitted as an ``auto_attack_override``; always-active
-  temporary bonus attack speed (20-40% by level); and permanent
-  Lavender-stack attack speed (0.28-1.1% per stack by level, driven by the
-  ``lavender_stacks`` option). The JSON stores both AS arrays under the
-  generic attribute "Per-Level Scaling" (effect[1] = temp AS, effect[2] =
-  per-stack), which no classifier can attribute.
+- P (Death in Lavender) has no direct damage. Ability casts grant a flat
+  20% bonus attack speed for three seconds; permanent Lavender stacks grant
+  0.1-2% bonus attack speed each by champion level. Patch 26.15 restored
+  basic attacks to 100% damage while retaining the passive's 75% modifier
+  on on-hit riders.
 - Q (Void Surge) is four directional dashes: the ``q_casts`` option
   multiplies the per-rotation cast count, dashes can crit and each applies
   item on-hit effects at 75% (``applies_item_on_hits``), and the real
@@ -17,16 +14,16 @@ Why each slot is non-generic:
 - W (Above and Below) is the one generic-shaped slot: a plain
   "Magic Damage" attribute read (knockup/slow are utility, not modeled).
 - E (Royal Maelstrom) computes its slash count from final bonus attack
-  speed — floor(6 + bonus AS% / 33.3) — and interpolates per-slash damage
+  speed — floor(6 + bonus AS% / 40) — and interpolates per-slash damage
   between the JSON min/max attributes by target missing health; slashes
-  can crit, and each applies item on-hit effects at 8-32% (interpolated
+  can crit, and each applies item on-hit effects at 12-24% (interpolated
   by the same missing-health fraction). The monster rows (effect[2]) and
   "Damage Reduction" (defensive) must never parse as damage.
 - R (Endless Banquet) is three modeled components: the Void Coral
   explosion (true damage + 25% of target missing health, option-driven),
   the True Form stat buff (bonus health plus a TOTAL-attack-speed
   multiplier that needs custom fight-engine handling and must NOT feed
-  E's slash count), and a ramping every-2nd-attack true damage proc
+  E's slash count), and a ramping every-attack true damage proc
   emitted as a synthetic ONHIT slot ("R_onhit"). Void Remora pets are
   skipped (minion-stat summons, no champion combat damage).
 """
@@ -49,14 +46,16 @@ from .slotlib import (
 
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Bel%27Veth
-PASSIVE_BASIC_ATTACK_RATIO = 0.75  # all basic-attack damage reduced to 75%
+PASSIVE_BASIC_ATTACK_RATIO = 1.0  # patch 26.15 restored full basic-attack damage
+PASSIVE_ON_HIT_RATIO = 0.75  # on-hit riders retain Bel'Veth's modifier
+PASSIVE_TEMP_BONUS_AS = 20.0  # refreshed for 3 seconds by every ability cast
 Q_DIRECTION_COOLDOWNS = (16.0, 15.0, 14.0, 13.0, 12.0)  # per-direction dash CD
 Q_ON_HIT_EFFECTIVENESS = 0.75  # each dash applies item on-hits at 75%
 E_BASE_SLASHES = 6  # base slash count
-E_BONUS_AS_PER_EXTRA_SLASH = 33.3  # +1 slash per 33.3% bonus attack speed
-E_ON_HIT_MIN_EFFECTIVENESS = 0.08  # per-slash item on-hits at 0% missing HP
-E_ON_HIT_MAX_EFFECTIVENESS = 0.32  # per-slash item on-hits at 100% missing HP
-R_ONHIT_CADENCE = 2  # R passive procs on every 2nd basic attack
+E_BONUS_AS_PER_EXTRA_SLASH = 40.0  # +1 slash per 40% bonus attack speed
+E_ON_HIT_MIN_EFFECTIVENESS = 0.12  # per-slash on-hits at 0% missing HP
+E_ON_HIT_MAX_EFFECTIVENESS = 0.24  # per-slash on-hits at 100% missing HP
+R_ONHIT_CADENCE = 1  # patch 26.15: R passive procs on every attack
 
 
 def _missing_hp_fraction(ctx: SlotCtx) -> float:
@@ -68,10 +67,9 @@ def _missing_hp_fraction(ctx: SlotCtx) -> float:
 def _per_level_scaling(ability: dict[str, Any], occurrence: int, level: int) -> float:
     """Value of the N-th "Per-Level Scaling" leveling entry at *level*.
 
-    P stores two arrays under this one generic attribute name (temp AS in
-    effect[1], Lavender per-stack AS in effect[2]), so the shared
-    first-match lookup cannot address the second. 18-entry arrays clamp at
-    their last value for levels 19-20 (``sum_modifiers`` index clamping).
+    Death in Lavender stores its permanent-stack AS under this generic
+    attribute name. Arrays clamp at their last value when shorter than the
+    requested level (``sum_modifiers`` index clamping).
     """
     seen = 0
     for effect in ability.get("effects", []):
@@ -84,21 +82,20 @@ def _per_level_scaling(ability: dict[str, Any], occurrence: int, level: int) -> 
 
 
 def _death_in_lavender(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: 75% basic-attack modifier + always-active bonus attack speed.
+    """P: full basic-attack damage, 75% on-hits, and bonus attack speed.
 
-    BUFF phase — the bonus AS (temp stacks + permanent Lavender stacks)
+    BUFF phase — the bonus AS (temporary buff + permanent Lavender stacks)
     is fed into ``ctx.stats`` so E's slash count sees it, and emitted as
-    a ``stat_buff`` so the fight engine's auto count scales too. The 75%
-    modifier rides an ``auto_attack_override``: ``damage_ratio`` scales
-    the autos themselves, ``on_hit_effectiveness`` scales every on-hit
-    rider on them (items, spellblade, R's ramping proc).
+    a ``stat_buff`` so the fight engine's auto count scales too. The attack
+    override keeps attacks at full damage while scaling every on-hit rider
+    (items, spellblade, R's ramping proc) to 75%.
     """
     ability = ctx.ability()
     if ability is None:
         return None
 
-    temp_as = _per_level_scaling(ability, 0, ctx.level)
-    per_stack = _per_level_scaling(ability, 1, ctx.level)
+    temp_as = PASSIVE_TEMP_BONUS_AS
+    per_stack = _per_level_scaling(ability, 0, ctx.level)
     stacks = max(0, int(ctx.options.get("lavender_stacks", 0)))
     bonus_as = temp_as + per_stack * stacks
 
@@ -116,11 +113,11 @@ def _death_in_lavender(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
     entry["auto_attack_override"] = {
         "damage_ratio": PASSIVE_BASIC_ATTACK_RATIO,
-        "on_hit_effectiveness": PASSIVE_BASIC_ATTACK_RATIO,
+        "on_hit_effectiveness": PASSIVE_ON_HIT_RATIO,
     }
     entry["detail"] = (
-        f"+{bonus_as:.1f}% bonus attack speed; basic attacks and their "
-        f"on-hit riders deal {PASSIVE_BASIC_ATTACK_RATIO:.0%} damage"
+        f"+{bonus_as:.1f}% bonus attack speed; basic attacks deal full "
+        f"damage and on-hit riders deal {PASSIVE_ON_HIT_RATIO:.0%}"
     )
     return entry
 
@@ -129,7 +126,7 @@ _death_in_lavender.phase = BUFF
 
 
 def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: ``q_casts`` directional dashes, each 0-20 + 100% AD, can crit."""
+    """Q: ``q_casts`` directional dashes, each 12-20 + 105% AD, can crit."""
     ability = ctx.ability()
     if ability is None:
         return None
@@ -196,7 +193,7 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
         "parts": (
             DamagePart("physical", per_slash, count=slashes, crit_effectiveness=1.0),
         ),
-        # Each slash applies item on-hits at 8-32%, interpolated by the
+        # Each slash applies item on-hits at 12-24%, interpolated by the
         # same missing-health fraction as the slash damage. Slashes are
         # real attacks (wiki: "on-hit, on-attack, and ability effects"),
         # so they also advance on-attack cadences (Guinsoo phantom).
@@ -214,7 +211,7 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R active: Void Coral explosion (true damage + 25% missing health),
+    """R active: Void Coral explosion (true damage + 20% missing health),
     plus the True Form stat buff when the ``true_form`` option is on."""
     ability = ctx.ability()
     if ability is None:
@@ -265,12 +262,12 @@ def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _endless_banquet_onhit(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R passive: ramping true damage on every 2nd basic attack.
+    """R passive: ramping true damage on every attack and Q/E on-hit.
 
-    Proc k deals k x (6/10/14 + 12% bonus AD) — stacks accumulate and
-    never reset. Emitted as a ramping on-hit; the fight engine owns the
-    auto-count cadence, and the passive's 75% basic-attack modifier
-    applies through the override's ``on_hit_effectiveness``.
+    Hit k deals k x (2/4/6 + 3% bonus AD) — stacks accumulate on one target
+    and expire after five seconds without a hit. Emitted as a ramping on-hit;
+    the fight engine owns the hit sequence, and each carrier's on-hit
+    modifier (75% autos/Q, 12-24% E) applies to that instance.
     """
     ability = ctx.ability("R")
     if ability is None:
@@ -280,7 +277,7 @@ def _endless_banquet_onhit(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     per_stack = extract_named(ability, "Bonus True Damage", rank, ctx.stats, ctx.target)
-    name = "Endless Banquet (every 2nd attack)"
+    name = "Endless Banquet (ramping on-hit)"
     return ability_on_hit_entry(
         name,
         rank,
@@ -291,6 +288,7 @@ def _endless_banquet_onhit(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "true",
             "stacks_required": R_ONHIT_CADENCE,
             "ramping": True,
+            "applies_on_ability_on_hits": True,
         },
     )
 
@@ -332,14 +330,15 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Passive temporary attack speed (20-40% by level) treated as always "
-    "active — she holds Death in Lavender stacks throughout a real combo",
-    "Basic attacks and ALL their riders (on-hit items, crits, R passive "
-    "true damage) deal 75% damage per her passive; ability damage is "
-    "unaffected",
+    "Passive 20% temporary attack speed is treated as active throughout the "
+    "selected combo because every ability cast refreshes its three seconds",
+    "Patch 26.15 restored basic attacks and crits to 100% damage; on-hit "
+    "riders still use Bel'Veth's sourced 75% modifier",
     "Q applies item on-hit effects once per dash at 75%; E once per slash "
-    "at 8-32% (interpolated by target missing health) — each is that "
+    "at 12-24% (interpolated by target missing health) — each is that "
     "ability's own modifier, independent of the passive's auto-only 75%",
+    "R's ramping true-damage passive applies on every basic attack and on "
+    "Q/E on-hit instance, using the carrier's own on-hit effectiveness",
     "Q/E applications trigger on-hit item damage (Nashor's, Wit's End, "
     "BotRK, ...) and count on the shared on-hit stack counters "
     "(Kraken/Hullbreaker) — a proc fires at the effectiveness of the hit "
@@ -347,7 +346,7 @@ ASSUMPTIONS = [
     "E slashes are real attacks (wiki: on-hit, on-attack, and ability "
     "effects) and advance on-attack cadences: Guinsoo's phantom-hit "
     "counter (a slash-fired phantom re-applies item on-hits at the "
-    "slash's 8-32%); Q is on-hit only and never advances on-attack "
+    "slash's 12-24%); Q is on-hit only and never advances on-attack "
     "mechanics",
     "On-attack mechanics the engine does not model per-hit are "
     "unaffected by E: energized stacking (RFC/Voltaic use a cooldown "
@@ -358,8 +357,6 @@ ASSUMPTIONS = [
     "Shared counter hit order: rotation ability hits (cast order, "
     "recasts grouped) land before the fight's autos — the sim's "
     "existing rotation-then-autos timeline",
-    "R's every-2nd-attack true damage counts basic attacks only — Q "
-    "resets the attack timer but is not a basic attack",
     "Target missing health defaults to 50% (shared option driving E slash "
     "damage, E on-hit effectiveness, and R explosion)",
     "Q per-direction dash cooldown (16-12s) is wiki prose (the JSON holds "
@@ -372,6 +369,45 @@ ASSUMPTIONS = [
     "not count as bonus AS for E's slash count",
     "'Based on level' scalings read the JSON per-level arrays (which "
     "extend past level 18); a shorter array would clamp at its last entry",
+]
+
+SOURCES = [
+    {
+        "label": "Bel'Veth — patch history (26.15 rework)",
+        "url": "https://wiki.leagueoflegends.com/en-us/Bel%27Veth/Patch_history",
+        "revision_id": 4047656,
+        "revision_timestamp": "2026-07-30T08:49:41Z",
+    },
+    {
+        "label": "Bel'Veth — Death in Lavender",
+        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Death_in_Lavender",
+        "revision_id": 4047658,
+        "revision_timestamp": "2026-07-30T08:50:50Z",
+    },
+    {
+        "label": "Bel'Veth — Void Surge",
+        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Void_Surge",
+        "revision_id": 4046597,
+        "revision_timestamp": "2026-07-28T20:14:01Z",
+    },
+    {
+        "label": "Bel'Veth — Above and Below",
+        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Above_and_Below",
+        "revision_id": 4046855,
+        "revision_timestamp": "2026-07-28T22:27:32Z",
+    },
+    {
+        "label": "Bel'Veth — Royal Maelstrom",
+        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Royal_Maelstrom",
+        "revision_id": 4046605,
+        "revision_timestamp": "2026-07-28T20:21:57Z",
+    },
+    {
+        "label": "Bel'Veth — Endless Banquet",
+        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Endless_Banquet",
+        "revision_id": 4047545,
+        "revision_timestamp": "2026-07-29T20:25:46Z",
+    },
 ]
 
 SLOTS = {

@@ -333,13 +333,21 @@ def _parse_simple_on_hit(text: str) -> dict[str, Any]:
     result: dict[str, Any] = {}
     result["damage_type"] = "magic" if "magic damage" in text.lower() else "physical"
 
-    flat_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)\s+", text)
+    flat_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)(?:\||\s+)", text)
     if flat_match:
         result["base"] = float(flat_match.group(1))
 
     ap_match = re.search(r"\+\s*(\d+(?:\.\d+)?)%\s*AP", text)
     if ap_match:
         result["ap_ratio"] = float(ap_match.group(1)) / 100.0
+
+    bonus_ad_match = re.search(
+        r"\+\s*(\d+(?:\.\d+)?)%\s*'''bonus'''\s*AD",
+        text,
+        re.IGNORECASE,
+    )
+    if bonus_ad_match:
+        result["bonus_ad_ratio"] = float(bonus_ad_match.group(1)) / 100.0
 
     return result
 

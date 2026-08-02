@@ -4249,17 +4249,50 @@ def _layer_on_hit_effects(
         if "proc_cooldown" in on_hit_data or "proc_window" in on_hit_data:
             continue  # scheduled current-health procs are simulated below
         counts_ability_hits = bool(on_hit_data.get("count_ability_hits"))
-        if num_auto_attacks == 0 and not counts_ability_hits:
+        carries_on_ability_on_hits = bool(on_hit_data.get("applies_on_ability_on_hits"))
+        if (
+            num_auto_attacks == 0
+            and not counts_ability_hits
+            and not carries_on_ability_on_hits
+        ):
             continue
 
-        raw_per_hit = on_hit_data.get("damage_per_hit", 0.0) * on_hit_effectiveness
-        if raw_per_hit <= 0:
+        raw_base = float(on_hit_data.get("damage_per_hit", 0.0))
+        if raw_base <= 0:
             continue
 
         dmg_type = on_hit_data.get("damage_type", "magic")
+        raw_per_hit = raw_base * on_hit_effectiveness
         per_hit = _mitigate(raw_per_hit, dmg_type, resists, magic_amp)
 
         hits = on_hit_hits + (rotation.total_ability_hits if counts_ability_hits else 0)
+
+        # Some champion on-hits explicitly ride ability-carried on-hit
+        # instances as well as ordinary attacks. Bel'Veth R is the canonical
+        # case: Q and E each apply the ramping true damage through their own
+        # effectiveness, while ambient autos use Death in Lavender's 75%.
+        # Preserve the actual carrier order because hit k deals k times the
+        # base value. Ability-fired and auto-fired Guinsoo phantoms are extra
+        # applications immediately after their carrier; Akshan-style double
+        # shots likewise add one application per ambient attack.
+        carrier_effectiveness: list[float] | None = None
+        if carries_on_ability_on_hits:
+            carrier_effectiveness = []
+            on_hit_position = 0
+            for app in apps:
+                if not app.on_hit:
+                    continue
+                carrier_effectiveness.append(app.effectiveness)
+                if on_hit_position in result.phantom_ability_stack_positions:
+                    carrier_effectiveness.append(app.effectiveness)
+                on_hit_position += 1
+            for auto_index in range(num_auto_attacks):
+                carrier_effectiveness.append(on_hit_effectiveness)
+                if auto_index in result.phantom_hit_autos:
+                    carrier_effectiveness.append(on_hit_effectiveness)
+                if autos.double_shot_info:
+                    carrier_effectiveness.append(on_hit_effectiveness)
+            hits = len(carrier_effectiveness)
 
         # Availability-limited on-hits (Bard meeps: stock + recharge)
         # apply at most max_procs times; autos beyond the cap are plain.
@@ -4284,12 +4317,23 @@ def _layer_on_hit_effects(
             max_stacks = int(stack_ramp["max_stacks"])
             stacked_hits = sum(min(k, max_stacks) for k in range(hits))
             ability_on_hit_damage = per_hit * hits + per_stack * stacked_hits
-        elif ramping and stacks_required > 1:
-            # Ramping every-Nth proc (Bel'Veth R): proc k deals
-            # k x per_hit — stacks accumulate and never reset, so the
-            # total is per_hit x (1 + 2 + ... + procs).
-            procs = hits // stacks_required
-            ability_on_hit_damage = per_hit * procs * (procs + 1) / 2.0
+        elif ramping:
+            # Ramping proc k deals k x its base. When abilities can carry the
+            # on-hit, each application has its own effectiveness; otherwise
+            # the ordinary auto effectiveness is uniform. ``stacks_required``
+            # remains supported for pre-26.15 every-Nth formulations.
+            procs = hits // max(1, stacks_required)
+            if carrier_effectiveness is not None and stacks_required <= 1:
+                ability_on_hit_damage = sum(
+                    _mitigate(
+                        raw_base * effectiveness * stack, dmg_type, resists, magic_amp
+                    )
+                    for stack, effectiveness in enumerate(
+                        carrier_effectiveness, start=1
+                    )
+                )
+            else:
+                ability_on_hit_damage = per_hit * procs * (procs + 1) / 2.0
         elif stacks_required > 1 and counts_ability_hits:
             # Shared auto+ability stack counter (e.g. Aurora P): only
             # complete procs deal damage — partial stacks expire.

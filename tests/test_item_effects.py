@@ -259,8 +259,20 @@ class TestResolveDamageEffects:
 
         assert len(effects.shaped_charges) == 1
         effect = effects.shaped_charges[0]
-        assert effect.cooldown == 45.0
-        assert effect.source.raw_damage(inputs) == 60.0
+        assert effect.cooldown == 20.0
+        assert effect.source.raw_damage(inputs) == 80.0
+
+    def test_terminus_shadow_scales_with_bonus_ad_and_ap(self) -> None:
+        effect = resolve_damage_effects(_build("Terminus")).per_hits[0]
+        inputs = DamageInputs(
+            champion_stats={"bonus_attack_damage": 100.0, "ability_power": 200.0},
+            level=18,
+            is_melee=True,
+            target_max_health=1000.0,
+            target_current_health=1000.0,
+        )
+
+        assert effect.source.raw_damage(inputs) == pytest.approx(60.0)
 
 
 class TestResolveStatEffects:

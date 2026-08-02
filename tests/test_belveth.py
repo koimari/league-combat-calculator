@@ -1,11 +1,11 @@
 """Tests for the Bel'Veth champion module.
 
-Hand-validated against the wiki (see /add-champion spec):
-- Q rank 5, 100 total AD: 20 + 100% AD = 120 per dash; x4 casts = 480
-- W rank 5, 50 bonus AD, 0 AP: 230 + 50 = 280
-- E rank 3, 100 AD, 0 bonus AS, 50% missing: (16 + 64) / 2 = 40 x 6 = 240
-- R rank 1 explosion, 0 AP, 2000 max HP at 50% missing: 150 + 250 = 400
-- R passive per stack, rank 1, 50 bonus AD: 6 + 12% x 50 = 12
+Hand-validated against revision-backed patch 26.15 wiki data:
+- Q rank 5, 100 total AD: 20 + 105% AD = 125 per dash; x4 casts = 500
+- W rank 5, 0 AP: 320
+- E rank 3, 100 AD, 0 bonus AS, 50% missing: (26 + 52) / 2 = 39 x 6 = 234
+- R rank 1 explosion, 0 AP, 2000 max HP at 50% missing: 150 + 200 = 350
+- R passive per stack, rank 1, 50 bonus AD: 2 + 3% x 50 = 3.5
 """
 
 import pytest
@@ -34,8 +34,8 @@ def _parse(
         "base_attack_damage": ad - bonus_ad,
         "bonus_attack_damage": bonus_ad,
         "ability_power": ap,
-        "attack_speed": 0.85,
-        "attack_speed_ratio": 0.85,
+        "attack_speed": 0.67,
+        "attack_speed_ratio": 0.67,
         "bonus_attack_speed": bonus_as,
         "critical_strike_chance": 0.0,
         "level": level,
@@ -69,7 +69,7 @@ def _fight(stats, abilities, items=None, **overrides):
 
 
 class TestPassiveDeathInLavender:
-    """P: 75% basic-attack modifier + always-active bonus attack speed."""
+    """P: full basic attacks, 75% on-hits, and bonus attack speed."""
 
     def test_stat_buff_level_1(self, belveth_data) -> None:
         """Temp AS at level 1 is 20%, no Lavender stacks by default."""
@@ -79,29 +79,30 @@ class TestPassiveDeathInLavender:
         )
 
     def test_stat_buff_level_18(self, belveth_data) -> None:
-        """Temp AS reaches 40% at level 18."""
+        """The refreshed temporary AS remains 20% at level 18."""
         abilities = _parse(belveth_data, 18)
         assert abilities["passive"]["stat_buff"]["bonus_attack_speed"] == pytest.approx(
-            40.0
+            20.0
         )
 
     def test_per_level_arrays_cover_level_20(self, belveth_data) -> None:
-        """The JSON per-level arrays extend past 18 — level 20 reads its
-        real value (43.14%), no clamping needed at the level cap."""
+        """Temporary AS is flat; no permanent stacks means 20% at level 20."""
         at_20 = _parse(belveth_data, 20)["passive"]["stat_buff"]
-        assert at_20["bonus_attack_speed"] == pytest.approx(43.14)
+        assert at_20["bonus_attack_speed"] == pytest.approx(20.0)
 
     def test_lavender_stacks_add_per_stack_as(self, belveth_data) -> None:
-        """Level 1: 20% temp + 100 stacks x 0.28% = 48% bonus AS."""
+        """Level 1: 20% temp + 100 stacks x 0.1% = 30% bonus AS."""
         abilities = _parse(belveth_data, 1, options={"lavender_stacks": 100})
         assert abilities["passive"]["stat_buff"]["bonus_attack_speed"] == pytest.approx(
-            48.0
+            30.0
         )
 
-    def test_auto_attack_override_75_percent(self, belveth_data) -> None:
-        """Autos and their on-hit riders both declared at 75%."""
+    def test_auto_attack_override_separates_attack_and_on_hit(
+        self, belveth_data
+    ) -> None:
+        """Patch 26.15: full attack damage, but on-hit riders remain 75%."""
         override = _parse(belveth_data, 1)["passive"]["auto_attack_override"]
-        assert override["damage_ratio"] == pytest.approx(0.75)
+        assert override["damage_ratio"] == pytest.approx(1.0)
         assert override["on_hit_effectiveness"] == pytest.approx(0.75)
 
     def test_no_attack_speed_growth(self, belveth_data) -> None:
@@ -116,16 +117,16 @@ class TestQVoidSurge:
         assert _parse(belveth_data, 5)["Q"]["damage_type"] == "physical"
 
     def test_q_rank5_100ad_four_casts(self, belveth_data) -> None:
-        """Rank 5, 100 AD: 20 + 100 = 120 per dash, x4 default = 480."""
+        """Rank 5, 100 AD: 20 + 105 = 125 per dash, x4 default = 500."""
         abilities = _parse(belveth_data, 18, ranks=_ALL_MAX)
-        assert abilities["Q"]["total_raw"] == pytest.approx(480.0)
+        assert abilities["Q"]["total_raw"] == pytest.approx(500.0)
         part = abilities["Q"]["parts"][0]
-        assert part.amount == pytest.approx(120.0)
+        assert part.amount == pytest.approx(125.0)
         assert part.count == 4
 
     def test_q_casts_option_scales_count(self, belveth_data) -> None:
         abilities = _parse(belveth_data, 18, ranks=_ALL_MAX, options={"q_casts": 2})
-        assert abilities["Q"]["total_raw"] == pytest.approx(240.0)
+        assert abilities["Q"]["total_raw"] == pytest.approx(250.0)
         assert abilities["Q"]["cast_instances"] == 2
 
     def test_q_can_crit(self, belveth_data) -> None:
@@ -145,10 +146,10 @@ class TestWAboveAndBelow:
     def test_w_is_magic(self, belveth_data) -> None:
         assert _parse(belveth_data, 5)["W"]["damage_type"] == "magic"
 
-    def test_w_rank5_50bonus_ad(self, belveth_data) -> None:
-        """Rank 5, 50 bonus AD, 0 AP: 230 + 100% x 50 = 280."""
+    def test_w_rank5_no_ap(self, belveth_data) -> None:
+        """Rank 5, 0 AP: 320; W no longer scales with bonus AD."""
         abilities = _parse(belveth_data, 18, bonus_ad=50.0, ranks=_ALL_MAX)
-        assert abilities["W"]["total_raw"] == pytest.approx(280.0)
+        assert abilities["W"]["total_raw"] == pytest.approx(320.0)
 
     def test_w_cooldown(self, belveth_data) -> None:
         assert _parse(belveth_data, 18, ranks=_ALL_MAX)["W"][
@@ -163,36 +164,36 @@ class TestERoyalMaelstrom:
         assert _parse(belveth_data, 5)["E"]["damage_type"] == "physical"
 
     def test_e_rank3_spec_sanity_check(self, belveth_data) -> None:
-        """Rank 3, 100 AD, 50% missing: (16 + 64)/2 = 40 per slash.
+        """Rank 3, 100 AD, 50% missing: (26 + 52)/2 = 39 per slash.
 
-        Passive temp AS at level 10 (~26%) is below the 33.3% threshold,
-        so the count stays at the 6 base slashes: 240 total.
+        Passive temp AS is below the 40% threshold, so the count stays at
+        the 6 base slashes: 234 total.
         """
         abilities = _parse(belveth_data, 10)  # E rank 3 by skill order
         assert abilities["E"]["rank"] == 3
         part = abilities["E"]["parts"][0]
-        assert part.amount == pytest.approx(40.0)
+        assert part.amount == pytest.approx(39.0)
         assert part.count == 6
-        assert abilities["E"]["total_raw"] == pytest.approx(240.0)
+        assert abilities["E"]["total_raw"] == pytest.approx(234.0)
 
     def test_e_interpolates_min_to_max(self, belveth_data) -> None:
         """0% missing reads the min attribute; 100% missing the max."""
         full = _parse(belveth_data, 10, options={"target_missing_hp_pct": 0})
         dead = _parse(belveth_data, 10, options={"target_missing_hp_pct": 100})
-        assert full["E"]["parts"][0].amount == pytest.approx(16.0)  # 8 + 8% AD
-        assert dead["E"]["parts"][0].amount == pytest.approx(64.0)  # 32 + 32% AD
+        assert full["E"]["parts"][0].amount == pytest.approx(26.0)  # 14 + 12% AD
+        assert dead["E"]["parts"][0].amount == pytest.approx(52.0)  # 2x min
 
     def test_e_slash_count_scales_with_bonus_as(self, belveth_data) -> None:
-        """floor(6 + bonus AS / 33.3): 100% items + 20% passive -> 9."""
+        """floor(6 + bonus AS / 40): 100% items + 20% passive -> 9."""
         abilities = _parse(belveth_data, 1, bonus_as=100.0, ranks={"E": 1})
         assert abilities["E"]["parts"][0].count == 9
 
     def test_e_slash_count_includes_lavender_stacks(self, belveth_data) -> None:
-        """Level 1 with 200 stacks: 20 + 56 = 76% bonus AS -> 8 slashes."""
+        """Level 1 with 200 stacks: 20 + 20 = 40% bonus AS -> 7 slashes."""
         abilities = _parse(
             belveth_data, 1, options={"lavender_stacks": 200}, ranks={"E": 1}
         )
-        assert abilities["E"]["parts"][0].count == 8
+        assert abilities["E"]["parts"][0].count == 7
 
     def test_e_slash_count_ignores_true_form(self, belveth_data) -> None:
         """True Form's total-AS multiplier is not bonus AS."""
@@ -214,23 +215,23 @@ class TestREndlessBanquet:
         assert _parse(belveth_data, 6)["R"]["damage_type"] == "true"
 
     def test_r_explosion_spec_sanity_check(self, belveth_data) -> None:
-        """Rank 1, 0 AP, 2000 max HP at 50% missing: 150 + 250 = 400."""
+        """Rank 1, 0 AP, 2000 max HP at 50% missing: 150 + 200 = 350."""
         abilities = _parse(belveth_data, 6)
-        assert abilities["R"]["total_raw"] == pytest.approx(400.0)
+        assert abilities["R"]["total_raw"] == pytest.approx(350.0)
 
     def test_r_explosion_missing_health_component(self, belveth_data) -> None:
         """0% missing leaves only the flat + AP part."""
         abilities = _parse(
             belveth_data, 6, ap=100.0, options={"target_missing_hp_pct": 0}
         )
-        assert abilities["R"]["total_raw"] == pytest.approx(250.0)  # 150 + 100% AP
+        assert abilities["R"]["total_raw"] == pytest.approx(300.0)  # 150 + 150% AP
 
     def test_true_form_off_by_default(self, belveth_data) -> None:
         """No stat_buff on R until the true_form option is enabled."""
         assert "stat_buff" not in _parse(belveth_data, 6)["R"]
 
     def test_true_form_stat_buff(self, belveth_data) -> None:
-        """Rank 2, 50 bonus AD, 100 AP: 150 + 60 + 90 = 300 HP; +15% AS."""
+        """Rank 2, 50 bonus AD, 100 AP: 250 + 75 + 150 = 475 HP; +15% AS."""
         abilities = _parse(
             belveth_data,
             11,
@@ -239,16 +240,17 @@ class TestREndlessBanquet:
             options={"true_form": True},
         )
         buff = abilities["R"]["stat_buff"]
-        assert buff["health"] == pytest.approx(300.0)
+        assert buff["health"] == pytest.approx(475.0)
         assert buff["total_attack_speed_percent"] == pytest.approx(15.0)
 
     def test_r_onhit_per_stack_value(self, belveth_data) -> None:
-        """Rank 1, 50 bonus AD: 6 + 12% x 50 = 12 true damage per stack."""
+        """Rank 1, 50 bonus AD: 2 + 3% x 50 = 3.5 true damage per stack."""
         on_hit = _parse(belveth_data, 6, bonus_ad=50.0)["R_onhit"]["on_hit"]
-        assert on_hit["damage_per_hit"] == pytest.approx(12.0)
+        assert on_hit["damage_per_hit"] == pytest.approx(3.5)
         assert on_hit["damage_type"] == "true"
-        assert on_hit["stacks_required"] == 2
+        assert on_hit["stacks_required"] == 1
         assert on_hit["ramping"] is True
+        assert on_hit["applies_on_ability_on_hits"] is True
 
     def test_r_slots_absent_before_6(self, belveth_data) -> None:
         """Both R entries (active + on-hit) are rank-gated."""
@@ -258,24 +260,24 @@ class TestREndlessBanquet:
 
 
 class TestFightEngineIntegration:
-    """The passive's 75% modifier, ramping R procs, and True Form AS
+    """The passive's split modifier, ramping R procs, and True Form AS
     through the champion-agnostic fight engine."""
 
-    def test_autos_deal_75_percent(self, belveth_data, attacker_stats) -> None:
-        """Vs 0 armor: per-hit auto damage is exactly AD x 0.75."""
+    def test_autos_deal_full_damage(self, belveth_data, attacker_stats) -> None:
+        """Patch 26.15: vs 0 armor, per-hit auto damage is exactly AD."""
         abilities = _parse(belveth_data, 18, ranks=_ALL_MAX)
         stats = attacker_stats(bonus_attack_speed=0.0)
         result = _fight(stats, abilities)
         auto = result["breakdown"]["auto_attacks"]
-        assert auto["damage_per_hit"] == pytest.approx(100.0 * 0.75)
+        assert auto["damage_per_hit"] == pytest.approx(100.0)
 
-    def test_crit_autos_also_75_percent(self, belveth_data, attacker_stats) -> None:
-        """100% crit: per-hit is AD x 2.0 x 0.75."""
+    def test_crit_autos_deal_full_damage(self, belveth_data, attacker_stats) -> None:
+        """Patch 26.15: 100% crit is AD x 2.0, without the old 75% cut."""
         abilities = _parse(belveth_data, 18, ranks=_ALL_MAX)
         stats = attacker_stats(bonus_attack_speed=0.0, critical_strike_chance=100.0)
         result = _fight(stats, abilities)
         auto = result["breakdown"]["auto_attacks"]
-        assert auto["damage_per_hit"] == pytest.approx(100.0 * 2.0 * 0.75)
+        assert auto["damage_per_hit"] == pytest.approx(100.0 * 2.0)
 
     def test_on_hit_items_reduced_to_75_percent(
         self, belveth_data, attacker_stats
@@ -299,35 +301,67 @@ class TestFightEngineIntegration:
         )
 
     def test_r_onhit_ramps_with_auto_count(self, belveth_data, attacker_stats) -> None:
-        """Proc k deals k x per-stack x 0.75 (passive); total is the
-        triangular sum over floor(autos / 2) procs."""
-        abilities = _parse(belveth_data, 18, bonus_ad=50.0, ranks=_ALL_MAX)
+        """Hit k deals k x per-stack x 0.75 (on-hit modifier)."""
+        abilities = _parse(
+            belveth_data,
+            18,
+            bonus_ad=50.0,
+            ranks={"Q": 0, "W": 0, "E": 0, "R": 3},
+        )
         per_stack = abilities["R_onhit"]["on_hit"]["damage_per_hit"]
         stats = attacker_stats(bonus_attack_speed=0.0)
         result = _fight(stats, abilities)
 
         autos = result["breakdown"]["auto_attacks"]["count"]
-        procs = autos // 2
+        procs = autos
         assert procs > 0
         expected = per_stack * 0.75 * procs * (procs + 1) / 2.0
         row = result["breakdown"]["on_hit_ability_R_onhit"]
         assert row["count"] == procs
         assert row["total_damage"] == pytest.approx(expected)
 
+    def test_r_onhit_ramps_through_q_and_e_in_carrier_order(
+        self, belveth_data, attacker_stats
+    ) -> None:
+        """No ambient autos: Q's four 75% applications lead E's six 18%
+        applications on one shared R-passive stack sequence."""
+        abilities = _parse(
+            belveth_data,
+            18,
+            bonus_ad=50.0,
+            ranks={"Q": 5, "W": 0, "E": 5, "R": 1},
+        )
+        per_stack = abilities["R_onhit"]["on_hit"]["damage_per_hit"]
+        e_hits = abilities["E"]["applies_item_on_hits"]["hits"]
+        assert e_hits == 6
+        result = _fight(
+            attacker_stats(bonus_attack_speed=0.0),
+            abilities,
+            auto_attack_uptime=0.0,
+            one_rotation=True,
+        )
+        effectiveness = [0.75] * 4 + [0.18] * e_hits
+        expected = per_stack * sum(
+            stack * modifier for stack, modifier in enumerate(effectiveness, start=1)
+        )
+        row = result["breakdown"]["on_hit_ability_R_onhit"]
+        assert row["count"] == len(effectiveness)
+        assert row["total_damage"] == pytest.approx(expected)
+
     def test_passive_as_buff_raises_auto_count(
         self, belveth_data, attacker_stats
     ) -> None:
-        """The stat_buff's 40% bonus AS feeds the fight's attack speed."""
+        """The stat_buff's 20% bonus AS feeds the fight's attack speed."""
         abilities = _parse(belveth_data, 18, ranks=_ALL_MAX)
         stats = attacker_stats(bonus_attack_speed=0.0)
         _fight(stats, abilities)
-        # attacker fixture: 1.0 base AS + 0.625 ratio x 40% = 1.25
-        assert stats["attack_speed"] == pytest.approx(1.25)
+        # attacker fixture: 1.0 base AS + 0.625 ratio x 20% = 1.125
+        assert stats["attack_speed"] == pytest.approx(1.125)
 
     def test_true_form_multiplies_total_attack_speed(
         self, belveth_data, attacker_stats
     ) -> None:
-        """R rank 3 True Form: final AS x1.20, applied AFTER bonus AS,
+        """R rank 3 True Form: final AS x1.25, applied AFTER bonus AS,
         and the champion stats panel reflects health + attack speed."""
         on = _parse(belveth_data, 18, ranks=_ALL_MAX, options={"true_form": True})
         off = _parse(belveth_data, 18, ranks=_ALL_MAX)
@@ -336,7 +370,7 @@ class TestFightEngineIntegration:
         _fight(stats_on, on)
         _fight(stats_off, off)
         assert stats_on["attack_speed"] == pytest.approx(
-            1.20 * stats_off["attack_speed"]
+            1.25 * stats_off["attack_speed"]
         )
         assert stats_on["health"] > stats_off["health"]
 
@@ -367,7 +401,7 @@ def _per_hit_raw(item, stats, target_health, current_health=None):
 
 
 class TestAbilityItemOnHits:
-    """Q and E apply item on-hit effects (75% and 8-32% respectively)."""
+    """Q and E apply item on-hit effects (75% and 12-24% respectively)."""
 
     def test_q_declares_on_hit_application(self, belveth_data) -> None:
         """Q: one application per dash at 75%, following q_casts."""
@@ -379,10 +413,10 @@ class TestAbilityItemOnHits:
         assert two["Q"]["applies_item_on_hits"]["hits"] == 2
 
     def test_e_declares_on_hit_application(self, belveth_data) -> None:
-        """E: one application per slash at 8-32% by missing health."""
+        """E: one application per slash at 12-24% by missing health."""
         mid = _parse(belveth_data, 18, ranks=_ALL_MAX)
         spec = mid["E"]["applies_item_on_hits"]
-        assert spec["effectiveness"] == pytest.approx(0.20)  # 50% missing
+        assert spec["effectiveness"] == pytest.approx(0.18)  # 50% missing
         assert spec["hits"] == mid["E"]["parts"][0].count
         full = _parse(
             belveth_data, 18, ranks=_ALL_MAX, options={"target_missing_hp_pct": 0}
@@ -390,8 +424,8 @@ class TestAbilityItemOnHits:
         dead = _parse(
             belveth_data, 18, ranks=_ALL_MAX, options={"target_missing_hp_pct": 100}
         )
-        assert full["E"]["applies_item_on_hits"]["effectiveness"] == pytest.approx(0.08)
-        assert dead["E"]["applies_item_on_hits"]["effectiveness"] == pytest.approx(0.32)
+        assert full["E"]["applies_item_on_hits"]["effectiveness"] == pytest.approx(0.12)
+        assert dead["E"]["applies_item_on_hits"]["effectiveness"] == pytest.approx(0.24)
 
     def test_w_and_r_do_not_apply_item_on_hits(self, belveth_data) -> None:
         """Only Q and E carry the on-hit application capability."""
@@ -403,7 +437,7 @@ class TestAbilityItemOnHits:
         self, belveth_data, attacker_stats
     ) -> None:
         """One rotation, NO autos, vs 0 MR: the only Nashor's damage is
-        Q's 4 applications at 75% and E's 7 slashes at 20%."""
+        Q's 4 applications at 75% and E's 6 slashes at 18%."""
         nashors = get_item_by_name("Nashor's Tooth")
         abilities = _parse(belveth_data, 18, ranks=_ALL_MAX)
         stats = attacker_stats(bonus_attack_speed=0.0)
@@ -416,13 +450,13 @@ class TestAbilityItemOnHits:
             target_health=100000.0,
         )
         raw = _per_hit_raw(nashors, stats, 100000.0)
-        slashes = abilities["E"]["parts"][0].count  # 7 (40% passive AS)
+        slashes = abilities["E"]["parts"][0].count  # 6 (20% passive AS)
         q_row = result["breakdown"]["on_hit_items_Q"]
         e_row = result["breakdown"]["on_hit_items_E"]
         assert q_row["count"] == 4
         assert q_row["total_damage"] == pytest.approx(raw * 0.75 * 4)
         assert e_row["count"] == slashes
-        assert e_row["total_damage"] == pytest.approx(raw * 0.20 * slashes)
+        assert e_row["total_damage"] == pytest.approx(raw * 0.18 * slashes)
         # No autos -> no auto-carried Nashor's row.
         assert result["breakdown"]["auto_attacks"]["count"] == 0
 
@@ -547,9 +581,9 @@ class TestSharedOnHitCounter:
         self, belveth_data, attacker_stats
     ) -> None:
         """Only E ranked, no autos: 6 slashes -> 2 procs, both on E hits
-        at the interpolated 20% (default 50% missing)."""
+        at the interpolated 18% (default 50% missing)."""
         kraken = get_item_by_name("Kraken Slayer")
-        # Level 10: passive temp AS ~29% < 33.3% -> exactly 6 slashes.
+        # Level 10: passive temp AS 20% < 40% -> exactly 6 slashes.
         abilities = _parse(belveth_data, 10, ranks={"Q": 0, "W": 0, "E": 3, "R": 0})
         assert abilities["E"]["parts"][0].count == 6
         stats = attacker_stats(bonus_attack_speed=0.0, level=10)
@@ -564,7 +598,7 @@ class TestSharedOnHitCounter:
         raw = _kraken_raw_full_hp(kraken, stats, self._HUGE_HP)
         row = result["breakdown"]["on_hit_Kraken Slayer"]
         assert row["count"] == 2
-        assert row["total_damage"] == pytest.approx(raw * 0.20 * 2, rel=1e-3)
+        assert row["total_damage"] == pytest.approx(raw * 0.18 * 2, rel=1e-3)
 
     def test_counter_carries_from_abilities_into_autos(
         self, belveth_data, attacker_stats
@@ -632,11 +666,11 @@ class TestOnAttackTaxonomy:
         self, belveth_data, attacker_stats
     ) -> None:
         """E-only, no autos: the 6th slash fires Guinsoo's phantom hit,
-        re-applying item on-hit damage at the slash's 20% effectiveness."""
+        re-applying item on-hit damage at the slash's 18% effectiveness."""
         rageblade = get_item_by_name("Guinsoo's Rageblade")
         abilities = _parse(belveth_data, 18, ranks={"Q": 0, "W": 0, "E": 5, "R": 0})
-        slashes = abilities["E"]["parts"][0].count  # 7 (passive 40% AS)
-        assert slashes == 7
+        slashes = abilities["E"]["parts"][0].count  # 6 (passive 20% AS)
+        assert slashes == 6
         stats = attacker_stats(bonus_attack_speed=0.0)
         result = _fight(
             dict(stats),
@@ -650,16 +684,16 @@ class TestOnAttackTaxonomy:
         raw = _per_hit_raw(rageblade, stats, self._HUGE_HP)  # 30 flat magic
         phantom_row = result["breakdown"]["on_hit_items_phantom"]
         assert phantom_row["count"] == 1  # phantom on the 6th slash only
-        assert phantom_row["total_damage"] == pytest.approx(raw * 0.20)
+        assert phantom_row["total_damage"] == pytest.approx(raw * 0.18)
         # The base slash applications are unchanged.
         e_row = result["breakdown"]["on_hit_items_E"]
-        assert e_row["total_damage"] == pytest.approx(raw * 0.20 * slashes)
+        assert e_row["total_damage"] == pytest.approx(raw * 0.18 * slashes)
 
     def test_e_slashes_shift_auto_phantom_timeline(
         self, belveth_data, attacker_stats
     ) -> None:
-        """Slashes and autos share ONE attack counter: 7 slashes + 2
-        autos put the second phantom on auto #2 (combined index 8)."""
+        """Slashes and autos share ONE attack counter: 6 slashes fire one
+        phantom, then 2 autos do not reach the next six-attack cadence."""
         rageblade = get_item_by_name("Guinsoo's Rageblade")
         abilities = _parse(belveth_data, 18, ranks={"Q": 0, "W": 0, "E": 5, "R": 0})
         no_passive = {k: v for k, v in abilities.items() if k != "passive"}
@@ -675,7 +709,7 @@ class TestOnAttackTaxonomy:
         )
         assert result["breakdown"]["auto_attacks"]["count"] == 2
         assert result["breakdown"]["on_hit_items_phantom"]["count"] == 1
-        assert result["phantom_hit_autos"] == {1}
+        assert result["phantom_hit_autos"] == set()
 
     def test_q_applications_do_not_advance_phantom(
         self, belveth_data, attacker_stats
@@ -704,14 +738,14 @@ class TestOnAttackTaxonomy:
     ) -> None:
         """A slash-fired phantom applies on-hit once more — one extra
         Kraken stack: 8 slashes + 1 phantom = 9 hits = 3 procs (vs 2
-        without Rageblade), all at the slash's 20% effectiveness."""
+        without Rageblade), all at the slash's 18% effectiveness."""
         kraken = get_item_by_name("Kraken Slayer")
         rageblade = get_item_by_name("Guinsoo's Rageblade")
         abilities = _parse(
-            belveth_data, 18, bonus_as=50.0, ranks={"Q": 0, "W": 0, "E": 5, "R": 0}
+            belveth_data, 18, bonus_as=60.0, ranks={"Q": 0, "W": 0, "E": 5, "R": 0}
         )
-        assert abilities["E"]["parts"][0].count == 8  # 40% passive + 50%
-        stats = attacker_stats(bonus_attack_speed=50.0)
+        assert abilities["E"]["parts"][0].count == 8  # 20% passive + 60%
+        stats = attacker_stats(bonus_attack_speed=60.0)
         kwargs = {
             "auto_attack_uptime": 0.0,
             "one_rotation": True,
@@ -723,7 +757,7 @@ class TestOnAttackTaxonomy:
         row = with_rageblade["breakdown"]["on_hit_Kraken Slayer"]
         assert without["breakdown"]["on_hit_Kraken Slayer"]["count"] == 2
         assert row["count"] == 3
-        assert row["total_damage"] == pytest.approx(raw * 0.20 * 3, rel=1e-3)
+        assert row["total_damage"] == pytest.approx(raw * 0.18 * 3, rel=1e-3)
 
 
 class TestStatsBonusAttackSpeed:

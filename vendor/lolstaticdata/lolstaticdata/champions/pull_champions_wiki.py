@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from collections import Counter
 from slpp import slpp as lua
 from datetime import datetime
+from requests import HTTPError
 
 from ..common.modelcommon import (
     DamageType,
@@ -487,9 +488,22 @@ class LolWikiDataHandler:
 
         # Pull the html from the wiki
         url = f"https://wiki.leagueoflegends.com/en-us/Template:Data_{champion_name}/{ability_name}"
-        html = download_soup(url, self.use_cache)
+        try:
+            html = download_soup(url, self.use_cache)
+        except HTTPError as exc:
+            # ChampionData occasionally retains a removed secondary spell
+            # name after its template has been deleted (for example Milio's
+            # former ``Cozy Campfire 2``).  The primary spell template is
+            # still authoritative, so a missing auxiliary page must not drop
+            # the entire champion from the generated roster.  Other HTTP
+            # failures remain fatal so a transient source outage cannot be
+            # mistaken for a valid patch refresh.
+            if exc.response is None or exc.response.status_code != 404:
+                raise
+            print("WARNING: Skipping missing auxiliary ability page: " f"{url}")
+            return None
         soup = BeautifulSoup(html, "lxml")
-        try: 
+        try:
             return HTMLAbilityWrapper(soup)
         except ValueError:
             print(f"WARNING: Ability data could not be found for {ability_name}. The Wiki page may be empty: https://wiki.leagueoflegends.com/en-us/Template:Data_{champion_name}/{ability_name}")

@@ -1032,8 +1032,9 @@ class TestBreakdownProcRowShape:
     an empty detail cell (the user-reported "no kraken procs")."""
 
     def test_kraken_counter_row_one_rotation_belveth(self):
-        """Bel'Veth one-rotation, bare Kraken: Q's 4 dashes + 8 slashes
-        (passive + Kraken AS) = 12 shared hits = 4 procs, rendered."""
+        """Bel'Veth 26.15, bare Kraken: Q's 4 dashes + 6 slashes
+        (20% passive + Kraken AS is below the next 40% E threshold) =
+        10 shared hits = 3 procs, rendered."""
         payload = {
             "champion": "Belveth",
             "level": 14,
@@ -1043,7 +1044,7 @@ class TestBreakdownProcRowShape:
         response = app_module.app.test_client().post("/api/calculate", json=payload)
         assert response.status_code == 200
         row = response.get_json()["breakdown"]["on_hit_Kraken Slayer"]
-        assert row["count"] == 4
+        assert row["count"] == 3
         assert row["unit"] == "procs"
         assert row["damage_per_hit"] is not None and row["damage_per_hit"] > 0
 

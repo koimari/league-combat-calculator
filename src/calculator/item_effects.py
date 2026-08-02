@@ -155,9 +155,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Terminus": {
         "type": "on_hit",
-        "formula": "flat",
+        "formula": "flat_bonus_ad_ap",
         "damage_type": "magic",
         "base": 30.0,
+        "bonus_ad_ratio": 0.10,
+        "ap_ratio": 0.10,
         # Juxtaposition: alternating Light/Dark hits, each stacks up to 3 times.
         # Dark hits (2nd, 4th, 6th auto): 10% armor/magic pen per stack
         "dark_pen_per_stack": 0.10,
@@ -501,12 +503,12 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Bastionbreaker": {
         "type": "shaped_charge",
         # Shaped Charge: next ability damage deals bonus true damage
-        # Melee: 30 + 1.5 per lethality, Ranged: 15 + 0.75 per lethality
-        "base_melee": 30.0,
-        "base_ranged": 15.0,
+        # Melee: 50 + 1.5 per lethality, Ranged: 25 + 0.75 per lethality
+        "base_melee": 50.0,
+        "base_ranged": 25.0,
         "lethality_ratio_melee": 1.5,
         "lethality_ratio_ranged": 0.75,
-        "cooldown": 45.0,
+        "cooldown": 20.0,
     },
     # ── Resistance Reduction ──────────────────────────────────────────────
     "Black Cleaver": {
@@ -1363,6 +1365,19 @@ def _compile_on_hit(
 
         def raw(inputs: DamageInputs) -> float:
             return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
+
+    elif formula == "flat_bonus_ad_ap":
+        base = required.number("base")
+        bonus_ad_ratio = required.number("bonus_ad_ratio")
+        ap_ratio = required.number("ap_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            stats = inputs.champion_stats
+            return (
+                base
+                + bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
+                + ap_ratio * stats.get("ability_power", 0.0)
+            )
 
     elif formula == "current_hp":
         melee_ratio = required.number("current_hp_ratio_melee")

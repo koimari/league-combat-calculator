@@ -118,30 +118,30 @@ class TestBastionbreakerShapedCharge:
         return get_item_by_name("Bastionbreaker")
 
     def test_shaped_charge_ranged_damage(self) -> None:
-        """Ranged: 15 + 0.75 * 22 lethality = 31.5 true damage."""
+        """Ranged: 25 + 0.75 * 22 lethality = 41.5 true damage."""
         stats = {"lethality": 22.0}
         effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
         damage = effect.source.raw_damage(
             DamageInputs(stats, 18, False, 1000.0, 1000.0)
         )
-        assert abs(damage - 31.5) < 0.01
+        assert abs(damage - 41.5) < 0.01
 
     def test_shaped_charge_melee_damage(self) -> None:
-        """Melee: 30 + 1.5 * 22 lethality = 63 true damage."""
+        """Melee: 50 + 1.5 * 22 lethality = 83 true damage."""
         stats = {"lethality": 22.0}
         effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000.0, 1000.0))
-        assert abs(damage - 63.0) < 0.01
+        assert abs(damage - 83.0) < 0.01
 
     def test_shaped_charge_multiple_procs(self) -> None:
-        """45s cooldown: 50s fight = 2 procs."""
+        """20s cooldown: 50s fight = 3 procs."""
         stats = {"lethality": 22.0}
         effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
         per_proc = effect.source.raw_damage(
             DamageInputs(stats, 18, False, 1000.0, 1000.0)
         )
         damage = per_proc * (1 + int(50.0 / effect.cooldown))
-        expected = 31.5 * 2
+        expected = 41.5 * 3
         assert abs(damage - expected) < 0.01
 
     def test_ahri_full_fight_with_bastionbreaker(
@@ -151,7 +151,7 @@ class TestBastionbreakerShapedCharge:
     ) -> None:
         """Ahri level 18 with only Bastionbreaker, one rotation.
 
-        Shaped Charge should add ~32 true damage.
+        Shaped Charge should add ~42 true damage.
         """
         from src.calculator.stats import calculate_total_stats
 
@@ -173,8 +173,8 @@ class TestBastionbreakerShapedCharge:
         )
         sc = fight["breakdown"]["shaped_charge_Bastionbreaker"]
         assert (
-            abs(sc["total_damage"] - 32) <= 1
-        ), f"Shaped Charge {sc['total_damage']:.1f} expected ~32"
+            abs(sc["total_damage"] - 42) <= 1
+        ), f"Shaped Charge {sc['total_damage']:.1f} expected ~42"
 
 
 class TestRapidFirecannonSharpshooter:
