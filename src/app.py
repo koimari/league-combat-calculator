@@ -32,7 +32,11 @@ from calculator.data_fetcher import (
 )
 from calculator.item_effects import item_input_options_meta, refresh_item_effects
 from calculator.rune_effects import keystone_catalog, refresh_rune_effects
-from calculator.item_coverage import item_model_coverage, require_target_item_coverage
+from calculator.item_coverage import (
+    item_model_coverage,
+    require_target_item_coverage,
+    target_build_coverage,
+)
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import validate_resolved_loadout
 from calculator.defensive_effects import resolve_starting_defenses
@@ -1471,6 +1475,30 @@ def _bis_candidate_pool(
     return sorted(scoped, key=lambda item: item.get("name", ""))
 
 
+def _roster_target_coverage(loadouts: list[ChampionLoadout]) -> list[dict[str, object]]:
+    """Return unsupported target mechanics for the coupled roster.
+
+    Roster BIS candidates are later used as passive targets by the main
+    champion's event timeline. Do not apply a candidate whose target-side
+    item effect is outside the sourced target model; that would either fail
+    the next main optimization late or silently ignore the mechanic.
+    """
+    blocked: list[dict[str, object]] = []
+    for loadout in loadouts:
+        coverage = target_build_coverage(list(loadout.item_data))
+        for entry in coverage.get("blocked", []):
+            blocked.append(
+                {
+                    "champion": loadout.champion_data.get(
+                        "name", loadout.request.champion
+                    ),
+                    "name": entry.get("name", ""),
+                    "reason": entry.get("reason", ""),
+                }
+            )
+    return blocked
+
+
 @app.route("/api/bis", methods=["POST"])
 def api_bis():
     """Rank one slot from the same coupled participant event model.
@@ -1539,6 +1567,7 @@ def api_bis():
         return rate_limit_response
 
     ranked: list[dict] = []
+    target_coverage_filtered: list[dict[str, object]] = []
     for candidate in candidates:
         try:
             candidate_request = _bis_replaced_loadout(
@@ -1555,6 +1584,12 @@ def api_bis():
                 candidate_enemies[subject_index] = resolved_subject
             elif subject_team == "ally":
                 candidate_allies[subject_index] = resolved_subject
+            blocked_targets = _roster_target_coverage(
+                [*candidate_enemies, *candidate_allies]
+            )
+            if blocked_targets:
+                target_coverage_filtered.extend(blocked_targets)
+                continue
             combat = build_participant_timeline(
                 candidate_main.champion_data,
                 candidate_main.request.level,
@@ -1635,6 +1670,13 @@ def api_bis():
         for candidate in ranked
         if candidate["timeline_coverage"].get("complete", False)
     ]
+    target_coverage_note = ""
+    if target_coverage_filtered:
+        first = target_coverage_filtered[0]
+        target_coverage_note = (
+            f"Target-side coverage filtered {len(target_coverage_filtered)} candidate "
+            f"receipts; {first['champion']} · {first['name']}: {first['reason']}"
+        )
     return jsonify(
         {
             "subject_team": subject_team,
@@ -1658,9 +1700,16 @@ def api_bis():
                 "note": (
                     "Only candidates with complete sourced event order are shown as BIS."
                     if certified_ranked
-                    else "BIS is withheld: every candidate still has partial or uncertified event order."
-                ),
+                    else (
+                        "BIS is withheld: a selected roster item is outside the sourced "
+                        "target model."
+                        if target_coverage_filtered
+                        else "BIS is withheld: every candidate still has partial or uncertified event order."
+                    )
+                ) + (f" {target_coverage_note}" if target_coverage_note else ""),
             },
+            "target_coverage_filtered": len(target_coverage_filtered),
+            "target_coverage_note": target_coverage_note,
         }
     )
 

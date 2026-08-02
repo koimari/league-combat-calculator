@@ -393,6 +393,22 @@ def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
     assert "Locket of the Iron Solari" not in top
 
 
+def test_roster_bis_filters_items_with_unsupported_target_mechanics():
+    """A roster BIS result must remain safe when reused as a passive target."""
+    app.config["TESTING"] = True
+    response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
+    assert response.status_code == 200
+    body = response.get_json()
+    names = {
+        candidate["name"]
+        for candidate in [*body["candidates"], *body["partial_candidates"]]
+    }
+
+    assert "Zhonya's Hourglass" not in names
+    assert body["target_coverage_filtered"] > 0
+    assert "target-side coverage filtered" in body["target_coverage_note"].lower()
+
+
 def test_bis_withholds_partial_event_order_instead_of_labeling_it_certified():
     app.config["TESTING"] = True
     payload = {
