@@ -111,6 +111,7 @@ def test_optimizer_rejects_a_locked_item_with_unmodeled_damage_mechanics():
         ("Maw of Malmortius", "modeled_one_rotation"),
         ("Seraph's Embrace", "modeled_one_rotation"),
         ("Sterak's Gage", "modeled_one_rotation"),
+        ("Protoplasm Harness", "modeled_one_rotation"),
         ("Void Staff", "not_target_relevant"),
     ],
 )
@@ -129,6 +130,7 @@ def test_target_item_coverage_is_mechanic_specific(item_name, status):
         "Maw of Malmortius",
         "Seraph's Embrace",
         "Sterak's Gage",
+        "Protoplasm Harness",
     ],
 )
 def test_lifeline_target_coverage_requires_one_rotation(item_name):

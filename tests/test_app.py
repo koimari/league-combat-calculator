@@ -332,6 +332,39 @@ def test_calculate_comparison_curve_recomputes_six_timed_windows():
     assert curve[-1]["total_damage"] > curve[0]["total_damage"]
 
 
+def test_calculate_models_protoplasm_as_health_and_healing_not_a_shield():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "items": ["Liandry's Torment"],
+            "enemies": [
+                {
+                    "champion": "Shen",
+                    "level": 7,
+                    "items": ["Protoplasm Harness"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    target = response.get_json()["targets"][0]
+    defense = target["target"]["starting_defenses"]
+    assert defense["threshold_shield"]["amount"] == 0
+    assert defense["threshold_health"] == {
+        "bonus_health": 170.6,
+        "healing": 205.9,
+        "health_ratio": 0.3,
+        "duration": 5.0,
+    }
+    result = target["result"]
+    assert result["threshold_health_triggered"] is False
+    assert result["target_healing_received"] == 0
+    assert result["target_ending_health"] < target["target"]["stats"]["health"]
+
+
 def test_optimizer_scores_every_selected_enemy(monkeypatch):
     captured = {}
 

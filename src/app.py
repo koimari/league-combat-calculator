@@ -364,6 +364,19 @@ def _serialize_fight_result(result: Mapping[str, object]) -> dict:
         "threshold_shield_absorbed": round(
             result.get("threshold_shield_absorbed", 0.0), 1
         ),
+        "threshold_health_triggered": bool(
+            result.get("threshold_health_triggered", False)
+        ),
+        "threshold_health_bonus_gained": round(
+            result.get("threshold_health_bonus_gained", 0.0), 1
+        ),
+        "target_healing_received": round(
+            result.get("target_healing_received", 0.0), 1
+        ),
+        "target_ending_health": round(result.get("target_ending_health", 0.0), 1),
+        "target_effective_max_health": round(
+            result.get("target_effective_max_health", 0.0), 1
+        ),
         "ability_damage": round(result["ability_damage"], 1),
         "auto_attack_damage": round(result["auto_attack_damage"], 1),
         "damage_by_type": {
@@ -514,6 +527,18 @@ def _comparison_curve(
                     ),
                     target_threshold_shield_damage_type=(
                         enemy.defenses.threshold_shield_damage_type
+                    ),
+                    target_threshold_health_bonus=(
+                        enemy.defenses.threshold_health_bonus
+                    ),
+                    target_threshold_health_heal=(
+                        enemy.defenses.threshold_health_heal
+                    ),
+                    target_threshold_health_ratio=(
+                        enemy.defenses.threshold_health_ratio
+                    ),
+                    target_threshold_health_duration=(
+                        enemy.defenses.threshold_health_duration
                     ),
                 )
                 target_results.append(
@@ -924,6 +949,12 @@ def api_calculate():
             target_threshold_shield_damage_type=(
                 enemy.defenses.threshold_shield_damage_type
             ),
+            target_threshold_health_bonus=enemy.defenses.threshold_health_bonus,
+            target_threshold_health_heal=enemy.defenses.threshold_health_heal,
+            target_threshold_health_ratio=enemy.defenses.threshold_health_ratio,
+            target_threshold_health_duration=(
+                enemy.defenses.threshold_health_duration
+            ),
         )
         serialized = _serialize_fight_result(
             run_fight(champion_data, level, items, target_params)
@@ -1100,6 +1131,12 @@ def api_optimize():
             ),
             target_threshold_shield_damage_type=(
                 enemy.defenses.threshold_shield_damage_type
+            ),
+            target_threshold_health_bonus=enemy.defenses.threshold_health_bonus,
+            target_threshold_health_heal=enemy.defenses.threshold_health_heal,
+            target_threshold_health_ratio=enemy.defenses.threshold_health_ratio,
+            target_threshold_health_duration=(
+                enemy.defenses.threshold_health_duration
             ),
         )
         for target_index, enemy in enumerate(enemies)

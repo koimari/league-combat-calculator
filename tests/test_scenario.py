@@ -122,6 +122,22 @@ def test_spirit_visage_amplifies_shieldbow_lifeline():
     assert loadout.defenses.threshold_shield_amount == pytest.approx(875)
 
 
+def test_protoplasm_is_exposed_as_temporary_health_and_healing():
+    loadout = ChampionLoadout(
+        champion="Shen", level=7, items=("Protoplasm Harness",)
+    ).resolve()
+
+    assert loadout.defenses.threshold_health_bonus == pytest.approx(170.588235)
+    assert loadout.defenses.threshold_health_heal == pytest.approx(205.882353)
+    public = loadout.defenses.public_summary()
+    assert public["threshold_health"] == {
+        "bonus_health": 170.6,
+        "healing": 205.9,
+        "health_ratio": 0.3,
+        "duration": 5.0,
+    }
+
+
 def test_loadout_level_changes_derived_stats():
     level_one = ChampionLoadout(champion="Ziggs", level=1).resolve()
     level_twelve = ChampionLoadout(champion="Ziggs", level=12).resolve()

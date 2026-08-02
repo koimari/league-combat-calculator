@@ -32,6 +32,10 @@ class StartingDefenses:
     threshold_shield_health_ratio: float = 0.0
     threshold_shield_duration: float = 0.0
     threshold_shield_damage_type: str = "all"
+    threshold_health_bonus: float = 0.0
+    threshold_health_heal: float = 0.0
+    threshold_health_ratio: float = 0.0
+    threshold_health_duration: float = 0.0
     assumptions: tuple[str, ...] = ()
     sources: tuple[DefenseSource, ...] = ()
     coverage: str = "base_and_items_only"
@@ -59,6 +63,12 @@ class StartingDefenses:
                 "health_ratio": round(self.threshold_shield_health_ratio, 3),
                 "duration": round(self.threshold_shield_duration, 1),
                 "damage_type": self.threshold_shield_damage_type,
+            },
+            "threshold_health": {
+                "bonus_health": round(self.threshold_health_bonus, 1),
+                "healing": round(self.threshold_health_heal, 1),
+                "health_ratio": round(self.threshold_health_ratio, 3),
+                "duration": round(self.threshold_health_duration, 1),
             },
             "assumptions": list(self.assumptions),
             "sources": [
@@ -165,6 +175,15 @@ _STERAKS_SOURCE = DefenseSource(
     revision_timestamp="2025-06-04T02:46:55Z",
 )
 
+_PROTOPLASM_SOURCE = DefenseSource(
+    label="Protoplasm Harness — Lifeline",
+    source_url=(
+        "https://wiki.leagueoflegends.com/en-us/" "Module:ItemData/data"
+    ),
+    revision_id=4046863,
+    revision_timestamp="2026-07-28T22:43:08Z",
+)
+
 
 def _shieldbow_shield_amount(level: int) -> float:
     effect = ITEM_EFFECTS["Immortal Shieldbow"]
@@ -180,7 +199,8 @@ def _shieldbow_shield_amount(level: int) -> float:
 
 def _linear_level_value(minimum: float, maximum: float, level: int) -> float:
     """Interpolate a Wiki ``X to Y based on level`` value across levels 1–18."""
-    return minimum + (maximum - minimum) * (level - 1) / 17.0
+    scaling_level = min(18, max(1, level))
+    return minimum + (maximum - minimum) * (scaling_level - 1) / 17.0
 
 
 def _lifeline_defense(
@@ -275,6 +295,10 @@ def resolve_starting_defenses(
     threshold_shield_health_ratio = champion_defenses.threshold_shield_health_ratio
     threshold_shield_duration = champion_defenses.threshold_shield_duration
     threshold_shield_damage_type = champion_defenses.threshold_shield_damage_type
+    threshold_health_bonus = champion_defenses.threshold_health_bonus
+    threshold_health_heal = champion_defenses.threshold_health_heal
+    threshold_health_ratio = champion_defenses.threshold_health_ratio
+    threshold_health_duration = champion_defenses.threshold_health_duration
     assumptions = list(champion_defenses.assumptions)
     sources = list(champion_defenses.sources)
 
@@ -315,6 +339,31 @@ def resolve_starting_defenses(
         assumptions.append(lifeline_assumption)
         sources.append(lifeline_source)
 
+    if "Protoplasm Harness" in names:
+        effect = ITEM_EFFECTS["Protoplasm Harness"]
+        threshold_health_bonus = _linear_level_value(
+            float(effect["bonus_health_min"]),
+            float(effect["bonus_health_max"]),
+            level,
+        )
+        threshold_health_heal = _linear_level_value(
+            float(effect["heal_min"]),
+            float(effect["heal_max"]),
+            level,
+        ) + float(effect["heal_bonus_armor_ratio"]) * float(
+            stats.get("bonus_armor", 0.0)
+        ) + float(effect["heal_bonus_mr_ratio"]) * float(
+            stats.get("bonus_magic_resistance", 0.0)
+        )
+        threshold_health_ratio = float(effect["health_threshold"])
+        threshold_health_duration = float(effect["duration"])
+        assumptions.append(
+            "Protoplasm Harness's Lifeline is ready. Before damage would leave "
+            "the target below 30% maximum health, it grants temporary bonus "
+            "health and begins its five-second heal."
+        )
+        sources.append(_PROTOPLASM_SOURCE)
+
     has_shield = (
         magic_shield > 0
         or physical_shield > 0
@@ -333,6 +382,17 @@ def resolve_starting_defenses(
             "Boundless Vitality increases every modeled shield by 25%."
         )
         sources.append(_SPIRIT_VISAGE_SOURCE)
+
+    if "Spirit Visage" in names and threshold_health_heal > 0:
+        threshold_health_heal *= float(
+            ITEM_EFFECTS["Spirit Visage"]["shield_received_multiplier"]
+        )
+        assumptions.append(
+            "Boundless Vitality increases Protoplasm Harness's modeled healing "
+            "by 25%."
+        )
+        if _SPIRIT_VISAGE_SOURCE not in sources:
+            sources.append(_SPIRIT_VISAGE_SOURCE)
 
     if "Plated Steelcaps" in names:
         basic_damage_multiplier *= float(
@@ -375,6 +435,10 @@ def resolve_starting_defenses(
         threshold_shield_health_ratio=threshold_shield_health_ratio,
         threshold_shield_duration=threshold_shield_duration,
         threshold_shield_damage_type=threshold_shield_damage_type,
+        threshold_health_bonus=threshold_health_bonus,
+        threshold_health_heal=threshold_health_heal,
+        threshold_health_ratio=threshold_health_ratio,
+        threshold_health_duration=threshold_health_duration,
         assumptions=tuple(assumptions),
         sources=tuple(sources),
         coverage="modeled_starting_defenses",

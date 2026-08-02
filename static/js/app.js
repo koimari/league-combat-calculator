@@ -1158,6 +1158,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (thresholdAmount > 0 && thresholdRatio > 0) {
             modifiers.push(`Lifeline ${Math.round(thresholdAmount).toLocaleString()} at ${Math.round(thresholdRatio * 100)}% HP`);
         }
+        const thresholdHealth = defenses.threshold_health || {};
+        const temporaryHealth = Number(thresholdHealth.bonus_health || 0);
+        const thresholdHealing = Number(thresholdHealth.healing || 0);
+        const thresholdHealthRatio = Number(thresholdHealth.health_ratio || 0);
+        if (temporaryHealth > 0 && thresholdHealthRatio > 0) {
+            modifiers.push(
+                `Lifeline +${Math.round(temporaryHealth).toLocaleString()} max HP + ` +
+                `${Math.round(thresholdHealing).toLocaleString()} healing at ` +
+                `${Math.round(thresholdHealthRatio * 100)}% HP`
+            );
+        }
         const parts = shields
             .map(([label, amount]) => `${label} ${Math.round(amount).toLocaleString()}`)
             .concat(modifiers);
@@ -1730,6 +1741,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     row.result.total_damage,
                     row.result.health_damage,
                     row.result.shield_absorbed,
+                    row.result.target_healing_received,
+                    row.result.target_ending_health,
                 ];
                 values.forEach((value) => {
                     const td = document.createElement("td");

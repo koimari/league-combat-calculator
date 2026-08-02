@@ -370,6 +370,10 @@ class FightConfig:
     target_threshold_shield_health_ratio: float = 0.0
     target_threshold_shield_duration: float = 0.0
     target_threshold_shield_damage_type: str = "all"
+    target_threshold_health_bonus: float = 0.0
+    target_threshold_health_heal: float = 0.0
+    target_threshold_health_ratio: float = 0.0
+    target_threshold_health_duration: float = 0.0
     enforce_resource_limits: bool = False
     roster_target_index: int = 0
     roster_target_count: int = 1
@@ -1209,8 +1213,83 @@ def _event_timeline_coverage(
     }
 
 
+@dataclass
+class _ThresholdHealthState:
+    """Ordered temporary-health/healing state for Protoplasm Lifeline.
+
+    The Wiki sources the pre-damage trigger, five-second health increase, and
+    heal. It does not document what happens to current health when that
+    temporary maximum health expires, so a fight reaching that boundary is
+    withheld instead of guessing.
+    """
+
+    base_max_health: float
+    current_health: float
+    bonus_health: float = 0.0
+    heal_total: float = 0.0
+    health_ratio: float = 0.0
+    duration: float = 0.0
+    triggered: bool = False
+    trigger_time: float = -1.0
+    last_time: float = 0.0
+    healing_received: float = 0.0
+
+    @property
+    def maximum_health(self) -> float:
+        return self.base_max_health + (self.bonus_health if self.triggered else 0.0)
+
+    def advance_to(self, event_time: float) -> None:
+        """Apply sourced over-time healing up to one incoming event."""
+        if not self.triggered:
+            self.last_time = max(self.last_time, event_time)
+            return
+        expiry = self.trigger_time + self.duration
+        if event_time >= expiry - 1e-9:
+            raise ValueError(
+                "Protoplasm Harness cannot be certified for damage at or after "
+                "its temporary-health expiry: the current-health removal rule "
+                "is not documented by the sourced Wiki data."
+            )
+        elapsed = max(0.0, event_time - self.last_time)
+        if (
+            self.current_health > 0
+            and self.duration > 0
+            and elapsed > 0
+            and self.heal_total > 0
+        ):
+            offered = self.heal_total * elapsed / self.duration
+            received = min(offered, max(0.0, self.maximum_health - self.current_health))
+            self.current_health += received
+            self.healing_received += received
+        self.last_time = max(self.last_time, event_time)
+
+    def trigger_before(self, damage: float, event_time: float) -> bool:
+        """Grant health before damage that would cross Lifeline's threshold."""
+        if (
+            self.triggered
+            or damage <= 0
+            or self.bonus_health <= 0
+            or self.health_ratio <= 0
+            or self.duration <= 0
+            or self.current_health - damage
+            >= self.maximum_health * self.health_ratio
+        ):
+            return False
+        self.triggered = True
+        self.trigger_time = event_time
+        self.last_time = event_time
+        self.current_health += self.bonus_health
+        return True
+
+    def take_damage(self, damage: float) -> None:
+        self.current_health = max(0.0, self.current_health - max(0.0, damage))
+
+
+_LIANDRY_BURN_KEY = "burn_Liandry's Torment"
+
+
 def _calculate_shadowflame_bonus(
-    effect: item_effects.MagicTrueCritEffect,
+    effect: item_effects.MagicTrueCritEffect | None,
     breakdown: dict[str, Any],
     ability_damages: dict[str, dict[str, Any]],
     target_health: float,
@@ -1224,10 +1303,21 @@ def _calculate_shadowflame_bonus(
     target_threshold_shield_health_ratio: float = 0.0,
     target_threshold_shield_duration: float = 0.0,
     target_threshold_shield_damage_type: str = "all",
+    target_threshold_health_bonus: float = 0.0,
+    target_threshold_health_heal: float = 0.0,
+    target_threshold_health_ratio: float = 0.0,
+    target_threshold_health_duration: float = 0.0,
     return_events: bool = False,
+    return_adjustments: bool = False,
 ) -> (
     tuple[float, dict[str, float]]
     | tuple[float, dict[str, float], list[dict[str, Any]]]
+    | tuple[
+        float,
+        dict[str, float],
+        list[dict[str, Any]],
+        dict[str, Any],
+    ]
 ):
     """Calculate bonus damage from Shadowflame's Cinderbloom passive.
 
@@ -1247,9 +1337,15 @@ def _calculate_shadowflame_bonus(
     """
     if cast_order is None:
         cast_order = list(DEFAULT_CAST_ORDER)
-    threshold_hp = target_health * effect.health_threshold
-    crit_bonus = effect.crit_multiplier - 1.0
-    current_hp = target_health
+    crit_bonus = effect.crit_multiplier - 1.0 if effect is not None else 0.0
+    health_state = _ThresholdHealthState(
+        base_max_health=target_health,
+        current_health=target_health,
+        bonus_health=max(0.0, target_threshold_health_bonus),
+        heal_total=max(0.0, target_threshold_health_heal),
+        health_ratio=max(0.0, target_threshold_health_ratio),
+        duration=max(0.0, target_threshold_health_duration),
+    )
     magic_shield = max(0.0, target_magic_shield)
     physical_shield = max(0.0, target_physical_shield)
     general_shield = max(0.0, target_general_shield)
@@ -1262,6 +1358,8 @@ def _calculate_shadowflame_bonus(
     total_bonus = 0.0
     bonus_by_type: dict[str, float] = {}
     bonus_events: list[dict[str, Any]] = []
+    liandry_delta = 0.0
+    liandry_events: list[dict[str, Any]] = []
 
     events = _ordered_damage_events(
         breakdown,
@@ -1275,10 +1373,33 @@ def _calculate_shadowflame_bonus(
         damage = event["damage"]
         dtype = event["damage_type"]
         event_time = float(event["time"])
+        health_state.advance_to(event_time)
         if threshold_shield > 0 and event_time > threshold_shield_expires:
             threshold_shield = 0.0
+        source_key = str(event.get("source_key", ""))
+        if (
+            source_key == _LIANDRY_BURN_KEY
+            and health_state.triggered
+            and event_time > health_state.trigger_time + 1e-9
+        ):
+            adjusted = damage * health_state.maximum_health / target_health
+            liandry_delta += adjusted - damage
+            damage = adjusted
+        if source_key == _LIANDRY_BURN_KEY:
+            liandry_events.append(
+                {
+                    "time": event_time,
+                    "damage_type": dtype,
+                    "damage": damage,
+                }
+            )
         event_damage = damage
-        if dtype in ("magic", "true") and current_hp < threshold_hp:
+        if (
+            effect is not None
+            and dtype in ("magic", "true")
+            and health_state.current_health
+            < health_state.maximum_health * effect.health_threshold
+        ):
             bonus = damage * crit_bonus
             total_bonus += bonus
             bonus_by_type[dtype] = bonus_by_type.get(dtype, 0.0) + bonus
@@ -1315,7 +1436,7 @@ def _calculate_shadowflame_bonus(
             and target_threshold_shield_amount > 0
             and lifeline_threshold_hp > 0
             and trigger_matches
-            and current_hp - event_damage < lifeline_threshold_hp
+            and health_state.current_health - event_damage < lifeline_threshold_hp
         ):
             threshold_triggered = True
             threshold_shield = target_threshold_shield_amount
@@ -1324,8 +1445,17 @@ def _calculate_shadowflame_bonus(
             absorbed = min(threshold_shield, event_damage)
             threshold_shield -= absorbed
             event_damage -= absorbed
-        current_hp = max(0.0, current_hp - event_damage)
+        health_state.trigger_before(event_damage, event_time)
+        health_state.take_damage(event_damage)
 
+    adjustments = {
+        "liandry_delta": liandry_delta,
+        "liandry_events": liandry_events,
+        "threshold_health_triggered": health_state.triggered,
+        "threshold_health_trigger_time": health_state.trigger_time,
+    }
+    if return_adjustments:
+        return total_bonus, bonus_by_type, bonus_events, adjustments
     if return_events:
         return total_bonus, bonus_by_type, bonus_events
     return total_bonus, bonus_by_type
@@ -4762,11 +4892,17 @@ def _add_single_proc_on_hits(
 def _add_shadowflame_cinderbloom(
     state: FightState, config: FightConfig, rotation: RotationResult
 ) -> None:
-    """Add Shadowflame's Cinderbloom bonus (magic/true crits below 40% HP)."""
+    """Resolve max-health-sensitive damage, then add Cinderbloom's bonus."""
     effect = state.damage_effects.magic_true_crit
-    if effect is None:
+    has_threshold_health = config.target_threshold_health_bonus > 0
+    if effect is None and not has_threshold_health:
         return
-    shadowflame_bonus, bonus_by_type, bonus_events = _calculate_shadowflame_bonus(
+    (
+        shadowflame_bonus,
+        bonus_by_type,
+        bonus_events,
+        adjustments,
+    ) = _calculate_shadowflame_bonus(
         effect,
         state.breakdown,
         state.ability_damages,
@@ -4784,8 +4920,23 @@ def _add_shadowflame_cinderbloom(
         target_threshold_shield_damage_type=(
             config.target_threshold_shield_damage_type
         ),
+        target_threshold_health_bonus=config.target_threshold_health_bonus,
+        target_threshold_health_heal=config.target_threshold_health_heal,
+        target_threshold_health_ratio=config.target_threshold_health_ratio,
+        target_threshold_health_duration=config.target_threshold_health_duration,
         return_events=True,
+        return_adjustments=True,
     )
+    liandry_delta = float(adjustments["liandry_delta"])
+    if abs(liandry_delta) > 1e-9:
+        liandry_row = state.breakdown.get(_LIANDRY_BURN_KEY)
+        if liandry_row is None:  # pragma: no cover - registry invariant
+            raise RuntimeError("Liandry adjustment has no breakdown row")
+        liandry_row["total_damage"] = (
+            float(liandry_row["total_damage"]) + liandry_delta
+        )
+        liandry_row["damage_events"] = adjustments["liandry_events"]
+        state.total_damage += liandry_delta
     if shadowflame_bonus > 0:
         state.breakdown[f"shadowflame_{effect.item_name}"] = {
             "name": f"{effect.item_name} (Cinderbloom)",
@@ -5126,6 +5277,20 @@ def calculate_fight_damage(
     timeline_coverage = _event_timeline_coverage(
         state.breakdown, state.ability_damages, state.cast_order
     )
+    if (
+        shield_outcome["threshold_health_triggered"]
+        and config.target_threshold_health_heal > 0
+    ):
+        timeline_coverage["complete"] = False
+        timeline_coverage["certification"] = "partial_event_order"
+        timeline_coverage["coarse_sources"] = sorted(
+            set(timeline_coverage["coarse_sources"])
+            | {"target_Protoplasm Harness"}
+        )
+        timeline_coverage["note"] = (
+            "Protoplasm Harness's sourced total healing is spread over five "
+            "seconds; its internal heal tick cadence is not source-certified."
+        )
     return {
         "breakdown": state.breakdown,
         "total_damage": state.total_damage,
@@ -5160,7 +5325,14 @@ def _resolve_starting_shield_outcome(
     physical_absorbed = 0.0
     general_absorbed = 0.0
     threshold_absorbed = 0.0
-    current_health = state.target_health
+    health_state = _ThresholdHealthState(
+        base_max_health=state.target_health,
+        current_health=state.target_health,
+        bonus_health=max(0.0, config.target_threshold_health_bonus),
+        heal_total=max(0.0, config.target_threshold_health_heal),
+        health_ratio=max(0.0, config.target_threshold_health_ratio),
+        duration=max(0.0, config.target_threshold_health_duration),
+    )
     threshold_shield = 0.0
     threshold_shield_expires = -1.0
     threshold_triggered = False
@@ -5174,6 +5346,7 @@ def _resolve_starting_shield_outcome(
         cast_events=rotation.cast_events,
     ):
         event_time = float(event["time"])
+        health_state.advance_to(event_time)
         if threshold_shield > 0 and event_time > threshold_shield_expires:
             threshold_shield = 0.0
         remaining = event["damage"]
@@ -5200,7 +5373,7 @@ def _resolve_starting_shield_outcome(
             and config.target_threshold_shield_amount > 0
             and threshold_hp > 0
             and trigger_matches
-            and current_health - remaining < threshold_hp
+            and health_state.current_health - remaining < threshold_hp
         ):
             threshold_triggered = True
             threshold_shield = config.target_threshold_shield_amount
@@ -5213,7 +5386,8 @@ def _resolve_starting_shield_outcome(
             threshold_shield -= absorbed
             threshold_absorbed += absorbed
             remaining -= absorbed
-        current_health = max(0.0, current_health - remaining)
+        health_state.trigger_before(remaining, event_time)
+        health_state.take_damage(remaining)
 
     absorbed = (
         magic_absorbed
@@ -5228,6 +5402,13 @@ def _resolve_starting_shield_outcome(
         "general_shield_absorbed": general_absorbed,
         "threshold_shield_absorbed": threshold_absorbed,
         "health_damage": max(0.0, state.total_damage - absorbed),
+        "threshold_health_triggered": health_state.triggered,
+        "threshold_health_bonus_gained": (
+            health_state.bonus_health if health_state.triggered else 0.0
+        ),
+        "target_healing_received": health_state.healing_received,
+        "target_ending_health": health_state.current_health,
+        "target_effective_max_health": health_state.maximum_health,
     }
 
 

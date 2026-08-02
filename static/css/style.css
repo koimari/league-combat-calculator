@@ -247,7 +247,7 @@ body {
 /* =============== LAYOUT =============== */
 .container {
     display: grid;
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
     gap: var(--gap-xl);
     max-width: 1200px;
     margin: var(--gap-xl) auto;
@@ -256,19 +256,21 @@ body {
 
 /* Compare mode: results panels for build A and build B side by side */
 .container.compare-mode {
-    grid-template-columns: 380px 1fr 1fr;
+    grid-template-columns: minmax(0, 380px) repeat(2, minmax(0, 1fr));
     max-width: 1800px;
 }
 
 @media (max-width: 1250px) {
     /* Not enough width for three columns: build B wraps below build A */
-    .container.compare-mode { grid-template-columns: 380px 1fr; }
+    .container.compare-mode {
+        grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+    }
     .container.compare-mode .results-panel { grid-column: 2; }
 }
 
 @media (max-width: 860px) {
     .container,
-    .container.compare-mode { grid-template-columns: 1fr; }
+    .container.compare-mode { grid-template-columns: minmax(0, 1fr); }
     .container.compare-mode .results-panel { grid-column: auto; }
 }
 
@@ -279,6 +281,7 @@ body {
     border: 1px solid var(--border-dark);
     border-radius: var(--radius-lg);
     padding: var(--gap-lg);
+    min-width: 0;
 }
 
 .config-panel {
@@ -299,6 +302,7 @@ body {
     border-top: 2px solid var(--gold-dim);
     border-radius: var(--radius-lg);
     padding: var(--gap-lg);
+    min-width: 0;
 }
 
 .scenario-heading,
@@ -641,6 +645,29 @@ body {
 }
 
 @media (max-width: 520px) {
+    .header-inner {
+        gap: 8px;
+        padding: 0.6rem 0.75rem;
+    }
+    .header-logo,
+    .data-freshness { display: none; }
+    .header-brand h1 {
+        font-size: 0.86rem;
+        letter-spacing: 0.5px;
+    }
+    .header-actions { gap: 4px; }
+    .btn-update {
+        font-size: 0.68rem;
+        padding: 0.35rem 0.5rem;
+    }
+    .container {
+        gap: var(--gap-md);
+        margin: var(--gap-md) auto;
+        padding: 0 var(--gap-sm);
+    }
+    .config-panel,
+    .results-panel,
+    .scenario-panel { padding: var(--gap-md); }
     .roster-card-head { align-items: flex-start; }
     .roster-card-identity { align-items: flex-start; flex-direction: column; }
     .roster-stat-matrix { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -778,6 +805,7 @@ body {
 
 .champion-info {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: var(--gap-sm);
@@ -951,6 +979,8 @@ label {
     display: flex;
     gap: var(--gap-sm);
     align-items: flex-start;
+    min-width: 0;
+    overflow-x: auto;
 }
 
 .ability-slot {
@@ -1085,6 +1115,8 @@ input[type="radio"] {
     display: flex;
     align-items: flex-start;
     gap: 6px;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .build-divider {

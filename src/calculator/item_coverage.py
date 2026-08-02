@@ -116,6 +116,11 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
 }
 
 _TARGET_ONE_ROTATION_REASONS: dict[str, str] = {
+    "Protoplasm Harness": (
+        "Lifeline's level-scaled temporary health and resist-scaled healing are "
+        "modeled for one rotation. The calculation fails closed if damage "
+        "reaches the unsourced temporary-health expiry boundary."
+    ),
     "Hexdrinker": (
         "Lifeline's level-scaled 30%-health magic shield is modeled for one "
         "rotation. Timed auto and item-effect timestamps are not certified yet."
@@ -167,7 +172,6 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Knight's Vow": "Pledge damage redirection and healing are not modelled.",
     "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",
     "Mikael's Blessing": "Purify's activated heal is not modelled.",
-    "Protoplasm Harness": "Lifeline's low-health shield is not modelled.",
     "Redemption": "Intervention's activated target healing is not modelled.",
     "Rod of Ages": "Timeless health stacks are not exposed as target state.",
     "Seeker's Armguard": "Time Stop's stasis is not modelled.",
@@ -196,6 +200,7 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     if ITEM_EFFECTS.get(name, {}).get("type") in {
         "defensive_start",
         "target_mitigation",
+        "target_threshold_health",
         "target_threshold_shield",
     }:
         status: ItemCoverageStatus = "stats_only"

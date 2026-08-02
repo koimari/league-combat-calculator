@@ -665,6 +665,141 @@ class TestTargetIncomingDamageModifiers:
         assert result["threshold_shield_absorbed"] == pytest.approx(360.0)
         assert result["health_damage"] == pytest.approx(50.0)
 
+    def test_protoplasm_grants_health_before_triggering_damage(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                }
+            },
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert result["total_damage"] == pytest.approx(800.0)
+        assert result["threshold_health_triggered"] is True
+        assert result["threshold_health_bonus_gained"] == 200.0
+        assert result["target_effective_max_health"] == 1200.0
+        assert result["target_ending_health"] == pytest.approx(400.0)
+
+    def test_protoplasm_updates_later_liandry_max_health_ticks(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                }
+            },
+            items=[get_item_by_name("Liandry's Torment")],
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        burn = result["breakdown"]["burn_Liandry's Torment"]
+        assert burn["total_damage"] == pytest.approx(72.0)
+        assert [event["damage"] for event in burn["damage_events"]] == pytest.approx(
+            [12.0] * 6
+        )
+        assert result["target_healing_received"] == pytest.approx(180.0)
+        assert result["timeline_coverage"]["complete"] is False
+        assert "target_Protoplasm Harness" in result["timeline_coverage"][
+            "coarse_sources"
+        ]
+
+    def test_protoplasm_health_can_delay_shadowflame_threshold(
+        self, fight, attacker_stats
+    ):
+        abilities = {
+            "Q": {
+                "name": "Trigger",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 750.0,
+                "parts": (DamagePart("magic", 750.0),),
+            },
+            "W": {
+                "name": "Follow up",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 100.0,
+                "parts": (DamagePart("magic", 100.0),),
+            },
+        }
+        baseline = fight(
+            attacker_stats(),
+            abilities,
+            items=[get_item_by_name("Shadowflame")],
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+        )
+        protoplasm = fight(
+            attacker_stats(),
+            abilities,
+            items=[get_item_by_name("Shadowflame")],
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=300.0,
+            target_threshold_health_heal=400.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert baseline["breakdown"]["shadowflame_Shadowflame"][
+            "total_damage"
+        ] == pytest.approx(20.0)
+        assert "shadowflame_Shadowflame" not in protoplasm["breakdown"]
+
+    def test_protoplasm_fails_closed_at_unsourced_expiry_boundary(
+        self, fight, attacker_stats
+    ):
+        with pytest.raises(ValueError, match="temporary-health expiry"):
+            fight(
+                attacker_stats(),
+                {
+                    "Q": {
+                        "name": "Trigger and repeat",
+                        "rank": 1,
+                        "cooldown": 5.0,
+                        "damage_type": "magic",
+                        "total_raw": 800.0,
+                        "parts": (DamagePart("magic", 800.0),),
+                    }
+                },
+                one_rotation=False,
+                fight_duration_seconds=6.0,
+                target_health=1000.0,
+                target_magic_resistance=0.0,
+                target_threshold_health_bonus=200.0,
+                target_threshold_health_heal=300.0,
+                target_threshold_health_ratio=0.30,
+                target_threshold_health_duration=5.0,
+            )
+
 
 class TestBorkCurrentHpSimulation:
     """Tests for Blade of the Ruined King current-HP iterative simulation."""

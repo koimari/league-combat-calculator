@@ -718,6 +718,18 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "duration": 4.5,
         "damage_type": "all",
     },
+    "Protoplasm Harness": {
+        "type": "target_threshold_health",
+        "health_threshold": 0.30,
+        "bonus_health_min": 100.0,
+        "bonus_health_max": 300.0,
+        "heal_min": 100.0,
+        "heal_max": 400.0,
+        "heal_bonus_armor_ratio": 1.75,
+        "heal_bonus_mr_ratio": 1.75,
+        "duration": 5.0,
+        "cooldown": 90.0,
+    },
     "Stormrazor": {
         "type": "on_hit_once",
         "formula": "flat",
@@ -820,6 +832,19 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
         {"max_mana_ratio_ability_melee", "max_mana_ratio_ability_ranged"}
     ),
     "Profane Hydra": frozenset({"cooldown"}),
+    "Protoplasm Harness": frozenset(
+        {
+            "health_threshold",
+            "bonus_health_min",
+            "bonus_health_max",
+            "heal_min",
+            "heal_max",
+            "heal_bonus_armor_ratio",
+            "heal_bonus_mr_ratio",
+            "duration",
+            "cooldown",
+        }
+    ),
     "Ravenous Hydra": frozenset({"cooldown"}),
     "Seraph's Embrace": frozenset(
         {"health_threshold", "shield_max_mana_ratio", "duration"}
@@ -1918,6 +1943,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "spellblade",
         "stat_conversion",
         "target_mitigation",
+        "target_threshold_health",
         "target_threshold_shield",
         "ult_attack_speed_buff",
         "ult_empowered_autos",
