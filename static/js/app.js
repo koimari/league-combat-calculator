@@ -3,6 +3,7 @@ const DDRAGON = "https://ddragon.leagueoflegends.com/cdn/16.15.1/img";
 let DATA;
 let pickerContext = null;
 let bisContext = null;
+const ABILITY_SLOTS = ["P", "Q", "W", "E", "R"];
 const engine = {
   ready: false,
   reviewed: new Set(),
@@ -35,6 +36,7 @@ const state = {
     abilityInputs: {},
   },
   targets: [],
+  allies: [],
   fight: { rotations: 1, duration: 10, aaUptime: 0 },
   optimizer: { running: false, summary: null },
 };
@@ -57,6 +59,21 @@ function invalidateOptimization() {
 
 function getChampion(name) {
   return name ? DATA.champions.find((entry) => entry.name === name) || null : null;
+}
+
+function mergeAbilityCatalog(catalog) {
+  if (!catalog?.champions?.length || !DATA?.champions?.length) return;
+  const entries = new Map(catalog.champions.map((entry) => [entry.name, entry]));
+  DATA.champions.forEach((champion) => {
+    const entry = entries.get(champion.name);
+    if (!entry) return;
+    const formulaBySlot = new Map((champion.abilities || []).map((ability) => [ability.slot, ability]));
+    champion.ingestedAbilities = (entry.abilities || []).map((ability) => ({
+      ...ability,
+      formulaReviewed: formulaBySlot.has(ability.slot),
+      source: catalog.source,
+    }));
+  });
 }
 
 function getItem(id) {
@@ -90,6 +107,8 @@ function itemImage(id) {
 }
 
 function abilityImage(ability) {
+  if (!ability?.icon) return "";
+  if (ability.icon.startsWith("http")) return ability.icon;
   return `${DDRAGON}/${ability.slot === "P" ? "passive" : "spell"}/${ability.icon}`;
 }
 
@@ -120,6 +139,7 @@ function stackValue(path) {
   if (parts[0] === "attacker" && parts[1] === "buildA") return state.attacker.buildAStacks[Number(parts[2])] || 0;
   if (parts[0] === "attacker" && parts[1] === "buildB") return state.attacker.buildBStacks[Number(parts[2])] || 0;
   if (parts[0] === "targets") return state.targets[Number(parts[1])]?.itemStacks?.[Number(parts[3])] || 0;
+  if (parts[0] === "allies") return state.allies[Number(parts[1])]?.itemStacks?.[Number(parts[3])] || 0;
   return 0;
 }
 
@@ -128,6 +148,7 @@ function setStackValue(path, value) {
   if (parts[0] === "attacker" && parts[1] === "buildA") state.attacker.buildAStacks[Number(parts[2])] = value;
   else if (parts[0] === "attacker" && parts[1] === "buildB") state.attacker.buildBStacks[Number(parts[2])] = value;
   else if (parts[0] === "targets") state.targets[Number(parts[1])].itemStacks[Number(parts[3])] = value;
+  else if (parts[0] === "allies") state.allies[Number(parts[1])].itemStacks[Number(parts[3])] = value;
   invalidateOptimization();
 }
 
@@ -275,19 +296,34 @@ function stackControl(path, id, compact = false) {
   </div>`;
 }
 
-function targetCard(target, index) {
-  const stats = championStats(target.champion, target.level, target.items, target.itemStacks);
-  const champion = getChampion(target.champion);
-  return `<article class="target-card">
+function rosterCard(loadout, index, kind) {
+  const isAlly = kind === "ally";
+  const root = isAlly ? "allies" : "targets";
+  const label = isAlly ? "ally" : "enemy";
+  const stats = championStats(loadout.champion, loadout.level, loadout.items, loadout.itemStacks);
+  const champion = getChampion(loadout.champion);
+  const effectToggle = isAlly
+    ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
+    : "";
+  return `<article class="target-card ${isAlly ? "ally-card" : ""}">
     <header>
-      <button class="target-pick ${champion ? "" : "empty-pick"}" type="button" data-picker="champion" data-path="targets.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(target.champion)}` : "Choose enemy champion"}">${champion ? `<img src="${championImage(target.champion)}" alt="" />` : "+"}</button>
-      <div class="target-title"><button type="button" data-picker="champion" data-path="targets.${index}.champion">${escapeHtml(target.champion || "Choose champion")}</button><span>${escapeHtml(champion?.title || "Enemy slot")}</span></div>
-      <div class="target-level"><button type="button" data-level="targets.${index}.level" data-delta="-1" aria-label="Decrease level">−</button><output>Lv ${target.level}</output><button type="button" data-level="targets.${index}.level" data-delta="1" aria-label="Increase level">+</button></div>
-      <button class="remove-target" type="button" data-remove-target="${index}" aria-label="Remove ${escapeHtml(target.champion || "enemy slot")}">×</button>
+      <button class="target-pick ${champion ? "" : "empty-pick"}" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(loadout.champion)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(loadout.champion)}" alt="" />` : "+"}</button>
+      <div class="target-title"><button type="button" data-picker="champion" data-path="${root}.${index}.champion">${escapeHtml(loadout.champion || "Choose champion")}</button><span>${escapeHtml(champion?.title || `${isAlly ? "Ally" : "Enemy"} slot`)}</span></div>
+      <div class="target-level"><button type="button" data-level="${root}.${index}.level" data-delta="-1" aria-label="Decrease level">−</button><output>Lv ${loadout.level}</output><button type="button" data-level="${root}.${index}.level" data-delta="1" aria-label="Increase level">+</button></div>
+      <button class="remove-target" type="button" ${isAlly ? `data-remove-ally="${index}"` : `data-remove-target="${index}"`} aria-label="Remove ${escapeHtml(loadout.champion || `${label} slot`)}">×</button>
     </header>
-    <div class="target-build">${target.items.map((id, slot) => itemSlot(`targets.${index}.items.${slot}`, id, true)).join("")}</div>
+    <div class="target-build">${loadout.items.map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true)).join("")}</div>
+    ${effectToggle}
     ${champion ? statMatrix(stats, null, true) : `<div class="matrix-placeholder">Choose a champion to show the full stat matrix.</div>`}
   </article>`;
+}
+
+function targetCard(target, index) {
+  return rosterCard(target, index, "enemy");
+}
+
+function allyCard(ally, index) {
+  return rosterCard(ally, index, "ally");
 }
 
 function segmented(label, values, active, attribute) {
@@ -300,8 +336,20 @@ function stepper(label, value, attributes, minusDisabled = false, plusDisabled =
 
 function renderAbilityPackage(champion) {
   const coverage = champion?.abilityCoverage;
-  if (!champion?.abilities?.length) return `<div class="ability-empty"><strong>Exact skill formulas withheld.</strong><span>${coverage?.withheld?.length ? `${coverage.withheld.join("/")} could not be resolved unambiguously · ` : ""}Use the manual package below.</span></div>`;
-  const rows = champion.abilities.map((ability) => {
+  const formulaBySlot = new Map((champion?.abilities || []).map((ability) => [ability.slot, ability]));
+  const ingestedBySlot = new Map((champion?.ingestedAbilities || []).map((ability) => [ability.slot, ability]));
+  if (!formulaBySlot.size && !ingestedBySlot.size) return `<div class="ability-empty"><strong>Ability metadata unavailable.</strong><span>${coverage?.withheld?.length ? `${coverage.withheld.join("/")} could not be resolved unambiguously · ` : ""}Use the manual package below.</span></div>`;
+
+  const rows = ABILITY_SLOTS.map((slot) => {
+    const ability = formulaBySlot.get(slot);
+    const ingested = ingestedBySlot.get(slot);
+    if (!ability) {
+      const description = ingested?.blurb || ingested?.description || "Ability metadata was ingested, but its exact combat formula is not reviewed yet.";
+      return `<article class="ability-row ability-withheld" title="${escapeHtml(ingested?.description || description)}">
+        <div class="ability-name"><img src="${abilityImage(ingested)}" alt="" /><b>${slot}</b><span><strong>${escapeHtml(ingested?.name || slot)}</strong><small>Ingested · exact formula withheld</small></span></div>
+        <p class="ability-note">${escapeHtml(description)}</p>
+      </article>`;
+    }
     const input = abilityInput(ability.slot);
     const rankLabel = ability.slot === "P" ? "Level scales" : "Rank";
     const rankControl = ability.slot === "P"
@@ -318,8 +366,9 @@ function renderAbilityPackage(champion) {
       ${hitControl}
     </article>`;
   }).join("");
+  const sourced = coverage?.supported ?? formulaBySlot.size;
   const withheld = coverage?.withheld?.length ? ` · withheld ${coverage.withheld.join("/")}` : "";
-  return `<div class="ability-package"><div class="ability-package-head"><div><strong>Damage rotation</strong><span>${coverage ? `${coverage.supported}/${coverage.total} sourced${withheld}` : "Ranks and hits are explicit"}</span></div><small>${escapeHtml(champion.source?.label || "Patch data")}</small></div><div class="ability-rows" style="--ability-count:${Math.min(champion.abilities.length, 5)}">${rows}</div></div>`;
+  return `<div class="ability-package"><div class="ability-package-head"><div><strong>Ability catalogue</strong><span>${sourced} reviewed formulas · ${ingestedBySlot.size}/5 metadata ingested${withheld}</span></div><small>${escapeHtml(champion.ingestedAbilities?.[0]?.source?.kind || champion.source?.label || "Patch data")}</small></div><div class="ability-rows" style="--ability-count:5">${rows}</div></div>`;
 }
 
 function roleQuestNote() {
@@ -398,8 +447,12 @@ function renderBuilder() {
       </div>
     </section>
     <section class="board-section">
-      <div class="section-bar"><h2>Enemy roster</h2><div class="section-actions"><small>${state.targets.length}/10 · every card includes full stats</small><button class="text-button" type="button" data-add-target ${state.targets.length >= 10 ? "disabled" : ""}>+ Add enemy</button></div></div>
+      <div class="section-bar"><h2>Enemy roster</h2><div class="section-actions"><small>${state.targets.length}/5 · every card includes full stats</small><button class="text-button" type="button" data-add-target ${state.targets.length >= 5 ? "disabled" : ""}>+ Add enemy</button></div></div>
       <div class="target-grid">${state.targets.length ? state.targets.map(targetCard).join("") : `<div class="empty-roster">Add an enemy champion to begin.</div>`}</div>
+    </section>
+    <section class="board-section">
+      <div class="section-bar"><h2>Allied context</h2><div class="section-actions"><small>${state.allies.length}/4 · buffs are opt-in and sourced</small><button class="text-button" type="button" data-add-ally ${state.allies.length >= 4 ? "disabled" : ""}>+ Add ally</button></div></div>
+      <div class="target-grid">${state.allies.length ? state.allies.map(allyCard).join("") : `<div class="empty-roster">Add an ally to include their build and any explicitly modeled outgoing effect.</div>`}</div>
     </section>
     <section class="board-section">
       <div class="section-bar"><h2>Time window</h2><small>Applied to every target</small></div>
@@ -729,6 +782,13 @@ function engineTarget(target) {
   };
 }
 
+function engineAlly(ally) {
+  return {
+    ...engineTarget(ally),
+    ally_effects_enabled: Boolean(ally.allyEffectsEnabled),
+  };
+}
+
 function engineFightPayload(side) {
   const build = engineBuild(side);
   const payload = {
@@ -740,7 +800,7 @@ function engineFightPayload(side) {
     target_armor: 100,
     target_mr: 100,
     enemies: state.targets.filter((target) => target.champion).map(engineTarget),
-    allies: [],
+    allies: state.allies.filter((ally) => ally.champion).map(engineAlly),
     role: state.attacker.role || "",
     role_quest_complete: state.attacker.roleQuestComplete,
     include_actives: true,
@@ -1057,10 +1117,12 @@ function scenarioSentence() {
   if (!state.attacker.champion) return "Choose a champion, a build and an enemy roster to begin.";
   const buildA = buildAIds().map(getItem).filter(Boolean).map((item) => item.name);
   const names = state.targets.map((target) => target.champion);
+  const allyNames = state.allies.map((ally) => ally.champion).filter(Boolean);
   const roster = names.length <= 1 ? (names[0] || "no enemies") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
   const compareText = state.attacker.comparisonEnabled && buildBIds().some(Boolean) ? `, comparing <strong>Build A</strong> with <strong>Build B</strong>` : "";
   const targetText = names.length ? `, into ${escapeHtml(roster)}` : "";
-  return `<strong>${escapeHtml(state.attacker.champion)} level ${state.attacker.level}</strong>${buildA.length ? ` with ${escapeHtml(buildA.join(" + "))}` : ""}${compareText}${targetText} over ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")} · ${one(state.fight.duration)}s each · ${Math.round(state.fight.aaUptime * 100)}% auto uptime.`;
+  const allyText = allyNames.length ? ` · ${allyNames.length} ${plural(allyNames.length, "ally")} in context` : "";
+  return `<strong>${escapeHtml(state.attacker.champion)} level ${state.attacker.level}</strong>${buildA.length ? ` with ${escapeHtml(buildA.join(" + "))}` : ""}${compareText}${targetText} over ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")} · ${one(state.fight.duration)}s each · ${Math.round(state.fight.aaUptime * 100)}% auto uptime${allyText}.`;
 }
 
 function render() {
@@ -1441,13 +1503,36 @@ document.addEventListener("click", (event) => {
   }
   if (event.target.closest("[data-add-target]")) {
     invalidateOptimization();
-    if (state.targets.length < 10) {
+    if (state.targets.length < 5) {
       const index = state.targets.length;
       state.targets.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0] });
       render();
       return openPicker("champion", `targets.${index}.champion`);
     }
     return;
+  }
+  const removeAllyButton = event.target.closest("[data-remove-ally]");
+  if (removeAllyButton) {
+    invalidateOptimization();
+    state.allies.splice(Number(removeAllyButton.dataset.removeAlly), 1);
+    return render();
+  }
+  if (event.target.closest("[data-add-ally]")) {
+    invalidateOptimization();
+    if (state.allies.length < 4) {
+      const index = state.allies.length;
+      state.allies.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], allyEffectsEnabled: false });
+      render();
+      return openPicker("champion", `allies.${index}.champion`);
+    }
+    return;
+  }
+  const allyEffectsButton = event.target.closest("[data-ally-effects]");
+  if (allyEffectsButton) {
+    invalidateOptimization();
+    const index = Number(allyEffectsButton.dataset.allyEffects);
+    state.allies[index].allyEffectsEnabled = !state.allies[index].allyEffectsEnabled;
+    return render();
   }
   const option = event.target.closest("[data-picker-value]");
   if (option && pickerContext) {
@@ -1500,9 +1585,11 @@ Promise.all([
   fetch("/static/data.json").then((response) => { if (!response.ok) throw new Error("Patch snapshot failed to load"); return response.json(); }),
   fetch("/api/champions").then((response) => { if (!response.ok) throw new Error("Champion availability failed to load"); return response.json(); }),
   fetch("/api/config").then((response) => { if (!response.ok) throw new Error("Calculator config failed to load"); return response.json(); }),
+  fetch("/static/ability-catalog.json").then((response) => { if (!response.ok) throw new Error("Ability catalogue failed to load"); return response.json(); }),
 ])
-  .then(([data, championAvailability, config]) => {
+  .then(([data, championAvailability, config, abilityCatalog]) => {
     DATA = data;
+    mergeAbilityCatalog(abilityCatalog);
     championAvailability.forEach((entry) => {
       engine.availability.set(entry.name, entry.availability || {});
       if (entry.availability?.ready) engine.reviewed.add(entry.name);

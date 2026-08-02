@@ -798,6 +798,17 @@ class TestIconUrlsAreHttps:
         abilities = app_module.app.test_client().get("/api/abilities/Aatrox").get_json()
 
         assert all(not a["icon"].startswith("http://") for a in abilities.values())
+        assert set(abilities) == {"P", "Q", "W", "E", "R"}
+        assert all(ability["ingested"] for ability in abilities.values())
+        assert abilities["Q"]["name"] == "The Darkin Blade"
+
+    def test_champion_api_exposes_all_ingested_slots_without_certifying_damage(self):
+        champions = app_module.app.test_client().get("/api/champions").get_json()
+
+        assert len(champions) == 173
+        assert all(champion["ability_ingestion"]["complete"] for champion in champions)
+        assert all(set(champion["abilities"]) == {"P", "Q", "W", "E", "R"} for champion in champions)
+        assert any(not champion["verified"] for champion in champions)
 
 
 class TestChampionVerifiedFlags:

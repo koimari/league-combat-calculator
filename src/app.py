@@ -871,6 +871,30 @@ def health():
     return jsonify({"status": "ok"})
 
 
+def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
+    """Return bounded descriptive metadata without exposing raw formula graphs."""
+    entries = ability_list if isinstance(ability_list, list) else []
+    first = entries[0] if entries and isinstance(entries[0], dict) else {}
+    descriptions = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        for effect in entry.get("effects", []):
+            description = str(effect.get("description", "")).strip()
+            if description and description not in descriptions:
+                descriptions.append(description)
+    return {
+        "slot": slot,
+        "name": first.get("name", slot),
+        "icon": _https_icon(first.get("icon", "")),
+        "blurb": first.get("blurb") or "",
+        "description": " ".join(descriptions),
+        "damage_type": first.get("damageType"),
+        "targeting": first.get("targeting"),
+        "ingested": bool(first),
+    }
+
+
 @app.route("/api/champions")
 def api_champions():
     """Return champion identity and fail-closed attacker readiness.
@@ -884,6 +908,14 @@ def api_champions():
     result = []
     for champ_data in champions.values():
         availability = attacker_availability(champ_data, _VERIFIED_CHAMPIONS)
+        ability_slots = {}
+        for slot in ("P", "Q", "W", "E", "R"):
+            ability = _public_ability_entry(
+                champ_data.get("abilities", {}).get(slot, []), slot
+            )
+            ability_slots[slot] = {
+                key: ability[key] for key in ("slot", "name", "icon", "ingested")
+            }
         result.append(
             {
                 "name": champ_data["name"],
@@ -891,6 +923,12 @@ def api_champions():
                 "verified": availability["ready"],
                 "availability": availability,
                 "patch_last_changed": champ_data.get("patchLastChanged"),
+                "abilities": ability_slots,
+                "ability_ingestion": {
+                    "complete": all(entry["ingested"] for entry in ability_slots.values()),
+                    "slot_count": sum(entry["ingested"] for entry in ability_slots.values()),
+                    "source": "Local Wiki cache",
+                },
             }
         )
     result = sorted(
@@ -993,7 +1031,7 @@ def api_config():
 
 @app.route("/api/abilities/<champion_name>")
 def api_abilities(champion_name: str):
-    """Return ability names and icons for a champion keyed by Q, W, E, R."""
+    """Return descriptive metadata for all five ingested ability slots."""
     try:
         champion_data = get_champion(champion_name)
     except KeyError:
@@ -1002,16 +1040,7 @@ def api_abilities(champion_name: str):
     abilities = champion_data.get("abilities", {})
     result = {}
     for key in ("P", "Q", "W", "E", "R"):
-        ability_list = abilities.get(key, [])
-        if ability_list and isinstance(ability_list[0], dict):
-            result[key] = {
-                "name": ability_list[0].get("name", key),
-                "icon": _https_icon(ability_list[0].get("icon", "")),
-            }
-        elif ability_list and isinstance(ability_list[0], str):
-            result[key] = {"name": ability_list[0], "icon": ""}
-        else:
-            result[key] = {"name": key, "icon": ""}
+        result[key] = _public_ability_entry(abilities.get(key, []), key)
     return jsonify(result)
 
 

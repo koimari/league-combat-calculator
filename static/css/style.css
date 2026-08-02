@@ -292,6 +292,10 @@ td:last-child { color: var(--olive); }
 .target-build { display: flex; gap: 5px; margin: 10px 0; }
 .target-build .slot-wrap, .target-build .item-slot, .target-build .item-icon { width: 34px; }
 .target-build .item-icon { height: 34px; }
+.ally-toggle { display: flex; align-items: center; gap: 7px; width: 100%; margin: 1px 0 10px; padding: 6px 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font: 700 8px var(--mono); text-align: left; text-transform: uppercase; }
+.ally-toggle i { width: 8px; height: 8px; border: 1px solid currentColor; background: transparent; }
+.ally-toggle.active { border-color: var(--olive); color: var(--olive); background: color-mix(in srgb, var(--olive) 7%, transparent); }
+.ally-toggle.active i { background: currentColor; }
 .target-card .stat-matrix { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .matrix-placeholder { display: grid; place-items: center; min-height: 75px; padding: 18px; border: 1px dashed var(--line-strong); color: var(--muted); font: 9px/1.5 var(--mono); text-align: center; }
 .hero-placeholder { min-height: 128px; }
@@ -341,6 +345,10 @@ td:last-child { color: var(--olive); }
 .ability-step button:disabled { opacity: .3; cursor: default; }
 .ability-step output, .ability-step.fixed strong { color: var(--ink); font: 9px var(--mono); text-align: center; }
 .ability-step.fixed strong { color: var(--accent); }
+.ability-withheld { background: color-mix(in srgb, var(--canvas) 45%, transparent); }
+.ability-withheld .ability-name { margin-bottom: 7px; }
+.ability-withheld .ability-name small { color: var(--accent); }
+.ability-note { margin: 0; color: var(--muted); font: 8px/1.45 var(--mono); }
 .ability-empty { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); color: var(--muted); font: 8px var(--mono); }
 .ability-empty strong { color: var(--ink); }
 
