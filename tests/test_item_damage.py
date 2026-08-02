@@ -590,6 +590,45 @@ class TestShadowflameCinderbloom:
         assert no_shield == pytest.approx(80.0)
         assert shielded == 0.0
 
+    def test_timed_cast_timeline_controls_threshold_crossing(self) -> None:
+        """Recasts must not be grouped ahead of intervening abilities."""
+        from src.calculator.damage import _calculate_shadowflame_bonus
+
+        breakdown = {
+            "Q": {
+                "name": "Repeat cast",
+                "casts": 2,
+                "total_damage": 1000.0,
+                "damage_type": "magic",
+            },
+            "W": {
+                "name": "Intervening cast",
+                "casts": 1,
+                "total_damage": 200.0,
+                "damage_type": "magic",
+            },
+        }
+        ability_damages = {
+            "Q": {"damage_type": "magic", "parts": (DamagePart("magic", 500),)},
+            "W": {"damage_type": "magic", "parts": (DamagePart("magic", 200),)},
+        }
+
+        bonus, _ = _calculate_shadowflame_bonus(
+            _shadowflame_effect(),
+            breakdown,
+            ability_damages,
+            1000.0,
+            cast_order=["Q", "W"],
+            cast_events=[
+                {"time": 0.0, "slot": "Q", "ordinal": 1},
+                {"time": 1.0, "slot": "W", "ordinal": 1},
+                {"time": 2.0, "slot": "Q", "ordinal": 2},
+            ],
+        )
+
+        # Q1 leaves 500 HP, W leaves 300 HP, so only Q2 lands below 40%.
+        assert bonus == pytest.approx(100.0)
+
     def test_physical_damage_not_affected(self) -> None:
         """Physical damage below threshold should not get Shadowflame bonus."""
         from src.calculator.damage import _calculate_shadowflame_bonus

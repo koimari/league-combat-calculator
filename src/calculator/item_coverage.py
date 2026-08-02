@@ -117,7 +117,10 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
 
 _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Armored Advance": "Plating's incoming physical-damage reduction is not modelled.",
-    "Banshee's Veil": "Annul's first-hostile-ability spell shield is not modelled.",
+    "Banshee's Veil": (
+        "Annul's first-hostile-ability spell shield is not modelled: the Wiki "
+        "documents multi-hit and secondary-effect behavior as ability-specific."
+    ),
     "Bloodthirster": "Ichorshield's accumulated starting shield is not modelled.",
     "Celestial Opposition": (
         "Blessing of the Mountain's opening damage reduction is not modelled."
@@ -126,7 +129,10 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Death's Dance": "Ignore Pain's damage deferral is not modelled.",
     "Doran's Shield": "Endure's combat health regeneration is not modelled.",
     "Eclipse": "Ever Rising Moon's target-side shield trigger is not modelled.",
-    "Edge of Night": "Annul's first-hostile-ability spell shield is not modelled.",
+    "Edge of Night": (
+        "Annul's first-hostile-ability spell shield is not modelled: the Wiki "
+        "documents multi-hit and secondary-effect behavior as ability-specific."
+    ),
     "Fimbulwinter": "Awe bonus health and Everlasting shields are not modelled.",
     "Force of Nature": "Steadfast's combat magic-resistance stacks are not modelled.",
     "Frozen Heart": "Winter's Caress attack-speed reduction is not modelled.",
@@ -150,7 +156,10 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Sundered Sky": "Lightshield Strike's target-side healing is not modelled.",
     "Thornmail": "Thorns' reactive damage and attacker survival are not modelled.",
     "Unending Despair": "Anguish's periodic combat healing is not modelled.",
-    "Verdant Barrier": "Annul's spell shield is not modelled.",
+    "Verdant Barrier": (
+        "Annul's first-hostile-ability spell shield is not modelled: the Wiki "
+        "documents multi-hit and secondary-effect behavior as ability-specific."
+    ),
     "Whispering Circlet": "Manaflow health state is not exposed for target modelling.",
     "Winter's Approach": "Awe and Manaflow health state are not modelled.",
     "Zhonya's Hourglass": "Time Stop's stasis is not modelled.",

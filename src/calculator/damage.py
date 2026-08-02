@@ -949,6 +949,166 @@ def _simulate_current_health_on_hit(
     return total_damage, total_hits
 
 
+def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
+    """Return one breakdown row's exact typed post-mitigation parts."""
+    by_type = entry.get("damage_by_type")
+    if by_type is not None:
+        return [
+            (dtype, float(amount))
+            for dtype, amount in by_type.items()
+            if dtype in {"physical", "magic", "true"} and amount > 0
+        ]
+    dtype = entry.get("damage_type")
+    damage = float(entry.get("total_damage", 0.0))
+    return [(dtype, damage)] if dtype in {"physical", "magic", "true"} and damage > 0 else []
+
+
+def _ordered_damage_events(
+    breakdown: dict[str, Any],
+    ability_damages: dict[str, dict[str, Any]],
+    cast_order: list[str],
+    *,
+    cast_events: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Reconstruct the engine's certified damage order from its own rows.
+
+    Ability rows are split into cast instances and follow the accepted cast
+    timeline. Autos and item effects retain the engine's existing coarse
+    phase order after the selected rotation. Untyped amplifier rows are
+    distributed across the already-known damage composition so shield
+    accounting never invents a fourth damage type.
+
+    This ledger is deliberately internal. It is exact at the cast boundary,
+    but it does not claim champion-specific spell-shield behavior within a
+    multi-hit cast; those target items remain fail-closed until each ability
+    supplies the necessary interaction metadata.
+    """
+    events: list[dict[str, Any]] = []
+    sequence = 0
+
+    def add(
+        source_key: str,
+        damage_type: str,
+        damage: float,
+        *,
+        time: float,
+        ordinal: int,
+        phase: str,
+    ) -> None:
+        nonlocal sequence
+        if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
+            return
+        events.append(
+            {
+                "source_key": source_key,
+                "damage_type": damage_type,
+                "damage": damage,
+                "time": time,
+                "ordinal": ordinal,
+                "phase": phase,
+                "sequence": sequence,
+            }
+        )
+        sequence += 1
+
+    timeline_by_slot: dict[str, list[dict[str, Any]]] = {}
+    for event in cast_events or []:
+        timeline_by_slot.setdefault(str(event.get("slot", "")), []).append(event)
+
+    last_ability_time = 0.0
+    for key in cast_order:
+        entry = breakdown.get(key)
+        if not entry or entry.get("informational"):
+            continue
+        casts = max(0, int(entry.get("casts", 0)))
+        if casts <= 0:
+            continue
+        slot_timeline = timeline_by_slot.get(key, [])
+        instances = max(1, int(ability_damages.get(key, {}).get("cast_instances", 1)))
+        for cast_index in range(casts):
+            cast_time = (
+                float(slot_timeline[cast_index].get("time", 0.0))
+                if cast_index < len(slot_timeline)
+                else 0.0
+            )
+            last_ability_time = max(last_ability_time, cast_time)
+            for dtype, amount in _row_damage_parts(entry):
+                per_instance = amount / (casts * instances)
+                for instance_index in range(instances):
+                    add(
+                        key,
+                        dtype,
+                        per_instance,
+                        time=cast_time,
+                        ordinal=cast_index * instances + instance_index + 1,
+                        phase="ability",
+                    )
+
+    auto = breakdown.get("auto_attacks")
+    if auto and not auto.get("informational"):
+        hits = max(1, int(auto.get("count", 1)))
+        for dtype, amount in _row_damage_parts(auto):
+            for hit_index in range(hits):
+                add(
+                    "auto_attacks",
+                    dtype,
+                    amount / hits,
+                    time=last_ability_time,
+                    ordinal=hit_index + 1,
+                    phase="auto",
+                )
+
+    skipped = set(cast_order) | {"auto_attacks", "execute"}
+    untyped: list[tuple[str, float]] = []
+    for key, entry in breakdown.items():
+        if key in skipped or entry.get("informational"):
+            continue
+        parts = _row_damage_parts(entry)
+        if parts:
+            for dtype, amount in parts:
+                add(
+                    key,
+                    dtype,
+                    amount,
+                    time=last_ability_time,
+                    ordinal=1,
+                    phase="effect",
+                )
+        else:
+            damage = float(entry.get("total_damage", 0.0))
+            if damage > 0:
+                untyped.append((key, damage))
+
+    typed_totals = {
+        dtype: sum(
+            event["damage"] for event in events if event["damage_type"] == dtype
+        )
+        for dtype in ("physical", "magic", "true")
+    }
+    typed_total = sum(typed_totals.values())
+    if typed_total > 0:
+        for key, damage in untyped:
+            for dtype, typed_damage in typed_totals.items():
+                if typed_damage > 0:
+                    add(
+                        key,
+                        dtype,
+                        damage * typed_damage / typed_total,
+                        time=last_ability_time,
+                        ordinal=1,
+                        phase="amplifier",
+                    )
+
+    return sorted(
+        events,
+        key=lambda event: (
+            event["time"],
+            {"ability": 0, "auto": 1, "effect": 2, "amplifier": 3}[event["phase"]],
+            event["sequence"],
+        ),
+    )
+
+
 def _calculate_shadowflame_bonus(
     effect: item_effects.MagicTrueCritEffect,
     breakdown: dict[str, Any],
@@ -956,6 +1116,7 @@ def _calculate_shadowflame_bonus(
     target_health: float,
     cast_order: list[str] | None = None,
     *,
+    cast_events: list[dict[str, Any]] | None = None,
     target_magic_shield: float = 0.0,
     target_physical_shield: float = 0.0,
     target_general_shield: float = 0.0,
@@ -987,71 +1148,17 @@ def _calculate_shadowflame_bonus(
     total_bonus = 0.0
     bonus_by_type: dict[str, float] = {}
 
-    # Build events: (damage_amount, damage_type) — only "magic" and
-    # "true" events are Cinderbloom-crittable.
-    events: list[tuple[float, str]] = []
-
-    # 1. Abilities in cast order
-    for key in cast_order:
-        if key not in breakdown:
-            continue
-        entry = breakdown[key]
-        damage = entry["total_damage"]
-        dtype = entry.get("damage_type", "magic")
-
-        if dtype == "mixed" and "damage_by_type" in entry:
-            # Mixed abilities carry their exact mitigated composition
-            # (e.g. Ahri Q: magic outgoing + true return).
-            for part_type, amount in entry["damage_by_type"].items():
-                events.append((amount, part_type))
-        elif dtype in ("magic", "true"):
-            # R with multiple dashes: split into individual events
-            if key == "R" and ability_damages.get("R", {}).get("cast_instances", 1) > 1:
-                total_dashes = ability_damages["R"]["cast_instances"]
-                casts = entry.get("casts", 1)
-                per_event = damage / (total_dashes * casts)
-                for _ in range(total_dashes * casts):
-                    events.append((per_event, dtype))
-            else:
-                events.append((damage, dtype))
-        else:
-            events.append((damage, dtype))
-
-    # 2. Auto attacks — physical for most champions, but auto-attack
-    # overrides can retype them (Azir's magic soldier attacks DO crit).
-    # Per-hit events so crits gate as the auto stream itself crosses the
-    # threshold. (Coarse ordering remains: the model lands all autos
-    # after all abilities, so retyped-auto bonuses are an upper bound.)
-    auto = breakdown.get("auto_attacks")
-    if auto and auto["total_damage"] > 0:
-        auto_hits = max(1, int(auto.get("count", 1)))
-        auto_per_hit = auto["total_damage"] / auto_hits
-        auto_type = auto.get("damage_type", "physical")
-        for _ in range(auto_hits):
-            events.append((auto_per_hit, auto_type))
-
-    # 3. Item effect damage (burns, procs, on-hits, etc.)
-    # Skip every ability row the rotation pass already consumed — derived from
-    # cast_order, not a Q/W/E/R literal, so synthetic recast rows
-    # (e.g. Ambessa "Q2") are not double-counted.
-    # No damage_amp_* rows can exist here: this reconstruction runs before
-    # _apply_damage_amplifiers. "execute" is created later and is a
-    # zero-damage display row regardless.
-    skip_keys = set(cast_order) | {"auto_attacks", "execute"}
-    for key, entry in breakdown.items():
-        if key in skip_keys:
-            continue
-        damage = entry.get("total_damage", 0)
-        if damage <= 0:
-            continue
-        # Known coarseness: mixed item rows (e.g. Bel'Veth item on-hits
-        # carrying magic + physical) pass through whole and never crit,
-        # even though their composition is on the row — matches the
-        # pre-composition behavior.
-        events.append((damage, entry.get("damage_type", "")))
+    events = _ordered_damage_events(
+        breakdown,
+        ability_damages,
+        cast_order,
+        cast_events=cast_events,
+    )
 
     # 4. Simulate damage order, tracking target HP
-    for damage, dtype in events:
+    for event in events:
+        damage = event["damage"]
+        dtype = event["damage_type"]
         event_damage = damage
         if dtype in ("magic", "true") and current_hp < threshold_hp:
             bonus = damage * crit_bonus
@@ -4293,7 +4400,7 @@ def _add_single_proc_on_hits(
 
 
 def _add_shadowflame_cinderbloom(
-    state: FightState, config: FightConfig
+    state: FightState, config: FightConfig, rotation: RotationResult
 ) -> None:
     """Add Shadowflame's Cinderbloom bonus (magic/true crits below 40% HP)."""
     effect = state.damage_effects.magic_true_crit
@@ -4305,6 +4412,7 @@ def _add_shadowflame_cinderbloom(
         state.ability_damages,
         state.target_health,
         state.cast_order,
+        cast_events=rotation.cast_events,
         target_magic_shield=config.target_magic_shield,
         target_physical_shield=config.target_physical_shield,
         target_general_shield=config.target_general_shield,
@@ -4626,7 +4734,7 @@ def calculate_fight_damage(
 
     # ── Single-proc on-hits, Shadowflame, and Expose Weakness ───────────
     _add_single_proc_on_hits(state, rotation, autos, on_hits, spellblade)
-    _add_shadowflame_cinderbloom(state, config)
+    _add_shadowflame_cinderbloom(state, config, rotation)
     _add_expose_weakness(state, autos, spellblade)
 
     # ── Fight-wide damage amplifiers ────────────────────────────────────
@@ -4641,7 +4749,7 @@ def calculate_fight_damage(
     # ── Notes for conditional item assumptions ──────────────────────────
     _collect_fight_notes(state, rotation, on_hits)
 
-    shield_outcome = _resolve_starting_shield_outcome(state, config)
+    shield_outcome = _resolve_starting_shield_outcome(state, config, rotation)
     return {
         "breakdown": state.breakdown,
         "total_damage": state.total_damage,
@@ -4661,29 +4769,39 @@ def calculate_fight_damage(
 
 
 def _resolve_starting_shield_outcome(
-    state: FightState, config: FightConfig
+    state: FightState, config: FightConfig, rotation: RotationResult
 ) -> dict[str, float]:
     """Split post-mitigation TDD into shield absorption and health damage.
 
     TDD remains damage dealt. Shields are reported as a separate defensive
     outcome so the UI does not hide how much of that damage reached health.
     """
-    damage_by_type = split_by_damage_type(state.breakdown)
-    magic_absorbed = min(
-        max(0.0, config.target_magic_shield), damage_by_type.get("magic", 0.0)
-    )
-    physical_absorbed = min(
-        max(0.0, config.target_physical_shield),
-        damage_by_type.get("physical", 0.0),
-    )
-    remaining_magic = max(0.0, damage_by_type.get("magic", 0.0) - magic_absorbed)
-    remaining_physical = max(
-        0.0, damage_by_type.get("physical", 0.0) - physical_absorbed
-    )
-    general_absorbed = min(
-        max(0.0, config.target_general_shield),
-        remaining_magic + remaining_physical + damage_by_type.get("true", 0.0),
-    )
+    magic_shield = max(0.0, config.target_magic_shield)
+    physical_shield = max(0.0, config.target_physical_shield)
+    general_shield = max(0.0, config.target_general_shield)
+    magic_absorbed = 0.0
+    physical_absorbed = 0.0
+    general_absorbed = 0.0
+    for event in _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    ):
+        remaining = event["damage"]
+        if event["damage_type"] == "magic":
+            absorbed = min(magic_shield, remaining)
+            magic_shield -= absorbed
+            magic_absorbed += absorbed
+            remaining -= absorbed
+        elif event["damage_type"] == "physical":
+            absorbed = min(physical_shield, remaining)
+            physical_shield -= absorbed
+            physical_absorbed += absorbed
+            remaining -= absorbed
+        absorbed = min(general_shield, remaining)
+        general_shield -= absorbed
+        general_absorbed += absorbed
     absorbed = magic_absorbed + physical_absorbed + general_absorbed
     return {
         "shield_absorbed": absorbed,

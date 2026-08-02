@@ -20,6 +20,7 @@ from src.calculator.damage import (
     calculate_fight_damage,
     split_auto_vs_ability,
     split_by_damage_type,
+    _ordered_damage_events,
     _simulate_current_health_on_hit,
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
     _navori_effective_cd,
@@ -84,6 +85,85 @@ class TestMitigate:
 
     def test_true_damage_ignores_resists_and_magic_amp(self, resists) -> None:
         assert _mitigate(300.0, "true", resists, 1.2) == 300.0
+
+
+class TestOrderedDamageEvents:
+    """The shared ledger keeps cast order and exact typed composition."""
+
+    def test_timed_casts_are_interleaved_by_the_accepted_timeline(self):
+        events = _ordered_damage_events(
+            {
+                "Q": {
+                    "casts": 2,
+                    "total_damage": 200.0,
+                    "damage_type": "magic",
+                },
+                "W": {
+                    "casts": 1,
+                    "total_damage": 60.0,
+                    "damage_type": "physical",
+                },
+            },
+            {"Q": {}, "W": {}},
+            ["Q", "W"],
+            cast_events=[
+                {"time": 0.0, "slot": "Q", "ordinal": 1},
+                {"time": 1.0, "slot": "W", "ordinal": 1},
+                {"time": 2.0, "slot": "Q", "ordinal": 2},
+            ],
+        )
+
+        assert [event["source_key"] for event in events] == ["Q", "W", "Q"]
+        assert [event["damage"] for event in events] == [100.0, 60.0, 100.0]
+
+    def test_mixed_cast_instances_keep_their_exact_damage_types(self):
+        events = _ordered_damage_events(
+            {
+                "R": {
+                    "casts": 1,
+                    "total_damage": 180.0,
+                    "damage_type": "mixed",
+                    "damage_by_type": {"magic": 120.0, "true": 60.0},
+                }
+            },
+            {"R": {"cast_instances": 3}},
+            ["R"],
+        )
+
+        assert len(events) == 6
+        assert sum(
+            event["damage"] for event in events if event["damage_type"] == "magic"
+        ) == pytest.approx(120.0)
+        assert sum(
+            event["damage"] for event in events if event["damage_type"] == "true"
+        ) == pytest.approx(60.0)
+
+    def test_untyped_amplifier_is_redistributed_without_losing_damage(self):
+        events = _ordered_damage_events(
+            {
+                "Q": {
+                    "casts": 1,
+                    "total_damage": 75.0,
+                    "damage_type": "magic",
+                },
+                "auto_attacks": {
+                    "count": 1,
+                    "total_damage": 25.0,
+                    "damage_type": "physical",
+                },
+                "damage_amp_Test": {"total_damage": 20.0},
+            },
+            {"Q": {}},
+            ["Q"],
+        )
+
+        assert sum(event["damage"] for event in events) == pytest.approx(120.0)
+        assert sum(
+            event["damage"]
+            for event in events
+            if event["source_key"] == "damage_amp_Test"
+            and event["damage_type"] == "magic"
+        ) == pytest.approx(15.0)
 
 
 class TestTargetIncomingDamageModifiers:

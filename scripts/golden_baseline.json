@@ -31843,7 +31843,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "0712b97bc5faa40f62f47d531a0988425500c063",
+    "git_head": "c500a0c5d2377d88545ba590149d7431abd0b150",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,
@@ -32167,9 +32167,9 @@
               "W": 854.78,
               "auto_attacks": 277.33,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 287.84
+              "shadowflame_Shadowflame": 274.81
             },
-            "total_damage": 3499.96
+            "total_damage": 3486.92
           },
           "no_items": {
             "breakdown_totals": {
@@ -32264,9 +32264,9 @@
               "auto_attacks": 242.67,
               "passive": 1062.72,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 534.43
+              "shadowflame_Shadowflame": 468.9
             },
-            "total_damage": 4951.18
+            "total_damage": 4885.65
           },
           "no_items": {
             "breakdown_totals": {
@@ -32362,9 +32362,9 @@
               "auto_attacks": 314.67,
               "passive": 1360.32,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 694.27
+              "shadowflame_Shadowflame": 536.85
             },
-            "total_damage": 6038.38
+            "total_damage": 5880.95
           },
           "no_items": {
             "breakdown_totals": {
@@ -33201,9 +33201,9 @@
               "R": 962.4,
               "auto_attacks": 158.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 223.55
+              "shadowflame_Shadowflame": 142.46
             },
-            "total_damage": 3124.75
+            "total_damage": 3043.66
           },
           "no_items": {
             "breakdown_totals": {
@@ -33283,9 +33283,9 @@
               "R": 1106.4,
               "auto_attacks": 280.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 252.35
+              "shadowflame_Shadowflame": 158.46
             },
-            "total_damage": 3579.55
+            "total_damage": 3485.66
           },
           "no_items": {
             "breakdown_totals": {
@@ -33372,9 +33372,9 @@
               "W": 423.19,
               "auto_attacks": 146.0,
               "proc_Luden's Echo": 163.19,
-              "shadowflame_Shadowflame": 159.51
+              "shadowflame_Shadowflame": 135.76
             },
-            "total_damage": 2557.53
+            "total_damage": 2533.78
           },
           "no_items": {
             "breakdown_totals": {
@@ -33462,9 +33462,9 @@
               "W": 498.8,
               "auto_attacks": 190.0,
               "proc_Luden's Echo": 165.98,
-              "shadowflame_Shadowflame": 187.03
+              "shadowflame_Shadowflame": 138.09
             },
-            "total_damage": 2859.85
+            "total_damage": 2810.91
           },
           "no_items": {
             "breakdown_totals": {
@@ -35723,9 +35723,9 @@
               "W": 256.8,
               "auto_attacks": 158.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 106.43
+              "shadowflame_Shadowflame": 499.68
             },
-            "total_damage": 4141.71
+            "total_damage": 4534.96
           },
           "no_items": {
             "breakdown_totals": {
@@ -35813,9 +35813,9 @@
               "W": 336.8,
               "auto_attacks": 277.33,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 122.43
+              "shadowflame_Shadowflame": 533.28
             },
-            "total_damage": 4683.45
+            "total_damage": 5094.29
           },
           "no_items": {
             "breakdown_totals": {
@@ -36854,9 +36854,9 @@
               "W": 470.24,
               "auto_attacks": 310.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 196.86
+              "shadowflame_Shadowflame": 31.07
             },
-            "total_damage": 2847.56
+            "total_damage": 2681.77
           },
           "no_items": {
             "breakdown_totals": {
@@ -37734,9 +37734,9 @@
               "W": 359.52,
               "auto_attacks": 158.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 177.74
+              "shadowflame_Shadowflame": 119.31
             },
-            "total_damage": 2466.38
+            "total_damage": 2407.95
           },
           "no_items": {
             "breakdown_totals": {
@@ -37824,9 +37824,9 @@
               "W": 415.52,
               "auto_attacks": 269.33,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 216.14
+              "shadowflame_Shadowflame": 228.35
             },
-            "total_damage": 2864.12
+            "total_damage": 2876.33
           },
           "no_items": {
             "breakdown_totals": {
@@ -37917,9 +37917,9 @@
               "auto_attacks": 178.67,
               "on_hit_ability_passive": 379.36,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 240.74
+              "shadowflame_Shadowflame": 174.64
             },
-            "total_damage": 2857.0
+            "total_damage": 2790.9
           },
           "no_items": {
             "breakdown_totals": {
@@ -38011,9 +38011,9 @@
               "auto_attacks": 293.33,
               "on_hit_ability_passive": 562.89,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 297.44
+              "shadowflame_Shadowflame": 211.35
             },
-            "total_damage": 3471.91
+            "total_damage": 3385.81
           },
           "no_items": {
             "breakdown_totals": {
@@ -38522,9 +38522,9 @@
               "W": 531.67,
               "auto_attacks": 274.67,
               "proc_Luden's Echo": 160.66,
-              "shadowflame_Shadowflame": 344.86
+              "shadowflame_Shadowflame": 355.33
             },
-            "total_damage": 3749.77
+            "total_damage": 3760.24
           },
           "no_items": {
             "breakdown_totals": {
@@ -38812,9 +38812,9 @@
               "auto_attacks": 164.0,
               "passive": 481.6,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 327.57
+              "shadowflame_Shadowflame": 228.77
             },
-            "total_damage": 3431.97
+            "total_damage": 3333.17
           },
           "no_items": {
             "breakdown_totals": {
@@ -38910,9 +38910,9 @@
               "auto_attacks": 288.0,
               "passive": 609.6,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 472.6
+              "shadowflame_Shadowflame": 437.09
             },
-            "total_damage": 4482.19
+            "total_damage": 4446.67
           },
           "no_items": {
             "breakdown_totals": {
