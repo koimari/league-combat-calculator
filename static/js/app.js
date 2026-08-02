@@ -167,12 +167,26 @@ function activeAbilityKit() {
 }
 
 function resetAbilityInputs() {
+  const defaultRanks = defaultAbilityRanks({
+    champion: state.attacker.champion,
+    level: state.attacker.level,
+  });
   state.attacker.abilityInputs = Object.fromEntries(activeAbilityKit().map((ability) => [ability.slot, {
-    rank: 1,
+    rank: ability.slot === "P" ? 1 : Number(defaultRanks[ability.slot] || 0),
     casts: 1,
     hits: 1,
     variant: 0,
   }]));
+}
+
+function syncAbilityInputsToLevel() {
+  if (!state.attacker.champion) return;
+  const defaultRanks = defaultAbilityRanks(state.attacker);
+  activeAbilityKit().forEach((ability) => {
+    const input = abilityInput(ability.slot);
+    input.rank = ability.slot === "P" ? 1 : Number(defaultRanks[ability.slot] || 0);
+    state.attacker.abilityInputs[ability.slot] = input;
+  });
 }
 
 function abilityInput(slot) {
@@ -2398,6 +2412,7 @@ document.addEventListener("click", (event) => {
     state.attacker.questBootA = 0;
     state.attacker.questBootB = 0;
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
+    syncAbilityInputsToLevel();
     invalidateOptimization();
     return render();
   }
@@ -2406,6 +2421,7 @@ document.addEventListener("click", (event) => {
     state.attacker.questBootA = 0;
     state.attacker.questBootB = 0;
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
+    syncAbilityInputsToLevel();
     invalidateOptimization();
     return render();
   }
@@ -2446,6 +2462,7 @@ document.addEventListener("click", (event) => {
   if (levelButton) {
     const cap = levelButton.dataset.level === "attacker.level" ? attackerLevelCap() : 18;
     setPath(levelButton.dataset.level, Math.max(1, Math.min(cap, Number(pathValue(levelButton.dataset.level)) + Number(levelButton.dataset.delta))));
+    if (levelButton.dataset.level === "attacker.level") syncAbilityInputsToLevel();
     return render();
   }
   const rosterRankButton = event.target.closest("[data-roster-rank]");
