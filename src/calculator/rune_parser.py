@@ -12,6 +12,8 @@ numbers appear in a small set of template forms:
 - ``{{rd|50%|35%}}`` — a melee/ranged value split (melee first, per Template:Rd)
 - prose stack rules — "Applying 3 stacks to a target within a 3 second period"
 - prose buff windows — "grants ... for 3 seconds, causing"
+- prose refreshing stacks — "apply a stack for 4 seconds ... stacking up to 3 times"
+- prose damage amps — "grant you 8% increased damage against champions"
 
 This module is pure parsing: no network, no file writes. ``data_updater``
 fetches the wikitext and writes the resulting payloads to ``data/runes.json``;
@@ -29,6 +31,9 @@ _AS_RATIO = re.compile(
     r"\{\{as\|\(\+\s*([\d.]+)%\s*(?:('''bonus'''|bonus)\s*)?(AD|AP)\)"
 )
 _STACK_RULE = re.compile(r"Applying (\d+) stacks? to a target within a ([\d.]+) second")
+_STACK_DURATION = re.compile(r"apply a \{\{tip\|stacks?\}\} for ([\d.]+) seconds")
+_MAX_STACKS = re.compile(r"stacking up to (\d+) times")
+_DAMAGE_AMP = re.compile(r"([\d.]+)% increased damage against champions")
 _BONUS_TRUE_DAMAGE = re.compile(r"\{\{as\|([\d.]+)%\s*'''bonus'''\s*true damage\}\}")
 _FLAT_GOLD = re.compile(r"\{\{g\|([\d.]+)\}\}")
 _MELEE_RANGED_SPLIT = re.compile(r"\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}")
@@ -235,6 +240,18 @@ def _parse_prose_rules(description: str, effects: dict[str, Any]) -> None:
     if stack_match:
         effects["stacks_required"] = int(stack_match.group(1))
         effects["stack_window_seconds"] = float(stack_match.group(2))
+
+    duration_match = _STACK_DURATION.search(description)
+    if duration_match:
+        effects["stack_duration_seconds"] = float(duration_match.group(1))
+
+    max_stacks_match = _MAX_STACKS.search(description)
+    if max_stacks_match:
+        effects["max_stacks"] = int(max_stacks_match.group(1))
+
+    amp_match = _DAMAGE_AMP.search(description)
+    if amp_match:
+        effects["damage_amp_ratio"] = float(amp_match.group(1)) / 100.0
 
     delay_match = _PROC_DELAY.search(description)
     if delay_match:

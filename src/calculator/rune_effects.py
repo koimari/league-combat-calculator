@@ -86,7 +86,41 @@ class KeystoneWindowAmpEffect:
         return self.gold_conversion_melee if is_melee else self.gold_conversion_ranged
 
 
-KeystoneEffect = KeystoneProcEffect | KeystoneWindowAmpEffect
+@dataclass(frozen=True, slots=True)
+class KeystoneProcAmpEffect:
+    """A stacked proc that then amplifies the rest of the fight (PTA-class).
+
+    Basic attacks build stacks that expire ``stack_duration_seconds``
+    after the last application; reaching ``stacks_required`` consumes
+    them for ``raw_damage`` adaptive damage and turns on a lasting
+    ``damage_amp_ratio`` amplifier of all non-true damage. The buff ends
+    only out of combat, so a continuous fight keeps it from first proc
+    to the end. Stack walking and amp summation live in the fight
+    engine, which owns the timeline and the damage ledger.
+    """
+
+    keystone_name: str
+    breakdown_key: str
+    display_name: str
+    stacks_required: int
+    stack_duration_seconds: float
+    cooldown_seconds: float
+    damage_amp_ratio: float
+    raw_damage: Callable[[DamageInputs], float]
+    damage_type: Callable[[Mapping[str, float]], str]
+
+    @property
+    def amp_breakdown_key(self) -> str:
+        """Ledger key for the lasting-amp row, beside the proc row's key."""
+        return f"{self.breakdown_key} amp"
+
+    @property
+    def amp_display_name(self) -> str:
+        """Display name for the lasting-amp breakdown row."""
+        return f"{self.keystone_name} amp (keystone)"
+
+
+KeystoneEffect = KeystoneProcEffect | KeystoneWindowAmpEffect | KeystoneProcAmpEffect
 
 
 class _RequiredRuneValues:
@@ -110,17 +144,22 @@ class _RequiredRuneValues:
         return float(self.value(key))
 
 
-def _compile_electrocute(entry: Mapping[str, Any]) -> KeystoneProcEffect:
-    """Compile Electrocute: 3 stacks in 3s strike for leveled adaptive damage."""
-    name = "Electrocute"
-    effects = _RequiredRuneValues(name, entry.get("effects", {}))
-    leveling = effects.value("leveling")
-    base_by_level = [float(value) for value in leveling[0]]
+def _required_leveling(name: str, effects: _RequiredRuneValues) -> list[float]:
+    """Read a rune's per-level damage list, requiring all 20 levels."""
+    base_by_level = [float(value) for value in effects.value("leveling")[0]]
     if len(base_by_level) < 20:
         raise KeyError(
             f"RUNE_EFFECTS[{name!r}] leveling covers {len(base_by_level)} "
             "levels; expected 20 — wiki parse degraded"
         )
+    return base_by_level
+
+
+def _compile_electrocute(entry: Mapping[str, Any]) -> KeystoneProcEffect:
+    """Compile Electrocute: 3 stacks in 3s strike for leveled adaptive damage."""
+    name = "Electrocute"
+    effects = _RequiredRuneValues(name, entry.get("effects", {}))
+    base_by_level = _required_leveling(name, effects)
     bonus_ad_ratio = effects.number("bonus_ad_ratio")
     ap_ratio = effects.number("ap_ratio")
     top = _RequiredRuneValues(name, entry)
@@ -171,9 +210,41 @@ def _compile_first_strike(entry: Mapping[str, Any]) -> KeystoneWindowAmpEffect:
     )
 
 
+def _compile_press_the_attack(entry: Mapping[str, Any]) -> KeystoneProcAmpEffect:
+    """Compile Press the Attack: 3 autos proc leveled damage plus a lasting amp."""
+    name = "Press the Attack"
+    effects = _RequiredRuneValues(name, entry.get("effects", {}))
+    base_by_level = _required_leveling(name, effects)
+    top = _RequiredRuneValues(name, entry)
+
+    def raw(inputs: DamageInputs) -> float:
+        level_index = max(1, min(inputs.level, len(base_by_level))) - 1
+        return base_by_level[level_index]
+
+    def adaptive_type(stats: Mapping[str, float]) -> str:
+        # Pure adaptive damage: the larger of bonus AD and AP decides.
+        # A tie follows the champion's adaptive type in game; the engine
+        # carries no adaptive type, so it defaults magic like Electrocute.
+        bonus_ad = stats.get("bonus_attack_damage", 0.0)
+        return "physical" if bonus_ad > stats.get("ability_power", 0.0) else "magic"
+
+    return KeystoneProcAmpEffect(
+        keystone_name=name,
+        breakdown_key=f"keystone_{name}",
+        display_name=f"{name} (keystone)",
+        stacks_required=int(effects.number("max_stacks")),
+        stack_duration_seconds=effects.number("stack_duration_seconds"),
+        cooldown_seconds=top.number("cooldown"),
+        damage_amp_ratio=effects.number("damage_amp_ratio"),
+        raw_damage=raw,
+        damage_type=adaptive_type,
+    )
+
+
 _KEYSTONE_COMPILERS: dict[str, Callable[[Mapping[str, Any]], KeystoneEffect]] = {
     "Electrocute": _compile_electrocute,
     "First Strike": _compile_first_strike,
+    "Press the Attack": _compile_press_the_attack,
 }
 
 

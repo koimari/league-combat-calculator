@@ -28,7 +28,7 @@ PRESS_THE_ATTACK_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Press 
 |released     = Season 2018
 |path         = Precision
 |slot         = Keystone
-|description  = {{sbc|Passive:}} {{tip|Basic attacks}} {{tip|on-hit}} against enemy {{tip|champion|champions}} apply a {{tip|stack}} for 4 seconds, stacking up to 3 times. The third stack consumes all stacks to deal {{pp|40 + (160-40)/17*(x-1)|1 to 20 by 1}} '''bonus''' {{tip|adaptive damage}}.
+|description  = {{sbc|Passive:}} {{tip|Basic attacks}} {{tip|on-hit}} against enemy {{tip|champion|champions}} apply a {{tip|stack}} for 4 seconds, refreshing on subsequent applications, expiring upon attacking a new champion, and stacking up to 3 times. The third stack consumes all stacks to deal {{pp|40 + (160-40)/17*(x-1)|1 to 20 by 1}} '''bonus''' {{tip|adaptive damage}} and grant you 8% increased damage against champions until 5 seconds after exiting [[combat status|combat]] with them.
 |description2 = {{Tip data/Adaptive damage|pst2|description}}
 |range        =
 |cooldown     = {{tt|6|Starts after consuming a target's stacks}}
@@ -111,16 +111,25 @@ class TestRunePayload:
         assert effects["stack_window_seconds"] == 3.0
         assert effects["proc_delay_seconds"] == 0.25
 
-    def test_press_the_attack_partial_effects(self):
+    def test_press_the_attack_effects_complete(self):
         payload = rune_payload("Press the Attack", PRESS_THE_ATTACK_WIKITEXT)
         assert payload["path"] == "Precision"
         assert payload["cooldown"] == 6.0
         effects = payload["effects"]
         assert effects["leveling"][0][0] == 40
+        assert effects["max_stacks"] == 3
+        assert effects["stack_duration_seconds"] == 4.0
+        assert effects["damage_amp_ratio"] == pytest.approx(0.08)
         # No Electrocute-style stack sentence: those keys must be absent,
         # never defaulted — rune_effects fails closed on missing keys.
         assert "stacks_required" not in effects
         assert "proc_delay_seconds" not in effects
+
+    def test_electrocute_gains_no_press_the_attack_keys(self):
+        effects = rune_payload("Electrocute", ELECTROCUTE_WIKITEXT)["effects"]
+        assert "max_stacks" not in effects
+        assert "stack_duration_seconds" not in effects
+        assert "damage_amp_ratio" not in effects
 
     def test_plain_ad_ratio_not_misread_as_bonus(self):
         text = ELECTROCUTE_WIKITEXT.replace("10% '''bonus''' AD", "30% AD")

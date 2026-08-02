@@ -30,7 +30,10 @@
           167.05882352941177,
           174.11764705882354
         ]
-      ]
+      ],
+      "stack_duration_seconds": 4.0,
+      "max_stacks": 3,
+      "damage_amp_ratio": 0.08
     }
   },
   "Lethal Tempo": {
@@ -40,7 +43,9 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
     "description": "{{sbc|Passive:}} Basic attacks {{tip|on-attack}} against enemy {{tip|champion|champions}} grant a {{tip|stack}} for 6 seconds, refreshing on subsequent attacks and stacking up to 6 times. Gain {{as|{{rd|6%|{{ap|6*0.8}}%}} '''bonus''' attack speed|as}} for each stack, up to {{as|{{rd|36%|{{ap|36*0.8}}%}}|as}} at maximum stacks.\nAt maximum stacks, basic attacks are empowered to fire a bolt at the target {{tip|on-attack}} that deals them {{rd|9 + (30-9)/17*(x-1) for 20|6 + (24-6)/17*(x-1) for 20|pp=true}} '''bonus''' {{tip|adaptive damage}} upon arrival, increased by {{rd|1%|{{fd|0.6{{recurring|6}}%}}}} per {{as|1% '''bonus''' attack speed}}.",
-    "effects": {}
+    "effects": {
+      "max_stacks": 6
+    }
   },
   "Fleet Footwork": {
     "name": "Fleet Footwork",
@@ -71,7 +76,8 @@
       "melee_ranged_ratios": [
         0.08,
         0.05
-      ]
+      ],
+      "max_stacks": 12
     }
   },
   "Electrocute": {
