@@ -1142,6 +1142,59 @@ def _ordered_damage_events(
     )
 
 
+def _event_timeline_coverage(
+    breakdown: dict[str, Any],
+    ability_damages: dict[str, dict[str, Any]],
+    cast_order: list[str],
+) -> dict[str, Any]:
+    """Certify which active rows have authored or cast-boundary ordering."""
+    exact: list[str] = []
+    coarse: list[str] = []
+    cast_keys = set(cast_order)
+    for key, entry in breakdown.items():
+        if entry.get("informational") or float(entry.get("total_damage", 0.0)) <= 0:
+            continue
+        damage_events = entry.get("damage_events")
+        event_total = (
+            sum(float(event.get("damage", 0.0)) for event in damage_events)
+            if isinstance(damage_events, list) and damage_events
+            else None
+        )
+        if event_total is not None and math.isclose(
+            event_total,
+            float(entry["total_damage"]),
+            rel_tol=1e-9,
+            abs_tol=1e-6,
+        ):
+            exact.append(key)
+            continue
+        if key in cast_keys and int(entry.get("casts", 0)) > 0:
+            info = ability_damages.get(key, {})
+            if float(info.get("dot_duration", 0.0)) > 0:
+                coarse.append(key)
+            else:
+                exact.append(key)
+            continue
+        coarse.append(key)
+    complete = not coarse
+    return {
+        "complete": complete,
+        "certification": (
+            "event_order_certified" if complete else "partial_event_order"
+        ),
+        "exact_sources": sorted(exact),
+        "coarse_sources": sorted(coarse),
+        "note": (
+            "Every active damage source has authored event or cast-boundary order."
+            if complete
+            else (
+                f"{len(coarse)} active damage source"
+                f"{' uses' if len(coarse) == 1 else 's use'} coarse phase ordering."
+            )
+        ),
+    }
+
+
 def _calculate_shadowflame_bonus(
     effect: item_effects.MagicTrueCritEffect,
     breakdown: dict[str, Any],
@@ -4941,6 +4994,9 @@ def calculate_fight_damage(
     _collect_fight_notes(state, rotation, on_hits)
 
     shield_outcome = _resolve_starting_shield_outcome(state, config, rotation)
+    timeline_coverage = _event_timeline_coverage(
+        state.breakdown, state.ability_damages, state.cast_order
+    )
     return {
         "breakdown": state.breakdown,
         "total_damage": state.total_damage,
@@ -4950,6 +5006,7 @@ def calculate_fight_damage(
         "cast_timeline": rotation.cast_events,
         "resource_spent": rotation.resource_spent,
         "resource_remaining": rotation.resource_remaining,
+        "timeline_coverage": timeline_coverage,
         **shield_outcome,
         # Exposed for champion-specific ability calculators (Case 1: stack
         # acceleration). Champions like Vayne can check which autos grant

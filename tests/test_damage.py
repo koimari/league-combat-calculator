@@ -26,6 +26,7 @@ from src.calculator.damage import (
     _navori_effective_cd,
     _mitigate,
 )
+from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
 
 
@@ -85,6 +86,71 @@ class TestMitigate:
 
     def test_true_damage_ignores_resists_and_magic_amp(self, resists) -> None:
         assert _mitigate(300.0, "true", resists, 1.2) == 300.0
+
+
+class TestTimelineCoverage:
+    """Results say exactly which active damage sources are event-ordered."""
+
+    @staticmethod
+    def _test_spell() -> dict:
+        return {
+            "Q": {
+                "name": "Test spell",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+                "parts": (DamagePart("magic", 300.0),),
+            }
+        }
+
+    def test_cast_and_auto_events_are_certified(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            self._test_spell(),
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            auto_attack_uptime=1.0,
+        )
+
+        assert result["timeline_coverage"] == {
+            "complete": True,
+            "certification": "event_order_certified",
+            "exact_sources": ["Q", "auto_attacks"],
+            "coarse_sources": [],
+            "note": (
+                "Every active damage source has authored event or cast-boundary "
+                "order."
+            ),
+        }
+
+    def test_authored_blackfire_ticks_remain_certified(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            self._test_spell(),
+            items=[get_item_by_name("Blackfire Torch")],
+            target_magic_resistance=0.0,
+        )
+
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert "burn_Blackfire Torch" in coverage["exact_sources"]
+
+    def test_coarse_luden_proc_prevents_exact_certification(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            self._test_spell(),
+            items=[get_item_by_name("Luden's Echo")],
+            target_magic_resistance=0.0,
+        )
+
+        assert result["timeline_coverage"]["complete"] is False
+        assert result["timeline_coverage"]["certification"] == "partial_event_order"
+        assert result["timeline_coverage"]["coarse_sources"] == [
+            "proc_Luden's Echo"
+        ]
 
 
 class TestOrderedDamageEvents:

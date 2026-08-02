@@ -376,6 +376,7 @@ def _serialize_fight_result(result: Mapping[str, object]) -> dict:
         "cast_timeline": list(result.get("cast_timeline", [])),
         "resource_spent": round(result.get("resource_spent", 0.0), 1),
         "resource_remaining": round(result.get("resource_remaining", 0.0), 1),
+        "timeline_coverage": dict(result.get("timeline_coverage", {})),
     }
 
 
@@ -429,10 +430,57 @@ def _allocate_target_limited_damage(target_results: list[dict]) -> None:
             )
 
 
+def _aggregate_timeline_coverage(results: list[dict]) -> dict:
+    """Combine per-target ordering receipts without overstating precision."""
+    coverage_rows = [result.get("timeline_coverage", {}) for result in results]
+    coarse_sources = sorted(
+        {
+            source
+            for coverage in coverage_rows
+            for source in coverage.get("coarse_sources", [])
+        }
+    )
+    exact_sources = sorted(
+        {
+            source
+            for coverage in coverage_rows
+            for source in coverage.get("exact_sources", [])
+        }
+        - set(coarse_sources)
+    )
+    timeline_complete = bool(coverage_rows) and all(
+        coverage.get("complete", False) for coverage in coverage_rows
+    )
+    target_count = len(results)
+    if timeline_complete:
+        note = (
+            f"Every active damage source is event-ordered across {target_count} "
+            f"selected {'target' if target_count == 1 else 'targets'}."
+        )
+    elif not coarse_sources:
+        note = "Timeline coverage is unavailable for at least one selected target."
+    else:
+        note = (
+            f"{len(coarse_sources)} active damage source"
+            f"{' uses' if len(coarse_sources) == 1 else 's use'} coarse phase "
+            "ordering on at least one selected target."
+        )
+    return {
+        "complete": timeline_complete,
+        "certification": (
+            "event_order_certified" if timeline_complete else "partial_event_order"
+        ),
+        "exact_sources": exact_sources,
+        "coarse_sources": coarse_sources,
+        "note": note,
+    }
+
+
 def _aggregate_public_results(results: list[dict]) -> dict:
     """Sum the same selected damage package across every hit target."""
     primary = results[0]
     target_count = len(results)
+    timeline_coverage = _aggregate_timeline_coverage(results)
     damage_types = {"physical": 0.0, "magic": 0.0, "true": 0.0}
     breakdown = {}
     for result in results:
@@ -486,6 +534,7 @@ def _aggregate_public_results(results: list[dict]) -> dict:
         "resource_spent": primary.get("resource_spent", 0.0),
         "resource_remaining": primary.get("resource_remaining", 0.0),
         "notes": list(primary.get("notes", [])),
+        "timeline_coverage": timeline_coverage,
     }
 
 

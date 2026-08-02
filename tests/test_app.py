@@ -299,6 +299,9 @@ def test_calculate_can_sum_one_damage_package_across_enemy_roster():
         sum(row["result"]["damage_by_type"]["magic"] for row in data["targets"]),
         1,
     )
+    assert data["timeline_coverage"]["complete"] is False
+    assert "proc_Luden's Echo" in data["timeline_coverage"]["coarse_sources"]
+    assert all("timeline_coverage" in row["result"] for row in data["targets"])
 
 
 def test_calculate_comparison_curve_recomputes_six_timed_windows():
