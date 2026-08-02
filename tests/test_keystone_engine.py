@@ -1,4 +1,5 @@
-"""Fight-engine tests for keystone runes (Electrocute, First Strike, PTA).
+"""Fight-engine tests for keystone runes (Electrocute, First Strike, PTA,
+Arcane Comet).
 
 Electrocute: the engine counts damage instances on the real fight
 timeline — one per accepted ability cast plus one per simulated auto
@@ -16,6 +17,13 @@ consumes them for leveled adaptive damage and turns on a lasting 8%
 amplifier of every certified non-true damage event for the rest of the
 fight (the buff only drops out of combat). The triggering swing and the
 first proc itself predate the buff and are never amplified.
+
+Arcane Comet: every damaging ability cast hurls a comet when the rune
+is off its leveled cooldown (20s at 1 → 8s at 18). Basic attacks never
+trigger it, and DoT ticks are not cast instances — damage over time
+neither triggers nor extends anything, unlike the Liandry's burn
+family. Damage is priced at the assumed 375-unit flight (+50%), landing
+0.8s after the cast.
 """
 
 import pytest
@@ -560,3 +568,133 @@ class TestPressTheAttackAmp:
         assert any(
             "Press the Attack" in note and "W" in note for note in result["notes"]
         )
+
+
+def _comet_row(result):
+    return result["breakdown"].get("keystone_Arcane Comet")
+
+
+# 100 base at 18, ×1.5 for the assumed 375-unit flight, into 100 MR.
+COMET_AMPED_AT_18 = 150.0
+COMET_MITIGATED_AT_18 = apply_resistance(COMET_AMPED_AT_18, 100.0)
+
+
+class TestArcaneCometProcs:
+    def test_single_cast_procs_one_comet_after_the_landing_delay(
+        self, fight, attacker_stats
+    ):
+        result = fight(attacker_stats(), _spell("Q"), keystone="Arcane Comet")
+        row = _comet_row(result)
+        assert row is not None
+        assert row["count"] == 1
+        assert row["damage_type"] == "magic"
+        assert row["total_damage"] == pytest.approx(COMET_MITIGATED_AT_18)
+        cast_time = result["cast_timeline"][0]["time"]
+        assert row["damage_events"][0]["time"] == pytest.approx(cast_time + 0.8)
+
+    def test_casts_inside_the_cooldown_are_gated(self, fight, attacker_stats):
+        # Three casts land within ~3s of each other; the level-18 comet
+        # cooldown is 8s, so only the first cast hurls a comet.
+        abilities = {**_spell("Q"), **_spell("W"), **_spell("E")}
+        result = fight(attacker_stats(), abilities, keystone="Arcane Comet")
+        assert _comet_row(result)["count"] == 1
+
+    def test_every_cast_procs_when_ability_cooldown_exceeds_the_runes(
+        self, fight, attacker_stats
+    ):
+        # Q recasts every 10s; the 8s comet cooldown is always ready.
+        result = fight(
+            attacker_stats(),
+            _spell("Q", cooldown=10.0),
+            keystone="Arcane Comet",
+            one_rotation=False,
+            fight_duration_seconds=25.0,
+        )
+        casts = len(result["cast_timeline"])
+        assert casts >= 2
+        assert _comet_row(result)["count"] == casts
+
+    def test_cooldown_scales_with_level(self, fight, attacker_stats):
+        # The same fight at level 1 runs a 20s comet cooldown: of the
+        # casts at ~0, 10, 20, the middle one is gated.
+        result = fight(
+            attacker_stats(level=1),
+            _spell("Q", cooldown=10.0),
+            keystone="Arcane Comet",
+            one_rotation=False,
+            fight_duration_seconds=25.0,
+        )
+        assert len(result["cast_timeline"]) == 3
+        assert _comet_row(result)["count"] == 2
+
+    def test_autos_never_trigger_and_the_note_says_so(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            {},
+            keystone="Arcane Comet",
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        assert _comet_row(result) is None
+        assert any(
+            "Arcane Comet" in note and "never procced" in note
+            for note in result["notes"]
+        )
+
+    def test_zero_damage_casts_never_trigger(self, fight, attacker_stats):
+        buff = {
+            "W": {
+                "name": "Test buff",
+                "rank": 1,
+                "cooldown": 60.0,
+                "damage_type": "magic",
+                "total_raw": 0.0,
+                "parts": (),
+            }
+        }
+        result = fight(attacker_stats(), buff, keystone="Arcane Comet")
+        assert _comet_row(result) is None
+
+    def test_dot_ticks_are_not_cast_instances(self, fight, attacker_stats):
+        # A DoT deals damage across 4s, but only its cast hurls a comet:
+        # ticks neither trigger nor extend anything (unlike Liandry's).
+        dot = {
+            "W": {
+                "name": "Test DoT",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+                "parts": (DamagePart("magic", 300.0),),
+                "dot_duration": 4.0,
+            }
+        }
+        result = fight(
+            attacker_stats(),
+            dot,
+            keystone="Arcane Comet",
+            fight_duration_seconds=10.0,
+        )
+        assert _comet_row(result)["count"] == 1
+
+    def test_adaptive_type_uses_physical_when_bonus_ad_dominates(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(bonus_attack_damage=200.0, attack_damage=300.0),
+            _spell("Q"),
+            keystone="Arcane Comet",
+            target_armor=100.0,
+        )
+        row = _comet_row(result)
+        assert row["damage_type"] == "physical"
+        # (100 base + 10% × 200 bonus AD) × 1.5 distance amp, into armor.
+        assert row["total_damage"] == pytest.approx(
+            apply_resistance((100.0 + 0.10 * 200.0) * 1.5, 100.0)
+        )
+
+    def test_assumed_flight_distance_is_disclosed(self, fight, attacker_stats):
+        result = fight(attacker_stats(), _spell("Q"), keystone="Arcane Comet")
+        assert any("Arcane Comet" in note and "375" in note for note in result["notes"])

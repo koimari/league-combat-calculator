@@ -34,6 +34,7 @@ def test_config_serves_keystone_roster_with_coverage():
     assert by_name["Electrocute"]["path"] == "Domination"
     assert by_name["First Strike"]["implemented"] is True
     assert by_name["Press the Attack"]["implemented"] is True
+    assert by_name["Arcane Comet"]["implemented"] is True
     assert by_name["Dark Harvest"]["implemented"] is False
     assert all(entry["icon"] for entry in keystones)
     # Paths arrive grouped in wiki order for direct picker rendering.
@@ -122,6 +123,27 @@ def test_calculate_includes_press_the_attack_rows():
     assert result["damage_by_type"]["true"] == pytest.approx(
         baseline["damage_by_type"]["true"], abs=0.11
     )
+
+
+def test_calculate_includes_arcane_comet_breakdown_row():
+    client = app_module.app.test_client()
+    with_keystone = client.post(
+        "/api/calculate", json=_payload(keystone="Arcane Comet")
+    )
+    without_keystone = client.post("/api/calculate", json=_payload())
+
+    assert with_keystone.status_code == 200
+    result = with_keystone.get_json()
+    row = result["breakdown"].get("keystone_Arcane Comet")
+    assert row is not None
+    assert row["name"] == "Arcane Comet (keystone)"
+    assert row["total_damage"] > 0
+    assert result["total_damage"] == pytest.approx(
+        without_keystone.get_json()["total_damage"] + row["total_damage"],
+        rel=1e-6,
+    )
+    # The assumed flight distance reaches the user through the notes.
+    assert any("Arcane Comet" in note and "375" in note for note in result["notes"])
 
 
 @pytest.mark.parametrize(

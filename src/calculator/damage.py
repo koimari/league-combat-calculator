@@ -5156,37 +5156,48 @@ def _add_item_proc_damage(
         state.total_damage += ult_proc_mitigated
 
 
-def _keystone_instance_times(
-    state: FightState, rotation: RotationResult
-) -> list[float]:
-    """Chronological damage-instance times the keystone stack counter sees.
+def _damaging_cast_times(state: FightState, rotation: RotationResult) -> list[float]:
+    """Chronological cast times of accepted DAMAGING ability casts.
 
-    One instance per accepted DAMAGING ability cast (wiki: up to one stack
-    per cast instance; zero-damage casts like stat-buff ultimates must not
-    stack) plus one per simulated auto swing. Instances the engine cannot
+    Zero-damage casts (stat-buff ultimates) are excluded — they apply no
+    keystone stacks and hurl no comets. Instances the engine cannot
     timestamp or certify are not counted — item-effect applications,
-    forced basic attacks, recast instances beyond the first, and pure
-    crowd-control casts (CC application stacks in game, but the engine
-    carries no CC metadata). Omitting an instance can only delay a proc,
-    never invent one.
+    recast instances beyond the first, and pure crowd-control casts (CC
+    application stacks in game, but the engine carries no CC metadata).
+    Omitting an instance can only delay a proc, never invent one.
     """
     damaging_slots = {
         slot
         for slot, entry in state.ability_damages.items()
         if float(entry.get("total_raw", 0.0)) > 0
     }
-    times = [
+    return sorted(
         float(event["time"])
         for event in rotation.cast_events
         if event.get("slot") in damaging_slots
-    ]
+    )
+
+
+def _keystone_instance_times(
+    state: FightState, rotation: RotationResult
+) -> list[float]:
+    """Chronological damage-instance times the keystone stack counter sees.
+
+    One instance per accepted damaging ability cast (wiki: up to one
+    stack per cast instance) plus one per simulated auto swing.
+    """
+    times = _damaging_cast_times(state, rotation)
     times.extend(_auto_attack_timestamps(state))
     return sorted(times)
 
 
 def _record_keystone_proc_row(
     state: FightState,
-    effect: "rune_effects.KeystoneProcEffect | rune_effects.KeystoneProcAmpEffect",
+    effect: (
+        "rune_effects.KeystoneProcEffect"
+        " | rune_effects.KeystoneProcAmpEffect"
+        " | rune_effects.KeystoneAbilityProcEffect"
+    ),
     proc_times: list[float],
 ) -> None:
     """Price one keystone's proc damage and record its breakdown row.
@@ -5252,6 +5263,46 @@ def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
     if not proc_times:
         return
     _record_keystone_proc_row(state, effect, proc_times)
+
+
+def _add_keystone_ability_proc_damage(
+    state: FightState, rotation: RotationResult
+) -> None:
+    """Add ability-cast keystone proc damage (Arcane Comet-class).
+
+    Every accepted damaging ability cast hurls the proc when the rune is
+    off its leveled cooldown; the damage event lands after the sourced
+    flight delay. Basic attacks never trigger this class, and the
+    engine's DoT ticks are not cast instances — damage over time neither
+    triggers nor extends anything here (unlike the Liandry's burn
+    family). Each proc is priced at the compiled assumed travel distance
+    and assumed to land; both assumptions are disclosed in the notes.
+    """
+    effect = state.keystone_effect
+    if not isinstance(effect, rune_effects.KeystoneAbilityProcEffect):
+        return
+    cooldown = effect.cooldown_at(state.level)
+    proc_times: list[float] = []
+    ready_at = 0.0
+    for cast_time in _damaging_cast_times(state, rotation):
+        if cast_time < ready_at:
+            continue
+        proc_times.append(cast_time + effect.proc_delay_seconds)
+        ready_at = cast_time + cooldown
+    if not proc_times:
+        # A selected keystone that never fires must say so — only
+        # damaging ability casts trigger it, so autos-only fights get zero.
+        state.notes.append(
+            f"{effect.keystone_name} never procced: the simulated fight "
+            "cast no damaging abilities."
+        )
+        return
+    _record_keystone_proc_row(state, effect, proc_times)
+    state.notes.append(
+        f"{effect.keystone_name} assumes every comet lands after a "
+        f"{effect.assumed_travel_distance:g}-unit flight "
+        f"(+{effect.distance_amp_ratio * 100:.0f}% distance damage), never dodged."
+    )
 
 
 def _certified_ledger(
@@ -6053,6 +6104,9 @@ def calculate_fight_damage(
 
     # ── Keystone rune proc (Electrocute-class stack triggers) ───────────
     _add_keystone_damage(state, rotation)
+
+    # ── Keystone ability-cast proc (Arcane Comet-class) ─────────────────
+    _add_keystone_ability_proc_damage(state, rotation)
 
     # ── Active item damage ──────────────────────────────────────────────
     _add_item_active_damage(state)
