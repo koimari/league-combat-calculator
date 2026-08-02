@@ -592,6 +592,31 @@
             </div>
         </section>
 
+        <section id="comparison-verdict" class="comparison-verdict hidden" aria-live="polite">
+            <div class="comparison-verdict-head">
+                <span class="comparison-kicker">Build read</span>
+                <strong id="comparison-summary"></strong>
+            </div>
+            <p id="comparison-explanation"></p>
+            <details class="crossover-details">
+                <summary id="crossover-summary">See crossover windows</summary>
+                <div class="table-scroll">
+                    <table class="breakdown-table crossover-table">
+                        <caption>Each row recomputes cooldowns, resources, autos, burns, shields, and defenses over a continuous fight.</caption>
+                        <thead>
+                            <tr>
+                                <th>Rotation window</th>
+                                <th class="col-right">Build A TDD</th>
+                                <th class="col-right">Build B TDD</th>
+                                <th class="col-right">Lead</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crossover-body"></tbody>
+                    </table>
+                </div>
+            </details>
+        </section>
+
         <!-- Full-width scenario builder. The focused damage champion remains
              above; these cards supply champion-derived ally and enemy context. -->
         <section class="scenario-panel">

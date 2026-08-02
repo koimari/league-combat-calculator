@@ -1278,11 +1278,78 @@ select:focus-visible {
 
 .comparison-verdict {
     grid-column: 1 / -1;
-    padding: 14px 18px;
-    border-left: 4px solid #b86122;
-    background: #f3ecdf;
-    color: #292722;
+    padding: 16px 18px;
+    border: 1px solid var(--border-gold);
+    border-left: 4px solid var(--teal);
+    border-radius: var(--radius-md);
+    background:
+        linear-gradient(90deg, rgba(10, 200, 185, 0.08), transparent 42%),
+        var(--bg-panel);
+    color: var(--text-primary);
+}
+
+.comparison-verdict-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 5px;
+}
+
+.comparison-kicker {
+    color: var(--teal);
+    font-size: 0.64rem;
     font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+#comparison-summary {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+}
+
+#comparison-explanation {
+    color: var(--text-body);
+    font-size: 0.82rem;
+    font-weight: 400;
+}
+
+.crossover-details {
+    margin-top: 12px;
+    border-top: 1px solid var(--border-dark);
+    padding-top: 10px;
+}
+
+.crossover-details summary {
+    color: var(--gold);
+    cursor: pointer;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+.crossover-table {
+    margin-top: 10px;
+    min-width: 560px;
+}
+
+.crossover-table caption {
+    caption-side: bottom;
+    color: var(--text-dim);
+    font-size: 0.68rem;
+    padding-top: 8px;
+    text-align: left;
+}
+
+.crossover-row {
+    background: rgba(10, 200, 185, 0.08);
+}
+
+@media (max-width: 520px) {
+    .comparison-verdict-head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
 }
 
 .total-subvalue {

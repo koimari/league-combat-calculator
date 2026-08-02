@@ -91,6 +91,7 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
         ("/api/optimize", {"champion": "Aatrox", "target_health": "inf"}),
         ("/api/calculate", {"champion": "Aatrox", "ability_ranks": []}),
         ("/api/optimize", {"champion": "Aatrox", "champion_options": []}),
+        ("/api/calculate", {"champion": "Aatrox", "include_crossover": "yes"}),
         ("/api/calculate", {"champion": "Aatrox", "cast_order": [{}, "W", "E", "R"]}),
         ("/api/calculate", {"champion": "Aatrox", "ability_ranks": {"Q": 1.5}}),
         (
@@ -203,6 +204,33 @@ def test_calculate_can_sum_one_damage_package_across_enemy_roster():
         sum(row["result"]["damage_by_type"]["magic"] for row in data["targets"]),
         1,
     )
+
+
+def test_calculate_comparison_curve_recomputes_six_timed_windows():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "items": ["Liandry's Torment"],
+            "include_crossover": True,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 12,
+                    "items": ["Hollow Radiance"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    curve = response.get_json()["comparison_curve"]
+    assert [point["rotation"] for point in curve] == [1, 2, 3, 4, 5, 6]
+    assert [point["seconds"] for point in curve] == [5, 10, 15, 20, 25, 30]
+    assert all(point["total_damage"] > 0 for point in curve)
+    assert all(point["dps"] > 0 for point in curve)
+    assert curve[-1]["total_damage"] > curve[0]["total_damage"]
 
 
 def test_optimizer_scores_every_selected_enemy(monkeypatch):

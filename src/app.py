@@ -482,6 +482,71 @@ def _aggregate_public_results(results: list[dict]) -> dict:
     }
 
 
+def _comparison_curve(
+    champion_data: dict,
+    level: int,
+    items: list[dict],
+    fight_params: FightParams,
+    enemies: list,
+) -> list[dict]:
+    """Score one build through six rotation-length timed windows.
+
+    A point is a continuous fight lasting ``ONE_ROTATION_DURATION`` times its
+    index. Cooldowns, resources, regeneration, autos, burns, shields, and
+    target-specific mitigation are therefore recomputed rather than multiplied
+    from the opening rotation.
+    """
+    points = []
+    for rotation in range(1, 7):
+        duration = ONE_ROTATION_DURATION * rotation
+        params = replace(
+            fight_params,
+            fight_duration_seconds=duration,
+            one_rotation=False,
+        )
+        if not enemies:
+            result = _serialize_fight_result(
+                run_fight(champion_data, level, items, params)
+            )
+        else:
+            target_results = []
+            for enemy in enemies:
+                target_params = replace(
+                    params,
+                    target_health=enemy.stats["health"],
+                    target_bonus_health=enemy.stats["bonus_health"],
+                    target_armor=enemy.stats["armor"],
+                    target_magic_resistance=enemy.stats["magic_resistance"],
+                    target_magic_shield=enemy.defenses.magic_shield,
+                    target_physical_shield=enemy.defenses.physical_shield,
+                    target_general_shield=enemy.defenses.general_shield,
+                )
+                target_results.append(
+                    {
+                        "target": _public_loadout_summary(enemy),
+                        "result": _serialize_fight_result(
+                            run_fight(champion_data, level, items, target_params)
+                        ),
+                    }
+                )
+            _allocate_target_limited_damage(target_results)
+            result = _aggregate_public_results(
+                [target["result"] for target in target_results]
+            )
+        total = float(result["total_damage"])
+        points.append(
+            {
+                "rotation": rotation,
+                "seconds": duration,
+                "total_damage": round(total, 1),
+                "dps": round(total / duration, 1),
+                "ability_damage": round(float(result["ability_damage"]), 1),
+                "auto_attack_damage": round(float(result["auto_attack_damage"]), 1),
+            }
+        )
+    return points
+
+
 def _dev_mode() -> bool:
     """True when LOL_CALC_DEV=1 (run_web.bat sets it; deployments don't).
 
@@ -719,6 +784,9 @@ def api_calculate():
         item_names = _request_string_list(data, "items", maximum=6)
         boots_name = _request_string(data, "boots")
         fight_params = FightParams.from_request(data)
+        include_crossover = data.get("include_crossover", False)
+        if not isinstance(include_crossover, bool):
+            raise ValueError("include_crossover must be true or false")
         enemy_requests = parse_roster(data, "enemies", maximum=MAX_ENEMIES)
         ally_requests = parse_roster(data, "allies", maximum=MAX_ALLIES)
     except ValueError as exc:
@@ -780,6 +848,10 @@ def api_calculate():
     if not enemies:
         result = run_fight(champion_data, level, items, fight_params)
         response = _serialize_fight_result(result)
+        if include_crossover:
+            response["comparison_curve"] = _comparison_curve(
+                champion_data, level, items, fight_params, enemies
+            )
         response["role_quest"] = (
             role_quest_meta(fight_params.role, fight_params.role_quest_complete)
             if fight_params.role
@@ -856,6 +928,10 @@ def api_calculate():
             ),
         }
     )
+    if include_crossover:
+        response["comparison_curve"] = _comparison_curve(
+            champion_data, level, items, fight_params, enemies
+        )
     return jsonify(response)
 
 

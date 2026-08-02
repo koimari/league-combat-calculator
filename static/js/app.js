@@ -43,6 +43,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const shareScenarioBtn = document.getElementById("share-scenario");
     const themeSelect = document.getElementById("theme-select");
     const dataFreshness = document.getElementById("data-freshness");
+    const comparisonVerdict = document.getElementById("comparison-verdict");
+    const comparisonSummary = document.getElementById("comparison-summary");
+    const comparisonExplanation = document.getElementById("comparison-explanation");
+    const crossoverSummary = document.getElementById("crossover-summary");
+    const crossoverBody = document.getElementById("crossover-body");
 
     // Build rows. Build B (Compare mode) is a clone of build A's row, made
     // before the slot click handlers are attached so both rows wire up
@@ -1418,6 +1423,7 @@ document.addEventListener("DOMContentLoaded", () => {
         payload.boots = selectedItems[build].boots;
         payload.items = buildItemList(build);
         payload.item_options = selectedItemOptions[build];
+        payload.include_crossover = compareCheckbox.checked;
         return fetch("/api/calculate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1784,16 +1790,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderComparisonVerdict(builds, results) {
-        let verdict = document.getElementById("comparison-verdict");
-        if (!verdict) {
-            verdict = document.createElement("section");
-            verdict.id = "comparison-verdict";
-            verdict.className = "comparison-verdict hidden";
-            verdict.setAttribute("aria-live", "polite");
-            resultsPanelA.before(verdict);
-        }
         if (builds.length !== 2) {
-            verdict.classList.add("hidden");
+            comparisonVerdict.classList.add("hidden");
             return;
         }
         const [a, b] = results;
@@ -1805,10 +1803,82 @@ document.addEventListener("DOMContentLoaded", () => {
         const seconds = document.querySelector('input[name="fight-mode"]:checked').value === "one_rotation"
             ? 5
             : parseInt(fightDuration.value, 10);
-        verdict.textContent = delta < 0.05
+        comparisonSummary.textContent = delta < 0.05
             ? `Tie · ${Math.round(high).toLocaleString()} TDD over ${seconds}s`
             : `Build ${winner} leads · +${Math.round(delta).toLocaleString()} TDD (${percent.toFixed(1)}%) over ${seconds}s`;
-        verdict.classList.remove("hidden");
+
+        const winnerResult = winner === "A" ? a : b;
+        const loserResult = winner === "A" ? b : a;
+        const strongestSource = Object.entries(winnerResult.breakdown || {})
+            .map(([key, row]) => ({
+                name: row.name,
+                edge: Number(row.total_damage || 0) - Number(loserResult.breakdown?.[key]?.total_damage || 0),
+            }))
+            .filter((source) => source.edge > 0.05)
+            .sort((left, right) => right.edge - left.edge)[0];
+        const strongestStat = [
+            ["ability_power", "AP"],
+            ["attack_damage", "attack damage"],
+            ["ability_haste", "ability haste"],
+            ["magic_penetration_flat", "flat magic penetration"],
+            ["magic_penetration_percent", "% magic penetration"],
+            ["lethality", "lethality"],
+            ["armor_penetration_percent", "% armor penetration"],
+            ["attack_speed", "attack speed"],
+        ]
+            .map(([key, label]) => ({
+                label,
+                edge: Number(winnerResult.champion_stats?.[key] || 0) - Number(loserResult.champion_stats?.[key] || 0),
+            }))
+            .filter((stat) => stat.edge > 0.05)
+            .sort((left, right) => right.edge - left.edge)[0];
+
+        const curveA = Array.isArray(a.comparison_curve) ? a.comparison_curve : [];
+        const curveB = Array.isArray(b.comparison_curve) ? b.comparison_curve : [];
+        crossoverBody.innerHTML = "";
+        let openingLeader = null;
+        let crossover = null;
+        curveA.forEach((pointA, index) => {
+            const pointB = curveB[index];
+            if (!pointB) return;
+            const edge = Number(pointA.total_damage) - Number(pointB.total_damage);
+            const leader = Math.abs(edge) < 0.05 ? "Tie" : edge > 0 ? "A" : "B";
+            if (openingLeader === null && leader !== "Tie") openingLeader = leader;
+            if (!crossover && openingLeader && leader !== "Tie" && leader !== openingLeader) {
+                crossover = { rotation: pointA.rotation, seconds: pointA.seconds, leader };
+            }
+            const row = document.createElement("tr");
+            if (crossover && crossover.rotation === pointA.rotation) {
+                row.classList.add("crossover-row");
+            }
+            [
+                `${pointA.rotation} · ${pointA.seconds}s`,
+                Math.round(pointA.total_damage).toLocaleString(),
+                Math.round(pointB.total_damage).toLocaleString(),
+                leader === "Tie" ? "Tie" : `${leader} +${Math.round(Math.abs(edge)).toLocaleString()}`,
+            ].forEach((value, cellIndex) => {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                if (cellIndex > 0) cell.className = "col-right";
+                row.appendChild(cell);
+            });
+            crossoverBody.appendChild(row);
+        });
+
+        crossoverSummary.textContent = crossover
+            ? `Lead changes at window ${crossover.rotation} (${crossover.seconds}s)`
+            : "No lead change through six rotation-length windows";
+        const sourceText = strongestSource
+            ? `${strongestSource.name} is the largest visible damage edge (+${Math.round(strongestSource.edge).toLocaleString()}).`
+            : "The visible damage sources are nearly even.";
+        const statText = strongestStat
+            ? ` Build ${winner}'s clearest stat edge is +${Number(strongestStat.edge.toFixed(1))} ${strongestStat.label}.`
+            : "";
+        const crossoverText = crossover
+            ? ` Build ${crossover.leader} moves ahead by ${crossover.seconds}s as cooldowns, resources, and persistent effects are recomputed.`
+            : " The same build stays ahead across the tested windows.";
+        comparisonExplanation.textContent = sourceText + statText + crossoverText;
+        comparisonVerdict.classList.remove("hidden");
     }
 
     // Simple animated counter for total damage
