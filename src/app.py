@@ -36,7 +36,9 @@ from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat
 from calculator.loadout_rules import validate_resolved_loadout
 from calculator.champions import (
     champion_options_meta_map,
+    engine_registration_kind,
     get_comparison_curve_unavailable_reason,
+    registered_engine_champion_names,
     registered_champion_names,
 )
 from calculator.champion_coverage import attacker_availability
@@ -84,6 +86,7 @@ _RATE_LIMIT_POLICIES = {
     "optimize": (2, 0.1),
 }
 _VERIFIED_CHAMPIONS = frozenset(registered_champion_names())
+_ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
 _ICON_HOSTS = frozenset(
     {
         "cdn.communitydragon.org",
@@ -121,6 +124,22 @@ _SECURITY_HEADERS = {
 _rate_limiter = TokenBucketStore(
     Path(tempfile.gettempdir()) / "lol-calculator-rate-limits.sqlite3"
 )
+
+
+def _generic_engine_enabled() -> bool:
+    """Whether production may execute the registered Wiki-generic modules.
+
+    The flag is intentionally opt-in so existing fail-closed API contracts and
+    local review tests cannot accidentally promote a generic estimate.  A
+    deployment can enable the runnable registration surface while the exact
+    reviewed registry still controls certification labels.
+    """
+    return os.environ.get("SCRYGLASS_ALLOW_GENERIC_CHAMPIONS", "0").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
 
 
 def _auth_enabled() -> bool:
@@ -456,7 +475,9 @@ def _load_public_champion(name: str) -> dict:
         champion = get_champion(name)
     except KeyError as exc:
         raise LookupError(f"Champion '{name}' not found") from exc
-    if champion["name"] not in _VERIFIED_CHAMPIONS:
+    if champion["name"] not in _VERIFIED_CHAMPIONS and not (
+        _generic_engine_enabled() and champion["name"] in _ENGINE_CHAMPIONS
+    ):
         availability = attacker_availability(champion, _VERIFIED_CHAMPIONS)
         reason = availability["blockers"][0]["label"]
         raise ValueError(f"Champion '{champion['name']}' is not verified: {reason}")
@@ -469,6 +490,8 @@ def _public_loadout_summary(loadout) -> dict:
     summary["icon"] = _https_icon(summary["icon"])
     summary["item_icons"] = [_https_icon(icon) for icon in summary["item_icons"]]
     summary["verified_attacker"] = summary["champion"] in _VERIFIED_CHAMPIONS
+    summary["engine_registered"] = summary["champion"] in _ENGINE_CHAMPIONS
+    summary["engine_registration"] = engine_registration_kind(summary["champion"])
     return summary
 
 
@@ -901,10 +924,10 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
 def api_champions():
     """Return champion identity and fail-closed attacker readiness.
 
-    ``verified`` = has a module in src/calculator/champions/ (the registry
-    is the source of truth). The picker greys out unverified champions —
-    generic-path numbers are estimates, never citable (CLAUDE.md rule 6).
-    Verified champions sort first, then unverified, A-Z within each group.
+    ``verified`` is the exact reviewed-module flag. ``engine_registered`` is
+    true for all champions with an importable backend module, including the
+    source-pinned Wiki-generic registrations.  The two flags are separate so
+    runnable coverage never gets mislabeled as exact certification.
     """
     champions = fetch_champion_data()
     result = []
@@ -923,6 +946,15 @@ def api_champions():
                 "name": champ_data["name"],
                 "icon": _https_icon(champ_data.get("icon", "")),
                 "verified": availability["ready"],
+                "engine_registered": champ_data["name"] in _ENGINE_CHAMPIONS,
+                "engine_registration": engine_registration_kind(champ_data["name"]),
+                "engine_backend_enabled": (
+                    availability["ready"]
+                    or (
+                        champ_data["name"] in _ENGINE_CHAMPIONS
+                        and _generic_engine_enabled()
+                    )
+                ),
                 "availability": availability,
                 "patch_last_changed": champ_data.get("patchLastChanged"),
                 "abilities": ability_slots,
@@ -1011,6 +1043,11 @@ def api_config():
             "input_limits": PUBLIC_INPUT_LIMITS,
             "champion_options": champion_options_meta_map(),
             "item_options": item_input_options_meta(),
+            "champion_engine": {
+                "registered_count": len(_ENGINE_CHAMPIONS),
+                "reviewed_count": len(_VERIFIED_CHAMPIONS),
+                "generic_enabled": _generic_engine_enabled(),
+            },
             "dev_mode": local_dev,
             "data_snapshot": {
                 "source": "League of Legends Wiki cache",
@@ -1149,6 +1186,15 @@ def api_calculate():
             if fight_params.role
             else None
         )
+        response["engine"] = {
+            "registration": engine_registration_kind(champion_data["name"]),
+            "certified": champion_data["name"] in _VERIFIED_CHAMPIONS,
+            "mode": (
+                "reviewed_event_order"
+                if champion_data["name"] in _VERIFIED_CHAMPIONS
+                else "wiki_generic_packet"
+            ),
+        }
         if allies:
             response.update(
                 {
@@ -1247,6 +1293,15 @@ def api_calculate():
             ),
         }
     )
+    response["engine"] = {
+        "registration": engine_registration_kind(champion_data["name"]),
+        "certified": champion_data["name"] in _VERIFIED_CHAMPIONS,
+        "mode": (
+            "reviewed_event_order"
+            if champion_data["name"] in _VERIFIED_CHAMPIONS
+            else "wiki_generic_packet"
+        ),
+    }
     if include_crossover:
         _add_comparison_curve(
             response, champion_data, level, items, fight_params, enemies

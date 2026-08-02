@@ -1,30 +1,19 @@
 """Champion ability registry.
 
-To add a new champion, use /add-champion or see the add-champion skill.
-In short: create a module in this package, implement ``parse_abilities()``,
-and register the champion name below.
-
-Champions NOT in ``_CHAMPION_MODULES`` fall through to the slot-archetype
-engine running ``GENERIC_SLOTS``, which reads ability data directly from
-the JSON with classifier-driven auto-detection.
+There are two deliberately separate registration lanes.  ``_CHAMPION_MODULES``
+contains custom, reviewed event-order modules (for example Orianna and
+Ziggs).  Every other champion in the local Wiki cache is explicitly registered
+to the source-pinned ``generic`` module.  That module is runnable backend
+coverage, while the reviewed registry remains the authority for exact public
+certification.
 """
 
+import json
 import importlib
+from pathlib import Path
 from typing import Any
 
-from .engine import build_parser
-from .slotlib import on_hit_auto, simple_damage
-
-# Slot map for champions without a registered module: classifier-driven
-# damage detection on Q/W/E/R (including in-slot on-hit passives) and
-# on-hit auto-detection for the champion passive.
-GENERIC_SLOTS = {
-    "Q": simple_damage(),
-    "W": simple_damage(),
-    "E": simple_damage(),
-    "R": simple_damage(),
-    "P": on_hit_auto(),
-}
+from .generic import GENERIC_SLOTS, parse_abilities as parse_generic_abilities
 
 
 # Map display name -> module name within this package.
@@ -79,6 +68,44 @@ _CHAMPION_MODULES: dict[str, str] = {
 }
 
 
+def _wiki_cache_names() -> tuple[str, ...]:
+    """Read display names from the checked-in Wiki snapshot.
+
+    Keeping the generic registration derived from the same cache that feeds
+    the browser prevents key/display-name drift (e.g. ``K'Sante`` and
+    ``Nunu & Willump``).  A missing cache is treated conservatively: custom
+    modules remain available, while deployment health can surface the missing
+    ingestion artifact instead of inventing names.
+    """
+    path = Path(__file__).resolve().parents[3] / "data" / "champions.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return ()
+    if not isinstance(payload, dict):
+        return ()
+    names = {
+        str(champion.get("name", "")).strip()
+        for champion in payload.values()
+        if isinstance(champion, dict) and str(champion.get("name", "")).strip()
+    }
+    return tuple(sorted(names))
+
+
+# Explicit engine registrations for every cached champion that does not yet
+# have a custom reviewed module.  ``generic`` is a real module import target,
+# not an implicit fall-through branch.
+_GENERIC_CHAMPION_MODULES: dict[str, str] = {
+    name: "generic"
+    for name in _wiki_cache_names()
+    if name not in _CHAMPION_MODULES
+}
+_ENGINE_CHAMPION_MODULES: dict[str, str] = {
+    **_CHAMPION_MODULES,
+    **_GENERIC_CHAMPION_MODULES,
+}
+
+
 # Option keys owned by the pipeline — never user input, never a module
 # OPTIONS declaration (tests/test_champion_options.py enforces the
 # no-collision rule). Injected by ``pipeline.run_fight`` for timed
@@ -104,8 +131,9 @@ def parse_abilities(
 ) -> dict[str, dict[str, Any]]:
     """Parse abilities for any champion.
 
-    Dispatches to a champion-specific module if one is registered,
-    otherwise falls through to the generic JSON-based parser.
+    Dispatches to a reviewed champion module or the explicitly registered
+    Wiki-generic module.  Synthetic pipeline fixtures may retain the legacy
+    generic parser fallback, but public data names are all in the manifest.
 
     Args:
         champion_name: Display name of the champion (e.g., "Ahri").
@@ -121,24 +149,22 @@ def parse_abilities(
     Returns:
         Ability damage dictionary keyed by Q/W/E/R.
     """
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is not None:
-        module = importlib.import_module(f".{module_name}", package=__name__)
-        return module.parse_abilities(
+    module_name = _ENGINE_CHAMPION_MODULES.get(champion_name)
+    # A few internal pipeline fixtures intentionally rename the display name;
+    # keep their legacy generic behavior without promoting fixture names to
+    # the public registration manifest.
+    if module_name is None:
+        return parse_generic_abilities(
             champion_data,
             level,
             total_ability_power,
-            ability_ranks,
+            ability_ranks=ability_ranks,
             champion_options=champion_options,
             champion_stats=champion_stats,
             target_stats=target_stats,
         )
-
-    # Fall through to the slot-archetype engine with the generic slot map.
-    # Skill-order lookup uses the data's own name (matching the old
-    # generic parser exactly — e.g. Singed's custom order).
-    generic_parse = build_parser(GENERIC_SLOTS, champion_data.get("name", ""))
-    return generic_parse(
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    return module.parse_abilities(
         champion_data,
         level,
         total_ability_power,
@@ -291,7 +317,27 @@ def registered_champion_names() -> list[str]:
     return sorted(_CHAMPION_MODULES)
 
 
-def is_champion_supported(champion_name: str) -> bool:  # noqa: ARG001
+def registered_engine_champion_names() -> list[str]:
+    """Display names with an importable backend module, sorted.
+
+    This is the complete runnable registration surface (custom reviewed plus
+    Wiki-generic).  ``registered_champion_names`` intentionally remains the
+    exact-certification registry for backwards-compatible fail-closed API
+    semantics.
+    """
+    return sorted(_ENGINE_CHAMPION_MODULES)
+
+
+def engine_registration_kind(champion_name: str) -> str | None:
+    """Return ``reviewed_module`` or ``wiki_generic_module`` for one name."""
+    if champion_name in _CHAMPION_MODULES:
+        return "reviewed_module"
+    if champion_name in _GENERIC_CHAMPION_MODULES:
+        return "wiki_generic_module"
+    return None
+
+
+def is_champion_supported(champion_name: str) -> bool:
     """Check whether a champion has ability damage implemented.
 
     Returns True for all champions — the generic parser handles

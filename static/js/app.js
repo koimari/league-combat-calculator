@@ -9,6 +9,7 @@ const ABILITY_SLOTS = ["P", "Q", "W", "E", "R"];
 const engine = {
   ready: false,
   reviewed: new Set(),
+  backend: new Set(),
   availability: new Map(),
   itemOptions: {},
   championOptions: {},
@@ -1021,10 +1022,11 @@ function renderExactBreakdown(aResult, bResult) {
 
 function renderExactMechanics(aResult, bResult) {
   const result = aResult;
+  const generic = result?.engine?.mode === "wiki_generic_packet";
   const coverage = result?.timeline_coverage || {};
   const events = (result?.cast_timeline || []).slice(0, 8).map((event) => `${one(event.time)}s ${event.name || event.slot}`).join(" · ");
   const notes = [...(result?.notes || []), coverage.note].filter(Boolean);
-  $("mechanicsOutput").innerHTML = `<div class="mechanics-head"><span>Engine output</span><b>${escapeHtml(coverage.certification || "event ordered")}</b></div><article class="mechanic-row"><div><strong>Fight order</strong><p>${escapeHtml(events || "No cast timeline returned")}</p></div><span class="modelled">Calculated</span></article>${notes.map((note) => `<article class="mechanic-row"><div><strong>Model note</strong><p>${escapeHtml(note)}</p></div><span class="text-only">Boundary</span></article>`).join("")}`;
+  $("mechanicsOutput").innerHTML = `<div class="mechanics-head"><span>${generic ? "Wiki backend estimate" : "Engine output"}</span><b>${escapeHtml(generic ? "packet order" : (coverage.certification || "event ordered"))}</b></div><article class="mechanic-row"><div><strong>Fight order</strong><p>${escapeHtml(events || "No cast timeline returned")}</p></div><span class="modelled">Calculated</span></article>${notes.map((note) => `<article class="mechanic-row"><div><strong>Model note</strong><p>${escapeHtml(note)}</p></div><span class="text-only">Boundary</span></article>`).join("")}`;
 }
 
 function renderExactResults(aResult, bResult) {
@@ -1035,16 +1037,20 @@ function renderExactResults(aResult, bResult) {
   const tied = bResult && Math.abs(aTotal - bTotal) < .5;
   const aWins = !bResult || aTotal > bTotal;
   const winner = bResult ? (aWins ? "Build A" : "Build B") : "Build A";
+  const generic = aResult?.engine?.mode === "wiki_generic_packet";
+  const outputLabel = generic ? "Wiki backend estimate" : "Engine output";
   const edge = bResult && Math.min(aTotal, bTotal) > 0 ? Math.abs(aTotal / bTotal - 1) * 100 : 0;
   $("resultContext").textContent = `${state.targets.length} ${plural(state.targets.length, "enemy")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
-  $("winnerVisual").innerHTML = tied ? `<div></div><div><span>Engine output</span><strong>Tie</strong><b>Less than 1 damage apart</b></div>` : `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${bResult ? "Better here" : "Engine output"}</span><strong>${winner}</strong><b>${bResult ? `${percent(edge)} more total damage` : "Event-ordered result"}</b></div>`;
+  $("winnerVisual").innerHTML = tied ? `<div></div><div><span>${outputLabel}</span><strong>Tie</strong><b>Less than 1 damage apart</b></div>` : `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${bResult ? "Better here" : outputLabel}</span><strong>${winner}</strong><b>${bResult ? `${percent(edge)} more total damage` : (generic ? "Wiki packet estimate" : "Event-ordered result")}</b></div>`;
   $("scoreGrid").innerHTML = [{ name: "Build A", total: aTotal, point: aPoint, winner: aWins && !tied }, ...(bResult ? [{ name: "Build B", total: bTotal, point: bPoint, winner: !aWins && !tied }] : [])].map((entry) => `<div class="score ${entry.winner ? "winner" : ""} ${bResult ? "" : "single-score"}"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>${entry.name}</span></header><strong>${fmt(entry.total)}</strong><small>TDD · ${fmt(entry.point.dps || entry.total / Math.max(1, state.fight.duration))} DPS</small></div>`).join("");
   renderExactStatMatrix(aResult, bResult);
   renderExactResistance(aResult, bResult);
   const certification = aResult.timeline_coverage?.certification || "event ordered";
   const shield = Number(aResult.shield_absorbed || 0);
   const resource = Number(aResult.resource_remaining || 0);
-  $("why").innerHTML = `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed · ${fmt(resource)} resource remaining.`;
+  $("why").innerHTML = generic
+    ? `<strong>Wiki-derived packet order</strong> · ${fmt(shield)} shield damage absorbed · ${fmt(resource)} resource remaining. Exact champion-specific certification is still pending.`
+    : `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed · ${fmt(resource)} resource remaining.`;
   $("threshold").innerHTML = `<span>Crossover</span><strong>${bResult ? (tied ? "No meaningful difference at this window" : `${escapeHtml(winner)} leads at the selected window`) : `${fmt(aTotal)} event-ordered damage`}</strong>`;
   const aCurve = aResult.comparison_curve || [{ rotation: state.fight.rotations, total_damage: aTotal }];
   const bCurve = bResult?.comparison_curve || [];
@@ -1062,7 +1068,7 @@ function renderExactResults(aResult, bResult) {
 function scheduleEngineCalculation() {
   if (engine.pendingTimer) clearTimeout(engine.pendingTimer);
   if (!engine.ready || !state.attacker.champion || !state.targets.length || !state.targets.every((target) => target.champion)) return;
-  if (!engine.reviewed.has(state.attacker.champion)) return;
+  if (!engine.reviewed.has(state.attacker.champion) && !engine.backend.has(state.attacker.champion)) return;
   engine.pendingTimer = setTimeout(() => {
     const requestId = ++engine.requestId;
     engine.pending = true;
@@ -2101,6 +2107,7 @@ Promise.all([
     championAvailability.forEach((entry) => {
       engine.availability.set(entry.name, entry.availability || {});
       if (entry.availability?.ready) engine.reviewed.add(entry.name);
+      if (entry.engine_backend_enabled) engine.backend.add(entry.name);
     });
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};
