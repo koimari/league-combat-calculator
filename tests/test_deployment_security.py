@@ -6,7 +6,7 @@ from pathlib import Path
 def test_container_is_pinned_minimal_nonroot_and_health_checked():
     dockerfile = Path("Dockerfile").read_text(encoding="utf-8")
 
-    assert "FROM python:3.14.3-slim@sha256:" in dockerfile
+    assert "FROM python:3.14.6-slim@sha256:" in dockerfile
     assert "COPY requirements-runtime.txt" in dockerfile
     assert "COPY requirements.txt" not in dockerfile
     assert "apt-get update" in dockerfile
