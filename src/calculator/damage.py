@@ -1155,6 +1155,8 @@ def _event_timeline_coverage(
         if entry.get("informational") or float(entry.get("total_damage", 0.0)) <= 0:
             continue
         damage_events = entry.get("damage_events")
+        if not isinstance(damage_events, list):
+            damage_events = entry.get("timeline_events")
         event_total = (
             sum(float(event.get("damage", 0.0)) for event in damage_events)
             if isinstance(damage_events, list) and damage_events
@@ -1210,7 +1212,11 @@ def _calculate_shadowflame_bonus(
     target_threshold_shield_health_ratio: float = 0.0,
     target_threshold_shield_duration: float = 0.0,
     target_threshold_shield_damage_type: str = "all",
-) -> tuple[float, dict[str, float]]:
+    return_events: bool = False,
+) -> (
+    tuple[float, dict[str, float]]
+    | tuple[float, dict[str, float], list[dict[str, Any]]]
+):
     """Calculate bonus damage from Shadowflame's Cinderbloom passive.
 
     Simulates damage dealt in ability-cast order. When the target's
@@ -1243,6 +1249,7 @@ def _calculate_shadowflame_bonus(
     )
     total_bonus = 0.0
     bonus_by_type: dict[str, float] = {}
+    bonus_events: list[dict[str, Any]] = []
 
     events = _ordered_damage_events(
         breakdown,
@@ -1263,6 +1270,15 @@ def _calculate_shadowflame_bonus(
             bonus = damage * crit_bonus
             total_bonus += bonus
             bonus_by_type[dtype] = bonus_by_type.get(dtype, 0.0) + bonus
+            bonus_events.append(
+                {
+                    "time": event_time,
+                    "damage": bonus,
+                    "damage_type": dtype,
+                    "source_key": f"shadowflame_{effect.item_name}",
+                    "trigger_source": event.get("source_key", ""),
+                }
+            )
             event_damage += bonus
 
         if dtype == "magic":
@@ -1298,6 +1314,8 @@ def _calculate_shadowflame_bonus(
             event_damage -= absorbed
         current_hp = max(0.0, current_hp - event_damage)
 
+    if return_events:
+        return total_bonus, bonus_by_type, bonus_events
     return total_bonus, bonus_by_type
 
 
@@ -4642,7 +4660,7 @@ def _add_shadowflame_cinderbloom(
     effect = state.damage_effects.magic_true_crit
     if effect is None:
         return
-    shadowflame_bonus, bonus_by_type = _calculate_shadowflame_bonus(
+    shadowflame_bonus, bonus_by_type, bonus_events = _calculate_shadowflame_bonus(
         effect,
         state.breakdown,
         state.ability_damages,
@@ -4660,11 +4678,16 @@ def _add_shadowflame_cinderbloom(
         target_threshold_shield_damage_type=(
             config.target_threshold_shield_damage_type
         ),
+        return_events=True,
     )
     if shadowflame_bonus > 0:
         state.breakdown[f"shadowflame_{effect.item_name}"] = {
             "name": f"{effect.item_name} (Cinderbloom)",
             "total_damage": shadowflame_bonus,
+            # Cinderbloom is computed from the ordered source ledger above.
+            # Keep those bonus timestamps for precision certification without
+            # replaying the bonus as a second shield-resolution damage source.
+            "timeline_events": bonus_events,
             **_damage_type_fields(bonus_by_type),
         }
         state.total_damage += shadowflame_bonus

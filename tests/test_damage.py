@@ -476,6 +476,20 @@ class TestTargetIncomingDamageModifiers:
         assert result["breakdown"]["shadowflame_Shadowflame"][
             "total_damage"
         ] == pytest.approx(60.0)
+        cinderbloom = result["breakdown"]["shadowflame_Shadowflame"]
+        assert cinderbloom["timeline_events"] == [
+            {
+                "time": 2.0,
+                "damage": pytest.approx(60.0),
+                "damage_type": "magic",
+                "source_key": "shadowflame_Shadowflame",
+                "trigger_source": "Q",
+            }
+        ]
+        assert result["timeline_coverage"]["complete"] is True
+        assert "shadowflame_Shadowflame" in result["timeline_coverage"][
+            "exact_sources"
+        ]
 
     def test_burn_ticks_keep_timing_and_respect_lifeline_expiry(
         self, fight, attacker_stats
