@@ -163,6 +163,35 @@ def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):
     assert score == 125.0
 
 
+def test_coupled_equal_damage_uses_event_health_only_as_tie_break(monkeypatch):
+    def fake_timeline(*_args, **kwargs):
+        items = kwargs.get("items") or _args[2]
+        health = 2_000.0 if any(item["name"] == "Warmog's Armor" for item in items) else 1_000.0
+        return {
+            "breakdown": [{"participant_id": "main", "total_damage": 500.0}],
+            "participants": [
+                {"participant_id": "main", "survival": {"effective_health": health}}
+            ],
+            "events": [],
+            "timeline_coverage": {"complete": True, "exact_sources": [], "coarse_sources": []},
+        }
+
+    monkeypatch.setattr("src.calculator.optimizer.build_participant_timeline", fake_timeline)
+    result = optimize_build(
+        "Aatrox",
+        get_champion("Aatrox"),
+        level=6,
+        role="top",
+        max_legendary_slots=1,
+        include_boots=False,
+        enemy_loadouts=[object()],
+        require_complete_timeline=True,
+    )
+
+    assert result["total_damage"] == 500.0
+    assert "Warmog's Armor" in result["items"]
+
+
 def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch):
     """A partial item event cannot win the main champion's coupled search."""
 

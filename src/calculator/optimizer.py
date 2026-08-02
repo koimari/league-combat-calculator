@@ -221,11 +221,32 @@ def _evaluate_build(
         if objective == "total_damage":
             # The participant timeline already truncates the main actor's
             # output at its event-ordered death time.  Effective health is a
-            # receipt component describing that survival window; adding it to
-            # damage here double-counts the same defensive value and causes
-            # glass-cannon candidates to lose to pure-health builds.
-            return float(main_row.get("total_damage", 0.0))
-        return float(main_row.get("total_damage", 0.0))
+            # receipt component describing that survival window; it is not
+            # part of the primary damage score.
+            primary_score = float(main_row.get("total_damage", 0.0))
+        else:
+            primary_score = float(main_row.get("total_damage", 0.0))
+
+        # Equal-damage coupled builds still need a deterministic, sourced
+        # decision.  Use the timeline's own effective-health receipt as an
+        # infinitesimal tie-break only; it cannot change a material damage
+        # ordering or the public rounded score.  This prevents an unrelated
+        # AP item from winning merely because it appeared earlier in the
+        # candidate list when the target was already dead at the first event.
+        if timeline_audit is not None:
+            main_survival = next(
+                (
+                    row.get("survival", {})
+                    for row in combat.get("participants", [])
+                    if row.get("participant_id") == "main"
+                ),
+                {},
+            )
+            effective_health = max(
+                0.0, float(main_survival.get("effective_health", 0.0))
+            )
+            return primary_score + effective_health * 1e-9
+        return primary_score
     results: list[dict[str, Any]] = []
     for target_params in targets:
         result = run_fight(champion_data, level, items, target_params)
