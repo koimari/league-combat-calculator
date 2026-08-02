@@ -291,7 +291,10 @@ def calculate_total_stats(
     )
     final_bonus_ad = raw_bonus_ad * quest_bonus_ad_multiplier
     total_ad = base_stats["attack_damage"] + final_bonus_ad
-    total_health = base_stats["health"] + total_item_stats["health"]
+    effective_bonus_health = (
+        total_item_stats["health"] * bonuses.item_bonus_health_multiplier
+    )
+    total_health = base_stats["health"] + effective_bonus_health
 
     # Terminus max-stack display assumption: bonus resists to both armor
     # and MR, percent pen to both armor and magic.
@@ -335,7 +338,7 @@ def calculate_total_stats(
         "magic_penetration_percent": final_magic_pen_percent,
         "base_attack_damage": round(base_stats["attack_damage"]),
         "bonus_attack_damage": round(final_bonus_ad),
-        "bonus_health": round(total_item_stats["health"]),
+        "bonus_health": round(effective_bonus_health),
         # Base health = champion base stats + level growth, no items.
         # Derived as total - bonus rather than rounded on its own so
         # ``health == base_health + bonus_health`` holds by construction:
@@ -343,7 +346,7 @@ def calculate_total_stats(
         # base health lands on a .5 boundary (Ambessa/Karthus at 13).
         # Abilities scale off all three separately ("% base health",
         # "% bonus health", "% maximum health"), so each is first-class.
-        "base_health": round(total_health) - round(total_item_stats["health"]),
+        "base_health": round(total_health) - round(effective_bonus_health),
         # Bonus (non-base) resists — champion mechanics scaling off bonus
         # armor/MR (Braum W's 36%) and the "% bonus armor" /
         # "% bonus magic resistance" scaling units read these.

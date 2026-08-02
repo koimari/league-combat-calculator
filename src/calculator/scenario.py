@@ -11,6 +11,7 @@ from typing import Any, Mapping
 from .data_fetcher import get_champion, get_item_by_name
 from .defensive_effects import StartingDefenses, resolve_starting_defenses
 from .item_effects import validate_item_input_options
+from .item_coverage import target_build_coverage
 from .loadout_rules import validate_resolved_loadout
 from .role_quests import validate_role
 from .stats import MAX_LEVEL, calculate_total_stats
@@ -123,7 +124,7 @@ class ChampionLoadout:
             item_data=item_data,
             stats=stats,
             defenses=resolve_starting_defenses(
-                champion_data["name"], self.level, stats
+                champion_data["name"], self.level, stats, item_data
             ),
         )
 
@@ -152,6 +153,7 @@ class ResolvedLoadout:
             "ally_effects_enabled": self.request.ally_effects_enabled,
             "stats": dict(self.stats),
             "starting_defenses": self.defenses.public_summary(),
+            "target_model_coverage": target_build_coverage(list(self.item_data)),
         }
 
 

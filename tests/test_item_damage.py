@@ -553,6 +553,43 @@ class TestShadowflameCinderbloom:
         # W (200) dealt below threshold, gets 20% bonus = 40
         assert abs(bonus - 40.0) < 0.01
 
+    def test_magic_shield_delays_shadowflame_health_threshold(self) -> None:
+        """A ready magic shield must absorb events before health falls."""
+        from src.calculator.damage import _calculate_shadowflame_bonus
+
+        breakdown = {
+            slot: {
+                "name": slot,
+                "casts": 1,
+                "total_damage": 400.0,
+                "damage_type": "magic",
+            }
+            for slot in ("Q", "W", "E")
+        }
+        ability_damages = {
+            slot: {
+                "damage_type": "magic",
+                "magic_damage": 400.0,
+                "total_raw": 400.0,
+                "parts": (DamagePart("magic", 400.0),),
+            }
+            for slot in ("Q", "W", "E")
+        }
+
+        no_shield, _ = _calculate_shadowflame_bonus(
+            _shadowflame_effect(), breakdown, ability_damages, 1000.0
+        )
+        shielded, _ = _calculate_shadowflame_bonus(
+            _shadowflame_effect(),
+            breakdown,
+            ability_damages,
+            1000.0,
+            target_magic_shield=300.0,
+        )
+
+        assert no_shield == pytest.approx(80.0)
+        assert shielded == 0.0
+
     def test_physical_damage_not_affected(self) -> None:
         """Physical damage below threshold should not get Shadowflame bonus."""
         from src.calculator.damage import _calculate_shadowflame_bonus

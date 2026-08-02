@@ -934,6 +934,8 @@ document.addEventListener("DOMContentLoaded", () => {
             itemOptions: {},
             allyEffectsEnabled: false,
             stats: null,
+            startingDefenses: null,
+            targetCoverage: null,
             statsError: "",
             refreshRevision: 0,
             refreshTimer: null,
@@ -967,6 +969,8 @@ document.addEventListener("DOMContentLoaded", () => {
         entry.champion = champion;
         entry.icon = icon;
         entry.stats = null;
+        entry.startingDefenses = null;
+        entry.targetCoverage = null;
         entry.statsError = "";
         renderRosterTeam(team);
         updateRosterCount();
@@ -982,6 +986,8 @@ document.addEventListener("DOMContentLoaded", () => {
         cleanUnusedItemOptions(entry.itemOptions, entry.slots, previous);
         ensureItemOptions(entry.itemOptions, itemName);
         entry.stats = null;
+        entry.startingDefenses = null;
+        entry.targetCoverage = null;
         renderRosterTeam(team);
         queueRosterStats(team, id);
         scheduleRecalc();
@@ -994,6 +1000,8 @@ document.addEventListener("DOMContentLoaded", () => {
         entry.slots[slot] = "";
         cleanUnusedItemOptions(entry.itemOptions, entry.slots, previous);
         entry.stats = null;
+        entry.startingDefenses = null;
+        entry.targetCoverage = null;
         renderRosterTeam(team);
         queueRosterStats(team, id);
         scheduleRecalc();
@@ -1050,9 +1058,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error) {
                     current.statsError = data.error;
                     current.stats = null;
+                    current.startingDefenses = null;
+                    current.targetCoverage = null;
                 } else {
                     current.statsError = "";
                     current.stats = data.stats;
+                    current.startingDefenses = data.starting_defenses || null;
+                    current.targetCoverage = data.target_model_coverage || null;
                 }
                 renderRosterTeam(team);
             })
@@ -1061,6 +1073,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!current || current.refreshRevision !== revision) return;
                 current.statsError = "Could not load stats";
                 current.stats = null;
+                current.startingDefenses = null;
+                current.targetCoverage = null;
                 renderRosterTeam(team);
             });
     }
@@ -1109,6 +1123,28 @@ document.addEventListener("DOMContentLoaded", () => {
         return span.innerHTML;
     }
 
+    function rosterDefenseMarkup(entry, team) {
+        if (team !== "enemies" || !entry.stats) return "";
+        const blocked = entry.targetCoverage?.blocked || [];
+        if (blocked.length) {
+            const item = blocked[0];
+            return `<div class="roster-model-status blocked" role="alert"><strong>Calculation paused</strong>` +
+                `<span>${escapeHtml(item.name)} · ${escapeHtml(item.reason)}</span></div>`;
+        }
+        const defenses = entry.startingDefenses || {};
+        const shields = [
+            ["Magic shield", Number(defenses.magic_shield || 0)],
+            ["Physical shield", Number(defenses.physical_shield || 0)],
+            ["Shield", Number(defenses.general_shield || 0)],
+        ].filter(([, amount]) => amount > 0);
+        if (!shields.length) return "";
+        const summary = shields
+            .map(([label, amount]) => `${label} ${Math.round(amount).toLocaleString()}`)
+            .join(" · ");
+        return `<div class="roster-model-status ready" role="status"><strong>Ready at start</strong>` +
+            `<span>${escapeHtml(summary)}</span></div>`;
+    }
+
     function rosterCard(entry, team) {
         const article = document.createElement("article");
         article.className = "roster-card";
@@ -1149,6 +1185,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
             <div class="roster-build">${itemSlots}</div>
+            ${rosterDefenseMarkup(entry, team)}
             ${team === "allies" ? `<label class="toggle-label compact roster-effect-toggle"><input type="checkbox" class="roster-effects-enabled" ${entry.allyEffectsEnabled ? "checked" : ""}><span class="toggle-text">Apply this ally's active buffs</span></label>` : ""}
             <div class="roster-item-options${optionRows ? "" : " hidden"}">${optionRows}</div>
             <div class="roster-stat-matrix">${rosterStatsMarkup(entry)}</div>`;
@@ -1163,6 +1200,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const level = Math.max(1, Math.min(20, parseInt(event.target.value, 10) || 1));
             entry.level = level;
             entry.stats = null;
+            entry.startingDefenses = null;
+            entry.targetCoverage = null;
             queueRosterStats(team, entry.id);
             scheduleRecalc();
         });

@@ -886,6 +886,10 @@ def _calculate_shadowflame_bonus(
     ability_damages: dict[str, dict[str, Any]],
     target_health: float,
     cast_order: list[str] | None = None,
+    *,
+    target_magic_shield: float = 0.0,
+    target_physical_shield: float = 0.0,
+    target_general_shield: float = 0.0,
 ) -> tuple[float, dict[str, float]]:
     """Calculate bonus damage from Shadowflame's Cinderbloom passive.
 
@@ -908,6 +912,9 @@ def _calculate_shadowflame_bonus(
     threshold_hp = target_health * effect.health_threshold
     crit_bonus = effect.crit_multiplier - 1.0
     current_hp = target_health
+    magic_shield = max(0.0, target_magic_shield)
+    physical_shield = max(0.0, target_physical_shield)
+    general_shield = max(0.0, target_general_shield)
     total_bonus = 0.0
     bonus_by_type: dict[str, float] = {}
 
@@ -976,11 +983,26 @@ def _calculate_shadowflame_bonus(
 
     # 4. Simulate damage order, tracking target HP
     for damage, dtype in events:
+        event_damage = damage
         if dtype in ("magic", "true") and current_hp < threshold_hp:
             bonus = damage * crit_bonus
             total_bonus += bonus
             bonus_by_type[dtype] = bonus_by_type.get(dtype, 0.0) + bonus
-        current_hp -= damage
+            event_damage += bonus
+
+        if dtype == "magic":
+            absorbed = min(magic_shield, event_damage)
+            magic_shield -= absorbed
+            event_damage -= absorbed
+        elif dtype == "physical":
+            absorbed = min(physical_shield, event_damage)
+            physical_shield -= absorbed
+            event_damage -= absorbed
+        if event_damage > 0:
+            absorbed = min(general_shield, event_damage)
+            general_shield -= absorbed
+            event_damage -= absorbed
+        current_hp = max(0.0, current_hp - event_damage)
 
     return total_bonus, bonus_by_type
 
@@ -4080,7 +4102,9 @@ def _add_single_proc_on_hits(
         state.total_damage += total_damage
 
 
-def _add_shadowflame_cinderbloom(state: FightState) -> None:
+def _add_shadowflame_cinderbloom(
+    state: FightState, config: FightConfig
+) -> None:
     """Add Shadowflame's Cinderbloom bonus (magic/true crits below 40% HP)."""
     effect = state.damage_effects.magic_true_crit
     if effect is None:
@@ -4091,6 +4115,9 @@ def _add_shadowflame_cinderbloom(state: FightState) -> None:
         state.ability_damages,
         state.target_health,
         state.cast_order,
+        target_magic_shield=config.target_magic_shield,
+        target_physical_shield=config.target_physical_shield,
+        target_general_shield=config.target_general_shield,
     )
     if shadowflame_bonus > 0:
         state.breakdown[f"shadowflame_{effect.item_name}"] = {
@@ -4409,7 +4436,7 @@ def calculate_fight_damage(
 
     # ── Single-proc on-hits, Shadowflame, and Expose Weakness ───────────
     _add_single_proc_on_hits(state, rotation, autos, on_hits, spellblade)
-    _add_shadowflame_cinderbloom(state)
+    _add_shadowflame_cinderbloom(state, config)
     _add_expose_weakness(state, autos, spellblade)
 
     # ── Fight-wide damage amplifiers ────────────────────────────────────

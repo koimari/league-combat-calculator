@@ -578,6 +578,34 @@ class TestHealthComponents:
         assert built["bonus_health"] > 0
         assert built["health"] > naked["health"]
 
+    def test_warmogs_vitality_multiplies_all_item_health(self, ahri_data: dict) -> None:
+        items = [
+            get_item_by_name("Warmog's Armor"),
+            get_item_by_name("Ruby Crystal"),
+        ]
+        raw_item_health = sum(get_item_stats(item)["health"] for item in items)
+
+        stats = calculate_total_stats(ahri_data, 18, items)
+
+        assert stats["bonus_health"] == round(raw_item_health * 1.12)
+        assert stats["health"] == stats["base_health"] + stats["bonus_health"]
+
+    def test_bloodmail_reads_warmogs_effective_bonus_health(
+        self, ahri_data: dict
+    ) -> None:
+        items = [
+            get_item_by_name("Warmog's Armor"),
+            get_item_by_name("Overlord's Bloodmail"),
+        ]
+        raw_item_health = sum(get_item_stats(item)["health"] for item in items)
+        raw_item_ad = sum(get_item_stats(item)["attack_damage"] for item in items)
+
+        stats = calculate_total_stats(ahri_data, 18, items)
+
+        assert stats["bonus_attack_damage"] == round(
+            raw_item_ad + raw_item_health * 1.12 * 0.025
+        )
+
     @pytest.mark.parametrize("level", [1, 6, 11, 18, 20])
     def test_invariant_holds_across_levels(self, ahri_data: dict, level: int) -> None:
         stats = calculate_total_stats(ahri_data, level, [])

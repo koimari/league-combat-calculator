@@ -269,7 +269,7 @@ def _find_passive_by_name(
 ) -> dict[str, Any] | None:
     """Find a passive entry by its name field."""
     for passive in item_data.get("passives", []):
-        if passive.get("name", "").lower() == name.lower():
+        if str(passive.get("name") or "").casefold() == name.casefold():
             return passive
     return None
 
@@ -280,7 +280,7 @@ def _find_active_by_name(
 ) -> dict[str, Any] | None:
     """Find an active entry by its name field."""
     for active in item_data.get("active", []):
-        if active.get("name", "").lower() == name.lower():
+        if str(active.get("name") or "").casefold() == name.casefold():
             return active
     return None
 
@@ -1182,6 +1182,50 @@ def _parse_steraks_claws(text: str) -> dict[str, Any]:
     return result
 
 
+def _parse_warmogs_vitality(text: str) -> dict[str, Any]:
+    """Parse Warmog's Vitality: item bonus health to bonus health."""
+    text_resolved = _resolve_simple_templates(text)
+    ratio_match = re.search(
+        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+health\s+'''from items'''",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if not ratio_match:
+        return {}
+    return {"item_bonus_health_ratio": float(ratio_match.group(1)) / 100.0}
+
+
+def _parse_kaenic_magebane(text: str) -> dict[str, Any]:
+    """Parse Kaenic Rookern Magebane's maximum-health magic shield."""
+    text_resolved = _resolve_simple_templates(text)
+    ratio_match = re.search(
+        r"(\d+(?:\.\d+)?)%\s+of\s+'''maximum'''\s+health",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if not ratio_match:
+        return {}
+    return {
+        "magic_shield_max_health_ratio": float(ratio_match.group(1)) / 100.0
+    }
+
+
+def _parse_spirit_visage_vitality(text: str) -> dict[str, Any]:
+    """Parse Spirit Visage's received healing and shielding multiplier."""
+    text_resolved = _resolve_simple_templates(text)
+    increase_match = re.search(
+        r"(?:shielding|health regeneration).*?by\s+(\d+(?:\.\d+)?)%",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if not increase_match:
+        return {}
+    return {
+        "shield_received_multiplier": 1.0
+        + float(increase_match.group(1)) / 100.0
+    }
+
+
 def _parse_stormrazor_bolt(text: str) -> dict[str, Any]:
     """Parse Stormrazor Bolt: energized magic damage on first auto.
 
@@ -1748,6 +1792,15 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Bandlepipes": [("passive", "Fanfare", _parse_bandlepipes_fanfare, {})],
     "Staff of Flowing Water": [("passive", "Rapids", _parse_flowing_water_rapids, {})],
     "Sterak's Gage": [("passive", "The Claws that Catch", _parse_steraks_claws, {})],
+    "Warmog's Armor": [
+        ("passive", "Warmog's Vitality", _parse_warmogs_vitality, {})
+    ],
+    "Kaenic Rookern": [
+        ("passive", "Magebane", _parse_kaenic_magebane, {})
+    ],
+    "Spirit Visage": [
+        ("passive", "Boundless Vitality", _parse_spirit_visage_vitality, {})
+    ],
     # ── Energized ──
     "Rapid Firecannon": [("passive", "Sharpshooter", _parse_simple_on_hit, {})],
     "Stormrazor": [("passive", "Bolt", _parse_stormrazor_bolt, {})],

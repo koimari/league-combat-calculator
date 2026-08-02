@@ -167,6 +167,56 @@ def test_loadout_stats_returns_champion_derived_full_matrix():
     assert data["stats"]["magic_resistance"] == 92
 
 
+def test_loadout_stats_exposes_target_item_coverage_without_hiding_the_card():
+    response = app_module.app.test_client().post(
+        "/api/loadout-stats",
+        json={"champion": "Galio", "level": 12, "items": ["Banshee's Veil"]},
+    )
+
+    assert response.status_code == 200
+    coverage = response.get_json()["target_model_coverage"]
+    assert coverage["complete"] is False
+    assert coverage["blocked"][0]["name"] == "Banshee's Veil"
+
+
+def test_calculate_withholds_an_unmodeled_enemy_spell_shield():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "enemies": [
+                {"champion": "Galio", "level": 12, "items": ["Banshee's Veil"]}
+            ],
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Banshee's Veil" in response.get_json()["error"]
+    assert "first-hostile-ability" in response.get_json()["error"]
+
+
+def test_calculate_applies_kaenic_starting_magic_shield():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "enemies": [
+                {"champion": "Kai'Sa", "level": 14, "items": ["Kaenic Rookern"]}
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    target = response.get_json()["targets"][0]
+    expected_shield = target["target"]["stats"]["health"] * 0.15
+    assert target["target"]["starting_defenses"]["magic_shield"] == pytest.approx(
+        expected_shield, abs=0.1
+    )
+    assert target["result"]["magic_shield_absorbed"] > 0
+
+
 def test_calculate_can_sum_one_damage_package_across_enemy_roster():
     client = app_module.app.test_client()
     payload = {

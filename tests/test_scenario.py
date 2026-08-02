@@ -22,13 +22,48 @@ def test_loadout_resolves_level_items_and_health_components():
     )
     assert loadout.defenses.magic_shield == pytest.approx(254.95, abs=0.1)
     assert loadout.defenses.sources[0].revision_id == 3990299
-    assert loadout.defenses.coverage == "modeled_starting_passive"
+    assert loadout.defenses.coverage == "modeled_starting_defenses"
 
 
 def test_unmodeled_starting_defense_is_labeled_base_and_items_only():
     loadout = ChampionLoadout(champion="Kai'Sa", level=14).resolve()
 
     assert loadout.defenses.coverage == "base_and_items_only"
+
+
+def test_kaenic_adds_ready_max_health_magic_shield():
+    loadout = ChampionLoadout(
+        champion="Kai'Sa", level=14, items=("Kaenic Rookern",)
+    ).resolve()
+
+    assert loadout.defenses.magic_shield == pytest.approx(
+        loadout.stats["health"] * 0.15
+    )
+    assert "previous 15 seconds" in loadout.defenses.assumptions[0]
+    assert loadout.defenses.sources[0].revision_id == 3984971
+
+
+def test_spirit_visage_amplifies_champion_and_kaenic_shields():
+    without_visage = ChampionLoadout(
+        champion="Galio", level=12, items=("Kaenic Rookern",)
+    ).resolve()
+    with_visage = ChampionLoadout(
+        champion="Galio",
+        level=12,
+        items=("Kaenic Rookern", "Spirit Visage"),
+    ).resolve()
+
+    # Spirit Visage itself adds health, so compare against the two shield
+    # formulas evaluated from the final build rather than the other loadout.
+    galio_percent = 7.5 + (13.5 - 7.5) * 11 / 17
+    expected_before_amp = with_visage.stats["health"] * (
+        galio_percent / 100 + 0.15
+    )
+    assert with_visage.defenses.magic_shield == pytest.approx(
+        expected_before_amp * 1.25
+    )
+    assert with_visage.defenses.magic_shield > without_visage.defenses.magic_shield
+    assert with_visage.defenses.sources[-1].revision_id == 4016166
 
 
 def test_loadout_level_changes_derived_stats():

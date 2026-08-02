@@ -1,8 +1,10 @@
 """Champion-owned starting defenses compiled from sourced mechanics."""
 
 from dataclasses import dataclass
+from typing import Any, Mapping, Sequence
 
 from .champions.skill_orders import get_ability_rank
+from .item_effects import ITEM_EFFECTS
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +57,20 @@ _GALIO_W_SOURCE = DefenseSource(
     revision_timestamp="2026-02-07T07:08:21Z",
 )
 
+_KAENIC_SOURCE = DefenseSource(
+    label="Kaenic Rookern — Magebane",
+    source_url="https://wiki.leagueoflegends.com/en-us/Kaenic_Rookern",
+    revision_id=3984971,
+    revision_timestamp="2026-01-17T16:04:29Z",
+)
+
+_SPIRIT_VISAGE_SOURCE = DefenseSource(
+    label="Spirit Visage — Boundless Vitality",
+    source_url="https://wiki.leagueoflegends.com/en-us/Spirit_Visage",
+    revision_id=4016166,
+    revision_timestamp="2026-05-09T17:09:08Z",
+)
+
 
 def _galio_starting_defenses(level: int, maximum_health: float) -> StartingDefenses:
     if get_ability_rank("W", level, "Galio") < 1:
@@ -74,8 +90,51 @@ def resolve_starting_defenses(
     champion_name: str,
     level: int,
     stats: dict[str, float],
+    items: Sequence[Mapping[str, Any]] = (),
 ) -> StartingDefenses:
-    """Resolve the champion's default ready-at-start defensive state."""
+    """Resolve sourced champion and item defenses ready at fight start."""
+    champion_defenses = StartingDefenses()
     if champion_name == "Galio":
-        return _galio_starting_defenses(level, stats["health"])
-    return StartingDefenses()
+        champion_defenses = _galio_starting_defenses(level, stats["health"])
+
+    names = {str(item.get("name", "")) for item in items}
+    magic_shield = champion_defenses.magic_shield
+    physical_shield = champion_defenses.physical_shield
+    general_shield = champion_defenses.general_shield
+    assumptions = list(champion_defenses.assumptions)
+    sources = list(champion_defenses.sources)
+
+    if "Kaenic Rookern" in names:
+        ratio = float(
+            ITEM_EFFECTS["Kaenic Rookern"]["magic_shield_max_health_ratio"]
+        )
+        magic_shield += stats["health"] * ratio
+        assumptions.append(
+            "Magebane is ready because the target has not taken magic damage "
+            "during the previous 15 seconds."
+        )
+        sources.append(_KAENIC_SOURCE)
+
+    has_shield = magic_shield > 0 or physical_shield > 0 or general_shield > 0
+    if "Spirit Visage" in names and has_shield:
+        multiplier = float(
+            ITEM_EFFECTS["Spirit Visage"]["shield_received_multiplier"]
+        )
+        magic_shield *= multiplier
+        physical_shield *= multiplier
+        general_shield *= multiplier
+        assumptions.append(
+            "Boundless Vitality increases every modeled starting shield by 25%."
+        )
+        sources.append(_SPIRIT_VISAGE_SOURCE)
+
+    if not sources:
+        return StartingDefenses()
+    return StartingDefenses(
+        magic_shield=magic_shield,
+        physical_shield=physical_shield,
+        general_shield=general_shield,
+        assumptions=tuple(assumptions),
+        sources=tuple(sources),
+        coverage="modeled_starting_defenses",
+    )

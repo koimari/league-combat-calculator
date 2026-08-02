@@ -96,6 +96,63 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
 }
 
 
+# Target loadouts are currently passive recipients of the selected attacker
+# package.  Any equipped mechanic that changes their incoming damage, health,
+# shields, or combat healing must either be represented here or stop the run.
+_TARGET_MODELED_REASONS: dict[str, str] = {
+    "Kaenic Rookern": "Magebane's ready maximum-health magic shield is modelled.",
+    "Spirit Visage": "Boundless Vitality amplifies modelled starting shields.",
+    "Warmog's Armor": (
+        "Warmog's Vitality modifies item health; combat regeneration stays "
+        "inactive while the target is taking damage."
+    ),
+}
+
+_TARGET_BLOCKED_REASONS: dict[str, str] = {
+    "Armored Advance": "Plating's incoming physical-damage reduction is not modelled.",
+    "Banshee's Veil": "Annul's first-hostile-ability spell shield is not modelled.",
+    "Bloodthirster": "Ichorshield's accumulated starting shield is not modelled.",
+    "Celestial Opposition": (
+        "Blessing of the Mountain's opening damage reduction is not modelled."
+    ),
+    "Chainlaced Crushers": "Noxian Persistence's magic shield is not modelled.",
+    "Death's Dance": "Ignore Pain's damage deferral is not modelled.",
+    "Doran's Shield": "Endure's combat health regeneration is not modelled.",
+    "Eclipse": "Ever Rising Moon's target-side shield trigger is not modelled.",
+    "Edge of Night": "Annul's first-hostile-ability spell shield is not modelled.",
+    "Fimbulwinter": "Awe bonus health and Everlasting shields are not modelled.",
+    "Force of Nature": "Steadfast's combat magic-resistance stacks are not modelled.",
+    "Frozen Heart": "Winter's Caress attack-speed reduction is not modelled.",
+    "Guardian Angel": "Rebirth is not modelled in target health damage.",
+    "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
+    "Heartsteel": "Permanent Colossal Consumption health stacks are not modelled.",
+    "Hexdrinker": "Lifeline's low-health magic shield is not modelled.",
+    "Immortal Shieldbow": "Lifeline's low-health shield is not modelled.",
+    "Jak'Sho, The Protean": "Voidborn Resilience's combat resist stacks are not modelled.",
+    "Knight's Vow": "Pledge damage redirection and healing are not modelled.",
+    "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",
+    "Maw of Malmortius": "Lifeline's low-health magic shield is not modelled.",
+    "Mikael's Blessing": "Purify's activated heal is not modelled.",
+    "Plated Steelcaps": "Plating's incoming basic-damage reduction is not modelled.",
+    "Protoplasm Harness": "Lifeline's low-health shield is not modelled.",
+    "Randuin's Omen": "Resilience's incoming critical-strike reduction is not modelled.",
+    "Redemption": "Intervention's activated target healing is not modelled.",
+    "Rod of Ages": "Timeless health stacks are not exposed as target state.",
+    "Seeker's Armguard": "Time Stop's stasis is not modelled.",
+    "Seraph's Embrace": "Lifeline's low-health mana shield is not modelled.",
+    "Spectre's Cowl": "Incorporeal's post-damage regeneration is not modelled.",
+    "Sterak's Gage": "Lifeline's low-health shield is not modelled.",
+    "Sundered Sky": "Lightshield Strike's target-side healing is not modelled.",
+    "Thornmail": "Thorns' reactive damage and attacker survival are not modelled.",
+    "Unending Despair": "Anguish's periodic combat healing is not modelled.",
+    "Verdant Barrier": "Annul's spell shield is not modelled.",
+    "Warden's Mail": "Rock Solid's incoming basic-damage reduction is not modelled.",
+    "Whispering Circlet": "Manaflow health state is not exposed for target modelling.",
+    "Winter's Approach": "Awe and Manaflow health state are not modelled.",
+    "Zhonya's Hourglass": "Time Stop's stasis is not modelled.",
+}
+
+
 def _has_described_effect(item: dict[str, Any]) -> bool:
     """Return whether cached Wiki data describes a passive or active."""
     return bool(item.get("passives") or item.get("active") or item.get("actives"))
@@ -104,7 +161,10 @@ def _has_described_effect(item: dict[str, Any]) -> bool:
 def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     """Return the optimiser coverage classification for one resolved item."""
     name = str(item.get("name", ""))
-    if name in ITEM_EFFECTS:
+    if ITEM_EFFECTS.get(name, {}).get("type") == "defensive_start":
+        status: ItemCoverageStatus = "stats_only"
+        reason = "The represented mechanic changes defense, not outgoing TDD."
+    elif name in ITEM_EFFECTS:
         status: ItemCoverageStatus = "modeled_effect"
         reason = "Damage-relevant effects are represented by the fight model."
     elif name in ITEM_INPUT_OPTIONS:
@@ -130,6 +190,59 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
         in {"modeled_effect", "modeled_state", "stats_only"},
         "reason": reason,
     }
+
+
+def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
+    """Classify one item for use on a passive enemy target."""
+    name = str(item.get("name", ""))
+    if name in _TARGET_MODELED_REASONS:
+        status = "modeled"
+        reason = _TARGET_MODELED_REASONS[name]
+    elif name in _TARGET_BLOCKED_REASONS:
+        status = "blocked"
+        reason = _TARGET_BLOCKED_REASONS[name]
+    elif item_model_coverage(item)["status"] == "review_pending":
+        status = "review_pending"
+        reason = "This passive or active has not been reviewed for target durability."
+    else:
+        status = "not_target_relevant"
+        reason = (
+            "No reviewed effect on this item changes incoming damage or starting "
+            "durability in the passive-target model."
+        )
+    return {
+        "name": name,
+        "status": status,
+        "calculation_eligible": status not in {"blocked", "review_pending"},
+        "reason": reason,
+    }
+
+
+def target_build_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarise whether a target inventory is safe to calculate."""
+    entries = [target_item_model_coverage(item) for item in items]
+    blocked = [entry for entry in entries if not entry["calculation_eligible"]]
+    return {
+        "complete": not blocked,
+        "model": "passive_target",
+        "items": entries,
+        "blocked": blocked,
+        "note": (
+            "Every equipped item is supported by the passive-target model."
+            if not blocked
+            else "Calculation is withheld until the named target mechanic is modelled."
+        ),
+    }
+
+
+def require_target_item_coverage(items: list[dict[str, Any]]) -> None:
+    """Reject target inventories that would silently omit a defense."""
+    coverage = target_build_coverage(items)
+    if coverage["blocked"]:
+        blocked = coverage["blocked"][0]
+        raise ValueError(
+            f"Enemy item {blocked['name']} is not supported yet: {blocked['reason']}"
+        )
 
 
 def optimizer_candidate_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
@@ -175,4 +288,7 @@ __all__ = [
     "optimizer_candidate_coverage",
     "optimizer_supported_items",
     "require_optimizer_item_coverage",
+    "require_target_item_coverage",
+    "target_build_coverage",
+    "target_item_model_coverage",
 ]

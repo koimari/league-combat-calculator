@@ -26,7 +26,7 @@ from calculator.data_fetcher import (
     get_item_by_name,
 )
 from calculator.item_effects import item_input_options_meta, refresh_item_effects
-from calculator.item_coverage import item_model_coverage
+from calculator.item_coverage import item_model_coverage, require_target_item_coverage
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import validate_resolved_loadout
 from calculator.champions import champion_options_meta_map, registered_champion_names
@@ -839,9 +839,13 @@ def api_calculate():
     try:
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
+        for enemy in enemies:
+            require_target_item_coverage(list(enemy.item_data))
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
 
     rate_limit_response = _spend_rate_limit("calculate")
     if rate_limit_response is not None:
@@ -1030,9 +1034,13 @@ def api_optimize():
     try:
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
+        for enemy in enemies:
+            require_target_item_coverage(list(enemy.item_data))
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
 
     ally_effects = tuple(
         effect

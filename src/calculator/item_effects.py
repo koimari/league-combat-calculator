@@ -646,6 +646,19 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "stat_conversion",
         "base_ad_to_bonus_ad_ratio": 0.45,
     },
+    "Warmog's Armor": {
+        "type": "stat_conversion",
+        "item_bonus_health_ratio": 0.12,
+    },
+    # ── Starting defenses (consumed by defensive_effects.py) ─────────────
+    "Kaenic Rookern": {
+        "type": "defensive_start",
+        "magic_shield_max_health_ratio": 0.15,
+    },
+    "Spirit Visage": {
+        "type": "defensive_start",
+        "shield_received_multiplier": 1.25,
+    },
     "Stormrazor": {
         "type": "on_hit_once",
         "formula": "flat",
@@ -1789,6 +1802,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "conditional_attack_speed",
         "crit_modifier",
         "damage_amp",
+        "defensive_start",
         "execute",
         "first_auto_crit",
         "hypershot_amp",
@@ -2257,6 +2271,7 @@ class StatBonuses:
     bonus_pen_percent: float  # Terminus dark stacks (armor AND magic pen)
     basic_ability_haste: float  # Spear of Shojin (Q/W/E only)
     bonus_move_speed_percent: float  # Mejai's 10+ Glory
+    item_bonus_health_multiplier: float  # Warmog's Vitality (1.0 = none)
 
 
 def resolve_stat_effects(
@@ -2281,6 +2296,12 @@ def resolve_stat_effects(
     """
     terminus_resists, terminus_pen = _terminus_max_stack_bonuses(items, level)
     input_bonus_ap, input_move_speed = _input_option_stat_bonuses(items, item_options)
+    item_bonus_health_multiplier = 1.0
+    if "Warmog's Armor" in _item_names(items):
+        item_bonus_health_multiplier += _required_effect_value(
+            "Warmog's Armor", "item_bonus_health_ratio"
+        )
+    effective_bonus_health = bonus_health * item_bonus_health_multiplier
     return StatBonuses(
         bonus_ap=(
             _mana_to_ap_bonus(items, bonus_mana)
@@ -2291,7 +2312,7 @@ def resolve_stat_effects(
         ap_multiplier=_ap_multiplier(items),
         bonus_ad=(
             _muramana_bonus_ad(items, max_mana)
-            + bloodmail_bonus_ad(items, bonus_health)
+            + bloodmail_bonus_ad(items, effective_bonus_health)
             + steraks_bonus_ad(items, base_attack_damage)
         ),
         attack_speed_percent=_passive_attack_speed_bonus(items, is_melee),
@@ -2299,4 +2320,5 @@ def resolve_stat_effects(
         bonus_pen_percent=terminus_pen,
         basic_ability_haste=_basic_ability_haste(items),
         bonus_move_speed_percent=input_move_speed,
+        item_bonus_health_multiplier=item_bonus_health_multiplier,
     )

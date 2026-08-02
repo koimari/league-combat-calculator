@@ -6,6 +6,9 @@ from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
     item_model_coverage,
     optimizer_candidate_coverage,
+    require_target_item_coverage,
+    target_build_coverage,
+    target_item_model_coverage,
 )
 from src.calculator.optimizer import (
     get_eligible_boots,
@@ -91,3 +94,40 @@ def test_optimizer_rejects_a_locked_item_with_unmodeled_damage_mechanics():
             locked_items=["Runaan's Hurricane"],
             locked_boots="Sorcerer's Shoes",
         )
+
+
+@pytest.mark.parametrize(
+    ("item_name", "status"),
+    [
+        ("Kaenic Rookern", "modeled"),
+        ("Spirit Visage", "modeled"),
+        ("Warmog's Armor", "modeled"),
+        ("Banshee's Veil", "blocked"),
+        ("Plated Steelcaps", "blocked"),
+        ("Void Staff", "not_target_relevant"),
+    ],
+)
+def test_target_item_coverage_is_mechanic_specific(item_name, status):
+    coverage = target_item_model_coverage(get_item_by_name(item_name))
+
+    assert coverage["status"] == status
+    assert coverage["calculation_eligible"] is (status != "blocked")
+
+
+def test_target_build_coverage_and_guard_name_the_omitted_defense():
+    items = [get_item_by_name("Kaenic Rookern"), get_item_by_name("Banshee's Veil")]
+    coverage = target_build_coverage(items)
+
+    assert coverage["complete"] is False
+    assert [entry["name"] for entry in coverage["blocked"]] == ["Banshee's Veil"]
+    with pytest.raises(ValueError, match="Annul's first-hostile-ability"):
+        require_target_item_coverage(items)
+
+
+def test_unknown_target_passive_fails_closed():
+    item = {"name": "Future Bulwark", "passives": [{"name": "Unknown"}]}
+
+    coverage = target_item_model_coverage(item)
+
+    assert coverage["status"] == "review_pending"
+    assert coverage["calculation_eligible"] is False
