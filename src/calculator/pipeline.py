@@ -25,7 +25,8 @@ from .damage import (
     split_by_damage_type,
 )
 from .item_effects import resolve_damage_effects, validate_item_input_options
-from .role_quests import validate_role
+from .healing import derive_self_healing
+from .role_quests import max_champion_level, validate_role
 from .rune_effects import validate_keystone_request
 from .stats import calculate_total_stats
 
@@ -214,6 +215,10 @@ class FightParams(FightConfig):
         three-rank ultimate layout. Transformation and auto-levelled kits fail
         closed until their individual allocation rules are represented.
         """
+        if level > max_champion_level(self.role, self.role_quest_complete):
+            raise ValueError(
+                f"Level {level} requires the completed top role quest"
+            )
         supported_modes = get_supported_fight_modes(champion_name)
         requested_mode = (
             "one_rotation"
@@ -340,6 +345,18 @@ def run_fight(
         replace(params, enforce_resource_limits=True),
     )
     result["champion_stats"] = fight_stats
+    result["self_healing_events"] = derive_self_healing(
+        champion_data,
+        fight_stats,
+        ability_damages,
+        list(result.get("damage_events", [])),
+        list(result.get("cast_timeline", [])),
+        params.fight_duration_seconds,
+    )
+    result["self_healing"] = sum(
+        float(event.get("amount", 0.0))
+        for event in result["self_healing_events"]
+    )
     auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
     result["auto_attack_damage"] = auto_damage
     result["ability_damage"] = ability_damage

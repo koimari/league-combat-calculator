@@ -87,6 +87,11 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "total_ticks",
         "tibbers_aura",
         "initial_burst",
+        # Authored event ledgers for fixed-count effects.  These are copied
+        # into the damage timeline by the fight engine; they are not inferred
+        # from aggregate totals.
+        "damage_events",
+        "event_phase",
     }
 )
 

@@ -89,10 +89,15 @@ def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "magic",
         "total_raw": r1_damage + r2_max,
         "parts": (
-            DamagePart("magic", r1_damage),
+            DamagePart("magic", r1_damage, time_offset=0.25),
             DamagePart(
                 "magic",
                 hp_scaled_damage=lambda missing: r2_min + span * missing,
+                # The Wiki documents a 2.5-second static recast lockout;
+                # include the 0.25-second cast start so R2 is ordered after
+                # R1 in the shared event ledger rather than collapsing both
+                # hits into one cast-boundary row.
+                time_offset=2.75,
             ),
         ),
     }
@@ -124,6 +129,7 @@ SLOTS = {
         per_proc=_assassins_mark_damage,
         dmg_type="magic",
         count_option="passive_procs",
+        phase_order_events=True,
     ),
 }
 

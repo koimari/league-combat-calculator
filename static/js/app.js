@@ -9,6 +9,7 @@ const ABILITY_SLOTS = ["P", "Q", "W", "E", "R"];
 const engine = {
   ready: false,
   reviewed: new Set(),
+  backend: new Set(),
   availability: new Map(),
   itemOptions: {},
   championOptions: {},
@@ -32,6 +33,8 @@ const state = {
     buildBStacks: [0, 0, 0, 0, 0, 0],
     questBootA: 0,
     questBootB: 0,
+    includeBootsA: true,
+    includeBootsB: true,
     keystoneA: "",
     keystoneB: "",
     comparisonEnabled: false,
@@ -44,7 +47,7 @@ const state = {
   targets: [],
   allies: [],
   fight: { rotations: 1, duration: 10, aaUptime: 0 },
-  optimizer: { running: false, summary: null },
+  optimizer: { running: false, summary: null, scope: null },
 };
 
 const TIER_TWO_BOOTS = [3006, 3009, 3008, 3158, 3111, 3047, 3020];
@@ -79,11 +82,72 @@ function mergeAbilityCatalog(catalog) {
       formulaReviewed: formulaBySlot.has(ability.slot),
       source: catalog.source,
     }));
+    champion.abilities = (champion.abilities || []).map((ability) => ({
+      ...ability,
+      formulaSource: ability.formulaSource || "Patch client formula graph",
+    }));
   });
 }
 
+function wikiDamageType(type) {
+  const normalized = String(type || "").toUpperCase();
+  if (normalized.includes("TRUE")) return "true";
+  if (normalized.includes("MAGIC")) return "magical";
+  if (normalized.includes("PHYSICAL")) return "physical";
+  return null;
+}
+
+function wikiFallbackVariant(form, packet = null) {
+  const source = packet || (form?.packets || []).find((entry) => wikiDamageType(entry?.damageType));
+  const ratios = source?.ratios || {};
+  const levelScaled = Array.isArray(source?.base) && source.base.length > 6;
+  return {
+    name: packet?.attribute || form?.name || "Wiki-derived form",
+    levelBase: levelScaled ? source.base : undefined,
+    base: levelScaled ? undefined : (source?.base || []),
+    ap: ratios.ap,
+    ad: ratios.ad,
+    bonusAd: ratios.bonusAd,
+    targetMaxHp: ratios.targetMaxHp,
+    targetCurrentHp: ratios.targetCurrentHp,
+    targetMissingHp: ratios.targetMissingHp,
+    packets: source ? [{ type: wikiDamageType(source.damageType) }] : [],
+  };
+}
+
+function wikiFallbackAbility(slot, forms, metadata) {
+  const normalized = (forms || []).flatMap((form) => {
+    const packets = (form.packets || []).filter((packet) => wikiDamageType(packet?.damageType));
+    return packets.length ? packets.map((packet) => wikiFallbackVariant(form, packet)) : [wikiFallbackVariant(form)];
+  });
+  const first = normalized[0] || { name: metadata?.name || slot, packets: [] };
+  return {
+    slot,
+    name: metadata?.name || first.name || slot,
+    icon: metadata?.icon || "",
+    maxRank: Math.max(...(forms || []).map((form) => Number(form.maxRank) || (slot === "R" ? 3 : slot === "P" ? 1 : 5)), slot === "R" ? 3 : slot === "P" ? 1 : 5),
+    variants: normalized.length ? normalized : [first],
+    formulaSource: "Wiki-derived local cache",
+    wikiDescription: metadata?.description || metadata?.blurb || "",
+  };
+}
+
 function mergeBisProfiles(profiles) {
-  if (profiles?.champions && typeof profiles.champions === "object") BIS_PROFILES = profiles.champions;
+  if (!profiles?.champions || typeof profiles.champions !== "object") return;
+  BIS_PROFILES = profiles.champions;
+  if (!DATA?.champions?.length) return;
+  DATA.champions.forEach((champion) => {
+    const profile = BIS_PROFILES[champion.name];
+    if (!profile?.abilities) return;
+    const existing = new Map((champion.abilities || []).map((ability) => [ability.slot, ability]));
+    const metadata = new Map((champion.ingestedAbilities || []).map((ability) => [ability.slot, ability]));
+    Object.entries(profile.abilities).forEach(([slot, forms]) => {
+      if (existing.has(slot)) return;
+      existing.set(slot, wikiFallbackAbility(slot, forms, metadata.get(slot)));
+    });
+    champion.abilities = ABILITY_SLOTS.map((slot) => existing.get(slot)).filter(Boolean);
+    champion.wikiAbilitySlots = champion.abilities.filter((ability) => ability.formulaSource === "Wiki-derived local cache").map((ability) => ability.slot);
+  });
 }
 
 function mergeEffectCatalog(catalog) {
@@ -103,12 +167,26 @@ function activeAbilityKit() {
 }
 
 function resetAbilityInputs() {
+  const defaultRanks = defaultAbilityRanks({
+    champion: state.attacker.champion,
+    level: state.attacker.level,
+  });
   state.attacker.abilityInputs = Object.fromEntries(activeAbilityKit().map((ability) => [ability.slot, {
-    rank: 1,
+    rank: ability.slot === "P" ? 1 : Number(defaultRanks[ability.slot] || 0),
     casts: 1,
     hits: 1,
     variant: 0,
   }]));
+}
+
+function syncAbilityInputsToLevel() {
+  if (!state.attacker.champion) return;
+  const defaultRanks = defaultAbilityRanks(state.attacker);
+  activeAbilityKit().forEach((ability) => {
+    const input = abilityInput(ability.slot);
+    input.rank = ability.slot === "P" ? 1 : Number(defaultRanks[ability.slot] || 0);
+    state.attacker.abilityInputs[ability.slot] = input;
+  });
 }
 
 function abilityInput(slot) {
@@ -142,6 +220,31 @@ function setPath(path, nextValue) {
   const parts = path.split(".");
   const last = parts.pop();
   const parent = parts.reduce((value, part) => value[Number.isNaN(Number(part)) ? part : Number(part)], state);
+  // Keep boots in the dedicated field even if a stale browser state or an
+  // older picker path tries to write a boots id into an ordinary item slot.
+  // The backend rejects that inventory, so normalize it before any request
+  // can reach the coupled optimizer.
+  if (parts.at(-1) === "items" && ALL_ROLE_BOOTS.has(Number(nextValue))) {
+    const index = Number(parts[1]);
+    if (parts[0] === "targets" || parts[0] === "allies") {
+      const loadout = state[parts[0]]?.[index];
+      if (loadout) {
+        loadout.boots = Number(nextValue);
+        loadout.includeBoots = true;
+        parent[Number(last)] = 0;
+        invalidateOptimization();
+        return;
+      }
+    }
+  }
+  if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB") && ALL_ROLE_BOOTS.has(Number(nextValue))) {
+    const side = parts[1].slice(-1);
+    state.attacker[`questBoot${side}`] = Number(nextValue);
+    state.attacker[`includeBoots${side}`] = true;
+    parent[Number(last)] = 0;
+    invalidateOptimization();
+    return;
+  }
   parent[Number.isNaN(Number(last)) ? last : Number(last)] = nextValue;
   invalidateOptimization();
 }
@@ -156,8 +259,8 @@ function stackValue(path) {
   const parts = path.split(".");
   if (parts[0] === "attacker" && parts[1] === "buildA") return state.attacker.buildAStacks[Number(parts[2])] || 0;
   if (parts[0] === "attacker" && parts[1] === "buildB") return state.attacker.buildBStacks[Number(parts[2])] || 0;
-  if (parts[0] === "targets") return state.targets[Number(parts[1])]?.itemStacks?.[Number(parts[3])] || 0;
-  if (parts[0] === "allies") return state.allies[Number(parts[1])]?.itemStacks?.[Number(parts[3])] || 0;
+  if (parts[0] === "targets" && parts[2] === "items") return state.targets[Number(parts[1])]?.itemStacks?.[Number(parts[3])] || 0;
+  if (parts[0] === "allies" && parts[2] === "items") return state.allies[Number(parts[1])]?.itemStacks?.[Number(parts[3])] || 0;
   return 0;
 }
 
@@ -165,8 +268,8 @@ function setStackValue(path, value) {
   const parts = path.split(".");
   if (parts[0] === "attacker" && parts[1] === "buildA") state.attacker.buildAStacks[Number(parts[2])] = value;
   else if (parts[0] === "attacker" && parts[1] === "buildB") state.attacker.buildBStacks[Number(parts[2])] = value;
-  else if (parts[0] === "targets") state.targets[Number(parts[1])].itemStacks[Number(parts[3])] = value;
-  else if (parts[0] === "allies") state.allies[Number(parts[1])].itemStacks[Number(parts[3])] = value;
+  else if (parts[0] === "targets" && parts[2] === "items") state.targets[Number(parts[1])].itemStacks[Number(parts[3])] = value;
+  else if (parts[0] === "allies" && parts[2] === "items") state.allies[Number(parts[1])].itemStacks[Number(parts[3])] = value;
   invalidateOptimization();
 }
 
@@ -237,8 +340,17 @@ function usesQuestBootSlot() {
   return state.attacker.roleQuestComplete && ["mid", "bottom"].includes(state.attacker.role);
 }
 
-function ordinarySlotCount() {
-  return state.attacker.role === "mid" && state.attacker.roleQuestComplete ? 5 : 6;
+function attackerLevelCap() {
+  return state.attacker.role === "top" && state.attacker.roleQuestComplete ? 20 : 18;
+}
+
+function ordinarySlotCount(side = "A") {
+  if (state.attacker.role === "bottom" && state.attacker.roleQuestComplete) return 6;
+  return includeBootsForSide(side) ? 5 : 6;
+}
+
+function includeBootsForSide(side) {
+  return side === "B" ? state.attacker.includeBootsB : state.attacker.includeBootsA;
 }
 
 function questBootIds() {
@@ -345,11 +457,16 @@ function rosterCard(loadout, index, kind) {
   const isAlly = kind === "ally";
   const root = isAlly ? "allies" : "targets";
   const label = isAlly ? "ally" : "enemy";
-  const stats = championStats(loadout.champion, loadout.level, loadout.items, loadout.itemStacks);
+  const statItemIds = loadout.items.slice(0, loadout.includeBoots ? 5 : 6);
+  if (loadout.includeBoots && loadout.boots) statItemIds.push(loadout.boots);
+  const stats = championStats(loadout.champion, loadout.level, statItemIds, loadout.itemStacks);
   const champion = getChampion(loadout.champion);
   const effectToggle = isAlly
     ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
     : "";
+  const path = `${root}.${index}`;
+  const rosterReady = Boolean(loadout.champion && bisReadyForPath(path));
+  const itemSlotCount = loadout.includeBoots ? 5 : 6;
   return `<article class="target-card ${isAlly ? "ally-card" : ""}">
     <header>
       <button class="target-pick ${champion ? "" : "empty-pick"}" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(loadout.champion)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(loadout.champion)}" alt="" />` : "+"}</button>
@@ -357,7 +474,9 @@ function rosterCard(loadout, index, kind) {
       <div class="target-level"><button type="button" data-level="${root}.${index}.level" data-delta="-1" aria-label="Decrease level">−</button><output>Lv ${loadout.level}</output><button type="button" data-level="${root}.${index}.level" data-delta="1" aria-label="Increase level">+</button></div>
       <button class="remove-target" type="button" ${isAlly ? `data-remove-ally="${index}"` : `data-remove-target="${index}"`} aria-label="Remove ${escapeHtml(loadout.champion || `${label} slot`)}">×</button>
     </header>
-    <div class="target-build">${loadout.items.map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true, true)).join("")}</div>
+    <div class="target-build">${loadout.items.slice(0, itemSlotCount).map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true, true)).join("")}${loadout.includeBoots ? itemSlot(`${root}.${index}.boots`, loadout.boots, true, true) : ""}</div>
+    <button class="boots-toggle ${loadout.includeBoots ? "active" : ""}" type="button" data-include-roster-boots="${root}.${index}" aria-pressed="${Boolean(loadout.includeBoots)}">${loadout.includeBoots ? "Boots included" : "No boots"}</button>
+    <div class="roster-build-actions"><button class="optimize-build roster-optimize" type="button" data-optimize-roster="${path}" ${rosterReady && !state.optimizer.running ? "" : "disabled"}>Optimize build</button></div>
     ${rosterAbilityRankControls(loadout, index, root)}
     ${effectToggle}
     ${champion ? statMatrix(stats, null, true) : `<div class="matrix-placeholder">Choose a champion to show the full stat matrix.</div>`}
@@ -392,7 +511,7 @@ function renderAbilityPackage(champion) {
     if (!ability) {
       const description = ingested?.blurb || ingested?.description || "Ability metadata was ingested, but its exact combat formula is not reviewed yet.";
       return `<article class="ability-row ability-withheld" title="${escapeHtml(ingested?.description || description)}">
-        <div class="ability-name"><img src="${abilityImage(ingested)}" alt="" /><b>${slot}</b><span><strong>${escapeHtml(ingested?.name || slot)}</strong><small>Ingested · exact formula withheld</small></span></div>
+        <div class="ability-name"><img src="${abilityImage(ingested)}" alt="" /><b>${slot}</b><span><strong>${escapeHtml(ingested?.name || slot)}</strong><small>Wiki description ingested · numeric packet pending</small></span></div>
         <p class="ability-note">${escapeHtml(description)}</p>
       </article>`;
     }
@@ -405,16 +524,20 @@ function renderAbilityPackage(champion) {
       ? stepper("Mines hit", input.hits, `data-ability-hits="${ability.slot}"`, input.hits <= 1, input.hits >= ability.maxHits)
       : "";
     const variants = ability.variants.length > 1 ? `<div class="ability-variants">${ability.variants.map((variant, index) => `<button type="button" data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</div>` : `<small>${escapeHtml(ability.variants[0].name)}</small>`;
+    const sourceLabel = ability.formulaSource === "Wiki-derived local cache" ? "Wiki-derived formula" : "Reviewed formula";
     return `<article class="ability-row">
       <div class="ability-name"><img src="${abilityImage(ability)}" alt="" /><b>${ability.slot}</b><span><strong>${escapeHtml(ability.name)}</strong>${variants}</span></div>
       ${rankControl}
       ${stepper(ability.slot === "P" ? "Procs" : "Casts", input.casts, `data-ability-casts="${ability.slot}"`, input.casts <= 0, input.casts >= 10)}
       ${hitControl}
+      <small class="ability-source">${sourceLabel}</small>
     </article>`;
   }).join("");
-  const sourced = coverage?.supported ?? formulaBySlot.size;
-  const withheld = coverage?.withheld?.length ? ` · withheld ${coverage.withheld.join("/")}` : "";
-  return `<div class="ability-package"><div class="ability-package-head"><div><strong>Ability catalogue</strong><span>${sourced} reviewed formulas · ${ingestedBySlot.size}/5 metadata ingested${withheld}</span></div><small>${escapeHtml(champion.ingestedAbilities?.[0]?.source?.kind || champion.source?.label || "Patch data")}</small></div><div class="ability-rows" style="--ability-count:5">${rows}</div></div>`;
+  const reviewed = [...formulaBySlot.values()].filter((ability) => ability.formulaSource !== "Wiki-derived local cache").length;
+  const wikiFormulas = [...formulaBySlot.values()].filter((ability) => ability.formulaSource === "Wiki-derived local cache" && ability.variants?.some((variant) => variant.packets?.length)).length;
+  const wikiDescriptions = [...formulaBySlot.values()].filter((ability) => ability.formulaSource === "Wiki-derived local cache" && !ability.variants?.some((variant) => variant.packets?.length)).length;
+  const withheld = coverage?.withheld?.filter((slot) => !formulaBySlot.has(slot)).length ? ` · pending ${coverage.withheld.filter((slot) => !formulaBySlot.has(slot)).join("/")}` : "";
+  return `<div class="ability-package"><div class="ability-package-head"><div><strong>Ability catalogue</strong><span>${reviewed} reviewed formulas · ${wikiFormulas} Wiki formulas · ${wikiDescriptions} Wiki descriptions · ${ingestedBySlot.size}/5 metadata ingested${withheld}</span></div><small>${escapeHtml(champion.ingestedAbilities?.[0]?.source?.kind || champion.source?.label || "Patch data")}</small></div><div class="ability-rows" style="--ability-count:5">${rows}</div></div>`;
 }
 
 function roleQuestNote() {
@@ -422,6 +545,7 @@ function roleQuestNote() {
   if (!state.attacker.roleQuestComplete) return "Role quest not completed.";
   if (state.attacker.role === "mid") return "+8% bonus AD and AP · Tier 3 boots use one of six slots.";
   if (state.attacker.role === "bottom") return "Six item slots · boots move into the dedicated quest slot.";
+  if (state.attacker.role === "top") return "+600 XP · +12.5% future XP · level cap 20 · no item-slot change.";
   if (state.attacker.role === "support") return "Reserved ward / support quest slot · excluded from damage scoring.";
   if (state.attacker.role === "top") return "Level cap raised to 20 · no item-slot change.";
   return "No item-slot change for this role.";
@@ -461,15 +585,15 @@ function keystoneSlot(side) {
 
 function renderBuildStrip(side) {
   const build = buildArray(side);
-  const normalSlots = Array.from({ length: ordinarySlotCount() }, (_, index) => itemSlot(`attacker.build${side}.${index}`, build[index], false, true)).join("");
-  const boot = usesQuestBootSlot()
-    ? `<div class="quest-item"><span>${state.attacker.role === "mid" ? "Tier 3 boots" : "Boots slot"}</span>${itemSlot(questBootPath(side), state.attacker[`questBoot${side}`], false, true)}</div>`
+  const normalSlots = Array.from({ length: ordinarySlotCount(side) }, (_, index) => itemSlot(`attacker.build${side}.${index}`, build[index], false, true)).join("");
+  const boot = includeBootsForSide(side)
+    ? `<div class="quest-item"><span>${state.attacker.role === "mid" && usesQuestBootSlot() ? "Tier 3 boots" : "Boots"}</span>${itemSlot(questBootPath(side), state.attacker[`questBoot${side}`], false, true)}</div>`
     : "";
   const support = state.attacker.role === "support" && state.attacker.roleQuestComplete
     ? `<div class="utility-slot" title="This slot is not included in damage scoring"><span>Quest / wards</span><b>◆</b><small>Utility</small></div>`
     : "";
   return `<div class="complete-build build-${side.toLowerCase()}">
-    <div class="complete-build-head"><strong>Build ${side}</strong><span>${ordinarySlotCount() + (usesQuestBootSlot() ? 1 : 0)} combat ${plural(ordinarySlotCount() + (usesQuestBootSlot() ? 1 : 0), "slot")} + keystone${support ? " + utility" : ""}</span></div>
+    <div class="complete-build-head"><strong>Build ${side}</strong><span>${ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0)} combat ${plural(ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0), "slot")} + keystone${support ? " + utility" : ""}</span><button class="boots-toggle ${includeBootsForSide(side) ? "active" : ""}" type="button" data-include-boots="${side}" aria-pressed="${includeBootsForSide(side)}">${includeBootsForSide(side) ? "Boots included" : "No boots"}</button></div>
     <div class="hero-slots">${normalSlots}${boot}${keystoneSlot(side)}${support}</div>
   </div>`;
 }
@@ -482,7 +606,7 @@ function renderBuilder() {
   const optimizePackageReady = optimizerDamagePackageReady();
   const optimizeReady = Boolean(attacker.champion && optimizePackageReady && state.targets.length && state.targets.every((target) => target.champion));
   const optimizerSummary = state.optimizer.summary
-    ? `<div class="optimizer-summary"><strong>${state.optimizer.summary.tested.toLocaleString("en-US")} builds · ${one(state.optimizer.summary.elapsedMs)} ms</strong><span>Build A now shows the complete highest-damage build.</span></div>`
+    ? `<div class="optimizer-summary"><strong>${state.optimizer.summary.tested.toLocaleString("en-US")} builds · ${one(state.optimizer.summary.elapsedMs)} ms</strong><span>${escapeHtml(state.optimizer.summary.label || "Build A now shows the complete highest-damage build.")}</span></div>`
     : "";
   $("builder").innerHTML = `
     <section class="board-section hero-section">
@@ -505,11 +629,11 @@ function renderBuilder() {
       </div>
     </section>
     <section class="board-section">
-      <div class="section-bar"><h2>Enemy roster</h2><div class="section-actions"><small>${state.targets.length}/5 · every card includes full stats</small><button class="text-button" type="button" data-add-target ${state.targets.length >= 5 ? "disabled" : ""}>+ Add enemy</button></div></div>
+      <div class="section-bar"><h2>Enemy roster</h2><div class="section-actions"><small>${state.targets.length}/5 · every card includes full stats</small><button class="text-button" type="button" data-optimize-roster-all="targets" ${state.targets.some((target) => target.champion) && !state.optimizer.running ? "" : "disabled"}>Optimize all enemies</button><button class="text-button" type="button" data-add-target ${state.targets.length >= 5 ? "disabled" : ""}>+ Add enemy</button></div></div>
       <div class="target-grid">${state.targets.length ? state.targets.map(targetCard).join("") : `<div class="empty-roster">Add an enemy champion to begin.</div>`}</div>
     </section>
     <section class="board-section">
-      <div class="section-bar"><h2>Allied context</h2><div class="section-actions"><small>${state.allies.length}/4 · buffs are opt-in and sourced</small><button class="text-button" type="button" data-add-ally ${state.allies.length >= 4 ? "disabled" : ""}>+ Add ally</button></div></div>
+      <div class="section-bar"><h2>Allied context</h2><div class="section-actions"><small>${state.allies.length}/4 · buffs are opt-in and sourced</small><button class="text-button" type="button" data-optimize-roster-all="allies" ${state.allies.some((ally) => ally.champion) && !state.optimizer.running ? "" : "disabled"}>Optimize all allies</button><button class="text-button" type="button" data-add-ally ${state.allies.length >= 4 ? "disabled" : ""}>+ Add ally</button></div></div>
       <div class="target-grid">${state.allies.length ? state.allies.map(allyCard).join("") : `<div class="empty-roster">Add an ally to include their build and any explicitly modeled outgoing effect.</div>`}</div>
     </section>
     <section class="board-section">
@@ -570,7 +694,16 @@ function abilityDamageRows(attackerStats, targetStats) {
     const apRatio = rankedValue(variant.ap, rank, levelScaled);
     const adRatio = rankedValue(variant.ad, rank, levelScaled);
     const bonusAdRatio = rankedValue(variant.bonusAd, rank, levelScaled);
-    const oneHit = base + apRatio * attackerStats.ap + adRatio * attackerStats.ad + bonusAdRatio * Math.max(0, attackerStats.ad - baseChampion.ad);
+    const targetMaxHpRatio = rankedValue(variant.targetMaxHp, rank, levelScaled);
+    const targetCurrentHpRatio = rankedValue(variant.targetCurrentHp, rank, levelScaled);
+    const targetMissingHpRatio = rankedValue(variant.targetMissingHp, rank, levelScaled);
+    const oneHit = base
+      + apRatio * attackerStats.ap
+      + adRatio * attackerStats.ad
+      + bonusAdRatio * Math.max(0, attackerStats.ad - baseChampion.ad)
+      + targetMaxHpRatio * targetStats.hp
+      + targetCurrentHpRatio * targetStats.hp
+      + targetMissingHpRatio * Math.max(0, targetStats.hp * 0.15);
     const hits = ability.maxHits ? input.hits : 1;
     const hitFactor = ability.subsequentMultiplier ? 1 + Math.max(0, hits - 1) * ability.subsequentMultiplier : hits;
     const raw = oneHit * hitFactor * input.casts;
@@ -594,6 +727,19 @@ function addBreakdown(map, source, detail, damage, kind = "ability") {
   map.set(key, row);
 }
 
+function allyStatBonuses() {
+  return state.allies.filter((ally) => ally.champion && ally.allyEffectsEnabled).reduce((total, ally) => {
+    // This mirrors the sourced frontend boundary in src/calculator/ally_effects.py:
+    // Staff of Flowing Water applies its 40 AP + 15 haste window after the
+    // ally heals or shields the attacker immediately before the fight.
+    if (ally.items.includes(6616)) {
+      total.ap += 40;
+      total.haste += 15;
+    }
+    return total;
+  }, { ap: 0, haste: 0 });
+}
+
 function calculateBuild(buildIds, rotations = state.fight.rotations, stackCounts = [], options = {}) {
   const build = buildStats(buildIds, stackCounts);
   const hasLiandry = buildIds.includes(6653);
@@ -602,6 +748,11 @@ function calculateBuild(buildIds, rotations = state.fight.rotations, stackCounts
   const combatant = options.combatant || state.attacker;
   const targetLoadouts = options.targetLoadouts || state.targets;
   const attackerStats = attackerChampionStats(buildIds, stackCounts, combatant);
+  if (combatant === state.attacker) {
+    const allyBonuses = options.allyBonuses || allyStatBonuses();
+    attackerStats.ap += Number(allyBonuses.ap || 0);
+    attackerStats.haste += Number(allyBonuses.haste || 0);
+  }
   const autosPerRotation = autoAttacksForStats(attackerStats, combatant);
   const profile = options.profile || state.attacker;
   const useAbilities = options.useAbilities ?? (combatant === state.attacker && profile.useAbilities !== false);
@@ -676,14 +827,20 @@ function calculateBuild(buildIds, rotations = state.fight.rotations, stackCounts
 }
 
 function buildIdsForSide(side) {
-  const ids = buildArray(side).slice(0, ordinarySlotCount());
-  if (usesQuestBootSlot()) ids.push(state.attacker[`questBoot${side}`]);
+  const ids = buildArray(side)
+    .slice(0, ordinarySlotCount(side))
+    .filter((id) => id && !ALL_ROLE_BOOTS.has(Number(id)));
+  if (includeBootsForSide(side) && state.attacker[`questBoot${side}`]) {
+    ids.push(state.attacker[`questBoot${side}`]);
+  }
   return ids;
 }
 
 function buildStacksForSide(side) {
-  const stacks = buildStackArray(side).slice(0, ordinarySlotCount());
-  if (usesQuestBootSlot()) stacks.push(0);
+  const stacks = buildStackArray(side)
+    .slice(0, ordinarySlotCount(side))
+    .filter((_, index) => !ALL_ROLE_BOOTS.has(Number(buildArray(side)[index])));
+  if (includeBootsForSide(side) && state.attacker[`questBoot${side}`]) stacks.push(0);
   return stacks;
 }
 
@@ -783,16 +940,19 @@ function engineItemOptions(ids, stacks = []) {
 }
 
 function engineBuild(side) {
-  const ids = buildIdsForSide(side).filter(Boolean);
+  const ids = buildArray(side).slice(0, ordinarySlotCount(side)).filter(Boolean);
   const stacks = buildStacksForSide(side);
-  const bootId = ids.find((id) => ALL_ROLE_BOOTS.has(Number(id))) || 0;
-  const itemIds = ids.filter((id) => Number(id) !== Number(bootId));
+  const bootId = includeBootsForSide(side)
+    ? (state.attacker[`questBoot${side}`] || ids.find((id) => ALL_ROLE_BOOTS.has(Number(id))) || 0)
+    : 0;
+  const itemIds = ids.filter((id) => !ALL_ROLE_BOOTS.has(Number(id)));
   const itemStacks = itemIds.map((id) => {
     const originalIndex = ids.indexOf(id);
     return stacks[originalIndex] || 0;
   });
   return {
     boots: bootId ? itemName(bootId) : "",
+    include_boots: includeBootsForSide(side),
     items: itemIds.map((id) => itemName(id)).filter(Boolean),
     item_options: engineItemOptions(itemIds, itemStacks),
     keystone: state.attacker[`keystone${side}`] || "",
@@ -840,13 +1000,21 @@ function engineAbilityRanks() {
 }
 
 function engineTarget(target) {
+  const selectedBoot = Number(target.boots || 0);
+  const itemIds = target.items
+    .slice(0, target.includeBoots ? 5 : 6)
+    .filter(Boolean)
+    .filter((id) => !ALL_ROLE_BOOTS.has(Number(id)));
   return {
     champion: target.champion,
     level: target.level,
-    items: target.items.filter(Boolean).map((id) => itemName(id)).filter(Boolean),
-    item_options: engineItemOptions(target.items.filter(Boolean), target.itemStacks),
+    items: itemIds.map((id) => itemName(id)).filter(Boolean),
+    boots: target.includeBoots && selectedBoot ? itemName(selectedBoot) : "",
+    include_boots: Boolean(target.includeBoots),
+    item_options: engineItemOptions(itemIds, target.itemStacks),
     role: "",
     role_quest_complete: false,
+    ability_ranks: Object.fromEntries(Object.entries(target.abilityRanks || {}).map(([slot, rank]) => [slot, Number(rank) || 0])),
   };
 }
 
@@ -974,8 +1142,18 @@ function renderExactBreakdown(aResult, bResult) {
   ingest(aResult, "a");
   if (bResult) ingest(bResult, "b");
   const body = [...rows.values()].map((row) => `<tr><td><strong>${escapeHtml(row.source)}</strong><small>${escapeHtml(row.detail)}</small></td><td>${fmt(row.a)}</td>${bResult ? `<td>${fmt(row.b)}</td><td>${Math.abs(row.a - row.b) < .5 ? "—" : `${row.a > row.b ? "+" : ""}${fmt(row.a - row.b)}`}</td>` : ""}</tr>`).join("");
-  const totalB = bResult ? `<td>${fmt(bResult.total_damage)}</td><td>${Math.abs(aResult.total_damage - bResult.total_damage) < .5 ? "—" : `${aResult.total_damage > bResult.total_damage ? "+" : ""}${fmt(aResult.total_damage - bResult.total_damage)}`}</td>` : "";
-  $("damageBreakdown").innerHTML = `<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage dealt</strong><small>After shields and selected enemy defenses</small></td><td>${fmt(aResult.total_damage)}</td>${totalB}</tr></tbody></table></div>`;
+  const mainTotal = (result) => Number(result?.combat?.breakdown?.find((entry) => entry.participant_id === "main")?.total_damage ?? result?.total_damage ?? 0);
+  const aMainTotal = mainTotal(aResult);
+  const bMainTotal = bResult ? mainTotal(bResult) : 0;
+  const totalB = bResult ? `<td>${fmt(bMainTotal)}</td><td>${Math.abs(aMainTotal - bMainTotal) < .5 ? "—" : `${aMainTotal > bMainTotal ? "+" : ""}${fmt(aMainTotal - bMainTotal)}`}</td>` : "";
+  const combatRows = (aResult?.combat?.breakdown || []).map((entry) => {
+    const survival = (aResult.combat.participants || []).find((participant) => participant.participant_id === entry.participant_id)?.survival || {};
+    const status = survival.survived_window ? "alive at window end" : `defeated at ${one(survival.death_time)}s`;
+    const appliedIncoming = Number(survival.health_damage || 0) + Number(survival.shield_absorbed || 0);
+    return `<tr><td><strong>${escapeHtml(`${entry.champion} · ${entry.team}`)}</strong><small>${escapeHtml(status)} · ${fmt(survival.effective_health || 0)} eHP · ${fmt(survival.healing_received || 0)} healing</small></td><td>${fmt(entry.total_damage)}</td><td>${fmt(appliedIncoming)}</td>${bResult ? `<td>—</td><td>—</td>` : ""}</tr>`;
+  }).join("");
+  const combatSection = combatRows ? `<section class="combat-participant-ledger"><header><div><p class="eyebrow">Team-fight ledger</p><h2>Every selected champion participates</h2></div><span>Event-ordered output · applied incoming damage · eHP</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Participant</th><th><i class="legend-a"></i>Output before defeat</th><th>Applied incoming damage</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${combatRows}</tbody></table></div></section>` : "";
+  $("damageBreakdown").innerHTML = `${combatSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage before defeat</strong><small>Post-mitigation output from the coupled participant timeline</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
 }
 
 function fightOrderAbility(slot) {
@@ -1016,27 +1194,32 @@ function renderExactMechanics(aResult, bResult) {
   const coverage = result?.timeline_coverage || {};
   const timeline = fightOrderTimeline(result);
   const notes = [...(result?.notes || []), coverage.note].filter(Boolean);
-  $("mechanicsOutput").innerHTML = `<div class="mechanics-head"><span>Engine output</span><b>${escapeHtml(coverage.certification || "event ordered")}</b></div><article class="mechanic-row"><div><strong>Fight order</strong>${timeline || "<p>No cast timeline returned</p>"}</div><span class="modelled">Calculated</span></article>${notes.map((note) => `<article class="mechanic-row"><div><strong>Model note</strong><p>${escapeHtml(note)}</p></div><span class="text-only">Boundary</span></article>`).join("")}`;
+  $("mechanicsOutput").innerHTML = `<div class="mechanics-head"><span>Reviewed engine output</span><b>${escapeHtml(coverage.certification || "event ordered")}</b></div><article class="mechanic-row"><div><strong>Fight order</strong>${timeline || "<p>No cast timeline returned</p>"}</div><span class="modelled">Calculated</span></article>${notes.map((note) => `<article class="mechanic-row"><div><strong>Model note</strong><p>${escapeHtml(note)}</p></div><span class="text-only">Boundary</span></article>`).join("")}`;
 }
 
 function renderExactResults(aResult, bResult) {
   const aPoint = exactPoint(aResult);
   const bPoint = bResult ? exactPoint(bResult) : null;
-  const aTotal = Number(aPoint.total_damage || 0);
-  const bTotal = bPoint ? Number(bPoint.total_damage || 0) : 0;
+  const participantTotal = (result, fallback) => Number(result?.combat?.breakdown?.find((entry) => entry.participant_id === "main")?.total_damage ?? fallback);
+  const aTotal = participantTotal(aResult, Number(aPoint.total_damage || 0));
+  const bTotal = bPoint ? participantTotal(bResult, Number(bPoint.total_damage || 0)) : 0;
   const tied = bResult && Math.abs(aTotal - bTotal) < .5;
   const aWins = !bResult || aTotal > bTotal;
   const winner = bResult ? (aWins ? "Build A" : "Build B") : "Build A";
+  const outputLabel = "Reviewed engine output";
   const edge = bResult && Math.min(aTotal, bTotal) > 0 ? Math.abs(aTotal / bTotal - 1) * 100 : 0;
   $("resultContext").textContent = `${state.targets.length} ${plural(state.targets.length, "enemy")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
-  $("winnerVisual").innerHTML = tied ? `<div></div><div><span>Engine output</span><strong>Tie</strong><b>Less than 1 damage apart</b></div>` : `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${bResult ? "Better here" : "Engine output"}</span><strong>${winner}</strong><b>${bResult ? `${percent(edge)} more total damage` : "Event-ordered result"}</b></div>`;
+  $("winnerVisual").innerHTML = tied ? `<div></div><div><span>${outputLabel}</span><strong>Tie</strong><b>Less than 1 damage apart</b></div>` : `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${bResult ? "Better here" : outputLabel}</span><strong>${winner}</strong><b>${bResult ? `${percent(edge)} more total damage` : "Event-ordered result"}</b></div>`;
   $("scoreGrid").innerHTML = [{ name: "Build A", total: aTotal, point: aPoint, winner: aWins && !tied }, ...(bResult ? [{ name: "Build B", total: bTotal, point: bPoint, winner: !aWins && !tied }] : [])].map((entry) => `<div class="score ${entry.winner ? "winner" : ""} ${bResult ? "" : "single-score"}"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>${entry.name}</span></header><strong>${fmt(entry.total)}</strong><small>TDD · ${fmt(entry.point.dps || entry.total / Math.max(1, state.fight.duration))} DPS</small></div>`).join("");
   renderExactStatMatrix(aResult, bResult);
   renderExactResistance(aResult, bResult);
   const certification = aResult.timeline_coverage?.certification || "event ordered";
   const shield = Number(aResult.shield_absorbed || 0);
   const resource = Number(aResult.resource_remaining || 0);
-  $("why").innerHTML = `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed · ${fmt(resource)} resource remaining.`;
+  const mainParticipant = (aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main");
+  const mainSurvival = mainParticipant?.survival;
+  const combatNote = mainSurvival ? ` · ${fmt(mainSurvival.effective_health || 0)} eHP · ${mainSurvival.survived_window ? "alive through the window" : `defeated at ${one(mainSurvival.death_time)}s`}` : "";
+  $("why").innerHTML = `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed · ${fmt(resource)} resource remaining${combatNote}.`;
   $("threshold").innerHTML = `<span>Crossover</span><strong>${bResult ? (tied ? "No meaningful difference at this window" : `${escapeHtml(winner)} leads at the selected window`) : `${fmt(aTotal)} event-ordered damage`}</strong>`;
   const aCurve = aResult.comparison_curve || [{ rotation: state.fight.rotations, total_damage: aTotal }];
   const bCurve = bResult?.comparison_curve || [];
@@ -1054,7 +1237,7 @@ function renderExactResults(aResult, bResult) {
 function scheduleEngineCalculation() {
   if (engine.pendingTimer) clearTimeout(engine.pendingTimer);
   if (!engine.ready || !state.attacker.champion || !state.targets.length || !state.targets.every((target) => target.champion)) return;
-  if (!engine.reviewed.has(state.attacker.champion)) return;
+  if (!engine.reviewed.has(state.attacker.champion) && !engine.backend.has(state.attacker.champion)) return;
   engine.pendingTimer = setTimeout(() => {
     const requestId = ++engine.requestId;
     engine.pending = true;
@@ -1087,10 +1270,6 @@ function renderResults() {
   const scenarioReady = state.attacker.champion && state.targets.length && state.targets.every((target) => target.champion);
   const hasA = buildAIds().some(Boolean);
   const hasB = state.attacker.comparisonEnabled && buildBIds().some(Boolean);
-  if (engine.ready && state.attacker.champion && !engine.reviewed.has(state.attacker.champion)) {
-    renderEngineUnavailable();
-    return;
-  }
   if (!scenarioReady || !hasA) {
     $("resultContext").textContent = "Waiting for scenario";
     $("winnerVisual").innerHTML = `<div class="result-empty-mark">+</div><div><span>Nothing calculated</span><strong>Build a scenario</strong><b>Champion · builds · enemies</b></div>`;
@@ -1103,6 +1282,7 @@ function renderResults() {
     $("rotationTable").innerHTML = "";
     return;
   }
+  const reviewedAttacker = engine.reviewed.has(state.attacker.champion);
   const aCurrent = calculateBuild(buildAIds(), state.fight.rotations, buildAStacks());
   const aAll = state.fight.rotations === 6 ? aCurrent : calculateBuild(buildAIds(), 6, buildAStacks());
   const aTotal = aCurrent.cumulative;
@@ -1110,10 +1290,12 @@ function renderResults() {
   $("resultContext").textContent = `${state.targets.length} ${plural(state.targets.length, "enemy")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
 
   if (!hasB) {
-    $("winnerVisual").innerHTML = `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>Modeled output</span><strong>Build A</strong><b>${buildAIds().filter(Boolean).length} items scored</b></div>`;
+    $("winnerVisual").innerHTML = `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${reviewedAttacker ? "Modeled output" : "Wiki-derived estimate"}</span><strong>Build A</strong><b>${buildAIds().filter(Boolean).length} items scored</b></div>`;
     $("scoreGrid").innerHTML = `<div class="score winner single-score"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>Build A</span></header><strong>${fmt(aTotal)}</strong><small>TDD · ${fmt(aTotal / seconds)} DPS</small></div>`;
     renderResistanceOutput(aCurrent.build, null);
-    $("why").innerHTML = `<strong>Build A</strong> is scored as one complete build. Enable Build B only for a full-build comparison.`;
+    $("why").innerHTML = reviewedAttacker
+      ? `<strong>Build A</strong> is scored as one complete build. Enable Build B only for a full-build comparison.`
+      : `<strong>Build A</strong> is scored with the Wiki-derived champion packets and item event catalogue. The exact registry has not yet certified this champion.`;
     $("threshold").innerHTML = `<span>Six-rotation total</span><strong>${fmt(aAll.cumulative)} modeled damage</strong>`;
     $("tableA").textContent = "Build A";
     $("tableB").textContent = "—";
@@ -1313,8 +1495,13 @@ function renderPicker(query) {
   const entries = source.filter((entry) => {
     if (!entry.name.toLowerCase().includes(normalized)) return false;
     if (pickerContext.type !== "item") return true;
+    const dedicatedBoot = ALL_ROLE_BOOTS.has(Number(entry.id));
+    if (pickerContext.path.endsWith(".boots") || pickerContext.path.includes("questBoot")) {
+      return dedicatedBoot;
+    }
+    if (pickerContext.path.includes(".items.")) return !dedicatedBoot;
     if (pickerContext.path.includes("questBoot")) return questBootIds().includes(entry.id);
-    if (usesQuestBootSlot() && pickerContext.path.match(/^attacker\.build[AB]\./)) return !ALL_ROLE_BOOTS.has(entry.id);
+    if (pickerContext.path.match(/^attacker\.build[AB]\./)) return !dedicatedBoot;
     return true;
   });
   const grid = $("pickerGrid");
@@ -1333,7 +1520,7 @@ function closePicker() {
 
 function idsForBis(path, candidateId) {
   const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
-  const ids = buildArray(side).slice(0, ordinarySlotCount());
+  const ids = buildArray(side).slice(0, ordinarySlotCount(side));
   if (path.match(/^attacker\.build[AB]\./)) ids[Number(path.split(".").at(-1))] = candidateId;
   if (usesQuestBootSlot()) ids.push(path.includes("questBoot") ? candidateId : state.attacker[`questBoot${side}`]);
   return ids;
@@ -1341,7 +1528,7 @@ function idsForBis(path, candidateId) {
 
 function stacksForBis(path, candidateId) {
   const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
-  const paths = Array.from({ length: ordinarySlotCount() }, (_, index) => `attacker.build${side}.${index}`);
+  const paths = Array.from({ length: ordinarySlotCount(side) }, (_, index) => `attacker.build${side}.${index}`);
   const stacks = paths.map((itemPath) => itemPath === path && Number(pathValue(path)) !== Number(candidateId) ? 0 : stackValue(itemPath));
   if (usesQuestBootSlot()) stacks.push(0);
   return stacks;
@@ -1349,7 +1536,11 @@ function stacksForBis(path, candidateId) {
 
 function bisProfile() {
   const selectedAbilities = activeAbilityKit().filter((ability) => abilityInput(ability.slot).casts > 0 && (ability.slot === "P" || abilityInput(ability.slot).rank > 0));
-  if (selectedAbilities.length) return { baseDamage: 0, apRatio: 0, physicalDamage: 0, adRatio: 0, useAbilities: true, label: "Selected skill rotation", exact: true };
+  if (selectedAbilities.length) {
+    const wikiSelected = selectedAbilities.some((ability) => ability.formulaSource === "Wiki-derived local cache");
+    if (wikiSelected) return { ...statOnlyProfile(state.attacker), useAbilities: true, exact: false, wiki: true };
+    return { baseDamage: 0, apRatio: 0, physicalDamage: 0, adRatio: 0, useAbilities: true, label: "Selected skill rotation", exact: true };
+  }
   const exact = state.attacker.baseDamage > 0 || state.attacker.apRatio > 0 || state.attacker.physicalDamage > 0 || state.attacker.adRatio > 0;
   if (exact) return { ...state.attacker, label: "Exact damage package", exact: true };
   return statOnlyProfile(state.attacker);
@@ -1509,11 +1700,29 @@ function bisItemEffects(item) {
     damageAmp: item?.id === 6653 || tags.has("damage_amp") || /bonus damage|more damage|damage amp/.test(text),
     onHit: tags.has("on_hit") || categories.has("OnHit") || /on[- ]hit|attacks deal/.test(text),
     aura: categories.has("Aura") || tags.has("aura") || /nearby allies|nearby enemy/.test(text),
+    allyAura: categories.has("Aura") || tags.has("aura") || /nearby allies|allied champions/.test(text),
     active: categories.has("Active") || tags.has("active") || /activate|grant nearby|shield/.test(text),
     healing: tags.has("healing") || categories.has("LifeSteal") || categories.has("HealthRegen"),
+    allyShield: /shield(?:ing)? an ally|nearby allies|allied champions/.test(text),
+    allyHealing: /heal(?:ing)? an ally|allied units|target allied champion|nearby allies/.test(text),
     eventOrder: wiki.eventOrder || [],
     defensive: categories.has("Health") || categories.has("Armor") || categories.has("MagicResist") || categories.has("SpellBlock"),
   };
+}
+
+function bisOutgoingSupport(combatant, stats, duration = 10) {
+  const shields = bisUtilityValue(combatant, stats, "shields", duration);
+  const heals = bisHealingPotential(combatant, stats, duration);
+  const profile = bisChampionProfile(combatant);
+  const control = Object.values(profile.abilities || {}).flat().reduce((total, ability) => total + (ability.signals?.control ? 1 : 0), 0);
+  return shields * 2.2 + heals * 1.5 + control * 35;
+}
+
+function bisSupportItemValue(item, stats) {
+  const effect = bisItemEffects(item);
+  if (!effect.allyShield && !effect.allyHealing && !effect.allyAura) return 0;
+  const sourcedEffect = (effect.allyShield ? 460 : 0) + (effect.allyHealing ? 420 : 0) + (effect.allyAura ? 180 : 0);
+  return sourcedEffect + Number(item?.ap || 0) * 5 + Number(item?.haste || 0) * 12 + Number(item?.hp || 0) * 0.18;
 }
 
 function bisHealingPotential(combatant, stats, duration = 10) {
@@ -1585,6 +1794,14 @@ function bisBuildScore(buildIds, combatant, opponents, path) {
   const hasAbilityDamage = Object.values(profile.abilities || {}).flat().some((ability) => ability.signals?.hasDamage || ability.packets?.length);
   const hasHealing = bisHealingPotential(combatant, stats, duration);
   const ownShields = bisUtilityValue(combatant, stats, "shields", duration);
+  const outgoingSupport = bisOutgoingSupport(combatant, stats, duration);
+  const supportItems = buildIds.reduce((sum, id) => sum + bisSupportItemValue(getItem(id), stats), 0);
+  const enemyPath = path.startsWith("targets.");
+  const supportPath = path.startsWith("allies.") || (path === "attacker" && state.attacker.role === "support" && (role === "enchanter" || role === "warden"));
+  const survivalPool = effectiveHealth + hasHealing * 0.7 + ownShields;
+  const pressurePerSecond = pressureTotal / duration;
+  const survivalSeconds = pressurePerSecond > 0 ? Math.min(duration, survivalPool / pressurePerSecond) : duration;
+  const survivalFraction = Math.max(0, Math.min(1, survivalSeconds / duration));
   const targetHealing = opponents.reduce((sum, target) => sum + bisHealingPotential(target, championStats(target.champion, target.level, target.items, target.itemStacks), duration), 0);
   const antiHeal = effects.some((effect) => effect.antiHeal) && targetHealing > 0 ? targetHealing * 0.4 * Math.min(1, duration / 3) : 0;
   const liandry = effects.some((effect) => effect.burn) && hasAbilityDamage ? opponents.reduce((sum, target) => {
@@ -1593,30 +1810,36 @@ function bisBuildScore(buildIds, combatant, opponents, path) {
   }, 0) + ownAbilityDamage * 0.06 : 0;
   const onHitBonus = effects.some((effect) => effect.onHit) ? autos.attacks * Math.max(8, stats.ad * 0.03) : 0;
   const teamUtility = effects.reduce((sum, effect, index) => sum + (effect.aura ? 38 : 0) + (effect.active ? 42 : 0) + (effect.healing ? 24 : 0), 0);
+  const tradeOutput = (ownAbilityDamage + autos.raw + onHitBonus + liandry + antiHeal) * survivalFraction;
   let score;
   let metric;
-  if (path.startsWith("targets.")) {
-    score = effectiveHealth + ownAbilityDamage * 0.25 + autos.raw * 0.1 + hasHealing * 0.4;
-    metric = "effective health";
-  } else if (role === "tank" || role === "warden") {
-    const allyUtilityWeight = role === "warden" && path.startsWith("allies.") ? 34 : 8;
-    score = effectiveHealth * (role === "warden" && path.startsWith("allies.") ? 0.72 : 1) + teamUtility * allyUtilityWeight + stats.haste * 10 + hasHealing * 0.8 + ownShields * 1.1 + ownAbilityDamage * 0.18;
-    metric = "effective health + team utility";
+  if (role === "tank" || role === "warden") {
+    const allyPath = supportPath;
+    const allyUtilityWeight = role === "warden" && allyPath ? 22 : 8;
+    score = enemyPath
+      ? tradeOutput * 0.85 + survivalPool * 0.62 + teamUtility * 10 + stats.haste * 10
+      : effectiveHealth * (role === "warden" && allyPath ? 0.48 : 1) + (allyPath ? outgoingSupport * 1.9 + supportItems : teamUtility * allyUtilityWeight) + stats.haste * 10 + hasHealing * 0.8 + ownShields * 1.1 + ownAbilityDamage * 0.18;
+    metric = enemyPath ? "trade output + survival window" : allyPath ? "outgoing protection + effective health" : "effective health + team utility";
   } else if (role === "enchanter" || role === "support") {
-    score = ownAbilityDamage * 0.45 + effectiveHealth * 0.45 + teamUtility * 10 + stats.haste * 12 + hasHealing * 1.1 + ownShields * 1.25;
-    metric = "utility + effective health";
+    const allyPath = supportPath;
+    score = allyPath
+      ? outgoingSupport * 2.4 + supportItems + ownAbilityDamage * 0.12 + effectiveHealth * 0.12 + stats.haste * 8
+      : enemyPath ? tradeOutput * 0.8 + survivalPool * 0.55 + teamUtility * 8 + stats.haste * 10 : ownAbilityDamage * 0.45 + effectiveHealth * 0.45 + teamUtility * 10 + stats.haste * 12 + hasHealing * 1.1 + ownShields * 1.25;
+    metric = allyPath ? "ally protection + sourced utility" : enemyPath ? "trade output + survival window" : "utility + effective health";
   } else if (role === "marksman") {
-    score = ownAbilityDamage + autos.raw + onHitBonus + stats.attackSpeed * 7 + stats.crit * 2;
-    metric = "estimated 10s output";
+    score = enemyPath ? tradeOutput * 0.95 + survivalPool * 0.38 + stats.attackSpeed * 7 + stats.crit * 2 : ownAbilityDamage + autos.raw + onHitBonus + stats.attackSpeed * 7 + stats.crit * 2;
+    metric = enemyPath ? "trade output + survival window" : "estimated 10s output";
   } else if (role === "mage" || role === "assassin") {
-    score = ownAbilityDamage + autos.raw * 0.35 + liandry + antiHeal + stats.haste * 5;
-    metric = "estimated 10s output";
+    score = enemyPath ? tradeOutput * 0.95 + survivalPool * 0.38 + stats.haste * 5 : ownAbilityDamage + autos.raw * 0.35 + liandry + antiHeal + stats.haste * 5;
+    metric = enemyPath ? "trade output + survival window" : "estimated 10s output";
   } else {
-    score = ownAbilityDamage * 0.75 + autos.raw * 0.65 + onHitBonus + effectiveHealth * 0.35 + stats.haste * 5;
-    metric = "damage + effective health";
+    score = enemyPath ? tradeOutput * 0.9 + survivalPool * 0.45 + stats.haste * 5 : ownAbilityDamage * 0.75 + autos.raw * 0.65 + onHitBonus + effectiveHealth * 0.35 + stats.haste * 5;
+    metric = enemyPath ? "trade output + survival window" : "damage + effective health";
   }
   const eventOrder = [];
   if (hasAbilityDamage) eventOrder.push("ability/attack hit");
+  if (enemyPath && pressureTotal > 0) eventOrder.push("incoming damage and mitigation set the survival window");
+  if (enemyPath) eventOrder.push("only damage dealt before defeat counts toward trade output");
   if (effects.some((effect) => effect.antiHeal)) eventOrder.push("apply 40% Wounds for 3s");
   if (effects.some((effect) => effect.burn)) eventOrder.push("Liandry burn after the damaging ability, then periodic ticks");
   if (hasHealing) eventOrder.push("healing resolves after incoming damage and modifiers");
@@ -1624,7 +1847,7 @@ function bisBuildScore(buildIds, combatant, opponents, path) {
   if (ownShields > 0) eventOrder.push("champion shields resolve before subsequent incoming damage");
   const wikiEvents = effects.flatMap((effect) => effect.eventOrder || []).filter((value, index, values) => values.indexOf(value) === index);
   wikiEvents.forEach((value) => { if (!eventOrder.includes(value)) eventOrder.push(value); });
-  return { score, metric, stats, ownAbilityDamage, autos, antiHeal, liandry, targetShields, ownShields, eventOrder, targetHealing, role };
+  return { score, metric, stats, ownAbilityDamage, autos, antiHeal, liandry, targetShields, ownShields, outgoingSupport, supportItems, survivalPool, survivalSeconds, survivalFraction, tradeOutput, eventOrder, targetHealing, role };
 }
 
 function rosterBisContext(path) {
@@ -1672,65 +1895,131 @@ function rosterBisCandidates(path, profile) {
   const role = bisRole(profile);
   return DATA.items.filter((item) => {
     const completed = item.price >= 2200 && item.into.length === 0;
-    const categories = new Set(item.categories || []);
-    const effect = bisItemEffects(item);
-    const defensive = effect.defensive || item.haste || categories.has("AbilityHaste") || categories.has("Aura") || categories.has("Active");
-    const offensive = item.ad || item.ap || item.attackSpeed || item.crit || item.pen || item.percentPen || item.lethality || item.percentArmorPen || categories.has("OnHit");
-    const relevant = role === "tank" || role === "warden"
-      ? defensive
-      : role === "enchanter" || role === "support"
-        ? (defensive || item.ap || effect.healing)
-        : role === "marksman"
-          ? Boolean(offensive)
-          : Boolean(offensive || defensive);
-    return completed && relevant && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
+    return completed && bisItemMatchesRole(item, role, path) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
   });
 }
 
-function openRosterBis(path) {
-  const context = rosterBisContext(path);
-  if (!context || !bisReadyForPath(path)) return;
-  const profile = bisChampionProfile(context.combatant);
-  const model = statOnlyProfile(context.combatant);
-  const ranked = rosterBisCandidates(path, profile).filter((item) => legalOptimizerBuild(rosterBisIds(path, item.id).filter(Boolean))).map((item) => {
-    const buildIds = rosterBisIds(path, item.id);
-    const result = bisBuildScore(buildIds, context.combatant, context.opponents, path);
-    return { item, result, total: result.score };
-  }).sort((a, b) => b.total - a.total).slice(0, 12);
-  const baselineId = Number(pathValue(path)) || 0;
-  const baseline = bisBuildScore(rosterBisIds(path, baselineId), context.combatant, context.opponents, path).score;
-  const role = context.root === "allies" ? "Ally" : "Enemy";
-  const slot = Number(String(path).split(".").at(-1)) + 1;
-  $("bisTitle").textContent = `Best item for ${role} ${context.combatant.champion} · slot ${slot}`;
-  const top = ranked[0]?.result;
-  const eventSummary = top?.eventOrder?.length ? ` · ${top.eventOrder.slice(0, 2).join(" → ")}` : "";
-  $("bisSummary").textContent = `${model.label} · ${context.opponents.length} ${plural(context.opponents.length, "opponent")}${eventSummary}`;
-  $("bisList").innerHTML = ranked.map((entry, index) => {
-    const gain = baseline > 0 ? (entry.total / baseline - 1) * 100 : 0;
-    const detail = entry.result.metric === "estimated 10s output" && (entry.result.liandry || entry.result.antiHeal)
-      ? `${itemStatsLine(entry.item)} · ${entry.result.liandry ? `Liandry +${fmt(entry.result.liandry)}` : ""}${entry.result.antiHeal ? ` Wounds value +${fmt(entry.result.antiHeal)}` : ""}`
-      : itemStatsLine(entry.item);
-    return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${itemImage(entry.item.id)}" alt="" /><div><strong>${escapeHtml(entry.item.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.total)}</strong><span>${escapeHtml(entry.result.metric)} · ${gain >= 0 ? "+" : ""}${one(gain)}%</span></p><button type="button" data-bis-value="${entry.item.id}">Use</button></article>`;
-  }).join("") || `<p class="picker-empty">No valid completed items match the Wiki-derived ${escapeHtml(model.roles?.[0]?.toLowerCase() || "champion")} model.</p>`;
+function bisItemMatchesRole(item, role, path = "") {
+  const categories = new Set(item.categories || []);
+  const effect = bisItemEffects(item);
+  if (String(path).startsWith("allies.") && (role === "enchanter" || role === "support")) {
+    // Ally optimization is an outgoing-support problem. Keep raw AP items
+    // only when they carry a sourced support signal or the support mana loop;
+    // defensive/AP damage items must not masquerade as enchanter BIS.
+    return Boolean(effect.allyShield || effect.allyHealing || effect.allyAura || (item.ap && categories.has("ManaRegen")));
+  }
+  const defensive = effect.defensive || item.hp || item.haste || categories.has("AbilityHaste") || categories.has("Aura") || categories.has("Active");
+  const offensive = item.ad || item.ap || item.attackSpeed || item.crit || item.pen || item.percentPen || item.lethality || item.percentArmorPen || categories.has("OnHit");
+  if (role === "tank" || role === "warden") return Boolean(defensive || (item.ad && item.hp));
+  if (role === "enchanter" || role === "support") return Boolean(defensive || item.ap || effect.healing);
+  if (role === "marksman") return Boolean(offensive);
+  if (role === "mage" || role === "assassin") return Boolean(item.ap || item.pen || item.percentPen || item.haste || effect.burn || effect.antiHeal);
+  return Boolean(offensive || defensive);
+}
+
+function bisBackendPayload(path) {
+  const parts = String(path).split(".");
+  const payload = { ...engineFightPayload("A") };
+  if (parts[0] === "attacker") {
+    const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
+    Object.assign(payload, engineFightPayload(side));
+    payload.subject_team = "main";
+    payload.subject_index = 0;
+    payload.slot_kind = parts[1]?.startsWith("questBoot") ? "boots" : "item";
+    payload.slot_index = parts[1]?.startsWith("questBoot") ? 0 : Number(parts.at(-1));
+    return payload;
+  }
+  if ((parts[0] !== "allies" && parts[0] !== "targets") || parts.length < 3) return null;
+  payload.subject_team = parts[0] === "allies" ? "ally" : "enemy";
+  payload.subject_index = Number(parts[1]);
+  payload.slot_kind = parts[2] === "boots" ? "boots" : "item";
+  payload.slot_index = payload.slot_kind === "boots" ? 0 : Number(parts[3]);
+  return payload;
+}
+
+function bisMetricLabel(value) {
+  return String(value || "team-fight value")
+    .replaceAll("effective health", "eHP")
+    .replaceAll("before defeat", "before defeat")
+    .replaceAll("sourced", "sourced");
+}
+
+function bisComponentLine(components) {
+  return Object.entries(components || {})
+    .filter(([, value]) => Number.isFinite(Number(value)) && Number(value) !== 0)
+    .slice(0, 3)
+    .map(([key, value]) => `${key.replaceAll("_", " ")} ${fmt(value)}`)
+    .join(" · ");
+}
+
+async function openBackendBis(path) {
+  if (!bisReadyForPath(path)) return;
+  const payload = bisBackendPayload(path);
+  if (!payload) return;
+  const isMain = payload.subject_team === "main";
+  const subject = isMain
+    ? state.attacker
+    : state[payload.subject_team === "ally" ? "allies" : "targets"][payload.subject_index];
+  if (!subject?.champion) return;
+  const subjectLabel = isMain ? "" : `${payload.subject_team === "ally" ? "Ally" : "Enemy"} `;
+  const slotLabel = payload.slot_kind === "boots" ? "boots" : `slot ${payload.slot_index + 1}`;
+  $("bisTitle").textContent = `Best ${payload.slot_kind === "boots" ? "boots" : "item"} for ${subjectLabel}${subject.champion} · ${slotLabel}`;
+  $("bisSummary").textContent = "Scoring the simultaneous event timeline · loading sourced candidates…";
+  $("bisList").innerHTML = `<p class="picker-empty">Scoring every legal candidate against the selected team-fight…</p>`;
   bisContext = { path };
   $("bis").showModal();
+  try {
+    const response = await fetch("/api/bis", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
+    const rows = result.candidates || [];
+    const coverage = result.coverage?.complete
+      ? "complete sourced coverage"
+      : "BIS withheld until event order is complete";
+    $("bisSummary").textContent = `${subject.champion} · ${rows.length} of ${result.candidate_count || rows.length} legal candidates · ${coverage}`;
+    $("bisList").innerHTML = rows.map((entry, index) => {
+      const item = DATA.items.find((candidate) => candidate.name === entry.name);
+      const detail = `${item ? itemStatsLine(item) : "Sourced item stats"} · ${bisComponentLine(entry.components)}`;
+      return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.score)}</strong><span>${escapeHtml(bisMetricLabel(entry.metric))}</span></p><button type="button" data-bis-value="${item ? item.id : ""}" ${item ? "" : "disabled"}>Use</button></article>`;
+    }).join("") || `<p class="picker-empty">${escapeHtml(result.coverage?.note || "No legal candidate has complete sourced mechanics for this timeline.")}</p>`;
+  } catch (error) {
+    $("bisSummary").textContent = "BIS unavailable";
+    $("bisList").innerHTML = `<p class="picker-empty">${escapeHtml(error.message)}</p>`;
+  }
+}
+
+function openRosterBis(path) {
+  return openBackendBis(path);
 }
 
 function optimizerDamagePackageReady() {
   const champion = getChampion(state.attacker.champion);
-  const coverage = champion?.abilityCoverage;
-  const completeSourcedKit = Boolean(coverage && coverage.supported === coverage.total && coverage.total > 0);
+  const completeSourcedKit = activeAbilityKit().filter((ability) => ["Q", "W", "E", "R"].includes(ability.slot)).length === 4;
   const selectedAbilities = completeSourcedKit && activeAbilityKit().some((ability) => abilityInput(ability.slot).casts > 0 && (ability.slot === "P" || abilityInput(ability.slot).rank > 0));
   const manualPackage = state.attacker.baseDamage > 0 || state.attacker.apRatio > 0 || state.attacker.physicalDamage > 0 || state.attacker.adRatio > 0;
-  return selectedAbilities || manualPackage;
+  // The backend has a dedicated reviewed module for every cached champion.
+  // A sparse client formula catalogue (for example a passive-only tank kit)
+  // must not make the optimizer button appear dead; the sourced BIS profile
+  // still supplies the selectable package while the engine remains the
+  // authority for the final score.
+  const reviewedBackend = Boolean(champion && (engine.reviewed.has(champion.name) || engine.backend.has(champion.name)));
+  return reviewedBackend && (selectedAbilities || manualPackage || Boolean(bisChampionProfile(state.attacker)));
 }
 
 function bisCandidates(path, profile) {
+  const wikiMode = Boolean(profile?.wiki) || String(profile?.label || "").startsWith("Wiki-derived");
   const selectedTypes = profile.useAbilities ? activeAbilityKit().flatMap((ability) => ability.variants.flatMap((variant) => variant.packets?.map((packet) => typeof packet === "string" ? packet : packet.type) || [variant.type])) : [];
   const physical = profile.physicalDamage > 0 || profile.adRatio > 0 || selectedTypes.includes("physical");
   const magical = profile.baseDamage > 0 || profile.apRatio > 0 || selectedTypes.includes("magical");
   const currentIds = idsForBis(path, 0).filter(Boolean);
   if (path.includes("questBoot")) return DATA.items.filter((item) => questBootIds().includes(item.id) && !currentIds.includes(item.id));
+  if (wikiMode && state.attacker.champion) {
+    return DATA.items.filter((item) => item.price >= 2200 && item.into.length === 0 && bisItemMatchesRole(item, bisRole(bisChampionProfile(state.attacker))) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id));
+  }
   return DATA.items.filter((item) => {
     const completed = item.price >= 2200 && item.into.length === 0;
     const relevant = (magical && (item.ap || item.pen || item.percentPen || [6653, 6655].includes(item.id))) || (physical && (item.ad || item.lethality || item.percentArmorPen));
@@ -1760,7 +2049,7 @@ function optimizerCandidatePool(profile, targetStats) {
       || (physical && (item.ad || item.lethality || item.percentArmorPen || item.attackSpeed || item.crit));
     return completed && damageStat;
   });
-  const scoreOptions = { profile, summaryOnly: true, targetStats };
+  const scoreOptions = { profile, summaryOnly: true, targetStats, allyBonuses: allyStatBonuses() };
   const scored = relevant.map((item) => ({
     item,
     total: calculateBuild([item.id], state.fight.rotations, [0], scoreOptions).cumulative,
@@ -1788,18 +2077,78 @@ function optimizerCandidatePool(profile, targetStats) {
   return chosen;
 }
 
+function roleAwareOptimizerCandidatePool(role, path = "attacker") {
+  const candidates = DATA.items.filter((item) => {
+    const completed = item.price >= 2200 && item.into.length === 0;
+    const candidatePath = role === "enchanter" || role === "support" ? "allies.0" : path;
+    return completed && !ALL_ROLE_BOOTS.has(item.id) && bisItemMatchesRole(item, role, candidatePath);
+  });
+  const currentIds = buildAIds().filter((id) => id && !ALL_ROLE_BOOTS.has(Number(id))).map(Number);
+  const scored = candidates.map((item) => ({
+    item,
+    total: bisBuildScore([item.id, 0, 0, 0, 0, 0], state.attacker, state.targets, path).score,
+  })).sort((a, b) => b.total - a.total);
+  const selected = [];
+  const seen = new Set();
+  [...currentIds.map((id) => ({ item: getItem(id), total: Number.POSITIVE_INFINITY })), ...scored].forEach((entry) => {
+    if (!entry.item || seen.has(entry.item.id)) return;
+    seen.add(entry.item.id);
+    selected.push(entry.item);
+  });
+  return selected.slice(0, 12);
+}
+
+function optimizeRoleAwareBuild(role) {
+  const started = performance.now();
+  const pool = roleAwareOptimizerCandidatePool(role);
+  if (pool.length < 6) throw new Error("Not enough completed role-compatible items for this build.");
+  const ids = pool.map((item) => item.id);
+  const evaluated = [];
+  const selected = [];
+  function search(from) {
+    if (selected.length === 6) {
+      if (!legalOptimizerBuild(selected)) return;
+      const build = [...selected];
+      evaluated.push({ build, total: bisBuildScore(build, state.attacker, state.targets, "attacker").score });
+      return;
+    }
+    const needed = 6 - selected.length;
+    for (let index = from; index <= ids.length - needed; index += 1) {
+      selected.push(ids[index]);
+      if (legalOptimizerBuild(selected)) search(index + 1);
+      selected.pop();
+    }
+  }
+  search(0);
+  evaluated.sort((a, b) => b.total - a.total);
+  const best = evaluated[0];
+  if (!best) throw new Error("No legal complete role-aware build matched this champion.");
+  return {
+    build: best.build,
+    questBoot: 0,
+    tested: evaluated.length,
+    elapsedMs: performance.now() - started,
+    total: best.total,
+    candidateCount: pool.length,
+    role,
+    roleAware: true,
+  };
+}
+
 function optimizeFullBuild() {
   const started = performance.now();
   const profile = bisProfile();
+  const role = bisRole(bisChampionProfile(state.attacker));
+  if (["enchanter", "warden", "tank", "support"].includes(role)) return optimizeRoleAwareBuild(role);
   const targetStats = state.targets.map((target) => championStats(target.champion, target.level, target.items, target.itemStacks));
   const pool = optimizerCandidatePool(profile, targetStats);
-  const slotCount = ordinarySlotCount();
+  const slotCount = ordinarySlotCount("A");
   if (pool.length < slotCount) throw new Error("Not enough completed damage items for this package.");
   const ids = pool.map((entry) => entry.item.id);
   const boots = usesQuestBootSlot() ? questBootIds() : [0];
   const evaluated = [];
   const selected = [];
-  const scoreOptions = { profile, summaryOnly: true, targetStats };
+  const scoreOptions = { profile, summaryOnly: true, targetStats, allyBonuses: allyStatBonuses() };
 
   function search(from) {
     if (selected.length === slotCount) {
@@ -1826,44 +2175,215 @@ function optimizeFullBuild() {
   return { build: best.ids, questBoot: best.questBoot, tested: evaluated.length, elapsedMs, total: best.total, candidateCount: pool.length };
 }
 
-function startOptimizeBuild() {
+function rosterOptimizerCandidatePool(path) {
+  const context = rosterBisContext(path);
+  if (!context) return [];
+  const profile = bisChampionProfile(context.combatant);
+  const role = bisRole(profile);
+  const current = context.combatant.items.filter((id) => id && !ALL_ROLE_BOOTS.has(Number(id))).map(Number);
+  const candidates = DATA.items.filter((item) => {
+    const completed = item.price >= 2200 && item.into.length === 0;
+    return completed && !ALL_ROLE_BOOTS.has(item.id) && bisItemMatchesRole(item, role, path);
+  });
+  const scored = candidates.map((item) => {
+    const ids = [item.id, 0, 0, 0, 0, 0];
+    return { item, total: bisBuildScore(ids, context.combatant, context.opponents, path).score };
+  }).sort((a, b) => b.total - a.total);
+  const selected = [];
+  const seen = new Set();
+  [...current.map((id) => ({ item: getItem(id), total: Number.POSITIVE_INFINITY })), ...scored].forEach((entry) => {
+    if (!entry.item || seen.has(entry.item.id)) return;
+    seen.add(entry.item.id);
+    selected.push(entry.item);
+  });
+  // Keep the exhaustive search small enough for an in-browser interaction.
+  return selected.slice(0, 12);
+}
+
+function optimizeRosterBuild(path) {
+  const started = performance.now();
+  const context = rosterBisContext(path);
+  const pool = rosterOptimizerCandidatePool(path);
+  if (!context || pool.length < 6) throw new Error("Not enough completed role-compatible items for this roster build.");
+  const evaluated = [];
+  const selected = [];
+  const ids = pool.map((item) => item.id);
+  function search(from) {
+    if (selected.length === 6) {
+      if (!legalOptimizerBuild(selected)) return;
+      const build = [...selected];
+      evaluated.push({ build, total: bisBuildScore(build, context.combatant, context.opponents, path).score });
+      return;
+    }
+    const needed = 6 - selected.length;
+    for (let index = from; index <= ids.length - needed; index += 1) {
+      selected.push(ids[index]);
+      if (legalOptimizerBuild(selected)) search(index + 1);
+      selected.pop();
+    }
+  }
+  search(0);
+  evaluated.sort((a, b) => b.total - a.total);
+  const best = evaluated[0];
+  if (!best) throw new Error("No legal complete roster build matched this champion.");
+  return {
+    build: best.build,
+    tested: evaluated.length,
+    elapsedMs: performance.now() - started,
+    total: best.total,
+    candidateCount: pool.length,
+    metric: bisBuildScore(best.build, context.combatant, context.opponents, path).metric,
+  };
+}
+
+function applyRosterBuild(path, result) {
+  const [root, indexText] = String(path).split(".");
+  const loadout = state[root]?.[Number(indexText)];
+  if (!loadout) return;
+  loadout.items = [...result.build, ...Array(Math.max(0, 6 - result.build.length)).fill(0)].slice(0, 6);
+  loadout.itemStacks = [0, 0, 0, 0, 0, 0];
+}
+
+function reoptimizeAttackerAfterRosterChange() {
+  if (!state.attacker.champion || !optimizerDamagePackageReady() || !state.targets.length || !state.targets.every((target) => target.champion)) return null;
+  try {
+    const result = optimizeFullBuild();
+    state.attacker.buildA = [...result.build, ...Array(Math.max(0, 6 - result.build.length)).fill(0)].slice(0, 6);
+    state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
+    state.attacker.questBootA = result.questBoot || 0;
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+function rosterOptimizationPaths(rootOrPath) {
+  if (String(rootOrPath).includes(".")) return bisReadyForPath(rootOrPath) ? [rootOrPath] : [];
+  return (state[rootOrPath] || []).map((loadout, index) => `${rootOrPath}.${index}`).filter((path) => bisReadyForPath(path));
+}
+
+async function requestBis(path) {
+  const payload = bisBackendPayload(path);
+  if (!payload) throw new Error("Invalid roster optimization path");
+  const response = await fetch("/api/bis", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json();
+  if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
+  return result;
+}
+
+async function optimizeRosterPathFromTimeline(path) {
+  let tested = 0;
+  const [root, indexText] = path.split(".");
+  const loadout = state[root][Number(indexText)];
+  if (loadout.includeBoots) {
+    const bootResult = await requestBis(`${path}.boots`);
+    if (!bootResult.coverage?.complete) throw new Error(bootResult.coverage?.note || "BIS withheld until event order is complete");
+    tested += Number(bootResult.candidate_count || 0);
+    const boot = bootResult.candidates?.[0] && DATA.items.find((entry) => entry.name === bootResult.candidates[0].name);
+    if (boot) loadout.boots = boot.id;
+  }
+  // Greedy slot passes keep every candidate on the same complete team
+  // timeline.  Re-running after each slot lets item interactions and deaths
+  // change the next slot's result instead of freezing a stat-only estimate.
+  for (let slot = 0; slot < (loadout.includeBoots ? 5 : 6); slot += 1) {
+    const result = await requestBis(`${path}.items.${slot}`);
+    if (!result.coverage?.complete) throw new Error(result.coverage?.note || "BIS withheld until event order is complete");
+    tested += Number(result.candidate_count || 0);
+    const candidate = result.candidates?.[0];
+    const item = candidate && DATA.items.find((entry) => entry.name === candidate.name);
+    if (!item) continue;
+    setPath(`${path}.items.${slot}`, item.id);
+    state[root][Number(indexText)].itemStacks[slot] = 0;
+  }
+  return tested;
+}
+
+async function startRosterOptimization(rootOrPath) {
+  if (state.optimizer.running) return;
+  const paths = rosterOptimizationPaths(rootOrPath);
+  if (!paths.length) return;
+  state.optimizer.running = true;
+  state.optimizer.scope = String(rootOrPath).includes(".") ? "roster" : rootOrPath;
+  state.optimizer.summary = null;
+  renderBuilder();
+  const started = performance.now();
+  let tested = 0;
+  try {
+    const changed = [];
+    for (const path of paths) {
+      tested += await optimizeRosterPathFromTimeline(path);
+      // The main build is deliberately re-solved after each roster change;
+      // an ally/enemy build can change the main champion's best response.
+      if (state.attacker.champion && optimizerDamagePackageReady() && state.targets.length && state.targets.every((target) => target.champion)) {
+        const mainResult = await optimizeMainBuildFromBackend();
+        tested += Number(mainResult?.evaluations || 0);
+      }
+      const [root, indexText] = path.split(".");
+      changed.push(state[root][Number(indexText)].champion);
+    }
+    const scope = paths.length === 1 ? `${changed[0]} build` : `${rootOrPath === "targets" ? "all enemy" : "all ally"} builds`;
+    state.optimizer.summary = {
+      tested,
+      elapsedMs: performance.now() - started,
+      label: `${scope} optimized from the coupled event timeline; Build A was rebalanced after each roster change.`,
+    };
+  } catch (error) {
+    state.optimizer.summary = { tested, elapsedMs: performance.now() - started, label: `Optimization stopped: ${error.message}` };
+  } finally {
+    state.optimizer.running = false;
+    state.optimizer.scope = null;
+    render();
+  }
+}
+
+async function optimizeMainBuildFromBackend() {
+    const payload = engineFightPayload("A");
+    payload.objective = "total_damage";
+    payload.locked_items = [];
+    payload.locked_boots = "";
+    payload.max_legendary_slots = ordinarySlotCount("A");
+    const response = await fetch("/api/optimize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok || result.error) throw new Error(result.error || "Optimizer unavailable");
+    const ids = (result.items || []).map((name) => DATA.items.find((item) => item.name === name)?.id || 0);
+    state.attacker.buildA = [...ids, ...Array(Math.max(0, 6 - ids.length)).fill(0)].slice(0, 6);
+    state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
+    state.attacker.questBootA = DATA.items.find((item) => item.name === result.boots)?.id || 0;
+    state.optimizer.summary = {
+      tested: Number(result.evaluations || 0),
+      elapsedMs: Number(result.optimization_time_ms || 0),
+      label: result.is_certified_best
+        ? "Coupled event-ordered BIS: TTD is counted only while the champion is alive."
+        : "Coupled BIS applied; event-order coverage remains partial for one or more sourced effects.",
+    };
+    return result;
+}
+
+async function startOptimizeBuild() {
   if (state.optimizer.running || !state.attacker.champion || !optimizerDamagePackageReady() || !state.targets.length || !state.targets.every((target) => target.champion)) return;
   state.optimizer.running = true;
   state.optimizer.summary = null;
   renderBuilder();
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    try {
-      const result = optimizeFullBuild();
-      state.attacker.buildA = [...result.build, ...Array(Math.max(0, 6 - result.build.length)).fill(0)].slice(0, 6);
-      state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
-      state.attacker.questBootA = result.questBoot || 0;
-      state.optimizer.summary = result;
-    } finally {
-      state.optimizer.running = false;
-      render();
-    }
-  }));
+  try {
+    await optimizeMainBuildFromBackend();
+  } catch (error) {
+    state.optimizer.summary = { tested: 0, elapsedMs: 0, label: `Optimization stopped: ${error.message}` };
+  } finally {
+    state.optimizer.running = false;
+    render();
+  }
 }
 
 function openBis(path) {
-  if (!bisReadyForPath(path)) return;
-  if (!String(path).startsWith("attacker.")) return openRosterBis(path);
-  bisContext = { path };
-  const profile = bisProfile();
-  const ranked = bisCandidates(path, profile).filter((item) => legalOptimizerBuild(idsForBis(path, item.id).filter(Boolean))).map((item) => {
-    const result = calculateBuild(idsForBis(path, item.id), state.fight.rotations, stacksForBis(path, item.id), { profile });
-    return { item, result, total: result.cumulative };
-  }).sort((a, b) => b.total - a.total).slice(0, 12);
-  const baselineId = Number(pathValue(path)) || 0;
-  const baseline = calculateBuild(idsForBis(path, baselineId), state.fight.rotations, stacksForBis(path, baselineId), { profile }).cumulative;
-  const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
-  $("bisTitle").textContent = path.includes("questBoot") ? `Best boots for Build ${side}` : `Best item for Build ${side} · slot ${Number(path.split(".").at(-1)) + 1}`;
-  $("bisSummary").textContent = `${state.attacker.champion} · ${profile.label} · ${state.targets.length} ${plural(state.targets.length, "enemy")}`;
-  $("bisList").innerHTML = ranked.map((entry, index) => {
-    const gain = baseline > 0 ? (entry.total / baseline - 1) * 100 : 0;
-    return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${itemImage(entry.item.id)}" alt="" /><div><strong>${escapeHtml(entry.item.name)}</strong><small>${escapeHtml(itemStatsLine(entry.item))}</small></div><p><strong>${fmt(entry.total)}</strong><span>TDD · ${gain >= 0 ? "+" : ""}${one(gain)}%</span></p><button type="button" data-bis-value="${entry.item.id}">Use</button></article>`;
-  }).join("") || `<p class="picker-empty">No valid completed items match this damage package.</p>`;
-  $("bis").showModal();
+  return openBackendBis(path);
 }
 
 function closeBis() {
@@ -1881,6 +2401,10 @@ function updateDamagePackage() {
 }
 
 document.addEventListener("click", (event) => {
+  const rosterOptimizeAll = event.target.closest("[data-optimize-roster-all]");
+  if (rosterOptimizeAll) return startRosterOptimization(rosterOptimizeAll.dataset.optimizeRosterAll);
+  const rosterOptimize = event.target.closest("[data-optimize-roster]");
+  if (rosterOptimize) return startRosterOptimization(rosterOptimize.dataset.optimizeRoster);
   if (event.target.closest("[data-optimize-build]")) return startOptimizeBuild();
   const roleButton = event.target.closest("[data-role]");
   if (roleButton) {
@@ -1888,6 +2412,7 @@ document.addEventListener("click", (event) => {
     state.attacker.questBootA = 0;
     state.attacker.questBootB = 0;
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
+    syncAbilityInputsToLevel();
     invalidateOptimization();
     return render();
   }
@@ -1896,6 +2421,7 @@ document.addEventListener("click", (event) => {
     state.attacker.questBootA = 0;
     state.attacker.questBootB = 0;
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
+    syncAbilityInputsToLevel();
     invalidateOptimization();
     return render();
   }
@@ -1913,10 +2439,30 @@ document.addEventListener("click", (event) => {
   if (pickerButton) return openPicker(pickerButton.dataset.picker, pickerButton.dataset.path);
   const bisButton = event.target.closest("[data-bis-path]");
   if (bisButton) return openBis(bisButton.dataset.bisPath);
+  const bootsButton = event.target.closest("[data-include-boots]");
+  if (bootsButton) {
+    const side = bootsButton.dataset.includeBoots;
+    const key = side === "B" ? "includeBootsB" : "includeBootsA";
+    state.attacker[key] = !state.attacker[key];
+    if (!state.attacker[key]) state.attacker[`questBoot${side}`] = 0;
+    invalidateOptimization();
+    return render();
+  }
+  const rosterBootsButton = event.target.closest("[data-include-roster-boots]");
+  if (rosterBootsButton) {
+    const [root, indexText] = rosterBootsButton.dataset.includeRosterBoots.split(".");
+    const loadout = state[root]?.[Number(indexText)];
+    if (!loadout) return;
+    loadout.includeBoots = !loadout.includeBoots;
+    if (!loadout.includeBoots) loadout.boots = 0;
+    invalidateOptimization();
+    return render();
+  }
   const levelButton = event.target.closest("[data-level]");
   if (levelButton) {
     const cap = levelButton.dataset.level === "attacker.level" ? attackerLevelCap() : 18;
     setPath(levelButton.dataset.level, Math.max(1, Math.min(cap, Number(pathValue(levelButton.dataset.level)) + Number(levelButton.dataset.delta))));
+    if (levelButton.dataset.level === "attacker.level") syncAbilityInputsToLevel();
     return render();
   }
   const rosterRankButton = event.target.closest("[data-roster-rank]");
@@ -2002,7 +2548,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.targets.length < 5) {
       const index = state.targets.length;
-      state.targets.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], abilityRanks: {} });
+      state.targets.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {} });
       render();
       return openPicker("champion", `targets.${index}.champion`);
     }
@@ -2018,7 +2564,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.allies.length < 4) {
       const index = state.allies.length;
-      state.allies.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], abilityRanks: {}, allyEffectsEnabled: false });
+      state.allies.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {}, allyEffectsEnabled: false });
       render();
       return openPicker("champion", `allies.${index}.champion`);
     }
@@ -2098,6 +2644,7 @@ Promise.all([
     championAvailability.forEach((entry) => {
       engine.availability.set(entry.name, entry.availability || {});
       if (entry.availability?.ready) engine.reviewed.add(entry.name);
+      if (entry.engine_backend_enabled) engine.backend.add(entry.name);
     });
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};

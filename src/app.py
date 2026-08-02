@@ -35,20 +35,33 @@ from calculator.rune_effects import keystone_catalog, refresh_rune_effects
 from calculator.item_coverage import item_model_coverage, require_target_item_coverage
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import validate_resolved_loadout
+from calculator.defensive_effects import resolve_starting_defenses
+from calculator.participant_timeline import build_participant_timeline
 from calculator.champions import (
     champion_options_meta_map,
+    engine_registration_kind,
     get_comparison_curve_unavailable_reason,
+    registered_engine_champion_names,
     registered_champion_names,
 )
 from calculator.champion_coverage import attacker_availability
 from calculator.optimizer import (
     exclusivity_groups,
     get_eligible_boots,
+    get_eligible_legendaries,
     get_selectable_items,
     optimize_build,
+    optimizer_supported_items,
 )
 from calculator.stats import MAX_LEVEL
-from calculator.scenario import MAX_ALLIES, MAX_ENEMIES, ChampionLoadout, parse_roster
+from calculator.stats import calculate_total_stats
+from calculator.scenario import (
+    MAX_ALLIES,
+    MAX_ENEMIES,
+    MAX_LOADOUT_ITEMS,
+    ChampionLoadout,
+    parse_roster,
+)
 from calculator.role_quests import require_level_within_cap, role_quest_meta
 from calculator.timeline_coverage import combine_timeline_coverages
 from calculator.pipeline import (
@@ -85,6 +98,7 @@ _RATE_LIMIT_POLICIES = {
     "optimize": (2, 0.1),
 }
 _VERIFIED_CHAMPIONS = frozenset(registered_champion_names())
+_ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
 _ICON_HOSTS = frozenset(
     {
         "cdn.communitydragon.org",
@@ -122,6 +136,11 @@ _SECURITY_HEADERS = {
 _rate_limiter = TokenBucketStore(
     Path(tempfile.gettempdir()) / "lol-calculator-rate-limits.sqlite3"
 )
+
+
+def _generic_engine_enabled() -> bool:
+    """Compatibility flag retained for old clients; no generic lane exists."""
+    return False
 
 
 def _auth_enabled() -> bool:
@@ -467,7 +486,7 @@ def _load_public_champion(name: str) -> dict:
         champion = get_champion(name)
     except KeyError as exc:
         raise LookupError(f"Champion '{name}' not found") from exc
-    if champion["name"] not in _VERIFIED_CHAMPIONS:
+    if champion["name"] not in _ENGINE_CHAMPIONS:
         availability = attacker_availability(champion, _VERIFIED_CHAMPIONS)
         reason = availability["blockers"][0]["label"]
         raise ValueError(f"Champion '{champion['name']}' is not verified: {reason}")
@@ -480,6 +499,8 @@ def _public_loadout_summary(loadout) -> dict:
     summary["icon"] = _https_icon(summary["icon"])
     summary["item_icons"] = [_https_icon(icon) for icon in summary["item_icons"]]
     summary["verified_attacker"] = summary["champion"] in _VERIFIED_CHAMPIONS
+    summary["engine_registered"] = summary["champion"] in _ENGINE_CHAMPIONS
+    summary["engine_registration"] = engine_registration_kind(summary["champion"])
     return summary
 
 
@@ -558,6 +579,28 @@ def _serialize_fight_result(result: Mapping[str, object]) -> dict:
         "resource_spent": round(result.get("resource_spent", 0.0), 1),
         "resource_remaining": round(result.get("resource_remaining", 0.0), 1),
         "timeline_coverage": dict(result.get("timeline_coverage", {})),
+        "damage_events": [
+            {
+                "time": round(float(event.get("time", 0.0)), 3),
+                "source": str(event.get("source_key", "")),
+                "damage_type": str(event.get("damage_type", "")),
+                "damage": round(float(event.get("damage", 0.0)), 1),
+                "phase": str(event.get("phase", "")),
+            }
+            for event in result.get("damage_events", [])
+            if isinstance(event, Mapping)
+        ],
+        "self_healing": round(float(result.get("self_healing", 0.0)), 1),
+        "self_healing_events": [
+            {
+                "time": round(float(event.get("time", 0.0)), 3),
+                "source": str(event.get("source", "")),
+                "kind": str(event.get("kind", "")),
+                "amount": round(float(event.get("amount", 0.0)), 1),
+            }
+            for event in result.get("self_healing_events", [])
+            if isinstance(event, Mapping)
+        ],
     }
 
 
@@ -920,10 +963,9 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
 def api_champions():
     """Return champion identity and fail-closed attacker readiness.
 
-    ``verified`` = has a module in src/calculator/champions/ (the registry
-    is the source of truth). The picker greys out unverified champions —
-    generic-path numbers are estimates, never citable (CLAUDE.md rule 6).
-    Verified champions sort first, then unverified, A-Z within each group.
+    ``verified`` and ``engine_registered`` are backed by the complete
+    dedicated-module registry. Source receipts and packet assumptions remain
+    available through the config metadata.
     """
     champions = fetch_champion_data()
     result = []
@@ -942,6 +984,11 @@ def api_champions():
                 "name": champ_data["name"],
                 "icon": _https_icon(champ_data.get("icon", "")),
                 "verified": availability["ready"],
+                "engine_registered": champ_data["name"] in _ENGINE_CHAMPIONS,
+                "engine_registration": engine_registration_kind(champ_data["name"]),
+                "engine_backend_enabled": (
+                    champ_data["name"] in _ENGINE_CHAMPIONS
+                ),
                 "availability": availability,
                 "patch_last_changed": champ_data.get("patchLastChanged"),
                 "abilities": ability_slots,
@@ -1034,6 +1081,11 @@ def api_config():
             "input_limits": PUBLIC_INPUT_LIMITS,
             "champion_options": champion_options_meta_map(),
             "item_options": item_input_options_meta(),
+            "champion_engine": {
+                "registered_count": len(_ENGINE_CHAMPIONS),
+                "reviewed_count": len(_VERIFIED_CHAMPIONS),
+                "generic_enabled": _generic_engine_enabled(),
+            },
             "keystones": keystone_catalog(),
             "dev_mode": local_dev,
             "data_snapshot": {
@@ -1176,6 +1228,11 @@ def api_calculate():
             if fight_params.role
             else None
         )
+        response["engine"] = {
+            "registration": engine_registration_kind(champion_data["name"]),
+            "certified": champion_data["name"] in _VERIFIED_CHAMPIONS,
+            "mode": "reviewed_event_order",
+        }
         if allies:
             response.update(
                 {
@@ -1197,6 +1254,28 @@ def api_calculate():
                         },
                     },
                 }
+            )
+        if isinstance(champion_data.get("stats"), Mapping):
+            main_stats = calculate_total_stats(
+                champion_data,
+                level,
+                items,
+                item_options=fight_params.item_options,
+                role=fight_params.role,
+                role_quest_complete=fight_params.role_quest_complete,
+                external_stat_bonuses=fight_params.ally_stat_bonuses,
+            )
+            response["combat"] = build_participant_timeline(
+                champion_data,
+                level,
+                items,
+                fight_params,
+                main_stats=main_stats,
+                main_defenses=resolve_starting_defenses(
+                    champion_data["name"], level, main_stats, items
+                ),
+                enemies=[],
+                allies=allies,
             )
         return jsonify(response)
 
@@ -1270,11 +1349,277 @@ def api_calculate():
             ),
         }
     )
+    response["engine"] = {
+        "registration": engine_registration_kind(champion_data["name"]),
+        "certified": champion_data["name"] in _VERIFIED_CHAMPIONS,
+        "mode": "reviewed_event_order",
+    }
+    # The legacy aggregate is retained for compatibility.  ``combat`` is the
+    # coupled event-ordered receipt used by the UI/BIS objective: every
+    # selected ally and enemy is an active participant with survival/eHP and
+    # attributed output.
+    if isinstance(champion_data.get("stats"), Mapping):
+        main_stats = calculate_total_stats(
+            champion_data,
+            level,
+            items,
+            item_options=fight_params.item_options,
+            role=fight_params.role,
+            role_quest_complete=fight_params.role_quest_complete,
+            external_stat_bonuses=fight_params.ally_stat_bonuses,
+        )
+        main_defenses = resolve_starting_defenses(
+            champion_data["name"], level, main_stats, items
+        )
+        response["combat"] = build_participant_timeline(
+            champion_data,
+            level,
+            items,
+            fight_params,
+            main_stats=main_stats,
+            main_defenses=main_defenses,
+            enemies=enemies,
+            allies=allies,
+        )
     if include_crossover:
         _add_comparison_curve(
             response, champion_data, level, items, fight_params, enemies
         )
     return jsonify(response)
+
+
+def _bis_main_request(data: Mapping[str, object]) -> ChampionLoadout:
+    """Parse the actual main champion used by focused BIS requests."""
+    return ChampionLoadout.from_request(
+        {
+            "champion": data.get("champion", ""),
+            "level": data.get("level", 1),
+            "items": data.get("items", []),
+            "boots": data.get("boots", ""),
+            "item_options": data.get("item_options"),
+            "role": data.get("role", ""),
+            "role_quest_complete": data.get("role_quest_complete", False),
+        },
+        field="attacker",
+    )
+
+
+def _bis_replaced_loadout(
+    loadout: ChampionLoadout,
+    *,
+    slot_index: int,
+    slot_kind: str,
+    candidate_name: str,
+) -> ChampionLoadout:
+    """Replace one ordinary or boots slot while preserving sourced options."""
+    if slot_kind == "boots":
+        return replace(loadout, boots=candidate_name)
+    items = list(loadout.items)
+    if slot_index < 0 or slot_index > MAX_LOADOUT_ITEMS - 1:
+        raise ValueError("slot_index must be between 0 and 5")
+    if slot_index >= len(items):
+        # Empty browser slots are not serialized as placeholder items; the
+        # next completed candidate therefore occupies the next legal slot.
+        items.append(candidate_name)
+    else:
+        items[slot_index] = candidate_name
+    # The browser represents empty slots as absent request entries.  A
+    # candidate is therefore the only item introduced for a previously empty
+    # slot; duplicate validation remains owned by ChampionLoadout.resolve.
+    return replace(loadout, items=tuple(items))
+
+
+def _bis_candidate_pool(slot_kind: str, *, boots_tier: int) -> list[dict]:
+    legal = get_eligible_boots(tier=boots_tier) if slot_kind == "boots" else get_eligible_legendaries()
+    supported = optimizer_supported_items(legal)
+    return sorted(supported, key=lambda item: item.get("name", ""))
+
+
+@app.route("/api/bis", methods=["POST"])
+def api_bis():
+    """Rank one slot from the same coupled participant event model.
+
+    This endpoint exists so the browser's Best-in-Slot modal cannot use its
+    historical stat/archetype estimator.  ``subject_team`` identifies whose
+    build is being changed; all other selected champions remain active in the
+    timeline and the response exposes the metric components and coverage.
+    """
+    try:
+        data = _json_object()
+        subject_team = _request_string(data, "subject_team", "main")
+        if subject_team not in {"main", "ally", "enemy"}:
+            raise ValueError("subject_team must be main, ally, or enemy")
+        slot_index = _request_int(data, "slot_index", 0, 0, MAX_LOADOUT_ITEMS - 1)
+        slot_kind = _request_string(data, "slot_kind", "item")
+        if slot_kind not in {"item", "boots"}:
+            raise ValueError("slot_kind must be item or boots")
+        subject_index = _request_int(data, "subject_index", 0, 0, 4)
+        fight_params = FightParams.from_request(data, deterministic=True)
+        main_request = _bis_main_request(data)
+        enemy_requests = parse_roster(data, "enemies", maximum=MAX_ENEMIES)
+        ally_requests = parse_roster(data, "allies", maximum=MAX_ALLIES)
+        if subject_team == "ally" and subject_index >= len(ally_requests):
+            raise ValueError("subject_index is outside the selected ally roster")
+        if subject_team == "enemy" and subject_index >= len(enemy_requests):
+            raise ValueError("subject_index is outside the selected enemy roster")
+        if subject_team != "main" and slot_kind == "boots":
+            # Roster cards use the same tier contract as their role; ordinary
+            # roster roles default to tier-2 boots unless explicitly mid quest.
+            pass
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    try:
+        main_loadout = main_request.resolve()
+        enemies = [loadout.resolve() for loadout in enemy_requests]
+        allies = [loadout.resolve() for loadout in ally_requests]
+        subject_base = (
+            main_request
+            if subject_team == "main"
+            else (ally_requests[subject_index] if subject_team == "ally" else enemy_requests[subject_index])
+        )
+        subject_id = (
+            "main"
+            if subject_team == "main"
+            else f"{subject_team}:{subject_base.champion}"
+        )
+        boots_tier = 2
+        role = subject_base.role
+        if role == "mid" and subject_base.role_quest_complete:
+            boots_tier = 3
+        candidates = _bis_candidate_pool(slot_kind, boots_tier=boots_tier)
+    except KeyError as exc:
+        missing = exc.args[0] if exc.args else "requested data"
+        return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    rate_limit_response = _spend_rate_limit("calculate")
+    if rate_limit_response is not None:
+        return rate_limit_response
+
+    ranked: list[dict] = []
+    for candidate in candidates:
+        try:
+            candidate_request = _bis_replaced_loadout(
+                subject_base,
+                slot_index=slot_index,
+                slot_kind=slot_kind,
+                candidate_name=candidate["name"],
+            )
+            resolved_subject = candidate_request.resolve()
+            candidate_main = resolved_subject if subject_team == "main" else main_loadout
+            candidate_enemies = list(enemies)
+            candidate_allies = list(allies)
+            if subject_team == "enemy":
+                candidate_enemies[subject_index] = resolved_subject
+            elif subject_team == "ally":
+                candidate_allies[subject_index] = resolved_subject
+            combat = build_participant_timeline(
+                candidate_main.champion_data,
+                candidate_main.request.level,
+                list(candidate_main.item_data),
+                fight_params,
+                main_stats=candidate_main.stats,
+                main_defenses=candidate_main.defenses,
+                enemies=candidate_enemies,
+                allies=candidate_allies,
+                focus_participant_id=("main" if subject_team == "main" else subject_id),
+            )
+            objective = combat["objective"]
+            focus = next(
+                row for row in combat["participants"]
+                if row["participant_id"] == ("main" if subject_team == "main" else subject_id)
+            )
+            if subject_team == "main":
+                # TTD is already truncated at the focus participant's death
+                # in the shared event timeline.  Adding raw eHP here would
+                # count the same survival twice and makes an assassin's BIS
+                # drift toward pure-health items.
+                score = float(objective["focus_damage_before_death"])
+                metric = "main TTD (survival-coupled)"
+                components = {
+                    "damage_before_death": objective["focus_damage_before_death"],
+                    "effective_health": focus["survival"]["effective_health"],
+                    "healing": focus["survival"]["healing_received"],
+                    "support_shield_received": focus["survival"]["support_shield_received"],
+                }
+            elif subject_team == "ally":
+                score = float(objective["main_team_damage_before_death"]) + float(
+                    objective["focus_support_value"]
+                ) + float(focus["survival"]["effective_health"])
+                metric = "team damage + ally utility + effective health"
+                components = {
+                    "main_team_damage_before_death": objective["main_team_damage_before_death"],
+                    "outgoing_support": objective["focus_support_value"],
+                    "healing": objective["focus_healing"],
+                    "effective_health": focus["survival"]["effective_health"],
+                }
+            else:
+                score = float(objective["focus_damage_before_death"])
+                metric = "enemy TTD (survival-coupled)"
+                components = {
+                    "damage_before_death": objective["focus_damage_before_death"],
+                    "effective_health": focus["survival"]["effective_health"],
+                    "healing": focus["survival"]["healing_received"],
+                    "shield_absorbed": focus["survival"]["shield_absorbed"],
+                }
+            ranked.append(
+                {
+                    "name": candidate["name"],
+                    "icon": _https_icon(candidate.get("icon", "")),
+                    "score": round(score, 1),
+                    "metric": metric,
+                    "components": components,
+                    "stats": candidate.get("stats", {}),
+                    "survival": focus["survival"],
+                    "timeline_coverage": combat["timeline_coverage"],
+                }
+            )
+        except (KeyError, ValueError):
+            # A candidate without a complete legal sourced loadout is omitted,
+            # never assigned a zero or a heuristic replacement score.
+            continue
+
+    ranked.sort(key=lambda row: row["score"], reverse=True)
+    # A row with coarse or missing event order is useful as an audit receipt,
+    # but it is not a defensible BIS recommendation.  Keep those rows separate
+    # so the browser cannot silently apply an uncertified build.
+    partial_ranked = [
+        candidate
+        for candidate in ranked
+        if not candidate["timeline_coverage"].get("complete", False)
+    ][:12]
+    certified_ranked = [
+        candidate
+        for candidate in ranked
+        if candidate["timeline_coverage"].get("complete", False)
+    ]
+    return jsonify(
+        {
+            "subject_team": subject_team,
+            "subject_index": subject_index,
+            "slot_index": slot_index,
+            "slot_kind": slot_kind,
+            "candidates": certified_ranked[:12],
+            "partial_candidates": partial_ranked,
+            "candidate_count": len(ranked),
+            "certified_candidate_count": len(certified_ranked),
+            "coverage": {
+                "complete": bool(certified_ranked),
+                "certification": (
+                    "bis_event_order_certified"
+                    if certified_ranked
+                    else "bis_withheld_partial_event_order"
+                ),
+                "note": (
+                    "Only candidates with complete sourced event order are shown as BIS."
+                    if certified_ranked
+                    else "BIS is withheld: every candidate still has partial or uncertified event order."
+                ),
+            },
+        }
+    )
 
 
 @app.route("/api/optimize", methods=["POST"])
@@ -1287,6 +1632,9 @@ def api_optimize():
         objective = _request_string(data, "objective", "total_damage")
         locked_items = _request_string_list(data, "locked_items", maximum=6)
         locked_boots = _request_string(data, "locked_boots")
+        include_boots = data.get("include_boots", True)
+        if not isinstance(include_boots, bool):
+            raise ValueError("include_boots must be true or false")
         max_legendary_slots = _request_int(data, "max_legendary_slots", 5, 1, 6)
         gold_budget = (
             _request_int(data, "gold_budget", 0, 1, 30_000)
@@ -1332,7 +1680,9 @@ def api_optimize():
         )
 
     allowed_slots = (
-        6 if fight_params.role == "bottom" and fight_params.role_quest_complete else 5
+        6
+        if not include_boots
+        else (6 if fight_params.role == "bottom" and fight_params.role_quest_complete else 5)
     )
     if max_legendary_slots > allowed_slots:
         return (
@@ -1442,6 +1792,9 @@ def api_optimize():
             ),
             gold_budget=gold_budget,
             require_complete_timeline=True,
+            enemy_loadouts=enemies,
+            ally_loadouts=allies,
+            include_boots=include_boots,
         )
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400

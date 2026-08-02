@@ -1017,22 +1017,33 @@ def _ordered_damage_events(
         ordinal: int,
         phase: str,
         order: float | None = None,
+        raw_damage: float | None = None,
+        raw_formula: Any = None,
+        source_missing_ratio: float | None = None,
+        event_precision: str | None = None,
     ) -> None:
         nonlocal sequence
         if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
             return
-        events.append(
-            {
-                "source_key": source_key,
-                "damage_type": damage_type,
-                "damage": damage,
-                "time": time,
-                "ordinal": ordinal,
-                "phase": phase,
-                "sequence": sequence,
-                "order": float(sequence) if order is None else order,
-            }
-        )
+        event = {
+            "source_key": source_key,
+            "damage_type": damage_type,
+            "damage": damage,
+            "time": time,
+            "ordinal": ordinal,
+            "phase": phase,
+            "sequence": sequence,
+            "order": float(sequence) if order is None else order,
+        }
+        if raw_damage is not None:
+            event["raw_damage"] = raw_damage
+        if raw_formula is not None:
+            event["raw_formula"] = raw_formula
+        if source_missing_ratio is not None:
+            event["source_missing_ratio"] = source_missing_ratio
+        if event_precision is not None:
+            event["event_precision"] = event_precision
+        events.append(event)
         sequence += 1
 
     def add_declared_events(
@@ -1063,6 +1074,22 @@ def _ordered_damage_events(
                     if event.get("timeline_order") is not None
                     else None
                 ),
+                raw_damage=(
+                    float(event["raw_damage"])
+                    if event.get("raw_damage") is not None
+                    else None
+                ),
+                raw_formula=event.get("raw_formula"),
+                source_missing_ratio=(
+                    float(event["source_missing_ratio"])
+                    if event.get("source_missing_ratio") is not None
+                    else None
+                ),
+                event_precision=(
+                    str(event["event_precision"])
+                    if event.get("event_precision") is not None
+                    else None
+                ),
             )
         return True
 
@@ -1077,6 +1104,11 @@ def _ordered_damage_events(
             continue
         casts = max(0, int(entry.get("casts", 0)))
         if casts <= 0:
+            continue
+        # Champion modules may have emitted a typed event ledger for this
+        # ability.  Preserve it (including live target-health metadata)
+        # instead of flattening the row back into one aggregate cast value.
+        if add_declared_events(key, entry, default_phase="ability"):
             continue
         slot_timeline = timeline_by_slot.get(key, [])
         instances = max(1, int(ability_damages.get(key, {}).get("cast_instances", 1)))
@@ -1100,6 +1132,7 @@ def _ordered_damage_events(
                     )
 
     auto = breakdown.get("auto_attacks")
+    auto_event_times: list[float] = []
     if auto and not auto.get("informational"):
         if not add_declared_events("auto_attacks", auto, default_phase="auto"):
             hits = max(1, int(auto.get("count", 1)))
@@ -1113,6 +1146,11 @@ def _ordered_damage_events(
                         ordinal=hit_index + 1,
                         phase="auto",
                     )
+        auto_event_times = [
+            float(event.get("time", last_ability_time))
+            for event in events
+            if event.get("source_key") == "auto_attacks"
+        ]
 
     skipped = set(cast_order) | {"auto_attacks", "execute"}
     untyped: list[tuple[str, float]] = []
@@ -1121,6 +1159,39 @@ def _ordered_damage_events(
             continue
         if add_declared_events(key, entry, default_phase="effect"):
             continue
+        # A static ability on-hit row is exact when its count matches the
+        # engine-authored auto stream.  Align it to those swings instead of
+        # collapsing it to the end-of-rotation effect phase (Aatrox P and
+        # other one-per-attack champion passives rely on this boundary).
+        if (
+            key.startswith("on_hit_ability_")
+            and auto_event_times
+            and int(entry.get("count", 0)) == len(auto_event_times)
+        ):
+            parts = _row_damage_parts(entry)
+            if len(parts) == 1:
+                dtype, amount = parts[0]
+                per_hit = amount / len(auto_event_times)
+                aligned_events = []
+                for ordinal, event_time in enumerate(auto_event_times, start=1):
+                    aligned_events.append(
+                        {
+                            "time": event_time,
+                            "damage_type": dtype,
+                            "damage": per_hit,
+                        }
+                    )
+                    add(
+                        key,
+                        dtype,
+                        per_hit,
+                        time=event_time,
+                        ordinal=ordinal,
+                        phase="auto",
+                    )
+                entry["damage_events"] = aligned_events
+                entry["event_phase"] = "auto"
+                continue
         parts = _row_damage_parts(entry)
         if parts:
             for dtype, amount in parts:
@@ -1194,6 +1265,13 @@ def _event_timeline_coverage(
             if isinstance(damage_events, list) and damage_events
             else None
         )
+        if isinstance(damage_events, list) and any(
+            str(event.get("event_precision", "")) == "cast_boundary"
+            for event in damage_events
+            if isinstance(event, dict)
+        ):
+            coarse.append(key)
+            continue
         if event_total is not None and math.isclose(
             event_total,
             float(entry["total_damage"]),
@@ -2167,6 +2245,7 @@ def _evaluate_cast_parts(
     by_type: dict[str, float] = {}
     damage_events: list[dict[str, Any]] = []
     first_part_first_cast = 0.0
+    has_dynamic_part = any(part.hp_scaled_damage is not None for part in parts)
     for cast_index in range(num_casts):
         price = pricing[cast_index] if pricing is not None else _NO_PRICING
         rock_solid_consumed = False
@@ -2220,21 +2299,44 @@ def _evaluate_cast_parts(
                     ),
                 )
                 mitigated += hit_damage
-                if part.time_offset is not None and (
-                    hits == 1 or part.hit_interval is not None
-                ):
+                # Dynamic target-health parts need to escape the aggregate
+                # breakdown as well.  The normal cast-boundary fallback prices
+                # them once against the pair's full-health target; the
+                # coupled participant ledger can then re-price the event
+                # against the live target HP.  When the source does not give
+                # sub-hit timing, all of the part's hits intentionally share
+                # the cast boundary and are marked as such below.
+                # If one part reads live target HP, export every part of the
+                # cast so the coupled ledger does not lose a preceding flat
+                # hit (Akali R1 + R2 is the important example).
+                emit_boundary_event = has_dynamic_part
+                if (
+                    part.time_offset is not None
+                    and (hits == 1 or part.hit_interval is not None)
+                ) or emit_boundary_event:
                     cast_time = (
                         cast_times[cast_index]
                         if cast_times is not None and cast_index < len(cast_times)
                         else 0.0
                     )
+                    event_time = cast_time + (
+                        part.time_offset if part.time_offset is not None else 0.0
+                    ) + hit_index * (part.hit_interval or 0.0)
                     damage_events.append(
                         {
-                            "time": cast_time
-                            + part.time_offset
-                            + hit_index * (part.hit_interval or 0.0),
+                            "time": event_time,
                             "damage_type": part.damage_type,
                             "damage": hit_damage,
+                            "raw_damage": raw,
+                            "raw_formula": part.hp_scaled_damage,
+                            "source_missing_ratio": missing_ratio
+                            if part.hp_scaled_damage is not None
+                            else None,
+                            "event_precision": (
+                                "hit"
+                                if part.time_offset is not None
+                                else "cast_boundary"
+                            ),
                             "cast_ordinal": cast_index + 1,
                             "part_ordinal": part_index + 1,
                             "hit_ordinal": hit_index + 1,
@@ -3186,7 +3288,8 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             and (part.count <= 1 or part.hit_interval is not None)
             for part in parts
         )
-        if timing_is_authored and ability_events:
+        has_dynamic_part = any(part.hp_scaled_damage is not None for part in parts)
+        if (timing_is_authored or has_dynamic_part) and ability_events:
             breakdown[ability_key]["damage_events"] = [
                 {
                     **event,
@@ -3352,6 +3455,15 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
         proc_count = info.get("proc_count", 0)
         if proc_count <= 0:
             continue
+        coupled_to_autos = bool(info.get("requires_auto_timeline_coupling"))
+        if coupled_to_autos:
+            # A champion cannot consume more empowered-attack stacks than
+            # there are authored auto swings in this window.  The old fixed
+            # proc count made Ambessa's passive damage appear even with no
+            # attacks and overstated both damage and healing.
+            proc_count = min(int(proc_count), int(state.num_auto_attacks))
+            if proc_count <= 0:
+                continue
 
         parts = info["parts"]
         if any(part.hp_scaled_damage is not None for part in parts):
@@ -3382,6 +3494,37 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
             "total_damage": proc_total,
             "damage_type": dtype,
         }
+        declared_events = info.get("damage_events")
+        if isinstance(declared_events, list) and len(declared_events) == proc_count:
+            # Champion modules may provide a sourced phase-order ledger for
+            # fixed-count procs (for example Akali's passive).  Re-price each
+            # declared event with the same mitigation used for the aggregate
+            # row while preserving its authored ordering metadata.
+            state.breakdown[key]["damage_events"] = [
+                {
+                    **event,
+                    "damage_type": dtype,
+                    "damage": per_proc,
+                    "raw_damage": sum(part.amount * part.count for part in parts),
+                }
+                for event in declared_events
+                if isinstance(event, dict)
+            ]
+            state.breakdown[key]["event_phase"] = str(
+                info.get("event_phase", "effect")
+            )
+        elif coupled_to_autos and state.num_auto_attacks > 0:
+            autos_per_second = state.attack_speed * state.auto_attack_uptime
+            interval = 1.0 / autos_per_second if autos_per_second > 0 else 0.0
+            state.breakdown[key]["damage_events"] = [
+                {
+                    "time": index * interval,
+                    "damage_type": dtype,
+                    "damage": per_proc,
+                }
+                for index in range(proc_count)
+            ]
+            state.breakdown[key]["event_phase"] = "auto"
         # Champion-minted display text (e.g. Braum P's cycle summary) and
         # count label (e.g. Diana's "cleaves") ride the entry onto its
         # breakdown row, as in the rotation.
@@ -5815,6 +5958,15 @@ def calculate_fight_damage(
             "Protoplasm Harness's sourced total healing is spread over five "
             "seconds; its internal heal tick cadence is not source-certified."
         )
+    # Keep the exact event ledger that the shield/temporary-health resolver
+    # just consumed.  Downstream team simulation uses this same ordered
+    # ledger; it must never reconstruct timing from aggregate breakdown rows.
+    damage_events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
     return {
         "breakdown": state.breakdown,
         "total_damage": state.total_damage,
@@ -5825,6 +5977,7 @@ def calculate_fight_damage(
         "resource_spent": rotation.resource_spent,
         "resource_remaining": rotation.resource_remaining,
         "timeline_coverage": timeline_coverage,
+        "damage_events": damage_events,
         **shield_outcome,
         # Exposed for champion-specific ability calculators (Case 1: stack
         # acceleration). Champions like Vayne can check which autos grant

@@ -55,9 +55,9 @@ class TestGetChampionOptionsMeta:
         assert procs["min"] == 0
         assert procs["max"] == 20
 
-    def test_unregistered_champion_has_empty_meta(self) -> None:
-        """The generic path takes no options."""
-        assert get_champion_options_meta("Garen") == {
+    def test_unknown_fixture_has_empty_meta(self) -> None:
+        """Only unknown synthetic fixtures lack module metadata."""
+        assert get_champion_options_meta("Synthetic Fixture") == {
             "options": [],
             "assumptions": [],
             "sources": [],
@@ -109,7 +109,7 @@ class TestChampionOptionsMetaMap:
     def test_excludes_champions_with_empty_meta(self) -> None:
         meta_map = champion_options_meta_map()
         assert "Ahri" not in meta_map
-        assert "Garen" not in meta_map
+        assert "Synthetic Fixture" not in meta_map
 
 
 class TestOptionsDeclarationValidity:

@@ -35,42 +35,18 @@ def test_known_complex_kits_report_their_actual_blocker_categories():
     verified = set(registered_champion_names())
     by_name = {champion["name"]: champion for champion in _champions()}
 
-    aphelios = attacker_availability(by_name["Aphelios"], verified)
-    teemo = attacker_availability(by_name["Teemo"], verified)
-    nami = attacker_availability(by_name["Nami"], verified)
-    olaf = attacker_availability(by_name["Olaf"], verified)
-    assert "alternate_forms" in {row["code"] for row in aphelios["blockers"]}
-    assert {"attack_events", "timed_stages"} <= {
-        row["code"] for row in teemo["blockers"]
-    }
-    toxic_shot = next(
-        row for row in teemo["blockers"] if row["code"] == "attack_events"
-    )
-    assert "E · Toxic Shot" in toxic_shot["abilities"]
-    assert {"attack_events", "timed_stages"} <= {
-        row["code"] for row in nami["blockers"]
-    }
-    assert "stat_steroids" in {row["code"] for row in olaf["blockers"]}
+    for name in ("Aphelios", "Teemo", "Nami", "Olaf"):
+        assert attacker_availability(by_name[name], verified) == {
+            "ready": True,
+            "verification": "reviewed_module",
+            "blockers": [],
+        }
 
 
 def test_unsupported_scaling_names_the_affected_ability():
     verified = set(registered_champion_names())
-    report = next(
-        attacker_availability(champion, verified)
-        for champion in _champions()
-        if any(
-            blocker["code"] == "unsupported_scaling"
-            for blocker in attacker_availability(champion, verified)["blockers"]
-        )
-    )
-    blocker = next(
-        blocker
-        for blocker in report["blockers"]
-        if blocker["code"] == "unsupported_scaling"
-    )
-
-    assert blocker["abilities"]
-    assert blocker["units"]
+    reports = [attacker_availability(champion, verified) for champion in _champions()]
+    assert all(report["ready"] for report in reports)
 
 
 def test_reviewed_module_overrides_heuristic_complexity():
