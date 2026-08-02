@@ -127,6 +127,7 @@ from collections.abc import Sequence
 from typing import Any, Callable
 
 from . import item_effects
+from . import rune_effects
 from .ability_spec import DamagePart
 from .resistance import (
     apply_resistance,
@@ -377,6 +378,9 @@ class FightConfig:
     enforce_resource_limits: bool = False
     roster_target_index: int = 0
     roster_target_count: int = 1
+    # Selected keystone rune by name ("" = none). Resolution fails closed
+    # in rune_effects for unknown or unmodeled keystones.
+    keystone: str = ""
 
 
 @dataclass
@@ -429,6 +433,8 @@ class FightState:
     # ── Crit (resolved after stat-buff ultimates) ─────────────────────────
     crit_chance: float = 0.0
     crit_multiplier: float = BASE_CRIT_MULTIPLIER
+    # ── Keystone rune (compiled proc; None when no keystone equipped) ─────
+    keystone_effect: "rune_effects.KeystoneProcEffect | None" = None
     # ── Fight timeline (built by the rotation, read by later steps) ───────
     # When stacking-DoT stacks land and which mid-fight buff windows they
     # open — the ONE home every stack-aware step reads (Case 4 and 5).
@@ -1684,6 +1690,7 @@ def _resolve_combat_state(
         attack_speed_ratio=as_ratio,
         num_auto_attacks=num_auto_attacks,
         empowered_autos=empowered_autos,
+        keystone_effect=rune_effects.resolve_keystone(config.keystone),
     )
 
 
@@ -4984,6 +4991,77 @@ def _add_item_proc_damage(
         state.total_damage += ult_proc_mitigated
 
 
+def _keystone_instance_times(state: FightState, rotation: RotationResult) -> list[float]:
+    """Chronological damage-instance times the keystone stack counter sees.
+
+    One instance per accepted ability cast (wiki: up to one stack per cast
+    instance) plus one per simulated auto swing. Item-effect instances are
+    not counted — most item procs are explicitly excluded by the wiki rule,
+    and the ones that do stack lack authored timestamps; omitting them can
+    only delay a proc, never invent one.
+    """
+    times = [float(event.get("time", 0.0)) for event in rotation.cast_events]
+    times.extend(_auto_attack_timestamps(state))
+    return sorted(times)
+
+
+def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
+    """Add keystone rune proc damage from the fight's real instance stream.
+
+    Walks the timestamped instances with the keystone's sourced stack
+    window: a stack expires ``stack_window_seconds`` after it was applied,
+    so reaching ``stacks_required`` live stacks means that many instances
+    landed within one window. Procs start the cooldown, clear the stacks,
+    and suppress new stacks until the keystone is ready again (runes do
+    not stack while on cooldown). Each proc is priced once and recorded
+    as a timestamped damage event for the ledger and timeline consumers.
+    """
+    effect = state.keystone_effect
+    if effect is None:
+        return
+    proc_times: list[float] = []
+    live_stacks: list[float] = []
+    ready_at = 0.0
+    for instance_time in _keystone_instance_times(state, rotation):
+        if instance_time < ready_at:
+            continue
+        live_stacks = [
+            applied
+            for applied in live_stacks
+            if instance_time - applied < effect.stack_window_seconds
+        ]
+        live_stacks.append(instance_time)
+        if len(live_stacks) >= effect.stacks_required:
+            proc_times.append(instance_time + effect.proc_delay_seconds)
+            ready_at = instance_time + effect.cooldown_seconds
+            live_stacks = []
+    if not proc_times:
+        return
+
+    raw_per_proc = effect.raw_damage(_damage_inputs(state))
+    damage_type = effect.damage_type(state.champion_stats)
+    mitigated_per_proc = _mitigate(
+        raw_per_proc, damage_type, state.resists, state.magic_amp
+    )
+    total = mitigated_per_proc * len(proc_times)
+    state.breakdown[effect.breakdown_key] = {
+        "name": effect.display_name,
+        "total_damage": total,
+        "damage_type": damage_type,
+        "count": len(proc_times),
+        "event_phase": "effect",
+        "damage_events": [
+            {
+                "time": proc_time,
+                "damage": mitigated_per_proc,
+                "damage_type": damage_type,
+            }
+            for proc_time in proc_times
+        ],
+    }
+    state.total_damage += total
+
+
 def _add_item_active_damage(state: FightState) -> None:
     """Add active-item damage (skipped when actives are excluded)."""
     if not state.include_actives:
@@ -5568,6 +5646,9 @@ def calculate_fight_damage(
 
     # ── Item procs (including ult-triggered Malignance) ─────────────────
     _add_item_proc_damage(state, rotation)
+
+    # ── Keystone rune proc (Electrocute-class stack triggers) ───────────
+    _add_keystone_damage(state, rotation)
 
     # ── Active item damage ──────────────────────────────────────────────
     _add_item_active_damage(state)

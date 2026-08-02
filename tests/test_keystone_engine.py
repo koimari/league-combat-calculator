@@ -1,0 +1,167 @@
+"""Fight-engine tests for keystone rune procs (Electrocute).
+
+The engine counts damage instances on the real fight timeline — one per
+accepted ability cast plus one per simulated auto swing — applies the
+sourced stack window, and gates re-procs behind the keystone cooldown.
+"""
+
+import pytest
+
+from src.calculator.ability_spec import DamagePart
+from src.calculator.resistance import apply_resistance
+
+
+def _spell(slot="Q", damage=300.0, cooldown=10.0):
+    return {
+        slot: {
+            "name": f"Test {slot}",
+            "rank": 1,
+            "cooldown": cooldown,
+            "damage_type": "magic",
+            "total_raw": damage,
+            "parts": (DamagePart("magic", damage),),
+        }
+    }
+
+
+def _keystone_row(result):
+    return result["breakdown"].get("keystone_Electrocute")
+
+
+ELECTROCUTE_BASE_AT_18 = 240.0  # 60 + 10 × 18, from data/runes.json
+ELECTROCUTE_BASE_AT_20 = 260.0
+
+
+class TestElectrocuteProcs:
+    def test_no_keystone_produces_no_row(self, fight, attacker_stats):
+        result = fight(attacker_stats(), _spell())
+        assert _keystone_row(result) is None
+
+    def test_one_rotation_three_casts_proc_once(self, fight, attacker_stats):
+        abilities = {**_spell("Q"), **_spell("W"), **_spell("E")}
+        result = fight(
+            attacker_stats(),
+            abilities,
+            keystone="Electrocute",
+            target_magic_resistance=100.0,
+        )
+        row = _keystone_row(result)
+        assert row is not None
+        assert row["count"] == 1
+        assert row["damage_type"] == "magic"
+        expected = apply_resistance(ELECTROCUTE_BASE_AT_18, 100.0)
+        assert row["total_damage"] == pytest.approx(expected)
+        assert result["total_damage"] >= expected
+
+    def test_cooldown_blocks_reproc_within_twenty_seconds(
+        self, fight, attacker_stats
+    ):
+        # 1.0 attack speed at full uptime: ten instances in ten seconds,
+        # but the 20s cooldown allows exactly one proc.
+        result = fight(
+            attacker_stats(),
+            {},
+            keystone="Electrocute",
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        row = _keystone_row(result)
+        assert row["count"] == 1
+
+    def test_second_proc_after_cooldown_expires(self, fight, attacker_stats):
+        # Autos at 0,1,2,... — proc at t=2, cooldown ready at t=22,
+        # stacks rebuild on the autos at 22,23,24 → second proc.
+        result = fight(
+            attacker_stats(),
+            {},
+            keystone="Electrocute",
+            one_rotation=False,
+            fight_duration_seconds=30.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        row = _keystone_row(result)
+        assert row["count"] == 2
+
+    def test_slow_instances_never_satisfy_the_window(self, fight, attacker_stats):
+        # 0.5 attack speed: instances every 2s — at most two stacks alive
+        # inside any 3-second window, so Electrocute never procs.
+        result = fight(
+            attacker_stats(attack_speed=0.5),
+            {},
+            keystone="Electrocute",
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        assert _keystone_row(result) is None
+
+    def test_proc_time_recorded_with_strike_delay(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            {},
+            keystone="Electrocute",
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+        )
+        events = _keystone_row(result)["damage_events"]
+        assert len(events) == 1
+        # Third auto lands at t=2; the lightning strikes 0.25s later.
+        assert events[0]["time"] == pytest.approx(2.25)
+
+    def test_adaptive_type_uses_physical_when_bonus_ad_dominates(
+        self, fight, attacker_stats
+    ):
+        stats = attacker_stats(bonus_attack_damage=200.0, attack_damage=300.0)
+        result = fight(
+            stats,
+            {},
+            keystone="Electrocute",
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+            target_armor=100.0,
+        )
+        row = _keystone_row(result)
+        assert row["damage_type"] == "physical"
+        expected = apply_resistance(ELECTROCUTE_BASE_AT_18 + 0.10 * 200.0, 100.0)
+        assert row["total_damage"] == pytest.approx(expected)
+
+    def test_level_twenty_uses_extended_wiki_leveling(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(level=20),
+            {},
+            keystone="Electrocute",
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+            auto_attacks_only=True,
+            target_magic_resistance=0.0,
+        )
+        row = _keystone_row(result)
+        assert row["total_damage"] == pytest.approx(ELECTROCUTE_BASE_AT_20)
+
+    def test_casts_and_autos_share_one_stack_counter(self, fight, attacker_stats):
+        # One cast plus the first two auto swings inside 3s → proc, even
+        # though neither source alone reaches three instances quickly.
+        result = fight(
+            attacker_stats(attack_speed=0.8),
+            _spell("Q"),
+            keystone="Electrocute",
+            one_rotation=False,
+            fight_duration_seconds=4.0,
+            auto_attack_uptime=1.0,
+        )
+        row = _keystone_row(result)
+        assert row is not None
+        assert row["count"] == 1
+
+    def test_unknown_keystone_raises(self, fight, attacker_stats):
+        with pytest.raises(ValueError, match="Fake Rune"):
+            fight(attacker_stats(), _spell(), keystone="Fake Rune")
