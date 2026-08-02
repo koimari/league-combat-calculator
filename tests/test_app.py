@@ -2,6 +2,8 @@
 
 from dataclasses import replace
 from pathlib import Path
+import base64
+import hashlib
 import sqlite3
 
 import pytest
@@ -24,18 +26,76 @@ def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contra
     page = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "Scryglass — Combat calculator" in page
-    assert 'class="header-brand" href="https://scryglass.xyz/"' in page
-    assert '<h1>Combat calculator</h1>' in page
+    assert "Scryglass — Item calculator" in page
+    assert 'class="brand" href="https://scryglass.xyz/"' in page
+    assert '<h1>Item calculator</h1>' in page
     for required_id in (
-        "champion-select",
-        "build-row-a",
-        "comparison-verdict",
-        "ally-roster",
-        "enemy-roster",
-        "optimize-btn",
+        "builder",
+        "winnerVisual",
+        "scoreGrid",
+        "resistanceOutput",
+        "damageBreakdown",
+        "rotationTable",
     ):
         assert f'id="{required_id}"' in page
+
+
+def _test_password_hash(password="secret"):
+    salt = b"test-scryglass-salt"
+    digest = hashlib.scrypt(password.encode(), salt=salt, n=16_384, r=8, p=1)
+    enc = lambda value: base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+    return f"scrypt$16384$8$1${enc(salt)}${enc(digest)}"
+
+
+def test_password_auth_gate_fails_closed_without_configuration(monkeypatch):
+    monkeypatch.setenv("SCRYGLASS_AUTH_REQUIRED", "1")
+    monkeypatch.delenv("SCRYGLASS_AUTH_SECRET", raising=False)
+    monkeypatch.delenv("SCRYGLASS_AUTH_USERS", raising=False)
+
+    client = app_module.app.test_client()
+    gated = client.get("/", follow_redirects=False)
+    assert gated.status_code == 302
+    assert gated.headers["Location"].endswith("/auth/login?next=/")
+    assert client.get("/healthz").get_json() == {"status": "ok"}
+    login_setup = client.get("/auth/login")
+    assert login_setup.status_code == 503
+    assert "SCRYGLASS_AUTH_SECRET" in login_setup.get_json()["error"]
+
+
+def test_password_auth_accepts_only_configured_accounts(monkeypatch):
+    monkeypatch.setenv("SCRYGLASS_AUTH_REQUIRED", "1")
+    monkeypatch.setenv("SCRYGLASS_AUTH_SECRET", "test-auth-secret")
+    monkeypatch.setenv(
+        "SCRYGLASS_AUTH_USERS",
+        '{"LSAccessAccount":"%s","SkywayAccessAccount":"%s","KoiAccessAccount":"%s"}'
+        % (_test_password_hash(), _test_password_hash("skyway-secret"), _test_password_hash("koi-secret")),
+    )
+    client = app_module.app.test_client()
+    assert client.get("/", follow_redirects=False).status_code == 302
+    bad = client.post("/auth/login", data={"username": "LSAccessAccount", "password": "wrong"})
+    assert bad.status_code == 401
+    good = client.post(
+        "/auth/login",
+        data={"username": "LSAccessAccount", "password": "secret", "next": "/"},
+        follow_redirects=False,
+    )
+    assert good.status_code == 302
+    assert good.headers["Location"].endswith("/")
+    assert client.get("/auth/status").get_json()["user"]["username"] == "LSAccessAccount"
+    assert client.get("/").status_code == 200
+
+    client = app_module.app.test_client()
+    koi = client.post(
+        "/auth/login",
+        data={"username": "KoiAccessAccount", "password": "koi-secret", "next": "/"},
+        follow_redirects=False,
+    )
+    assert koi.status_code == 302
+    assert client.get("/auth/status").get_json()["user"]["username"] == "KoiAccessAccount"
+    assert client.post(
+        "/auth/login",
+        data={"username": "Admin", "password": "koi-secret"},
+    ).status_code == 401
 
 
 def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
