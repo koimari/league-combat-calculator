@@ -19,6 +19,25 @@ def _disable_rate_limits_between_route_tests():
     app_module.app.config["RATE_LIMIT_ENABLED"] = previous
 
 
+def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contract():
+    response = app_module.app.test_client().get("/")
+    page = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Scryglass — Combat calculator" in page
+    assert 'class="header-brand" href="https://scryglass.xyz/"' in page
+    assert '<h1>Combat calculator</h1>' in page
+    for required_id in (
+        "champion-select",
+        "build-row-a",
+        "comparison-verdict",
+        "ally-roster",
+        "enemy-roster",
+        "optimize-btn",
+    ):
+        assert f'id="{required_id}"' in page
+
+
 def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
     captured = {}
     champion_data = {"name": "Ahri"}
