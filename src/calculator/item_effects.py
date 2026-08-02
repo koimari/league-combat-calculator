@@ -2207,6 +2207,19 @@ def _ap_multiplier(items: list[dict[str, Any]]) -> float:
     return 1.0 + bonus
 
 
+def _permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
+    """AP multiplier that counts as a permanent item-owned stat.
+
+    Rabadon's always applies. Blackfire Torch's per-burning-target increase is
+    a combat state and therefore cannot unlock Living Weapon.
+    """
+    if "Rabadon's Deathcap" not in _item_names(items):
+        return 1.0
+    return 1.0 + _required_effect_value(
+        "Rabadon's Deathcap", "ap_percent_increase"
+    )
+
+
 def _mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
     """Awe passives (Archangel's Staff, Seraph's Embrace): bonus mana → AP.
 
@@ -2413,6 +2426,11 @@ class StatBonuses:
     basic_ability_haste: float  # Spear of Shojin (Q/W/E only)
     bonus_move_speed_percent: float  # Mejai's 10+ Glory
     item_bonus_health_multiplier: float  # Warmog's Vitality (1.0 = none)
+    # Permanent item-owned subsets used by Kai'Sa's Living Weapon. These
+    # exclude temporary combat effects (Blackfire, Rapids, AS windows).
+    permanent_bonus_ap: float
+    permanent_ap_multiplier: float
+    permanent_bonus_ad: float
 
 
 def resolve_stat_effects(
@@ -2443,23 +2461,25 @@ def resolve_stat_effects(
             "Warmog's Armor", "item_bonus_health_ratio"
         )
     effective_bonus_health = bonus_health * item_bonus_health_multiplier
+    mana_bonus_ap = _mana_to_ap_bonus(items, bonus_mana)
+    dawncore_bonus_ap = _dawncore_bonus_ap(items, bonus_mana_regen_percent)
+    permanent_bonus_ap = mana_bonus_ap + dawncore_bonus_ap + input_bonus_ap
+    permanent_bonus_ad = (
+        _muramana_bonus_ad(items, max_mana)
+        + bloodmail_bonus_ad(items, effective_bonus_health)
+        + steraks_bonus_ad(items, base_attack_damage)
+    )
     return StatBonuses(
-        bonus_ap=(
-            _mana_to_ap_bonus(items, bonus_mana)
-            + _dawncore_bonus_ap(items, bonus_mana_regen_percent)
-            + _flowing_water_bonus_ap(items)
-            + input_bonus_ap
-        ),
+        bonus_ap=permanent_bonus_ap + _flowing_water_bonus_ap(items),
         ap_multiplier=_ap_multiplier(items),
-        bonus_ad=(
-            _muramana_bonus_ad(items, max_mana)
-            + bloodmail_bonus_ad(items, effective_bonus_health)
-            + steraks_bonus_ad(items, base_attack_damage)
-        ),
+        bonus_ad=permanent_bonus_ad,
         attack_speed_percent=_passive_attack_speed_bonus(items, is_melee),
         bonus_resists=terminus_resists,
         bonus_pen_percent=terminus_pen,
         basic_ability_haste=_basic_ability_haste(items),
         bonus_move_speed_percent=input_move_speed,
         item_bonus_health_multiplier=item_bonus_health_multiplier,
+        permanent_bonus_ap=permanent_bonus_ap,
+        permanent_ap_multiplier=_permanent_ap_multiplier(items),
+        permanent_bonus_ad=permanent_bonus_ad,
     )

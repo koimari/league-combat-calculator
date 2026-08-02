@@ -102,6 +102,14 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
             "/api/calculate",
             {"champion": "Aatrox", "champion_options": {"sweetspot": "false"}},
         ),
+        (
+            "/api/calculate",
+            {"champion": "Kai'Sa", "champion_options": {"q_evolved": "maybe"}},
+        ),
+        (
+            "/api/optimize",
+            {"champion": "Kai'Sa", "champion_options": {"w_evolved": 1}},
+        ),
         ("/api/calculate", {"champion": "Aatrox", "items": "Kraken Slayer"}),
         (
             "/api/calculate",

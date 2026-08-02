@@ -8259,7 +8259,7 @@
         "Q": {
           "cooldown": 6.0,
           "damage_type": "physical",
-          "detail": "6 missiles on one isolated target",
+          "detail": "6 missiles on one isolated target; automatic: 22.8/100 AD from items + growth",
           "name": "Icathian Rain",
           "parts": [
             "DamagePart(physical, amount=100.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.2571428571428571)",
@@ -8281,7 +8281,7 @@
           ],
           "post_hit_proc": {
             "breakdown_key": "passive_plasma",
-            "detail": "2 successive stack applications",
+            "detail": "2 successive stack applications; automatic: 0.0/100 item AP",
             "name": "Second Skin (Plasma)",
             "parts": [
               "DamagePart(magic, amount=19.29, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.8571428571428572)",
@@ -8314,6 +8314,9 @@
           "bonus_magic_resistance": 0,
           "bonus_mana": 0,
           "critical_strike_chance": 0.0,
+          "evolution_ability_power": 0.0,
+          "evolution_attack_damage": 0.0,
+          "evolution_attack_speed_percent": 0.0,
           "flat_armor_penetration": 0.0,
           "health": 640,
           "is_melee": false,
@@ -8344,6 +8347,9 @@
           "bonus_magic_resistance": 0,
           "bonus_mana": 0,
           "critical_strike_chance": 0.0,
+          "evolution_ability_power": 0.0,
+          "evolution_attack_damage": 22.81,
+          "evolution_attack_speed_percent": 15.8,
           "flat_armor_penetration": 0.0,
           "health": 1535,
           "is_melee": false,
@@ -8374,6 +8380,9 @@
           "bonus_magic_resistance": 0,
           "bonus_mana": 0,
           "critical_strike_chance": 0.0,
+          "evolution_ability_power": 0.0,
+          "evolution_attack_damage": 44.2,
+          "evolution_attack_speed_percent": 30.6,
           "flat_armor_penetration": 0.0,
           "health": 2374,
           "is_melee": false,
@@ -31881,7 +31890,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "a178af3fe3f36b1e508af03ab1d20955c965b751",
+    "git_head": "940ed9d33268b25e15a326ff0a1c632b07d18d2b",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785669778.9014,
@@ -37697,10 +37706,10 @@
             "Q": 282.6,
             "W": 308.4,
             "auto_attacks": 0.0,
-            "passive_plasma": 130.43,
+            "passive_plasma": 217.7,
             "proc_Luden's Echo": 155.36
           },
-          "total_damage": 876.79
+          "total_damage": 964.06
         },
         "no_items": {
           "breakdown_totals": {
@@ -37713,21 +37722,21 @@
         },
         "physical_build": {
           "breakdown_totals": {
-            "Q": 314.58,
+            "Q": 524.29,
             "W": 277.21,
             "auto_attacks": 0.0,
             "passive_plasma": 31.21
           },
-          "total_damage": 623.0
+          "total_damage": 832.72
         },
         "spellblade_build": {
           "breakdown_totals": {
-            "Q": 241.58,
+            "Q": 402.62,
             "W": 236.36,
             "auto_attacks": 0.0,
             "passive_plasma": 31.21
           },
-          "total_damage": 509.15
+          "total_damage": 670.2
         },
         "sustained": {
           "magic_build": {
@@ -37750,10 +37759,10 @@
             "Q": 282.6,
             "W": 370.24,
             "auto_attacks": 0.0,
-            "passive_plasma": 149.87,
+            "passive_plasma": 250.32,
             "proc_Luden's Echo": 155.36
           },
-          "total_damage": 958.07
+          "total_damage": 1058.52
         },
         "no_items": {
           "breakdown_totals": {
@@ -37766,21 +37775,21 @@
         },
         "physical_build": {
           "breakdown_totals": {
-            "Q": 314.58,
+            "Q": 524.29,
             "W": 332.43,
             "auto_attacks": 0.0,
             "passive_plasma": 48.57
           },
-          "total_damage": 695.58
+          "total_damage": 905.29
         },
         "spellblade_build": {
           "breakdown_totals": {
-            "Q": 241.58,
+            "Q": 402.62,
             "W": 291.57,
             "auto_attacks": 0.0,
             "passive_plasma": 48.57
           },
-          "total_damage": 581.72
+          "total_damage": 742.77
         },
         "sustained": {
           "magic_build": {

@@ -16,7 +16,12 @@ from src.calculator.champions import (
     get_champion_options_meta,
 )
 
-_OPTION_TYPES = {"bool": bool, "int": int, "float": (int, float)}
+_OPTION_TYPES = {
+    "bool": bool,
+    "int": int,
+    "float": (int, float),
+    "select": str,
+}
 
 
 def _module(champion_name: str):
@@ -122,6 +127,11 @@ class TestOptionsDeclarationValidity:
                 )
                 if "min" in opt and "max" in opt:
                     assert opt["min"] <= opt["default"] <= opt["max"], (name, opt)
+                if opt["type"] == "select":
+                    assert opt.get("choices"), (name, opt)
+                    values = [choice["value"] for choice in opt["choices"]]
+                    assert len(values) == len(set(values)), (name, opt)
+                    assert opt["default"] in values, (name, opt)
 
     def test_sources_shape(self) -> None:
         """Every declared source is a revision-pinned Wiki page."""

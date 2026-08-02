@@ -275,6 +275,17 @@ def _validate_champion_options(champion_name: str, data: Mapping[str, object]) -
             if not isinstance(value, bool):
                 raise ValueError(f"champion_options.{key} must be true or false")
             continue
+        if option_type == "select":
+            if isinstance(value, bool) and option.get("legacy_bool"):
+                continue
+            if not isinstance(value, str):
+                raise ValueError(f"champion_options.{key} must be a string")
+            choices = {choice["value"] for choice in option["choices"]}
+            if value not in choices:
+                raise ValueError(
+                    f"champion_options.{key} must be one of {sorted(choices)}"
+                )
+            continue
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError(f"champion_options.{key} must be a number")
         if option_type == "int" and not isinstance(value, int):

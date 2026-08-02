@@ -291,6 +291,29 @@ def calculate_total_stats(
     )
     final_bonus_ad = raw_bonus_ad * quest_bonus_ad_multiplier
     total_ad = base_stats["attack_damage"] + final_bonus_ad
+    # Living Weapon counts permanent stats from items plus stat growth, but
+    # excludes level-1 stats, adaptive force, role quests, ally buffs, and
+    # temporary combat passives. Keep the three owned totals first-class so
+    # every optimizer candidate can resolve its own evolution state.
+    level_attack_damage_growth = (
+        base_stats["attack_damage"]
+        - champion_data["stats"]["attackDamage"]["flat"]
+    )
+    evolution_attack_damage = (
+        level_attack_damage_growth
+        + total_item_stats["attack_damage"]
+        + bonuses.permanent_bonus_ad
+    )
+    external_ability_power = float(external.get("ability_power", 0.0))
+    item_flat_ability_power = (
+        total_item_stats["ability_power"] - external_ability_power
+    )
+    evolution_ability_power = (
+        item_flat_ability_power + bonuses.permanent_bonus_ap
+    ) * bonuses.permanent_ap_multiplier
+    evolution_attack_speed_percent = (
+        level_as_bonus + total_item_stats["attack_speed_percent"]
+    )
     effective_bonus_health = (
         total_item_stats["health"] * bonuses.item_bonus_health_multiplier
     )
@@ -322,7 +345,7 @@ def calculate_total_stats(
     )
     final_move_speed = apply_movement_speed_soft_caps(raw_move_speed)
 
-    return {
+    result = {
         "health": round(total_health),
         "attack_damage": round(total_ad),
         "ability_power": round(final_ability_power),
@@ -367,3 +390,12 @@ def calculate_total_stats(
         "is_melee": is_melee,
         "move_speed": final_move_speed,
     }
+    if champion_data.get("name") == "Kai'Sa":
+        result.update(
+            {
+                "evolution_attack_damage": evolution_attack_damage,
+                "evolution_ability_power": evolution_ability_power,
+                "evolution_attack_speed_percent": evolution_attack_speed_percent,
+            }
+        )
+    return result

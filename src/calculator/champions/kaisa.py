@@ -30,6 +30,7 @@ _W_EVOLVED_STACKS = 3
 _PLASMA_STACKS_TO_RUPTURE = 5
 _RUPTURE_BASE_MISSING_HEALTH_RATIO = 0.15
 _RUPTURE_RATIO_PER_AP = 0.0006
+_EVOLUTION_THRESHOLD = 100.0
 
 
 def _clamp(value: float, lower: float, upper: float) -> float:
@@ -62,6 +63,29 @@ def _w_hit_time(ctx: SlotCtx) -> tuple[float, float]:
     return distance, _W_CAST_TIME + distance / _W_MISSILE_SPEED
 
 
+def _evolution_state(
+    ctx: SlotCtx,
+    option_key: str,
+    stat_key: str,
+    stat_label: str,
+) -> tuple[bool, str]:
+    """Resolve Auto/Base/Evolved while accepting old shared-link booleans."""
+    selected = ctx.options.get(option_key, "auto")
+    if isinstance(selected, bool):
+        return selected, "shared-link override"
+    if selected == "evolved":
+        return True, "forced evolved"
+    if selected == "base":
+        return False, "forced not evolved"
+    if selected != "auto":
+        raise ValueError(f"Kai'Sa {option_key} must be auto, base, or evolved")
+    owned = float(ctx.stats.get(stat_key, 0.0))
+    return (
+        owned >= _EVOLUTION_THRESHOLD,
+        f"automatic: {owned:.1f}/{_EVOLUTION_THRESHOLD:g} {stat_label}",
+    )
+
+
 def _plasma_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
     base, per_prior_stack = _plasma_values(ctx)
     stacks = int(
@@ -71,11 +95,13 @@ def _plasma_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
             float(_PLASMA_STACKS_TO_RUPTURE - 1),
         )
     )
-    applications = (
-        _W_EVOLVED_STACKS
-        if bool(ctx.options.get("w_evolved", False))
-        else _W_NORMAL_STACKS
+    w_evolved, evolution_note = _evolution_state(
+        ctx,
+        "w_evolved",
+        "evolution_ability_power",
+        "item AP",
     )
+    applications = _W_EVOLVED_STACKS if w_evolved else _W_NORMAL_STACKS
     target_health = float(ctx.target.get("target_max_health", 0.0))
     ability_power = float(ctx.stats.get("ability_power", 0.0))
     rupture_ratio = (
@@ -113,6 +139,7 @@ def _plasma_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
         "detail": (
             f"{applications} successive stack applications"
             + (f"; {ruptures} rupture" if ruptures else "")
+            + f"; {evolution_note}"
         ),
     }
 
@@ -152,7 +179,12 @@ def _icathian_rain(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    evolved = bool(ctx.options.get("q_evolved", False))
+    evolved, evolution_note = _evolution_state(
+        ctx,
+        "q_evolved",
+        "evolution_attack_damage",
+        "AD from items + growth",
+    )
     missiles = _Q_EVOLVED_MISSILES if evolved else _Q_NORMAL_MISSILES
     first = extract_named(
         ability, "Physical Damage Per Missile", rank, ctx.stats, ctx.target
@@ -192,6 +224,7 @@ def _icathian_rain(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["detail"] = (
         f"{missiles} missiles on one isolated target"
         + (" (evolved)" if evolved else "")
+        + f"; {evolution_note}"
     )
     return entry
 
@@ -216,15 +249,27 @@ COMPARISON_CURVE_UNAVAILABLE_REASON = (
 OPTIONS = [
     {
         "key": "q_evolved",
-        "type": "bool",
-        "default": False,
-        "label": "Icathian Rain evolved",
+        "type": "select",
+        "default": "auto",
+        "label": "Icathian Rain evolution",
+        "legacy_bool": True,
+        "choices": [
+            {"value": "auto", "label": "Automatic from build"},
+            {"value": "base", "label": "Not evolved"},
+            {"value": "evolved", "label": "Evolved"},
+        ],
     },
     {
         "key": "w_evolved",
-        "type": "bool",
-        "default": False,
-        "label": "Void Seeker evolved",
+        "type": "select",
+        "default": "auto",
+        "label": "Void Seeker evolution",
+        "legacy_bool": True,
+        "choices": [
+            {"value": "auto", "label": "Automatic from build"},
+            {"value": "base", "label": "Not evolved"},
+            {"value": "evolved", "label": "Evolved"},
+        ],
     },
     {
         "key": "plasma_starting_stacks",
@@ -251,8 +296,8 @@ ASSUMPTIONS = [
     "resolve before casting Q",
     "Every Q missile hits one isolated selected target; shared targets would "
     "split the volley",
-    "Q/W evolution state is selected explicitly because adaptive force does "
-    "not count and the engine does not yet track item-owned evolution stats",
+    "Q/W evolutions follow permanent item stats and level growth automatically; "
+    "the selector can reproduce a not-yet-evolved or forced test state",
     "W applies each Plasma stack successively; a fifth-stack rupture uses "
     "health remaining after W and the preceding Caustic Wounds hit",
     "E and R deal no enemy damage and are excluded; timed attacks are withheld",

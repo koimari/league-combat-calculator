@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Champion option/assumption metadata, declared as OPTIONS/ASSUMPTIONS
     // beside each champion module's SLOTS (src/calculator/champions/).
     // Shape: { "<champion>": { options: [{key, type, default, label,
-    // min?, max?, step?}], assumptions: ["..."], sources: [...],
+    // min?, max?, step?, choices?}], assumptions: ["..."], sources: [...],
     // supported_fight_modes?: [...] } } — champions absent from the map
     // have no special options (the generic path).
     let championOptionsMeta = {};
@@ -256,6 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
             champion: championSelect.value,
             level: parseInt(levelSlider.value, 10),
             builds: selectedItems,
+            itemOptions: selectedItemOptions,
             compare: compareCheckbox.checked,
             fight: buildFightPayload(championSelect.value || ""),
             goldBudget: goldBudget.value,
@@ -292,6 +293,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 Object.entries(source).forEach(([slot, name]) => {
                     if (name) selectItem(build, slot, name, itemIconMap[name] || "");
                 });
+                selectedItemOptions[build] = {
+                    ...(state.itemOptions?.[build] || {}),
+                };
+                refreshBuildItemOptions(build);
             }
             compareCheckbox.checked = Boolean(state.compare);
             compareCheckbox.dispatchEvent(new Event("change"));
@@ -312,6 +317,29 @@ document.addEventListener("DOMContentLoaded", () => {
             includeAutos.checked = Boolean(fight.include_auto_attacks);
             autoAttacksOnly.checked = Boolean(fight.auto_attacks_only);
             includeActives.checked = fight.include_actives !== false;
+            autoRankCheckbox.checked = !fight.ability_ranks;
+            abilitiesBar.classList.toggle("rank-disabled", autoRankCheckbox.checked);
+            for (const key of ["Q", "W", "E", "R"]) {
+                const rank = fight.ability_ranks?.[key];
+                if (rank !== undefined) {
+                    document.getElementById(`rank-${key}`).value = rank;
+                }
+            }
+            const savedChampionOptions = fight.champion_options || {};
+            const optionMeta = championOptionsMeta[champion?.name]?.options || [];
+            for (const opt of optionMeta) {
+                if (!(opt.key in savedChampionOptions)) continue;
+                const input = document.getElementById(championOptionInputId(opt.key));
+                if (!input) continue;
+                const saved = savedChampionOptions[opt.key];
+                if (opt.type === "bool") {
+                    input.checked = Boolean(saved);
+                } else if (opt.type === "select" && typeof saved === "boolean") {
+                    input.value = saved ? "evolved" : "base";
+                } else {
+                    input.value = saved;
+                }
+            }
             const restoredMode = fight.fight_mode === "time_based"
                 ? "time_based"
                 : "one_rotation";
@@ -356,8 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return "champ-opt-" + key;
     }
 
-    // Build the option controls: bool -> checkbox (recalc on change),
-    // int/float -> number input with min/max/step (recalc on input).
+    // Build option controls from module metadata.
     function renderChampionOptions(container, options) {
         container.innerHTML = "";
         options.forEach((opt, index) => {
@@ -369,7 +396,9 @@ document.addEventListener("DOMContentLoaded", () => {
             text.className = "toggle-text";
             text.textContent = opt.label;
 
-            const input = document.createElement("input");
+            const input = document.createElement(
+                opt.type === "select" ? "select" : "input"
+            );
             input.id = championOptionInputId(opt.key);
             if (opt.type === "bool") {
                 input.type = "checkbox";
@@ -377,6 +406,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 input.addEventListener("change", scheduleRecalc);
                 label.appendChild(input);
                 label.appendChild(text);
+            } else if (opt.type === "select") {
+                for (const choice of opt.choices || []) {
+                    const option = document.createElement("option");
+                    option.value = choice.value;
+                    option.textContent = choice.label;
+                    option.selected = choice.value === opt.default;
+                    input.appendChild(option);
+                }
+                input.style.cssText = OPTION_NUMBER_STYLE + "width:160px;";
+                input.addEventListener("change", scheduleRecalc);
+                label.appendChild(text);
+                label.appendChild(input);
             } else {
                 input.type = "number";
                 input.value = opt.default;
@@ -403,6 +444,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const el = document.getElementById(championOptionInputId(opt.key));
             if (opt.type === "bool") {
                 values[opt.key] = el ? el.checked : !!opt.default;
+            } else if (opt.type === "select") {
+                values[opt.key] = el?.value || opt.default;
             } else {
                 const parsed =
                     opt.type === "int"

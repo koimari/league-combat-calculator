@@ -297,6 +297,9 @@ class TestResolveStatEffects:
         assert bonuses.bonus_pen_percent == 0.0
         assert bonuses.basic_ability_haste == 0.0
         assert bonuses.bonus_move_speed_percent == 0.0
+        assert bonuses.permanent_bonus_ap == 0.0
+        assert bonuses.permanent_ap_multiplier == 1.0
+        assert bonuses.permanent_bonus_ad == 0.0
 
     def test_combined_build_resolves_every_conversion(
         self, monkeypatch: pytest.MonkeyPatch
@@ -323,6 +326,27 @@ class TestResolveStatEffects:
         assert bonuses.bonus_ad == 30.0 + 45.0  # Muramana 2% of 1500 + Sterak's 45%
         assert bonuses.bonus_ap == 6.0  # Awe: 1% of 600 bonus mana
         assert bonuses.ap_multiplier == 1.30
+        assert bonuses.permanent_bonus_ap == 6.0
+        assert bonuses.permanent_ap_multiplier == 1.30
+        assert bonuses.permanent_bonus_ad == 75.0
+
+    def test_temporary_combat_ap_is_not_permanent_item_ap(self) -> None:
+        build = _build("Blackfire Torch", "Staff of Flowing Water")
+        bonuses = resolve_stat_effects(
+            build,
+            bonus_mana=0.0,
+            max_mana=500.0,
+            bonus_health=0.0,
+            base_attack_damage=100.0,
+            bonus_mana_regen_percent=0.0,
+            is_melee=False,
+            level=18,
+        )
+
+        assert bonuses.ap_multiplier == pytest.approx(1.04)
+        assert bonuses.permanent_ap_multiplier == 1.0
+        assert bonuses.bonus_ap == 40.0
+        assert bonuses.permanent_bonus_ap == 0.0
 
 
 class TestApMultiplier:
