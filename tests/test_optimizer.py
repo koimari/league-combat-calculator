@@ -136,7 +136,7 @@ def test_one_open_slot_is_exhaustive_for_modeled_items_and_has_runner_up():
     assert result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
 
 
-def test_one_open_slot_is_certified_only_when_candidate_coverage_is_complete(
+def test_candidate_item_coverage_alone_does_not_certify_partial_timelines(
     monkeypatch,
 ):
     monkeypatch.setattr(
@@ -160,8 +160,58 @@ def test_one_open_slot_is_certified_only_when_candidate_coverage_is_complete(
         locked_boots="Sorcerer's Shoes",
     )
 
-    assert result["is_certified_best"] is True
+    assert result["is_certified_best"] is False
     assert result["search_guarantee"] == "exhaustive_legal_candidates"
+    assert result["search_timeline_coverage"]["complete"] is False
+    assert result["search_timeline_coverage"]["partial_evaluations"] > 0
+
+
+def test_one_open_slot_is_certified_when_candidates_and_timelines_are_complete(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "src.calculator.optimizer.optimizer_candidate_coverage",
+        lambda items: {
+            "eligible_candidates": len(items),
+            "scored_candidates": len(items),
+            "excluded_count": 0,
+            "complete": True,
+            "excluded": [],
+            "note": "Every available candidate is fully modelled.",
+        },
+    )
+
+    def exact_fight(_champion, _level, items, _params):
+        damage = float(len(items) * 100)
+        return {
+            "total_damage": damage,
+            "breakdown": {},
+            "timeline_coverage": {
+                "complete": True,
+                "certification": "event_order_certified",
+                "exact_sources": [],
+                "coarse_sources": [],
+                "note": "Every active damage source is event-ordered.",
+            },
+        }
+
+    monkeypatch.setattr("src.calculator.optimizer.run_fight", exact_fight)
+    result = optimize_build(
+        "Ahri",
+        get_champion("Ahri"),
+        level=18,
+        max_legendary_slots=2,
+        locked_items=["Rabadon's Deathcap"],
+        locked_boots="Sorcerer's Shoes",
+    )
+
+    assert result["is_certified_best"] is True
+    assert result["search_timeline_coverage"]["complete"] is True
+    assert result["timeline_coverage"]["complete"] is True
+    assert all(
+        build["timeline_coverage"]["complete"]
+        for build in result["ranked_builds"]
+    )
 
 
 def test_optimizer_is_champion_specific_for_orianna_auto_uptime():

@@ -40,6 +40,7 @@ from calculator.optimizer import (
 from calculator.stats import MAX_LEVEL
 from calculator.scenario import MAX_ALLIES, MAX_ENEMIES, ChampionLoadout, parse_roster
 from calculator.role_quests import role_quest_meta
+from calculator.timeline_coverage import combine_timeline_coverages
 from calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
     DEFAULT_FIGHT_DURATION,
@@ -432,48 +433,10 @@ def _allocate_target_limited_damage(target_results: list[dict]) -> None:
 
 def _aggregate_timeline_coverage(results: list[dict]) -> dict:
     """Combine per-target ordering receipts without overstating precision."""
-    coverage_rows = [result.get("timeline_coverage", {}) for result in results]
-    coarse_sources = sorted(
-        {
-            source
-            for coverage in coverage_rows
-            for source in coverage.get("coarse_sources", [])
-        }
+    return combine_timeline_coverages(
+        (result.get("timeline_coverage", {}) for result in results),
+        target_count=len(results),
     )
-    exact_sources = sorted(
-        {
-            source
-            for coverage in coverage_rows
-            for source in coverage.get("exact_sources", [])
-        }
-        - set(coarse_sources)
-    )
-    timeline_complete = bool(coverage_rows) and all(
-        coverage.get("complete", False) for coverage in coverage_rows
-    )
-    target_count = len(results)
-    if timeline_complete:
-        note = (
-            f"Every active damage source is event-ordered across {target_count} "
-            f"selected {'target' if target_count == 1 else 'targets'}."
-        )
-    elif not coarse_sources:
-        note = "Timeline coverage is unavailable for at least one selected target."
-    else:
-        note = (
-            f"{len(coarse_sources)} active damage source"
-            f"{' uses' if len(coarse_sources) == 1 else 's use'} coarse phase "
-            "ordering on at least one selected target."
-        )
-    return {
-        "complete": timeline_complete,
-        "certification": (
-            "event_order_certified" if timeline_complete else "partial_event_order"
-        ),
-        "exact_sources": exact_sources,
-        "coarse_sources": coarse_sources,
-        "note": note,
-    }
 
 
 def _aggregate_public_results(results: list[dict]) -> dict:

@@ -24,6 +24,7 @@ from .loadout_rules import (
     validate_resolved_loadout,
 )
 from .pipeline import FightParams, run_fight
+from .timeline_coverage import combine_timeline_coverages
 
 # Items unavailable on Summoner's Rift.
 ITEM_BLOCKLIST = {
@@ -119,6 +120,7 @@ def _evaluate_build(
     fight_params: FightParams | tuple[FightParams, ...],
     objective: str,
     gold_budget: int | None = None,
+    timeline_audit: dict[str, Any] | None = None,
 ) -> float:
     """Evaluate a build and return the damage score for the given objective.
 
@@ -131,6 +133,16 @@ def _evaluate_build(
     for target_params in targets:
         result = run_fight(champion_data, level, items, target_params)
         results.append(result)
+    if timeline_audit is not None:
+        coverage = combine_timeline_coverages(
+            (result.get("timeline_coverage", {}) for result in results),
+            target_count=len(results),
+        )
+        timeline_audit["evaluations"] += 1
+        timeline_audit["exact_sources"].update(coverage["exact_sources"])
+        timeline_audit["coarse_sources"].update(coverage["coarse_sources"])
+        if not coverage["complete"]:
+            timeline_audit["partial_evaluations"] += 1
 
     def included(entry: dict[str, Any]) -> bool:
         if objective == "physical_damage":
@@ -177,6 +189,55 @@ def _evaluate_build(
             original = row.get("total_damage", 0.0)
             total += original * desired / solo - original
     return total
+
+
+def _build_timeline_coverage(
+    champion_data: dict[str, Any],
+    level: int,
+    items: list[dict[str, Any]],
+    fight_params: FightParams | tuple[FightParams, ...],
+) -> dict[str, Any]:
+    """Return the target-combined ordering receipt for one ranked build."""
+    targets = fight_params if isinstance(fight_params, tuple) else (fight_params,)
+    results = [
+        run_fight(champion_data, level, items, target_params)
+        for target_params in targets
+    ]
+    return combine_timeline_coverages(
+        (result.get("timeline_coverage", {}) for result in results),
+        target_count=len(results),
+    )
+
+
+def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
+    """Serialize precision across every candidate evaluation in this search."""
+    evaluations = int(audit["evaluations"])
+    partial_evaluations = int(audit["partial_evaluations"])
+    coarse_sources = sorted(audit["coarse_sources"])
+    exact_sources = sorted(set(audit["exact_sources"]) - set(coarse_sources))
+    complete = evaluations > 0 and partial_evaluations == 0
+    if complete:
+        note = f"All {evaluations:,} candidate evaluations are event-ordered."
+    elif coarse_sources:
+        note = (
+            f"{partial_evaluations:,} of {evaluations:,} candidate evaluations use "
+            "coarse phase ordering."
+        )
+    else:
+        note = "Timeline coverage is unavailable for at least one candidate evaluation."
+    return {
+        "complete": complete,
+        "certification": (
+            "candidate_event_order_certified"
+            if complete
+            else "partial_candidate_event_order"
+        ),
+        "evaluations": evaluations,
+        "partial_evaluations": partial_evaluations,
+        "exact_sources": exact_sources,
+        "coarse_sources": coarse_sources,
+        "note": note,
+    }
 
 
 def _item_gold(item: dict[str, Any]) -> int:
@@ -416,10 +477,17 @@ def optimize_build(
             for params in target_fight_params
         )
 
+    timeline_audit = {
+        "evaluations": 0,
+        "partial_evaluations": 0,
+        "exact_sources": set(),
+        "coarse_sources": set(),
+    }
     eval_kwargs = {
         "fight_params": fight_params,
         "objective": objective,
         "gold_budget": gold_budget,
+        "timeline_audit": timeline_audit,
     }
 
     # Build item pools.  Keep the complete legal lists for the public coverage
@@ -655,23 +723,36 @@ def optimize_build(
         if isinstance(fight_params, tuple)
         else fight_params.fight_duration_seconds
     )
-    public_ranked = [
-        {
-            "rank": rank,
-            "items": [item["name"] for item in legendaries],
-            "boots": boots["name"] if boots else None,
-            "total_damage": round(score, 1),
-            "dps": round(score / duration, 1),
-            "gold": _build_gold(([boots] if boots else []) + legendaries),
-        }
-        for rank, (legendaries, boots, score) in enumerate(ranked[:2], start=1)
-    ]
+    public_ranked = []
+    for rank, (legendaries, boots, score) in enumerate(ranked[:2], start=1):
+        build_items = ([boots] if boots else []) + legendaries
+        public_ranked.append(
+            {
+                "rank": rank,
+                "items": [item["name"] for item in legendaries],
+                "boots": boots["name"] if boots else None,
+                "total_damage": round(score, 1),
+                "dps": round(score / duration, 1),
+                "gold": _build_gold(build_items),
+                "timeline_coverage": _build_timeline_coverage(
+                    champion_data,
+                    level,
+                    build_items,
+                    fight_params,
+                ),
+            }
+        )
 
     coverage_candidates = list(legal_legendaries)
     if not boots_locked:
         coverage_candidates.extend(legal_boots)
     candidate_coverage = optimizer_candidate_coverage(coverage_candidates)
-    certified_best = exact_mode and candidate_coverage["complete"]
+    search_timeline_coverage = _public_search_timeline_coverage(timeline_audit)
+    certified_best = (
+        exact_mode
+        and candidate_coverage["complete"]
+        and search_timeline_coverage["complete"]
+    )
 
     return {
         "items": legendary_names,
@@ -683,10 +764,12 @@ def optimize_build(
         "evaluations": total_evals,
         "target_count": len(fight_params) if isinstance(fight_params, tuple) else 1,
         "ranked_builds": public_ranked,
+        "timeline_coverage": public_ranked[0]["timeline_coverage"],
+        "search_timeline_coverage": search_timeline_coverage,
         "search_guarantee": (
             (
                 "exhaustive_legal_candidates"
-                if certified_best
+                if candidate_coverage["complete"]
                 else "exhaustive_modeled_candidates"
             )
             if exact_mode

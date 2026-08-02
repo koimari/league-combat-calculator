@@ -1803,10 +1803,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const eventTimeline = field("event-timeline");
         const events = Array.isArray(data.cast_timeline) ? data.cast_timeline : [];
-        eventTimeline.classList.toggle("hidden", events.length === 0);
+        const timelineCoverage = data.timeline_coverage || null;
+        const hasTimelineReceipt = Boolean(timelineCoverage?.certification);
+        eventTimeline.classList.toggle(
+            "hidden",
+            events.length === 0 && !hasTimelineReceipt
+        );
+        const timelineList = field("event-timeline-list");
+        timelineList.replaceChildren();
+        timelineList.classList.toggle("hidden", events.length === 0);
         if (events.length > 0) {
-            const list = field("event-timeline-list");
-            list.innerHTML = "";
             events.forEach((event) => {
                 const item = document.createElement("li");
                 const time = document.createElement("span");
@@ -1824,13 +1830,27 @@ document.addEventListener("DOMContentLoaded", () => {
                     ? `${changes.join(" / ")} resource${Number.isFinite(after) ? ` · ${Math.round(after)} left` : ""}`
                     : "no resource cost";
                 item.append(time, name, cost);
-                list.appendChild(item);
+                timelineList.appendChild(item);
             });
-            const startingResource = Number(stats.max_mana || 0);
-            field("resource-summary").textContent = startingResource > 0
-                ? `${Math.round(data.resource_spent || 0)} spent · ${Math.round(data.resource_remaining || 0)} left`
-                : "";
         }
+        const startingResource = Number(stats.max_mana || 0);
+        const resourceSummary = startingResource > 0
+            ? `${Math.round(data.resource_spent || 0)} spent · ${Math.round(data.resource_remaining || 0)} left`
+            : "";
+        const orderSummary = hasTimelineReceipt
+            ? timelineCoverage.complete ? "Exact damage order" : "Partial damage order"
+            : "";
+        field("timeline-order-summary").textContent = [orderSummary, resourceSummary]
+            .filter(Boolean)
+            .join(" · ");
+        const coarseNames = (timelineCoverage?.coarse_sources || []).map(
+            (key) => breakdown[key]?.name || key
+        );
+        field("timeline-coverage-note").textContent = timelineCoverage?.complete
+            ? timelineCoverage.note
+            : coarseNames.length > 0
+                ? `Still phase-ordered: ${coarseNames.join(", ")}.`
+                : timelineCoverage?.note || "";
 
         // Champion assumptions are champion-level, not build-level: show
         // them on panel A only so Compare mode doesn't repeat them.
@@ -2133,9 +2153,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     );
                 }
                 const excluded = Number(data.candidate_coverage?.excluded_count || 0);
-                optimizeStatus.textContent = excluded > 0
-                    ? `Best modelled item: ${bestItem} · ${excluded} withheld`
-                    : `Certified BIS item: ${bestItem}`;
+                const timingPartial = data.search_timeline_coverage?.complete === false;
+                const timingLabel = timingPartial ? " · timing partly ordered" : "";
+                optimizeStatus.textContent = data.is_certified_best
+                    ? `Certified BIS item: ${bestItem}`
+                    : excluded > 0
+                        ? `Best modelled item: ${bestItem} · ${excluded} withheld${timingLabel}`
+                        : timingPartial
+                            ? `Best exact-search item: ${bestItem} · timing partly ordered`
+                            : `Best found item: ${bestItem}`;
                 optimizeStatus.classList.remove("hidden");
                 renderOptimizerCoverage(data);
             })
@@ -2218,9 +2244,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // Show status
                 const excluded = Number(data.candidate_coverage?.excluded_count || 0);
+                const timingPartial = data.search_timeline_coverage?.complete === false;
+                const timingLabel = timingPartial ? " · timing partly ordered" : "";
                 const resultLabel = data.is_certified_best
                     ? "Certified BIS"
-                    : excluded > 0 ? "Best modelled result" : "Best found";
+                    : excluded > 0
+                        ? `Best modelled result${timingLabel}`
+                        : timingPartial
+                            ? "Best found · timing partly ordered"
+                            : "Best found";
                 optimizeStatus.textContent =
                     `${resultLabel}: ${ranked[0].total_damage.toLocaleString()} TDD · runner-up ${ranked[1].total_damage.toLocaleString()} · ${data.evaluations.toLocaleString()} builds`;
                 optimizeStatus.classList.remove("hidden");
