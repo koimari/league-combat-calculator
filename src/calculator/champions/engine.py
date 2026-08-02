@@ -74,7 +74,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "spellblade_true_ratio",
         "spellblade_bonus_true_ratio",
         "auto_attack_override",
+        "auto_attack_conversion",
         "double_shot",
+        "target_max_health_sensitive",
         "detail",  # display text copied onto the ability's breakdown row
         "unit",  # count label for a proc row ("cleaves"); default is "hits"
         # producer diagnostics / display metadata

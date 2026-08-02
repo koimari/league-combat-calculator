@@ -288,6 +288,15 @@ def run_fight(
         target_stats=params.target_stats(),
         champion_options=champion_options,
     )
+    if params.target_threshold_health_bonus > 0 and any(
+        ability.get("target_max_health_sensitive", False)
+        for ability in ability_damages.values()
+    ):
+        raise ValueError(
+            "This damage package scales from target maximum health and cannot "
+            "yet be certified against Protoplasm Harness's temporary maximum-"
+            "health change. Remove Protoplasm or choose another attacker."
+        )
 
     # The fight engine applies ability stat buffs (Mega Gnar's form
     # stats, Vayne/Aatrox R, ...) to this copy in place — report THESE

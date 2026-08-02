@@ -42,11 +42,16 @@ class TestDamagePartValidation:
         with pytest.raises(ValueError, match="mixed"):
             DamagePart("mixed", 100.0)
 
+    @pytest.mark.parametrize("field", ["time_offset", "hit_interval"])
+    def test_negative_timing_raises(self, field: str) -> None:
+        with pytest.raises(ValueError, match=field):
+            DamagePart("magic", 100.0, **{field: -0.1})
+
 
 class TestEvaluateCastParts:
     def test_single_magic_part_mitigated_and_amped(self) -> None:
         state = _stub_state(magic_amp=1.1)
-        total, first, _ = _evaluate_cast_parts(
+        total, first, _, _ = _evaluate_cast_parts(
             state, (DamagePart("magic", 200.0),), 1, 40.0, 0.0
         )
         expected = apply_resistance(200.0, 40.0) * 1.1
@@ -55,27 +60,50 @@ class TestEvaluateCastParts:
 
     def test_true_part_ignores_resists_and_amp(self) -> None:
         state = _stub_state(magic_amp=1.5)
-        total, _, _ = _evaluate_cast_parts(
+        total, _, _, _ = _evaluate_cast_parts(
             state, (DamagePart("true", 100.0),), 1, 40.0, 0.0
         )
         assert total == 100.0
 
     def test_physical_part_uses_armor_without_magic_amp(self) -> None:
         state = _stub_state(effective_armor=100.0, magic_amp=2.0)
-        total, _, _ = _evaluate_cast_parts(
+        total, _, _, _ = _evaluate_cast_parts(
             state, (DamagePart("physical", 100.0),), 1, 0.0, 0.0
         )
         assert total == pytest.approx(apply_resistance(100.0, 100.0))
 
     def test_count_multiplies_one_part(self) -> None:
         state = _stub_state()
-        single, _, _ = _evaluate_cast_parts(
+        single, _, _, _ = _evaluate_cast_parts(
             state, (DamagePart("magic", 90.0),), 1, 0.0, 0.0
         )
-        tripled, _, _ = _evaluate_cast_parts(
+        tripled, _, _, _ = _evaluate_cast_parts(
             state, (DamagePart("magic", 90.0, count=3),), 1, 0.0, 0.0
         )
         assert tripled == pytest.approx(single * 3)
+
+    def test_authored_part_timing_emits_absolute_hit_events(self) -> None:
+        state = _stub_state()
+        _, _, _, events = _evaluate_cast_parts(
+            state,
+            (
+                DamagePart("magic", 50.0, time_offset=0.25),
+                DamagePart(
+                    "magic",
+                    20.0,
+                    count=3,
+                    time_offset=0.75,
+                    hit_interval=0.5,
+                ),
+            ),
+            1,
+            0.0,
+            0.0,
+            cast_times=(2.0,),
+        )
+
+        assert [event["time"] for event in events] == [2.25, 2.75, 3.25, 3.75]
+        assert [event["damage"] for event in events] == [50.0, 20.0, 20.0, 20.0]
 
     def test_second_part_sees_first_parts_damage(self) -> None:
         # Akali R shape: R2 interpolates on missing HP *after* R1 lands.
@@ -88,7 +116,7 @@ class TestEvaluateCastParts:
             seen_ratios.append(missing_ratio)
             return 100.0 + span * missing_ratio
 
-        total, _, _ = _evaluate_cast_parts(
+        total, _, _, _ = _evaluate_cast_parts(
             state,
             (DamagePart("magic", r1), DamagePart("magic", hp_scaled_damage=r2)),
             1,
@@ -132,7 +160,7 @@ class TestEvaluateCastParts:
     def test_crit_effectiveness_scales_raw(self) -> None:
         # Akshan R: raw × (1 + eff·cc + eff·(cm-2)·cc), physical.
         state = _stub_state(effective_armor=0.0, crit_chance=0.5, crit_multiplier=2.3)
-        total, _, _ = _evaluate_cast_parts(
+        total, _, _, _ = _evaluate_cast_parts(
             state,
             (DamagePart("physical", 100.0, crit_effectiveness=0.3),),
             1,
@@ -144,7 +172,7 @@ class TestEvaluateCastParts:
 
     def test_first_return_is_first_part_first_cast(self) -> None:
         state = _stub_state()
-        _, first, _ = _evaluate_cast_parts(
+        _, first, _, _ = _evaluate_cast_parts(
             state,
             (DamagePart("magic", 100.0), DamagePart("true", 40.0)),
             2,
@@ -156,7 +184,7 @@ class TestEvaluateCastParts:
     def test_by_type_return_splits_mixed_parts(self) -> None:
         # Ahri Q shape: magic outgoing + true return, over 2 casts.
         state = _stub_state(magic_amp=1.1)
-        total, _, by_type = _evaluate_cast_parts(
+        total, _, by_type, _ = _evaluate_cast_parts(
             state,
             (DamagePart("magic", 100.0), DamagePart("true", 40.0)),
             2,

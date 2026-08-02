@@ -2081,12 +2081,14 @@ def _evaluate_cast_parts(
     *,
     on_hit: "Callable[[float], float] | None" = None,
     pricing: "tuple[CastPricing, ...] | None" = None,
-) -> tuple[float, float, dict[str, float]]:
+    cast_times: "tuple[float, ...] | None" = None,
+) -> tuple[float, float, dict[str, float], list[dict[str, Any]]]:
     """Evaluate an ability's typed damage parts over its casts.
 
-    Returns a 3-tuple: total mitigated damage pre-amp; the first part's
-    mitigated damage on the first cast (the Horizon Focus trigger value
-    for mixed entries); and per-damage-type mitigated totals pre-amp.
+    Returns total mitigated damage pre-amp; the first part's mitigated
+    damage on the first cast (the Horizon Focus trigger value for mixed
+    entries); per-damage-type mitigated totals pre-amp; and any authored
+    absolute hit events.
     Threads running target damage through every part and cast so
     HP-scaled parts see prior hits (Akali R2 after R1, Kog'Maw R shot
     after shot).
@@ -2106,6 +2108,7 @@ def _evaluate_cast_parts(
     target_health = state.target_health
     total = 0.0
     by_type: dict[str, float] = {}
+    damage_events: list[dict[str, Any]] = []
     first_part_first_cast = 0.0
     for cast_index in range(num_casts):
         price = pricing[cast_index] if pricing is not None else _NO_PRICING
@@ -2149,28 +2152,40 @@ def _evaluate_cast_parts(
                 and raw > 0
                 and not rock_solid_consumed
             )
-            if on_hit is None:
-                mitigated = _mitigate_hits(
+            mitigated = 0.0
+            for hit_index in range(hits):
+                hit_damage = _mitigate_hits(
                     state,
                     part,
                     raw,
                     ability_mr,
-                    hits,
-                    rock_solid_instances=rock_solid_instances,
+                    1,
+                    rock_solid_instances=int(
+                        rock_solid_instances > 0 and hit_index == 0
+                    ),
                 )
-            else:
-                mitigated = 0.0
-                for hit_index in range(hits):
-                    mitigated += _mitigate_hits(
-                        state,
-                        part,
-                        raw,
-                        ability_mr,
-                        1,
-                        rock_solid_instances=int(
-                            rock_solid_instances > 0 and hit_index == 0
-                        ),
+                mitigated += hit_damage
+                if part.time_offset is not None and (
+                    hits == 1 or part.hit_interval is not None
+                ):
+                    cast_time = (
+                        cast_times[cast_index]
+                        if cast_times is not None and cast_index < len(cast_times)
+                        else 0.0
                     )
+                    damage_events.append(
+                        {
+                            "time": cast_time
+                            + part.time_offset
+                            + hit_index * (part.hit_interval or 0.0),
+                            "damage_type": part.damage_type,
+                            "damage": hit_damage,
+                            "cast_ordinal": cast_index + 1,
+                            "part_ordinal": part_index + 1,
+                            "hit_ordinal": hit_index + 1,
+                        }
+                    )
+                if on_hit is not None:
                     ability_mr = on_hit(ability_mr)
             if rock_solid_instances:
                 rock_solid_consumed = True
@@ -2179,7 +2194,7 @@ def _evaluate_cast_parts(
             total += mitigated
             by_type[part.damage_type] = by_type.get(part.damage_type, 0.0) + mitigated
             running_damage += mitigated
-    return total, first_part_first_cast, by_type
+    return total, first_part_first_cast, by_type, damage_events
 
 
 def _effective_timed_cooldown(
@@ -2959,7 +2974,12 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # A ramped shred (Corki E) stacks up across this ability's own
         # hits; an unramped one lands in full after it (below).
         shred_ramp = _make_shred_ramp(resists, ability_info, ult_cast, ability_stacks)
-        ability_total, first_part_damage, ability_by_type = _evaluate_cast_parts(
+        (
+            ability_total,
+            first_part_damage,
+            ability_by_type,
+            ability_events,
+        ) = _evaluate_cast_parts(
             state,
             parts,
             num_casts,
@@ -2967,6 +2987,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             mitigated_damage_dealt,
             on_hit=shred_ramp.stage if shred_ramp is not None else None,
             pricing=pricing,
+            cast_times=plan.times.get(ability_key),
         )
 
         # Apply ability-specific damage amplifiers (e.g., Actualizer)
@@ -2993,6 +3014,20 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             "total_damage": ability_total,
             "damage_type": damage_type,
         }
+        timing_is_authored = bool(parts) and all(
+            part.time_offset is not None
+            and (part.count <= 1 or part.hit_interval is not None)
+            for part in parts
+        )
+        if timing_is_authored and ability_events:
+            breakdown[ability_key]["damage_events"] = [
+                {
+                    **event,
+                    "damage": event["damage"] * state.ability_amp,
+                }
+                for event in ability_events
+            ]
+            breakdown[ability_key]["event_phase"] = "ability"
         # With no auto row to report them, the basic attacks this cast
         # forced — and the crit riding them — are otherwise invisible:
         # the UI's "N casts" text says nothing about the swings folded
@@ -3441,8 +3476,23 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             double_shot_info = _ds_info["double_shot"]
             break
 
+    # A bounded set of attacks may replace their normal physical swing with
+    # one modified basic-damage instance (Galio's Colossal Smash). The
+    # module supplies only the non-AD bonus; the ordinary swing path below
+    # continues to own crits, Sundered Sky, and mid-fight AD changes.
+    conversion_info: dict[str, Any] | None = None
+    for _conversion_key, _conversion_entry in state.ability_damages.items():
+        if "auto_attack_conversion" in _conversion_entry:
+            conversion_info = _conversion_entry["auto_attack_conversion"]
+            break
+    converted_auto_limit = min(
+        num_auto_attacks,
+        max(0, int(conversion_info.get("count", 0))) if conversion_info else 0,
+    )
+
     # Simulate each auto attack individually, rolling for crits
     auto_physical_total = 0.0
+    converted_auto_total = 0.0
     fiendhunter_true_total = 0.0
     passive_true_total = 0.0  # champion rider (Corki P), % of the raw swing
     num_crits = 0
@@ -3497,6 +3547,20 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     auto_events: list[dict[str, Any]] = []
     fiendhunter_events: list[dict[str, Any]] = []
     passive_true_events: list[dict[str, Any]] = []
+    converted_auto_events: list[dict[str, Any]] = []
+    converted_natural_crits = 0
+
+    def converted_swing_damage(raw_ad: float, *, critical: bool) -> float:
+        """Price one modified attack, reducing only its AD crit component."""
+        assert conversion_info is not None
+        adjusted_ad = raw_ad
+        if critical:
+            adjusted_ad *= state.target_critical_strike_damage_multiplier
+        return _mitigate_basic_attack_swing(
+            state,
+            float(conversion_info.get("bonus_raw", 0.0)) + adjusted_ad,
+            str(conversion_info.get("damage_type", "magic")),
+        )
 
     for i in range(num_auto_attacks):
         attack_time = auto_times[i] if i < len(auto_times) else 0.0
@@ -3598,50 +3662,92 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             raw_true = 0.0
 
         if deterministic_outcomes is not None:
-            mitigated = sum(
-                weight
-                * _mitigate_basic_attack_swing(
-                    state, outcome_raw, critical_strike=critical
+            if i < converted_auto_limit:
+                mitigated = sum(
+                    weight
+                    * converted_swing_damage(outcome_raw, critical=critical)
+                    for weight, outcome_raw, critical in deterministic_outcomes
                 )
-                for weight, outcome_raw, critical in deterministic_outcomes
-            )
+            else:
+                mitigated = sum(
+                    weight
+                    * _mitigate_basic_attack_swing(
+                        state, outcome_raw, critical_strike=critical
+                    )
+                    for weight, outcome_raw, critical in deterministic_outcomes
+                )
         else:
-            mitigated = _mitigate_basic_attack_swing(
-                state,
-                raw_phys,
-                critical_strike=(
-                    not override_crit_as_bonus
-                    and (natural_crit or is_empowered or is_sundered)
-                ),
+            converted_critical = (
+                not override_crit_as_bonus
+                and (natural_crit or is_empowered or is_sundered)
             )
+            if i < converted_auto_limit:
+                mitigated = converted_swing_damage(
+                    raw_phys,
+                    critical=converted_critical,
+                )
+            else:
+                mitigated = _mitigate_basic_attack_swing(
+                    state,
+                    raw_phys,
+                    critical_strike=converted_critical,
+                )
 
         if sundered_normal_raw is not None:
             if deterministic:
                 normal_mitigated = (
                     crit_chance
-                    * _mitigate_basic_attack_swing(
-                        state,
-                        swing_ad * crit_multiplier,
-                        critical_strike=True,
+                    * (
+                        converted_swing_damage(
+                            swing_ad * crit_multiplier, critical=True
+                        )
+                        if i < converted_auto_limit
+                        else _mitigate_basic_attack_swing(
+                            state,
+                            swing_ad * crit_multiplier,
+                            critical_strike=True,
+                        )
                     )
                     + (1.0 - crit_chance)
-                    * _mitigate_basic_attack_swing(state, swing_ad)
+                    * (
+                        converted_swing_damage(swing_ad, critical=False)
+                        if i < converted_auto_limit
+                        else _mitigate_basic_attack_swing(state, swing_ad)
+                    )
                 )
             else:
-                normal_mitigated = _mitigate_basic_attack_swing(
-                    state,
-                    sundered_normal_raw,
-                    critical_strike=natural_crit,
+                normal_mitigated = (
+                    converted_swing_damage(
+                        sundered_normal_raw,
+                        critical=natural_crit,
+                    )
+                    if i < converted_auto_limit
+                    else _mitigate_basic_attack_swing(
+                        state,
+                        sundered_normal_raw,
+                        critical_strike=natural_crit,
+                    )
                 )
             sundered_sky_damage_diff = mitigated - normal_mitigated
-        auto_physical_total += mitigated
-        auto_events.append(
-            {
-                "time": attack_time,
-                "damage_type": "physical",
-                "damage": mitigated,
-            }
-        )
+        if i < converted_auto_limit:
+            converted_auto_total += mitigated
+            converted_natural_crits += int(natural_crit)
+            converted_auto_events.append(
+                {
+                    "time": attack_time,
+                    "damage_type": str(conversion_info.get("damage_type", "magic")),
+                    "damage": mitigated,
+                }
+            )
+        else:
+            auto_physical_total += mitigated
+            auto_events.append(
+                {
+                    "time": attack_time,
+                    "damage_type": "physical",
+                    "damage": mitigated,
+                }
+            )
         if raw_true > 0:
             fiendhunter_events.append(
                 {
@@ -3677,9 +3783,11 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     # Corki's true instance is basic damage in-game, like the physical one.
     passive_true_total *= basic_amp
 
-    auto_total = auto_physical_total
+    auto_total = auto_physical_total + converted_auto_total
     auto_damage_per_hit = auto_total / num_auto_attacks if num_auto_attacks > 0 else 0.0
-    num_non_crits = num_auto_attacks - num_crits
+    ordinary_auto_count = num_auto_attacks - converted_auto_limit
+    ordinary_crits = max(0, num_crits - converted_natural_crits)
+    num_non_crits = ordinary_auto_count - ordinary_crits
 
     auto_name = "Auto Attacks"
     auto_damage_type = "physical"
@@ -3689,19 +3797,37 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
     breakdown["auto_attacks"] = {
         "name": auto_name,
-        "count": num_auto_attacks,
-        "num_crits": num_crits,
+        "count": ordinary_auto_count,
+        "num_crits": ordinary_crits,
         "num_non_crits": num_non_crits,
-        "crit_damage_per_hit": crit_damage_per_hit if num_crits > 0 else None,
+        "crit_damage_per_hit": crit_damage_per_hit if ordinary_crits > 0 else None,
         "non_crit_damage_per_hit": (
             non_crit_damage_per_hit if num_non_crits > 0 else None
         ),
-        "damage_per_hit": auto_damage_per_hit,
-        "total_damage": auto_total,
+        "damage_per_hit": (
+            auto_physical_total / ordinary_auto_count
+            if ordinary_auto_count > 0
+            else 0.0
+        ),
+        "total_damage": auto_physical_total,
         "damage_type": auto_damage_type,
         "damage_events": auto_events,
         "event_phase": "auto",
     }
+    if conversion_info is not None and converted_auto_limit > 0:
+        breakdown["on_hit_ability_passive"] = {
+            "name": str(conversion_info.get("name", "Modified attacks")),
+            "count": converted_auto_limit,
+            "damage_per_hit": converted_auto_total / converted_auto_limit,
+            "total_damage": converted_auto_total,
+            "damage_type": str(conversion_info.get("damage_type", "magic")),
+            "damage_events": converted_auto_events,
+            "event_phase": "auto",
+            "detail": (
+                f"{converted_auto_limit} modified basic attack"
+                f"{'' if converted_auto_limit == 1 else 's'}; includes the swing"
+            ),
+        }
     if ultimate_auto_buff is not None and empowered_autos > 0:
         breakdown["auto_attacks"]["empowered_count"] = empowered_autos
 
