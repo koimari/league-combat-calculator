@@ -12,6 +12,7 @@ const engine = {
   availability: new Map(),
   itemOptions: {},
   championOptions: {},
+  fightLimits: { fight_duration: [1, 10] },
   pendingTimer: null,
   requestId: 0,
   responses: null,
@@ -497,7 +498,7 @@ function renderBuilder() {
       <div class="section-bar"><h2>Time window</h2><small>Applied to every target</small></div>
       <div class="fight-controls">
         ${segmented("Rotations", [[1,"1"],[2,"2"],[3,"3"],[4,"4"],[5,"5"],[6,"6"]], state.fight.rotations, "rotations")}
-        <div class="control-group"><span>Window per rotation</span><div class="duration-control"><div class="segmented">${[[3.5,"3.5s"],[8,"8s"],[16,"16s"]].map(([value, text]) => `<button type="button" data-fight="duration" data-value="${value}" class="${state.fight.duration === value ? "active" : ""}">${text}</button>`).join("")}</div><label><input type="range" min="1" max="40" step="0.5" value="${state.fight.duration}" data-fight-range="duration" /><output>${one(state.fight.duration)}s</output></label></div></div>
+        ${windowControl()}
         <div class="control-group"><span>Auto-attack uptime</span><label class="uptime-control"><input type="range" min="0" max="100" step="5" value="${Math.round(state.fight.aaUptime * 100)}" data-fight-range="aaUptime" /><output>${Math.round(state.fight.aaUptime * 100)}%</output></label></div>
         <div class="auto-count"><span>Expected autos per rotation</span><strong><i class="legend-a"></i>A ${autoAttacksForStats(statsA)}${attacker.comparisonEnabled ? ` <i class="legend-b"></i>B ${autoAttacksForStats(statsB)}` : ""}</strong><small>attack speed × time × 0.92 × uptime</small></div>
       </div>
@@ -508,6 +509,12 @@ function ludenDamage(ap, targetCount, targetIndex, hasLuden) {
   if (!hasLuden || targetIndex >= Math.min(6, targetCount)) return 0;
   const proc = 75 + 0.05 * ap;
   return targetIndex === 0 ? proc * (1 + 0.2 * Math.max(6 - targetCount, 0)) : proc;
+}
+
+function windowControl() {
+  const [windowMin, windowMax] = engine.fightLimits.fight_duration;
+  const presets = [3.5, 8, windowMax].map((value) => [value, `${one(value)}s`]);
+  return `<div class="control-group"><span>Window per rotation</span><div class="duration-control"><div class="segmented">${presets.map(([value, text]) => `<button type="button" data-fight="duration" data-value="${value}" class="${state.fight.duration === value ? "active" : ""}">${text}</button>`).join("")}</div><label><input type="range" min="${windowMin}" max="${windowMax}" step="0.5" value="${state.fight.duration}" data-fight-range="duration" /><output>${one(state.fight.duration)}s</output></label></div></div>`;
 }
 
 function autoAttacksForStats(stats, combatant = state.attacker) {
@@ -2060,6 +2067,7 @@ Promise.all([
     });
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};
+    engine.fightLimits = { ...engine.fightLimits, ...(config.input_limits || {}) };
     engine.ready = true;
     render();
   })
