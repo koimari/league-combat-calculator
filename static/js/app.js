@@ -1627,6 +1627,7 @@ function bisBuildScore(buildIds, combatant, opponents, path) {
   const outgoingSupport = bisOutgoingSupport(combatant, stats, duration);
   const supportItems = buildIds.reduce((sum, id) => sum + bisSupportItemValue(getItem(id), stats), 0);
   const enemyPath = path.startsWith("targets.");
+  const supportPath = path.startsWith("allies.") || (path === "attacker" && state.attacker.role === "support" && (role === "enchanter" || role === "warden"));
   const survivalPool = effectiveHealth + hasHealing * 0.7 + ownShields;
   const pressurePerSecond = pressureTotal / duration;
   const survivalSeconds = pressurePerSecond > 0 ? Math.min(duration, survivalPool / pressurePerSecond) : duration;
@@ -1643,14 +1644,14 @@ function bisBuildScore(buildIds, combatant, opponents, path) {
   let score;
   let metric;
   if (role === "tank" || role === "warden") {
-    const allyPath = path.startsWith("allies.");
+    const allyPath = supportPath;
     const allyUtilityWeight = role === "warden" && allyPath ? 22 : 8;
     score = enemyPath
       ? tradeOutput * 0.85 + survivalPool * 0.62 + teamUtility * 10 + stats.haste * 10
       : effectiveHealth * (role === "warden" && allyPath ? 0.48 : 1) + (allyPath ? outgoingSupport * 1.9 + supportItems : teamUtility * allyUtilityWeight) + stats.haste * 10 + hasHealing * 0.8 + ownShields * 1.1 + ownAbilityDamage * 0.18;
     metric = enemyPath ? "trade output + survival window" : allyPath ? "outgoing protection + effective health" : "effective health + team utility";
   } else if (role === "enchanter" || role === "support") {
-    const allyPath = path.startsWith("allies.");
+    const allyPath = supportPath;
     score = allyPath
       ? outgoingSupport * 2.4 + supportItems + ownAbilityDamage * 0.12 + effectiveHealth * 0.12 + stats.haste * 8
       : enemyPath ? tradeOutput * 0.8 + survivalPool * 0.55 + teamUtility * 8 + stats.haste * 10 : ownAbilityDamage * 0.45 + effectiveHealth * 0.45 + teamUtility * 10 + stats.haste * 12 + hasHealing * 1.1 + ownShields * 1.25;
@@ -1858,9 +1859,69 @@ function optimizerCandidatePool(profile, targetStats) {
   return chosen;
 }
 
+function roleAwareOptimizerCandidatePool(role, path = "attacker") {
+  const candidates = DATA.items.filter((item) => {
+    const completed = item.price >= 2200 && item.into.length === 0;
+    const candidatePath = role === "enchanter" || role === "support" ? "allies.0" : path;
+    return completed && !ALL_ROLE_BOOTS.has(item.id) && bisItemMatchesRole(item, role, candidatePath);
+  });
+  const currentIds = buildAIds().filter((id) => id && !ALL_ROLE_BOOTS.has(Number(id))).map(Number);
+  const scored = candidates.map((item) => ({
+    item,
+    total: bisBuildScore([item.id, 0, 0, 0, 0, 0], state.attacker, state.targets, path).score,
+  })).sort((a, b) => b.total - a.total);
+  const selected = [];
+  const seen = new Set();
+  [...currentIds.map((id) => ({ item: getItem(id), total: Number.POSITIVE_INFINITY })), ...scored].forEach((entry) => {
+    if (!entry.item || seen.has(entry.item.id)) return;
+    seen.add(entry.item.id);
+    selected.push(entry.item);
+  });
+  return selected.slice(0, 12);
+}
+
+function optimizeRoleAwareBuild(role) {
+  const started = performance.now();
+  const pool = roleAwareOptimizerCandidatePool(role);
+  if (pool.length < 6) throw new Error("Not enough completed role-compatible items for this build.");
+  const ids = pool.map((item) => item.id);
+  const evaluated = [];
+  const selected = [];
+  function search(from) {
+    if (selected.length === 6) {
+      if (!legalOptimizerBuild(selected)) return;
+      const build = [...selected];
+      evaluated.push({ build, total: bisBuildScore(build, state.attacker, state.targets, "attacker").score });
+      return;
+    }
+    const needed = 6 - selected.length;
+    for (let index = from; index <= ids.length - needed; index += 1) {
+      selected.push(ids[index]);
+      if (legalOptimizerBuild(selected)) search(index + 1);
+      selected.pop();
+    }
+  }
+  search(0);
+  evaluated.sort((a, b) => b.total - a.total);
+  const best = evaluated[0];
+  if (!best) throw new Error("No legal complete role-aware build matched this champion.");
+  return {
+    build: best.build,
+    questBoot: 0,
+    tested: evaluated.length,
+    elapsedMs: performance.now() - started,
+    total: best.total,
+    candidateCount: pool.length,
+    role,
+    roleAware: true,
+  };
+}
+
 function optimizeFullBuild() {
   const started = performance.now();
   const profile = bisProfile();
+  const role = bisRole(bisChampionProfile(state.attacker));
+  if (["enchanter", "warden", "tank", "support"].includes(role)) return optimizeRoleAwareBuild(role);
   const targetStats = state.targets.map((target) => championStats(target.champion, target.level, target.items, target.itemStacks));
   const pool = optimizerCandidatePool(profile, targetStats);
   const slotCount = ordinarySlotCount();
@@ -2032,7 +2093,9 @@ function startOptimizeBuild() {
       state.attacker.buildA = [...result.build, ...Array(Math.max(0, 6 - result.build.length)).fill(0)].slice(0, 6);
       state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
       state.attacker.questBootA = result.questBoot || 0;
-      state.optimizer.summary = result;
+      state.optimizer.summary = result.roleAware
+        ? { ...result, label: `${result.role} build optimized with role-specific protection and utility scoring.` }
+        : result;
     } finally {
       state.optimizer.running = false;
       render();
