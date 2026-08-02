@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#e8e3d7" />
+    <meta name="theme-color" content="#121212" />
     <meta name="description" content="Compare League of Legends item builds against a complete target roster." />
     <title>Scryglass — Item calculator</title>
     <link rel="preconnect" href="https://ddragon.leagueoflegends.com" />
@@ -16,14 +16,10 @@
           <span class="brand-mark" aria-hidden="true"></span>
           <strong>Scryglass</strong>
         </a>
-        <nav aria-label="Primary">
-          <a href="https://scryglass.xyz/articles">Articles</a>
-          <a href="https://scryglass.xyz/elo">Ratings</a>
-          <a href="https://scryglass.xyz/browse">Matches</a>
-          <a class="active" href="/">Calculator</a>
-        </nav>
         <span class="patch"><i></i>26.15</span>
-        <button class="icon-button" id="themeToggle" type="button" aria-label="Toggle colour theme">◐</button>
+        {% if auth_user %}
+          <div class="auth-identity"><span class="auth-dot"></span><span>Signed in as <strong>{{ auth_user }}</strong></span><a href="/auth/logout">Log out</a></div>
+        {% endif %}
       </div>
     </header>
 
@@ -94,10 +90,10 @@
     <dialog id="bis" class="picker bis-dialog">
       <div class="picker-shell">
         <header>
-          <div><p class="eyebrow">Best in slot · damage</p><h2 id="bisTitle">Rank this slot</h2></div>
+          <div><p class="eyebrow">Best in slot · scenario</p><h2 id="bisTitle">Rank this slot</h2></div>
           <button class="picker-close" id="bisClose" type="button" aria-label="Close Best in Slot">×</button>
         </header>
-        <div class="bis-intro"><strong id="bisSummary"></strong><span>Every candidate is scored into the complete selected enemy roster.</span></div>
+        <div class="bis-intro"><strong id="bisSummary"></strong><span>Every candidate is scored into the selected scenario context.</span></div>
         <div id="bisList" class="bis-list"></div>
       </div>
     </dialog>

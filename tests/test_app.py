@@ -82,7 +82,13 @@ def test_password_auth_accepts_only_configured_accounts(monkeypatch):
     assert good.status_code == 302
     assert good.headers["Location"].endswith("/")
     assert client.get("/auth/status").get_json()["user"]["username"] == "LSAccessAccount"
-    assert client.get("/").status_code == 200
+    page = client.get("/")
+    assert page.status_code == 200
+    body = page.get_data(as_text=True)
+    assert "Signed in as <strong>LSAccessAccount</strong>" in body
+    assert "/auth/logout" in body
+    assert "Articles" not in body and "Ratings" not in body and "Matches" not in body
+    assert 'data-theme="dark"' in body
 
     client = app_module.app.test_client()
     koi = client.post(

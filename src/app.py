@@ -233,15 +233,15 @@ def _auth_error(message: str, status: int = 503):
 def _login_page(message: str = "", status: int = 200, next_path: str = "/"):
     """Render the tiny access gate without depending on protected assets."""
     notice = (
-        f'<p style="color:#a33" role="alert">{html.escape(message)}</p>'
+        f'<p style="color:#c5120b" role="alert">{html.escape(message)}</p>'
         if message
         else ""
     )
     page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Scryglass · Private calculator</title>
-<style>body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#eee9df;color:#2c2a27;font:16px/1.5 Georgia,serif}}main{{width:min(420px,calc(100% - 40px));padding:32px;background:#f8f5ed;border:1px solid #c9c0b1;box-shadow:0 16px 50px #2c2a2718}}h1{{margin:0 0 8px;font-size:28px}}p{{margin:8px 0 22px}}label{{display:grid;gap:6px;margin:14px 0;font:12px/1.2 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}}input{{box-sizing:border-box;width:100%;padding:12px;border:1px solid #bdb4a6;background:#fffdf8;color:inherit;font:16px Georgia,serif}}button{{margin-top:8px;width:100%;padding:12px;border:0;background:#bd5f26;color:#fff;font:12px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;cursor:pointer}}</style></head>
-<body><main><p style="font:11px ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#bd5f26">Private calculator</p><h1>Sign in to Scryglass</h1><p>This page is restricted to approved research accounts.</p>{notice}<form method="post" action="/auth/login"><input type="hidden" name="next" value="{html.escape(next_path, quote=True)}"><label>Username<input name="username" autocomplete="username" required autofocus></label><label>Password<input type="password" name="password" autocomplete="current-password" required></label><button type="submit">Enter calculator</button></form></main></body></html>"""
+<style>body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#121212;color:#f1f1f1;font:16px/1.5 Georgia,serif}}main{{width:min(420px,calc(100% - 40px));padding:32px;background:#181818;border:1px solid #2d2d2d;box-shadow:0 16px 50px #00000066}}h1{{margin:0 0 8px;font-size:28px}}p{{margin:8px 0 22px;color:#a4a4a4}}label{{display:grid;gap:6px;margin:14px 0;color:#a4a4a4;font:12px/1.2 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}}input{{box-sizing:border-box;width:100%;padding:12px;border:1px solid #464646;background:#202020;color:#f1f1f1;font:16px Georgia,serif}}button{{margin-top:8px;width:100%;padding:12px;border:0;background:#c5120b;color:#f1f1f1;font:12px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;cursor:pointer}}</style></head>
+<body><main><p style="font:11px ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#c5120b">Private calculator</p><h1>Sign in to Scryglass</h1><p>This page is restricted to approved research accounts.</p>{notice}<form method="post" action="/auth/login"><input type="hidden" name="next" value="{html.escape(next_path, quote=True)}"><label>Username<input name="username" autocomplete="username" required autofocus></label><label>Password<input type="password" name="password" autocomplete="current-password" required></label><button type="submit">Enter calculator</button></form></main></body></html>"""
     return Response(page, status=status, mimetype="text/html")
 
 
@@ -855,6 +855,7 @@ def auth_status():
 @app.route("/")
 def index():
     """Serve the main calculator page."""
+    session = _current_session()
     return render_template(
         "index.html",
         default_target=DEFAULT_TARGET,
@@ -862,6 +863,7 @@ def index():
         default_auto_attack_uptime=DEFAULT_AUTO_ATTACK_UPTIME,
         max_level=MAX_LEVEL,
         input_limits=PUBLIC_INPUT_LIMITS,
+        auth_user=session.get("username") if session else None,
     )
 
 

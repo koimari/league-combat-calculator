@@ -199,9 +199,9 @@ function championStats(name, level, itemIds = [], stackCounts = []) {
   };
 }
 
-function attackerChampionStats(itemIds = [], stackCounts = []) {
-  const stats = championStats(state.attacker.champion, state.attacker.level, itemIds, stackCounts);
-  if (state.attacker.role === "mid" && state.attacker.roleQuestComplete) {
+function attackerChampionStats(itemIds = [], stackCounts = [], combatant = state.attacker) {
+  const stats = championStats(combatant.champion, combatant.level, itemIds, stackCounts);
+  if (combatant.role === "mid" && combatant.roleQuestComplete) {
     const build = buildStats(itemIds, stackCounts);
     const baseAd = stats.ad - build.ad;
     stats.ad = baseAd + build.ad * 1.08;
@@ -273,9 +273,18 @@ function itemStatsLine(item) {
   return stats.join(" · ") || "Item effect";
 }
 
+function bisReadyForPath(path) {
+  const [root, indexText] = String(path).split(".");
+  const index = Number(indexText);
+  if (root === "attacker") return Boolean(state.attacker.champion && state.targets.length && state.targets.every((target) => target.champion));
+  if (root === "allies") return Boolean(state.allies[index]?.champion && state.targets.some((target) => target.champion));
+  if (root === "targets") return Boolean(state.targets[index]?.champion && state.attacker.champion);
+  return false;
+}
+
 function itemSlot(path, id, compact = false, allowBis = false) {
   const item = getItem(id);
-  const bisReady = Boolean(state.attacker.champion && state.targets.length && state.targets.every((target) => target.champion));
+  const bisReady = bisReadyForPath(path);
   return `<div class="slot-wrap ${compact ? "compact" : ""}">
     <button class="item-slot" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}">
       <span class="item-icon ${item ? "" : "empty"}">${item ? `<img src="${itemImage(id)}" alt="" />` : `<span aria-hidden="true">+</span>`}</span>
@@ -312,7 +321,7 @@ function rosterCard(loadout, index, kind) {
       <div class="target-level"><button type="button" data-level="${root}.${index}.level" data-delta="-1" aria-label="Decrease level">−</button><output>Lv ${loadout.level}</output><button type="button" data-level="${root}.${index}.level" data-delta="1" aria-label="Increase level">+</button></div>
       <button class="remove-target" type="button" ${isAlly ? `data-remove-ally="${index}"` : `data-remove-target="${index}"`} aria-label="Remove ${escapeHtml(loadout.champion || `${label} slot`)}">×</button>
     </header>
-    <div class="target-build">${loadout.items.map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true)).join("")}</div>
+    <div class="target-build">${loadout.items.map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true, true)).join("")}</div>
     ${effectToggle}
     ${champion ? statMatrix(stats, null, true) : `<div class="matrix-placeholder">Choose a champion to show the full stat matrix.</div>`}
   </article>`;
@@ -471,8 +480,8 @@ function ludenDamage(ap, targetCount, targetIndex, hasLuden) {
   return targetIndex === 0 ? proc * (1 + 0.2 * Math.max(6 - targetCount, 0)) : proc;
 }
 
-function autoAttacksForStats(stats) {
-  if (!state.attacker.champion || state.fight.aaUptime <= 0) return 0;
+function autoAttacksForStats(stats, combatant = state.attacker) {
+  if (!combatant.champion || state.fight.aaUptime <= 0) return 0;
   const activeSeconds = state.fight.duration * Math.max(0, Math.min(1, state.fight.aaUptime));
   return Math.floor(Math.max(0.4, stats.attackSpeed) * activeSeconds * 0.92);
 }
@@ -535,9 +544,12 @@ function calculateBuild(buildIds, rotations = state.fight.rotations, stackCounts
   const hasLiandry = buildIds.includes(6653);
   const hasShadowflame = buildIds.includes(4645);
   const hasLuden = buildIds.includes(6655);
-  const attackerStats = attackerChampionStats(buildIds, stackCounts);
-  const autosPerRotation = autoAttacksForStats(attackerStats);
+  const combatant = options.combatant || state.attacker;
+  const targetLoadouts = options.targetLoadouts || state.targets;
+  const attackerStats = attackerChampionStats(buildIds, stackCounts, combatant);
+  const autosPerRotation = autoAttacksForStats(attackerStats, combatant);
   const profile = options.profile || state.attacker;
+  const useAbilities = options.useAbilities ?? (combatant === state.attacker && profile.useAbilities !== false);
   let cumulative = 0;
   const ledger = [];
   const breakdown = new Map();
@@ -551,13 +563,13 @@ function calculateBuild(buildIds, rotations = state.fight.rotations, stackCounts
     const burnTicks = steady ? 3 * 1.06 : 1.02 + 1.04 + 1.06;
     let rotationDamage = 0;
 
-    state.targets.forEach((target, targetIndex) => {
+    targetLoadouts.forEach((target, targetIndex) => {
       const targetStats = options.targetStats?.[targetIndex] || championStats(target.champion, target.level, target.items, target.itemStacks);
       const effectiveMr = effectiveMagicResistance(targetStats.mr, build);
       const effectiveArmor = effectivePhysicalArmor(targetStats.armor, build);
       const magicMultiplier = 100 / (100 + effectiveMr);
       const physicalMultiplier = 100 / (100 + effectiveArmor);
-      const rows = options.profile?.useAbilities === false ? [] : abilityDamageRows(attackerStats, targetStats);
+      const rows = useAbilities ? abilityDamageRows(attackerStats, targetStats) : [];
       if (profile.baseDamage || profile.apRatio) rows.push({ source: "Manual · magic package", detail: "Entered below", raw: profile.baseDamage + profile.apRatio * attackerStats.ap, type: "magical" });
       if (profile.physicalDamage || profile.adRatio) rows.push({ source: "Manual · physical package", detail: "Entered below", raw: profile.physicalDamage + profile.adRatio * attackerStats.ad, type: "physical" });
       const triggersAbilityItems = rows.length > 0;
@@ -588,7 +600,7 @@ function calculateBuild(buildIds, rotations = state.fight.rotations, stackCounts
         targetMagicDamage += burn;
         recordBreakdown("Liandry’s Torment · Torment", `${one(burnTicks)} burn ticks`, burn, "item");
       }
-      const ludenRaw = ludenDamage(attackerStats.ap, state.targets.length, targetIndex, hasLuden && triggersAbilityItems);
+      const ludenRaw = ludenDamage(attackerStats.ap, targetLoadouts.length, targetIndex, hasLuden && triggersAbilityItems);
       const luden = ludenRaw * magicMultiplier;
       if (luden > 0) {
         rotationDamage += luden;
@@ -1237,12 +1249,91 @@ function bisProfile() {
   if (selectedAbilities.length) return { baseDamage: 0, apRatio: 0, physicalDamage: 0, adRatio: 0, useAbilities: true, label: "Selected skill rotation", exact: true };
   const exact = state.attacker.baseDamage > 0 || state.attacker.apRatio > 0 || state.attacker.physicalDamage > 0 || state.attacker.adRatio > 0;
   if (exact) return { ...state.attacker, label: "Exact damage package", exact: true };
-  const champion = getChampion(state.attacker.champion);
+  return statOnlyProfile(state.attacker);
+}
+
+function statOnlyProfile(combatant) {
+  const champion = getChampion(combatant.champion);
   const primary = champion?.tags?.[0] || "Fighter";
-  const magical = primary === "Mage" || primary === "Support";
+  const magical = champion?.tags?.includes("Mage") || champion?.tags?.includes("Support") || primary === "Mage" || primary === "Support";
   return magical
-    ? { baseDamage: 100, apRatio: 1, physicalDamage: 0, adRatio: 0, label: "Stat-only AP preview", exact: false }
-    : { baseDamage: 0, apRatio: 0, physicalDamage: 0, adRatio: 1, label: "Stat-only AD preview", exact: false };
+    ? { baseDamage: 100, apRatio: 1, physicalDamage: 0, adRatio: 0, useAbilities: false, label: "Stats-only AP preview", exact: false }
+    : { baseDamage: 0, apRatio: 0, physicalDamage: 0, adRatio: 1, useAbilities: false, label: "Stats-only AD preview", exact: false };
+}
+
+function rosterBisContext(path) {
+  const [root, indexText] = String(path).split(".");
+  const index = Number(indexText);
+  const combatant = root === "allies" ? state.allies[index] : state.targets[index];
+  if (!combatant?.champion) return null;
+  if (root === "allies") {
+    return { root, index, combatant, opponents: state.targets.filter((target) => target.champion) };
+  }
+  if (root === "targets") {
+    const attacker = {
+      champion: state.attacker.champion,
+      level: state.attacker.level,
+      items: buildAIds(),
+      itemStacks: buildAStacks(),
+      role: state.attacker.role,
+      roleQuestComplete: state.attacker.roleQuestComplete,
+    };
+    return { root, index, combatant, opponents: [attacker, ...state.allies.filter((ally) => ally.champion)] };
+  }
+  return null;
+}
+
+function rosterBisIds(path, candidateId) {
+  const context = rosterBisContext(path);
+  if (!context) return [];
+  const ids = [...context.combatant.items];
+  ids[Number(String(path).split(".").at(-1))] = candidateId;
+  return ids;
+}
+
+function rosterBisStacks(path, candidateId) {
+  const context = rosterBisContext(path);
+  if (!context) return [];
+  const ids = [...context.combatant.items];
+  const stacks = [...(context.combatant.itemStacks || [])];
+  const slot = Number(String(path).split(".").at(-1));
+  if (Number(ids[slot]) !== Number(candidateId)) stacks[slot] = 0;
+  return stacks;
+}
+
+function rosterBisCandidates(path, profile) {
+  const currentIds = rosterBisIds(path, 0).filter(Boolean);
+  const magical = profile.baseDamage > 0 || profile.apRatio > 0;
+  const physical = profile.physicalDamage > 0 || profile.adRatio > 0;
+  return DATA.items.filter((item) => {
+    const completed = item.price >= 2200 && item.into.length === 0;
+    const relevant = (magical && (item.ap || item.pen || item.percentPen || [6653, 6655].includes(item.id))) || (physical && (item.ad || item.lethality || item.percentArmorPen || item.attackSpeed || item.crit));
+    return completed && relevant && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
+  });
+}
+
+function openRosterBis(path) {
+  const context = rosterBisContext(path);
+  if (!context || !bisReadyForPath(path)) return;
+  const profile = statOnlyProfile(context.combatant);
+  const targetStats = context.opponents.map((target) => championStats(target.champion, target.level, target.items, target.itemStacks));
+  const scoreOptions = { profile, combatant: context.combatant, targetLoadouts: context.opponents, targetStats, useAbilities: false, summaryOnly: true };
+  const ranked = rosterBisCandidates(path, profile).filter((item) => legalOptimizerBuild(rosterBisIds(path, item.id).filter(Boolean))).map((item) => {
+    const result = calculateBuild(rosterBisIds(path, item.id), state.fight.rotations, rosterBisStacks(path, item.id), scoreOptions);
+    return { item, result, total: result.cumulative };
+  }).sort((a, b) => b.total - a.total).slice(0, 12);
+  const baselineId = Number(pathValue(path)) || 0;
+  const baseline = calculateBuild(rosterBisIds(path, baselineId), state.fight.rotations, rosterBisStacks(path, baselineId), scoreOptions).cumulative;
+  const role = context.root === "allies" ? "Ally" : "Enemy";
+  const slot = Number(String(path).split(".").at(-1)) + 1;
+  $("bisTitle").textContent = `Best item for ${role} ${context.combatant.champion} · slot ${slot}`;
+  $("bisSummary").textContent = `${profile.label} · ${context.opponents.length} ${plural(context.opponents.length, "opponent")}`;
+  $("bisList").innerHTML = ranked.map((entry, index) => {
+    const gain = baseline > 0 ? (entry.total / baseline - 1) * 100 : 0;
+    return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${itemImage(entry.item.id)}" alt="" /><div><strong>${escapeHtml(entry.item.name)}</strong><small>${escapeHtml(itemStatsLine(entry.item))}</small></div><p><strong>${fmt(entry.total)}</strong><span>Opponents · ${gain >= 0 ? "+" : ""}${one(gain)}%</span></p><button type="button" data-bis-value="${entry.item.id}">Use</button></article>`;
+  }).join("") || `<p class="picker-empty">No valid completed items match this stats-only preview.</p>`;
+  bisContext = { path };
+  $("bis").showModal();
 }
 
 function optimizerDamagePackageReady() {
@@ -1375,7 +1466,8 @@ function startOptimizeBuild() {
 }
 
 function openBis(path) {
-  if (!state.attacker.champion || !state.targets.length || !state.targets.every((target) => target.champion)) return;
+  if (!bisReadyForPath(path)) return;
+  if (!String(path).startsWith("attacker.")) return openRosterBis(path);
   bisContext = { path };
   const profile = bisProfile();
   const ranked = bisCandidates(path, profile).filter((item) => legalOptimizerBuild(idsForBis(path, item.id).filter(Boolean))).map((item) => {
@@ -1579,7 +1671,6 @@ $("picker").addEventListener("click", (event) => { if (event.target === $("picke
 $("bisClose").addEventListener("click", closeBis);
 $("bis").addEventListener("click", (event) => { if (event.target === $("bis")) closeBis(); });
 for (const id of ["baseDamage", "apRatio", "physicalDamage", "adRatio"]) $(id).addEventListener("input", updateDamagePackage);
-$("themeToggle").addEventListener("click", () => { document.documentElement.dataset.theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; });
 
 Promise.all([
   fetch("/static/data.json").then((response) => { if (!response.ok) throw new Error("Patch snapshot failed to load"); return response.json(); }),
