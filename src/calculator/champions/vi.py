@@ -250,6 +250,14 @@ def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
 
 CAST_ORDER = ("Q", "E", "R")
 SUPPORTED_FIGHT_MODES = ("one_rotation",)
+UNSUPPORTED_FIGHT_MODE_REASON = (
+    "Time-based Vi calculations are withheld until Denting Blows can be "
+    "interleaved with the ambient attack stream. Use One Rotation."
+)
+CUSTOM_CAST_ORDER_UNAVAILABLE_REASON = (
+    "Vi uses the certified Q -> E -> R sequence; custom cast orders are not "
+    "available yet."
+)
 COMPARISON_CURVE_UNAVAILABLE_REASON = (
     "Crossover windows are withheld for Vi until W stacks, attack resets, "
     "and ambient attacks share one timed event ledger."

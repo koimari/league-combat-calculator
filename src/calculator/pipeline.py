@@ -12,6 +12,9 @@ from typing import Any, Mapping
 from .champions import (
     RESERVED_OPTION_KEYS,
     get_champion_cast_order,
+    get_custom_cast_order_unavailable_reason,
+    get_supported_fight_modes,
+    get_unsupported_fight_mode_reason,
     parse_champion_abilities,
 )
 from .champions.skill_orders import get_ability_rank
@@ -208,18 +211,22 @@ class FightParams(FightConfig):
         three-rank ultimate layout. Transformation and auto-levelled kits fail
         closed until their individual allocation rules are represented.
         """
-        if champion_name == "Vi":
-            if not self.one_rotation:
-                raise ValueError(
-                    "Time-based Vi calculations are withheld until Denting "
-                    "Blows can be interleaved with the ambient attack stream. "
-                    "Use One Rotation."
-                )
-            if self.cast_order is not None:
-                raise ValueError(
-                    "Vi uses the certified Q -> E -> R sequence; custom cast "
-                    "orders are not available yet."
-                )
+        supported_modes = get_supported_fight_modes(champion_name)
+        requested_mode = (
+            "one_rotation"
+            if self.one_rotation
+            else ("auto_only" if self.auto_attacks_only else "time_based")
+        )
+        if supported_modes is not None and requested_mode not in supported_modes:
+            reason = get_unsupported_fight_mode_reason(champion_name)
+            raise ValueError(
+                reason
+                or f"{requested_mode} is not certified for {champion_name}"
+            )
+
+        custom_order_reason = get_custom_cast_order_unavailable_reason(champion_name)
+        if self.cast_order is not None and custom_order_reason is not None:
+            raise ValueError(custom_order_reason)
 
         if self.ability_ranks is None:
             return

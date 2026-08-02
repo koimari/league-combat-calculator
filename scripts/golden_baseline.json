@@ -8259,35 +8259,40 @@
         "Q": {
           "cooldown": 6.0,
           "damage_type": "physical",
+          "detail": "6 missiles on one isolated target",
           "name": "Icathian Rain",
           "parts": [
-            "DamagePart(physical, amount=100.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=100.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.2571428571428571)",
+            "DamagePart(physical, amount=25.0, count=5, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.457142857142857, hit_interval=0.2)"
           ],
           "rank": 5,
           "resource_cost": 55.0,
           "resource_type": "MANA",
-          "total_raw": 100.0
+          "total_raw": 225.0
         },
         "W": {
-          "cast_time": 0.4,
+          "cast_time": 0.86,
           "cooldown": 17.0,
           "damage_type": "magic",
+          "detail": "hit at 800 range; Plasma resolves afterwards",
           "name": "Void Seeker",
           "parts": [
-            "DamagePart(magic, amount=186.60000000000002, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=186.60000000000002, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.8571428571428572)"
           ],
+          "post_hit_proc": {
+            "breakdown_key": "passive_plasma",
+            "detail": "2 successive stack applications",
+            "name": "Second Skin (Plasma)",
+            "parts": [
+              "DamagePart(magic, amount=19.29, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.8571428571428572)",
+              "DamagePart(magic, amount=24.41, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.8571428571428572)"
+            ]
+          },
           "rank": 3,
           "resource_cost": 65.0,
           "resource_type": "MANA",
+          "target_max_health_sensitive": true,
           "total_raw": 186.6
-        },
-        "passive": {
-          "name": "Second Skin",
-          "on_hit": {
-            "damage_per_hit": 19.29,
-            "damage_type": "magic",
-            "name": "Second Skin (on-hit)"
-          }
         }
       },
       "stats": {
@@ -31876,12 +31881,12 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "bbc423375b99898b0fcab67920d005826a1d8733",
+    "git_head": "a178af3fe3f36b1e508af03ab1d20955c965b751",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785669778.9014,
     "patch_last_changed_max": "26.15",
-    "registered_champion_count": 42
+    "registered_champion_count": 43
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -37681,6 +37686,114 @@
               "spellblade_Trinity Force": 395.47
             },
             "total_damage": 2857.67
+          }
+        }
+      }
+    },
+    "Kai'Sa": {
+      "11": {
+        "magic_build": {
+          "breakdown_totals": {
+            "Q": 282.6,
+            "W": 308.4,
+            "auto_attacks": 0.0,
+            "passive_plasma": 130.43,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 876.79
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "Q": 150.0,
+            "W": 133.29,
+            "auto_attacks": 0.0,
+            "passive_plasma": 31.21
+          },
+          "total_damage": 314.5
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "Q": 314.58,
+            "W": 277.21,
+            "auto_attacks": 0.0,
+            "passive_plasma": 31.21
+          },
+          "total_damage": 623.0
+        },
+        "spellblade_build": {
+          "breakdown_totals": {
+            "Q": 241.58,
+            "W": 236.36,
+            "auto_attacks": 0.0,
+            "passive_plasma": 31.21
+          },
+          "total_damage": 509.15
+        },
+        "sustained": {
+          "magic_build": {
+            "error": "ValueError: Time-based Kai'Sa calculations are withheld until Supercharge's four-second attack-speed window, on-attack cooldown refunds, Killer Instinct's attack reset, and Plasma all share one attack timeline. Use One Rotation."
+          },
+          "no_items": {
+            "error": "ValueError: Time-based Kai'Sa calculations are withheld until Supercharge's four-second attack-speed window, on-attack cooldown refunds, Killer Instinct's attack reset, and Plasma all share one attack timeline. Use One Rotation."
+          },
+          "physical_build": {
+            "error": "ValueError: Time-based Kai'Sa calculations are withheld until Supercharge's four-second attack-speed window, on-attack cooldown refunds, Killer Instinct's attack reset, and Plasma all share one attack timeline. Use One Rotation."
+          },
+          "spellblade_build": {
+            "error": "ValueError: Time-based Kai'Sa calculations are withheld until Supercharge's four-second attack-speed window, on-attack cooldown refunds, Killer Instinct's attack reset, and Plasma all share one attack timeline. Use One Rotation."
+          }
+        }
+      },
+      "18": {
+        "magic_build": {
+          "breakdown_totals": {
+            "Q": 282.6,
+            "W": 370.24,
+            "auto_attacks": 0.0,
+            "passive_plasma": 149.87,
+            "proc_Luden's Echo": 155.36
+          },
+          "total_damage": 958.07
+        },
+        "no_items": {
+          "breakdown_totals": {
+            "Q": 150.0,
+            "W": 188.5,
+            "auto_attacks": 0.0,
+            "passive_plasma": 48.57
+          },
+          "total_damage": 387.07
+        },
+        "physical_build": {
+          "breakdown_totals": {
+            "Q": 314.58,
+            "W": 332.43,
+            "auto_attacks": 0.0,
+            "passive_plasma": 48.57
+          },
+          "total_damage": 695.58
+        },
+        "spellblade_build": {
+          "breakdown_totals": {
+            "Q": 241.58,
+            "W": 291.57,
+            "auto_attacks": 0.0,
+            "passive_plasma": 48.57
+          },
+          "total_damage": 581.72
+        },
+        "sustained": {
+          "magic_build": {
+            "error": "ValueError: Time-based Kai'Sa calculations are withheld until Supercharge's four-second attack-speed window, on-attack cooldown refunds, Killer Instinct's attack reset, and Plasma all share one attack timeline. Use One Rotation."
+          },
+          "no_items": {
+            "error": "ValueError: Time-based Kai'Sa calculations are withheld until Supercharge's four-second attack-speed window, on-attack cooldown refunds, Killer Instinct's attack reset, and Plasma all share one attack timeline. Use One Rotation."
+          },
+          "physical_build": {
+            "error": "ValueError: Time-based Kai'Sa calculations are withheld until Supercharge's four-second attack-speed window, on-attack cooldown refunds, Killer Instinct's attack reset, and Plasma all share one attack timeline. Use One Rotation."
+          },
+          "spellblade_build": {
+            "error": "ValueError: Time-based Kai'Sa calculations are withheld until Supercharge's four-second attack-speed window, on-attack cooldown refunds, Killer Instinct's attack reset, and Plasma all share one attack timeline. Use One Rotation."
           }
         }
       }

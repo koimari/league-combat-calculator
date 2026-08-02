@@ -63,6 +63,7 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Gnar": "gnar",
     "Jarvan IV": "jarvan_iv",
     "Jayce": "jayce",
+    "Kai'Sa": "kaisa",
     "Kog'Maw": "kogmaw",
     "Lissandra": "lissandra",
     "Orianna": "orianna",
@@ -231,6 +232,36 @@ def get_comparison_curve_unavailable_reason(champion_name: str) -> str | None:
         return None
     module = importlib.import_module(f".{module_name}", package=__name__)
     reason = getattr(module, "COMPARISON_CURVE_UNAVAILABLE_REASON", None)
+    return str(reason) if reason else None
+
+
+def get_supported_fight_modes(champion_name: str) -> tuple[str, ...] | None:
+    """Return a module's certified public fight modes, when restricted."""
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return None
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    modes = getattr(module, "SUPPORTED_FIGHT_MODES", None)
+    return tuple(str(mode) for mode in modes) if modes is not None else None
+
+
+def get_unsupported_fight_mode_reason(champion_name: str) -> str | None:
+    """Return the sourced fail-closed explanation for restricted modes."""
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return None
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    reason = getattr(module, "UNSUPPORTED_FIGHT_MODE_REASON", None)
+    return str(reason) if reason else None
+
+
+def get_custom_cast_order_unavailable_reason(champion_name: str) -> str | None:
+    """Explain why a module's certified cast sequence cannot be reordered."""
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return None
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    reason = getattr(module, "CUSTOM_CAST_ORDER_UNAVAILABLE_REASON", None)
     return str(reason) if reason else None
 
 
