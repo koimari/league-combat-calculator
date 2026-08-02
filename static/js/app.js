@@ -41,7 +41,7 @@ const state = {
   targets: [],
   allies: [],
   fight: { rotations: 1, duration: 10, aaUptime: 0 },
-  optimizer: { running: false, summary: null },
+  optimizer: { running: false, summary: null, scope: null },
 };
 
 const TIER_TWO_BOOTS = [3006, 3009, 3008, 3158, 3111, 3047, 3020];
@@ -399,6 +399,8 @@ function rosterCard(loadout, index, kind) {
   const effectToggle = isAlly
     ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
     : "";
+  const path = `${root}.${index}`;
+  const rosterReady = Boolean(loadout.champion && bisReadyForPath(path));
   return `<article class="target-card ${isAlly ? "ally-card" : ""}">
     <header>
       <button class="target-pick ${champion ? "" : "empty-pick"}" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(loadout.champion)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(loadout.champion)}" alt="" />` : "+"}</button>
@@ -407,6 +409,7 @@ function rosterCard(loadout, index, kind) {
       <button class="remove-target" type="button" ${isAlly ? `data-remove-ally="${index}"` : `data-remove-target="${index}"`} aria-label="Remove ${escapeHtml(loadout.champion || `${label} slot`)}">×</button>
     </header>
     <div class="target-build">${loadout.items.map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true, true)).join("")}</div>
+    <div class="roster-build-actions"><button class="optimize-build roster-optimize" type="button" data-optimize-roster="${path}" ${rosterReady && !state.optimizer.running ? "" : "disabled"}>Optimize build</button></div>
     ${rosterAbilityRankControls(loadout, index, root)}
     ${effectToggle}
     ${champion ? statMatrix(stats, null, true) : `<div class="matrix-placeholder">Choose a champion to show the full stat matrix.</div>`}
@@ -523,7 +526,7 @@ function renderBuilder() {
   const optimizePackageReady = optimizerDamagePackageReady();
   const optimizeReady = Boolean(attacker.champion && optimizePackageReady && state.targets.length && state.targets.every((target) => target.champion));
   const optimizerSummary = state.optimizer.summary
-    ? `<div class="optimizer-summary"><strong>${state.optimizer.summary.tested.toLocaleString("en-US")} builds · ${one(state.optimizer.summary.elapsedMs)} ms</strong><span>Build A now shows the complete highest-damage build.</span></div>`
+    ? `<div class="optimizer-summary"><strong>${state.optimizer.summary.tested.toLocaleString("en-US")} builds · ${one(state.optimizer.summary.elapsedMs)} ms</strong><span>${escapeHtml(state.optimizer.summary.label || "Build A now shows the complete highest-damage build.")}</span></div>`
     : "";
   $("builder").innerHTML = `
     <section class="board-section hero-section">
@@ -546,11 +549,11 @@ function renderBuilder() {
       </div>
     </section>
     <section class="board-section">
-      <div class="section-bar"><h2>Enemy roster</h2><div class="section-actions"><small>${state.targets.length}/5 · every card includes full stats</small><button class="text-button" type="button" data-add-target ${state.targets.length >= 5 ? "disabled" : ""}>+ Add enemy</button></div></div>
+      <div class="section-bar"><h2>Enemy roster</h2><div class="section-actions"><small>${state.targets.length}/5 · every card includes full stats</small><button class="text-button" type="button" data-optimize-roster-all="targets" ${state.targets.some((target) => target.champion) && !state.optimizer.running ? "" : "disabled"}>Optimize all enemies</button><button class="text-button" type="button" data-add-target ${state.targets.length >= 5 ? "disabled" : ""}>+ Add enemy</button></div></div>
       <div class="target-grid">${state.targets.length ? state.targets.map(targetCard).join("") : `<div class="empty-roster">Add an enemy champion to begin.</div>`}</div>
     </section>
     <section class="board-section">
-      <div class="section-bar"><h2>Allied context</h2><div class="section-actions"><small>${state.allies.length}/4 · buffs are opt-in and sourced</small><button class="text-button" type="button" data-add-ally ${state.allies.length >= 4 ? "disabled" : ""}>+ Add ally</button></div></div>
+      <div class="section-bar"><h2>Allied context</h2><div class="section-actions"><small>${state.allies.length}/4 · buffs are opt-in and sourced</small><button class="text-button" type="button" data-optimize-roster-all="allies" ${state.allies.some((ally) => ally.champion) && !state.optimizer.running ? "" : "disabled"}>Optimize all allies</button><button class="text-button" type="button" data-add-ally ${state.allies.length >= 4 ? "disabled" : ""}>+ Add ally</button></div></div>
       <div class="target-grid">${state.allies.length ? state.allies.map(allyCard).join("") : `<div class="empty-roster">Add an ally to include their build and any explicitly modeled outgoing effect.</div>`}</div>
     </section>
     <section class="board-section">
@@ -638,6 +641,19 @@ function addBreakdown(map, source, detail, damage, kind = "ability") {
   map.set(key, row);
 }
 
+function allyStatBonuses() {
+  return state.allies.filter((ally) => ally.champion && ally.allyEffectsEnabled).reduce((total, ally) => {
+    // This mirrors the sourced frontend boundary in src/calculator/ally_effects.py:
+    // Staff of Flowing Water applies its 40 AP + 15 haste window after the
+    // ally heals or shields the attacker immediately before the fight.
+    if (ally.items.includes(6616)) {
+      total.ap += 40;
+      total.haste += 15;
+    }
+    return total;
+  }, { ap: 0, haste: 0 });
+}
+
 function calculateBuild(buildIds, rotations = state.fight.rotations, stackCounts = [], options = {}) {
   const build = buildStats(buildIds, stackCounts);
   const hasLiandry = buildIds.includes(6653);
@@ -646,6 +662,11 @@ function calculateBuild(buildIds, rotations = state.fight.rotations, stackCounts
   const combatant = options.combatant || state.attacker;
   const targetLoadouts = options.targetLoadouts || state.targets;
   const attackerStats = attackerChampionStats(buildIds, stackCounts, combatant);
+  if (combatant === state.attacker) {
+    const allyBonuses = options.allyBonuses || allyStatBonuses();
+    attackerStats.ap += Number(allyBonuses.ap || 0);
+    attackerStats.haste += Number(allyBonuses.haste || 0);
+  }
   const autosPerRotation = autoAttacksForStats(attackerStats, combatant);
   const profile = options.profile || state.attacker;
   const useAbilities = options.useAbilities ?? (combatant === state.attacker && profile.useAbilities !== false);
@@ -1509,11 +1530,29 @@ function bisItemEffects(item) {
     damageAmp: item?.id === 6653 || tags.has("damage_amp") || /bonus damage|more damage|damage amp/.test(text),
     onHit: tags.has("on_hit") || categories.has("OnHit") || /on[- ]hit|attacks deal/.test(text),
     aura: categories.has("Aura") || tags.has("aura") || /nearby allies|nearby enemy/.test(text),
+    allyAura: categories.has("Aura") || tags.has("aura") || /nearby allies|allied champions/.test(text),
     active: categories.has("Active") || tags.has("active") || /activate|grant nearby|shield/.test(text),
     healing: tags.has("healing") || categories.has("LifeSteal") || categories.has("HealthRegen"),
+    allyShield: /shield(?:ing)? an ally|nearby allies|allied champions/.test(text),
+    allyHealing: /heal(?:ing)? an ally|allied units|target allied champion|nearby allies/.test(text),
     eventOrder: wiki.eventOrder || [],
     defensive: categories.has("Health") || categories.has("Armor") || categories.has("MagicResist") || categories.has("SpellBlock"),
   };
+}
+
+function bisOutgoingSupport(combatant, stats, duration = 10) {
+  const shields = bisUtilityValue(combatant, stats, "shields", duration);
+  const heals = bisHealingPotential(combatant, stats, duration);
+  const profile = bisChampionProfile(combatant);
+  const control = Object.values(profile.abilities || {}).flat().reduce((total, ability) => total + (ability.signals?.control ? 1 : 0), 0);
+  return shields * 2.2 + heals * 1.5 + control * 35;
+}
+
+function bisSupportItemValue(item, stats) {
+  const effect = bisItemEffects(item);
+  if (!effect.allyShield && !effect.allyHealing && !effect.allyAura) return 0;
+  const sourcedEffect = (effect.allyShield ? 460 : 0) + (effect.allyHealing ? 420 : 0) + (effect.allyAura ? 180 : 0);
+  return sourcedEffect + Number(item?.ap || 0) * 5 + Number(item?.haste || 0) * 12 + Number(item?.hp || 0) * 0.18;
 }
 
 function bisHealingPotential(combatant, stats, duration = 10) {
@@ -1585,6 +1624,13 @@ function bisBuildScore(buildIds, combatant, opponents, path) {
   const hasAbilityDamage = Object.values(profile.abilities || {}).flat().some((ability) => ability.signals?.hasDamage || ability.packets?.length);
   const hasHealing = bisHealingPotential(combatant, stats, duration);
   const ownShields = bisUtilityValue(combatant, stats, "shields", duration);
+  const outgoingSupport = bisOutgoingSupport(combatant, stats, duration);
+  const supportItems = buildIds.reduce((sum, id) => sum + bisSupportItemValue(getItem(id), stats), 0);
+  const enemyPath = path.startsWith("targets.");
+  const survivalPool = effectiveHealth + hasHealing * 0.7 + ownShields;
+  const pressurePerSecond = pressureTotal / duration;
+  const survivalSeconds = pressurePerSecond > 0 ? Math.min(duration, survivalPool / pressurePerSecond) : duration;
+  const survivalFraction = Math.max(0, Math.min(1, survivalSeconds / duration));
   const targetHealing = opponents.reduce((sum, target) => sum + bisHealingPotential(target, championStats(target.champion, target.level, target.items, target.itemStacks), duration), 0);
   const antiHeal = effects.some((effect) => effect.antiHeal) && targetHealing > 0 ? targetHealing * 0.4 * Math.min(1, duration / 3) : 0;
   const liandry = effects.some((effect) => effect.burn) && hasAbilityDamage ? opponents.reduce((sum, target) => {
@@ -1593,27 +1639,36 @@ function bisBuildScore(buildIds, combatant, opponents, path) {
   }, 0) + ownAbilityDamage * 0.06 : 0;
   const onHitBonus = effects.some((effect) => effect.onHit) ? autos.attacks * Math.max(8, stats.ad * 0.03) : 0;
   const teamUtility = effects.reduce((sum, effect, index) => sum + (effect.aura ? 38 : 0) + (effect.active ? 42 : 0) + (effect.healing ? 24 : 0), 0);
+  const tradeOutput = (ownAbilityDamage + autos.raw + onHitBonus + liandry + antiHeal) * survivalFraction;
   let score;
   let metric;
   if (role === "tank" || role === "warden") {
-    const allyUtilityWeight = role === "warden" && path.startsWith("allies.") ? 34 : 8;
-    score = effectiveHealth * (role === "warden" && path.startsWith("allies.") ? 0.72 : 1) + teamUtility * allyUtilityWeight + stats.haste * 10 + hasHealing * 0.8 + ownShields * 1.1 + ownAbilityDamage * 0.18;
-    metric = "effective health + team utility";
+    const allyPath = path.startsWith("allies.");
+    const allyUtilityWeight = role === "warden" && allyPath ? 22 : 8;
+    score = enemyPath
+      ? tradeOutput * 0.85 + survivalPool * 0.62 + teamUtility * 10 + stats.haste * 10
+      : effectiveHealth * (role === "warden" && allyPath ? 0.48 : 1) + (allyPath ? outgoingSupport * 1.9 + supportItems : teamUtility * allyUtilityWeight) + stats.haste * 10 + hasHealing * 0.8 + ownShields * 1.1 + ownAbilityDamage * 0.18;
+    metric = enemyPath ? "trade output + survival window" : allyPath ? "outgoing protection + effective health" : "effective health + team utility";
   } else if (role === "enchanter" || role === "support") {
-    score = ownAbilityDamage * 0.45 + effectiveHealth * 0.45 + teamUtility * 10 + stats.haste * 12 + hasHealing * 1.1 + ownShields * 1.25;
-    metric = "utility + effective health";
+    const allyPath = path.startsWith("allies.");
+    score = allyPath
+      ? outgoingSupport * 2.4 + supportItems + ownAbilityDamage * 0.12 + effectiveHealth * 0.12 + stats.haste * 8
+      : enemyPath ? tradeOutput * 0.8 + survivalPool * 0.55 + teamUtility * 8 + stats.haste * 10 : ownAbilityDamage * 0.45 + effectiveHealth * 0.45 + teamUtility * 10 + stats.haste * 12 + hasHealing * 1.1 + ownShields * 1.25;
+    metric = allyPath ? "ally protection + sourced utility" : enemyPath ? "trade output + survival window" : "utility + effective health";
   } else if (role === "marksman") {
-    score = ownAbilityDamage + autos.raw + onHitBonus + stats.attackSpeed * 7 + stats.crit * 2;
-    metric = "estimated 10s output";
+    score = enemyPath ? tradeOutput * 0.95 + survivalPool * 0.38 + stats.attackSpeed * 7 + stats.crit * 2 : ownAbilityDamage + autos.raw + onHitBonus + stats.attackSpeed * 7 + stats.crit * 2;
+    metric = enemyPath ? "trade output + survival window" : "estimated 10s output";
   } else if (role === "mage" || role === "assassin") {
-    score = ownAbilityDamage + autos.raw * 0.35 + liandry + antiHeal + stats.haste * 5;
-    metric = "estimated 10s output";
+    score = enemyPath ? tradeOutput * 0.95 + survivalPool * 0.38 + stats.haste * 5 : ownAbilityDamage + autos.raw * 0.35 + liandry + antiHeal + stats.haste * 5;
+    metric = enemyPath ? "trade output + survival window" : "estimated 10s output";
   } else {
-    score = ownAbilityDamage * 0.75 + autos.raw * 0.65 + onHitBonus + effectiveHealth * 0.35 + stats.haste * 5;
-    metric = "damage + effective health";
+    score = enemyPath ? tradeOutput * 0.9 + survivalPool * 0.45 + stats.haste * 5 : ownAbilityDamage * 0.75 + autos.raw * 0.65 + onHitBonus + effectiveHealth * 0.35 + stats.haste * 5;
+    metric = enemyPath ? "trade output + survival window" : "damage + effective health";
   }
   const eventOrder = [];
   if (hasAbilityDamage) eventOrder.push("ability/attack hit");
+  if (enemyPath && pressureTotal > 0) eventOrder.push("incoming damage and mitigation set the survival window");
+  if (enemyPath) eventOrder.push("only damage dealt before defeat counts toward trade output");
   if (effects.some((effect) => effect.antiHeal)) eventOrder.push("apply 40% Wounds for 3s");
   if (effects.some((effect) => effect.burn)) eventOrder.push("Liandry burn after the damaging ability, then periodic ticks");
   if (hasHealing) eventOrder.push("healing resolves after incoming damage and modifiers");
@@ -1621,7 +1676,7 @@ function bisBuildScore(buildIds, combatant, opponents, path) {
   if (ownShields > 0) eventOrder.push("champion shields resolve before subsequent incoming damage");
   const wikiEvents = effects.flatMap((effect) => effect.eventOrder || []).filter((value, index, values) => values.indexOf(value) === index);
   wikiEvents.forEach((value) => { if (!eventOrder.includes(value)) eventOrder.push(value); });
-  return { score, metric, stats, ownAbilityDamage, autos, antiHeal, liandry, targetShields, ownShields, eventOrder, targetHealing, role };
+  return { score, metric, stats, ownAbilityDamage, autos, antiHeal, liandry, targetShields, ownShields, outgoingSupport, supportItems, survivalPool, survivalSeconds, survivalFraction, tradeOutput, eventOrder, targetHealing, role };
 }
 
 function rosterBisContext(path) {
@@ -1669,13 +1724,19 @@ function rosterBisCandidates(path, profile) {
   const role = bisRole(profile);
   return DATA.items.filter((item) => {
     const completed = item.price >= 2200 && item.into.length === 0;
-    return completed && bisItemMatchesRole(item, role) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
+    return completed && bisItemMatchesRole(item, role, path) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
   });
 }
 
-function bisItemMatchesRole(item, role) {
+function bisItemMatchesRole(item, role, path = "") {
   const categories = new Set(item.categories || []);
   const effect = bisItemEffects(item);
+  if (String(path).startsWith("allies.") && (role === "enchanter" || role === "support")) {
+    // Ally optimization is an outgoing-support problem. Keep raw AP items
+    // only when they carry a sourced support signal or the support mana loop;
+    // defensive/AP damage items must not masquerade as enchanter BIS.
+    return Boolean(effect.allyShield || effect.allyHealing || effect.allyAura || (item.ap && categories.has("ManaRegen")));
+  }
   const defensive = effect.defensive || item.hp || item.haste || categories.has("AbilityHaste") || categories.has("Aura") || categories.has("Active");
   const offensive = item.ad || item.ap || item.attackSpeed || item.crit || item.pen || item.percentPen || item.lethality || item.percentArmorPen || categories.has("OnHit");
   if (role === "tank" || role === "warden") return Boolean(defensive || (item.ad && item.hp));
@@ -1705,7 +1766,9 @@ function openRosterBis(path) {
   $("bisSummary").textContent = `${model.label} · ${context.opponents.length} ${plural(context.opponents.length, "opponent")}${eventSummary}`;
   $("bisList").innerHTML = ranked.map((entry, index) => {
     const gain = baseline > 0 ? (entry.total / baseline - 1) * 100 : 0;
-    const detail = entry.result.metric === "estimated 10s output" && (entry.result.liandry || entry.result.antiHeal)
+    const detail = entry.result.metric === "trade output + survival window"
+      ? `${itemStatsLine(entry.item)} · ${fmt(entry.result.tradeOutput)} trade output · ${one(entry.result.survivalSeconds)}s survival`
+      : entry.result.metric === "estimated 10s output" && (entry.result.liandry || entry.result.antiHeal)
       ? `${itemStatsLine(entry.item)} · ${entry.result.liandry ? `Liandry +${fmt(entry.result.liandry)}` : ""}${entry.result.antiHeal ? ` Wounds value +${fmt(entry.result.antiHeal)}` : ""}`
       : itemStatsLine(entry.item);
     return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${itemImage(entry.item.id)}" alt="" /><div><strong>${escapeHtml(entry.item.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.total)}</strong><span>${escapeHtml(entry.result.metric)} · ${gain >= 0 ? "+" : ""}${one(gain)}%</span></p><button type="button" data-bis-value="${entry.item.id}">Use</button></article>`;
@@ -1767,7 +1830,7 @@ function optimizerCandidatePool(profile, targetStats) {
       || (physical && (item.ad || item.lethality || item.percentArmorPen || item.attackSpeed || item.crit));
     return completed && damageStat;
   });
-  const scoreOptions = { profile, summaryOnly: true, targetStats };
+  const scoreOptions = { profile, summaryOnly: true, targetStats, allyBonuses: allyStatBonuses() };
   const scored = relevant.map((item) => ({
     item,
     total: calculateBuild([item.id], state.fight.rotations, [0], scoreOptions).cumulative,
@@ -1806,7 +1869,7 @@ function optimizeFullBuild() {
   const boots = usesQuestBootSlot() ? questBootIds() : [0];
   const evaluated = [];
   const selected = [];
-  const scoreOptions = { profile, summaryOnly: true, targetStats };
+  const scoreOptions = { profile, summaryOnly: true, targetStats, allyBonuses: allyStatBonuses() };
 
   function search(from) {
     if (selected.length === slotCount) {
@@ -1831,6 +1894,131 @@ function optimizeFullBuild() {
   if (!best) throw new Error("No legal complete build matched this package.");
   const elapsedMs = performance.now() - started;
   return { build: best.ids, questBoot: best.questBoot, tested: evaluated.length, elapsedMs, total: best.total, candidateCount: pool.length };
+}
+
+function rosterOptimizerCandidatePool(path) {
+  const context = rosterBisContext(path);
+  if (!context) return [];
+  const profile = bisChampionProfile(context.combatant);
+  const role = bisRole(profile);
+  const current = context.combatant.items.filter((id) => id && !ALL_ROLE_BOOTS.has(Number(id))).map(Number);
+  const candidates = DATA.items.filter((item) => {
+    const completed = item.price >= 2200 && item.into.length === 0;
+    return completed && !ALL_ROLE_BOOTS.has(item.id) && bisItemMatchesRole(item, role, path);
+  });
+  const scored = candidates.map((item) => {
+    const ids = [item.id, 0, 0, 0, 0, 0];
+    return { item, total: bisBuildScore(ids, context.combatant, context.opponents, path).score };
+  }).sort((a, b) => b.total - a.total);
+  const selected = [];
+  const seen = new Set();
+  [...current.map((id) => ({ item: getItem(id), total: Number.POSITIVE_INFINITY })), ...scored].forEach((entry) => {
+    if (!entry.item || seen.has(entry.item.id)) return;
+    seen.add(entry.item.id);
+    selected.push(entry.item);
+  });
+  // Keep the exhaustive search small enough for an in-browser interaction.
+  return selected.slice(0, 12);
+}
+
+function optimizeRosterBuild(path) {
+  const started = performance.now();
+  const context = rosterBisContext(path);
+  const pool = rosterOptimizerCandidatePool(path);
+  if (!context || pool.length < 6) throw new Error("Not enough completed role-compatible items for this roster build.");
+  const evaluated = [];
+  const selected = [];
+  const ids = pool.map((item) => item.id);
+  function search(from) {
+    if (selected.length === 6) {
+      if (!legalOptimizerBuild(selected)) return;
+      const build = [...selected];
+      evaluated.push({ build, total: bisBuildScore(build, context.combatant, context.opponents, path).score });
+      return;
+    }
+    const needed = 6 - selected.length;
+    for (let index = from; index <= ids.length - needed; index += 1) {
+      selected.push(ids[index]);
+      if (legalOptimizerBuild(selected)) search(index + 1);
+      selected.pop();
+    }
+  }
+  search(0);
+  evaluated.sort((a, b) => b.total - a.total);
+  const best = evaluated[0];
+  if (!best) throw new Error("No legal complete roster build matched this champion.");
+  return {
+    build: best.build,
+    tested: evaluated.length,
+    elapsedMs: performance.now() - started,
+    total: best.total,
+    candidateCount: pool.length,
+    metric: bisBuildScore(best.build, context.combatant, context.opponents, path).metric,
+  };
+}
+
+function applyRosterBuild(path, result) {
+  const [root, indexText] = String(path).split(".");
+  const loadout = state[root]?.[Number(indexText)];
+  if (!loadout) return;
+  loadout.items = [...result.build, ...Array(Math.max(0, 6 - result.build.length)).fill(0)].slice(0, 6);
+  loadout.itemStacks = [0, 0, 0, 0, 0, 0];
+}
+
+function reoptimizeAttackerAfterRosterChange() {
+  if (!state.attacker.champion || !optimizerDamagePackageReady() || !state.targets.length || !state.targets.every((target) => target.champion)) return null;
+  try {
+    const result = optimizeFullBuild();
+    state.attacker.buildA = [...result.build, ...Array(Math.max(0, 6 - result.build.length)).fill(0)].slice(0, 6);
+    state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
+    state.attacker.questBootA = result.questBoot || 0;
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+function rosterOptimizationPaths(rootOrPath) {
+  if (String(rootOrPath).includes(".")) return bisReadyForPath(rootOrPath) ? [rootOrPath] : [];
+  return (state[rootOrPath] || []).map((loadout, index) => `${rootOrPath}.${index}`).filter((path) => bisReadyForPath(path));
+}
+
+function startRosterOptimization(rootOrPath) {
+  if (state.optimizer.running) return;
+  const paths = rosterOptimizationPaths(rootOrPath);
+  if (!paths.length) return;
+  state.optimizer.running = true;
+  state.optimizer.scope = String(rootOrPath).includes(".") ? "roster" : rootOrPath;
+  state.optimizer.summary = null;
+  renderBuilder();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const started = performance.now();
+    const changed = [];
+    let tested = 0;
+    try {
+      paths.forEach((path) => {
+        const result = optimizeRosterBuild(path);
+        applyRosterBuild(path, result);
+        tested += result.tested;
+        const attackerResult = reoptimizeAttackerAfterRosterChange();
+        const [root, indexText] = path.split(".");
+        changed.push({ champion: state[root][Number(indexText)].champion, attacker: Boolean(attackerResult) });
+      });
+      const names = changed.map((entry) => entry.champion).filter(Boolean);
+      const scope = paths.length === 1 ? `${names[0]} build` : `${rootOrPath === "targets" ? "all enemy" : "all ally"} builds`;
+      state.optimizer.summary = {
+        tested,
+        elapsedMs: performance.now() - started,
+        label: `${scope} optimized in sequence; Build A was rebalanced after each roster change.`,
+      };
+    } catch (error) {
+      state.optimizer.summary = { tested, elapsedMs: performance.now() - started, label: `Optimization stopped: ${error.message}` };
+    } finally {
+      state.optimizer.running = false;
+      state.optimizer.scope = null;
+      render();
+    }
+  }));
 }
 
 function startOptimizeBuild() {
@@ -1896,6 +2084,10 @@ function updateDamagePackage() {
 }
 
 document.addEventListener("click", (event) => {
+  const rosterOptimizeAll = event.target.closest("[data-optimize-roster-all]");
+  if (rosterOptimizeAll) return startRosterOptimization(rosterOptimizeAll.dataset.optimizeRosterAll);
+  const rosterOptimize = event.target.closest("[data-optimize-roster]");
+  if (rosterOptimize) return startRosterOptimization(rosterOptimize.dataset.optimizeRoster);
   if (event.target.closest("[data-optimize-build]")) return startOptimizeBuild();
   const roleButton = event.target.closest("[data-role]");
   if (roleButton) {

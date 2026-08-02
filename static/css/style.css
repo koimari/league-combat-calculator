@@ -58,6 +58,7 @@ h1 { margin: 0; font: 500 clamp(32px, 4vw, 48px)/1 var(--serif); letter-spacing:
 .section-bar small { color: var(--muted); font: 10px var(--mono); }
 .section-actions { display: flex; align-items: center; gap: 8px; }
 .text-button { border: 0; padding: 4px 0; background: transparent; color: var(--accent); cursor: pointer; font: 700 10px var(--mono); text-transform: uppercase; }
+.text-button:disabled { opacity: .36; cursor: not-allowed; }
 
 .attacker-board { display: grid; grid-template-columns: 170px 1fr; min-height: 161px; }
 .attacker-card { padding: 15px; border-right: 1px solid var(--line); }
@@ -276,6 +277,8 @@ td:last-child { color: var(--olive); }
 .target-title button { display: block; max-width: 100%; padding: 0; overflow: hidden; border: 0; background: transparent; cursor: pointer; font: 500 17px var(--serif); text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .target-title span { display: block; margin-top: 2px; overflow: hidden; color: var(--muted); font: 7px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
 .target-build { display: flex; gap: 5px; margin: 10px 0; }
+.roster-build-actions { display: flex; justify-content: flex-end; margin: -2px 0 9px; }
+.roster-optimize { min-height: 24px; padding: 5px 8px; font-size: 7px; }
 .target-build .slot-wrap, .target-build .item-slot, .target-build .item-icon { width: 34px; }
 .target-build .item-icon { height: 34px; }
 .roster-ranks { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 0 0 10px; color: var(--muted); font: 8px var(--mono); text-transform: uppercase; }
