@@ -20,7 +20,8 @@ from .damage import (
     split_auto_vs_ability,
     split_by_damage_type,
 )
-from .item_effects import resolve_damage_effects
+from .item_effects import resolve_damage_effects, validate_item_input_options
+from .role_quests import validate_role
 from .stats import calculate_total_stats
 
 DEFAULT_TARGET: dict[str, float] = {
@@ -80,6 +81,9 @@ class FightParams(FightConfig):
 
     ability_ranks: dict[str, int] | None = None
     champion_options: dict[str, Any] | None = None
+    item_options: dict[str, dict[str, int]] | None = None
+    role: str = ""
+    role_quest_complete: bool = False
 
     @classmethod
     def from_request(
@@ -117,6 +121,11 @@ class FightParams(FightConfig):
         champion_options = data.get("champion_options")
         if champion_options is not None and not isinstance(champion_options, Mapping):
             raise ValueError("champion_options must be an object")
+        item_options = validate_item_input_options(data.get("item_options"))
+        role = validate_role(data.get("role", ""))
+        role_quest_complete = _request_bool(data, "role_quest_complete", False)
+        if role_quest_complete and not role:
+            raise ValueError("role is required when role_quest_complete is true")
 
         params = cls(
             target_health=_bounded_request_float(
@@ -141,6 +150,9 @@ class FightParams(FightConfig):
             champion_options=(
                 dict(champion_options) if champion_options is not None else None
             ),
+            item_options=item_options or None,
+            role=role,
+            role_quest_complete=role_quest_complete,
             deterministic=deterministic,
         )
         params._validate_request_values()
@@ -191,7 +203,14 @@ def run_fight(
     params: FightParams,
 ) -> dict[str, Any]:
     """Run stats, champion ability parsing, and fight damage as one pipeline."""
-    champion_stats = calculate_total_stats(champion_data, level, items)
+    champion_stats = calculate_total_stats(
+        champion_data,
+        level,
+        items,
+        item_options=params.item_options,
+        role=params.role,
+        role_quest_complete=params.role_quest_complete,
+    )
 
     # Reserved option keys are pipeline-owned: strip whatever the caller
     # sent, then hand timed fights the fight window and auto uptime so

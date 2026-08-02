@@ -12,9 +12,11 @@ wiki (vendor/lolstaticdata, external)
        ├→ passive_parser.py → item_effects.py   (item knowledge)
        └→ champions/                            (ability parsing)
   → stats.py + resistance.py                    (champion math)
+       └→ role_quests.py                        (patch-pinned role modifiers)
   → pipeline.py → damage.py                     (full fight → fight engine)
        ├→ app.py → static/js/app.js             (web UI)
-       └→ optimizer.py                          (build search)
+       ├→ scenario.py                           (ally/enemy loadouts)
+       └→ optimizer.py                          (roster-aware build search)
 ```
 
 ## Module homes
@@ -81,11 +83,22 @@ wiki (vendor/lolstaticdata, external)
   leaf. (Lethality needs no formula: it is 1:1 flat armor pen, applied in
   stats.py. The ability-haste→CDR formula lives in damage.py, its only
   consumer.)
+- `src/calculator/role_quests.py` — Wiki-revision-backed role-quest rules and public
+  metadata. The mid quest's AP/bonus-AD modifiers enter through `stats.py`; boot tier and
+  inventory capacity are validated by the API and optimizer.
+
+**Scenario composition**
+- `src/calculator/scenario.py` — strict champion/level/boots/item loadouts for up to four
+  allies and five enemies. Resolves all data through `data_fetcher.py`, calculates complete
+  stat matrices, and keeps base HP, bonus HP, and total HP separate. Enemy matrices become
+  target-specific `FightParams`; aggregate TDD is the sum of the same selected package
+  across those targets. Allies remain context unless an explicit tested outgoing effect is
+  registered.
 
 **Fight engine**
 - `src/calculator/pipeline.py` — canonical stats → ability parsing → fight orchestration.
   Owns `FightParams` (a `FightConfig` subclass adding the parse-layer inputs
-  `ability_ranks`/`champion_options`), request-mode resolution, and every
+  `ability_ranks`/`champion_options`/`item_options`/role-quest state), request-mode resolution, and every
   fight/target default.
 - `src/calculator/damage.py` — owns `FightConfig`, the one spelling of a fight's
   configuration; `calculate_fight_damage(champion_stats, ability_damages, items,
@@ -109,7 +122,8 @@ wiki (vendor/lolstaticdata, external)
   and app.js untouched.
 
 **Consumers**
-- `src/calculator/optimizer.py` — enumerates builds through `pipeline.run_fight`.
+- `src/calculator/optimizer.py` — enumerates builds through `pipeline.run_fight`, scoring
+  each candidate into one target or a whole enemy roster and summing the chosen objective.
   Owns `_EXCLUSIVITY_GROUPS` (canonical; served to the frontend) and the
   item-eligibility predicates (`get_eligible_legendaries`/`get_eligible_boots`)
   the item-picker routes reuse.

@@ -71,11 +71,32 @@ def test_request_defaults_have_one_canonical_home():
         ({"cast_order": ["Q", "Q", "E", "R"]}, "Cast order must"),
         ({"ability_ranks": {"Q": 6}}, "Q rank must be 0-5"),
         ({"ability_ranks": {"R": 4}}, "R rank must be 0-3"),
+        (
+            {"item_options": {"Dark Seal": {"glory_stacks": 11}}},
+            "glory_stacks must be between 0 and 10",
+        ),
+        (
+            {"item_options": {"Mejai's Soulstealer": {"glory_stacks": 1.5}}},
+            "glory_stacks must be an integer",
+        ),
+        ({"role": "river"}, "role must be"),
+        ({"role_quest_complete": "yes"}, "role_quest_complete must be true or false"),
+        (
+            {"role_quest_complete": True},
+            "role is required when role_quest_complete is true",
+        ),
     ],
 )
 def test_fight_params_reject_invalid_shared_inputs(request_data, message):
     with pytest.raises(ValueError, match=message):
         FightParams.from_request(request_data)
+
+
+def test_fight_params_parse_role_quest_state():
+    params = FightParams.from_request({"role": "Mid", "role_quest_complete": True})
+
+    assert params.role == "mid"
+    assert params.role_quest_complete is True
 
 
 def test_run_fight_builds_fresh_stats_and_abilities(ahri_data):

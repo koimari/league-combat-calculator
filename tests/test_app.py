@@ -147,6 +147,97 @@ def test_public_bounds_accept_the_existing_ui_maxima():
     assert response.status_code == 200
 
 
+def test_loadout_stats_returns_champion_derived_full_matrix():
+    response = app_module.app.test_client().post(
+        "/api/loadout-stats",
+        json={
+            "champion": "Galio",
+            "level": 12,
+            "items": ["Hollow Radiance"],
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["champion"] == "Galio"
+    assert data["stats"]["health"] == 2240
+    assert data["stats"]["base_health"] == 1840
+    assert data["stats"]["bonus_health"] == 400
+    assert data["stats"]["magic_resistance"] == 92
+
+
+def test_calculate_can_sum_one_damage_package_across_enemy_roster():
+    client = app_module.app.test_client()
+    payload = {
+        "champion": "Ziggs",
+        "level": 12,
+        "items": ["Luden's Echo"],
+        "enemies": [
+            {
+                "champion": "Galio",
+                "level": 12,
+                "items": ["Hollow Radiance"],
+            },
+            {"champion": "Kai'Sa", "level": 14, "items": []},
+        ],
+        "allies": [{"champion": "Orianna", "level": 12, "items": []}],
+    }
+
+    response = client.post("/api/calculate", json=payload)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["scenario"]["target_count"] == 2
+    assert data["scenario"]["primary_target"] == "Galio"
+    assert [row["target"]["champion"] for row in data["targets"]] == [
+        "Galio",
+        "Kai'Sa",
+    ]
+    assert data["targets"][0]["target"]["stats"]["bonus_health"] == 400
+    assert data["allies"][0]["champion"] == "Orianna"
+    assert data["scenario"]["ally_effects"]["unmodeled"] == ["Orianna"]
+    assert data["total_damage"] == round(
+        sum(row["result"]["total_damage"] for row in data["targets"]), 1
+    )
+    assert data["damage_by_type"]["magic"] == round(
+        sum(row["result"]["damage_by_type"]["magic"] for row in data["targets"]),
+        1,
+    )
+
+
+def test_optimizer_scores_every_selected_enemy(monkeypatch):
+    captured = {}
+
+    def fake_optimize_build(**kwargs):
+        captured.update(kwargs)
+        return {"items": [], "boots": None, "total_damage": 0.0}
+
+    monkeypatch.setattr(app_module, "optimize_build", fake_optimize_build)
+    response = app_module.app.test_client().post(
+        "/api/optimize",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 12,
+                    "items": ["Hollow Radiance"],
+                },
+                {"champion": "Kai'Sa", "level": 14},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    targets = captured["target_fight_params"]
+    assert len(targets) == 2
+    assert targets[0].target_health == 2240
+    assert targets[0].target_bonus_health == 400
+    assert targets[0].target_magic_resistance == 92
+    assert targets[1].target_health == 1873
+
+
 def test_optimize_rejects_unknown_locked_items_as_client_input():
     response = app_module.app.test_client().post(
         "/api/optimize",
@@ -285,6 +376,16 @@ def test_security_headers_cover_html_json_and_errors(path):
     assert "unsafe-eval" not in policy
 
 
+def test_local_http_csp_does_not_upgrade_its_own_static_assets():
+    response = app_module.app.test_client().get(
+        "/", environ_base={"REMOTE_ADDR": "127.0.0.1", "wsgi.url_scheme": "http"}
+    )
+
+    assert (
+        "upgrade-insecure-requests" not in response.headers["Content-Security-Policy"]
+    )
+
+
 def test_picker_rendering_never_puts_api_strings_into_inner_html():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
@@ -338,6 +439,11 @@ def test_config_exposes_all_request_defaults():
         "target_armor": [0.0, 500.0],
         "target_mr": [0.0, 500.0],
     }
+    assert data["item_options"]["Dark Seal"]["options"]["glory_stacks"]["max"] == 10
+    assert (
+        data["item_options"]["Mejai's Soulstealer"]["options"]["glory_stacks"]["max"]
+        == 25
+    )
 
 
 class TestIconUrlsAreHttps:
@@ -355,6 +461,16 @@ class TestIconUrlsAreHttps:
         icons = [c["icon"] for c in champs] + [i["icon"] for i in items + boots]
         assert icons
         assert not [u for u in icons if u.startswith("http://")]
+
+    def test_manual_item_api_includes_reconstructable_partial_builds(self):
+        items = app_module.app.test_client().get("/api/items").get_json()
+        names = {item["name"] for item in items}
+
+        assert {"Ruby Crystal", "Dark Seal", "Doran's Ring"} <= names
+
+    def test_boot_api_marks_role_quest_tiers(self):
+        boots = app_module.app.test_client().get("/api/boots").get_json()
+        assert {boot["tier"] for boot in boots} == {2, 3}
 
     def test_ability_icons_are_https(self):
         abilities = app_module.app.test_client().get("/api/abilities/Aatrox").get_json()
@@ -483,8 +599,8 @@ class TestUpdateDataDevGate:
         assert data["dev_mode"] is True
 
 
-@pytest.mark.parametrize("slot_count", [1, 2, 3, 4, 5, 6])
-def test_optimize_accepts_slot_counts_one_through_six(monkeypatch, slot_count):
+@pytest.mark.parametrize("slot_count", [1, 2, 3, 4, 5])
+def test_optimize_accepts_standard_slot_counts(monkeypatch, slot_count):
     monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
     monkeypatch.setattr(
         app_module,
@@ -496,6 +612,67 @@ def test_optimize_accepts_slot_counts_one_through_six(monkeypatch, slot_count):
     response = app_module.app.test_client().post("/api/optimize", json=payload)
 
     assert response.status_code == 200
+
+
+def test_optimize_accepts_six_items_only_after_bottom_quest(monkeypatch):
+    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+    captured = {}
+
+    def fake_optimize(**kwargs):
+        captured.update(kwargs)
+        return {"items": [], "total_damage": 0.0}
+
+    monkeypatch.setattr(app_module, "optimize_build", fake_optimize)
+    client = app_module.app.test_client()
+
+    rejected = client.post(
+        "/api/optimize",
+        json={"champion": "Ahri", "level": 18, "max_legendary_slots": 6},
+    )
+    accepted = client.post(
+        "/api/optimize",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "max_legendary_slots": 6,
+            "role": "bottom",
+            "role_quest_complete": True,
+        },
+    )
+
+    assert rejected.status_code == 400
+    assert accepted.status_code == 200
+    assert captured["max_legendary_slots"] == 6
+
+
+def test_optimize_uses_tier_three_boots_only_for_completed_mid_quest(monkeypatch):
+    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
+    tiers = []
+
+    def fake_optimize(**kwargs):
+        tiers.append(kwargs["boots_tier"])
+        return {"items": [], "total_damage": 0.0}
+
+    monkeypatch.setattr(app_module, "optimize_build", fake_optimize)
+    client = app_module.app.test_client()
+    assert (
+        client.post("/api/optimize", json={"champion": "Ahri", "level": 18}).status_code
+        == 200
+    )
+    assert (
+        client.post(
+            "/api/optimize",
+            json={
+                "champion": "Ahri",
+                "level": 18,
+                "role": "mid",
+                "role_quest_complete": True,
+            },
+        ).status_code
+        == 200
+    )
+
+    assert tiers == [2, 3]
 
 
 @pytest.mark.parametrize("slot_count", [0, 7, -1])

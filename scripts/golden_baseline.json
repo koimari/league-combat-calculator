@@ -74,7 +74,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -102,7 +103,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -130,7 +132,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 345.0
         }
       }
     },
@@ -208,7 +211,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 418
+          "max_mana": 418,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -236,7 +240,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 637
+          "max_mana": 637,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -264,7 +269,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 843
+          "max_mana": 843,
+          "move_speed": 330.0
         }
       }
     },
@@ -341,7 +347,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 37,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -369,7 +376,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 55,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -397,7 +405,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 72,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 345.0
         }
       }
     },
@@ -478,7 +487,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -506,7 +516,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 701
+          "max_mana": 701,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -534,7 +545,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1030
+          "max_mana": 1030,
+          "move_speed": 330.0
         }
       }
     },
@@ -599,7 +611,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -627,7 +640,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 701
+          "max_mana": 701,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -655,7 +669,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1030
+          "max_mana": 1030,
+          "move_speed": 330.0
         }
       }
     },
@@ -753,7 +768,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -781,7 +797,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -809,7 +826,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 335.0
         }
       }
     },
@@ -902,7 +920,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 285
+          "max_mana": 285,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -930,7 +949,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 636
+          "max_mana": 636,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -958,7 +978,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 965
+          "max_mana": 965,
+          "move_speed": 335.0
         }
       }
     },
@@ -1024,7 +1045,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 495
+          "max_mana": 495,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -1052,7 +1074,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 890
+          "max_mana": 890,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -1080,7 +1103,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1260
+          "max_mana": 1260,
+          "move_speed": 325.0
         }
       }
     },
@@ -1176,7 +1200,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 418
+          "max_mana": 418,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -1204,7 +1229,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 637
+          "max_mana": 637,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -1232,7 +1258,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 843
+          "max_mana": 843,
+          "move_speed": 335.0
         }
       }
     },
@@ -1277,7 +1304,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 348
+          "max_mana": 348,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -1305,7 +1333,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 717
+          "max_mana": 717,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -1333,7 +1362,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1062
+          "max_mana": 1062,
+          "move_speed": 325.0
         }
       }
     },
@@ -1410,7 +1440,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 280
+          "max_mana": 280,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -1438,7 +1469,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 587
+          "max_mana": 587,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -1466,7 +1498,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 875
+          "max_mana": 875,
+          "move_speed": 325.0
         }
       }
     },
@@ -1532,7 +1565,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 530
+          "max_mana": 530,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -1560,7 +1594,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 881
+          "max_mana": 881,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -1588,7 +1623,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1210
+          "max_mana": 1210,
+          "move_speed": 340.0
         }
       }
     },
@@ -1669,7 +1705,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 475
+          "max_mana": 475,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -1697,7 +1734,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 43,
-          "max_mana": 738
+          "max_mana": 738,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -1725,7 +1763,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 54,
-          "max_mana": 985
+          "max_mana": 985,
+          "move_speed": 335.0
         }
       }
     },
@@ -1807,7 +1846,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 320
+          "max_mana": 320,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -1835,7 +1875,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 671
+          "max_mana": 671,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -1863,7 +1904,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1000
+          "max_mana": 1000,
+          "move_speed": 330.0
         }
       }
     },
@@ -1921,7 +1963,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -1949,7 +1992,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 789
+          "max_mana": 789,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -1977,7 +2021,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1200
+          "max_mana": 1200,
+          "move_speed": 335.0
         }
       }
     },
@@ -2102,7 +2147,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -2130,7 +2176,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -2158,7 +2205,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         }
       }
     },
@@ -2238,7 +2286,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 267
+          "max_mana": 267,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -2266,7 +2315,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 618
+          "max_mana": 618,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -2294,7 +2344,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 947
+          "max_mana": 947,
+          "move_speed": 325.0
         }
       }
     },
@@ -2383,7 +2434,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 469
+          "max_mana": 469,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -2411,7 +2463,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 653
+          "max_mana": 653,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -2439,7 +2492,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 826
+          "max_mana": 826,
+          "move_speed": 340.0
         }
       }
     },
@@ -2509,7 +2563,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 311
+          "max_mana": 311,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -2537,7 +2592,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 706
+          "max_mana": 706,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -2565,7 +2621,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1076
+          "max_mana": 1076,
+          "move_speed": 335.0
         }
       }
     },
@@ -2693,7 +2750,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -2721,7 +2779,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -2749,7 +2808,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         }
       }
     },
@@ -2828,7 +2888,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 315
+          "max_mana": 315,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -2856,7 +2917,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 666
+          "max_mana": 666,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -2884,7 +2946,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 995
+          "max_mana": 995,
+          "move_speed": 325.0
         }
       }
     },
@@ -2990,7 +3053,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 339
+          "max_mana": 339,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -3018,7 +3082,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 795
+          "max_mana": 795,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -3046,7 +3111,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1223
+          "max_mana": 1223,
+          "move_speed": 340.0
         }
       }
     },
@@ -3126,7 +3192,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 480
+          "max_mana": 480,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -3154,7 +3221,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 43,
-          "max_mana": 831
+          "max_mana": 831,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -3182,7 +3250,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 54,
-          "max_mana": 1160
+          "max_mana": 1160,
+          "move_speed": 335.0
         }
       }
     },
@@ -3265,7 +3334,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 270
+          "max_mana": 270,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -3293,7 +3363,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 796
+          "max_mana": 796,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -3321,7 +3392,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1290
+          "max_mana": 1290,
+          "move_speed": 345.0
         }
       }
     },
@@ -3418,7 +3490,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -3446,7 +3519,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 701
+          "max_mana": 701,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -3474,7 +3548,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1030
+          "max_mana": 1030,
+          "move_speed": 325.0
         }
       }
     },
@@ -3583,7 +3658,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 263
+          "max_mana": 263,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -3611,7 +3687,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 772
+          "max_mana": 772,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -3639,7 +3716,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1249
+          "max_mana": 1249,
+          "move_speed": 340.0
         }
       }
     },
@@ -3730,7 +3808,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 375
+          "max_mana": 375,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -3758,7 +3837,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 594
+          "max_mana": 594,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -3786,7 +3866,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 800
+          "max_mana": 800,
+          "move_speed": 345.0
         }
       }
     },
@@ -3869,7 +3950,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 29,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -3897,7 +3979,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 49,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -3925,7 +4008,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 68,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 345.0
         }
       }
     },
@@ -3991,7 +4075,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 361
+          "max_mana": 361,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -4019,7 +4104,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 703
+          "max_mana": 703,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -4047,7 +4133,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1024
+          "max_mana": 1024,
+          "move_speed": 330.0
         }
       }
     },
@@ -4132,7 +4219,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 280
+          "max_mana": 280,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -4160,7 +4248,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 894
+          "max_mana": 894,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -4188,7 +4277,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1470
+          "max_mana": 1470,
+          "move_speed": 340.0
         }
       }
     },
@@ -4244,7 +4334,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 324
+          "max_mana": 324,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -4272,7 +4363,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 763
+          "max_mana": 763,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -4300,7 +4392,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1174
+          "max_mana": 1174,
+          "move_speed": 330.0
         }
       }
     },
@@ -4378,7 +4471,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 315
+          "max_mana": 315,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -4406,7 +4500,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 684
+          "max_mana": 684,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -4434,7 +4529,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1029
+          "max_mana": 1029,
+          "move_speed": 335.0
         }
       }
     },
@@ -4534,7 +4630,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 375
+          "max_mana": 375,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -4562,7 +4659,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 989
+          "max_mana": 989,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -4590,7 +4688,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1565
+          "max_mana": 1565,
+          "move_speed": 325.0
         }
       }
     },
@@ -4667,7 +4766,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 500
+          "max_mana": 500,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -4695,7 +4795,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 746
+          "max_mana": 746,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -4723,7 +4824,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 976
+          "max_mana": 976,
+          "move_speed": 335.0
         }
       }
     },
@@ -4787,7 +4889,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -4815,7 +4918,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 826
+          "max_mana": 826,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -4843,7 +4947,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1320
+          "max_mana": 1320,
+          "move_speed": 345.0
         }
       }
     },
@@ -4918,7 +5023,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 317
+          "max_mana": 317,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -4946,7 +5052,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 773
+          "max_mana": 773,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -4974,7 +5081,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1201
+          "max_mana": 1201,
+          "move_speed": 335.0
         }
       }
     },
@@ -5058,7 +5166,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 410
+          "max_mana": 410,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -5086,7 +5195,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 761
+          "max_mana": 761,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -5114,7 +5224,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1090
+          "max_mana": 1090,
+          "move_speed": 340.0
         }
       }
     },
@@ -5189,7 +5300,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 280
+          "max_mana": 280,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -5217,7 +5329,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 806
+          "max_mana": 806,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -5245,7 +5358,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1300
+          "max_mana": 1300,
+          "move_speed": 345.0
         }
       }
     },
@@ -5310,7 +5424,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -5338,7 +5453,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 46,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -5366,7 +5482,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 58,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         }
       }
     },
@@ -5437,7 +5554,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -5465,7 +5583,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -5493,7 +5612,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 335.0
         }
       }
     },
@@ -5569,7 +5689,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -5597,7 +5718,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 812
+          "max_mana": 812,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -5625,7 +5747,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1199
+          "max_mana": 1199,
+          "move_speed": 330.0
         }
       }
     },
@@ -5692,7 +5815,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 325
+          "max_mana": 325,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -5720,7 +5844,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 676
+          "max_mana": 676,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -5748,7 +5873,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1005
+          "max_mana": 1005,
+          "move_speed": 340.0
         }
       }
     },
@@ -5822,7 +5948,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 330
+          "max_mana": 330,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -5850,7 +5977,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 681
+          "max_mana": 681,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -5878,7 +6006,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1010
+          "max_mana": 1010,
+          "move_speed": 340.0
         }
       }
     },
@@ -5952,7 +6081,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 280
+          "max_mana": 280,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -5980,7 +6110,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 631
+          "max_mana": 631,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -6008,7 +6139,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 960
+          "max_mana": 960,
+          "move_speed": 345.0
         }
       }
     },
@@ -6075,7 +6207,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 385
+          "max_mana": 385,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -6103,7 +6236,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 560
+          "max_mana": 560,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -6131,7 +6265,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 725
+          "max_mana": 725,
+          "move_speed": 340.0
         }
       }
     },
@@ -6176,7 +6311,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 480
+          "max_mana": 480,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -6204,7 +6340,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 743
+          "max_mana": 743,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -6232,7 +6369,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 990
+          "max_mana": 990,
+          "move_speed": 330.0
         }
       }
     },
@@ -6309,7 +6447,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 350.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -6337,7 +6476,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 789
+          "max_mana": 789,
+          "move_speed": 350.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -6365,7 +6505,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1200
+          "max_mana": 1200,
+          "move_speed": 350.0
         }
       }
     },
@@ -6440,7 +6581,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -6468,7 +6610,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 48,
-          "max_mana": 789
+          "max_mana": 789,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -6496,7 +6639,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 65,
-          "max_mana": 1200
+          "max_mana": 1200,
+          "move_speed": 335.0
         }
       }
     },
@@ -6573,7 +6717,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 450
+          "max_mana": 450,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -6601,7 +6746,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 976
+          "max_mana": 976,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -6629,7 +6775,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1470
+          "max_mana": 1470,
+          "move_speed": 330.0
         }
       }
     },
@@ -6694,7 +6841,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 360
+          "max_mana": 360,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -6722,7 +6870,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 799
+          "max_mana": 799,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -6750,7 +6899,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1210
+          "max_mana": 1210,
+          "move_speed": 325.0
         }
       }
     },
@@ -6832,7 +6982,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -6860,7 +7011,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 783
+          "max_mana": 783,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -6888,7 +7040,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1235
+          "max_mana": 1235,
+          "move_speed": 340.0
         }
       }
     },
@@ -6963,7 +7116,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 339
+          "max_mana": 339,
+          "move_speed": 350.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -6991,7 +7145,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 795
+          "max_mana": 795,
+          "move_speed": 350.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -7019,7 +7174,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1223
+          "max_mana": 1223,
+          "move_speed": 350.0
         }
       }
     },
@@ -7094,7 +7250,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 375
+          "max_mana": 375,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -7122,7 +7279,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 770
+          "max_mana": 770,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -7150,7 +7308,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1140
+          "max_mana": 1140,
+          "move_speed": 335.0
         }
       }
     },
@@ -7228,7 +7387,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -7256,7 +7416,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 739
+          "max_mana": 739,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -7284,7 +7445,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1150
+          "max_mana": 1150,
+          "move_speed": 330.0
         }
       }
     },
@@ -7360,7 +7522,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 260
+          "max_mana": 260,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -7388,7 +7551,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 699
+          "max_mana": 699,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -7416,7 +7580,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1110
+          "max_mana": 1110,
+          "move_speed": 325.0
         }
       }
     },
@@ -7490,7 +7655,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 320
+          "max_mana": 320,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -7518,7 +7684,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 48,
-          "max_mana": 846
+          "max_mana": 846,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -7546,7 +7713,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 66,
-          "max_mana": 1340
+          "max_mana": 1340,
+          "move_speed": 330.0
         }
       }
     },
@@ -7609,7 +7777,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 345
+          "max_mana": 345,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -7637,7 +7806,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 696
+          "max_mana": 696,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -7665,7 +7835,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1025
+          "max_mana": 1025,
+          "move_speed": 335.0
         }
       }
     },
@@ -7732,7 +7903,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -7760,7 +7932,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 695
+          "max_mana": 695,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -7788,7 +7961,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1065
+          "max_mana": 1065,
+          "move_speed": 330.0
         }
       }
     },
@@ -7844,7 +8018,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 374
+          "max_mana": 374,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -7872,7 +8047,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 725
+          "max_mana": 725,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -7900,7 +8076,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1054
+          "max_mana": 1054,
+          "move_speed": 335.0
         }
       }
     },
@@ -7966,7 +8143,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 467
+          "max_mana": 467,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -7994,7 +8172,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 739
+          "max_mana": 739,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -8022,7 +8201,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 994
+          "max_mana": 994,
+          "move_speed": 335.0
         }
       }
     },
@@ -8099,7 +8279,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -8127,7 +8308,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 1163
+          "max_mana": 1163,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -8155,7 +8337,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1879
+          "max_mana": 1879,
+          "move_speed": 335.0
         }
       }
     },
@@ -8229,7 +8412,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -8257,7 +8441,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -8285,7 +8470,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 335.0
         }
       }
     },
@@ -8358,7 +8544,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 22,
-          "max_mana": 330
+          "max_mana": 330,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -8386,7 +8573,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 33,
-          "max_mana": 769
+          "max_mana": 769,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -8414,7 +8602,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 44,
-          "max_mana": 1180
+          "max_mana": 1180,
+          "move_speed": 335.0
         }
       }
     },
@@ -8479,7 +8668,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 410
+          "max_mana": 410,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -8507,7 +8697,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 849
+          "max_mana": 849,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -8535,7 +8726,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1260
+          "max_mana": 1260,
+          "move_speed": 340.0
         }
       }
     },
@@ -8612,7 +8804,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -8640,7 +8833,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -8668,7 +8862,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 335.0
         }
       }
     },
@@ -8742,7 +8937,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 327
+          "max_mana": 327,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -8770,7 +8966,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 678
+          "max_mana": 678,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -8798,7 +8995,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1007
+          "max_mana": 1007,
+          "move_speed": 345.0
         }
       }
     },
@@ -8863,7 +9061,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -8891,7 +9090,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 607
+          "max_mana": 607,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -8919,7 +9119,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 895
+          "max_mana": 895,
+          "move_speed": 325.0
         }
       }
     },
@@ -8992,7 +9193,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 305.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -9020,7 +9222,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 46,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 305.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -9048,7 +9251,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 63,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 305.0
         }
       }
     },
@@ -9135,7 +9339,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 325
+          "max_mana": 325,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -9163,7 +9368,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 676
+          "max_mana": 676,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -9191,7 +9397,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1005
+          "max_mana": 1005,
+          "move_speed": 330.0
         }
       }
     },
@@ -9267,7 +9474,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -9295,7 +9503,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 619
+          "max_mana": 619,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -9323,7 +9532,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 825
+          "max_mana": 825,
+          "move_speed": 340.0
         }
       }
     },
@@ -9390,7 +9600,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -9418,7 +9629,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -9446,7 +9658,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 345.0
         }
       }
     },
@@ -9522,7 +9735,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 302
+          "max_mana": 302,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -9550,7 +9764,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 653
+          "max_mana": 653,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -9578,7 +9793,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 982
+          "max_mana": 982,
+          "move_speed": 335.0
         }
       }
     },
@@ -9655,7 +9871,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 410
+          "max_mana": 410,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -9683,7 +9900,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 46,
-          "max_mana": 849
+          "max_mana": 849,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -9711,7 +9929,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 58,
-          "max_mana": 1260
+          "max_mana": 1260,
+          "move_speed": 330.0
         }
       }
     },
@@ -9788,7 +10007,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 475
+          "max_mana": 475,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -9816,7 +10036,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 738
+          "max_mana": 738,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -9844,7 +10065,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 985
+          "max_mana": 985,
+          "move_speed": 325.0
         }
       }
     },
@@ -9919,7 +10141,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 280
+          "max_mana": 280,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -9947,7 +10170,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 894
+          "max_mana": 894,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -9975,7 +10199,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1470
+          "max_mana": 1470,
+          "move_speed": 340.0
         }
       }
     },
@@ -10041,7 +10266,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 320
+          "max_mana": 320,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -10069,7 +10295,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 697
+          "max_mana": 697,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -10097,7 +10324,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1051
+          "max_mana": 1051,
+          "move_speed": 335.0
         }
       }
     },
@@ -10152,7 +10380,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -10180,7 +10409,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 833
+          "max_mana": 833,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -10208,7 +10438,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1285
+          "max_mana": 1285,
+          "move_speed": 330.0
         }
       }
     },
@@ -10275,7 +10506,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 440
+          "max_mana": 440,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -10303,7 +10535,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 646
+          "max_mana": 646,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -10331,7 +10564,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 840
+          "max_mana": 840,
+          "move_speed": 330.0
         }
       }
     },
@@ -10407,7 +10641,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 280
+          "max_mana": 280,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -10435,7 +10670,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 46,
-          "max_mana": 806
+          "max_mana": 806,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -10463,7 +10699,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 63,
-          "max_mana": 1300
+          "max_mana": 1300,
+          "move_speed": 335.0
         }
       }
     },
@@ -10540,7 +10777,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 375
+          "max_mana": 375,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -10568,7 +10806,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 621
+          "max_mana": 621,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -10596,7 +10835,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 851
+          "max_mana": 851,
+          "move_speed": 335.0
         }
       }
     },
@@ -10673,7 +10913,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 375
+          "max_mana": 375,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -10701,7 +10942,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 752
+          "max_mana": 752,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -10729,7 +10971,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1106
+          "max_mana": 1106,
+          "move_speed": 335.0
         }
       }
     },
@@ -10783,7 +11026,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 251
+          "max_mana": 251,
+          "move_speed": 355.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -10811,7 +11055,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 620
+          "max_mana": 620,
+          "move_speed": 355.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -10839,7 +11084,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 965
+          "max_mana": 965,
+          "move_speed": 355.0
         }
       }
     },
@@ -10916,7 +11162,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 480
+          "max_mana": 480,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -10944,7 +11191,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 726
+          "max_mana": 726,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -10972,7 +11220,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 956
+          "max_mana": 956,
+          "move_speed": 330.0
         }
       }
     },
@@ -11016,7 +11265,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 365
+          "max_mana": 365,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -11044,7 +11294,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 742
+          "max_mana": 742,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -11072,7 +11323,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1096
+          "max_mana": 1096,
+          "move_speed": 330.0
         }
       }
     },
@@ -11137,7 +11389,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -11165,7 +11418,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 651
+          "max_mana": 651,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -11193,7 +11447,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 980
+          "max_mana": 980,
+          "move_speed": 325.0
         }
       }
     },
@@ -11267,7 +11522,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 330
+          "max_mana": 330,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -11295,7 +11551,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 46,
-          "max_mana": 900
+          "max_mana": 900,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -11323,7 +11580,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 63,
-          "max_mana": 1435
+          "max_mana": 1435,
+          "move_speed": 340.0
         }
       }
     },
@@ -11387,7 +11645,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -11415,7 +11674,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -11443,7 +11703,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 335.0
         }
       }
     },
@@ -11510,7 +11771,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 340
+          "max_mana": 340,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -11538,7 +11800,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 866
+          "max_mana": 866,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -11566,7 +11829,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1360
+          "max_mana": 1360,
+          "move_speed": 335.0
         }
       }
     },
@@ -11631,7 +11895,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -11659,7 +11924,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 883
+          "max_mana": 883,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -11687,7 +11953,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1335
+          "max_mana": 1335,
+          "move_speed": 340.0
         }
       }
     },
@@ -11764,7 +12031,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 365
+          "max_mana": 365,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -11792,7 +12060,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 742
+          "max_mana": 742,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -11820,7 +12089,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1096
+          "max_mana": 1096,
+          "move_speed": 335.0
         }
       }
     },
@@ -11886,7 +12156,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 326
+          "max_mana": 326,
+          "move_speed": 350.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -11914,7 +12185,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 870
+          "max_mana": 870,
+          "move_speed": 350.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -11942,7 +12214,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1380
+          "max_mana": 1380,
+          "move_speed": 350.0
         }
       }
     },
@@ -12027,7 +12300,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -12055,7 +12329,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 812
+          "max_mana": 812,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -12083,7 +12358,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1199
+          "max_mana": 1199,
+          "move_speed": 325.0
         }
       }
     },
@@ -12160,7 +12436,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 450
+          "max_mana": 450,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -12188,7 +12465,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 713
+          "max_mana": 713,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -12216,7 +12494,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 960
+          "max_mana": 960,
+          "move_speed": 340.0
         }
       }
     },
@@ -12272,7 +12551,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 295
+          "max_mana": 295,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -12300,7 +12580,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 43,
-          "max_mana": 690
+          "max_mana": 690,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -12328,7 +12609,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 55,
-          "max_mana": 1060
+          "max_mana": 1060,
+          "move_speed": 335.0
         }
       }
     },
@@ -12393,7 +12675,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -12421,7 +12704,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 657
+          "max_mana": 657,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -12449,7 +12733,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 945
+          "max_mana": 945,
+          "move_speed": 340.0
         }
       }
     },
@@ -12522,7 +12807,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 275
+          "max_mana": 275,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -12550,7 +12836,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 46,
-          "max_mana": 582
+          "max_mana": 582,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -12578,7 +12865,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 58,
-          "max_mana": 870
+          "max_mana": 870,
+          "move_speed": 345.0
         }
       }
     },
@@ -12653,7 +12941,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 280
+          "max_mana": 280,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -12681,7 +12970,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 649
+          "max_mana": 649,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -12709,7 +12999,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 994
+          "max_mana": 994,
+          "move_speed": 345.0
         }
       }
     },
@@ -12775,7 +13066,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 316
+          "max_mana": 316,
+          "move_speed": 350.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -12803,7 +13095,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 755
+          "max_mana": 755,
+          "move_speed": 350.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -12831,7 +13124,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1166
+          "max_mana": 1166,
+          "move_speed": 350.0
         }
       }
     },
@@ -12918,7 +13212,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 26,
-          "max_mana": 418
+          "max_mana": 418,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -12946,7 +13241,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 37,
-          "max_mana": 637
+          "max_mana": 637,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -12974,7 +13270,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 48,
-          "max_mana": 843
+          "max_mana": 843,
+          "move_speed": 325.0
         }
       }
     },
@@ -13051,7 +13348,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 341
+          "max_mana": 341,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -13079,7 +13377,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 911
+          "max_mana": 911,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -13107,7 +13406,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1446
+          "max_mana": 1446,
+          "move_speed": 335.0
         }
       }
     },
@@ -13183,7 +13483,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 317
+          "max_mana": 317,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -13211,7 +13512,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 46,
-          "max_mana": 589
+          "max_mana": 589,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -13239,7 +13541,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 63,
-          "max_mana": 844
+          "max_mana": 844,
+          "move_speed": 345.0
         }
       }
     },
@@ -13323,7 +13626,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 280
+          "max_mana": 280,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -13351,7 +13655,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 631
+          "max_mana": 631,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -13379,7 +13684,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 960
+          "max_mana": 960,
+          "move_speed": 345.0
         }
       }
     },
@@ -13445,7 +13751,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 415
+          "max_mana": 415,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -13473,7 +13780,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 854
+          "max_mana": 854,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -13501,7 +13809,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1265
+          "max_mana": 1265,
+          "move_speed": 330.0
         }
       }
     },
@@ -13585,7 +13894,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 375
+          "max_mana": 375,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -13613,7 +13923,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 902
+          "max_mana": 902,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -13641,7 +13952,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1395
+          "max_mana": 1395,
+          "move_speed": 335.0
         }
       }
     },
@@ -13704,7 +14016,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 269
+          "max_mana": 269,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -13732,7 +14045,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 576
+          "max_mana": 576,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -13760,7 +14074,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 864
+          "max_mana": 864,
+          "move_speed": 330.0
         }
       }
     },
@@ -13826,7 +14141,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 315
+          "max_mana": 315,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -13854,7 +14170,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 754
+          "max_mana": 754,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -13882,7 +14199,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1165
+          "max_mana": 1165,
+          "move_speed": 335.0
         }
       }
     },
@@ -13946,7 +14264,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 310
+          "max_mana": 310,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -13974,7 +14293,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 600
+          "max_mana": 600,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -14002,7 +14322,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 871
+          "max_mana": 871,
+          "move_speed": 335.0
         }
       }
     },
@@ -14068,7 +14389,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -14096,7 +14418,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -14124,7 +14447,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 340.0
         }
       }
     },
@@ -14201,7 +14525,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 320
+          "max_mana": 320,
+          "move_speed": 315.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -14229,7 +14554,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 44,
-          "max_mana": 671
+          "max_mana": 671,
+          "move_speed": 315.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -14257,7 +14583,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 59,
-          "max_mana": 1000
+          "max_mana": 1000,
+          "move_speed": 315.0
         }
       }
     },
@@ -14313,7 +14640,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -14341,7 +14669,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 789
+          "max_mana": 789,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -14369,7 +14698,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1200
+          "max_mana": 1200,
+          "move_speed": 330.0
         }
       }
     },
@@ -14444,7 +14774,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -14472,7 +14803,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 46,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -14500,7 +14832,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 63,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 345.0
         }
       }
     },
@@ -14575,7 +14908,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 4
+          "max_mana": 4,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -14603,7 +14937,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 4
+          "max_mana": 4,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -14631,7 +14966,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 4
+          "max_mana": 4,
+          "move_speed": 345.0
         }
       }
     },
@@ -14686,7 +15022,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -14714,7 +15051,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -14742,7 +15080,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         }
       }
     },
@@ -14815,7 +15154,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 150
+          "max_mana": 150,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -14843,7 +15183,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 42,
-          "max_mana": 150
+          "max_mana": 150,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -14871,7 +15212,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 54,
-          "max_mana": 150
+          "max_mana": 150,
+          "move_speed": 345.0
         }
       }
     },
@@ -14948,7 +15290,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -14976,7 +15319,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 43,
-          "max_mana": 914
+          "max_mana": 914,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -15004,7 +15348,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 54,
-          "max_mana": 1490
+          "max_mana": 1490,
+          "move_speed": 340.0
         }
       }
     },
@@ -15088,7 +15433,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 349
+          "max_mana": 349,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -15116,7 +15462,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 682
+          "max_mana": 682,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -15144,7 +15491,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 995
+          "max_mana": 995,
+          "move_speed": 335.0
         }
       }
     },
@@ -15229,7 +15577,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -15257,7 +15606,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 751
+          "max_mana": 751,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -15285,7 +15635,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1080
+          "max_mana": 1080,
+          "move_speed": 340.0
         }
       }
     },
@@ -15352,7 +15703,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -15380,7 +15732,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 745
+          "max_mana": 745,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -15408,7 +15761,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1115
+          "max_mana": 1115,
+          "move_speed": 330.0
         }
       }
     },
@@ -15483,7 +15837,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 360
+          "max_mana": 360,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -15511,7 +15866,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 711
+          "max_mana": 711,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -15539,7 +15895,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1040
+          "max_mana": 1040,
+          "move_speed": 330.0
         }
       }
     },
@@ -15615,7 +15972,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -15643,7 +16001,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 46,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -15671,7 +16030,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 63,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         }
       }
     },
@@ -15748,7 +16108,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 297
+          "max_mana": 297,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -15776,7 +16137,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 648
+          "max_mana": 648,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -15804,7 +16166,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 977
+          "max_mana": 977,
+          "move_speed": 345.0
         }
       }
     },
@@ -15858,7 +16221,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -15886,7 +16250,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -15914,7 +16279,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 340.0
         }
       }
     },
@@ -15990,7 +16356,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 350.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -16018,7 +16385,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 350.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -16046,7 +16414,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 350.0
         }
       }
     },
@@ -16101,7 +16470,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 330
+          "max_mana": 330,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -16129,7 +16499,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 725
+          "max_mana": 725,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -16157,7 +16528,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1095
+          "max_mana": 1095,
+          "move_speed": 345.0
         }
       }
     },
@@ -16232,7 +16604,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -16260,7 +16633,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 856
+          "max_mana": 856,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -16288,7 +16662,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1284
+          "max_mana": 1284,
+          "move_speed": 345.0
         }
       }
     },
@@ -16343,7 +16718,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 340
+          "max_mana": 340,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -16371,7 +16747,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 735
+          "max_mana": 735,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -16399,7 +16776,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1105
+          "max_mana": 1105,
+          "move_speed": 335.0
         }
       }
     },
@@ -16484,7 +16862,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 320
+          "max_mana": 320,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -16512,7 +16891,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 671
+          "max_mana": 671,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -16540,7 +16920,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1000
+          "max_mana": 1000,
+          "move_speed": 335.0
         }
       }
     },
@@ -16617,7 +16998,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -16645,7 +17027,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 651
+          "max_mana": 651,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -16673,7 +17056,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 980
+          "max_mana": 980,
+          "move_speed": 330.0
         }
       }
     },
@@ -16728,7 +17112,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 340
+          "max_mana": 340,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -16756,7 +17141,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 735
+          "max_mana": 735,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -16784,7 +17170,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1105
+          "max_mana": 1105,
+          "move_speed": 325.0
         }
       }
     },
@@ -16840,7 +17227,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 425
+          "max_mana": 425,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -16868,7 +17256,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 776
+          "max_mana": 776,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -16896,7 +17285,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1105
+          "max_mana": 1105,
+          "move_speed": 325.0
         }
       }
     },
@@ -16974,7 +17364,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 31,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -17002,7 +17393,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 45,
-          "max_mana": 654
+          "max_mana": 654,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -17030,7 +17422,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 57,
-          "max_mana": 893
+          "max_mana": 893,
+          "move_speed": 330.0
         }
       }
     },
@@ -17085,7 +17478,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -17113,7 +17507,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 54,
-          "max_mana": 1014
+          "max_mana": 1014,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -17141,7 +17536,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 75,
-          "max_mana": 1590
+          "max_mana": 1590,
+          "move_speed": 340.0
         }
       }
     },
@@ -17237,7 +17633,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 480
+          "max_mana": 480,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -17265,7 +17662,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 831
+          "max_mana": 831,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -17293,7 +17691,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1160
+          "max_mana": 1160,
+          "move_speed": 330.0
         }
       }
     },
@@ -17359,7 +17758,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 325
+          "max_mana": 325,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -17387,7 +17787,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 764
+          "max_mana": 764,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -17415,7 +17816,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1175
+          "max_mana": 1175,
+          "move_speed": 335.0
         }
       }
     },
@@ -17471,7 +17873,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 470
+          "max_mana": 470,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -17499,7 +17902,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 39,
-          "max_mana": 733
+          "max_mana": 733,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -17527,7 +17931,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 980
+          "max_mana": 980,
+          "move_speed": 330.0
         }
       }
     },
@@ -17592,7 +17997,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 36,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -17620,7 +18026,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 54,
-          "max_mana": 725
+          "max_mana": 725,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -17648,7 +18055,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 71,
-          "max_mana": 1029
+          "max_mana": 1029,
+          "move_speed": 335.0
         }
       }
     },
@@ -17692,7 +18100,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -17720,7 +18129,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 46,
-          "max_mana": 826
+          "max_mana": 826,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -17748,7 +18158,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 63,
-          "max_mana": 1320
+          "max_mana": 1320,
+          "move_speed": 340.0
         }
       }
     },
@@ -17812,7 +18223,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 334
+          "max_mana": 334,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -17840,7 +18252,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 553
+          "max_mana": 553,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -17868,7 +18281,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 759
+          "max_mana": 759,
+          "move_speed": 330.0
         }
       }
     },
@@ -17935,7 +18349,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 274
+          "max_mana": 274,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -17963,7 +18378,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 44,
-          "max_mana": 660
+          "max_mana": 660,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -17991,7 +18407,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 56,
-          "max_mana": 1022
+          "max_mana": 1022,
+          "move_speed": 330.0
         }
       }
     },
@@ -18058,7 +18475,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -18086,7 +18504,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 39,
-          "max_mana": 581
+          "max_mana": 581,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -18114,7 +18533,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 844
+          "max_mana": 844,
+          "move_speed": 325.0
         }
       }
     },
@@ -18169,7 +18589,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 340
+          "max_mana": 340,
+          "move_speed": 350.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -18197,7 +18618,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 735
+          "max_mana": 735,
+          "move_speed": 350.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -18225,7 +18647,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1105
+          "max_mana": 1105,
+          "move_speed": 350.0
         }
       }
     },
@@ -18279,7 +18702,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -18307,7 +18731,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -18335,7 +18760,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 345.0
         }
       }
     },
@@ -18398,7 +18824,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 333
+          "max_mana": 333,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -18426,7 +18853,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 675
+          "max_mana": 675,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -18454,7 +18882,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 996
+          "max_mana": 996,
+          "move_speed": 330.0
         }
       }
     },
@@ -18509,7 +18938,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -18537,7 +18967,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 651
+          "max_mana": 651,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -18565,7 +18996,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 980
+          "max_mana": 980,
+          "move_speed": 330.0
         }
       }
     },
@@ -18619,7 +19051,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 271
+          "max_mana": 271,
+          "move_speed": 350.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -18647,7 +19080,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 710
+          "max_mana": 710,
+          "move_speed": 350.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -18675,7 +19109,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1121
+          "max_mana": 1121,
+          "move_speed": 350.0
         }
       }
     },
@@ -18760,7 +19195,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 340
+          "max_mana": 340,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -18788,7 +19224,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 735
+          "max_mana": 735,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -18816,7 +19253,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1105
+          "max_mana": 1105,
+          "move_speed": 330.0
         }
       }
     },
@@ -18892,7 +19330,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 320
+          "max_mana": 320,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -18920,7 +19359,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 671
+          "max_mana": 671,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -18948,7 +19388,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1000
+          "max_mana": 1000,
+          "move_speed": 330.0
         }
       }
     },
@@ -19030,7 +19471,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 232
+          "max_mana": 232,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -19058,7 +19500,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 539
+          "max_mana": 539,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -19086,7 +19529,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 827
+          "max_mana": 827,
+          "move_speed": 330.0
         }
       }
     },
@@ -19153,7 +19597,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 490
+          "max_mana": 490,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -19181,7 +19626,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 43,
-          "max_mana": 718
+          "max_mana": 718,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -19209,7 +19655,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 54,
-          "max_mana": 932
+          "max_mana": 932,
+          "move_speed": 340.0
         }
       }
     },
@@ -19285,7 +19732,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 469
+          "max_mana": 469,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -19313,7 +19761,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 653
+          "max_mana": 653,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -19341,7 +19790,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 826
+          "max_mana": 826,
+          "move_speed": 340.0
         }
       }
     },
@@ -19427,7 +19877,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 28,
-          "max_mana": 490
+          "max_mana": 490,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -19455,7 +19906,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 39,
-          "max_mana": 771
+          "max_mana": 771,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -19483,7 +19935,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 1034
+          "max_mana": 1034,
+          "move_speed": 335.0
         }
       }
     },
@@ -19556,7 +20009,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 295
+          "max_mana": 295,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -19584,7 +20038,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 865
+          "max_mana": 865,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -19612,7 +20067,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1400
+          "max_mana": 1400,
+          "move_speed": 340.0
         }
       }
     },
@@ -19678,7 +20134,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -19706,7 +20163,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -19734,7 +20192,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 345.0
         }
       }
     },
@@ -19800,7 +20259,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 405
+          "max_mana": 405,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -19828,7 +20288,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 800
+          "max_mana": 800,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -19856,7 +20317,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1170
+          "max_mana": 1170,
+          "move_speed": 335.0
         }
       }
     },
@@ -19931,7 +20393,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 2
+          "max_mana": 2,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -19959,7 +20422,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 2
+          "max_mana": 2,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -19987,7 +20451,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 2
+          "max_mana": 2,
+          "move_speed": 330.0
         }
       }
     },
@@ -20070,7 +20535,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -20098,7 +20564,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 964
+          "max_mana": 964,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -20126,7 +20593,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1540
+          "max_mana": 1540,
+          "move_speed": 340.0
         }
       }
     },
@@ -20181,7 +20649,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 280
+          "max_mana": 280,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -20209,7 +20678,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 587
+          "max_mana": 587,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -20237,7 +20707,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 875
+          "max_mana": 875,
+          "move_speed": 335.0
         }
       }
     },
@@ -20312,7 +20783,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 340
+          "max_mana": 340,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -20340,7 +20812,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 691
+          "max_mana": 691,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -20368,7 +20841,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1020
+          "max_mana": 1020,
+          "move_speed": 330.0
         }
       }
     },
@@ -20444,7 +20918,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 400
+          "max_mana": 400,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -20472,7 +20947,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 593
+          "max_mana": 593,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -20500,7 +20976,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 774
+          "max_mana": 774,
+          "move_speed": 340.0
         }
       }
     },
@@ -20576,7 +21053,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 274
+          "max_mana": 274,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -20604,7 +21082,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 757
+          "max_mana": 757,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -20632,7 +21111,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1209
+          "max_mana": 1209,
+          "move_speed": 345.0
         }
       }
     },
@@ -20696,7 +21176,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -20724,7 +21205,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -20752,7 +21234,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 100
+          "max_mana": 100,
+          "move_speed": 345.0
         }
       }
     },
@@ -20831,7 +21314,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 500
+          "max_mana": 500,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -20859,7 +21343,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 500
+          "max_mana": 500,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -20887,7 +21372,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 500
+          "max_mana": 500,
+          "move_speed": 345.0
         }
       }
     },
@@ -20942,7 +21428,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 300
+          "max_mana": 300,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -20970,7 +21457,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 826
+          "max_mana": 826,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -20998,7 +21486,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1320
+          "max_mana": 1320,
+          "move_speed": 340.0
         }
       }
     },
@@ -21063,7 +21552,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 275
+          "max_mana": 275,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -21091,7 +21581,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 670
+          "max_mana": 670,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -21119,7 +21610,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1040
+          "max_mana": 1040,
+          "move_speed": 325.0
         }
       }
     },
@@ -21173,7 +21665,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 25,
-          "max_mana": 440
+          "max_mana": 440,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -21201,7 +21694,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 35,
-          "max_mana": 835
+          "max_mana": 835,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -21229,7 +21723,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 44,
-          "max_mana": 1205
+          "max_mana": 1205,
+          "move_speed": 330.0
         }
       }
     },
@@ -21305,7 +21800,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 350
+          "max_mana": 350,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -21333,7 +21829,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 833
+          "max_mana": 833,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -21361,7 +21858,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 1285
+          "max_mana": 1285,
+          "move_speed": 345.0
         }
       }
     },
@@ -21437,7 +21935,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 32,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -21465,7 +21964,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 50,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -21493,7 +21993,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 67,
-          "max_mana": 0
+          "max_mana": 0,
+          "move_speed": 340.0
         }
       }
     },
@@ -21558,7 +22059,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 29,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 345.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -21586,7 +22088,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 47,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 345.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -21614,7 +22117,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 64,
-          "max_mana": 200
+          "max_mana": 200,
+          "move_speed": 345.0
         }
       }
     },
@@ -21698,7 +22202,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 250
+          "max_mana": 250,
+          "move_speed": 330.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -21726,7 +22231,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 645
+          "max_mana": 645,
+          "move_speed": 330.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -21754,7 +22260,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1015
+          "max_mana": 1015,
+          "move_speed": 330.0
         }
       }
     },
@@ -21841,7 +22348,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 480
+          "max_mana": 480,
+          "move_speed": 325.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -21869,7 +22377,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 686
+          "max_mana": 686,
+          "move_speed": 325.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -21897,7 +22406,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 880
+          "max_mana": 880,
+          "move_speed": 325.0
         }
       }
     },
@@ -21942,7 +22452,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 452
+          "max_mana": 452,
+          "move_speed": 335.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -21970,7 +22481,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 891
+          "max_mana": 891,
+          "move_speed": 335.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -21998,7 +22510,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 1302
+          "max_mana": 1302,
+          "move_speed": 335.0
         }
       }
     },
@@ -22072,7 +22585,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 425
+          "max_mana": 425,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -22100,7 +22614,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 644
+          "max_mana": 644,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -22128,7 +22643,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 850
+          "max_mana": 850,
+          "move_speed": 340.0
         }
       }
     },
@@ -22195,7 +22711,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 30,
-          "max_mana": 418
+          "max_mana": 418,
+          "move_speed": 340.0
         },
         "11": {
           "ability_haste": 0.0,
@@ -22223,7 +22740,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 41,
-          "max_mana": 637
+          "max_mana": 637,
+          "move_speed": 340.0
         },
         "18": {
           "ability_haste": 0.0,
@@ -22251,7 +22769,8 @@
           "magic_penetration_flat": 0.0,
           "magic_penetration_percent": 0.0,
           "magic_resistance": 52,
-          "max_mana": 843
+          "max_mana": 843,
+          "move_speed": 340.0
         }
       }
     }
@@ -29811,7 +30330,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1784496747.7116182,
-    "git_head": "9038bbf3a731cbf2234023f3336509dff2fcfeee",
+    "git_head": "f9b4cfe66e7e3c7cfee7ad93b684675016336138",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1784496771.6013362,

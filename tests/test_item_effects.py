@@ -284,6 +284,7 @@ class TestResolveStatEffects:
         assert bonuses.bonus_resists == 0.0
         assert bonuses.bonus_pen_percent == 0.0
         assert bonuses.basic_ability_haste == 0.0
+        assert bonuses.bonus_move_speed_percent == 0.0
 
     def test_combined_build_resolves_every_conversion(
         self, monkeypatch: pytest.MonkeyPatch

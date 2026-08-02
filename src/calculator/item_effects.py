@@ -19,6 +19,112 @@ from typing import Any, Callable, Literal, Mapping, Sequence
 logger = logging.getLogger(__name__)
 
 
+# Public controls for stateful item stats.  Both validation metadata and the
+# sourced numeric mechanics live here so routes/UI never carry item constants.
+ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
+    "Dark Seal": {
+        "glory_stacks": {
+            "type": "int",
+            "label": "Glory stacks",
+            "default": 0,
+            "min": 0,
+            "max": 10,
+            "step": 1,
+        },
+        "bonus_ap_per_stack": 4.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Dark_Seal",
+        "source_revision_id": 4015213,
+    },
+    "Mejai's Soulstealer": {
+        "glory_stacks": {
+            "type": "int",
+            "label": "Glory stacks",
+            "default": 0,
+            "min": 0,
+            "max": 25,
+            "step": 1,
+        },
+        "bonus_ap_per_stack": 5.0,
+        "move_speed_threshold": 10,
+        "move_speed_percent": 10.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Mejai's_Soulstealer",
+        "source_revision_id": 3902926,
+    },
+}
+
+
+def item_input_options_meta() -> dict[str, dict[str, Any]]:
+    """Return the browser-safe controls and provenance for stateful items."""
+    return {
+        item_name: {
+            "options": {
+                "glory_stacks": dict(config["glory_stacks"]),
+            },
+            "source_url": config["source_url"],
+            "source_revision_id": config["source_revision_id"],
+        }
+        for item_name, config in ITEM_INPUT_OPTIONS.items()
+    }
+
+
+def validate_item_input_options(value: object) -> dict[str, dict[str, int]]:
+    """Validate the nested public item-option object."""
+    if value is None:
+        return {}
+    if not isinstance(value, Mapping):
+        raise ValueError("item_options must be an object")
+    unknown_items = set(value) - set(ITEM_INPUT_OPTIONS)
+    if unknown_items:
+        raise ValueError(f"Unknown item option target: {sorted(unknown_items)[0]}")
+
+    parsed: dict[str, dict[str, int]] = {}
+    for item_name, raw_options in value.items():
+        if not isinstance(raw_options, Mapping):
+            raise ValueError(f"item_options.{item_name} must be an object")
+        config = ITEM_INPUT_OPTIONS[item_name]
+        declared = {"glory_stacks"}
+        unknown_options = set(raw_options) - declared
+        if unknown_options:
+            raise ValueError(
+                f"Unknown option for {item_name}: {sorted(unknown_options)[0]}"
+            )
+        option = config["glory_stacks"]
+        stacks = raw_options.get("glory_stacks", option["default"])
+        if isinstance(stacks, bool) or not isinstance(stacks, int):
+            raise ValueError(
+                f"item_options.{item_name}.glory_stacks must be an integer"
+            )
+        if not option["min"] <= stacks <= option["max"]:
+            raise ValueError(
+                f"item_options.{item_name}.glory_stacks must be between "
+                f"{option['min']} and {option['max']}"
+            )
+        parsed[item_name] = {"glory_stacks": stacks}
+    return parsed
+
+
+def _input_option_stat_bonuses(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+) -> tuple[float, float]:
+    """Return bonus AP and percent move speed from equipped item state."""
+    if not item_options:
+        return 0.0, 0.0
+    equipped = _item_names(items)
+    bonus_ap = 0.0
+    move_speed_percent = 0.0
+    for item_name, options in item_options.items():
+        if item_name not in equipped or item_name not in ITEM_INPUT_OPTIONS:
+            continue
+        config = ITEM_INPUT_OPTIONS[item_name]
+        stacks = options.get("glory_stacks", 0)
+        bonus_ap += stacks * config["bonus_ap_per_stack"]
+        threshold = config.get("move_speed_threshold")
+        if threshold is not None and stacks >= threshold:
+            move_speed_percent += config["move_speed_percent"]
+    return bonus_ap, move_speed_percent
+
+
 # ---------------------------------------------------------------------------
 # Complete offline item effect snapshot
 # ---------------------------------------------------------------------------
@@ -2140,6 +2246,7 @@ class StatBonuses:
     bonus_resists: float  # Terminus light stacks (armor AND MR)
     bonus_pen_percent: float  # Terminus dark stacks (armor AND magic pen)
     basic_ability_haste: float  # Spear of Shojin (Q/W/E only)
+    bonus_move_speed_percent: float  # Mejai's 10+ Glory
 
 
 def resolve_stat_effects(
@@ -2152,6 +2259,7 @@ def resolve_stat_effects(
     bonus_mana_regen_percent: float,
     is_melee: bool,
     level: int,
+    item_options: Mapping[str, Mapping[str, int]] | None = None,
 ) -> StatBonuses:
     """Compile the stat-granting passives of *items* into one bundle.
 
@@ -2162,11 +2270,13 @@ def resolve_stat_effects(
     a new import or call site.
     """
     terminus_resists, terminus_pen = _terminus_max_stack_bonuses(items, level)
+    input_bonus_ap, input_move_speed = _input_option_stat_bonuses(items, item_options)
     return StatBonuses(
         bonus_ap=(
             _mana_to_ap_bonus(items, bonus_mana)
             + _dawncore_bonus_ap(items, bonus_mana_regen_percent)
             + _flowing_water_bonus_ap(items)
+            + input_bonus_ap
         ),
         ap_multiplier=_ap_multiplier(items),
         bonus_ad=(
@@ -2178,4 +2288,5 @@ def resolve_stat_effects(
         bonus_resists=terminus_resists,
         bonus_pen_percent=terminus_pen,
         basic_ability_haste=_basic_ability_haste(items),
+        bonus_move_speed_percent=input_move_speed,
     )

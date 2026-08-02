@@ -32,6 +32,10 @@ ITEM_BLOCKLIST = {
 # the single source of truth: the frontend fetches it via /api/config
 # (see exclusivity_groups() below) instead of keeping its own copy.
 _EXCLUSIVITY_GROUPS: dict[str, set[str]] = {
+    "Glory": {
+        "Dark Seal",
+        "Mejai's Soulstealer",
+    },
     "Spellblade": {
         "Trinity Force",
         "Lich Bane",
@@ -96,14 +100,37 @@ def get_eligible_legendaries() -> list[dict[str, Any]]:
     ]
 
 
-def get_eligible_boots() -> list[dict[str, Any]]:
-    """Return all tier-2+ boots eligible for the optimizer."""
+def get_selectable_items() -> list[dict[str, Any]]:
+    """Return ordinary Summoner's Rift build items for manual loadouts.
+
+    The optimizer intentionally searches completed legendary items only.
+    Manual scenario reconstruction also needs components and starters such as
+    Ruby Crystal, Dark Seal, and Doran's Ring.
+    """
+    allowed_ranks = {"BASIC", "EPIC", "STARTER", "LEGENDARY"}
+    return [
+        item_data
+        for item_data in fetch_item_data().values()
+        if allowed_ranks.intersection(item_data.get("rank", []))
+        and "BOOTS" not in item_data.get("rank", [])
+        and item_data.get("name")
+        and item_data["name"] not in ITEM_BLOCKLIST
+    ]
+
+
+def get_eligible_boots(tier: int | None = 2) -> list[dict[str, Any]]:
+    """Return boots eligible for the requested role-quest tier.
+
+    Ordinary builds use tier 2. Completed mid-lane quests use tier 3.
+    Passing ``None`` returns both tiers for the role-aware manual picker.
+    """
     items = fetch_item_data()
     return [
         item_data
         for item_data in items.values()
         if "BOOTS" in item_data.get("rank", [])
         and item_data.get("tier", 0) >= 2
+        and (tier is None or item_data.get("tier") == tier)
         and item_data.get("name")
         and item_data["name"] not in ITEM_BLOCKLIST
     ]
@@ -134,30 +161,32 @@ def _evaluate_build(
     champion_data: dict[str, Any],
     level: int,
     items: list[dict[str, Any]],
-    fight_params: FightParams,
+    fight_params: FightParams | tuple[FightParams, ...],
     objective: str,
 ) -> float:
     """Evaluate a build and return the damage score for the given objective.
 
     Creates fresh copies of mutable state to avoid cross-call contamination.
     """
-    result = run_fight(champion_data, level, items, fight_params)
-
-    if objective == "physical_damage":
-        # Sum physical-type entries from breakdown
-        total = 0.0
-        for entry in result.get("breakdown", {}).values():
-            if entry.get("damage_type") == "physical":
-                total += entry.get("total_damage", 0.0)
-        return total
-    if objective == "magic_damage":
-        total = 0.0
-        for entry in result.get("breakdown", {}).values():
-            if entry.get("damage_type") == "magic":
-                total += entry.get("total_damage", 0.0)
-        return total
-    # Default: total damage
-    return result.get("total_damage", 0.0)
+    targets = fight_params if isinstance(fight_params, tuple) else (fight_params,)
+    total = 0.0
+    for target_params in targets:
+        result = run_fight(champion_data, level, items, target_params)
+        if objective == "physical_damage":
+            total += sum(
+                entry.get("total_damage", 0.0)
+                for entry in result.get("breakdown", {}).values()
+                if entry.get("damage_type") == "physical"
+            )
+        elif objective == "magic_damage":
+            total += sum(
+                entry.get("total_damage", 0.0)
+                for entry in result.get("breakdown", {}).values()
+                if entry.get("damage_type") == "magic"
+            )
+        else:
+            total += result.get("total_damage", 0.0)
+    return total
 
 
 def _greedy_fill(
@@ -356,6 +385,8 @@ def optimize_build(
     locked_items: list[str] | None = None,
     locked_boots: str | None = None,
     max_legendary_slots: int = 5,
+    target_fight_params: tuple[FightParams, ...] | None = None,
+    boots_tier: int = 2,
 ) -> dict[str, Any]:
     """Find the optimal item build for a champion.
 
@@ -367,6 +398,8 @@ def optimize_build(
         locked_items: Item names already selected (optimizer won't change these).
         locked_boots: Boots name already selected (optimizer won't change).
         max_legendary_slots: Number of legendary item slots to fill (1-6).
+        target_fight_params: Optional roster targets scored as summed TDD.
+        boots_tier: 2 normally; 3 after the mid-lane role quest.
 
     Returns:
         Dict with optimized build, damage, and metadata.
@@ -378,6 +411,12 @@ def optimize_build(
     elif not fight_params.deterministic:
         fight_params = replace(fight_params, deterministic=True)
 
+    if target_fight_params:
+        fight_params = tuple(
+            params if params.deterministic else replace(params, deterministic=True)
+            for params in target_fight_params
+        )
+
     eval_kwargs = {
         "fight_params": fight_params,
         "objective": objective,
@@ -385,7 +424,7 @@ def optimize_build(
 
     # Build item pools
     all_legendaries = get_eligible_legendaries()
-    all_boots = get_eligible_boots()
+    all_boots = get_eligible_boots(tier=boots_tier)
 
     # Resolve locked items
     resolved_locked = []
@@ -490,4 +529,5 @@ def optimize_build(
         "max_legendary_slots": max_legendary_slots,
         "optimization_time_ms": round(elapsed * 1000, 1),
         "evaluations": total_evals,
+        "target_count": len(fight_params) if isinstance(fight_params, tuple) else 1,
     }

@@ -29,6 +29,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const compareCheckbox = document.getElementById("compare-mode");
     const container = document.querySelector("main.container");
     const optimizerGroup = document.querySelector(".optimizer-group");
+    const allyRosterEl = document.getElementById("ally-roster");
+    const enemyRosterEl = document.getElementById("enemy-roster");
+    const rosterCountEl = document.getElementById("roster-count");
+    const addAllyBtn = document.getElementById("add-ally-btn");
+    const addEnemyBtn = document.getElementById("add-enemy-btn");
+    const manualTargetGroup = document.getElementById("manual-target-group");
+    const attackerRole = document.getElementById("attacker-role");
+    const roleQuestComplete = document.getElementById("role-quest-complete");
+    const roleQuestHint = document.getElementById("role-quest-hint");
 
     // Build rows. Build B (Compare mode) is a clone of build A's row, made
     // before the slot click handlers are attached so both rows wire up
@@ -41,6 +50,16 @@ document.addEventListener("DOMContentLoaded", () => {
     buildRowB.querySelector(".build-row-tag").textContent = "Build B";
     buildRowB.querySelector(".build-row-tag").classList.remove("hidden");
     buildRowA.after(buildRowB);
+    [buildRowA, buildRowB].forEach((row) => {
+        const options = document.createElement("div");
+        options.className = "build-item-options hidden";
+        row.appendChild(options);
+        const bisButton = document.createElement("button");
+        bisButton.type = "button";
+        bisButton.className = "btn-build-bis";
+        bisButton.textContent = "BIS · Find best next item";
+        row.appendChild(bisButton);
+    });
 
     // Results panels. Panel B (Compare mode) is a clone of panel A —
     // everything inside is targeted by class/data-field, never id, so the
@@ -87,6 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // shared with the Python backend, populated by the fetch below.
     let itemToGroups = {};   // item name -> list of exclusivity group names
     let defaultTarget = {};  // default target stats for empty inputs
+    let itemOptionsMeta = {};
     // Champion option/assumption metadata, declared as OPTIONS/ASSUMPTIONS
     // beside each champion module's SLOTS (src/calculator/champions/).
     // Shape: { "<champion>": { options: [{key, type, default, label,
@@ -103,7 +123,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return { boots: "", 1: "", 2: "", 3: "", 4: "", 5: "", 6: "" };
     }
     let selectedItems = { a: emptyBuild(), b: emptyBuild() };
+    let selectedItemOptions = { a: {}, b: {} };
     let activePicker = null; // { build, slot } while the item picker is open
+    let activeChampionPicker = null;
+    let nextRosterId = 1;
+    const rosters = { allies: [], enemies: [] };
 
     // === Populate data ===
 
@@ -136,6 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
             data.forEach((item) => {
                 itemIconMap[item.name] = item.icon;
             });
+            applyRoleQuestUi();
         });
 
     // Config shared with the backend: item exclusivity groups (from
@@ -146,6 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .then((data) => {
             defaultTarget = data.default_target;
             championOptionsMeta = data.champion_options || {};
+            itemOptionsMeta = data.item_options || {};
             // Update Data is a local dev workflow (LOL_CALC_DEV=1); the
             // deployed site 404s the endpoint, so hide its button.
             document
@@ -158,6 +184,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     itemToGroups[name].push(group);
                 }
             }
+            refreshBuildItemOptions("a");
+            refreshBuildItemOptions("b");
+            renderRosterTeam("allies");
+            renderRosterTeam("enemies");
         });
 
     // === Champion selection ===
@@ -315,7 +345,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // === Champion Picker ===
 
-    function openChampionPicker() {
+    function openChampionPicker(context = { kind: "attacker" }) {
+        activeChampionPicker = context;
         champPickerSearch.value = "";
         renderChampionGrid(championsData);
         champPickerOverlay.classList.remove("hidden");
@@ -324,6 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function closeChampionPicker() {
         champPickerOverlay.classList.add("hidden");
+        activeChampionPicker = null;
     }
 
     function createPickerContent(icon, name, tooltip) {
@@ -346,14 +378,29 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         champs.forEach((champ) => {
             const el = document.createElement("div");
-            // Unverified = no champion module yet (server-decided; see
-            // /api/champions): greyed out, tooltip explains, no click.
-            el.className = champ.verified ? "picker-item" : "picker-item unverified";
-            const tooltip = champ.verified ? champ.name : `${champ.name} — not yet verified`;
+            // An attacker needs a verified champion-specific damage module.
+            // Roster cards only derive defensive/stat context, so every
+            // champion in the local cache is valid there.
+            const selectingAttacker = !activeChampionPicker ||
+                activeChampionPicker.kind === "attacker";
+            const blocked = selectingAttacker && !champ.verified;
+            el.className = blocked ? "picker-item unverified" : "picker-item";
+            const tooltip = blocked
+                ? `${champ.name} — damage module not yet verified`
+                : champ.name;
             el.append(...createPickerContent(champ.icon, champ.name, tooltip));
-            if (champ.verified) {
+            if (!blocked) {
                 el.addEventListener("click", () => {
-                    selectChampion(champ.name, champ.icon);
+                    if (selectingAttacker) {
+                        selectChampion(champ.name, champ.icon);
+                    } else {
+                        selectRosterChampion(
+                            activeChampionPicker.team,
+                            activeChampionPicker.id,
+                            champ.name,
+                            champ.icon
+                        );
+                    }
                     closeChampionPicker();
                 });
             }
@@ -362,8 +409,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Click portrait or name to open champion picker
-    championPortraitBtn.addEventListener("click", openChampionPicker);
-    championNameDisplay.addEventListener("click", openChampionPicker);
+    championPortraitBtn.addEventListener("click", () => openChampionPicker());
+    championNameDisplay.addEventListener("click", () => openChampionPicker());
 
     // Close champion picker
     champPickerClose.addEventListener("click", closeChampionPicker);
@@ -485,10 +532,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Returns the exclusivity reason if an item is blocked, or null if allowed.
     // Checked within one build only; currentSlot's own item is allowed.
     function getExclusivityBlock(build, itemName, currentSlot) {
+        return getSlotExclusivityBlock(
+            selectedItems[build], itemName, currentSlot
+        );
+    }
+
+    function getSlotExclusivityBlock(slots, itemName, currentSlot) {
         const groups = itemToGroups[itemName];
         if (!groups) return null;
 
-        for (const [slotKey, slotItem] of Object.entries(selectedItems[build])) {
+        for (const [slotKey, slotItem] of Object.entries(slots)) {
             if (!slotItem || slotKey === currentSlot) continue;
             if (slotItem === itemName) continue; // duplicate check handled elsewhere
             const slotGroups = itemToGroups[slotItem];
@@ -503,9 +556,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function openItemPicker(build, slotKey) {
-        activePicker = { build: build, slot: slotKey };
+        activePicker = { kind: "build", build: build, slot: slotKey };
         const isBoot = slotKey === "boots";
-        const sourceItems = isBoot ? bootsData : itemsData;
+        const sourceItems = isBoot ? activeBootsPool() : itemsData;
 
         pickerTitle.textContent = isBoot ? "Select Boots" : "Select Item";
         pickerSearch.value = "";
@@ -513,6 +566,16 @@ document.addEventListener("DOMContentLoaded", () => {
         renderPickerItems(sourceItems);
         pickerOverlay.classList.remove("hidden");
         pickerSearch.focus();
+    }
+
+    function activeBootsPool() {
+        const attackerPicker = activePicker && activePicker.kind === "build";
+        const tier = attackerPicker
+            && attackerRole.value === "mid"
+            && roleQuestComplete.checked
+            ? 3
+            : 2;
+        return bootsData.filter((item) => item.tier === tier);
     }
 
     function renderPickerItems(items) {
@@ -523,16 +586,22 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Get already-selected items in this build to mark as unavailable
-        const selected = getSelectedItemNames(activePicker.build);
+        const activeRosterEntry = activePicker.kind === "roster"
+            ? getRosterEntry(activePicker.team, activePicker.id)
+            : null;
+        // Get already-selected items in this build/loadout to mark unavailable.
+        const activeSlots = activeRosterEntry
+            ? activeRosterEntry.slots
+            : selectedItems[activePicker.build];
+        const selected = new Set(Object.values(activeSlots).filter(Boolean));
         // The item currently in this slot is allowed (replacing itself)
-        const currentInSlot = selectedItems[activePicker.build][activePicker.slot] || "";
+        const currentInSlot = activeSlots[activePicker.slot] || "";
 
         items.forEach((item) => {
             const el = document.createElement("div");
             const isUsed = selected.has(item.name) && item.name !== currentInSlot;
             const exclusivityBlock = !isUsed
-                ? getExclusivityBlock(activePicker.build, item.name, activePicker.slot)
+                ? getSlotExclusivityBlock(activeSlots, item.name, activePicker.slot)
                 : null;
             const isBlocked = isUsed || exclusivityBlock;
             el.className = "picker-item" + (isBlocked ? " picker-item-used" : "");
@@ -542,7 +611,21 @@ document.addEventListener("DOMContentLoaded", () => {
             el.append(...createPickerContent(item.icon, item.name, tooltip));
             if (!isBlocked) {
                 el.addEventListener("click", () => {
-                    selectItem(activePicker.build, activePicker.slot, item.name, item.icon);
+                    if (activePicker.kind === "roster") {
+                        selectRosterItem(
+                            activePicker.team,
+                            activePicker.id,
+                            activePicker.slot,
+                            item.name
+                        );
+                    } else {
+                        selectItem(
+                            activePicker.build,
+                            activePicker.slot,
+                            item.name,
+                            item.icon
+                        );
+                    }
                     closePicker();
                 });
             }
@@ -550,8 +633,62 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function ensureItemOptions(store, itemName) {
+        const meta = itemOptionsMeta[itemName];
+        if (!meta || store[itemName]) return;
+        store[itemName] = {};
+        for (const [key, option] of Object.entries(meta.options || {})) {
+            store[itemName][key] = option.default;
+        }
+    }
+
+    function cleanUnusedItemOptions(store, slots, itemName) {
+        if (!itemName || Object.values(slots).includes(itemName)) return;
+        delete store[itemName];
+    }
+
+    function refreshBuildItemOptions(build) {
+        const container = document.querySelector(
+            `.build-row[data-build="${build}"] .build-item-options`
+        );
+        if (!container) return;
+        container.innerHTML = "";
+        const configuredNames = [...new Set(Object.values(selectedItems[build]))]
+            .filter((name) => name && itemOptionsMeta[name]);
+        container.classList.toggle("hidden", configuredNames.length === 0);
+        configuredNames.forEach((itemName) => {
+            ensureItemOptions(selectedItemOptions[build], itemName);
+            const meta = itemOptionsMeta[itemName];
+            for (const [key, option] of Object.entries(meta.options || {})) {
+                const label = document.createElement("label");
+                label.className = "item-option-control";
+                const text = document.createElement("span");
+                text.textContent = `${itemName} · ${option.label}`;
+                const input = document.createElement("input");
+                input.type = "number";
+                input.min = option.min;
+                input.max = option.max;
+                input.step = option.step;
+                input.value = selectedItemOptions[build][itemName][key];
+                input.addEventListener("input", () => {
+                    const value = Math.max(
+                        option.min,
+                        Math.min(option.max, parseInt(input.value, 10) || 0)
+                    );
+                    selectedItemOptions[build][itemName][key] = value;
+                    scheduleRecalc();
+                });
+                label.append(text, input);
+                container.appendChild(label);
+            }
+        });
+    }
+
     function selectItem(build, slotKey, name, icon) {
+        const previous = selectedItems[build][slotKey];
         selectedItems[build][slotKey] = name;
+        cleanUnusedItemOptions(selectedItemOptions[build], selectedItems[build], previous);
+        ensureItemOptions(selectedItemOptions[build], name);
 
         const slot = slotElement(build, slotKey);
         if (!slot) return;
@@ -569,11 +706,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const removeBtn = slot.querySelector(".item-remove-btn");
         if (removeBtn) removeBtn.classList.remove("hidden");
 
+        refreshBuildItemOptions(build);
         scheduleRecalc();
     }
 
     function clearItemSlot(build, slotKey) {
+        const previous = selectedItems[build][slotKey];
         selectedItems[build][slotKey] = "";
+        cleanUnusedItemOptions(selectedItemOptions[build], selectedItems[build], previous);
 
         const slot = slotElement(build, slotKey);
         if (!slot) return;
@@ -590,6 +730,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Hide remove button
         const removeBtn = slot.querySelector(".item-remove-btn");
         if (removeBtn) removeBtn.classList.add("hidden");
+        refreshBuildItemOptions(build);
     }
 
     function closePicker() {
@@ -606,7 +747,7 @@ document.addEventListener("DOMContentLoaded", () => {
     pickerSearch.addEventListener("input", () => {
         const query = pickerSearch.value.toLowerCase().trim();
         const isBoot = activePicker && activePicker.slot === "boots";
-        const sourceItems = isBoot ? bootsData : itemsData;
+        const sourceItems = isBoot ? activeBootsPool() : itemsData;
 
         if (!query) {
             renderPickerItems(sourceItems);
@@ -618,6 +759,304 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         renderPickerItems(filtered);
     });
+
+    // === Ally / enemy roster builder ===
+
+    function newRosterEntry() {
+        return {
+            id: nextRosterId++,
+            champion: "",
+            icon: "",
+            level: 1,
+            slots: emptyBuild(),
+            itemOptions: {},
+            stats: null,
+            statsError: "",
+            refreshRevision: 0,
+            refreshTimer: null,
+        };
+    }
+
+    function getRosterEntry(team, id) {
+        return rosters[team].find((entry) => entry.id === id) || null;
+    }
+
+    function addRosterEntry(team) {
+        const maximum = team === "allies" ? 4 : 5;
+        if (rosters[team].length >= maximum) return;
+        rosters[team].push(newRosterEntry());
+        renderRosterTeam(team);
+        updateRosterCount();
+    }
+
+    function removeRosterEntry(team, id) {
+        const entry = getRosterEntry(team, id);
+        if (entry && entry.refreshTimer) clearTimeout(entry.refreshTimer);
+        rosters[team] = rosters[team].filter((row) => row.id !== id);
+        renderRosterTeam(team);
+        updateRosterCount();
+        scheduleRecalc();
+    }
+
+    function selectRosterChampion(team, id, champion, icon) {
+        const entry = getRosterEntry(team, id);
+        if (!entry) return;
+        entry.champion = champion;
+        entry.icon = icon;
+        entry.stats = null;
+        entry.statsError = "";
+        renderRosterTeam(team);
+        updateRosterCount();
+        queueRosterStats(team, id);
+        scheduleRecalc();
+    }
+
+    function selectRosterItem(team, id, slot, itemName) {
+        const entry = getRosterEntry(team, id);
+        if (!entry) return;
+        const previous = entry.slots[slot];
+        entry.slots[slot] = itemName;
+        cleanUnusedItemOptions(entry.itemOptions, entry.slots, previous);
+        ensureItemOptions(entry.itemOptions, itemName);
+        entry.stats = null;
+        renderRosterTeam(team);
+        queueRosterStats(team, id);
+        scheduleRecalc();
+    }
+
+    function clearRosterItem(team, id, slot) {
+        const entry = getRosterEntry(team, id);
+        if (!entry) return;
+        const previous = entry.slots[slot];
+        entry.slots[slot] = "";
+        cleanUnusedItemOptions(entry.itemOptions, entry.slots, previous);
+        entry.stats = null;
+        renderRosterTeam(team);
+        queueRosterStats(team, id);
+        scheduleRecalc();
+    }
+
+    function openRosterItemPicker(team, id, slot) {
+        activePicker = { kind: "roster", team: team, id: id, slot: slot };
+        const isBoot = slot === "boots";
+        pickerTitle.textContent = isBoot ? "Select Boots" : "Select Item";
+        pickerSearch.value = "";
+        renderPickerItems(isBoot ? bootsData.filter((item) => item.tier === 2) : itemsData);
+        pickerOverlay.classList.remove("hidden");
+        pickerSearch.focus();
+    }
+
+    function rosterPayload(entry) {
+        const items = [];
+        for (let index = 1; index <= 6; index++) {
+            if (entry.slots[index]) items.push(entry.slots[index]);
+        }
+        return {
+            champion: entry.champion,
+            level: entry.level,
+            boots: entry.slots.boots,
+            items: items,
+            item_options: entry.itemOptions,
+        };
+    }
+
+    function queueRosterStats(team, id) {
+        const entry = getRosterEntry(team, id);
+        if (!entry || !entry.champion) return;
+        if (entry.refreshTimer) clearTimeout(entry.refreshTimer);
+        const revision = ++entry.refreshRevision;
+        entry.refreshTimer = setTimeout(
+            () => refreshRosterStats(team, id, revision), 120
+        );
+    }
+
+    function refreshRosterStats(team, id, revision) {
+        const entry = getRosterEntry(team, id);
+        if (!entry || !entry.champion) return;
+        fetch("/api/loadout-stats", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(rosterPayload(entry)),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                const current = getRosterEntry(team, id);
+                if (!current || current.refreshRevision !== revision) return;
+                if (data.error) {
+                    current.statsError = data.error;
+                    current.stats = null;
+                } else {
+                    current.statsError = "";
+                    current.stats = data.stats;
+                }
+                renderRosterTeam(team);
+            })
+            .catch(() => {
+                const current = getRosterEntry(team, id);
+                if (!current || current.refreshRevision !== revision) return;
+                current.statsError = "Could not load stats";
+                current.stats = null;
+                renderRosterTeam(team);
+            });
+    }
+
+    const ROSTER_STATS = [
+        ["Total HP", "health", 0],
+        ["Base HP", "base_health", 0],
+        ["Bonus HP", "bonus_health", 0],
+        ["Mana", "max_mana", 0],
+        ["Attack damage", "attack_damage", 0],
+        ["Ability power", "ability_power", 0],
+        ["Armor", "armor", 1],
+        ["Magic resist", "magic_resistance", 1],
+        ["Attack speed", "attack_speed", 3],
+        ["Move speed", "move_speed", 1],
+        ["Ability haste", "ability_haste", 0],
+        ["Magic pen", "magic_penetration_flat", 1],
+        ["% magic pen", "magic_penetration_percent", 1],
+        ["Lethality", "lethality", 1],
+        ["% armor pen", "armor_penetration_percent", 1],
+        ["Crit chance", "critical_strike_chance", 1],
+    ];
+
+    function rosterStatsMarkup(entry) {
+        if (!entry.champion) {
+            return '<div class="roster-stat-loading">Select a champion to derive stats.</div>';
+        }
+        if (entry.statsError) {
+            return `<div class="roster-stat-loading">${escapeHtml(entry.statsError)}</div>`;
+        }
+        if (!entry.stats) {
+            return '<div class="roster-stat-loading">Calculating complete stats…</div>';
+        }
+        return ROSTER_STATS.map(([label, key, precision]) => {
+            const raw = Number(entry.stats[key] || 0);
+            const value = raw.toFixed(precision);
+            const suffix = label.startsWith("%") || label === "Crit chance" ? "%" : "";
+            return `<div class="roster-stat-cell"><span class="roster-stat-label">${label}</span>` +
+                `<span class="roster-stat-value">${value}${suffix}</span></div>`;
+        }).join("");
+    }
+
+    function escapeHtml(value) {
+        const span = document.createElement("span");
+        span.textContent = value;
+        return span.innerHTML;
+    }
+
+    function rosterCard(entry, team) {
+        const article = document.createElement("article");
+        article.className = "roster-card";
+        article.dataset.rosterId = entry.id;
+
+        const itemSlots = ["boots", 1, 2, 3, 4, 5, 6].map((slot) => {
+            const name = entry.slots[slot];
+            const content = name
+                ? `<img src="${itemIconMap[name] || ""}" alt="${escapeHtml(name)}">`
+                : (slot === "boots" ? "B" : "+");
+            return `<button type="button" class="roster-item-slot" data-slot="${slot}" ` +
+                `title="${escapeHtml(name || (slot === "boots" ? "Boots" : `Item ${slot}`))}">${content}</button>`;
+        }).join("");
+
+        const optionRows = [...new Set(Object.values(entry.slots))]
+            .filter((name) => name && itemOptionsMeta[name])
+            .flatMap((itemName) => {
+                ensureItemOptions(entry.itemOptions, itemName);
+                return Object.entries(itemOptionsMeta[itemName].options || {}).map(
+                    ([key, option]) =>
+                        `<label class="item-option-control" data-item="${escapeHtml(itemName)}" data-key="${key}">` +
+                        `<span>${escapeHtml(itemName)} · ${escapeHtml(option.label)}</span>` +
+                        `<input type="number" min="${option.min}" max="${option.max}" step="${option.step}" ` +
+                        `value="${entry.itemOptions[itemName][key]}"></label>`
+                );
+            }).join("");
+
+        article.innerHTML = `
+            <div class="roster-card-head">
+                <div class="roster-card-identity">
+                    <img class="roster-champion-icon" src="${entry.icon}" alt="">
+                    <button type="button" class="roster-select-champion">${escapeHtml(entry.champion || "Select champion")}</button>
+                </div>
+                <div class="roster-level-control">
+                    <label>Lv</label>
+                    <input class="roster-level" type="number" min="1" max="20" value="${entry.level}">
+                    <button type="button" class="roster-remove" title="Remove champion">×</button>
+                </div>
+            </div>
+            <div class="roster-build">${itemSlots}</div>
+            <div class="roster-item-options${optionRows ? "" : " hidden"}">${optionRows}</div>
+            <div class="roster-stat-matrix">${rosterStatsMarkup(entry)}</div>`;
+
+        article.querySelector(".roster-select-champion").addEventListener("click", () => {
+            openChampionPicker({ kind: "roster", team: team, id: entry.id });
+        });
+        article.querySelector(".roster-remove").addEventListener("click", () => {
+            removeRosterEntry(team, entry.id);
+        });
+        article.querySelector(".roster-level").addEventListener("input", (event) => {
+            const level = Math.max(1, Math.min(20, parseInt(event.target.value, 10) || 1));
+            entry.level = level;
+            entry.stats = null;
+            queueRosterStats(team, entry.id);
+            scheduleRecalc();
+        });
+        article.querySelectorAll(".roster-item-slot").forEach((slotEl) => {
+            const slot = slotEl.dataset.slot;
+            slotEl.addEventListener("click", () => {
+                openRosterItemPicker(team, entry.id, slot);
+            });
+            slotEl.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                if (entry.slots[slot]) clearRosterItem(team, entry.id, slot);
+            });
+        });
+        article.querySelectorAll(".roster-item-options .item-option-control").forEach((label) => {
+            const input = label.querySelector("input");
+            const itemName = label.dataset.item;
+            const key = label.dataset.key;
+            const option = itemOptionsMeta[itemName].options[key];
+            input.addEventListener("input", () => {
+                entry.itemOptions[itemName][key] = Math.max(
+                    option.min,
+                    Math.min(option.max, parseInt(input.value, 10) || 0)
+                );
+                entry.stats = null;
+                queueRosterStats(team, entry.id);
+                scheduleRecalc();
+            });
+        });
+        return article;
+    }
+
+    function renderRosterTeam(team) {
+        const element = team === "allies" ? allyRosterEl : enemyRosterEl;
+        const emptyText = team === "allies"
+            ? "No allies selected"
+            : "No enemies selected — using the manual target";
+        element.innerHTML = "";
+        if (rosters[team].length === 0) {
+            element.innerHTML = `<div class="roster-empty">${emptyText}</div>`;
+            return;
+        }
+        rosters[team].forEach((entry) => element.appendChild(rosterCard(entry, team)));
+    }
+
+    function updateRosterCount() {
+        const allyLabel = rosters.allies.length === 1 ? "ally" : "allies";
+        const enemyLabel = rosters.enemies.length === 1 ? "enemy" : "enemies";
+        rosterCountEl.textContent = `${rosters.allies.length} ${allyLabel} · ${rosters.enemies.length} ${enemyLabel}`;
+        addAllyBtn.disabled = rosters.allies.length >= 4;
+        addEnemyBtn.disabled = rosters.enemies.length >= 5;
+        const usingRosterTargets = rosters.enemies.some((entry) => entry.champion);
+        manualTargetGroup.classList.toggle("manual-target-disabled", usingRosterTargets);
+        [targetBaseHealth, targetBonusHealth, targetArmor, targetMr].forEach((input) => {
+            input.disabled = usingRosterTargets;
+        });
+    }
+
+    addAllyBtn.addEventListener("click", () => addRosterEntry("allies"));
+    addEnemyBtn.addEventListener("click", () => addRosterEntry("enemies"));
+    updateRosterCount();
 
     // Escape key closes pickers
     document.addEventListener("keydown", (e) => {
@@ -748,6 +1187,8 @@ document.addEventListener("DOMContentLoaded", () => {
             auto_attack_uptime: parseFloat(autoUptime.value) / 100,
             auto_attacks_only: fightMode === "time_based" && autoAttacksOnly.checked,
             include_actives: includeActives.checked,
+            role: attackerRole.value,
+            role_quest_complete: roleQuestComplete.checked,
         };
 
         // Ability ranks
@@ -766,6 +1207,13 @@ document.addEventListener("DOMContentLoaded", () => {
             payload.champion_options = championOptions;
         }
 
+        payload.allies = rosters.allies
+            .filter((entry) => entry.champion)
+            .map(rosterPayload);
+        payload.enemies = rosters.enemies
+            .filter((entry) => entry.champion)
+            .map(rosterPayload);
+
         return payload;
     }
 
@@ -783,6 +1231,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const payload = buildFightPayload(champion);
         payload.boots = selectedItems[build].boots;
         payload.items = buildItemList(build);
+        payload.item_options = selectedItemOptions[build];
         return fetch("/api/calculate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -993,6 +1442,44 @@ document.addEventListener("DOMContentLoaded", () => {
         field("true-damage-value").textContent = trueDamage;
         field("true-damage-card").classList.toggle("hidden", trueDamage <= 0);
 
+        // Multi-target scenario: TDD is the sum of the same selected damage
+        // package landing on each chosen enemy.  Keep each target visible so
+        // resistance and health differences never disappear into one number.
+        const targetResults = field("target-results");
+        const hasTargets = Array.isArray(data.targets) && data.targets.length > 0;
+        targetResults.classList.toggle("hidden", !hasTargets);
+        if (hasTargets) {
+            field("target-result-context").textContent =
+                `${data.targets.length} selected target${data.targets.length === 1 ? "" : "s"}`;
+            const targetBody = field("target-results-body");
+            targetBody.innerHTML = "";
+            data.targets.forEach((row) => {
+                const tr = document.createElement("tr");
+                const identity = document.createElement("td");
+                const icon = document.createElement("img");
+                icon.src = row.target.icon;
+                icon.alt = "";
+                const name = document.createElement("span");
+                name.textContent = `${row.target.champion} · Lv ${row.target.level}`;
+                identity.append(icon, name);
+                tr.appendChild(identity);
+
+                const values = [
+                    row.target.stats.health,
+                    row.target.stats.armor,
+                    row.target.stats.magic_resistance,
+                    row.result.total_damage,
+                ];
+                values.forEach((value) => {
+                    const td = document.createElement("td");
+                    td.className = "col-right";
+                    td.textContent = Math.round(value).toLocaleString();
+                    tr.appendChild(td);
+                });
+                targetBody.appendChild(tr);
+            });
+        }
+
         // Effective resistances
         field("eff-armor").textContent = data.effective_armor;
         field("eff-mr").textContent = data.effective_mr;
@@ -1108,6 +1595,135 @@ document.addEventListener("DOMContentLoaded", () => {
     const optimizeSlots = document.getElementById("optimize-slots");
 
     let isOptimizing = false;
+    const bisBuildsInFlight = new Set();
+
+    function applyRoleQuestUi() {
+        const role = attackerRole.value;
+        if (!role) {
+            roleQuestComplete.checked = false;
+        }
+        roleQuestComplete.disabled = !role;
+        const complete = Boolean(role) && roleQuestComplete.checked;
+        const bottomExtraSlot = role === "bottom" && complete;
+        const requiredBootTier = role === "mid" && complete ? 3 : 2;
+
+        const effectText = {
+            top: "Top quest has no direct damage stat modifier.",
+            jungle: "Jungle quest movement is positional and excluded from damage scoring.",
+            mid: "Mid quest applies +8% bonus AD, +8% AP, and tier-3 boots.",
+            bottom: "Bottom quest moves boots to the quest slot, opening a sixth item slot.",
+            support: "Support quest keeps wards separate; no extra damage-item slot.",
+        };
+        roleQuestHint.textContent = !role
+            ? "Select a role to apply its quest rules."
+            : complete
+                ? effectText[role]
+                : "Quest not complete — no quest reward is applied.";
+
+        document.querySelectorAll(".quest-extra-slot").forEach((slot) => {
+            slot.classList.toggle("hidden", !bottomExtraSlot);
+        });
+        const sixItems = optimizeSlots.querySelector('option[value="6"]');
+        sixItems.disabled = !bottomExtraSlot;
+        if (!bottomExtraSlot && optimizeSlots.value === "6") {
+            optimizeSlots.value = "5";
+        }
+
+        for (const build of ["a", "b"]) {
+            if (!bottomExtraSlot && selectedItems[build][6]) {
+                clearItemSlot(build, "6");
+            }
+            const selectedBoots = bootsData.find(
+                (item) => item.name === selectedItems[build].boots
+            );
+            if (selectedBoots && selectedBoots.tier !== requiredBootTier) {
+                clearItemSlot(build, "boots");
+            }
+        }
+        scheduleRecalc();
+    }
+
+    attackerRole.addEventListener("change", applyRoleQuestUi);
+    roleQuestComplete.addEventListener("change", applyRoleQuestUi);
+    applyRoleQuestUi();
+
+    function firstOpenItemSlot(build, maximum) {
+        for (let slot = 1; slot <= maximum; slot++) {
+            if (!selectedItems[build][slot]) return String(slot);
+        }
+        return null;
+    }
+
+    function findBestNextItem(build, button) {
+        const champion = championSelect.value;
+        if (!champion) {
+            showError("Please select a champion first.");
+            return;
+        }
+        if (bisBuildsInFlight.has(build)) return;
+
+        const capacity = attackerRole.value === "bottom"
+            && roleQuestComplete.checked ? 6 : 5;
+        const openSlot = firstOpenItemSlot(build, capacity);
+        if (!openSlot) {
+            showError(`Build ${build.toUpperCase()} has no open item slot.`);
+            return;
+        }
+
+        const lockedItems = buildItemList(build);
+        const payload = buildFightPayload(champion);
+        payload.objective = optimizeObjective.value;
+        payload.locked_items = lockedItems;
+        payload.locked_boots = selectedItems[build].boots || "";
+        payload.max_legendary_slots = lockedItems.length + 1;
+        payload.item_options = selectedItemOptions[build];
+
+        bisBuildsInFlight.add(build);
+        const oldText = button.textContent;
+        button.disabled = true;
+        button.textContent = "Finding BIS…";
+
+        fetch("/api/optimize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                const lockedSet = new Set(lockedItems);
+                const bestItem = (data.items || []).find(
+                    (name) => !lockedSet.has(name)
+                );
+                if (!bestItem) {
+                    showError("No legal damage item improved this build.");
+                    return;
+                }
+                selectItem(build, openSlot, bestItem, itemIconMap[bestItem] || "");
+                if (!selectedItems[build].boots && data.boots) {
+                    selectItem(
+                        build,
+                        "boots",
+                        data.boots,
+                        itemIconMap[data.boots] || ""
+                    );
+                }
+            })
+            .catch(() => showError("BIS search failed. Please try again."))
+            .finally(() => {
+                bisBuildsInFlight.delete(build);
+                button.disabled = false;
+                button.textContent = oldText;
+            });
+    }
+
+    document.querySelectorAll(".btn-build-bis").forEach((button) => {
+        const build = button.closest(".build-row").dataset.build;
+        button.addEventListener("click", () => findBestNextItem(build, button));
+    });
 
     // The optimizer always works on build A; it's disabled in Compare mode
     optimizeBtn.addEventListener("click", () => {
@@ -1130,6 +1746,7 @@ document.addEventListener("DOMContentLoaded", () => {
         payload.locked_items = lockedItems;
         payload.locked_boots = lockedBoots;
         payload.max_legendary_slots = maxSlots;
+        payload.item_options = selectedItemOptions.a;
 
         // Show loading
         optimizeBtnText.textContent = "Optimizing...";
