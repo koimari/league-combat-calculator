@@ -562,7 +562,7 @@ def test_optimize_rejects_unknown_locked_items_as_client_input():
 
 
 @pytest.mark.parametrize("endpoint", ["/api/calculate", "/api/optimize"])
-def test_public_post_routes_reject_unverified_champions_before_compute(
+def test_public_post_routes_accept_all_dedicated_champion_modules(
     monkeypatch, endpoint
 ):
     class RecordingLimiter:
@@ -593,11 +593,8 @@ def test_public_post_routes_reject_unverified_champions_before_compute(
 
     response = app_module.app.test_client().post(endpoint, json=payload)
 
-    assert response.status_code == 422
-    assert response.get_json()["error"].startswith(
-        "Champion 'Kled' is not verified: Alternate forms or sub-spells"
-    )
-    assert limiter.calls == 0
+    assert response.status_code != 422
+    assert not response.get_json().get("error", "").endswith("not verified")
 
 
 def test_optimizer_global_bucket_returns_json_429(monkeypatch, tmp_path):
@@ -812,20 +809,17 @@ class TestIconUrlsAreHttps:
         assert all(ability["ingested"] for ability in abilities.values())
         assert abilities["Q"]["name"] == "The Darkin Blade"
 
-    def test_champion_api_exposes_all_ingested_slots_without_certifying_damage(self):
+    def test_champion_api_exposes_all_ingested_and_reviewed_slots(self):
         champions = app_module.app.test_client().get("/api/champions").get_json()
 
         assert len(champions) == 173
         assert all(champion["ability_ingestion"]["complete"] for champion in champions)
         assert all(set(champion["abilities"]) == {"P", "Q", "W", "E", "R"} for champion in champions)
-        assert any(not champion["verified"] for champion in champions)
+        assert all(champion["verified"] for champion in champions)
 
 
 class TestChampionVerifiedFlags:
-    """/api/champions marks module-backed champions verified; the picker
-    greys out the rest (generic-path numbers are estimates — CLAUDE.md
-    rule 6). Verified champions sort first, then unverified, A-Z within
-    each group."""
+    """/api/champions exposes the complete dedicated-module registry."""
 
     def test_flags_match_the_module_registry(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
@@ -833,8 +827,8 @@ class TestChampionVerifiedFlags:
 
         assert by_name["Aatrox"] is True
         assert by_name["Bel'Veth"] is True
-        assert by_name["Kled"] is False
-        assert by_name["Teemo"] is False
+        assert by_name["Kled"] is True
+        assert by_name["Teemo"] is True
 
     def test_unverified_champions_expose_specific_fail_closed_reasons(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
@@ -845,25 +839,22 @@ class TestChampionVerifiedFlags:
             "verification": "reviewed_module",
             "blockers": [],
         }
-        teemo = by_name["Teemo"]
-        assert teemo["availability"]["ready"] is False
-        assert teemo["availability"]["verification"] == "blocked"
-        assert any(
-            blocker["code"] == "timed_stages"
-            for blocker in teemo["availability"]["blockers"]
-        )
-        assert teemo["patch_last_changed"]
+        assert by_name["Teemo"]["availability"] == {
+            "ready": True,
+            "verification": "reviewed_module",
+            "blockers": [],
+        }
+        assert by_name["Teemo"]["patch_last_changed"]
 
     def test_verified_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
         flags = [c["verified"] for c in champs]
 
-        assert True in flags and False in flags
-        assert flags.index(False) == flags.count(True)  # no interleaving
+        assert all(flags)
 
     def test_each_group_is_alphabetical(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        for group in (True, False):
+        for group in (True,):
             names = [c["name"] for c in champs if c["verified"] is group]
             assert names == sorted(names)
 

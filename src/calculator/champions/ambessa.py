@@ -97,6 +97,10 @@ def _drakehounds_step(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = proc_damage(_drakehounds_step_damage, "physical")(ctx)
     if entry is None:
         return None
+    # Medarda Maxim is consumed by empowered basic attacks; its proc count
+    # must be coupled to the authored auto timeline rather than treated as a
+    # free fixed-count damage package.
+    entry["requires_auto_timeline_coupling"] = True
     # Wiki revision 4038211 supplies the 1/7/13 thresholds. The locally
     # ingested champion JSON carries the three values in the passive prose.
     description = " ".join(

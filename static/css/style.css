@@ -58,6 +58,7 @@ h1 { margin: 0; font: 500 clamp(32px, 4vw, 48px)/1 var(--serif); letter-spacing:
 .section-bar small { color: var(--muted); font: 10px var(--mono); }
 .section-actions { display: flex; align-items: center; gap: 8px; }
 .text-button { border: 0; padding: 4px 0; background: transparent; color: var(--accent); cursor: pointer; font: 700 10px var(--mono); text-transform: uppercase; }
+.text-button:disabled { opacity: .36; cursor: not-allowed; }
 
 .attacker-board { display: grid; grid-template-columns: 170px 1fr; min-height: 161px; }
 .attacker-card { padding: 15px; border-right: 1px solid var(--line); }
@@ -261,6 +262,9 @@ td:last-child { color: var(--olive); }
 .complete-build-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 11px; }
 .complete-build-head strong { font: 500 16px var(--serif); }
 .complete-build-head span { color: var(--muted); font: 7px var(--mono); text-transform: uppercase; }
+.boots-toggle { margin-left: auto; padding: 5px 8px; border: 1px solid var(--line-strong); background: transparent; color: var(--muted); font: 7px var(--mono); text-transform: uppercase; cursor: pointer; }
+.boots-toggle.active { border-color: var(--accent); color: var(--accent); }
+.target-card > .boots-toggle { margin: 0 0 7px; }
 .quest-item, .utility-slot { min-width: 66px; padding-left: 11px; border-left: 1px dashed var(--line-strong); }
 .quest-item > span, .utility-slot > span { display: block; height: 10px; margin: -2px 0 4px; color: var(--accent); font: 6px var(--mono); text-transform: uppercase; }
 .utility-slot b { display: grid; place-items: center; width: 54px; height: 54px; border: 1px dashed var(--olive); color: var(--olive); background: color-mix(in srgb, var(--olive) 6%, transparent); font: 16px var(--serif); }
@@ -287,6 +291,8 @@ td:last-child { color: var(--olive); }
 .target-title button { display: block; max-width: 100%; padding: 0; overflow: hidden; border: 0; background: transparent; cursor: pointer; font: 500 17px var(--serif); text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .target-title span { display: block; margin-top: 2px; overflow: hidden; color: var(--muted); font: 7px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
 .target-build { display: flex; gap: 5px; margin: 10px 0; }
+.roster-build-actions { display: flex; justify-content: flex-end; margin: -2px 0 9px; }
+.roster-optimize { min-height: 24px; padding: 5px 8px; font-size: 7px; }
 .target-build .slot-wrap, .target-build .item-slot, .target-build .item-icon { width: 34px; }
 .target-build .item-icon { height: 34px; }
 .roster-ranks { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 0 0 10px; color: var(--muted); font: 8px var(--mono); text-transform: uppercase; }
@@ -349,6 +355,7 @@ td:last-child { color: var(--olive); }
 .ability-step button:disabled { opacity: .3; cursor: default; }
 .ability-step output, .ability-step.fixed strong { color: var(--ink); font: 9px var(--mono); text-align: center; }
 .ability-step.fixed strong { color: var(--accent); }
+.ability-source { display: block; margin-top: 7px; color: var(--muted); font: 7px var(--mono); text-transform: uppercase; }
 .ability-withheld { background: color-mix(in srgb, var(--canvas) 45%, transparent); }
 .ability-withheld .ability-name { margin-bottom: 7px; }
 .ability-withheld .ability-name small { color: var(--accent); }

@@ -131,24 +131,17 @@ def _champion(name: str = "TestChamp", **slots: list) -> dict:
 # ---------------------------------------------------------------------------
 
 
-class TestGenericDispatch:
-    """Unregistered champions route to the engine's generic slot map."""
+class TestDedicatedDispatch:
+    """Every cached champion routes to a dedicated packet module."""
 
     def test_dispatcher_fallback_uses_engine(
         self,
         champions_data: dict,
     ) -> None:
-        """Dispatching an unregistered champion == engine + GENERIC_SLOTS."""
+        """Garen's dedicated packet is used instead of the legacy fallback."""
         champ = next(c for c in champions_data.values() if c.get("name") == "Garen")
         stats = _default_stats()
         target = _default_target()
-        engine = _engine_parse(
-            champ,
-            13,
-            200.0,
-            champion_stats=stats,
-            target_stats=target,
-        )
         dispatched = dispatch_parse(
             "Garen",
             champ,
@@ -157,8 +150,8 @@ class TestGenericDispatch:
             champion_stats=stats,
             target_stats=target,
         )
-        assert dispatched == engine
         assert dispatched["Q"]["total_raw"] > 0
+        assert dispatched["R"]["cooldown"] == 120.0
 
 
 # ---------------------------------------------------------------------------

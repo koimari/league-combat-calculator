@@ -13,9 +13,15 @@ ROLES: Final[frozenset[str]] = frozenset({"top", "jungle", "mid", "bottom", "sup
 MID_QUEST_BONUS_AD_PERCENT: Final[float] = 8.0
 MID_QUEST_AP_PERCENT: Final[float] = 8.0
 
-# Top quest: raises the champion level cap from 18 to 20.
+# Top-lane reward from the Season 2026 Role Quests: the completion packet
+# grants one upfront level's worth of sourced experience and increases later
+# experience gains; the calculator exposes the resulting level cap while the
+# actual level remains an explicit user input.
+TOP_QUEST_BONUS_XP: Final[int] = 600
+TOP_QUEST_FUTURE_XP_PERCENT: Final[float] = 12.5
 BASE_LEVEL_CAP: Final[int] = 18
 TOP_QUEST_LEVEL_CAP: Final[int] = 20
+TOP_LEVEL_CAP: Final[int] = TOP_QUEST_LEVEL_CAP
 
 
 def level_cap(role: str, quest_complete: bool) -> int:
@@ -53,10 +59,24 @@ def role_quest_meta(role: str, complete: bool) -> dict[str, object]:
     if not complete:
         return {"role": role, "complete": False, "effect": "Not active"}
     effects = {
-        "top": "Raises the champion level cap from 18 to 20",
+        "top": (
+            f"+{TOP_QUEST_BONUS_XP} XP, +{TOP_QUEST_FUTURE_XP_PERCENT:g}% future XP, "
+            f"and level cap {TOP_LEVEL_CAP}"
+        ),
         "jungle": "Movement reward is positional and not used for damage scoring",
         "mid": "8% bonus AD, 8% AP, and tier-3 boots",
         "bottom": "Boots move to the quest slot, allowing six ordinary items",
         "support": "Ward and support-item rewards do not add an ordinary damage slot",
     }
     return {"role": role, "complete": True, "effect": effects[role]}
+
+
+def max_champion_level(role: str, complete: bool) -> int:
+    """Return the sourced level cap for the selected role-quest state."""
+    # Direct engine/unit-test callers historically supply level 20 without a
+    # role object.  Keep that internal contract; public loadouts use
+    # ``require_level_within_cap`` above and therefore still require the
+    # completed top quest explicitly.
+    if not role:
+        return TOP_LEVEL_CAP
+    return level_cap(role, complete)
