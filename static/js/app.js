@@ -13,6 +13,7 @@ const engine = {
   availability: new Map(),
   itemOptions: {},
   championOptions: {},
+  keystones: [],
   fightLimits: { fight_duration: [1, 10] },
   pendingTimer: null,
   requestId: 0,
@@ -34,6 +35,8 @@ const state = {
     questBootB: 0,
     includeBootsA: true,
     includeBootsB: true,
+    keystoneA: "",
+    keystoneB: "",
     comparisonEnabled: false,
     baseDamage: 0,
     apRatio: 0,
@@ -153,6 +156,10 @@ function mergeEffectCatalog(catalog) {
 
 function getItem(id) {
   return Number(id) ? DATA.items.find((entry) => entry.id === Number(id)) || null : null;
+}
+
+function getKeystone(name) {
+  return name ? engine.keystones.find((entry) => entry.name === name) || null : null;
 }
 
 function activeAbilityKit() {
@@ -526,6 +533,17 @@ function questBootPath(side) {
   return `attacker.questBoot${side}`;
 }
 
+function keystoneSlot(side) {
+  const name = state.attacker[`keystone${side}`];
+  const keystone = getKeystone(name);
+  return `<div class="quest-item keystone-item"><span>Keystone</span><div class="slot-wrap">
+    <button class="item-slot keystone-slot" type="button" data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add keystone"}">
+      <span class="item-icon keystone-icon ${keystone ? "" : "empty"}">${keystone ? `<img src="${keystone.icon}" alt="" />` : `<span aria-hidden="true">+</span>`}</span>
+      <small>${escapeHtml(keystone?.name || "Add keystone")}</small>
+    </button>
+  </div></div>`;
+}
+
 function renderBuildStrip(side) {
   const build = buildArray(side);
   const normalSlots = Array.from({ length: ordinarySlotCount(side) }, (_, index) => itemSlot(`attacker.build${side}.${index}`, build[index], false, true)).join("");
@@ -536,8 +554,8 @@ function renderBuildStrip(side) {
     ? `<div class="utility-slot" title="This slot is not included in damage scoring"><span>Quest / wards</span><b>◆</b><small>Utility</small></div>`
     : "";
   return `<div class="complete-build build-${side.toLowerCase()}">
-    <div class="complete-build-head"><strong>Build ${side}</strong><span>${ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0)} combat ${plural(ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0), "slot")}${support ? " + utility" : ""}</span><button class="boots-toggle ${includeBootsForSide(side) ? "active" : ""}" type="button" data-include-boots="${side}" aria-pressed="${includeBootsForSide(side)}">${includeBootsForSide(side) ? "Boots included" : "No boots"}</button></div>
-    <div class="hero-slots">${normalSlots}${boot}${support}</div>
+    <div class="complete-build-head"><strong>Build ${side}</strong><span>${ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0)} combat ${plural(ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0), "slot")} + keystone${support ? " + utility" : ""}</span><button class="boots-toggle ${includeBootsForSide(side) ? "active" : ""}" type="button" data-include-boots="${side}" aria-pressed="${includeBootsForSide(side)}">${includeBootsForSide(side) ? "Boots included" : "No boots"}</button></div>
+    <div class="hero-slots">${normalSlots}${boot}${keystoneSlot(side)}${support}</div>
   </div>`;
 }
 
@@ -898,6 +916,7 @@ function engineBuild(side) {
     include_boots: includeBootsForSide(side),
     items: itemIds.map((id) => itemName(id)).filter(Boolean),
     item_options: engineItemOptions(itemIds, itemStacks),
+    keystone: state.attacker[`keystone${side}`] || "",
   };
 }
 
@@ -1073,6 +1092,7 @@ function renderExactResistance(aResult, bResult) {
 }
 
 function renderExactBreakdown(aResult, bResult) {
+  $("damageBreakdown").hidden = false;
   const rows = new Map();
   const ingest = (result, side) => exactBreakdown(result).forEach((entry) => {
     const key = `${entry.source}:${entry.detail}`;
@@ -1346,7 +1366,9 @@ function scenarioSentence() {
   const compareText = state.attacker.comparisonEnabled && buildBIds().some(Boolean) ? `, comparing <strong>Build A</strong> with <strong>Build B</strong>` : "";
   const targetText = names.length ? `, into ${escapeHtml(roster)}` : "";
   const allyText = allyNames.length ? ` · ${allyNames.length} ${plural(allyNames.length, "ally")} in context` : "";
-  return `<strong>${escapeHtml(state.attacker.champion)} level ${state.attacker.level}</strong>${buildA.length ? ` with ${escapeHtml(buildA.join(" + "))}` : ""}${compareText}${targetText} over ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")} · ${one(state.fight.duration)}s each · ${Math.round(state.fight.aaUptime * 100)}% auto uptime${allyText}.`;
+  const keystoneA = getKeystone(state.attacker.keystoneA);
+  const keystoneText = keystoneA ? ` running ${escapeHtml(keystoneA.name)}` : "";
+  return `<strong>${escapeHtml(state.attacker.champion)} level ${state.attacker.level}</strong>${buildA.length ? ` with ${escapeHtml(buildA.join(" + "))}` : ""}${keystoneText}${compareText}${targetText} over ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")} · ${one(state.fight.duration)}s each · ${Math.round(state.fight.aaUptime * 100)}% auto uptime${allyText}.`;
 }
 
 function render() {
@@ -1358,8 +1380,8 @@ function render() {
 
 function openPicker(type, path) {
   pickerContext = { type, path };
-  $("pickerKind").textContent = type === "champion" ? "Champion roster" : "Item catalogue";
-  $("pickerTitle").textContent = type === "champion" ? "Choose a champion" : "Choose an item";
+  $("pickerKind").textContent = type === "champion" ? "Champion roster" : type === "keystone" ? "Rune keystones" : "Item catalogue";
+  $("pickerTitle").textContent = type === "champion" ? "Choose a champion" : type === "keystone" ? "Choose a keystone" : "Choose an item";
   $("pickerSearch").value = "";
   renderPicker("");
   $("picker").showModal();
@@ -1379,26 +1401,36 @@ function createPickerContent(entries, selected, query, includeEmpty) {
   };
 
   if (includeEmpty) {
+    const isKeystone = pickerContext.type === "keystone";
     const button = document.createElement("button");
     const icon = document.createElement("span");
     button.type = "button";
-    button.className = `picker-option ${Number(selected) === 0 ? "selected" : ""}`;
-    button.dataset.pickerValue = "0";
+    button.className = `picker-option ${(isKeystone ? !selected : Number(selected) === 0) ? "selected" : ""}`;
+    button.dataset.pickerValue = isKeystone ? "" : "0";
     icon.className = "empty-icon";
     icon.textContent = "×";
-    button.append(icon, makeText("Empty slot", "Remove item"));
+    button.append(icon, makeText(isKeystone ? "No keystone" : "Empty slot", isKeystone ? "Remove keystone" : "Remove item"));
     fragment.append(button);
   }
 
   entries.forEach((entry) => {
-    const value = pickerContext.type === "champion" ? entry.name : entry.id;
-    const imageUrl = pickerContext.type === "champion" ? championImage(entry.name) : itemImage(entry.id);
-    const detail = pickerContext.type === "champion" ? `${entry.tags.join(" · ")} · ${entry.resource}` : itemStatsLine(entry);
+    const isKeystone = pickerContext.type === "keystone";
+    const value = pickerContext.type === "item" ? entry.id : entry.name;
+    const imageUrl = pickerContext.type === "champion" ? championImage(entry.name) : isKeystone ? entry.icon : itemImage(entry.id);
+    const detail = pickerContext.type === "champion"
+      ? `${entry.tags.join(" · ")} · ${entry.resource}`
+      : isKeystone
+        ? `${entry.path} keystone${entry.implemented ? "" : " · not modeled yet"}`
+        : itemStatsLine(entry);
     const button = document.createElement("button");
     const image = document.createElement("img");
     button.type = "button";
-    button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""}`;
+    button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""} ${isKeystone && !entry.implemented ? "locked" : ""}`;
     button.dataset.pickerValue = String(value);
+    if (isKeystone && !entry.implemented) {
+      button.disabled = true;
+      button.title = "This keystone is not modeled yet; its numbers would be estimates.";
+    }
     image.src = imageUrl;
     image.alt = "";
     image.loading = "lazy";
@@ -1419,7 +1451,8 @@ function renderPicker(query) {
   if (!pickerContext) return;
   const normalized = query.trim().toLowerCase();
   const selected = pathValue(pickerContext.path);
-  const entries = (pickerContext.type === "champion" ? DATA.champions : DATA.items).filter((entry) => {
+  const source = pickerContext.type === "champion" ? DATA.champions : pickerContext.type === "keystone" ? engine.keystones : DATA.items;
+  const entries = source.filter((entry) => {
     if (!entry.name.toLowerCase().includes(normalized)) return false;
     if (pickerContext.type !== "item") return true;
     if (pickerContext.path.endsWith(".boots") || pickerContext.path.includes("questBoot")) {
@@ -1435,7 +1468,7 @@ function renderPicker(query) {
     entries,
     selected,
     query,
-    pickerContext.type === "item" && !normalized,
+    pickerContext.type !== "champion" && !normalized,
   ));
 }
 
@@ -2355,6 +2388,7 @@ document.addEventListener("click", (event) => {
       state.attacker.buildB = [...state.attacker.buildA];
       state.attacker.buildBStacks = [...state.attacker.buildAStacks];
       state.attacker.questBootB = state.attacker.questBootA;
+      state.attacker.keystoneB = state.attacker.keystoneA;
     }
     return render();
   }
@@ -2570,6 +2604,7 @@ Promise.all([
     });
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};
+    engine.keystones = config.keystones || [];
     engine.fightLimits = { ...engine.fightLimits, ...(config.input_limits || {}) };
     engine.ready = true;
     render();

@@ -27,6 +27,7 @@ from .damage import (
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import derive_self_healing
 from .role_quests import max_champion_level, validate_role
+from .rune_effects import validate_keystone_request
 from .stats import calculate_total_stats
 
 DEFAULT_TARGET: dict[str, float] = {
@@ -129,6 +130,7 @@ class FightParams(FightConfig):
         if champion_options is not None and not isinstance(champion_options, Mapping):
             raise ValueError("champion_options must be an object")
         item_options = validate_item_input_options(data.get("item_options"))
+        keystone = validate_keystone_request(data.get("keystone"))
         role = validate_role(data.get("role", ""))
         role_quest_complete = _request_bool(data, "role_quest_complete", False)
         if role_quest_complete and not role:
@@ -158,6 +160,7 @@ class FightParams(FightConfig):
                 dict(champion_options) if champion_options is not None else None
             ),
             item_options=item_options or None,
+            keystone=keystone,
             role=role,
             role_quest_complete=role_quest_complete,
             deterministic=deterministic,
@@ -225,8 +228,7 @@ class FightParams(FightConfig):
         if supported_modes is not None and requested_mode not in supported_modes:
             reason = get_unsupported_fight_mode_reason(champion_name)
             raise ValueError(
-                reason
-                or f"{requested_mode} is not certified for {champion_name}"
+                reason or f"{requested_mode} is not certified for {champion_name}"
             )
 
         custom_order_reason = get_custom_cast_order_unavailable_reason(champion_name)

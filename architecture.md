@@ -8,7 +8,7 @@ The calculator separates sourced data, combat rules, scenario composition, optim
 League Wiki cache
   -> data_fetcher.py
   -> scenario.py / stats.py
-  -> champions/* + item_effects.py
+  -> champions/* + item_effects.py + rune_effects.py
   -> pipeline.py
   -> damage.py
   -> app.py
@@ -22,6 +22,7 @@ League Wiki cache
 - `stats.py` applies level growth, item stats, role-quest modifiers, and external ally stat effects.
 - `resistance.py` owns armor, magic resistance, and penetration order.
 - `item_effects.py` owns item values and effect formulas. Item-specific numbers do not belong in routes or the interface.
+- `rune_effects.py` owns keystone rune values and effect formulas the same way, reading `data/runes.json` (parsed from the wiki's rune data templates by `rune_parser.py`). Only compiled keystones are selectable; the rest are served greyed out and fail closed if requested.
 - `item_coverage.py` classifies each optimizer candidate as modelled, reviewed stats-only, blocked, or pending review. New passive or active text fails closed until it is explicitly classified.
 - `champions/<name>.py` owns reviewed champion formulas, options, and assumptions. The generic parser is useful for development coverage but is not a public exactness claim.
 - `loadout_rules.py` validates inventory capacity, boot tiers, duplicate items, and mutually exclusive item groups for both manual builds and optimization.
