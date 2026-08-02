@@ -725,7 +725,7 @@ def _simulate_stacking_on_hit_damage(
     proc_autos: list[int],
     effectiveness: float = 1.0,
     target_basic_damage_multiplier: float = 1.0,
-) -> float:
+) -> list[float]:
     """Simulate a stacking proc whose formula reads decreasing target HP.
 
     Kraken's bonus damage scales with the target's missing health at
@@ -747,16 +747,18 @@ def _simulate_stacking_on_hit_damage(
             the rare item proc that the Wiki tags as basic damage.
 
     Returns:
-        Total mitigated damage across all procs.
+        Each proc's mitigated damage in ascending-auto order — the same
+        order as sorted ``proc_autos`` — so callers can stamp per-swing
+        damage events (sum for the total).
     """
     if not proc_autos:
-        return 0.0
+        return []
 
     # Convert proc list to a counter: how many procs fire on each auto
     proc_counts: dict[int, int] = Counter(proc_autos)
 
     current_hp = target_health
-    total_damage = 0.0
+    proc_damages: list[float] = []
 
     for i in range(num_auto_attacks):
         procs_this_auto = proc_counts.get(i, 0)
@@ -778,7 +780,7 @@ def _simulate_stacking_on_hit_damage(
             )
             if effect.source.basic_damage and effect.source.damage_type != "true":
                 mitigated *= target_basic_damage_multiplier
-            total_damage += mitigated
+            proc_damages.append(mitigated)
             current_hp -= mitigated
 
         # Reduce HP from auto attack + other on-hit damage
@@ -786,7 +788,7 @@ def _simulate_stacking_on_hit_damage(
         if current_hp < 0:
             current_hp = 0
 
-    return total_damage
+    return proc_damages
 
 
 def _schedule_cooldown_procs(
@@ -832,7 +834,7 @@ def _simulate_cooldown_current_health_procs(
     magic_amp: float,
     proc_autos: list[int],
     effectiveness: float = 1.0,
-) -> float:
+) -> list[float]:
     """Simulate cooldown-gated current-health procs (Jarvan IV passive).
 
     Each proc deals ``current_health_percent`` of the target's decayed
@@ -852,10 +854,10 @@ def _simulate_cooldown_current_health_procs(
         effectiveness: On-hit effectiveness multiplier (Azir soldiers).
 
     Returns:
-        Total mitigated damage across all procs.
+        Each proc's mitigated damage, in proc order (sum for the total).
     """
     if not proc_autos:
-        return 0.0
+        return []
 
     pct = on_hit_data["current_health_percent"] / 100.0
     min_damage = on_hit_data.get("min_damage", 0.0)
@@ -863,19 +865,19 @@ def _simulate_cooldown_current_health_procs(
     proc_set = set(proc_autos)
 
     current_hp = target_health
-    total_damage = 0.0
+    proc_damages: list[float] = []
     for i in range(num_auto_attacks):
         if i in proc_set:
             raw_damage = max(pct * current_hp, min_damage) * effectiveness
             mitigated = _mitigate(raw_damage, dmg_type, resists, magic_amp)
-            total_damage += mitigated
+            proc_damages.append(mitigated)
             current_hp -= mitigated
 
         # Reduce HP from auto attack + other on-hit damage
         current_hp -= auto_damage_per_hit + other_on_hit_per_hit
         current_hp = max(current_hp, 0.0)
 
-    return total_damage
+    return proc_damages
 
 
 def _simulate_current_health_on_hit(
@@ -916,7 +918,9 @@ def _simulate_current_health_on_hit(
             damage (Azir soldiers apply on-hit at 50%).
 
     Returns:
-        Tuple of (total mitigated BoRK damage, total BoRK hit count).
+        Tuple of (total mitigated BoRK damage, total BoRK hit count,
+        each hit's mitigated damage in application order — one entry per
+        counted hit, so callers can stamp per-swing damage events).
     """
     if phantom_hit_autos is None:
         phantom_hit_autos = set()
@@ -924,6 +928,7 @@ def _simulate_current_health_on_hit(
     current_hp = target_health
     total_damage = 0.0
     total_hits = 0
+    hit_damages: list[float] = []
 
     for i in range(num_auto_attacks):
         # How many times BoRK procs this auto (1 normally, +1 on phantom hit,
@@ -951,6 +956,7 @@ def _simulate_current_health_on_hit(
             )
             total_damage += mitigated
             total_hits += 1
+            hit_damages.append(mitigated)
 
             current_hp -= mitigated
 
@@ -964,7 +970,7 @@ def _simulate_current_health_on_hit(
         if current_hp < 0:
             current_hp = 0
 
-    return total_damage, total_hits
+    return total_damage, total_hits, hit_damages
 
 
 def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
@@ -995,10 +1001,12 @@ def _ordered_damage_events(
     """Reconstruct the engine's certified damage order from its own rows.
 
     Ability rows are split into cast instances and follow the accepted cast
-    timeline. Autos and item effects retain the engine's existing coarse
-    phase order after the selected rotation. Untyped amplifier rows are
-    distributed across the already-known damage composition so shield
-    accounting never invents a fourth damage type.
+    timeline. Rows with engine-authored ``damage_events`` (autos, per-swing
+    on-hit effects, timestamped procs) keep their own event order; item
+    effects without authored events retain the coarse phase order after the
+    selected rotation. Untyped amplifier rows are distributed across the
+    already-known damage composition so shield accounting never invents a
+    fourth damage type.
 
     This ledger is deliberately internal. It is exact at the cast boundary,
     but it does not claim champion-specific spell-shield behavior within a
@@ -1132,7 +1140,6 @@ def _ordered_damage_events(
                     )
 
     auto = breakdown.get("auto_attacks")
-    auto_event_times: list[float] = []
     if auto and not auto.get("informational"):
         if not add_declared_events("auto_attacks", auto, default_phase="auto"):
             hits = max(1, int(auto.get("count", 1)))
@@ -1146,11 +1153,6 @@ def _ordered_damage_events(
                         ordinal=hit_index + 1,
                         phase="auto",
                     )
-        auto_event_times = [
-            float(event.get("time", last_ability_time))
-            for event in events
-            if event.get("source_key") == "auto_attacks"
-        ]
 
     skipped = set(cast_order) | {"auto_attacks", "execute"}
     untyped: list[tuple[str, float]] = []
@@ -1159,39 +1161,6 @@ def _ordered_damage_events(
             continue
         if add_declared_events(key, entry, default_phase="effect"):
             continue
-        # A static ability on-hit row is exact when its count matches the
-        # engine-authored auto stream.  Align it to those swings instead of
-        # collapsing it to the end-of-rotation effect phase (Aatrox P and
-        # other one-per-attack champion passives rely on this boundary).
-        if (
-            key.startswith("on_hit_ability_")
-            and auto_event_times
-            and int(entry.get("count", 0)) == len(auto_event_times)
-        ):
-            parts = _row_damage_parts(entry)
-            if len(parts) == 1:
-                dtype, amount = parts[0]
-                per_hit = amount / len(auto_event_times)
-                aligned_events = []
-                for ordinal, event_time in enumerate(auto_event_times, start=1):
-                    aligned_events.append(
-                        {
-                            "time": event_time,
-                            "damage_type": dtype,
-                            "damage": per_hit,
-                        }
-                    )
-                    add(
-                        key,
-                        dtype,
-                        per_hit,
-                        time=event_time,
-                        ordinal=ordinal,
-                        phase="auto",
-                    )
-                entry["damage_events"] = aligned_events
-                entry["event_phase"] = "auto"
-                continue
         parts = _row_damage_parts(entry)
         if parts:
             for dtype, amount in parts:
@@ -4415,6 +4384,34 @@ def _layer_on_hit_effects(
     double_shot_extra = num_auto_attacks if autos.double_shot_info else 0
     on_hit_hits = num_auto_attacks + result.phantom_hit_count + double_shot_extra
 
+    # Every auto-segment on-hit application rides a timestamped swing, so
+    # the rows built below can author exact per-swing damage events. One
+    # entry per application, in the shared counter's order: the swing
+    # itself, its Rageblade phantom re-application, then a double-shot
+    # extra — all at that swing's authored time.
+    swing_times = _auto_attack_timestamps(state)
+    if len(swing_times) != num_auto_attacks:
+        swing_times = []  # unresolvable schedule: rows stay coarse
+    application_times: list[float] = []
+    for auto_index, swing_time in enumerate(swing_times):
+        application_times.append(swing_time)
+        if auto_index in result.phantom_hit_autos:
+            application_times.append(swing_time)
+        if double_shot_extra:
+            application_times.append(swing_time)
+
+    def swing_event_row(
+        times: list[float], damages: list[float], damage_type: str
+    ) -> dict[str, Any]:
+        """Row fields authoring one typed event per (time, damage) pair."""
+        return {
+            "event_phase": "auto",
+            "damage_events": [
+                {"time": time, "damage": damage, "damage_type": damage_type}
+                for time, damage in zip(times, damages)
+            ],
+        }
+
     # Process fixed-formula per-hit effects. Current-health effects are
     # simulated below because each application changes the next one's input.
     damage_inputs = _damage_inputs(state)
@@ -4445,6 +4442,10 @@ def _layer_on_hit_effects(
             "total_damage": item_damage,
             "damage_type": source.damage_type,
         }
+        if application_times:
+            breakdown[source.breakdown_key].update(
+                swing_event_row(application_times, [per_hit] * hits, source.damage_type)
+            )
 
     # Process ability on-hit effects (Case 2: abilities that add damage per
     # auto attack, e.g. Viego passive % health on-hit). These are passed in
@@ -4484,6 +4485,7 @@ def _layer_on_hit_effects(
         # applications immediately after their carrier; Akshan-style double
         # shots likewise add one application per ambient attack.
         carrier_effectiveness: list[float] | None = None
+        leading_carrier_hits = 0
         if carries_on_ability_on_hits:
             carrier_effectiveness = []
             on_hit_position = 0
@@ -4494,6 +4496,9 @@ def _layer_on_hit_effects(
                 if on_hit_position in result.phantom_ability_stack_positions:
                     carrier_effectiveness.append(app.effectiveness)
                 on_hit_position += 1
+            # Ability-carried applications have no authored timestamps
+            # yet — while any lead the counter, this row stays coarse.
+            leading_carrier_hits = len(carrier_effectiveness)
             for auto_index in range(num_auto_attacks):
                 carrier_effectiveness.append(on_hit_effectiveness)
                 if auto_index in result.phantom_hit_autos:
@@ -4511,6 +4516,19 @@ def _layer_on_hit_effects(
         stacks_required = on_hit_data.get("stacks_required", 0)
         ramping = bool(on_hit_data.get("ramping"))
         stack_ramp = on_hit_data.get("stack_ramp")
+
+        # Per-swing events are authorable only when every counted hit is
+        # an auto-segment application with an authored swing time —
+        # ability-carried hits (leading carriers, shared auto+ability
+        # counters) have no timestamps yet and keep the row coarse.
+        stampable = (
+            bool(application_times)
+            and leading_carrier_hits == 0
+            and not (counts_ability_hits and rotation.total_ability_hits > 0)
+            and hits <= len(application_times)
+        )
+        event_times: list[float] | None = None
+        event_damages: list[float] | None = None
         if stack_ramp:
             # Stack-ramped on-hit (Orianna P): each hit lands at the
             # CURRENT stack count then adds a stack (capped), so hit k
@@ -4525,6 +4543,12 @@ def _layer_on_hit_effects(
             max_stacks = int(stack_ramp["max_stacks"])
             stacked_hits = sum(min(k, max_stacks) for k in range(hits))
             ability_on_hit_damage = per_hit * hits + per_stack * stacked_hits
+            if stampable:
+                # Hit k lands at the CURRENT stack count — its own value.
+                event_times = application_times[:hits]
+                event_damages = [
+                    per_hit + min(k, max_stacks) * per_stack for k in range(hits)
+                ]
         elif ramping:
             # Ramping proc k deals k x its base. When abilities can carry the
             # on-hit, each application has its own effectiveness; otherwise
@@ -4532,25 +4556,49 @@ def _layer_on_hit_effects(
             # remains supported for pre-26.15 every-Nth formulations.
             procs = hits // max(1, stacks_required)
             if carrier_effectiveness is not None and stacks_required <= 1:
-                ability_on_hit_damage = sum(
+                carrier_damages = [
                     _mitigate(
                         raw_base * effectiveness * stack, dmg_type, resists, magic_amp
                     )
                     for stack, effectiveness in enumerate(
                         carrier_effectiveness, start=1
                     )
-                )
+                ]
+                ability_on_hit_damage = sum(carrier_damages)
+                if stampable:
+                    # No leading carriers: the carrier order IS the
+                    # auto-segment application order.
+                    event_times = application_times[:hits]
+                    event_damages = carrier_damages
             else:
                 ability_on_hit_damage = per_hit * procs * (procs + 1) / 2.0
+                if stampable:
+                    # Proc j fires on the application landing its Nth stack.
+                    interval = max(1, stacks_required)
+                    event_times = [
+                        application_times[j * interval - 1] for j in range(1, procs + 1)
+                    ]
+                    event_damages = [per_hit * j for j in range(1, procs + 1)]
         elif stacks_required > 1 and counts_ability_hits:
             # Shared auto+ability stack counter (e.g. Aurora P): only
             # complete procs deal damage — partial stacks expire.
             ability_on_hit_damage = (
                 per_hit * stacks_required * (hits // stacks_required)
             )
+            if stampable:
+                event_times = [
+                    application_times[j * stacks_required - 1]
+                    for j in range(1, hits // stacks_required + 1)
+                ]
+                event_damages = [per_hit * stacks_required] * (hits // stacks_required)
         else:
             # Autos-only on-hit (e.g. Vayne W): smooth per-hit average.
+            # The total includes partial stacks, so events are the same
+            # per-swing shares — the ledger must sum to the row exactly.
             ability_on_hit_damage = per_hit * hits
+            if stampable:
+                event_times = application_times[:hits]
+                event_damages = [per_hit] * hits
         on_hit_total += ability_on_hit_damage
         if max_procs is None and not ramping and not stack_ramp:
             static_share = per_hit
@@ -4596,12 +4644,20 @@ def _layer_on_hit_effects(
                 "total_damage": ability_on_hit_damage,
                 "damage_type": dmg_type,
             }
+        if event_times is not None and event_damages is not None:
+            breakdown[f"on_hit_ability_{ability_key}"].update(
+                swing_event_row(event_times, event_damages, dmg_type)
+            )
 
     # BoRK: simulate with decreasing target current HP per auto attack.
     # Phantom hit autos cause BoRK to proc twice (at different current HP).
     # Double shot (e.g. Akshan) also procs BoRK an extra time per auto.
     if current_health_effect is not None and num_auto_attacks > 0:
-        current_health_total, current_health_hits = _simulate_current_health_on_hit(
+        (
+            current_health_total,
+            current_health_hits,
+            current_health_hit_damages,
+        ) = _simulate_current_health_on_hit(
             effect=current_health_effect,
             base_inputs=_damage_inputs(state),
             target_health=state.target_health,
@@ -4630,6 +4686,18 @@ def _layer_on_hit_effects(
             "total_damage": current_health_total,
             "damage_type": source.damage_type,
         }
+        # The simulation walks the same application order the swing
+        # schedule authored, so its per-hit values stamp one event each.
+        if application_times and len(current_health_hit_damages) == len(
+            application_times
+        ):
+            breakdown[source.breakdown_key].update(
+                swing_event_row(
+                    application_times,
+                    current_health_hit_damages,
+                    source.damage_type,
+                )
+            )
 
     # Scheduled current-health on-hits ride the fight's auto timeline and
     # read the target's decayed current HP per proc. Two schedules:
@@ -4665,7 +4733,7 @@ def _layer_on_hit_effects(
                 continue
             if not proc_autos:
                 continue
-            proc_total = _simulate_cooldown_current_health_procs(
+            proc_damages = _simulate_cooldown_current_health_procs(
                 on_hit_data,
                 state.target_health,
                 num_auto_attacks,
@@ -4676,15 +4744,26 @@ def _layer_on_hit_effects(
                 proc_autos,
                 effectiveness=on_hit_effectiveness,
             )
+            proc_total = sum(proc_damages)
             on_hit_total += proc_total
+            proc_damage_type = on_hit_data.get("damage_type", "physical")
             breakdown[f"on_hit_ability_{ability_key}"] = {
                 "name": on_hit_data.get("name", f"{ability_key} (on-hit)"),
                 "count": len(proc_autos),
                 "damage_per_hit": proc_total / len(proc_autos),
                 "total_damage": proc_total,
-                "damage_type": on_hit_data.get("damage_type", "physical"),
+                "damage_type": proc_damage_type,
                 "unit": "procs",
             }
+            if swing_times:
+                # Each proc rides one specific swing — stamp its time.
+                breakdown[f"on_hit_ability_{ability_key}"].update(
+                    swing_event_row(
+                        [swing_times[i] for i in proc_autos],
+                        proc_damages,
+                        proc_damage_type,
+                    )
+                )
 
     state.total_damage += on_hit_total
     return result
@@ -5660,6 +5739,13 @@ def _add_single_proc_on_hits(
         if on_hits.has_current_health_on_hit and on_hits.current_health_on_hit_avg > 0:
             other_on_hit_per_hit += on_hits.current_health_on_hit_avg
 
+        # Auto-segment procs ride specific swings, whose times the auto
+        # stream already authored; ability-segment procs have no
+        # timestamps yet, so any of those keeps the row coarse.
+        swing_times = _auto_attack_timestamps(state)
+        if len(swing_times) != num_auto_attacks:
+            swing_times = []
+
         for effect in state.damage_effects.stacking_on_hits:
             source = effect.source
             # The item taxonomy decides which ability applications
@@ -5709,9 +5795,10 @@ def _add_single_proc_on_hits(
 
             # Auto-segment procs: unchanged auto-timeline behavior at
             # the auto stream's effectiveness.
+            auto_proc_damages: list[float] = []
             if proc_autos:
                 if effect.tracks_target_health:
-                    total_damage += _simulate_stacking_on_hit_damage(
+                    auto_proc_damages = _simulate_stacking_on_hit_damage(
                         effect,
                         _damage_inputs(state),
                         state.target_health,
@@ -5726,18 +5813,23 @@ def _add_single_proc_on_hits(
                             state.target_basic_damage_multiplier
                         ),
                     )
+                    total_damage += sum(auto_proc_damages)
                 else:
                     raw = (
                         source.raw_damage(_damage_inputs(state))
                         * len(proc_autos)
                         * effectiveness
                     )
-                    total_damage += _mitigate(
+                    auto_segment_total = _mitigate(
                         raw, source.damage_type, resists, state.magic_amp
                     ) * (
                         state.target_basic_damage_multiplier
                         if source.basic_damage and source.damage_type != "true"
                         else 1.0
+                    )
+                    total_damage += auto_segment_total
+                    auto_proc_damages = [auto_segment_total / len(proc_autos)] * len(
+                        proc_autos
                     )
 
             breakdown[source.breakdown_key] = {
@@ -5748,6 +5840,19 @@ def _add_single_proc_on_hits(
                 "total_damage": total_damage,
                 "damage_type": source.damage_type,
             }
+            # Every proc fired on a timestamped swing: author its events.
+            # Ability-segment procs carry no authored timestamps yet, so
+            # a row containing any stays coarse deliberately.
+            if not ability_procs and auto_proc_damages and swing_times:
+                breakdown[source.breakdown_key]["event_phase"] = "auto"
+                breakdown[source.breakdown_key]["damage_events"] = [
+                    {
+                        "time": swing_times[auto_index],
+                        "damage": damage,
+                        "damage_type": source.damage_type,
+                    }
+                    for auto_index, damage in zip(sorted(proc_autos), auto_proc_damages)
+                ]
             state.total_damage += total_damage
 
     for effect in state.damage_effects.cooldown_procs:

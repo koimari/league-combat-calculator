@@ -44,7 +44,7 @@ def _simulate_bork_damage(
 ):
     """Readable test adapter around the generic current-health simulation."""
     effect = resolve_damage_effects([{"name": "Blade of the Ruined King"}])
-    return _simulate_current_health_on_hit(
+    total, hits, _per_hit_damages = _simulate_current_health_on_hit(
         effect.per_hits[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
         target_health,
@@ -56,6 +56,7 @@ def _simulate_bork_damage(
         phantom_hit_autos,
         double_hit_all,
     )
+    return total, hits
 
 
 def _calculate_phantom_hits(num_auto_attacks, item_names):
@@ -1349,6 +1350,189 @@ def test_coupled_auto_sources_are_coarse_in_coverage_itself():
         breakdown, ability_damages, ["Q"], num_auto_attacks=0
     )
     assert no_autos["exact_sources"] == ["Q"]
+
+
+class TestOnHitSwingEvents:
+    """On-hit rows author real per-swing timestamps in timed fights.
+
+    Phase 1 of timestamp certification: every on-hit application rides a
+    simulated auto swing, so the rows can author exact ``damage_events``
+    at those swing times instead of collapsing to the coarse effect
+    phase. Ability-carried on-hit applications have no authored
+    timestamps yet, so rows fed by them deliberately stay coarse.
+    """
+
+    @staticmethod
+    def _on_hit_shell(**extra) -> dict:
+        """Zero-direct-damage ability whose payload is a true on-hit."""
+        on_hit = {
+            "name": "Test on-hit",
+            "damage_per_hit": 30.0,
+            "damage_type": "true",
+        }
+        on_hit.update(extra)
+        return {
+            "W": {
+                "name": "Test on-hit",
+                "rank": 1,
+                "damage_type": "true",
+                "total_raw": 0.0,
+                "parts": (),
+                "on_hit": on_hit,
+            }
+        }
+
+    def _timed_fight(self, fight, attacker_stats, abilities, **overrides):
+        """5s timed fight at 1.0 AS / full uptime: swings at 0..4s."""
+        config = {
+            "one_rotation": False,
+            "fight_duration_seconds": 5.0,
+            "auto_attack_uptime": 1.0,
+            "target_armor": 0.0,
+            "target_magic_resistance": 0.0,
+        }
+        config.update(overrides)
+        return fight(attacker_stats(), abilities, **config)
+
+    def test_ability_on_hit_rides_authored_swing_times(
+        self, fight, attacker_stats
+    ) -> None:
+        """A one-per-attack passive authors one event per swing."""
+        result = self._timed_fight(fight, attacker_stats, self._on_hit_shell())
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        assert all(event["damage"] == pytest.approx(30.0) for event in events)
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_stacked_on_hit_smooths_partial_procs_onto_swings(
+        self, fight, attacker_stats
+    ) -> None:
+        """Vayne-W-style rows smear the per-proc damage over every swing.
+
+        The row's total is the smooth per-hit average (partial stacks
+        included), so its events must be per-swing shares — grouping
+        them into whole procs would break the sum contract.
+        """
+        result = self._timed_fight(
+            fight, attacker_stats, self._on_hit_shell(stacks_required=3)
+        )
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        assert all(event["damage"] == pytest.approx(30.0) for event in events)
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_max_procs_cap_consumes_the_earliest_swings(
+        self, fight, attacker_stats
+    ) -> None:
+        """A stock-limited on-hit (Bard meeps) procs on the first swings."""
+        result = self._timed_fight(
+            fight, attacker_stats, self._on_hit_shell(max_procs=2)
+        )
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0]
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_stack_ramp_on_hit_escalates_per_swing(self, fight, attacker_stats) -> None:
+        """Orianna-P-style events carry each swing's own stacked value."""
+        result = self._timed_fight(
+            fight,
+            attacker_stats,
+            self._on_hit_shell(stack_ramp={"damage_per_stack": 10.0, "max_stacks": 2}),
+        )
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        assert [event["damage"] for event in events] == pytest.approx(
+            [30.0, 40.0, 50.0, 50.0, 50.0]
+        )
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_ramping_on_hit_scales_with_swing_index(
+        self, fight, attacker_stats
+    ) -> None:
+        """Ramping proc k deals k×base AT swing k — not an even spread."""
+        result = self._timed_fight(
+            fight, attacker_stats, self._on_hit_shell(ramping=True)
+        )
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        assert [event["damage"] for event in events] == pytest.approx(
+            [30.0, 60.0, 90.0, 120.0, 150.0]
+        )
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_scheduled_cooldown_procs_land_on_their_swing_times(
+        self, fight, attacker_stats
+    ) -> None:
+        """Cooldown-gated current-HP procs (Jarvan P) stamp their swings."""
+        abilities = self._on_hit_shell(
+            proc_cooldown=2.5,
+            current_health_percent=10.0,
+            min_damage=10.0,
+            damage_type="physical",
+        )
+        del abilities["W"]["on_hit"]["damage_per_hit"]
+        result = self._timed_fight(fight, attacker_stats, abilities)
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        # Procs at swings 0 (100 = 10% of 1000 HP) and 3 (HP has decayed
+        # by the proc plus three 100-damage autos: 10% of 600 = 60).
+        assert [event["time"] for event in events] == [0.0, 3.0]
+        assert [event["damage"] for event in events] == pytest.approx([100.0, 60.0])
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_ability_hit_counted_on_hits_stay_coarse(
+        self, fight, attacker_stats
+    ) -> None:
+        """Shared auto+ability stack counters have untimestamped hits.
+
+        Ability-carried applications carry no authored timestamps yet,
+        so a row whose counter they feed (Aurora P) fails closed to
+        coarse instead of inventing swing times for ability hits.
+        """
+        abilities = self._on_hit_shell(stacks_required=2, count_ability_hits=True)
+        abilities["Q"] = {
+            "name": "Damaging spell",
+            "rank": 1,
+            "cooldown": 10.0,
+            "damage_type": "magic",
+            "total_raw": 300.0,
+            "parts": (DamagePart("magic", 300.0),),
+        }
+        result = self._timed_fight(fight, attacker_stats, abilities)
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        assert row["total_damage"] > 0
+        assert "damage_events" not in row
+        assert "on_hit_ability_W" in result["timeline_coverage"]["coarse_sources"]
 
 
 class TestSplitAutoVsAbility:

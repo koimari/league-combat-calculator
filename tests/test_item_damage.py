@@ -45,7 +45,7 @@ def _simulate_bork_damage(
 ):
     """Readable test adapter around the generic current-health simulation."""
     effect = resolve_damage_effects([{"name": "Blade of the Ruined King"}])
-    return _simulate_current_health_on_hit(
+    total, hits, _per_hit_damages = _simulate_current_health_on_hit(
         effect.per_hits[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
         target_health,
@@ -57,6 +57,7 @@ def _simulate_bork_damage(
         phantom_hit_autos,
         double_hit_all,
     )
+    return total, hits
 
 
 def _calculate_phantom_hits(num_auto_attacks, item_names):
@@ -86,16 +87,18 @@ def _simulate_kraken_damage(
     """Readable test adapter around the generic stacking-proc simulation."""
     effects = resolve_damage_effects([{"name": "Kraken Slayer"}])
     effect = effects.stacking_on_hits[0]
-    return _simulate_stacking_on_hit_damage(
-        effect,
-        DamageInputs({}, level, is_melee, target_health, target_health),
-        target_health,
-        num_auto_attacks,
-        auto_damage_per_hit,
-        other_on_hit_per_hit,
-        SimpleNamespace(effective_armor=effective_armor, effective_mr=0.0),
-        1.0,
-        kraken_proc_autos,
+    return sum(
+        _simulate_stacking_on_hit_damage(
+            effect,
+            DamageInputs({}, level, is_melee, target_health, target_health),
+            target_health,
+            num_auto_attacks,
+            auto_damage_per_hit,
+            other_on_hit_per_hit,
+            SimpleNamespace(effective_armor=effective_armor, effective_mr=0.0),
+            1.0,
+            kraken_proc_autos,
+        )
     )
 
 
@@ -4511,3 +4514,96 @@ class TestCollectorThreshold(_FightHarness):
         )
         entry = result["breakdown"]["execute"]
         assert entry["execution_threshold_hp"] == 200.0  # 10% of 2000
+
+
+class TestOnHitItemSwingEvents(_FightHarness):
+    """On-hit item rows author per-swing damage events (phase 1).
+
+    Every on-hit application in these fights rides a simulated auto
+    swing, so the item rows stamp their events at those swing times and
+    the timeline classifier certifies them exact. Event sums must equal
+    the row totals — that IS the classifier's exactness contract.
+    """
+
+    def _timed_fight(self, items, *, duration=5.0):
+        """Timed fight at 1.0 AS / full uptime: swings at 0..duration-1."""
+        return self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=duration,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            items=items,
+        )
+
+    def test_static_on_hit_item_authors_per_swing_events(self) -> None:
+        """Wit's End stamps one uniform event per auto swing."""
+        result = self._timed_fight([{"name": "Wit's End"}])
+
+        row = result["breakdown"]["on_hit_Wit's End"]
+        events = row["damage_events"]
+        auto_times = [
+            event["time"]
+            for event in result["breakdown"]["auto_attacks"]["damage_events"]
+        ]
+        assert [event["time"] for event in events] == auto_times
+        assert all(
+            event["damage"] == pytest.approx(row["damage_per_hit"]) for event in events
+        )
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_Wit's End" in result["timeline_coverage"]["exact_sources"]
+
+    def test_bork_authors_declining_per_swing_events(self) -> None:
+        """BoRK's current-HP simulation emits its per-swing values."""
+        result = self._timed_fight([{"name": "Blade of the Ruined King"}])
+
+        row = result["breakdown"]["on_hit_Blade of the Ruined King"]
+        events = row["damage_events"]
+        assert len(events) == row["count"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        damages = [event["damage"] for event in events]
+        assert damages == sorted(damages, reverse=True)  # HP decays per swing
+        assert damages[0] > damages[-1]
+        assert sum(damages) == pytest.approx(row["total_damage"])
+        assert (
+            "on_hit_Blade of the Ruined King"
+            in result["timeline_coverage"]["exact_sources"]
+        )
+
+    def test_phantom_hits_double_the_events_on_their_swings(self) -> None:
+        """A Rageblade phantom swing carries a second on-hit event."""
+        result = self._timed_fight(
+            [{"name": "Guinsoo's Rageblade"}, {"name": "Wit's End"}],
+            duration=10.0,
+        )
+
+        assert result["phantom_hit_autos"] == {5, 8}
+        row = result["breakdown"]["on_hit_Wit's End"]
+        events = row["damage_events"]
+        assert len(events) == 12  # 10 swings + 2 phantom applications
+        times = [event["time"] for event in events]
+        assert times.count(5.0) == 2
+        assert times.count(8.0) == 2
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_Wit's End" in result["timeline_coverage"]["exact_sources"]
+        assert (
+            "on_hit_Guinsoo's Rageblade" in result["timeline_coverage"]["exact_sources"]
+        )
+
+    def test_kraken_counter_procs_author_swing_events(self) -> None:
+        """Kraken's every-3rd-hit procs stamp the swing that landed them."""
+        result = self._timed_fight([{"name": "Kraken Slayer"}], duration=9.0)
+
+        row = result["breakdown"]["on_hit_Kraken Slayer"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [2.0, 5.0, 8.0]
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_Kraken Slayer" in result["timeline_coverage"]["exact_sources"]
