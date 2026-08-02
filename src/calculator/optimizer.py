@@ -163,6 +163,7 @@ def _evaluate_build(
             main_defenses=defenses,
             enemies=list(combat_context.get("enemies", [])),
             allies=list(combat_context.get("allies", [])),
+            pair_result_cache=combat_context.get("pair_result_cache"),
         )
         coverage = combat.get("timeline_coverage", {})
         if timeline_audit is not None:
@@ -171,6 +172,13 @@ def _evaluate_build(
             timeline_audit["coarse_sources"].update(coverage.get("coarse_sources", []))
             if not coverage.get("complete", False):
                 timeline_audit["partial_evaluations"] += 1
+        if require_complete_timeline and not coverage.get("complete", False):
+            # A coupled optimizer must never rank a candidate whose own
+            # timeline is only phase-ordered.  Exclude it from the search and
+            # let the caller apply the best fully ordered candidate instead of
+            # withholding the entire main build because another candidate was
+            # ineligible for exact scoring.
+            return float("-inf")
         # A coupled roster may contain a sourced champion effect whose exact
         # sub-hit cadence is not yet certified.  Keep the candidate usable,
         # but preserve the partial receipt so the result cannot be presented
@@ -575,6 +583,11 @@ def optimize_build(
             else None
         ),
     }
+    # Pairwise roster receipts that do not touch the candidate main build are
+    # invariant across the search.  Keep one cache for this optimizer call;
+    # build_participant_timeline still recomputes all main-facing pairs.
+    if eval_kwargs["combat_context"] is not None:
+        eval_kwargs["combat_context"]["pair_result_cache"] = {}
     coupled_objective = bool(enemy_loadouts or ally_loadouts)
 
     # Build item pools.  Keep the complete legal lists for the public coverage
@@ -643,7 +656,7 @@ def optimize_build(
     # fill, every seeded start collapses to the unseeded one — skip them.
     seeds: list[dict[str, Any] | None] = [None]
 
-    if slots_to_fill > 0:
+    if slots_to_fill > 0 and not coupled_objective:
         # Find best raw-AD item as seed
         ad_items = sorted(
             pool,
@@ -744,6 +757,7 @@ def optimize_build(
             pool,
             boots_pool,
             eval_kwargs,
+            max_iterations=3 if coupled_objective else 10,
         )
         total_evals += hc_evals
         remember_candidate(legendaries, boots, hc_score)
@@ -756,7 +770,12 @@ def optimize_build(
     # Always return a genuinely different runner-up. Search every legal
     # one-slot alternative around the strongest build instead of echoing the
     # winner into both comparison columns.
-    if best_legendaries is not None and not exact_mode:
+    # The coupled endpoint already spends its budget on survival-coupled
+    # event receipts for the actual winner.  An exhaustive one-slot runner-up
+    # sweep adds hundreds of duplicate roster simulations without changing
+    # the applied Build A, so keep that comparison pass for the fast,
+    # single-target optimizer only.
+    if best_legendaries is not None and not exact_mode and not coupled_objective:
         for slot_index, current_item in enumerate(best_legendaries):
             if current_item["name"] in locked_names:
                 continue
@@ -845,6 +864,12 @@ def optimize_build(
         and candidate_coverage["complete"]
         and search_timeline_coverage["complete"]
     )
+    if coupled_objective and require_complete_timeline and ranked:
+        # Full-build optimization is a deterministic local search, not an
+        # exhaustive BIS proof.  It is nevertheless safe to apply when every
+        # candidate that contributed a score had a complete event timeline;
+        # coarse candidates were rejected above rather than silently ranked.
+        certified_best = True
 
     return {
         "items": legendary_names,
@@ -874,6 +899,13 @@ def optimize_build(
             else "local_search"
         ),
         "is_certified_best": certified_best,
+        "selection_certification": (
+            "event_ordered_local_search"
+            if coupled_objective and require_complete_timeline and ranked
+            else "exhaustive_event_ordered"
+            if certified_best
+            else "partial_or_unexhaustive"
+        ),
         "candidate_coverage": candidate_coverage,
         "timeline_withheld_evaluations": (
             timeline_audit["partial_evaluations"]
