@@ -1857,13 +1857,15 @@ async function openBackendBis(path) {
     const result = await response.json();
     if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
     const rows = result.candidates || [];
-    const coverage = result.coverage?.complete ? "complete sourced coverage" : "partial source coverage shown";
+    const coverage = result.coverage?.complete
+      ? "complete sourced coverage"
+      : "BIS withheld until event order is complete";
     $("bisSummary").textContent = `${subject.champion} · ${rows.length} of ${result.candidate_count || rows.length} legal candidates · ${coverage}`;
     $("bisList").innerHTML = rows.map((entry, index) => {
       const item = DATA.items.find((candidate) => candidate.name === entry.name);
       const detail = `${item ? itemStatsLine(item) : "Sourced item stats"} · ${bisComponentLine(entry.components)}`;
       return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.score)}</strong><span>${escapeHtml(bisMetricLabel(entry.metric))}</span></p><button type="button" data-bis-value="${item ? item.id : ""}" ${item ? "" : "disabled"}>Use</button></article>`;
-    }).join("") || `<p class="picker-empty">No legal candidate has complete sourced mechanics for this timeline.</p>`;
+    }).join("") || `<p class="picker-empty">${escapeHtml(result.coverage?.note || "No legal candidate has complete sourced mechanics for this timeline.")}</p>`;
   } catch (error) {
     $("bisSummary").textContent = "BIS unavailable";
     $("bisList").innerHTML = `<p class="picker-empty">${escapeHtml(error.message)}</p>`;
@@ -2159,6 +2161,7 @@ async function optimizeRosterPathFromTimeline(path) {
   const loadout = state[root][Number(indexText)];
   if (loadout.includeBoots) {
     const bootResult = await requestBis(`${path}.boots`);
+    if (!bootResult.coverage?.complete) throw new Error(bootResult.coverage?.note || "BIS withheld until event order is complete");
     tested += Number(bootResult.candidate_count || 0);
     const boot = bootResult.candidates?.[0] && DATA.items.find((entry) => entry.name === bootResult.candidates[0].name);
     if (boot) loadout.boots = boot.id;
@@ -2168,6 +2171,7 @@ async function optimizeRosterPathFromTimeline(path) {
   // change the next slot's result instead of freezing a stat-only estimate.
   for (let slot = 0; slot < (loadout.includeBoots ? 5 : 6); slot += 1) {
     const result = await requestBis(`${path}.items.${slot}`);
+    if (!result.coverage?.complete) throw new Error(result.coverage?.note || "BIS withheld until event order is complete");
     tested += Number(result.candidate_count || 0);
     const candidate = result.candidates?.[0];
     const item = candidate && DATA.items.find((entry) => entry.name === candidate.name);

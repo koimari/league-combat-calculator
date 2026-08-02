@@ -1007,22 +1007,33 @@ def _ordered_damage_events(
         ordinal: int,
         phase: str,
         order: float | None = None,
+        raw_damage: float | None = None,
+        raw_formula: Any = None,
+        source_missing_ratio: float | None = None,
+        event_precision: str | None = None,
     ) -> None:
         nonlocal sequence
         if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
             return
-        events.append(
-            {
-                "source_key": source_key,
-                "damage_type": damage_type,
-                "damage": damage,
-                "time": time,
-                "ordinal": ordinal,
-                "phase": phase,
-                "sequence": sequence,
-                "order": float(sequence) if order is None else order,
-            }
-        )
+        event = {
+            "source_key": source_key,
+            "damage_type": damage_type,
+            "damage": damage,
+            "time": time,
+            "ordinal": ordinal,
+            "phase": phase,
+            "sequence": sequence,
+            "order": float(sequence) if order is None else order,
+        }
+        if raw_damage is not None:
+            event["raw_damage"] = raw_damage
+        if raw_formula is not None:
+            event["raw_formula"] = raw_formula
+        if source_missing_ratio is not None:
+            event["source_missing_ratio"] = source_missing_ratio
+        if event_precision is not None:
+            event["event_precision"] = event_precision
+        events.append(event)
         sequence += 1
 
     def add_declared_events(
@@ -1053,6 +1064,22 @@ def _ordered_damage_events(
                     if event.get("timeline_order") is not None
                     else None
                 ),
+                raw_damage=(
+                    float(event["raw_damage"])
+                    if event.get("raw_damage") is not None
+                    else None
+                ),
+                raw_formula=event.get("raw_formula"),
+                source_missing_ratio=(
+                    float(event["source_missing_ratio"])
+                    if event.get("source_missing_ratio") is not None
+                    else None
+                ),
+                event_precision=(
+                    str(event["event_precision"])
+                    if event.get("event_precision") is not None
+                    else None
+                ),
             )
         return True
 
@@ -1067,6 +1094,11 @@ def _ordered_damage_events(
             continue
         casts = max(0, int(entry.get("casts", 0)))
         if casts <= 0:
+            continue
+        # Champion modules may have emitted a typed event ledger for this
+        # ability.  Preserve it (including live target-health metadata)
+        # instead of flattening the row back into one aggregate cast value.
+        if add_declared_events(key, entry, default_phase="ability"):
             continue
         slot_timeline = timeline_by_slot.get(key, [])
         instances = max(1, int(ability_damages.get(key, {}).get("cast_instances", 1)))
@@ -1217,6 +1249,13 @@ def _event_timeline_coverage(
             if isinstance(damage_events, list) and damage_events
             else None
         )
+        if isinstance(damage_events, list) and any(
+            str(event.get("event_precision", "")) == "cast_boundary"
+            for event in damage_events
+            if isinstance(event, dict)
+        ):
+            coarse.append(key)
+            continue
         if event_total is not None and math.isclose(
             event_total,
             float(entry["total_damage"]),
@@ -2169,6 +2208,7 @@ def _evaluate_cast_parts(
     by_type: dict[str, float] = {}
     damage_events: list[dict[str, Any]] = []
     first_part_first_cast = 0.0
+    has_dynamic_part = any(part.hp_scaled_damage is not None for part in parts)
     for cast_index in range(num_casts):
         price = pricing[cast_index] if pricing is not None else _NO_PRICING
         rock_solid_consumed = False
@@ -2224,21 +2264,44 @@ def _evaluate_cast_parts(
                     ),
                 )
                 mitigated += hit_damage
-                if part.time_offset is not None and (
-                    hits == 1 or part.hit_interval is not None
-                ):
+                # Dynamic target-health parts need to escape the aggregate
+                # breakdown as well.  The normal cast-boundary fallback prices
+                # them once against the pair's full-health target; the
+                # coupled participant ledger can then re-price the event
+                # against the live target HP.  When the source does not give
+                # sub-hit timing, all of the part's hits intentionally share
+                # the cast boundary and are marked as such below.
+                # If one part reads live target HP, export every part of the
+                # cast so the coupled ledger does not lose a preceding flat
+                # hit (Akali R1 + R2 is the important example).
+                emit_boundary_event = has_dynamic_part
+                if (
+                    part.time_offset is not None
+                    and (hits == 1 or part.hit_interval is not None)
+                ) or emit_boundary_event:
                     cast_time = (
                         cast_times[cast_index]
                         if cast_times is not None and cast_index < len(cast_times)
                         else 0.0
                     )
+                    event_time = cast_time + (
+                        part.time_offset if part.time_offset is not None else 0.0
+                    ) + hit_index * (part.hit_interval or 0.0)
                     damage_events.append(
                         {
-                            "time": cast_time
-                            + part.time_offset
-                            + hit_index * (part.hit_interval or 0.0),
+                            "time": event_time,
                             "damage_type": part.damage_type,
                             "damage": hit_damage,
+                            "raw_damage": raw,
+                            "raw_formula": part.hp_scaled_damage,
+                            "source_missing_ratio": missing_ratio
+                            if part.hp_scaled_damage is not None
+                            else None,
+                            "event_precision": (
+                                "hit"
+                                if part.time_offset is not None
+                                else "cast_boundary"
+                            ),
                             "cast_ordinal": cast_index + 1,
                             "part_ordinal": part_index + 1,
                             "hit_ordinal": hit_index + 1,
@@ -3186,7 +3249,8 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             and (part.count <= 1 or part.hit_interval is not None)
             for part in parts
         )
-        if timing_is_authored and ability_events:
+        has_dynamic_part = any(part.hp_scaled_damage is not None for part in parts)
+        if (timing_is_authored or has_dynamic_part) and ability_events:
             breakdown[ability_key]["damage_events"] = [
                 {
                     **event,

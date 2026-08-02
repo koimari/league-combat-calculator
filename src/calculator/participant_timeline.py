@@ -152,6 +152,7 @@ def _simulate_survival(
             "shields": _participant_defenses(combatant.defenses),
             "starting_shield": sum(_participant_defenses(combatant.defenses).values()),
             "damage_taken": 0.0,
+            "overkill": 0.0,
             "health_damage": 0.0,
             "shield_absorbed": 0.0,
             "healing_received": 0.0,
@@ -161,12 +162,15 @@ def _simulate_survival(
 
     actions: list[tuple[float, int, str, dict[str, Any]]] = []
     for participant_id, events in support_effects.items():
-        actions.extend(
-            (float(event.get("time", 0.0)), -1, participant_id, event)
-            for event in events
-        )
-    # Damage resolves before healing at the same timestamp, matching the
-    # engine's incoming-damage then post-hit healing boundary.
+        for event in events:
+            # A sourced ally shield is a pre-damage barrier.  A sourced heal
+            # is a post-damage recovery event.  They must not share one
+            # priority merely because both are support effects.
+            kind = str(event.get("kind", ""))
+            priority = -1 if kind == "shield" else 1
+            actions.append((float(event.get("time", 0.0)), priority, participant_id, event))
+    # Damage resolves before self-healing and sourced recovery at the same
+    # timestamp, while shields remain before damage above.
     for participant_id, events in incoming.items():
         actions.extend(
             (float(event.get("time", 0.0)), 0, participant_id, event)
@@ -182,6 +186,23 @@ def _simulate_survival(
     for event_time, phase, participant_id, event in actions:
         state = states[participant_id]
         if state["death_time"] is not None:
+            # Preserve the scheduled source in the receipt, but do not let
+            # a dead target contribute post-death damage to TTD/BIS.
+            event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+            event["damage"] = 0.0
+            event["live_damage"] = 0.0
+            event["overkill"] = 0.0
+            event["skipped_reason"] = "target_dead"
+            continue
+        source_id = event.get("attacker")
+        if source_id in states and states[source_id]["death_time"] is not None:
+            # A dead actor cannot continue an already-scheduled rotation or
+            # emit a support effect later in the shared window.
+            event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+            event["damage"] = 0.0
+            event["live_damage"] = 0.0
+            event["overkill"] = 0.0
+            event["skipped_reason"] = "attacker_dead"
             continue
         if phase == -1:
             kind = str(event.get("kind", ""))
@@ -202,20 +223,54 @@ def _simulate_survival(
             continue
 
         amount = max(0.0, float(event.get("damage", 0.0)))
+        original_amount = amount
+        raw_formula = event.get("raw_formula")
+        raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
+        if callable(raw_formula) and raw_damage > 0 and state["max_health"] > 0:
+            # The one-attacker engine prices a target-health formula against
+            # that pair's full-health target.  Re-price only the sourced
+            # health-dependent component here; all typed mitigation and item
+            # amplifiers remain represented by the original damage/raw ratio.
+            missing_ratio = max(
+                0.0,
+                min(1.0, 1.0 - state["health"] / state["max_health"]),
+            )
+            try:
+                live_raw = max(0.0, float(raw_formula(missing_ratio)))
+            except (TypeError, ValueError):
+                live_raw = raw_damage
+            amount *= live_raw / raw_damage
+        event["pair_damage"] = round(original_amount, 6)
+        event["live_damage"] = round(amount, 6)
         state["damage_taken"] += amount
         damage_type = str(event.get("damage_type", ""))
+        event_absorbed = 0.0
         if damage_type in {"magic", "physical"}:
             key = f"{damage_type}_shield"
             absorbed = min(state["shields"][key], amount)
             state["shields"][key] -= absorbed
             amount -= absorbed
             state["shield_absorbed"] += absorbed
-        absorbed = min(state["shields"]["general_shield"], amount)
-        state["shields"]["general_shield"] -= absorbed
-        amount -= absorbed
-        state["shield_absorbed"] += absorbed
-        state["health"] = max(0.0, state["health"] - amount)
-        state["health_damage"] += amount
+            event_absorbed += absorbed
+        general_absorbed = min(state["shields"]["general_shield"], amount)
+        state["shields"]["general_shield"] -= general_absorbed
+        amount -= general_absorbed
+        state["shield_absorbed"] += general_absorbed
+        event_absorbed += general_absorbed
+        # Damage beyond the remaining shield + health is overkill, not more
+        # effective HP.  Keep the original pair value for diagnostics but
+        # expose only applied damage to the team-fight breakdown.
+        applied_to_health = min(amount, state["health"])
+        overkill = max(0.0, amount - applied_to_health)
+        state["health"] = max(0.0, state["health"] - applied_to_health)
+        state["health_damage"] += applied_to_health
+        state["overkill"] += overkill
+        event["overkill"] = round(overkill, 6)
+        # The event's post-mitigation value is replaced with the amount that
+        # actually consumed the target's shield/health.  Keep ``pair_damage``
+        # and ``live_damage`` above for diagnostics without letting overkill
+        # inflate team-fight TTD or BIS scores.
+        event["damage"] = round(event_absorbed + applied_to_health, 6)
         if state["health"] <= 0.0 and state["death_time"] is None:
             state["death_time"] = min(float(duration), event_time)
 
@@ -226,6 +281,7 @@ def _simulate_survival(
             "max_health": round(state["max_health"], 1),
             "ending_health": round(state["health"], 1),
             "damage_taken": round(state["damage_taken"], 1),
+            "overkill": round(state["overkill"], 1),
             "health_damage": round(state["health_damage"], 1),
             "shield_absorbed": round(state["shield_absorbed"], 1),
             "healing_received": round(state["healing_received"], 1),
@@ -455,6 +511,16 @@ def build_participant_timeline(
                 "source": event.get("source_key", ""),
                 "damage_type": event.get("damage_type", ""),
                 "damage": round(float(event.get("damage", 0.0)), 1),
+                "pair_damage": round(
+                    float(event.get("pair_damage", event.get("damage", 0.0))), 1
+                ),
+                "overkill": round(float(event.get("overkill", 0.0)), 1),
+                "event_precision": event.get("event_precision", "exact"),
+                **(
+                    {"skipped_reason": str(event["skipped_reason"])}
+                    if event.get("skipped_reason")
+                    else {}
+                ),
             }
             for events in outgoing.values()
             for event in events

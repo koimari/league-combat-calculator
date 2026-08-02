@@ -1559,20 +1559,41 @@ def api_bis():
             continue
 
     ranked.sort(key=lambda row: row["score"], reverse=True)
+    # A row with coarse or missing event order is useful as an audit receipt,
+    # but it is not a defensible BIS recommendation.  Keep those rows separate
+    # so the browser cannot silently apply an uncertified build.
+    partial_ranked = [
+        candidate
+        for candidate in ranked
+        if not candidate["timeline_coverage"].get("complete", False)
+    ][:12]
+    certified_ranked = [
+        candidate
+        for candidate in ranked
+        if candidate["timeline_coverage"].get("complete", False)
+    ]
     return jsonify(
         {
             "subject_team": subject_team,
             "subject_index": subject_index,
             "slot_index": slot_index,
             "slot_kind": slot_kind,
-            "candidates": ranked[:12],
+            "candidates": certified_ranked[:12],
+            "partial_candidates": partial_ranked,
             "candidate_count": len(ranked),
+            "certified_candidate_count": len(certified_ranked),
             "coverage": {
-                "complete": bool(ranked) and all(
-                    candidate["timeline_coverage"].get("complete", False)
-                    for candidate in ranked
+                "complete": bool(certified_ranked),
+                "certification": (
+                    "bis_event_order_certified"
+                    if certified_ranked
+                    else "bis_withheld_partial_event_order"
                 ),
-                "note": "Each candidate is scored from the selected participant timeline; partial sources remain explicitly labeled.",
+                "note": (
+                    "Only candidates with complete sourced event order are shown as BIS."
+                    if certified_ranked
+                    else "BIS is withheld: every candidate still has partial or uncertified event order."
+                ),
             },
         }
     )

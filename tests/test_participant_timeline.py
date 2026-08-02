@@ -124,6 +124,75 @@ def test_coupled_timeline_stops_output_after_main_champion_is_defeated():
     assert next(row for row in combat["breakdown"] if row["participant_id"] == "main")["total_damage"] <= 138.5
 
 
+def test_coupled_timeline_reprices_current_health_damage_for_each_attacker():
+    """A second Mundo Q must see the damage already dealt by the first one."""
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Dr. Mundo",
+            "level": 6,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 3.5,
+            "include_auto_attacks": False,
+            "ability_ranks": {"Q": 3, "W": 1, "E": 1, "R": 1},
+            "enemies": [{"champion": "Aphelios", "level": 6, "items": []}],
+            "allies": [
+                {
+                    "champion": "Dr. Mundo",
+                    "level": 6,
+                    "items": [],
+                    "ally_effects_enabled": False,
+                    "ability_ranks": {"Q": 3, "W": 1, "E": 1, "R": 1},
+                }
+            ],
+        },
+    )
+    assert response.status_code == 200
+    events = [
+        event
+        for event in response.get_json()["combat"]["events"]
+        if event["target"] == "enemy:Aphelios" and event["source"] == "Q"
+    ]
+    main_q = next(event for event in events if event["attacker"] == "main")
+    ally_q = next(event for event in events if event["attacker"] == "ally:Dr. Mundo")
+    assert main_q["damage"] > ally_q["damage"]
+    assert main_q["pair_damage"] == ally_q["pair_damage"]
+    assert ally_q["damage"] < ally_q["pair_damage"]
+
+
+def test_coupled_timeline_caps_overkill_and_skips_post_death_events():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 18,
+            "items": [
+                "Luden's Echo",
+                "Rabadon's Deathcap",
+                "Shadowflame",
+                "Void Staff",
+                "Stormsurge",
+            ],
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": False,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+            "enemies": [{"champion": "Aphelios", "level": 1, "items": []}],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    enemy = next(row for row in combat["participants"] if row["team"] == "enemy")
+    main_row = next(row for row in combat["breakdown"] if row["participant_id"] == "main")
+    assert enemy["survival"]["survived_window"] is False
+    assert enemy["survival"]["overkill"] > 0
+    assert main_row["total_damage"] <= enemy["survival"]["max_health"]
+    assert any(event.get("skipped_reason") == "target_dead" for event in combat["events"])
+
+
 def _bis_request(subject_team: str) -> dict:
     return {
         "champion": "Aatrox",
@@ -185,6 +254,31 @@ def test_bis_endpoint_keeps_ally_and_enemy_in_the_same_timeline():
     assert "effective_health" in ally_top["components"]
     assert enemy_top["metric"] == "enemy TTD + survival pool"
     assert enemy_top["components"]["effective_health"] > 0
+
+
+def test_bis_withholds_partial_event_order_instead_of_labeling_it_certified():
+    app.config["TESTING"] = True
+    payload = {
+        "champion": "Dr. Mundo",
+        "level": 6,
+        "items": [],
+        "fight_mode": "time_based",
+        "fight_duration": 3.5,
+        "include_auto_attacks": False,
+        "ability_ranks": {"Q": 3, "W": 1, "E": 1, "R": 1},
+        "subject_team": "main",
+        "subject_index": 0,
+        "slot_index": 0,
+        "slot_kind": "item",
+        "enemies": [{"champion": "Aphelios", "level": 6, "items": []}],
+    }
+    response = app.test_client().post("/api/bis", json=payload)
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["certified_candidate_count"] == 0
+    assert body["candidates"] == []
+    assert body["partial_candidates"]
+    assert body["coverage"]["certification"] == "bis_withheld_partial_event_order"
 
 
 def test_explicitly_disabled_ally_effects_are_not_injected_into_ehp():
