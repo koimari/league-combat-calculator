@@ -423,8 +423,8 @@ function bisReadyForPath(path) {
   const [root, indexText] = String(path).split(".");
   const index = Number(indexText);
   if (root === "attacker") return Boolean(state.attacker.champion && state.targets.length && state.targets.every((target) => target.champion));
-  if (root === "allies") return Boolean(state.allies[index]?.champion && state.targets.some((target) => target.champion));
-  if (root === "targets") return Boolean(state.targets[index]?.champion && state.attacker.champion);
+  if (root === "allies") return Boolean(state.allies[index]?.champion && state.allies[index]?.role && state.targets.some((target) => target.champion));
+  if (root === "targets") return Boolean(state.targets[index]?.champion && state.targets[index]?.role && state.attacker.champion);
   return false;
 }
 
