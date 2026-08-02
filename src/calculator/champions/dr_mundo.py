@@ -235,15 +235,26 @@ def _infected_bonesaw(ctx: SlotCtx) -> dict[str, Any] | None:
 
     percent = extract_value(ability, "Magic Damage", rank) / 100.0
     minimum = extract_value(ability, "Minimum Damage", rank)
-    total = max(percent * ctx.target.get("target_max_health", 0.0), minimum)
+    target_max = float(ctx.target.get("target_max_health", 0.0))
 
-    return damage_entry(
+    # Q is current-health damage.  The fight evaluator calls this closure
+    # once per hit with the running target-health loss, so a repeated Q is
+    # priced after the preceding casts instead of six times against full HP.
+    def current_health_damage(missing_ratio: float) -> float:
+        current = max(0.0, target_max * (1.0 - missing_ratio))
+        return max(percent * current, minimum)
+
+    entry = damage_entry(
         ability.get("name", "Infected Bonesaw"),
         rank,
         extract_cooldown(ability, rank),
-        total,
+        max(percent * target_max, minimum),
         "magic",
     )
+    entry["parts"] = (DamagePart("magic", hp_scaled_damage=current_health_damage),)
+    entry["target_max_health_sensitive"] = True
+    entry["detail"] = "Current-health damage with rank-scaled minimum floor"
+    return entry
 
 
 # ---------------------------------------------------------------------------

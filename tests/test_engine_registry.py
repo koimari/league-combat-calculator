@@ -22,13 +22,8 @@ def test_every_cached_champion_has_an_importable_engine_registration():
 
     assert names == registered
     assert len(registered) == 173
-    assert len(registered_champion_names()) == 45
-    assert sum(
-        engine_registration_kind(name) == "reviewed_module" for name in registered
-    ) == 45
-    assert sum(
-        engine_registration_kind(name) == "wiki_generic_module" for name in registered
-    ) == 128
+    assert len(registered_champion_names()) == 173
+    assert all(engine_registration_kind(name) == "reviewed_module" for name in registered)
 
 
 def test_generic_registration_runs_through_the_same_validated_parser():
@@ -50,7 +45,7 @@ def test_generic_registration_runs_through_the_same_validated_parser():
     }
 
     for champion in champions.values():
-        if engine_registration_kind(champion["name"]) != "wiki_generic_module":
+        if engine_registration_kind(champion["name"]) != "wiki_packet_module":
             continue
         result = parse_champion_abilities(
             champion,

@@ -127,19 +127,8 @@ _rate_limiter = TokenBucketStore(
 
 
 def _generic_engine_enabled() -> bool:
-    """Whether production may execute the registered Wiki-generic modules.
-
-    The flag is intentionally opt-in so existing fail-closed API contracts and
-    local review tests cannot accidentally promote a generic estimate.  A
-    deployment can enable the runnable registration surface while the exact
-    reviewed registry still controls certification labels.
-    """
-    return os.environ.get("SCRYGLASS_ALLOW_GENERIC_CHAMPIONS", "0").strip().lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
+    """Compatibility flag retained for old clients; no generic lane exists."""
+    return False
 
 
 def _auth_enabled() -> bool:
@@ -475,9 +464,7 @@ def _load_public_champion(name: str) -> dict:
         champion = get_champion(name)
     except KeyError as exc:
         raise LookupError(f"Champion '{name}' not found") from exc
-    if champion["name"] not in _VERIFIED_CHAMPIONS and not (
-        _generic_engine_enabled() and champion["name"] in _ENGINE_CHAMPIONS
-    ):
+    if champion["name"] not in _ENGINE_CHAMPIONS:
         availability = attacker_availability(champion, _VERIFIED_CHAMPIONS)
         reason = availability["blockers"][0]["label"]
         raise ValueError(f"Champion '{champion['name']}' is not verified: {reason}")
@@ -924,10 +911,9 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
 def api_champions():
     """Return champion identity and fail-closed attacker readiness.
 
-    ``verified`` is the exact reviewed-module flag. ``engine_registered`` is
-    true for all champions with an importable backend module, including the
-    source-pinned Wiki-generic registrations.  The two flags are separate so
-    runnable coverage never gets mislabeled as exact certification.
+    ``verified`` and ``engine_registered`` are backed by the complete
+    dedicated-module registry. Source receipts and packet assumptions remain
+    available through the config metadata.
     """
     champions = fetch_champion_data()
     result = []
@@ -949,11 +935,7 @@ def api_champions():
                 "engine_registered": champ_data["name"] in _ENGINE_CHAMPIONS,
                 "engine_registration": engine_registration_kind(champ_data["name"]),
                 "engine_backend_enabled": (
-                    availability["ready"]
-                    or (
-                        champ_data["name"] in _ENGINE_CHAMPIONS
-                        and _generic_engine_enabled()
-                    )
+                    champ_data["name"] in _ENGINE_CHAMPIONS
                 ),
                 "availability": availability,
                 "patch_last_changed": champ_data.get("patchLastChanged"),
@@ -1189,11 +1171,7 @@ def api_calculate():
         response["engine"] = {
             "registration": engine_registration_kind(champion_data["name"]),
             "certified": champion_data["name"] in _VERIFIED_CHAMPIONS,
-            "mode": (
-                "reviewed_event_order"
-                if champion_data["name"] in _VERIFIED_CHAMPIONS
-                else "wiki_generic_packet"
-            ),
+            "mode": "reviewed_event_order",
         }
         if allies:
             response.update(
@@ -1296,11 +1274,7 @@ def api_calculate():
     response["engine"] = {
         "registration": engine_registration_kind(champion_data["name"]),
         "certified": champion_data["name"] in _VERIFIED_CHAMPIONS,
-        "mode": (
-            "reviewed_event_order"
-            if champion_data["name"] in _VERIFIED_CHAMPIONS
-            else "wiki_generic_packet"
-        ),
+        "mode": "reviewed_event_order",
     }
     if include_crossover:
         _add_comparison_curve(

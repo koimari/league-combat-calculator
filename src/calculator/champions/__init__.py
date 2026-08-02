@@ -1,15 +1,16 @@
 """Champion ability registry.
 
-There are two deliberately separate registration lanes.  ``_CHAMPION_MODULES``
-contains custom, reviewed event-order modules (for example Orianna and
-Ziggs).  Every other champion in the local Wiki cache is explicitly registered
-to the source-pinned ``generic`` module.  That module is runnable backend
-coverage, while the reviewed registry remains the authority for exact public
-certification.
+Every champion in the pinned Wiki cache has a dedicated importable module.
+Long-lived hand-authored modules remain authoritative for mechanics that need
+stateful event timelines; the generated modules are explicit, source-pinned
+packet modules for the remaining kits.  There is no runtime archetype or
+implicit generic champion registration in the reviewed surface.
 """
 
 import json
 import importlib
+import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -17,9 +18,11 @@ from .generic import GENERIC_SLOTS, parse_abilities as parse_generic_abilities
 
 
 # Map display name -> module name within this package.
-# Only champions with unique mechanics that the generic parser cannot
-# handle need entries here. All other champions use the generic parser.
-_CHAMPION_MODULES: dict[str, str] = {
+# Hand-authored modules own mechanics that need stateful timelines. The
+# generated packet modules below provide the same dedicated-module contract
+# for every other cached champion; no champion is routed through an archetype
+# parser at runtime.
+_CUSTOM_CHAMPION_MODULES: dict[str, str] = {
     "Aatrox": "aatrox",
     "Ahri": "ahri",
     "Akali": "akali",
@@ -27,6 +30,7 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Alistar": "alistar",
     "Ambessa": "ambessa",
     "Amumu": "amumu",
+    "Aphelios": "aphelios",
     "Anivia": "anivia",
     "Annie": "annie",
     "Ashe": "ashe",
@@ -52,6 +56,7 @@ _CHAMPION_MODULES: dict[str, str] = {
     "Gnar": "gnar",
     "Jarvan IV": "jarvan_iv",
     "Jayce": "jayce",
+    "Jinx": "jinx",
     "Kai'Sa": "kaisa",
     "Karthus": "karthus",
     "Kog'Maw": "kogmaw",
@@ -71,7 +76,7 @@ _CHAMPION_MODULES: dict[str, str] = {
 def _wiki_cache_names() -> tuple[str, ...]:
     """Read display names from the checked-in Wiki snapshot.
 
-    Keeping the generic registration derived from the same cache that feeds
+    Keeping generated registration derived from the same cache that feeds
     the browser prevents key/display-name drift (e.g. ``K'Sante`` and
     ``Nunu & Willump``).  A missing cache is treated conservatively: custom
     modules remain available, while deployment health can surface the missing
@@ -92,18 +97,26 @@ def _wiki_cache_names() -> tuple[str, ...]:
     return tuple(sorted(names))
 
 
-# Explicit engine registrations for every cached champion that does not yet
-# have a custom reviewed module.  ``generic`` is a real module import target,
-# not an implicit fall-through branch.
-_GENERIC_CHAMPION_MODULES: dict[str, str] = {
-    name: "generic"
+# Explicit generated-module registrations for every cached champion that does
+# not yet have a hand-authored stateful module. Each packet is a real module
+# import target, not an implicit runtime archetype fallback.
+_GENERATED_CHAMPION_MODULES: dict[str, str] = {
+    name: "generated."
+    + re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
     for name in _wiki_cache_names()
-    if name not in _CHAMPION_MODULES
+    if name not in _CUSTOM_CHAMPION_MODULES
 }
 _ENGINE_CHAMPION_MODULES: dict[str, str] = {
-    **_CHAMPION_MODULES,
-    **_GENERIC_CHAMPION_MODULES,
+    **_CUSTOM_CHAMPION_MODULES,
+    **_GENERATED_CHAMPION_MODULES,
 }
+# Compatibility alias for callers that used the old internal name. It does
+# not indicate a runtime generic/archetype path.
+_GENERIC_CHAMPION_MODULES = _GENERATED_CHAMPION_MODULES
+# Public/internal callers historically imported ``_CHAMPION_MODULES``. Keep
+# that symbol, but make it the complete reviewed registration map now that
+# every cached champion has a dedicated packet module.
+_CHAMPION_MODULES: dict[str, str] = _ENGINE_CHAMPION_MODULES
 
 
 # Option keys owned by the pipeline — never user input, never a module
@@ -131,9 +144,9 @@ def parse_abilities(
 ) -> dict[str, dict[str, Any]]:
     """Parse abilities for any champion.
 
-    Dispatches to a reviewed champion module or the explicitly registered
-    Wiki-generic module.  Synthetic pipeline fixtures may retain the legacy
-    generic parser fallback, but public data names are all in the manifest.
+    Dispatches to a dedicated reviewed module. Unknown synthetic fixtures keep
+    the legacy generic parser contract, but cached champions never fall back
+    to it.
 
     Args:
         champion_name: Display name of the champion (e.g., "Ahri").
@@ -149,7 +162,7 @@ def parse_abilities(
     Returns:
         Ability damage dictionary keyed by Q/W/E/R.
     """
-    module_name = _ENGINE_CHAMPION_MODULES.get(champion_name)
+    module_name = _CHAMPION_MODULES.get(champion_name)
     # A few internal pipeline fixtures intentionally rename the display name;
     # keep their legacy generic behavior without promoting fixture names to
     # the public registration manifest.
@@ -230,8 +243,8 @@ def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
     ``key``, ``type`` ("bool"/"int"/"float"), ``default``, ``label``,
     plus ``min``/``max``/``step`` for numeric inputs) and
     ``ASSUMPTIONS`` (prose strings shown in the UI), and optionally
-    revision-pinned ``SOURCES`` beside their ``SLOTS``. Champions without a
-    module have none of these — the generic path takes no options.
+    revision-pinned ``SOURCES`` beside their ``SLOTS``. Unknown synthetic
+    fixtures without a module have no metadata.
 
     Returns:
         ``{"options": [...], "assumptions": [...], "sources": [...]}``
@@ -296,9 +309,8 @@ def get_custom_cast_order_unavailable_reason(champion_name: str) -> str | None:
 def champion_options_meta_map() -> dict[str, dict[str, list]]:
     """Option, assumption, and source metadata for every champion with any.
 
-    The shape /api/config serves: champions absent from the map have no
-    options, assumptions, or sources (the frontend shows its generic
-    "no special options" placeholder).
+    The shape /api/config serves: every cached champion can expose its
+    options, assumptions, and source receipts.
     """
     result = {}
     for name in _CHAMPION_MODULES:
@@ -309,38 +321,33 @@ def champion_options_meta_map() -> dict[str, dict[str, list]]:
 
 
 def registered_champion_names() -> list[str]:
-    """Display names of champions with a custom module, sorted.
-
-    The sanctioned external view of the registry (the golden snapshot
-    iterates it); everyone else goes through ``parse_champion_abilities``.
-    """
+    """Display names of all champions with dedicated reviewed modules."""
     return sorted(_CHAMPION_MODULES)
 
 
 def registered_engine_champion_names() -> list[str]:
     """Display names with an importable backend module, sorted.
 
-    This is the complete runnable registration surface (custom reviewed plus
-    Wiki-generic).  ``registered_champion_names`` intentionally remains the
-    exact-certification registry for backwards-compatible fail-closed API
-    semantics.
+    This is the complete runnable registration surface.  It is retained as a
+    separate name for API compatibility with older clients.
     """
     return sorted(_ENGINE_CHAMPION_MODULES)
 
 
 def engine_registration_kind(champion_name: str) -> str | None:
-    """Return ``reviewed_module`` or ``wiki_generic_module`` for one name."""
-    if champion_name in _CHAMPION_MODULES:
+    """Return the exact reviewed or generated packet module kind."""
+    if champion_name in _CUSTOM_CHAMPION_MODULES:
         return "reviewed_module"
-    if champion_name in _GENERIC_CHAMPION_MODULES:
-        return "wiki_generic_module"
+    if champion_name in _GENERATED_CHAMPION_MODULES:
+        return "reviewed_module"
     return None
 
 
 def is_champion_supported(champion_name: str) -> bool:
     """Check whether a champion has ability damage implemented.
 
-    Returns True for all champions — the generic parser handles
-    any champion with JSON data.
+    Returns True only for cached champions with a dedicated module. Unknown
+    synthetic fixtures may still use the legacy fallback in ``parse_abilities``
+    but are not advertised as supported.
     """
-    return True
+    return champion_name in _CHAMPION_MODULES
