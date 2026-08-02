@@ -2005,7 +2005,10 @@ async function openBackendBis(path) {
     const coverage = result.coverage?.complete
       ? "complete sourced coverage"
       : "BIS withheld until event order is complete";
-    $("bisSummary").textContent = `${subject.champion} · ${rows.length} of ${result.candidate_count || rows.length} legal candidates · ${coverage}`;
+    const candidateScope = result.candidate_scope?.startsWith("role-tagged:")
+      ? `${result.candidate_scope.slice("role-tagged:".length)} role-compatible`
+      : "all supported";
+    $("bisSummary").textContent = `${subject.champion} · ${rows.length} of ${result.candidate_count || rows.length} ${candidateScope} candidates · ${coverage}`;
     $("bisList").innerHTML = rows.map((entry, index) => {
       const item = DATA.items.find((candidate) => candidate.name === entry.name);
       const detail = `${item ? itemStatsLine(item) : "Sourced item stats"} · ${bisComponentLine(entry.components)}`;

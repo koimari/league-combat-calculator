@@ -2,7 +2,9 @@
 
 from src.calculator.data_fetcher import get_champion
 from src.calculator.pipeline import FightParams, run_fight
-from src.app import app
+from src.app import _role_scoped_bis_candidates, app
+from src.calculator.item_coverage import optimizer_supported_items
+from src.calculator.optimizer import get_eligible_legendaries
 
 
 def _timed_params() -> FightParams:
@@ -373,6 +375,18 @@ def test_roster_bis_requires_an_explicit_role_instead_of_guessing_item_class():
     response = app.test_client().post("/api/bis", json=payload)
     assert response.status_code == 400
     assert response.get_json()["error"] == "enemy role is required before roster BIS can be scored"
+
+
+def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
+    candidates = optimizer_supported_items(get_eligible_legendaries())
+    support = {item["name"] for item in _role_scoped_bis_candidates(candidates, role="support")}
+    top = {item["name"] for item in _role_scoped_bis_candidates(candidates, role="top")}
+
+    assert "Locket of the Iron Solari" in support
+    assert "Moonstone Renewer" in support
+    assert "Warmog's Armor" not in support
+    assert "Warmog's Armor" in top
+    assert "Locket of the Iron Solari" not in top
 
 
 def test_bis_withholds_partial_event_order_instead_of_labeling_it_certified():
