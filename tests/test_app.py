@@ -300,6 +300,7 @@ def test_calculate_can_sum_one_damage_package_across_enemy_roster():
         1,
     )
     assert data["timeline_coverage"]["complete"] is False
+    assert "passive" in data["timeline_coverage"]["coarse_sources"]
     assert "proc_Luden's Echo" in data["timeline_coverage"]["coarse_sources"]
     assert all("timeline_coverage" in row["result"] for row in data["targets"])
 

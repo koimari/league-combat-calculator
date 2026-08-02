@@ -998,6 +998,7 @@ def _ordered_damage_events(
         time: float,
         ordinal: int,
         phase: str,
+        order: float | None = None,
     ) -> None:
         nonlocal sequence
         if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
@@ -1011,6 +1012,7 @@ def _ordered_damage_events(
                 "ordinal": ordinal,
                 "phase": phase,
                 "sequence": sequence,
+                "order": float(sequence) if order is None else order,
             }
         )
         sequence += 1
@@ -1038,6 +1040,11 @@ def _ordered_damage_events(
                 time=float(event.get("time", 0.0)),
                 ordinal=ordinal,
                 phase=phase,
+                order=(
+                    float(event["timeline_order"])
+                    if event.get("timeline_order") is not None
+                    else None
+                ),
             )
         return True
 
@@ -1136,6 +1143,7 @@ def _ordered_damage_events(
         events,
         key=lambda event: (
             event["time"],
+            event["order"],
             {"ability": 0, "auto": 1, "effect": 2, "amplifier": 3}[event["phase"]],
             event["sequence"],
         ),
@@ -4372,7 +4380,51 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             state.total_damage += periodic_mitigated
 
 
-def _add_item_proc_damage(state: FightState) -> None:
+def _ability_damage_proc_triggers(
+    state: FightState,
+    rotation: RotationResult,
+    effect: item_effects.CooldownProcEffect,
+) -> list[dict[str, Any]]:
+    """Schedule an ability-triggered proc onto legal damaging casts."""
+    cast_sources = set(state.cast_order)
+    ordered = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
+    unique_hits: list[dict[str, Any]] = []
+    seen: set[tuple[str, int, float]] = set()
+    for event in ordered:
+        if event["source_key"] not in cast_sources or event["damage"] <= 0:
+            continue
+        identity = (
+            event["source_key"],
+            int(event["ordinal"]),
+            float(event["time"]),
+        )
+        if identity in seen:
+            continue
+        seen.add(identity)
+        unique_hits.append(event)
+
+    proc_triggers: list[dict[str, Any]] = []
+    ready_at = float("-inf")
+    for event in unique_hits:
+        event_time = float(event["time"])
+        if event_time + 1e-9 < ready_at:
+            continue
+        proc_triggers.append(event)
+        if not effect.repeat_on_cooldown:
+            break
+        ready_at = event_time + effect.cooldown
+    return proc_triggers
+
+
+def _add_item_proc_damage(
+    state: FightState,
+    rotation: RotationResult,
+) -> None:
     """Add proc-type item damage and ultimate-triggered procs (Malignance)."""
     resists = state.resists
 
@@ -4380,22 +4432,47 @@ def _add_item_proc_damage(state: FightState) -> None:
         if effect.late_phase:
             continue
         source = effect.source
-        raw_proc = source.raw_damage(_damage_inputs(state))
-        if effect.repeat_on_cooldown:
-            raw_proc *= 1 + int(state.fight_duration_seconds / effect.cooldown)
-        proc_mitigated = _mitigate(
-            raw_proc, source.damage_type, resists, state.magic_amp
+        proc_triggers = (
+            _ability_damage_proc_triggers(state, rotation, effect)
+            if effect.trigger == "ability_damage"
+            else []
+        )
+        if effect.trigger == "ability_damage" and not proc_triggers:
+            continue
+        procs = (
+            len(proc_triggers)
+            if proc_triggers
+            else (
+                1 + int(state.fight_duration_seconds / effect.cooldown)
+                if effect.repeat_on_cooldown
+                else 1
+            )
+        )
+        raw_per_proc = source.raw_damage(_damage_inputs(state))
+        mitigated_per_proc = _mitigate(
+            raw_per_proc, source.damage_type, resists, state.magic_amp
         )
 
         # Stormsurge and Zaz'Zak deal ability damage — amplified by Actualizer
         if source.is_ability_damage:
-            proc_mitigated *= state.ability_amp
+            mitigated_per_proc *= state.ability_amp
+        proc_mitigated = mitigated_per_proc * procs
 
         state.breakdown[source.breakdown_key] = {
             "name": source.display_name,
             "total_damage": proc_mitigated,
             "damage_type": source.damage_type,
         }
+        if proc_triggers:
+            state.breakdown[source.breakdown_key]["damage_events"] = [
+                {
+                    "time": float(trigger["time"]),
+                    "timeline_order": float(trigger["order"]) + 0.5,
+                    "damage": mitigated_per_proc,
+                    "damage_type": source.damage_type,
+                }
+                for trigger in proc_triggers
+            ]
         if source.multi_target_charges:
             state.breakdown[source.breakdown_key]["targeting"] = {
                 "kind": "charged_bounce",
@@ -4994,7 +5071,7 @@ def calculate_fight_damage(
     _add_burn_damage(state, rotation)
 
     # ── Item procs (including ult-triggered Malignance) ─────────────────
-    _add_item_proc_damage(state)
+    _add_item_proc_damage(state, rotation)
 
     # ── Active item damage ──────────────────────────────────────────────
     _add_item_active_damage(state)

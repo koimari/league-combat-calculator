@@ -41,3 +41,25 @@ def combine_timeline_coverages(
         "coarse_sources": coarse_sources,
         "note": note,
     }
+
+
+def downgrade_timeline_sources(
+    coverage: Mapping[str, Any],
+    sources: Iterable[str],
+    *,
+    note: str,
+) -> dict[str, Any]:
+    """Mark sources partial when a later operation invalidates their receipt."""
+    source_set = {source for source in sources if source}
+    if not source_set:
+        return dict(coverage)
+    exact_sources = set(coverage.get("exact_sources", [])) - source_set
+    coarse_sources = set(coverage.get("coarse_sources", [])) | source_set
+    return {
+        **coverage,
+        "complete": False,
+        "certification": "partial_event_order",
+        "exact_sources": sorted(exact_sources),
+        "coarse_sources": sorted(coarse_sources),
+        "note": note,
+    }

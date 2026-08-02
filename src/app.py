@@ -40,7 +40,10 @@ from calculator.optimizer import (
 from calculator.stats import MAX_LEVEL
 from calculator.scenario import MAX_ALLIES, MAX_ENEMIES, ChampionLoadout, parse_roster
 from calculator.role_quests import role_quest_meta
-from calculator.timeline_coverage import combine_timeline_coverages
+from calculator.timeline_coverage import (
+    combine_timeline_coverages,
+    downgrade_timeline_sources,
+)
 from calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
     DEFAULT_FIGHT_DURATION,
@@ -428,6 +431,17 @@ def _allocate_target_limited_damage(target_results: list[dict]) -> None:
             result["shield_absorbed"] = round(magic_absorbed, 1)
             result["health_damage"] = round(
                 max(0.0, result["total_damage"] - magic_absorbed), 1
+            )
+    if target_count > 1 and keys:
+        for target in target_results:
+            result = target["result"]
+            result["timeline_coverage"] = downgrade_timeline_sources(
+                result.get("timeline_coverage", {}),
+                keys,
+                note=(
+                    "Charged proc damage is allocated across targets after each "
+                    "target's defensive event simulation."
+                ),
             )
 
 

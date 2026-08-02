@@ -887,68 +887,48 @@ class TestShadowflameCinderbloom:
         )
         assert abs(bonus - 60.0) < 0.01
 
-    def test_ambessa_q2_not_double_counted(
+    def test_ambessa_q2_and_luden_have_one_ledger_position(
         self,
         ambessa_data: dict,
         shadowflame: dict,
         parse_at,
     ) -> None:
-        """Ambessa (real synthetic Q2 row) + Shadowflame + Luden's Echo.
-
-        Target health is chosen so that whether the 40% threshold is crossed
-        before the fight's only magic event (the Luden's proc, last in event
-        order) depends on Q2 being counted once vs twice.  A probe run
-        against a huge target measures the per-row damages D (none scale
-        with target health here); we then pick
-
-            H = (sum of all rows before Luden's + D_Q2 / 2) / 0.6
-
-        With every row counted once, HP at the Luden's proc is
-        0.4*H + D_Q2/2 — above the threshold, so there is NO Cinderbloom
-        bonus.  Double-counting Q2 pushes it below and fabricates one.
-        """
+        """A real synthetic recast and a triggered proc each enter once."""
         from src.calculator.data_fetcher import get_item_by_name
+        from src.calculator.damage import _ordered_damage_events
 
         items = [shadowflame, get_item_by_name("Luden's Echo")]
         stats, abilities = parse_at(ambessa_data, 18, items=items)
 
-        def run(target_health: float) -> dict:
-            return calculate_fight_damage(
-                dict(stats),
-                abilities,
-                items,
-                FightConfig(
-                    target_health=target_health,
-                    target_armor=100,
-                    target_magic_resistance=100,
-                    fight_duration_seconds=5.0,
-                    auto_attack_uptime=0.0,
-                    one_rotation=True,
-                ),
-            )
+        fight = calculate_fight_damage(
+            dict(stats),
+            abilities,
+            items,
+            FightConfig(
+                target_health=100000.0,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
+        )
+        events = _ordered_damage_events(
+            fight["breakdown"],
+            abilities,
+            ["Q", "Q2", "W", "E", "R"],
+            cast_events=fight["cast_timeline"],
+        )
+        q2_events = [event for event in events if event["source_key"] == "Q2"]
+        luden_events = [
+            event for event in events if event["source_key"] == "proc_Luden's Echo"
+        ]
 
-        probe = run(100000.0)["breakdown"]
-        assert "Q2" in probe and probe["Q2"]["total_damage"] > 0
-        assert "shadowflame_Shadowflame" not in probe  # nothing crosses 40%
-        luden_key = "proc_Luden's Echo"
-        luden_damage = probe[luden_key]["total_damage"]
-        assert luden_damage > 0
-        before_luden = sum(
-            row["total_damage"] for key, row in probe.items() if key != luden_key
+        assert sum(event["damage"] for event in q2_events) == pytest.approx(
+            fight["breakdown"]["Q2"]["total_damage"]
         )
-        target_health = (before_luden + probe["Q2"]["total_damage"] / 2) / 0.6
-
-        fight = run(target_health)
-        # Guard: same per-row damages at the tuned target health.
-        assert fight["breakdown"]["Q2"]["total_damage"] == pytest.approx(
-            probe["Q2"]["total_damage"]
-        )
-        assert fight["breakdown"][luden_key]["total_damage"] == pytest.approx(
-            luden_damage
-        )
-        # With Q2 counted once, the threshold is never crossed before the
-        # only magic event — no Cinderbloom bonus row may exist.
-        assert "shadowflame_Shadowflame" not in fight["breakdown"]
+        assert len(luden_events) == 1
+        assert luden_events[0]["order"] == pytest.approx(0.5)
 
 
 class TestActualizerAmpRow:

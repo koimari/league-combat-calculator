@@ -24,7 +24,7 @@ from .loadout_rules import (
     validate_resolved_loadout,
 )
 from .pipeline import FightParams, run_fight
-from .timeline_coverage import combine_timeline_coverages
+from .timeline_coverage import combine_timeline_coverages, downgrade_timeline_sources
 
 # Items unavailable on Summoner's Rift.
 ITEM_BLOCKLIST = {
@@ -134,10 +134,7 @@ def _evaluate_build(
         result = run_fight(champion_data, level, items, target_params)
         results.append(result)
     if timeline_audit is not None:
-        coverage = combine_timeline_coverages(
-            (result.get("timeline_coverage", {}) for result in results),
-            target_count=len(results),
-        )
+        coverage = _combined_build_timeline_coverage(results)
         timeline_audit["evaluations"] += 1
         timeline_audit["exact_sources"].update(coverage["exact_sources"])
         timeline_audit["coarse_sources"].update(coverage["coarse_sources"])
@@ -203,10 +200,33 @@ def _build_timeline_coverage(
         run_fight(champion_data, level, items, target_params)
         for target_params in targets
     ]
-    return combine_timeline_coverages(
+    return _combined_build_timeline_coverage(results)
+
+
+def _combined_build_timeline_coverage(
+    results: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Combine targets and fail partial on post-ledger charged allocation."""
+    coverage = combine_timeline_coverages(
         (result.get("timeline_coverage", {}) for result in results),
         target_count=len(results),
     )
+    charged_sources = {
+        key
+        for result in results
+        for key, row in result.get("breakdown", {}).items()
+        if row.get("targeting", {}).get("kind") == "charged_bounce"
+    }
+    if len(results) > 1 and charged_sources:
+        coverage = downgrade_timeline_sources(
+            coverage,
+            charged_sources,
+            note=(
+                "Charged proc damage is allocated across targets after each "
+                "target's defensive event simulation."
+            ),
+        )
+    return coverage
 
 
 def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:

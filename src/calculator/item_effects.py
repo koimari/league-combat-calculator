@@ -306,6 +306,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Luden's Echo": {
         "type": "proc",
         "formula": "charged_ap",
+        "trigger": "ability_damage",
         "damage_type": "magic",
         # 6 charges, single target: primary + 5 × 20% = ×2.0 multiplier
         "base_per_charge": 75.0,
@@ -331,6 +332,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Stormsurge": {
         "type": "proc",
         "formula": "flat_ap",
+        "trigger": "damage_threshold",
         "repeat_on_cooldown": False,
         "damage_type": "magic",
         # 125 + 10% AP, 30s CD (triggers at 25% HP damage in 2.5s)
@@ -342,6 +344,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Zaz'Zak's Realmspike": {
         "type": "proc",
         "formula": "flat_ap_max_hp",
+        "trigger": "ability_damage",
         "damage_type": "magic",
         # 10 + 15% AP + 3% target max HP, 10s CD
         "base": 10.0,
@@ -777,6 +780,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "phantom_hit",
         "uses_empowered_auto_count",
         "repeat_on_cooldown",
+        "trigger",
         "is_ability_damage",
         "double_on_hit",
         "basic_damage",
@@ -1060,6 +1064,7 @@ class CooldownProcEffect:
     cooldown: float
     repeat_on_cooldown: bool = True
     late_phase: bool = False
+    trigger: str = "coarse"
 
 
 @dataclass(frozen=True, slots=True)
@@ -1602,6 +1607,7 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         source,
         required.number("cooldown"),
         bool(values.get("repeat_on_cooldown", True)),
+        trigger=str(values.get("trigger", "coarse")),
     )
 
 

@@ -136,7 +136,7 @@ class TestTimelineCoverage:
         assert coverage["complete"] is True
         assert "burn_Blackfire Torch" in coverage["exact_sources"]
 
-    def test_coarse_luden_proc_prevents_exact_certification(
+    def test_luden_proc_is_certified_on_its_triggering_cast(
         self, fight, attacker_stats
     ):
         result = fight(
@@ -146,11 +146,76 @@ class TestTimelineCoverage:
             target_magic_resistance=0.0,
         )
 
-        assert result["timeline_coverage"]["complete"] is False
-        assert result["timeline_coverage"]["certification"] == "partial_event_order"
-        assert result["timeline_coverage"]["coarse_sources"] == [
-            "proc_Luden's Echo"
-        ]
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert coverage["certification"] == "event_order_certified"
+        assert "proc_Luden's Echo" in coverage["exact_sources"]
+
+    def test_luden_requires_a_damaging_ability_trigger(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            items=[get_item_by_name("Luden's Echo")],
+        )
+
+        assert "proc_Luden's Echo" not in result["breakdown"]
+
+    def test_luden_reprocs_only_on_a_ready_damaging_cast(
+        self, fight, attacker_stats
+    ):
+        ability = self._test_spell()
+        ability["Q"]["cooldown"] = 4.0
+        result = fight(
+            attacker_stats(),
+            ability,
+            items=[get_item_by_name("Luden's Echo")],
+            one_rotation=False,
+            fight_duration_seconds=13.0,
+            target_magic_resistance=0.0,
+        )
+
+        proc = result["breakdown"]["proc_Luden's Echo"]
+        assert proc["total_damage"] == pytest.approx(300.0)
+        assert [event["time"] for event in proc["damage_events"]] == [0.0, 12.0]
+        assert result["timeline_coverage"]["complete"] is True
+        assert "proc_Luden's Echo" in result["timeline_coverage"]["exact_sources"]
+
+    def test_luden_crosses_shadowflame_threshold_before_the_follow_up(
+        self, fight, attacker_stats
+    ):
+        abilities = {
+            "Q": {
+                "name": "Opening spell",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 500.0,
+                "parts": (DamagePart("magic", 500.0),),
+            },
+            "W": {
+                "name": "Follow-up spell",
+                "rank": 1,
+                "cooldown": 10.0,
+                "damage_type": "magic",
+                "total_raw": 200.0,
+                "parts": (DamagePart("magic", 200.0),),
+            },
+        }
+        result = fight(
+            attacker_stats(),
+            abilities,
+            items=[
+                get_item_by_name("Luden's Echo"),
+                get_item_by_name("Shadowflame"),
+            ],
+            target_magic_resistance=0.0,
+        )
+
+        # Q leaves 500 HP. Luden's 150 lands immediately after Q and leaves
+        # 350, so W starts below 40% and receives a 40-damage Cinderbloom
+        # bonus. Treating Luden as an end-of-rotation proc would yield 30.
+        assert result["breakdown"]["shadowflame_Shadowflame"][
+            "total_damage"
+        ] == pytest.approx(40.0)
 
 
 class TestOrderedDamageEvents:
