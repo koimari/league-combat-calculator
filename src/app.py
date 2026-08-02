@@ -31,6 +31,7 @@ from calculator.data_fetcher import (
     get_item_by_name,
 )
 from calculator.item_effects import item_input_options_meta, refresh_item_effects
+from calculator.rune_effects import keystone_catalog
 from calculator.item_coverage import item_model_coverage, require_target_item_coverage
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import validate_resolved_loadout
@@ -1011,6 +1012,7 @@ def api_config():
             "input_limits": PUBLIC_INPUT_LIMITS,
             "champion_options": champion_options_meta_map(),
             "item_options": item_input_options_meta(),
+            "keystones": keystone_catalog(),
             "dev_mode": local_dev,
             "data_snapshot": {
                 "source": "League of Legends Wiki cache",

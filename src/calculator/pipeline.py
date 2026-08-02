@@ -26,6 +26,7 @@ from .damage import (
 )
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .role_quests import validate_role
+from .rune_effects import validate_keystone_request
 from .stats import calculate_total_stats
 
 DEFAULT_TARGET: dict[str, float] = {
@@ -128,6 +129,7 @@ class FightParams(FightConfig):
         if champion_options is not None and not isinstance(champion_options, Mapping):
             raise ValueError("champion_options must be an object")
         item_options = validate_item_input_options(data.get("item_options"))
+        keystone = validate_keystone_request(data.get("keystone"))
         role = validate_role(data.get("role", ""))
         role_quest_complete = _request_bool(data, "role_quest_complete", False)
         if role_quest_complete and not role:
@@ -157,6 +159,7 @@ class FightParams(FightConfig):
                 dict(champion_options) if champion_options is not None else None
             ),
             item_options=item_options or None,
+            keystone=keystone,
             role=role,
             role_quest_complete=role_quest_complete,
             deterministic=deterministic,
