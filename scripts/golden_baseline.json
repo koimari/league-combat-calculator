@@ -3700,6 +3700,7 @@
           "damage_type": "physical",
           "detail": "16 tick(s) over 4s; shreds 16 armor and magic resist over 4 stack(s), one per tick",
           "dot_duration": 4.0,
+          "dot_tick_interval": 0.25,
           "name": "Gatling Gun",
           "parts": [
             "DamagePart(physical, amount=11.25, count=16, hp_scaled=no, crit_effectiveness=0.0)"
@@ -3749,6 +3750,7 @@
           "damage_type": "magic",
           "detail": "5 tick(s) of one blazing patch over 2.5s",
           "dot_duration": 2.5,
+          "dot_tick_interval": 0.5,
           "name": "Valkyrie",
           "parts": [
             "DamagePart(magic, amount=150.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -3941,7 +3943,8 @@
             "name": "Hemorrhage (bleed)",
             "single_stack_bonus_ad_ratio": 0.3,
             "single_stack_raw": 23.0,
-            "starting_stacks": 5
+            "starting_stacks": 5,
+            "tick_interval": 1.25
           },
           "total_raw": 23.0
         }
@@ -34290,7 +34293,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "e98646360e5714895f6ae4f6addb57914d9e8cb2",
+    "git_head": "2c69362542826126bae254de57b8006cb36dbf76",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785669778.9014,
@@ -38627,9 +38630,10 @@
             "R": 634.33,
             "W": 650.4,
             "auto_attacks": 0.0,
-            "proc_Luden's Echo": 178.17
+            "proc_Luden's Echo": 178.17,
+            "shadowflame_Shadowflame": 130.08
           },
-          "total_damage": 2140.52
+          "total_damage": 2270.6
         },
         "no_items": {
           "breakdown_totals": {
@@ -38671,9 +38675,9 @@
               "auto_attacks": 219.58,
               "auto_attacks_true_damage": 59.2,
               "proc_Luden's Echo": 176.87,
-              "shadowflame_Shadowflame": 8.88
+              "shadowflame_Shadowflame": 138.96
             },
-            "total_damage": 2297.01
+            "total_damage": 2427.09
           },
           "no_items": {
             "breakdown_totals": {
@@ -38721,9 +38725,10 @@
             "R": 961.54,
             "W": 890.4,
             "auto_attacks": 0.0,
-            "proc_Luden's Echo": 184.95
+            "proc_Luden's Echo": 184.95,
+            "shadowflame_Shadowflame": 178.08
           },
-          "total_damage": 2793.23
+          "total_damage": 2971.31
         },
         "no_items": {
           "breakdown_totals": {
@@ -38765,9 +38770,9 @@
               "auto_attacks": 287.02,
               "auto_attacks_true_damage": 75.2,
               "proc_Luden's Echo": 183.21,
-              "shadowflame_Shadowflame": 11.28
+              "shadowflame_Shadowflame": 189.36
             },
-            "total_damage": 2966.81
+            "total_damage": 3144.89
           },
           "no_items": {
             "breakdown_totals": {

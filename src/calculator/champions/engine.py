@@ -67,6 +67,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "on_hit",
         "proc_count",
         "dot_duration",
+        "dot_tick_interval",
         "stacking_dot",
         "stack_triggered_buff",
         "applies_dot_stack",

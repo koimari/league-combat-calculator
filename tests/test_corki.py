@@ -362,6 +362,18 @@ class TestDotDurations:
         assert abilities["W"]["dot_duration"] == pytest.approx(2.5)
         assert abilities["E"]["dot_duration"] == pytest.approx(4.0)
 
+    def test_w_and_e_declare_their_sourced_tick_cadence(self, corki_data) -> None:
+        """W ticks every 0.5s and E every 0.25s (wiki, test-locked via
+        Total / Per-Tick above); the engine authors tick events from them."""
+        abilities = _parse(corki_data)
+        assert abilities["W"]["dot_tick_interval"] == pytest.approx(0.5)
+        assert abilities["E"]["dot_tick_interval"] == pytest.approx(0.25)
+
+    def test_partial_uptime_scales_the_window_not_the_cadence(self, corki_data) -> None:
+        partial = _parse(corki_data, options={"w_patch_uptime": 0.4})["W"]
+        assert partial["dot_duration"] == pytest.approx(1.0)
+        assert partial["dot_tick_interval"] == pytest.approx(0.5)
+
 
 class TestOptions:
     """Every declared option changes the parse."""

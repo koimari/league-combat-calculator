@@ -3543,6 +3543,187 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
         state.total_damage += proc_total
 
 
+def _ability_dot_tick_events(
+    entry: dict[str, Any],
+    info: dict[str, Any],
+    cast_times: list[float],
+) -> list[dict[str, float | str]] | None:
+    """One DoT ability row's per-tick events, or None to stay coarse.
+
+    A row qualifies when its ability declares both ``dot_duration`` and a
+    wiki-sourced ``dot_tick_interval``. Each accepted cast spreads its even
+    share of the row's typed damage across the DoT window from its cast
+    time, using the same full-tick/remainder split as item burns. Rows
+    without a sourced cadence author nothing (fail-closed — a cadence is
+    never invented), as do rows whose totals a later step may move
+    (``empowers_next_auto`` swings) or whose typed parts do not reproduce
+    the row total.
+    """
+    dot_duration = float(info.get("dot_duration", 0.0))
+    tick_interval = float(info.get("dot_tick_interval", 0.0))
+    if dot_duration <= 0 or tick_interval <= 0:
+        return None
+    if info.get("empowers_next_auto"):
+        return None  # the reattributed swing would break the event sum
+    casts = max(0, int(entry.get("casts", 0)))
+    if casts <= 0:
+        return None
+    parts = _row_damage_parts(entry)
+    if not parts or not math.isclose(
+        sum(amount for _, amount in parts),
+        float(entry.get("total_damage", 0.0)),
+        rel_tol=1e-9,
+        abs_tol=1e-6,
+    ):
+        return None
+    events: list[dict[str, float | str]] = []
+    for cast_index in range(casts):
+        cast_time = cast_times[cast_index] if cast_index < len(cast_times) else 0.0
+        for dtype, amount in parts:
+            for tick in _periodic_damage_events(
+                amount / casts, dtype, dot_duration, tick_interval
+            ):
+                events.append({**tick, "time": cast_time + float(tick["time"])})
+    events.sort(key=lambda tick: float(tick["time"]))
+    return events or None
+
+
+def _author_ability_dot_events(state: FightState, rotation: RotationResult) -> None:
+    """Author per-tick damage events for DoT ability rows with sourced cadence.
+
+    Ticks let the coverage classifier certify a ``dot_duration`` row
+    instead of downgrading it at the cast boundary; rows that stay
+    unsourced keep coarse ordering. Rows that already authored their own
+    event ledger are left alone.
+    """
+    times_by_slot: dict[str, list[float]] = {}
+    for event in rotation.cast_events:
+        slot = str(event.get("slot", ""))
+        times_by_slot.setdefault(slot, []).append(float(event.get("time", 0.0)))
+    for key in state.cast_order:
+        entry = state.breakdown.get(key)
+        info = state.ability_damages.get(key, {})
+        if not entry or entry.get("damage_events") is not None:
+            continue
+        events = _ability_dot_tick_events(entry, info, times_by_slot.get(key, []))
+        if events is not None:
+            entry["damage_events"] = events
+            entry["event_phase"] = "ability"
+
+
+class _DotTickLedger:
+    """Buckets a stacking DoT's continuous integral into sourced ticks.
+
+    Constructed with the spec's ``tick_interval`` (0 disables authoring —
+    an unsourced cadence is never invented) and the fight's rate integral.
+    ``accumulate`` integrates one constant-stack span, cutting it at the
+    tick boundaries riding the current chain's clock; ``open_chain``
+    anchors that clock at the application that opened a chain;
+    ``close_chain`` flushes the last partial tick where a chain's bleed
+    actually stopped. ``events`` scales the raw buckets to the mitigated
+    total, since mitigation is one linear factor.
+    """
+
+    def __init__(
+        self,
+        interval: float,
+        integrate: Callable[[float, float, int], float],
+    ) -> None:
+        self.interval = interval
+        self.authoring = interval > 0
+        self._integrate = integrate
+        self._raw_ticks: list[list[float]] = []  # [time, raw damage]
+        self._pending_raw = 0.0
+        self._next_tick: float | None = None
+
+    def open_chain(self, time: float) -> None:
+        """Anchor the tick clock when no chain is running."""
+        if self.authoring and self._next_tick is None:
+            self._next_tick = time + self.interval
+
+    def close_chain(self, time: float) -> None:
+        """Flush the chain's last partial tick and drop its clock."""
+        if self.authoring:
+            self._flush(time)
+            self._next_tick = None
+
+    def accumulate(self, start: float, end: float, stacks: int) -> float:
+        """Integrate [start, end), bucketing the raw damage into ticks."""
+        if not self.authoring:
+            return self._integrate(start, end, stacks)
+        raw = 0.0
+        cursor = start
+        while self._next_tick is not None and self._next_tick <= end:
+            raw += self._bucket(cursor, self._next_tick, stacks)
+            cursor = self._next_tick
+            self._flush(self._next_tick)
+            self._next_tick += self.interval
+        raw += self._bucket(cursor, end, stacks)
+        return raw
+
+    def _bucket(self, start: float, end: float, stacks: int) -> float:
+        segment = self._integrate(start, end, stacks)
+        self._pending_raw += segment
+        return segment
+
+    def _flush(self, time: float) -> None:
+        if self._pending_raw > 0:
+            self._raw_ticks.append([time, self._pending_raw])
+            self._pending_raw = 0.0
+
+    def events(
+        self, damage_type: str, total: float, raw_total: float
+    ) -> list[dict[str, Any]] | None:
+        """The mitigated per-tick event list, or None when not authoring."""
+        if not (self.authoring and self._raw_ticks and raw_total > 0 and total > 0):
+            return None
+        scale = total / raw_total
+        events: list[dict[str, Any]] = [
+            {"time": time, "damage_type": damage_type, "damage": raw * scale}
+            for time, raw in self._raw_ticks
+        ]
+        # Eliminate floating-point drift while preserving every tick's timing.
+        events[-1]["damage"] += total - sum(event["damage"] for event in events)
+        return events
+
+
+def _integrate_stack_chains(
+    timeline: StackTimeline,
+    duration: float,
+    ledger: _DotTickLedger,
+) -> float:
+    """Walk the stack applications, integrating every chain's raw damage.
+
+    Each span between applications ticks at the running stack count;
+    ticks stop ``duration`` after the last application even if the next
+    one comes later (the chain expired meanwhile), and the final
+    application commits its full window of ticks past the fight cutoff.
+    The ledger buckets the same integral into tick events as it goes.
+    """
+    raw_total = 0.0
+    stacks = timeline.starting_stacks
+    previous_hit = 0.0
+    if stacks > 0:
+        ledger.open_chain(0.0)  # the pre-fight chain is already running
+    for application in timeline.applications:
+        if stacks > 0:
+            chain_end = min(application.time, previous_hit + duration)
+            raw_total += ledger.accumulate(previous_hit, chain_end, stacks)
+            if application.stacks_before == 0:
+                # The chain expired before this hit: close its last
+                # (partial) tick where the bleed actually stopped.
+                ledger.close_chain(chain_end)
+        # A fresh chain's ticks ride this application's clock; a running
+        # chain keeps its anchor (open_chain is a no-op then).
+        ledger.open_chain(application.time)
+        stacks = application.stacks_after
+        previous_hit = application.time
+    # Committed tail: the last application's full window of ticks.
+    raw_total += ledger.accumulate(previous_hit, previous_hit + duration, stacks)
+    ledger.close_chain(previous_hit + duration)
+    return raw_total
+
+
 def _add_stacking_dot_damage(state: FightState) -> None:
     """Add hit-timeline stacking DoT damage (Case 4, e.g. Briar's bleed).
 
@@ -3557,6 +3738,13 @@ def _add_stacking_dot_damage(state: FightState) -> None:
     falls inside it, so a window opening mid-gap splits that gap. The
     DoT cannot crit and triggers nothing; it is mitigated once as its
     declared type.
+
+    A spec with a sourced ``tick_interval`` also authors per-tick damage
+    events: the same integral is bucketed at tick boundaries riding each
+    chain's clock (anchored at the application that opened the chain; a
+    gap of ``duration`` closes the chain's last partial tick where the
+    bleed stopped and the next application re-anchors the grid). Without
+    a sourced cadence no events are invented and the row stays coarse.
     """
     timeline = state.stack_timeline
     if timeline is None:
@@ -3603,27 +3791,15 @@ def _add_stacking_dot_damage(state: FightState) -> None:
             total_raw += tick_rate(stacks, False) * (end - cursor)
         return total_raw
 
-    raw_total = 0.0
-    stacks = timeline.starting_stacks
-    previous_hit = 0.0
-    for application in timeline.applications:
-        if stacks > 0:
-            # Ticks stop ``duration`` after the last application even if
-            # the next one comes later (the chain expired meanwhile).
-            raw_total += integrate(
-                previous_hit, min(application.time, previous_hit + duration), stacks
-            )
-        stacks = application.stacks_after
-        previous_hit = application.time
-    # Committed tail: the last application's full window of ticks.
-    raw_total += integrate(previous_hit, previous_hit + duration, stacks)
+    ledger = _DotTickLedger(float(spec.get("tick_interval", 0.0)), integrate)
+    raw_total = _integrate_stack_chains(timeline, duration, ledger)
 
     damage_type = spec.get("damage_type", "physical")
     total = _mitigate(raw_total, damage_type, state.resists, state.magic_amp)
     # A seeded-only fight lands no applications; the pre-fight stacks are
     # what the row is reporting, so they are its count.
     applications = len(timeline.applications) or timeline.starting_stacks
-    state.breakdown[f"stacking_dot_{dot_key}"] = {
+    row: dict[str, Any] = {
         "name": spec["name"],
         "count": applications,
         "damage_per_hit": total / applications,
@@ -3635,6 +3811,11 @@ def _add_stacking_dot_damage(state: FightState) -> None:
             f"the full {duration:g}s of ticks"
         ),
     }
+    events = ledger.events(damage_type, total, raw_total)
+    if events is not None:
+        row["damage_events"] = events
+        row["event_phase"] = "effect"
+    state.breakdown[f"stacking_dot_{dot_key}"] = row
     state.total_damage += total
 
 
@@ -6464,6 +6645,7 @@ def calculate_fight_damage(
 
     # ── Ability rotation, precomputed procs, DoTs, and Shaped Charge ────
     rotation = _compute_ability_rotation(state)
+    _author_ability_dot_events(state, rotation)
     _add_precomputed_proc_damage(state)
     _add_stacking_dot_damage(state)
     _add_shaped_charge_damage(state)

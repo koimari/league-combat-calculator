@@ -285,6 +285,71 @@ class TestTimelineCoverage:
         assert secondary["health_damage"] == pytest.approx(675.0)
 
 
+class TestAbilityDotTickEvents:
+    """DoT ability rows with a sourced tick cadence author per-tick events."""
+
+    @staticmethod
+    def _dot_spell(*, tick_interval: float | None = 0.5) -> dict:
+        entry = {
+            "name": "Poison",
+            "rank": 1,
+            "cooldown": 4.0,
+            "damage_type": "magic",
+            "total_raw": 300.0,
+            "parts": (DamagePart("magic", 300.0),),
+            "dot_duration": 3.0,
+        }
+        if tick_interval is not None:
+            entry["dot_tick_interval"] = tick_interval
+        return {"Q": entry}
+
+    def test_sourced_cadence_authors_ticks_from_each_cast(self, fight, attacker_stats):
+        """Casts at t=0 and t=4 each spread six 0.5s ticks over their
+        3s window; the events sum to the row total and certify it."""
+        result = fight(
+            attacker_stats(),
+            self._dot_spell(),
+            target_magic_resistance=0.0,
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+        )
+
+        row = result["breakdown"]["Q"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == pytest.approx(
+            [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
+        )
+        assert all(event["damage"] == pytest.approx(50.0) for event in events)
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+
+    def test_authored_dot_ticks_lift_the_coverage_downgrade(
+        self, fight, attacker_stats
+    ):
+        """A dot_duration row whose events sum exactly is certified."""
+        result = fight(
+            attacker_stats(),
+            self._dot_spell(),
+            target_magic_resistance=0.0,
+        )
+
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert "Q" in coverage["exact_sources"]
+
+    def test_dot_without_sourced_cadence_stays_coarse(self, fight, attacker_stats):
+        """No sourced tick interval means no invented events: fail closed."""
+        result = fight(
+            attacker_stats(),
+            self._dot_spell(tick_interval=None),
+            target_magic_resistance=0.0,
+        )
+
+        assert "damage_events" not in result["breakdown"]["Q"]
+        assert "Q" in result["timeline_coverage"]["coarse_sources"]
+
+
 class TestOrderedDamageEvents:
     """The shared ledger keeps cast order and exact typed composition."""
 
@@ -1850,22 +1915,27 @@ class TestSplitByDamageType:
 # ---------------------------------------------------------------------------
 
 
-def _stacking_dot_passive(single_stack_raw=100.0, applied_by_autos=True):
+def _stacking_dot_passive(
+    single_stack_raw=100.0, applied_by_autos=True, tick_interval=None
+):
     """Passive entry declaring a hit-driven stacking DoT (Briar P shape)."""
+    spec = {
+        "name": "Bleed",
+        "damage_type": "physical",
+        "single_stack_raw": single_stack_raw,
+        "duration": 5.0,
+        "max_stacks": 5,
+        "extra_stack_effectiveness": 0.25,
+        "applied_by_autos": applied_by_autos,
+    }
+    if tick_interval is not None:
+        spec["tick_interval"] = tick_interval
     return {
         "name": "Bleed",
         "damage_type": "physical",
         "total_raw": single_stack_raw,
         "parts": (),
-        "stacking_dot": {
-            "name": "Bleed",
-            "damage_type": "physical",
-            "single_stack_raw": single_stack_raw,
-            "duration": 5.0,
-            "max_stacks": 5,
-            "extra_stack_effectiveness": 0.25,
-            "applied_by_autos": applied_by_autos,
-        },
+        "stacking_dot": spec,
     }
 
 
@@ -2049,6 +2119,89 @@ class TestStackingDot:
             target_armor=0.0,
         )
         assert "stacking_dot_passive" not in result["breakdown"]
+
+
+class TestStackingDotTickEvents:
+    """A sourced tick cadence turns the integrated bleed into tick events."""
+
+    def test_single_application_authors_its_four_ticks(
+        self, attacker_stats, fight
+    ) -> None:
+        """One stack over 5s at 1.25s cadence: four 25-raw ticks."""
+        abilities = {
+            "passive": _stacking_dot_passive(tick_interval=1.25),
+            "Q": _stack_applier(),
+        }
+        result = fight(attacker_stats(), abilities, target_armor=0.0)
+
+        row = result["breakdown"]["stacking_dot_passive"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == pytest.approx(
+            [1.25, 2.5, 3.75, 5.0]
+        )
+        assert all(event["damage"] == pytest.approx(25.0) for event in events)
+        assert all(event["damage_type"] == "physical" for event in events)
+        coverage = result["timeline_coverage"]
+        assert "stacking_dot_passive" in coverage["exact_sources"]
+
+    def test_tick_buckets_integrate_the_ramping_rate(
+        self, attacker_stats, fight
+    ) -> None:
+        """10 autos at 1/s: the first 1.25s tick spans the 1-stack second
+        (20) plus a quarter second at 2 stacks (6.25); the whole event
+        list conserves the row's 510 raw total through the tail at 14s."""
+        result = fight(
+            attacker_stats(),
+            {"passive": _stacking_dot_passive(tick_interval=1.25)},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+        )
+
+        row = result["breakdown"]["stacking_dot_passive"]
+        events = row["damage_events"]
+        assert len(events) == 12  # 11 full ticks + the 14s tail remainder
+        assert events[0]["time"] == pytest.approx(1.25)
+        assert events[0]["damage"] == pytest.approx(26.25)
+        assert events[-1]["time"] == pytest.approx(14.0)
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert result["timeline_coverage"]["complete"] is True
+
+    def test_expired_chain_reanchors_the_tick_grid(self, attacker_stats, fight) -> None:
+        """Hits at t=0 and t=6 (gap > 5s): the first chain ticks on the
+        t=0 clock, the fresh chain ticks on the t=6 clock."""
+        result = fight(
+            attacker_stats(attack_speed=1.0 / 6.0),
+            {"passive": _stacking_dot_passive(tick_interval=1.25)},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=12.0,
+            auto_attack_uptime=1.0,
+        )
+
+        row = result["breakdown"]["stacking_dot_passive"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == pytest.approx(
+            [1.25, 2.5, 3.75, 5.0, 7.25, 8.5, 9.75, 11.0]
+        )
+        assert sum(event["damage"] for event in events) == pytest.approx(200.0)
+
+    def test_unsourced_cadence_keeps_the_row_coarse(
+        self, attacker_stats, fight
+    ) -> None:
+        """No sourced tick interval means no invented events: fail closed."""
+        abilities = {
+            "passive": _stacking_dot_passive(),
+            "Q": _stack_applier(),
+        }
+        result = fight(attacker_stats(), abilities, target_armor=0.0)
+
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert "damage_events" not in row
+        assert "stacking_dot_passive" in result["timeline_coverage"]["coarse_sources"]
 
 
 # ---------------------------------------------------------------------------
