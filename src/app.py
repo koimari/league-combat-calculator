@@ -1478,6 +1478,10 @@ def api_bis():
             if subject_team == "main"
             else (ally_requests[subject_index] if subject_team == "ally" else enemy_requests[subject_index])
         )
+        if subject_team != "main" and not subject_base.role:
+            raise ValueError(
+                f"{subject_team} role is required before roster BIS can be scored"
+            )
         subject_id = (
             "main"
             if subject_team == "main"

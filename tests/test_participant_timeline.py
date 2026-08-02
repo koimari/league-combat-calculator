@@ -323,6 +323,7 @@ def _bis_request(subject_team: str) -> dict:
                 "champion": "Ambessa",
                 "level": 18,
                 "items": [],
+                "role": "top",
                 "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
             }
         ],
@@ -363,6 +364,15 @@ def test_bis_endpoint_keeps_ally_and_enemy_in_the_same_timeline():
     assert "effective_health" in ally_top["components"]
     assert enemy_top["metric"] == "enemy TTD (survival-coupled)"
     assert enemy_top["components"]["effective_health"] > 0
+
+
+def test_roster_bis_requires_an_explicit_role_instead_of_guessing_item_class():
+    app.config["TESTING"] = True
+    payload = _bis_request("enemy")
+    payload["enemies"][0].pop("role")
+    response = app.test_client().post("/api/bis", json=payload)
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "enemy role is required before roster BIS can be scored"
 
 
 def test_bis_withholds_partial_event_order_instead_of_labeling_it_certified():
