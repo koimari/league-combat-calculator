@@ -24,6 +24,10 @@ class StartingDefenses:
     magic_shield: float = 0.0
     physical_shield: float = 0.0
     general_shield: float = 0.0
+    basic_damage_multiplier: float = 1.0
+    basic_damage_flat_reduction: float = 0.0
+    basic_damage_flat_reduction_cap: float = 0.0
+    critical_strike_damage_multiplier: float = 1.0
     assumptions: tuple[str, ...] = ()
     sources: tuple[DefenseSource, ...] = ()
     coverage: str = "base_and_items_only"
@@ -34,6 +38,18 @@ class StartingDefenses:
             "magic_shield": round(self.magic_shield, 1),
             "physical_shield": round(self.physical_shield, 1),
             "general_shield": round(self.general_shield, 1),
+            "incoming_damage": {
+                "basic_damage_multiplier": round(self.basic_damage_multiplier, 3),
+                "basic_damage_flat_reduction": round(
+                    self.basic_damage_flat_reduction, 1
+                ),
+                "basic_damage_flat_reduction_cap": round(
+                    self.basic_damage_flat_reduction_cap, 3
+                ),
+                "critical_strike_damage_multiplier": round(
+                    self.critical_strike_damage_multiplier, 3
+                ),
+            },
             "assumptions": list(self.assumptions),
             "sources": [
                 {
@@ -71,6 +87,27 @@ _SPIRIT_VISAGE_SOURCE = DefenseSource(
     revision_timestamp="2026-05-09T17:09:08Z",
 )
 
+_PLATED_STEELCAPS_SOURCE = DefenseSource(
+    label="Plated Steelcaps — Plating",
+    source_url="https://wiki.leagueoflegends.com/en-us/Plated_Steelcaps",
+    revision_id=4022248,
+    revision_timestamp="2026-05-24T02:13:22Z",
+)
+
+_WARDENS_MAIL_SOURCE = DefenseSource(
+    label="Warden's Mail — Rock Solid",
+    source_url="https://wiki.leagueoflegends.com/en-us/Warden%27s_Mail",
+    revision_id=3987228,
+    revision_timestamp="2026-01-25T05:28:19Z",
+)
+
+_RANDUINS_OMEN_SOURCE = DefenseSource(
+    label="Randuin's Omen — Resilience",
+    source_url="https://wiki.leagueoflegends.com/en-us/Randuin%27s_Omen",
+    revision_id=4021798,
+    revision_timestamp="2026-05-21T14:21:13Z",
+)
+
 
 def _galio_starting_defenses(level: int, maximum_health: float) -> StartingDefenses:
     if get_ability_rank("W", level, "Galio") < 1:
@@ -101,6 +138,14 @@ def resolve_starting_defenses(
     magic_shield = champion_defenses.magic_shield
     physical_shield = champion_defenses.physical_shield
     general_shield = champion_defenses.general_shield
+    basic_damage_multiplier = champion_defenses.basic_damage_multiplier
+    basic_damage_flat_reduction = champion_defenses.basic_damage_flat_reduction
+    basic_damage_flat_reduction_cap = (
+        champion_defenses.basic_damage_flat_reduction_cap
+    )
+    critical_strike_damage_multiplier = (
+        champion_defenses.critical_strike_damage_multiplier
+    )
     assumptions = list(champion_defenses.assumptions)
     sources = list(champion_defenses.sources)
 
@@ -128,12 +173,43 @@ def resolve_starting_defenses(
         )
         sources.append(_SPIRIT_VISAGE_SOURCE)
 
+    if "Plated Steelcaps" in names:
+        basic_damage_multiplier *= float(
+            ITEM_EFFECTS["Plated Steelcaps"]["basic_damage_multiplier"]
+        )
+        assumptions.append("Plating reduces every non-true basic-damage instance.")
+        sources.append(_PLATED_STEELCAPS_SOURCE)
+
+    if "Warden's Mail" in names:
+        basic_damage_flat_reduction = float(
+            ITEM_EFFECTS["Warden's Mail"]["basic_damage_flat_reduction"]
+        )
+        basic_damage_flat_reduction_cap = float(
+            ITEM_EFFECTS["Warden's Mail"]["basic_damage_flat_reduction_cap"]
+        )
+        assumptions.append(
+            "Rock Solid reduces the first post-mitigation basic-damage "
+            "instance of each attack or cast."
+        )
+        sources.append(_WARDENS_MAIL_SOURCE)
+
+    if "Randuin's Omen" in names:
+        critical_strike_damage_multiplier *= float(
+            ITEM_EFFECTS["Randuin's Omen"]["critical_strike_damage_multiplier"]
+        )
+        assumptions.append("Resilience reduces damage from critical strikes.")
+        sources.append(_RANDUINS_OMEN_SOURCE)
+
     if not sources:
         return StartingDefenses()
     return StartingDefenses(
         magic_shield=magic_shield,
         physical_shield=physical_shield,
         general_shield=general_shield,
+        basic_damage_multiplier=basic_damage_multiplier,
+        basic_damage_flat_reduction=basic_damage_flat_reduction,
+        basic_damage_flat_reduction_cap=basic_damage_flat_reduction_cap,
+        critical_strike_damage_multiplier=critical_strike_damage_multiplier,
         assumptions=tuple(assumptions),
         sources=tuple(sources),
         coverage="modeled_starting_defenses",

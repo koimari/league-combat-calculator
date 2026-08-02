@@ -106,6 +106,13 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
         "Warmog's Vitality modifies item health; combat regeneration stays "
         "inactive while the target is taking damage."
     ),
+    "Plated Steelcaps": "Plating's 10% non-true basic-damage reduction is modelled.",
+    "Warden's Mail": (
+        "Rock Solid's post-mitigation 15 reduction, capped at 20%, is modelled."
+    ),
+    "Randuin's Omen": (
+        "Resilience's 30% incoming critical-strike damage reduction is modelled."
+    ),
 }
 
 _TARGET_BLOCKED_REASONS: dict[str, str] = {
@@ -133,9 +140,7 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",
     "Maw of Malmortius": "Lifeline's low-health magic shield is not modelled.",
     "Mikael's Blessing": "Purify's activated heal is not modelled.",
-    "Plated Steelcaps": "Plating's incoming basic-damage reduction is not modelled.",
     "Protoplasm Harness": "Lifeline's low-health shield is not modelled.",
-    "Randuin's Omen": "Resilience's incoming critical-strike reduction is not modelled.",
     "Redemption": "Intervention's activated target healing is not modelled.",
     "Rod of Ages": "Timeless health stacks are not exposed as target state.",
     "Seeker's Armguard": "Time Stop's stasis is not modelled.",
@@ -146,7 +151,6 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Thornmail": "Thorns' reactive damage and attacker survival are not modelled.",
     "Unending Despair": "Anguish's periodic combat healing is not modelled.",
     "Verdant Barrier": "Annul's spell shield is not modelled.",
-    "Warden's Mail": "Rock Solid's incoming basic-damage reduction is not modelled.",
     "Whispering Circlet": "Manaflow health state is not exposed for target modelling.",
     "Winter's Approach": "Awe and Manaflow health state are not modelled.",
     "Zhonya's Hourglass": "Time Stop's stasis is not modelled.",
@@ -161,7 +165,10 @@ def _has_described_effect(item: dict[str, Any]) -> bool:
 def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     """Return the optimiser coverage classification for one resolved item."""
     name = str(item.get("name", ""))
-    if ITEM_EFFECTS.get(name, {}).get("type") == "defensive_start":
+    if ITEM_EFFECTS.get(name, {}).get("type") in {
+        "defensive_start",
+        "target_mitigation",
+    }:
         status: ItemCoverageStatus = "stats_only"
         reason = "The represented mechanic changes defense, not outgoing TDD."
     elif name in ITEM_EFFECTS:

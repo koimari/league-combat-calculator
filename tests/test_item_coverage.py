@@ -103,7 +103,9 @@ def test_optimizer_rejects_a_locked_item_with_unmodeled_damage_mechanics():
         ("Spirit Visage", "modeled"),
         ("Warmog's Armor", "modeled"),
         ("Banshee's Veil", "blocked"),
-        ("Plated Steelcaps", "blocked"),
+        ("Plated Steelcaps", "modeled"),
+        ("Warden's Mail", "modeled"),
+        ("Randuin's Omen", "modeled"),
         ("Void Staff", "not_target_relevant"),
     ],
 )

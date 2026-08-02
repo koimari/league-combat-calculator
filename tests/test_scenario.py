@@ -66,6 +66,33 @@ def test_spirit_visage_amplifies_champion_and_kaenic_shields():
     assert with_visage.defenses.sources[-1].revision_id == 4016166
 
 
+def test_target_items_resolve_sourced_incoming_damage_modifiers():
+    loadout = ChampionLoadout(
+        champion="Galio",
+        level=12,
+        items=("Warden's Mail", "Randuin's Omen"),
+        boots="Plated Steelcaps",
+    ).resolve()
+
+    assert loadout.defenses.basic_damage_multiplier == pytest.approx(0.90)
+    assert loadout.defenses.basic_damage_flat_reduction == 15
+    assert loadout.defenses.basic_damage_flat_reduction_cap == pytest.approx(0.20)
+    assert loadout.defenses.critical_strike_damage_multiplier == pytest.approx(0.70)
+    assert [source.revision_id for source in loadout.defenses.sources[-3:]] == [
+        4022248,
+        3987228,
+        4021798,
+    ]
+
+    public = loadout.defenses.public_summary()["incoming_damage"]
+    assert public == {
+        "basic_damage_multiplier": 0.9,
+        "basic_damage_flat_reduction": 15.0,
+        "basic_damage_flat_reduction_cap": 0.2,
+        "critical_strike_damage_multiplier": 0.7,
+    }
+
+
 def test_loadout_level_changes_derived_stats():
     level_one = ChampionLoadout(champion="Ziggs", level=1).resolve()
     level_twelve = ChampionLoadout(champion="Ziggs", level=12).resolve()

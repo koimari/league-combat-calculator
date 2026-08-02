@@ -86,6 +86,137 @@ class TestMitigate:
         assert _mitigate(300.0, "true", resists, 1.2) == 300.0
 
 
+class TestTargetIncomingDamageModifiers:
+    """Target item defenses apply to their exact damage events."""
+
+    def test_plating_and_rock_solid_apply_after_armor(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(attack_damage=100.0, attack_speed=1.0),
+            one_rotation=False,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=1.0,
+            target_armor=100.0,
+            target_basic_damage_multiplier=0.90,
+            target_basic_damage_flat_reduction=15.0,
+            target_basic_damage_flat_reduction_cap=0.20,
+        )
+
+        # 100 raw -> 50 after armor -> 45 after Plating -> Rock Solid is
+        # capped at 20% of 45, so it removes 9 rather than the full 15.
+        assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
+            36.0
+        )
+
+    def test_randuin_reduces_only_the_critical_branch(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(
+                attack_damage=100.0,
+                attack_speed=1.0,
+                critical_strike_chance=50.0,
+            ),
+            one_rotation=False,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=1.0,
+            target_armor=0.0,
+            target_critical_strike_damage_multiplier=0.70,
+        )
+
+        # Deterministic EV: 50% x 100 + 50% x (200 x 0.7) = 120.
+        assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
+            120.0
+        )
+
+    def test_rock_solid_consumes_once_per_multihit_basic_cast(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Two-hit attack spell",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 200.0,
+                    "parts": (
+                        DamagePart(
+                            "physical", 100.0, count=2, basic_damage=True
+                        ),
+                    ),
+                }
+            },
+            target_armor=0.0,
+            target_basic_damage_multiplier=0.90,
+            target_basic_damage_flat_reduction=15.0,
+            target_basic_damage_flat_reduction_cap=0.20,
+        )
+
+        # Both hits receive Plating (180 total); only the first instance in
+        # the cast consumes Rock Solid (15), leaving 165.
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(165.0)
+
+    def test_randuin_reduces_ability_critical_strikes(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(critical_strike_chance=100.0),
+            {
+                "Q": {
+                    "name": "Critting ability",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 100.0,
+                    "parts": (
+                        DamagePart("physical", 100.0, crit_effectiveness=1.0),
+                    ),
+                }
+            },
+            target_armor=0.0,
+            target_critical_strike_damage_multiplier=0.70,
+        )
+
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(140.0)
+
+    def test_randuin_does_not_reduce_true_damage_critical_strikes(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(critical_strike_chance=100.0),
+            {
+                "Q": {
+                    "name": "True crit",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "true",
+                    "total_raw": 100.0,
+                    "parts": (
+                        DamagePart("true", 100.0, crit_effectiveness=1.0),
+                    ),
+                }
+            },
+            target_critical_strike_damage_multiplier=0.70,
+        )
+
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(200.0)
+
+    def test_plating_reduces_basic_tagged_item_damage(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(attack_damage=100.0, attack_speed=1.0),
+            one_rotation=False,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=1.0,
+            target_armor=0.0,
+            target_basic_damage_multiplier=0.90,
+            items=[{"name": "Heartsteel"}],
+        )
+
+        assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
+            90.0
+        )
+        assert result["breakdown"]["on_hit_once_Heartsteel"][
+            "total_damage"
+        ] == pytest.approx(171.0)
+
+
 class TestBorkCurrentHpSimulation:
     """Tests for Blade of the Ruined King current-HP iterative simulation."""
 

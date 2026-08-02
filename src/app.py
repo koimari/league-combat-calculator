@@ -524,6 +524,18 @@ def _comparison_curve(
                     target_magic_shield=enemy.defenses.magic_shield,
                     target_physical_shield=enemy.defenses.physical_shield,
                     target_general_shield=enemy.defenses.general_shield,
+                    target_basic_damage_multiplier=(
+                        enemy.defenses.basic_damage_multiplier
+                    ),
+                    target_basic_damage_flat_reduction=(
+                        enemy.defenses.basic_damage_flat_reduction
+                    ),
+                    target_basic_damage_flat_reduction_cap=(
+                        enemy.defenses.basic_damage_flat_reduction_cap
+                    ),
+                    target_critical_strike_damage_multiplier=(
+                        enemy.defenses.critical_strike_damage_multiplier
+                    ),
                 )
                 target_results.append(
                     {
@@ -910,6 +922,16 @@ def api_calculate():
             target_magic_shield=enemy.defenses.magic_shield,
             target_physical_shield=enemy.defenses.physical_shield,
             target_general_shield=enemy.defenses.general_shield,
+            target_basic_damage_multiplier=enemy.defenses.basic_damage_multiplier,
+            target_basic_damage_flat_reduction=(
+                enemy.defenses.basic_damage_flat_reduction
+            ),
+            target_basic_damage_flat_reduction_cap=(
+                enemy.defenses.basic_damage_flat_reduction_cap
+            ),
+            target_critical_strike_damage_multiplier=(
+                enemy.defenses.critical_strike_damage_multiplier
+            ),
         )
         serialized = _serialize_fight_result(
             run_fight(champion_data, level, items, target_params)
@@ -1064,6 +1086,16 @@ def api_optimize():
             target_magic_shield=enemy.defenses.magic_shield,
             target_physical_shield=enemy.defenses.physical_shield,
             target_general_shield=enemy.defenses.general_shield,
+            target_basic_damage_multiplier=enemy.defenses.basic_damage_multiplier,
+            target_basic_damage_flat_reduction=(
+                enemy.defenses.basic_damage_flat_reduction
+            ),
+            target_basic_damage_flat_reduction_cap=(
+                enemy.defenses.basic_damage_flat_reduction_cap
+            ),
+            target_critical_strike_damage_multiplier=(
+                enemy.defenses.critical_strike_damage_multiplier
+            ),
         )
         for enemy in enemies
     )

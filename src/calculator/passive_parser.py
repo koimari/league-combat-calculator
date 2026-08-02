@@ -1226,6 +1226,45 @@ def _parse_spirit_visage_vitality(text: str) -> dict[str, Any]:
     }
 
 
+def _parse_plating(text: str) -> dict[str, Any]:
+    """Parse Steelcaps Plating's incoming basic-damage reduction."""
+    text_resolved = _resolve_simple_templates(text)
+    reduction = _extract_percentage(text_resolved)
+    if reduction is None:
+        return {}
+    return {"basic_damage_multiplier": 1.0 - reduction}
+
+
+def _parse_rock_solid(text: str) -> dict[str, Any]:
+    """Parse Warden's Mail's post-mitigation flat reduction and cap."""
+    text_resolved = _resolve_simple_templates(text)
+    flat_match = re.search(
+        r"reduced[^\d]*(\d+(?:\.\d+)?)",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    cap_match = re.search(
+        r"maximum[^\d]*(\d+(?:\.\d+)?)%",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if not flat_match or not cap_match:
+        return {}
+    return {
+        "basic_damage_flat_reduction": float(flat_match.group(1)),
+        "basic_damage_flat_reduction_cap": float(cap_match.group(1)) / 100.0,
+    }
+
+
+def _parse_critical_resilience(text: str) -> dict[str, Any]:
+    """Parse Randuin's incoming critical-strike damage reduction."""
+    text_resolved = _resolve_simple_templates(text)
+    reduction = _extract_percentage(text_resolved)
+    if reduction is None:
+        return {}
+    return {"critical_strike_damage_multiplier": 1.0 - reduction}
+
+
 def _parse_stormrazor_bolt(text: str) -> dict[str, Any]:
     """Parse Stormrazor Bolt: energized magic damage on first auto.
 
@@ -1800,6 +1839,11 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     ],
     "Spirit Visage": [
         ("passive", "Boundless Vitality", _parse_spirit_visage_vitality, {})
+    ],
+    "Plated Steelcaps": [("passive", "Plating", _parse_plating, {})],
+    "Warden's Mail": [("passive", "Rock Solid", _parse_rock_solid, {})],
+    "Randuin's Omen": [
+        ("passive", "Resilience", _parse_critical_resilience, {})
     ],
     # ── Energized ──
     "Rapid Firecannon": [("passive", "Sharpshooter", _parse_simple_on_hit, {})],

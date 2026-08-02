@@ -1137,12 +1137,27 @@ document.addEventListener("DOMContentLoaded", () => {
             ["Physical shield", Number(defenses.physical_shield || 0)],
             ["Shield", Number(defenses.general_shield || 0)],
         ].filter(([, amount]) => amount > 0);
-        if (!shields.length) return "";
-        const summary = shields
+        const incoming = defenses.incoming_damage || {};
+        const modifiers = [];
+        const basicMultiplier = Number(incoming.basic_damage_multiplier ?? 1);
+        const basicFlat = Number(incoming.basic_damage_flat_reduction || 0);
+        const basicCap = Number(incoming.basic_damage_flat_reduction_cap || 0);
+        const critMultiplier = Number(incoming.critical_strike_damage_multiplier ?? 1);
+        if (basicMultiplier < 1) {
+            modifiers.push(`${Math.round((1 - basicMultiplier) * 100)}% less basic damage`);
+        }
+        if (basicFlat > 0) {
+            modifiers.push(`−${Math.round(basicFlat)} basic damage (${Math.round(basicCap * 100)}% cap)`);
+        }
+        if (critMultiplier < 1) {
+            modifiers.push(`${Math.round((1 - critMultiplier) * 100)}% less critical-strike damage`);
+        }
+        const parts = shields
             .map(([label, amount]) => `${label} ${Math.round(amount).toLocaleString()}`)
-            .join(" · ");
-        return `<div class="roster-model-status ready" role="status"><strong>Ready at start</strong>` +
-            `<span>${escapeHtml(summary)}</span></div>`;
+            .concat(modifiers);
+        if (!parts.length) return "";
+        return `<div class="roster-model-status ready" role="status"><strong>Modeled defense</strong>` +
+            `<span>${escapeHtml(parts.join(" · "))}</span></div>`;
     }
 
     function rosterCard(entry, team) {

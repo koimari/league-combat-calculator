@@ -575,6 +575,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "base": 70.0,
         "max_hp_ratio": 0.06,
         "cooldown": 30.0,
+        # Wiki Damage tags: this item proc is tagged BasicAttack.
+        "basic_damage": True,
     },
     "Hullbreaker": {
         "type": "on_hit_stacking",
@@ -610,6 +612,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "scaling_start_level": 9,
         "missing_hp_bonus_max": 0.75,
         "hits_required": 3,
+        # Wiki Damage tags: this item proc is tagged BasicAttack.
+        "basic_damage": True,
     },
     # ── Stat Conversion (passives that modify champion stats) ──────────────
     "Rabadon's Deathcap": {
@@ -658,6 +662,19 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Spirit Visage": {
         "type": "defensive_start",
         "shield_received_multiplier": 1.25,
+    },
+    "Plated Steelcaps": {
+        "type": "target_mitigation",
+        "basic_damage_multiplier": 0.90,
+    },
+    "Warden's Mail": {
+        "type": "target_mitigation",
+        "basic_damage_flat_reduction": 15.0,
+        "basic_damage_flat_reduction_cap": 0.20,
+    },
+    "Randuin's Omen": {
+        "type": "target_mitigation",
+        "critical_strike_damage_multiplier": 0.70,
     },
     "Stormrazor": {
         "type": "on_hit_once",
@@ -723,6 +740,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "repeat_on_cooldown",
         "is_ability_damage",
         "double_on_hit",
+        "basic_damage",
     }
 )
 
@@ -919,6 +937,7 @@ class DamageSource:
     multi_target_charges: int = 0
     repeated_target_multiplier: float = 1.0
     single_target_multiplier: float = 1.0
+    basic_damage: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -1592,6 +1611,7 @@ def _explicit_damage_source(
         display_name=str(required.value("display_name")),
         damage_type=required.value("damage_type"),
         raw_damage=raw_damage,
+        basic_damage=bool(required.values.get("basic_damage", False)),
     )
 
 
@@ -1819,6 +1839,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "shaped_charge",
         "spellblade",
         "stat_conversion",
+        "target_mitigation",
         "ult_attack_speed_buff",
         "ult_empowered_autos",
         "ult_proc",

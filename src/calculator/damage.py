@@ -362,6 +362,10 @@ class FightConfig:
     target_magic_shield: float = 0.0
     target_physical_shield: float = 0.0
     target_general_shield: float = 0.0
+    target_basic_damage_multiplier: float = 1.0
+    target_basic_damage_flat_reduction: float = 0.0
+    target_basic_damage_flat_reduction_cap: float = 0.0
+    target_critical_strike_damage_multiplier: float = 1.0
     enforce_resource_limits: bool = False
 
 
@@ -395,6 +399,10 @@ class FightState:
     is_melee: bool
     level: int
     enforce_resource_limits: bool
+    target_basic_damage_multiplier: float
+    target_basic_damage_flat_reduction: float
+    target_basic_damage_flat_reduction_cap: float
+    target_critical_strike_damage_multiplier: float
     # ── Resolved combat numbers ───────────────────────────────────────────
     resists: Resists
     magic_amp: float  # Abyssal Mask
@@ -438,6 +446,62 @@ def _apply_basic_amp(
     amped = mitigated * state.basic_amp
     state.basic_amp_ability_bonus += (amped - mitigated) * procs
     return amped
+
+
+def _apply_target_basic_damage_reduction(
+    state: "FightState",
+    post_mitigation_damage: float,
+    *,
+    hits: int = 1,
+    rock_solid_instances: int = 1,
+) -> float:
+    """Apply target-side percentage and capped-flat basic-damage defenses.
+
+    Plating is a percentage modifier and therefore composes
+    multiplicatively with armor and attacker amplifiers. Rock Solid is
+    explicitly post-mitigation: it removes 15 from the first basic-damage
+    instance of each cast, but never more than 20% of that instance.
+    ``hits`` lets a multi-hit basic-damage part receive Plating on every hit
+    while consuming Rock Solid only once for its cast instance.
+    """
+    if hits <= 0:
+        return post_mitigation_damage
+    reduced = post_mitigation_damage * state.target_basic_damage_multiplier
+    # Negative parts are algebraic modifiers to a swing (Jayce W below
+    # rank 5), not a separate incoming event. Plating scales the modifier,
+    # but a flat defensive proc cannot be consumed by negative damage.
+    if reduced <= 0:
+        return reduced
+    flat = state.target_basic_damage_flat_reduction
+    cap = state.target_basic_damage_flat_reduction_cap
+    instances = min(max(0, rock_solid_instances), hits)
+    if flat <= 0 or cap <= 0 or instances <= 0:
+        return reduced
+    per_hit = reduced / hits
+    reduction_per_instance = min(flat, per_hit * cap)
+    return max(0.0, reduced - reduction_per_instance * instances)
+
+
+def _mitigate_basic_attack_swing(
+    state: "FightState",
+    raw_damage: float,
+    damage_type: str = "physical",
+    *,
+    critical_strike: bool = False,
+) -> float:
+    """Resolve one primary basic-attack damage instance against the target."""
+    mitigated = _mitigate(
+        raw_damage,
+        damage_type,
+        state.resists,
+        state.magic_amp,
+    )
+    mitigated *= state.basic_amp
+    if critical_strike:
+        mitigated *= state.target_critical_strike_damage_multiplier
+    if damage_type != "true":
+        mitigated = _apply_target_basic_damage_reduction(state, mitigated)
+    return mitigated
 
 
 def _damage_inputs(
@@ -642,6 +706,7 @@ def _simulate_stacking_on_hit_damage(
     magic_amp: float,
     proc_autos: list[int],
     effectiveness: float = 1.0,
+    target_basic_damage_multiplier: float = 1.0,
 ) -> float:
     """Simulate a stacking proc whose formula reads decreasing target HP.
 
@@ -660,6 +725,8 @@ def _simulate_stacking_on_hit_damage(
         proc_autos: Sorted 0-indexed auto indices where the effect procs.
         effectiveness: On-hit effectiveness multiplier on each proc's raw
             damage (Azir soldiers proc at 50%).
+        target_basic_damage_multiplier: Target-side percentage modifier for
+            the rare item proc that the Wiki tags as basic damage.
 
     Returns:
         Total mitigated damage across all procs.
@@ -691,6 +758,8 @@ def _simulate_stacking_on_hit_damage(
                 resists,
                 magic_amp,
             )
+            if effect.source.basic_damage and effect.source.damage_type != "true":
+                mitigated *= target_basic_damage_multiplier
             total_damage += mitigated
             current_hp -= mitigated
 
@@ -1199,6 +1268,16 @@ def _resolve_combat_state(
         is_melee=is_melee,
         level=level,
         enforce_resource_limits=config.enforce_resource_limits,
+        target_basic_damage_multiplier=config.target_basic_damage_multiplier,
+        target_basic_damage_flat_reduction=(
+            config.target_basic_damage_flat_reduction
+        ),
+        target_basic_damage_flat_reduction_cap=(
+            config.target_basic_damage_flat_reduction_cap
+        ),
+        target_critical_strike_damage_multiplier=(
+            config.target_critical_strike_damage_multiplier
+        ),
         resists=resists,
         magic_amp=damage_effects.magic_amp,
         ability_amp=(
@@ -1586,6 +1665,7 @@ def _mitigate_hits(
     raw: float,
     ability_mr: float,
     hits: int,
+    rock_solid_instances: int = 0,
 ) -> float:
     """Mitigated damage for *hits* identical hits of one damage part."""
     if part.damage_type == "true":
@@ -1594,7 +1674,15 @@ def _mitigate_hits(
         mitigated = apply_resistance(raw, state.resists.effective_armor) * hits
     else:
         mitigated = apply_resistance(raw, ability_mr) * state.magic_amp * hits
-    return _apply_basic_amp(state, part, mitigated)
+    mitigated = _apply_basic_amp(state, part, mitigated)
+    if part.basic_damage and part.damage_type != "true":
+        mitigated = _apply_target_basic_damage_reduction(
+            state,
+            mitigated,
+            hits=hits,
+            rock_solid_instances=rock_solid_instances,
+        )
+    return mitigated
 
 
 def _evaluate_cast_parts(
@@ -1634,6 +1722,7 @@ def _evaluate_cast_parts(
     first_part_first_cast = 0.0
     for cast_index in range(num_casts):
         price = pricing[cast_index] if pricing is not None else _NO_PRICING
+        rock_solid_consumed = False
         for part_index, part in enumerate(parts):
             if part.hp_scaled_damage is not None:
                 hp_now = max(0.0, target_health - running_damage)
@@ -1649,17 +1738,55 @@ def _evaluate_cast_parts(
             hits = price.dot_stacks if part.dot_stack_scaled else part.count
             if part.crit_effectiveness > 0:
                 eff = part.crit_effectiveness
-                bonus_crit = state.crit_multiplier - BASE_CRIT_MULTIPLIER
-                raw *= (
-                    1 + eff * state.crit_chance + eff * bonus_crit * state.crit_chance
+                crit_probability = min(1.0, eff * state.crit_chance)
+                target_crit_multiplier = (
+                    1.0
+                    if part.damage_type == "true"
+                    else getattr(
+                        state,
+                        "target_critical_strike_damage_multiplier",
+                        1.0,
+                    )
                 )
+                raw *= (
+                    1.0
+                    - crit_probability
+                    + crit_probability
+                    * state.crit_multiplier
+                    * target_crit_multiplier
+                )
+            rock_solid_instances = int(
+                part.basic_damage
+                and part.damage_type != "true"
+                and hits > 0
+                and raw > 0
+                and not rock_solid_consumed
+            )
             if on_hit is None:
-                mitigated = _mitigate_hits(state, part, raw, ability_mr, hits)
+                mitigated = _mitigate_hits(
+                    state,
+                    part,
+                    raw,
+                    ability_mr,
+                    hits,
+                    rock_solid_instances=rock_solid_instances,
+                )
             else:
                 mitigated = 0.0
-                for _ in range(hits):
-                    mitigated += _mitigate_hits(state, part, raw, ability_mr, 1)
+                for hit_index in range(hits):
+                    mitigated += _mitigate_hits(
+                        state,
+                        part,
+                        raw,
+                        ability_mr,
+                        1,
+                        rock_solid_instances=int(
+                            rock_solid_instances > 0 and hit_index == 0
+                        ),
+                    )
                     ability_mr = on_hit(ability_mr)
+            if rock_solid_instances:
+                rock_solid_consumed = True
             if cast_index == 0 and part_index == 0:
                 first_part_first_cast = mitigated
             total += mitigated
@@ -2915,7 +3042,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         first_auto_crit.reduced_crit_ratio if first_auto_crit is not None else 0.0
     )
 
-    sundered_sky_damage_diff = 0.0  # + = bonus damage, - = lost damage
+    sundered_sky_damage_diff = 0.0  # post-target: + = bonus, - = lost damage
 
     # Ashe-style override: crit chance converts to bonus AD ratio on every
     # auto instead of random crit strikes.  ad_ratio replaces the normal 1.0.
@@ -2970,6 +3097,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         if natural_crit:
             num_crits += 1
 
+        deterministic_outcomes: list[tuple[float, float, bool]] | None = None
+        sundered_normal_raw: float | None = None
+
         if override_crit_as_bonus:
             # Crit chance converts to bonus damage on every auto (e.g. Ashe).
             # Passive: "bonus damage equal to X% of the attack's damage."
@@ -2991,6 +3121,10 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                 raw_phys_no = swing_ad * crit_multiplier * fh_reduced_crit
                 raw_phys = crit_chance * raw_phys_crit + (1 - crit_chance) * raw_phys_no
                 raw_true = crit_chance * raw_true_crit
+                deterministic_outcomes = [
+                    (crit_chance, raw_phys_crit, True),
+                    (1.0 - crit_chance, raw_phys_no, True),
+                ]
             elif natural_crit:
                 # Full crit + bonus true damage
                 raw_phys = swing_ad * crit_multiplier
@@ -3012,7 +3146,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                 normal_raw = swing_ad * crit_multiplier
             else:
                 normal_raw = swing_ad
-            sundered_sky_damage_diff = raw_phys - normal_raw
+            sundered_normal_raw = normal_raw
             raw_true = 0.0
         else:
             if deterministic:
@@ -3020,13 +3154,53 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                 raw_phys = swing_ad * (
                     crit_chance * crit_multiplier + (1 - crit_chance)
                 )
+                deterministic_outcomes = [
+                    (crit_chance, swing_ad * crit_multiplier, True),
+                    (1.0 - crit_chance, swing_ad, False),
+                ]
             elif natural_crit:
                 raw_phys = swing_ad * crit_multiplier
             else:
                 raw_phys = swing_ad
             raw_true = 0.0
 
-        mitigated = apply_resistance(raw_phys, effective_armor)
+        if deterministic_outcomes is not None:
+            mitigated = sum(
+                weight
+                * _mitigate_basic_attack_swing(
+                    state, outcome_raw, critical_strike=critical
+                )
+                for weight, outcome_raw, critical in deterministic_outcomes
+            )
+        else:
+            mitigated = _mitigate_basic_attack_swing(
+                state,
+                raw_phys,
+                critical_strike=(
+                    not override_crit_as_bonus
+                    and (natural_crit or is_empowered or is_sundered)
+                ),
+            )
+
+        if sundered_normal_raw is not None:
+            if deterministic:
+                normal_mitigated = (
+                    crit_chance
+                    * _mitigate_basic_attack_swing(
+                        state,
+                        swing_ad * crit_multiplier,
+                        critical_strike=True,
+                    )
+                    + (1.0 - crit_chance)
+                    * _mitigate_basic_attack_swing(state, swing_ad)
+                )
+            else:
+                normal_mitigated = _mitigate_basic_attack_swing(
+                    state,
+                    sundered_normal_raw,
+                    critical_strike=natural_crit,
+                )
+            sundered_sky_damage_diff = mitigated - normal_mitigated
         auto_physical_total += mitigated
         # Champion rider: a share of this swing's PRE-mitigation damage
         # again as true damage (Corki P). Riding raw_phys carries the
@@ -3043,12 +3217,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             non_crit_damage_per_hit = mitigated
 
     # Apply basic damage amplification (e.g. Hexoptics C44 Magnification)
-    auto_physical_total *= basic_amp
     fiendhunter_true_total *= basic_amp
     # Corki's true instance is basic damage in-game, like the physical one.
     passive_true_total *= basic_amp
-    crit_damage_per_hit *= basic_amp
-    non_crit_damage_per_hit *= basic_amp
 
     auto_total = auto_physical_total
     auto_damage_per_hit = auto_total / num_auto_attacks if num_auto_attacks > 0 else 0.0
@@ -3083,13 +3254,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         and num_auto_attacks > 0
         and override_replace_raw is None
     ):
-        mitigated_diff = (
-            apply_resistance(
-                abs(sundered_sky_damage_diff),
-                effective_armor,
-            )
-            * basic_amp
-        )
+        mitigated_diff = abs(sundered_sky_damage_diff)
         if sundered_sky_damage_diff > 0:
             ss_note = f"+{mitigated_diff:.0f} bonus damage (non-crit turned into {ss_reduced_crit * 100:.0f}% crit)"
         elif sundered_sky_damage_diff < 0:
@@ -3147,7 +3312,17 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             ds_ad = attack_damage * ds_ratio
             if deterministic:
                 ds_crit = False
-                raw_ds = ds_ad * (crit_chance * crit_multiplier + (1 - crit_chance))
+                double_shot_total += (
+                    crit_chance
+                    * _mitigate_basic_attack_swing(
+                        state,
+                        ds_ad * crit_multiplier,
+                        critical_strike=True,
+                    )
+                    + (1.0 - crit_chance)
+                    * _mitigate_basic_attack_swing(state, ds_ad)
+                )
+                continue
             else:
                 ds_crit = random.random() < crit_chance
                 if ds_crit:
@@ -3155,7 +3330,11 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                     raw_ds = ds_ad * crit_multiplier
                 else:
                     raw_ds = ds_ad
-            double_shot_total += apply_resistance(raw_ds, effective_armor) * basic_amp
+            double_shot_total += _mitigate_basic_attack_swing(
+                state,
+                raw_ds,
+                critical_strike=ds_crit,
+            )
 
         ds_non_crits = num_auto_attacks - ds_crits
         breakdown["double_shot"] = {
@@ -3951,6 +4130,8 @@ def _add_single_proc_on_hits(
             mitigated = _mitigate(
                 raw_damage, source.damage_type, resists, state.magic_amp
             )
+            if source.basic_damage and source.damage_type != "true":
+                mitigated *= state.target_basic_damage_multiplier
             breakdown[source.breakdown_key] = {
                 "name": source.display_name,
                 "count": procs,
@@ -4033,6 +4214,8 @@ def _add_single_proc_on_hits(
                 inputs = _damage_inputs(state, max(0.0, app.target_hp - proc_hp_dealt))
                 raw = source.raw_damage(inputs) * app.effectiveness
                 mitigated = _mitigate(raw, source.damage_type, resists, state.magic_amp)
+                if source.basic_damage and source.damage_type != "true":
+                    mitigated *= state.target_basic_damage_multiplier
                 total_damage += mitigated
                 proc_hp_dealt += mitigated
 
@@ -4051,6 +4234,9 @@ def _add_single_proc_on_hits(
                         state.magic_amp,
                         proc_autos,
                         effectiveness=effectiveness,
+                        target_basic_damage_multiplier=(
+                            state.target_basic_damage_multiplier
+                        ),
                     )
                 else:
                     raw = (
@@ -4060,6 +4246,10 @@ def _add_single_proc_on_hits(
                     )
                     total_damage += _mitigate(
                         raw, source.damage_type, resists, state.magic_amp
+                    ) * (
+                        state.target_basic_damage_multiplier
+                        if source.basic_damage and source.damage_type != "true"
+                        else 1.0
                     )
 
             breakdown[source.breakdown_key] = {
