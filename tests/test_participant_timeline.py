@@ -1,8 +1,13 @@
 """Regression coverage for coupled participant combat receipts."""
 
+from types import SimpleNamespace
+
 from src.calculator.data_fetcher import get_champion
 from src.calculator.pipeline import FightParams, run_fight
-from src.app import app
+from src.app import _role_scoped_bis_candidates, app
+from src.calculator.item_coverage import optimizer_supported_items
+from src.calculator.optimizer import get_eligible_legendaries
+from src.calculator.participant_timeline import Combatant, _simulate_survival
 
 
 def _timed_params() -> FightParams:
@@ -140,6 +145,78 @@ def test_api_includes_sourced_lulu_ally_shield_in_main_ehp():
     assert main["survival"]["support_shield_received"] > 0
 
 
+def test_main_support_targets_selected_ally_and_uses_requested_rank():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Lulu",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": False,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+            "allies": [
+                {
+                    "champion": "Jinx",
+                    "level": 18,
+                    "items": [],
+                    "ally_effects_enabled": True,
+                }
+            ],
+            "enemies": [{"champion": "Ambessa", "level": 18, "items": []}],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    shield = next(
+        event
+        for event in combat["support_events"]
+        if event["attacker"] == "main" and event["source"].startswith("Help, Pix!")
+    )
+    assert shield["target"] == "ally:Jinx"
+    assert shield["target_policy"] == "first_selected_teammate"
+    assert shield["amount"] == 230.0
+    assert shield["applied_amount"] == 230.0
+    jinx = next(row for row in combat["participants"] if row["participant_id"] == "ally:Jinx")
+    assert jinx["survival"]["support_shield_received"] == 230.0
+
+
+def test_enemy_self_shield_is_present_in_the_coupled_timeline():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Aatrox",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": False,
+            "enemies": [
+                {
+                    "champion": "Orianna",
+                    "level": 6,
+                    "items": [],
+                    "ability_ranks": {"Q": 3, "W": 1, "E": 1, "R": 1},
+                }
+            ],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    shield = next(
+        event
+        for event in combat["support_events"]
+        if event["attacker"] == "enemy:Orianna"
+        and event["source"].startswith("Command: Protect")
+    )
+    assert shield["target"] == "enemy:Orianna"
+    assert shield["target_policy"] == "self"
+    assert shield["amount"] == 55.0
+
+
 def test_coupled_timeline_stops_output_after_main_champion_is_defeated():
     app.config["TESTING"] = True
     response = app.test_client().post(
@@ -252,6 +329,7 @@ def _bis_request(subject_team: str) -> dict:
                 "champion": "Ambessa",
                 "level": 18,
                 "items": [],
+                "role": "top",
                 "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
             }
         ],
@@ -294,6 +372,27 @@ def test_bis_endpoint_keeps_ally_and_enemy_in_the_same_timeline():
     assert enemy_top["components"]["effective_health"] > 0
 
 
+def test_roster_bis_requires_an_explicit_role_instead_of_guessing_item_class():
+    app.config["TESTING"] = True
+    payload = _bis_request("enemy")
+    payload["enemies"][0].pop("role")
+    response = app.test_client().post("/api/bis", json=payload)
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "enemy role is required before roster BIS can be scored"
+
+
+def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
+    candidates = optimizer_supported_items(get_eligible_legendaries())
+    support = {item["name"] for item in _role_scoped_bis_candidates(candidates, role="support")}
+    top = {item["name"] for item in _role_scoped_bis_candidates(candidates, role="top")}
+
+    assert "Locket of the Iron Solari" in support
+    assert "Moonstone Renewer" in support
+    assert "Warmog's Armor" not in support
+    assert "Warmog's Armor" in top
+    assert "Locket of the Iron Solari" not in top
+
+
 def test_bis_withholds_partial_event_order_instead_of_labeling_it_certified():
     app.config["TESTING"] = True
     payload = {
@@ -329,3 +428,97 @@ def test_explicitly_disabled_ally_effects_are_not_injected_into_ehp():
         event["attacker"] == "ally:Lulu"
         for event in response.get_json()["combat"]["support_events"]
     )
+
+
+def _dummy_combatant(participant_id: str, team: str, health: float = 100.0) -> Combatant:
+    defenses = SimpleNamespace(
+        magic_shield=0.0,
+        physical_shield=0.0,
+        general_shield=0.0,
+    )
+    return Combatant(
+        participant_id=participant_id,
+        team=team,
+        champion_data={"name": participant_id},
+        level=1,
+        items=(),
+        stats={"health": health},
+        defenses=defenses,
+    )
+
+
+def test_simulator_orders_same_timestamp_events_without_comparing_payloads():
+    target = _dummy_combatant("target", "enemy")
+    source = _dummy_combatant("source", "main")
+    result = _simulate_survival(
+        [source, target],
+        {
+            "target": [
+                {
+                    "time": 0.0,
+                    "damage": 40.0,
+                    "damage_type": "physical",
+                    "attacker": "source",
+                    "sequence": 0,
+                    "_event_id": "first",
+                },
+                {
+                    "time": 0.0,
+                    "damage": 40.0,
+                    "damage_type": "physical",
+                    "attacker": "source",
+                    "sequence": 1,
+                    "_event_id": "second",
+                },
+            ]
+        },
+        {},
+        {},
+        10.0,
+    )
+    assert result["target"]["damage_taken"] == 80.0
+
+
+def test_simulator_scores_only_applied_support_and_healing_amounts():
+    source = _dummy_combatant("source", "main")
+    target = _dummy_combatant("target", "ally")
+    dead_target = _dummy_combatant("dead", "ally", health=50.0)
+    result = _simulate_survival(
+        [source, target, dead_target],
+        {
+            "dead": [
+                {
+                    "time": 0.0,
+                    "damage": 50.0,
+                    "damage_type": "physical",
+                    "attacker": "source",
+                    "sequence": 0,
+                    "_event_id": "kill",
+                }
+            ]
+        },
+        {
+            "target": [
+                {
+                    "time": 0.0,
+                    "amount": 50.0,
+                    "attacker": "source",
+                    "source": "already-full heal",
+                }
+            ]
+        },
+        {
+            "dead": [
+                {
+                    "time": 1.0,
+                    "amount": 50.0,
+                    "kind": "shield",
+                    "attacker": "source",
+                    "source": "late shield",
+                }
+            ]
+        },
+        10.0,
+    )
+    assert result["target"]["healing_received"] == 0.0
+    assert result["dead"]["support_shield_received"] == 0.0

@@ -33,6 +33,42 @@ class Combatant:
     request: Any = None
 
 
+def _event_sequence(event: Mapping[str, Any]) -> int:
+    """Return a stable source sequence for simultaneous event ordering."""
+    value = event.get("sequence", event.get("_trigger_sequence", 0))
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _participant_order(participant_id: Any) -> tuple[int, str]:
+    """Use a deterministic side order when sources share a timestamp."""
+    text = str(participant_id or "")
+    if text == "main":
+        return (0, text)
+    if text.startswith("ally:"):
+        return (1, text)
+    if text.startswith("enemy:"):
+        return (2, text)
+    return (3, text)
+
+
+def _action_sort_key(row: tuple[float, int, str, dict[str, Any]]) -> tuple[Any, ...]:
+    """Sort event phases without ever comparing payload dictionaries."""
+    event_time, phase, participant_id, event = row
+    source_id = event.get("attacker", participant_id)
+    return (
+        float(event_time),
+        int(phase),
+        _event_sequence(event),
+        *_participant_order(source_id),
+        str(participant_id),
+        str(event.get("_event_id", "")),
+        str(event.get("source", event.get("source_key", ""))),
+    )
+
+
 def _from_loadout(
     participant_id: str,
     team: str,
@@ -136,6 +172,69 @@ def _participant_defenses(defenses: Any) -> dict[str, float]:
     }
 
 
+def _support_target_ids(
+    attacker: Combatant,
+    effect: Mapping[str, Any],
+    all_actors: list[Combatant],
+) -> tuple[list[str], str]:
+    """Resolve a sourced support packet to selected teammates.
+
+    Target selection is intentionally explicit.  The packet supplies whether
+    an effect is self-cast, area-wide, or one-teammate; for the latter the
+    first selected teammate is the deterministic scenario target.  This keeps
+    the model reproducible without pretending that an unspecified cursor
+    choice was observed.
+    """
+    if effect.get("target_self") or effect.get("target_scope") == "self":
+        return [attacker.participant_id], "self"
+    # ``main`` and ``ally`` are separate UI buckets but they are one allied
+    # side in the fight.  Comparing the raw labels would make a main Lulu
+    # unable to target an ally (and an ally unable to target the main).
+    attacker_side = "main" if attacker.team in {"main", "ally"} else attacker.team
+    teammates = [
+        actor
+        for actor in all_actors
+        if ("main" if actor.team in {"main", "ally"} else actor.team)
+        == attacker_side
+        and actor.participant_id != attacker.participant_id
+    ]
+    if not teammates:
+        return [], "no_selected_teammate"
+    if effect.get("target_scope") == "all_teammates":
+        return [actor.participant_id for actor in teammates], "all_selected_teammates"
+    return [teammates[0].participant_id], "first_selected_teammate"
+
+
+def _attach_support_effects(
+    attacker: Combatant,
+    result: Mapping[str, Any],
+    all_actors: list[Combatant],
+    support_effects: dict[str, list[dict[str, Any]]],
+) -> None:
+    """Attach one actor's sourced shield/heal packets exactly once."""
+    if attacker.team == "ally" and not getattr(attacker.request, "ally_effects_enabled", False):
+        return
+    request = attacker.request
+    effects = derive_ally_effects(
+        attacker.champion_data,
+        attacker.level,
+        result.get("champion_stats", attacker.stats),
+        list(result.get("cast_timeline", [])),
+        ability_ranks=getattr(request, "ability_ranks", None),
+    )
+    for effect in effects:
+        target_ids, target_policy = _support_target_ids(attacker, effect, all_actors)
+        for target_id in target_ids:
+            support_effects[target_id].append(
+                {
+                    **effect,
+                    "attacker": attacker.participant_id,
+                    "target": target_id,
+                    "target_policy": target_policy,
+                }
+            )
+
+
 def _simulate_survival(
     combatants: Iterable[Combatant],
     incoming: Mapping[str, list[dict[str, Any]]],
@@ -182,7 +281,7 @@ def _simulate_survival(
             (float(event.get("time", 0.0)), 1, participant_id, event)
             for event in events
         )
-    actions.sort(key=lambda row: (row[0], row[1]))
+    actions.sort(key=_action_sort_key)
 
     for event_time, phase, participant_id, event in actions:
         state = states[participant_id]
@@ -191,6 +290,7 @@ def _simulate_survival(
             # A heal whose damage event was skipped because its target was
             # already dead must not survive as an unconnected recovery tick.
             if damage_event_status.get(str(trigger_id)) != "applied":
+                event["applied_amount"] = 0.0
                 event["skipped_reason"] = "trigger_event_skipped"
                 continue
         if state["death_time"] is not None:
@@ -200,6 +300,7 @@ def _simulate_survival(
             event["damage"] = 0.0
             event["live_damage"] = 0.0
             event["overkill"] = 0.0
+            event["applied_amount"] = 0.0
             event["skipped_reason"] = "target_dead"
             continue
         source_id = event.get("attacker")
@@ -210,6 +311,7 @@ def _simulate_survival(
             event["damage"] = 0.0
             event["live_damage"] = 0.0
             event["overkill"] = 0.0
+            event["applied_amount"] = 0.0
             event["skipped_reason"] = "attacker_dead"
             continue
         if phase == -1:
@@ -218,16 +320,19 @@ def _simulate_survival(
             if kind == "shield":
                 state["shields"]["general_shield"] += amount
                 state["support_shield_received"] += amount
+                event["applied_amount"] = round(amount, 6)
             elif kind == "heal":
                 received = min(amount, max(0.0, state["max_health"] - state["health"]))
                 state["health"] += received
                 state["healing_received"] += received
+                event["applied_amount"] = round(received, 6)
             continue
         if phase == 1:
             amount = max(0.0, float(event.get("amount", 0.0)))
             received = min(amount, max(0.0, state["max_health"] - state["health"]))
             state["health"] += received
             state["healing_received"] += received
+            event["applied_amount"] = round(received, 6)
             continue
 
         amount = max(0.0, float(event.get("damage", 0.0)))
@@ -426,31 +531,12 @@ def build_participant_timeline(
                             continue
                     healing[attacker.participant_id].append(enriched_heal)
                 if attacker.participant_id not in support_attached:
-                    effects_enabled = (
-                        attacker.team != "ally"
-                        or getattr(attacker.request, "ally_effects_enabled", False)
+                    _attach_support_effects(
+                        attacker,
+                        result,
+                        all_actors,
+                        support_effects,
                     )
-                    if effects_enabled:
-                        for effect in derive_ally_effects(
-                            attacker.champion_data,
-                            attacker.level,
-                            result.get("champion_stats", attacker.stats),
-                            list(result.get("cast_timeline", [])),
-                        ):
-                            if not effect.get("target_self") and attacker.team != "ally":
-                                continue
-                            target_id = (
-                                attacker.participant_id
-                                if effect.get("target_self")
-                                else main.participant_id
-                            )
-                            support_effects[target_id].append(
-                                {
-                                    **effect,
-                                    "attacker": attacker.participant_id,
-                                    "target": target_id,
-                                }
-                            )
                     support_attached.add(attacker.participant_id)
                 row = breakdown[attacker.participant_id]
                 row.update(
@@ -466,6 +552,23 @@ def build_participant_timeline(
                         source,
                         {"name": entry.get("name", source), "total_damage": 0.0},
                     )
+
+    # A support source still has a cast schedule when no opposing target was
+    # selected (for example, a main champion with allies but an empty enemy
+    # roster).  Resolve that schedule once so ally/enemy support packets are
+    # not silently dropped merely because the pairwise damage loop had no row.
+    for attacker in all_actors:
+        if attacker.participant_id in support_attached:
+            continue
+        actor_params = _actor_params(params, attacker)
+        fallback = run_fight(
+            attacker.champion_data,
+            attacker.level,
+            list(attacker.items),
+            actor_params,
+        )
+        _attach_support_effects(attacker, fallback, all_actors, support_effects)
+        support_attached.add(attacker.participant_id)
 
     survival = _simulate_survival(
         all_actors,
@@ -517,13 +620,13 @@ def build_participant_timeline(
     )
     focus_survival = survival.get(focus_participant_id)
     focus_support = sum(
-        float(event.get("amount", 0.0))
+        float(event.get("applied_amount", 0.0))
         for events in support_effects.values()
         for event in events
         if event.get("attacker") == focus_participant_id
     )
     focus_healing = sum(
-        float(event.get("amount", 0.0))
+        float(event.get("applied_amount", 0.0))
         for event in healing.get(focus_participant_id, [])
     )
     return {
@@ -569,6 +672,9 @@ def build_participant_timeline(
                 "attacker": event.get("attacker"),
                 "source": event.get("source", ""),
                 "amount": round(float(event.get("amount", 0.0)), 1),
+                "applied_amount": round(
+                    float(event.get("applied_amount", event.get("amount", 0.0))), 1
+                ),
                 **(
                     {"skipped_reason": str(event["skipped_reason"])}
                     if event.get("skipped_reason")
@@ -586,6 +692,15 @@ def build_participant_timeline(
                 "source": event.get("source", ""),
                 "kind": event.get("kind", ""),
                 "amount": round(float(event.get("amount", 0.0)), 1),
+                "applied_amount": round(
+                    float(event.get("applied_amount", event.get("amount", 0.0))), 1
+                ),
+                "target_policy": event.get("target_policy", ""),
+                **(
+                    {"skipped_reason": str(event["skipped_reason"])}
+                    if event.get("skipped_reason")
+                    else {}
+                ),
             }
             for events in support_effects.values()
             for event in events

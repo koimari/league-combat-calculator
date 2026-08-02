@@ -1429,10 +1429,46 @@ def _bis_replaced_loadout(
     return replace(loadout, items=tuple(items))
 
 
-def _bis_candidate_pool(slot_kind: str, *, boots_tier: int) -> list[dict]:
+def _role_scoped_bis_candidates(
+    candidates: list[dict],
+    *,
+    role: str,
+) -> list[dict]:
+    """Keep roster BIS candidates within the selected role's sourced shop scope.
+
+    The item cache carries Riot's shop tags for each completed item.  A roster
+    role is an explicit scenario input, so using those tags here prevents a
+    support-only item from being recommended to a top/mid enemy and prevents a
+    support ally's BIS from collapsing into raw-health tank items.  This is a
+    candidate-legality boundary, not a champion archetype or damage heuristic;
+    the surviving candidates are still scored by the coupled event timeline.
+    """
+    normalized = str(role or "").strip().lower()
+    if normalized == "support":
+        return [
+            item
+            for item in candidates
+            if "SUPPORT" in {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
+        ]
+    if normalized in {"top", "jungle", "mid", "bottom"}:
+        return [
+            item
+            for item in candidates
+            if "SUPPORT" not in {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
+        ]
+    return candidates
+
+
+def _bis_candidate_pool(
+    slot_kind: str,
+    *,
+    boots_tier: int,
+    role: str = "",
+) -> list[dict]:
     legal = get_eligible_boots(tier=boots_tier) if slot_kind == "boots" else get_eligible_legendaries()
     supported = optimizer_supported_items(legal)
-    return sorted(supported, key=lambda item: item.get("name", ""))
+    scoped = supported if slot_kind == "boots" else _role_scoped_bis_candidates(supported, role=role)
+    return sorted(scoped, key=lambda item: item.get("name", ""))
 
 
 @app.route("/api/bis", methods=["POST"])
@@ -1478,6 +1514,10 @@ def api_bis():
             if subject_team == "main"
             else (ally_requests[subject_index] if subject_team == "ally" else enemy_requests[subject_index])
         )
+        if subject_team != "main" and not subject_base.role:
+            raise ValueError(
+                f"{subject_team} role is required before roster BIS can be scored"
+            )
         subject_id = (
             "main"
             if subject_team == "main"
@@ -1487,7 +1527,7 @@ def api_bis():
         role = subject_base.role
         if role == "mid" and subject_base.role_quest_complete:
             boots_tier = 3
-        candidates = _bis_candidate_pool(slot_kind, boots_tier=boots_tier)
+        candidates = _bis_candidate_pool(slot_kind, boots_tier=boots_tier, role=role)
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
@@ -1601,6 +1641,9 @@ def api_bis():
             "subject_index": subject_index,
             "slot_index": slot_index,
             "slot_kind": slot_kind,
+            "candidate_scope": (
+                f"role-tagged:{role}" if role and slot_kind != "boots" else "all-supported"
+            ),
             "candidates": certified_ranked[:12],
             "partial_candidates": partial_ranked,
             "candidate_count": len(ranked),
