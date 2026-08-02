@@ -133,6 +133,69 @@ def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):
     assert score == 125.0
 
 
+def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch):
+    """A partial item event cannot win the main champion's coupled search."""
+
+    def fake_timeline(*_args, **kwargs):
+        items = kwargs.get("items") or _args[2]
+        partial = any(item.get("name") == "Unending Despair" for item in items)
+        return {
+            "breakdown": [{"participant_id": "main", "total_damage": 900.0}],
+            "participants": [],
+            "events": [],
+            "timeline_coverage": {
+                "complete": not partial,
+                "exact_sources": [],
+                "coarse_sources": ["periodic_Unending Despair"] if partial else [],
+            },
+        }
+
+    monkeypatch.setattr(
+        "src.calculator.optimizer.build_participant_timeline", fake_timeline
+    )
+    result = optimize_build(
+        "Aatrox",
+        get_champion("Aatrox"),
+        level=6,
+        max_legendary_slots=1,
+        locked_boots="Sorcerer's Shoes",
+        enemy_loadouts=[object()],
+        require_complete_timeline=True,
+    )
+
+    assert result["is_certified_best"] is True
+    assert result["selection_certification"] == "event_ordered_local_search"
+    assert "Unending Despair" not in result["items"]
+
+
+def test_coupled_evaluate_withholds_partial_timeline(monkeypatch):
+    monkeypatch.setattr(
+        "src.calculator.optimizer.build_participant_timeline",
+        lambda *_args, **_kwargs: {
+            "breakdown": [{"participant_id": "main", "total_damage": 125.0}],
+            "participants": [],
+            "events": [],
+            "timeline_coverage": {
+                "complete": False,
+                "exact_sources": [],
+                "coarse_sources": ["periodic_item"],
+            },
+        },
+    )
+    params = FightParams.from_request({}, deterministic=True)
+    score = _evaluate_build(
+        get_champion("Aatrox"),
+        18,
+        [],
+        params,
+        "total_damage",
+        require_complete_timeline=True,
+        combat_context={"enemies": [object()], "allies": []},
+    )
+
+    assert score == float("-inf")
+
+
 def test_optimizer_respects_gold_budget():
     result = optimize_build(
         "Ahri",

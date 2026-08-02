@@ -2428,7 +2428,9 @@ async function optimizeMainBuildFromBackend() {
     state.optimizer.summary = {
       tested: Number(result.evaluations || 0),
       elapsedMs: Number(result.optimization_time_ms || 0),
-      label: "Coupled event-ordered BIS: TTD is counted only while the champion is alive.",
+      label: result.selection_certification === "event_ordered_local_search"
+        ? "Event-ordered local-search build applied; coarse candidates were excluded and TTD stops at death."
+        : "Coupled event-ordered BIS: TTD is counted only while the champion is alive.",
     };
     return result;
 }

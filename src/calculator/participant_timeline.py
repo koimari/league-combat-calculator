@@ -432,6 +432,7 @@ def build_participant_timeline(
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
     focus_participant_id: str = "main",
+    pair_result_cache: dict[tuple[str, str], Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Compose all selected actors and return the coupled combat receipt.
 
@@ -480,12 +481,31 @@ def build_participant_timeline(
                 continue
             actor_params = _actor_params(params, attacker)
             for defender in defenders:
-                result = run_fight(
-                    attacker.champion_data,
-                    attacker.level,
-                    list(attacker.items),
-                    _target_params(actor_params, defender),
+                # Roster-to-roster pairs do not depend on the candidate main
+                # build.  The coupled optimizer evaluates thousands of main
+                # candidates, so reuse those immutable pair receipts while
+                # still recomputing every pair that touches ``main`` (the
+                # candidate changes its stats, defenses, and event order).
+                cache_key = (attacker.participant_id, defender.participant_id)
+                cacheable = (
+                    attacker.participant_id != "main"
+                    and defender.participant_id != "main"
                 )
+                if (
+                    cacheable
+                    and pair_result_cache is not None
+                    and cache_key in pair_result_cache
+                ):
+                    result = pair_result_cache[cache_key]
+                else:
+                    result = run_fight(
+                        attacker.champion_data,
+                        attacker.level,
+                        list(attacker.items),
+                        _target_params(actor_params, defender),
+                    )
+                    if cacheable and pair_result_cache is not None:
+                        pair_result_cache[cache_key] = result
                 coverage_reports.append(dict(result.get("timeline_coverage", {})))
                 result_events = list(result.get("damage_events", []))
                 for event in result_events:
