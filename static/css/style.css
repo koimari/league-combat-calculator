@@ -278,6 +278,13 @@ td:last-child { color: var(--olive); }
 .target-build { display: flex; gap: 5px; margin: 10px 0; }
 .target-build .slot-wrap, .target-build .item-slot, .target-build .item-icon { width: 34px; }
 .target-build .item-icon { height: 34px; }
+.roster-ranks { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 0 0 10px; color: var(--muted); font: 8px var(--mono); text-transform: uppercase; }
+.roster-ranks > small { margin-right: 3px; color: var(--muted); }
+.roster-rank { display: inline-flex; align-items: center; border: 1px solid var(--line); background: var(--canvas); }
+.roster-rank b { padding: 3px 4px; color: var(--accent); font-size: 8px; }
+.roster-rank button { width: 17px; height: 19px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font: 12px var(--mono); }
+.roster-rank button:hover { color: var(--ink); }
+.roster-rank output { min-width: 11px; color: var(--ink); text-align: center; }
 .ally-toggle { display: flex; align-items: center; gap: 7px; width: 100%; margin: 1px 0 10px; padding: 6px 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font: 700 8px var(--mono); text-align: left; text-transform: uppercase; }
 .ally-toggle i { width: 8px; height: 8px; border: 1px solid currentColor; background: transparent; }
 .ally-toggle.active { border-color: var(--olive); color: var(--olive); background: color-mix(in srgb, var(--olive) 7%, transparent); }

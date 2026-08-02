@@ -1,6 +1,8 @@
 const DDRAGON = "https://ddragon.leagueoflegends.com/cdn/16.15.1/img";
 
 let DATA;
+let BIS_PROFILES = {};
+let EFFECT_CATALOG = {};
 let pickerContext = null;
 let bisContext = null;
 const ABILITY_SLOTS = ["P", "Q", "W", "E", "R"];
@@ -74,6 +76,14 @@ function mergeAbilityCatalog(catalog) {
       source: catalog.source,
     }));
   });
+}
+
+function mergeBisProfiles(profiles) {
+  if (profiles?.champions && typeof profiles.champions === "object") BIS_PROFILES = profiles.champions;
+}
+
+function mergeEffectCatalog(catalog) {
+  if (catalog?.items && typeof catalog.items === "object") EFFECT_CATALOG = catalog.items;
 }
 
 function getItem(id) {
@@ -295,6 +305,19 @@ function itemSlot(path, id, compact = false, allowBis = false) {
   </div>`;
 }
 
+function rosterAbilityRankControls(loadout, index, root) {
+  if (!loadout?.champion) return "";
+  const profile = bisChampionProfile(loadout);
+  const rows = ["Q", "W", "E", "R"].map((slot) => {
+    const forms = profile.abilities?.[slot] || [];
+    if (!forms.length) return "";
+    const maxRank = Math.max(...forms.map((ability) => ability.maxRank || (slot === "R" ? 3 : 5)));
+    const rank = bisRankFor(loadout, slot, maxRank);
+    return `<span class="roster-rank"><b>${slot}</b><button type="button" data-roster-rank="${root}.${index}.${slot}" data-delta="-1" aria-label="Decrease ${slot} rank">−</button><output>${rank}</output><button type="button" data-roster-rank="${root}.${index}.${slot}" data-delta="1" aria-label="Increase ${slot} rank">+</button></span>`;
+  }).join("");
+  return `<div class="roster-ranks"><small>Wiki ability ranks</small>${rows}</div>`;
+}
+
 function stackControl(path, id, compact = false) {
   const spec = stackSpec(id);
   const value = Math.min(stackValue(path), spec.max);
@@ -322,6 +345,7 @@ function rosterCard(loadout, index, kind) {
       <button class="remove-target" type="button" ${isAlly ? `data-remove-ally="${index}"` : `data-remove-target="${index}"`} aria-label="Remove ${escapeHtml(loadout.champion || `${label} slot`)}">×</button>
     </header>
     <div class="target-build">${loadout.items.map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true, true)).join("")}</div>
+    ${rosterAbilityRankControls(loadout, index, root)}
     ${effectToggle}
     ${champion ? statMatrix(stats, null, true) : `<div class="matrix-placeholder">Choose a champion to show the full stat matrix.</div>`}
   </article>`;
@@ -1254,11 +1278,274 @@ function bisProfile() {
 
 function statOnlyProfile(combatant) {
   const champion = getChampion(combatant.champion);
-  const primary = champion?.tags?.[0] || "Fighter";
-  const magical = champion?.tags?.includes("Mage") || champion?.tags?.includes("Support") || primary === "Mage" || primary === "Support";
-  return magical
-    ? { baseDamage: 100, apRatio: 1, physicalDamage: 0, adRatio: 0, useAbilities: false, label: "Stats-only AP preview", exact: false }
-    : { baseDamage: 0, apRatio: 0, physicalDamage: 0, adRatio: 1, useAbilities: false, label: "Stats-only AD preview", exact: false };
+  const profile = BIS_PROFILES[combatant?.champion] || {};
+  const roles = [...new Set([...(profile.roles || []), ...(champion?.tags || [])].map((role) => String(role).toUpperCase()))];
+  const primary = bisRole({ roles });
+  const label = { warden: "Warden", tank: "Tank", enchanter: "Enchanter", support: "Support", marksman: "Marksman", mage: "Mage", assassin: "Assassin", fighter: "Fighter" }[primary] || "Champion";
+  return { baseDamage: 0, apRatio: 0, physicalDamage: 0, adRatio: 0, useAbilities: false, label: `Wiki-derived ${label} estimate`, exact: false, roles, wiki: Boolean(profile.name) };
+}
+
+function bisChampionProfile(combatant) {
+  const champion = getChampion(combatant?.champion);
+  const profile = BIS_PROFILES[combatant?.champion] || {};
+  const roles = [...new Set([...(profile.roles || []), ...(champion?.tags || [])].map((role) => String(role).toUpperCase()))];
+  return { ...profile, roles, champion };
+}
+
+function bisHasRole(profile, ...roles) {
+  return roles.some((role) => profile.roles?.includes(role));
+}
+
+function bisRole(profile) {
+  if (bisHasRole(profile, "WARDEN")) return "warden";
+  if (bisHasRole(profile, "ENCHANTER")) return "enchanter";
+  if (bisHasRole(profile, "TANK", "JUGGERNAUT")) return "tank";
+  if (bisHasRole(profile, "MARKSMAN")) return "marksman";
+  if (bisHasRole(profile, "ASSASSIN")) return "assassin";
+  if (bisHasRole(profile, "MAGE", "ARTILLERY", "BURST")) return "mage";
+  if (bisHasRole(profile, "FIGHTER", "DIVER")) return "fighter";
+  if (bisHasRole(profile, "SUPPORT")) return "support";
+  return "fighter";
+}
+
+function defaultAbilityRanks(combatant) {
+  const level = Math.max(1, Math.min(18, Number(combatant?.level) || 1));
+  const profile = bisChampionProfile(combatant);
+  const ranks = { Q: 0, W: 0, E: 0, R: 0 };
+  const basicSlots = ["Q", "W", "E"].filter((slot) => (profile.abilities?.[slot] || []).length);
+  const ultimateRanks = level >= 16 ? 3 : level >= 11 ? 2 : level >= 6 ? 1 : 0;
+  ranks.R = Math.min(ultimateRanks, Math.max(...(profile.abilities?.R || []).map((ability) => ability.maxRank || 3), 3));
+  let points = Math.max(0, level - ranks.R);
+  let cursor = 0;
+  while (points > 0 && basicSlots.length) {
+    const slot = basicSlots[cursor % basicSlots.length];
+    const maxRank = Math.max(...(profile.abilities?.[slot] || []).map((ability) => ability.maxRank || 5), 5);
+    if (ranks[slot] < maxRank) {
+      ranks[slot] += 1;
+      points -= 1;
+    }
+    cursor += 1;
+    if (cursor > 30) break;
+  }
+  return ranks;
+}
+
+function bisRankFor(combatant, slot, maxRank) {
+  const level = Math.max(1, Math.min(18, Number(combatant?.level) || 1));
+  if (slot === "P") return level;
+  const cap = slot === "R" ? (level >= 16 ? 3 : level >= 11 ? 2 : level >= 6 ? 1 : 0) : Math.min(5, Math.floor((level + 1) / 2));
+  const hasRequested = Object.prototype.hasOwnProperty.call(combatant?.abilityRanks || {}, slot);
+  const requested = hasRequested ? Number(combatant?.abilityRanks?.[slot]) : Number(defaultAbilityRanks(combatant)[slot] || 0);
+  return Math.max(0, Math.min(maxRank || (slot === "R" ? 3 : 5), Number.isFinite(requested) ? requested : cap));
+}
+
+function bisPacketValue(packet, rank, level, stats, targetStats) {
+  const valueAt = (values) => {
+    if (!Array.isArray(values) || !values.length) return 0;
+    const longLeveling = values.length > 6;
+    const index = longLeveling ? Math.max(0, Math.min(values.length - 1, level - 1)) : Math.max(0, Math.min(values.length - 1, rank - 1));
+    return Number(values[index] || 0);
+  };
+  const ratios = packet?.ratios || {};
+  const ratioValue = (key, value) => valueAt(ratios[key]) * value;
+  return valueAt(packet?.base)
+    + ratioValue("ap", stats.ap)
+    + ratioValue("ad", stats.ad)
+    + ratioValue("bonusAd", Math.max(0, stats.ad - (stats.baseAd || 0)))
+    + ratioValue("bonusHp", stats.bonusHp)
+    + ratioValue("selfMaxHp", stats.hp)
+    + ratioValue("targetMaxHp", targetStats.hp)
+    + ratioValue("targetCurrentHp", targetStats.hp * 0.85)
+    + ratioValue("targetMissingHp", targetStats.hp * 0.15)
+    + ratioValue("armor", stats.armor)
+    + ratioValue("bonusArmor", Math.max(0, stats.armor - (stats.baseArmor || 0)))
+    + ratioValue("mr", stats.mr)
+    + ratioValue("bonusMr", Math.max(0, stats.mr - (stats.baseMr || 0)));
+}
+
+function bisDamageMultiplier(type, attackerStats, targetStats) {
+  if (String(type || "").toUpperCase().includes("TRUE")) return 1;
+  if (String(type || "").toUpperCase().includes("MAGIC")) return 100 / (100 + effectiveMagicResistance(targetStats.mr, attackerStats));
+  return 100 / (100 + effectivePhysicalArmor(targetStats.armor, attackerStats));
+}
+
+function bisAbilityDamage(combatant, stats, targetStats, duration = 10) {
+  const profile = bisChampionProfile(combatant);
+  const baseStats = championStats(combatant.champion, combatant.level);
+  stats.baseAd ??= baseStats.ad;
+  stats.baseArmor ??= baseStats.armor;
+  stats.baseMr ??= baseStats.mr;
+  const rows = [];
+  const forms = profile.abilities || {};
+  Object.entries(forms).forEach(([slot, abilities]) => {
+    if (!Array.isArray(abilities) || !abilities.length) return;
+    const rank = bisRankFor(combatant, slot, Math.max(...abilities.map((ability) => ability.maxRank || 1)));
+    const formRows = abilities.map((ability) => {
+      const packets = (ability.packets || []).map((packet) => ({ packet, value: bisPacketValue(packet, rank, combatant.level || 1, stats, targetStats) })).filter((entry) => entry.value > 0);
+      const chosen = packets.sort((a, b) => b.value - a.value)[0];
+      if (!chosen) return null;
+      const cooldown = Number(ability.cooldown?.[Math.max(0, Math.min((ability.cooldown?.length || 1) - 1, rank - 1))] || 0);
+      const casts = slot === "P" ? 1 : Math.max(1, Math.min(4, Math.floor(duration / Math.max(2, cooldown || (slot === "R" ? 30 : 8))) + 1));
+      const persistentFactor = ability.signals?.persistent ? 1.25 : 1;
+      return { ability, packet: chosen.packet, raw: chosen.value * casts * persistentFactor, casts };
+    }).filter(Boolean);
+    const strongest = formRows.sort((a, b) => b.raw - a.raw)[0];
+    if (strongest) rows.push(strongest);
+  });
+  return rows;
+}
+
+function bisAutoDamage(combatant, stats, duration = 10) {
+  const role = bisRole(bisChampionProfile(combatant));
+  const uptime = { marksman: 0.82, fighter: 0.58, assassin: 0.45, tank: 0.38, warden: 0.32, enchanter: 0.2, support: 0.2, mage: 0.16 }[role] || 0.35;
+  const attacks = Math.max(0, Math.max(0.4, stats.attackSpeed) * duration * uptime * 0.92);
+  const critMultiplier = 1 + (stats.crit / 100) * 0.75;
+  return { attacks, raw: attacks * stats.ad * critMultiplier, uptime };
+}
+
+function bisUtilityValue(combatant, stats, kind, duration = 10) {
+  const profile = bisChampionProfile(combatant);
+  return Object.entries(profile.abilities || {}).reduce((total, [slot, abilities]) => {
+    if (!Array.isArray(abilities) || !abilities.length) return total;
+    const rank = bisRankFor(combatant, slot, Math.max(...abilities.map((ability) => ability.maxRank || 1)));
+    const values = abilities.map((ability) => {
+      const packets = (ability[kind] || []).map((packet) => bisPacketValue(packet, rank, combatant.level || 1, stats, stats)).filter((value) => value > 0);
+      if (!packets.length) return 0;
+      const cooldown = Number(ability.cooldown?.[Math.max(0, Math.min((ability.cooldown?.length || 1) - 1, rank - 1))] || 0);
+      const casts = slot === "P" ? 1 : Math.max(1, Math.min(4, Math.floor(duration / Math.max(2, cooldown || 8)) + 1));
+      return Math.max(...packets) * casts;
+    });
+    return total + Math.max(...values, 0);
+  }, 0);
+}
+
+function bisItemEffects(item) {
+  const text = String(item?.passiveText || "").toLowerCase();
+  const categories = new Set(item?.categories || []);
+  const wiki = EFFECT_CATALOG[String(item?.id)] || {};
+  const tags = new Set(wiki.tags || []);
+  return {
+    antiHeal: tags.has("healing_reduction") || /wounds|grievous/.test(text),
+    burn: item?.id === 6653 || tags.has("damage_over_time") || /burn|damage over time/.test(text),
+    damageAmp: item?.id === 6653 || tags.has("damage_amp") || /bonus damage|more damage|damage amp/.test(text),
+    onHit: tags.has("on_hit") || categories.has("OnHit") || /on[- ]hit|attacks deal/.test(text),
+    aura: categories.has("Aura") || tags.has("aura") || /nearby allies|nearby enemy/.test(text),
+    active: categories.has("Active") || tags.has("active") || /activate|grant nearby|shield/.test(text),
+    healing: tags.has("healing") || categories.has("LifeSteal") || categories.has("HealthRegen"),
+    eventOrder: wiki.eventOrder || [],
+    defensive: categories.has("Health") || categories.has("Armor") || categories.has("MagicResist") || categories.has("SpellBlock"),
+  };
+}
+
+function bisHealingPotential(combatant, stats, duration = 10) {
+  const profile = bisChampionProfile(combatant);
+  let exact = 0;
+  Object.entries(profile.abilities || {}).forEach(([slot, abilities]) => {
+    if (!Array.isArray(abilities) || !abilities.length) return;
+    const rank = bisRankFor(combatant, slot, Math.max(...abilities.map((ability) => ability.maxRank || 1)));
+    const values = abilities.map((ability) => {
+      const packets = (ability.heals || [])
+        .map((packet) => bisPacketValue(packet, rank, combatant.level || 1, stats, stats))
+        .filter((value) => value > 0);
+      if (!packets.length) return 0;
+      const cooldown = Number(ability.cooldown?.[Math.max(0, Math.min((ability.cooldown?.length || 1) - 1, rank - 1))] || 0);
+      const casts = slot === "P" ? 1 : Math.max(1, Math.min(4, Math.floor(duration / Math.max(2, cooldown || 8)) + 1));
+      return Math.max(...packets) * casts;
+    });
+    exact += Math.max(...values, 0);
+  });
+  if (exact > 0) return exact;
+  // Some Wiki entries describe healing without a numeric packet. Keep that
+  // fallback deliberately small and signal-based instead of inventing HP regen.
+  const signals = Object.values(profile.abilities || {}).flat().reduce((total, ability) => total + (ability.signals?.heal ? 1 : 0), 0);
+  return signals * stats.hp * 0.025;
+}
+
+function bisIncomingPressure(opponents, candidateStats, duration = 10) {
+  let physical = 0;
+  let magical = 0;
+  let trueDamage = 0;
+  opponents.forEach((opponent) => {
+    const opponentStats = championStats(opponent.champion, opponent.level, opponent.items, opponent.itemStacks);
+    const rows = bisAbilityDamage(opponent, opponentStats, candidateStats, duration);
+    rows.forEach((row) => {
+      const type = String(row.packet?.damageType || "").toUpperCase();
+      if (type.includes("MAGIC")) magical += row.raw;
+      else if (type.includes("TRUE")) trueDamage += row.raw;
+      else physical += row.raw;
+    });
+    physical += bisAutoDamage(opponent, opponentStats, duration).raw;
+  });
+  return { physical, magical, trueDamage };
+}
+
+function bisBuildScore(buildIds, combatant, opponents, path) {
+  const duration = Math.max(3, Number(state.fight.duration) || 10);
+  const stats = championStats(combatant.champion, combatant.level, buildIds, combatant.itemStacks || []);
+  stats.baseAd = championStats(combatant.champion, combatant.level).ad;
+  stats.baseArmor = championStats(combatant.champion, combatant.level).armor;
+  stats.baseMr = championStats(combatant.champion, combatant.level).mr;
+  const profile = bisChampionProfile(combatant);
+  const role = bisRole(profile);
+  const incoming = bisIncomingPressure(opponents, stats, duration);
+  const pressureTotal = incoming.physical + incoming.magical + incoming.trueDamage;
+  const physicalMitigation = 1 + stats.armor / 100;
+  const magicalMitigation = 1 + stats.mr / 100;
+  const mix = pressureTotal ? (incoming.physical / pressureTotal) / physicalMitigation + (incoming.magical / pressureTotal) / magicalMitigation + (incoming.trueDamage / pressureTotal) : 0;
+  const effectiveHealth = mix > 0 ? stats.hp / mix : stats.hp;
+  const ownRows = opponents.map((target) => {
+    const targetStats = championStats(target.champion, target.level, target.items, target.itemStacks);
+    const damage = bisAbilityDamage(combatant, stats, targetStats, duration).reduce((sum, row) => sum + row.raw * bisDamageMultiplier(row.packet?.damageType, stats, targetStats), 0);
+    const targetShield = bisUtilityValue(target, targetStats, "shields", duration);
+    return { damage: Math.max(0, damage - targetShield), shield: targetShield };
+  });
+  const ownAbilityDamage = ownRows.reduce((sum, value) => sum + value.damage, 0);
+  const targetShields = ownRows.reduce((sum, value) => sum + value.shield, 0);
+  const autos = bisAutoDamage(combatant, stats, duration);
+  const effects = buildIds.map((id) => bisItemEffects(getItem(id)));
+  const hasAbilityDamage = Object.values(profile.abilities || {}).flat().some((ability) => ability.signals?.hasDamage || ability.packets?.length);
+  const hasHealing = bisHealingPotential(combatant, stats, duration);
+  const ownShields = bisUtilityValue(combatant, stats, "shields", duration);
+  const targetHealing = opponents.reduce((sum, target) => sum + bisHealingPotential(target, championStats(target.champion, target.level, target.items, target.itemStacks), duration), 0);
+  const antiHeal = effects.some((effect) => effect.antiHeal) && targetHealing > 0 ? targetHealing * 0.4 * Math.min(1, duration / 3) : 0;
+  const liandry = effects.some((effect) => effect.burn) && hasAbilityDamage ? opponents.reduce((sum, target) => {
+    const targetStats = championStats(target.champion, target.level, target.items, target.itemStacks);
+    return sum + targetStats.hp * 0.06 * bisDamageMultiplier("MAGIC_DAMAGE", stats, targetStats);
+  }, 0) + ownAbilityDamage * 0.06 : 0;
+  const onHitBonus = effects.some((effect) => effect.onHit) ? autos.attacks * Math.max(8, stats.ad * 0.03) : 0;
+  const teamUtility = effects.reduce((sum, effect, index) => sum + (effect.aura ? 38 : 0) + (effect.active ? 42 : 0) + (effect.healing ? 24 : 0), 0);
+  let score;
+  let metric;
+  if (path.startsWith("targets.")) {
+    score = effectiveHealth + ownAbilityDamage * 0.25 + autos.raw * 0.1 + hasHealing * 0.4;
+    metric = "effective health";
+  } else if (role === "tank" || role === "warden") {
+    const allyUtilityWeight = role === "warden" && path.startsWith("allies.") ? 34 : 8;
+    score = effectiveHealth * (role === "warden" && path.startsWith("allies.") ? 0.72 : 1) + teamUtility * allyUtilityWeight + stats.haste * 10 + hasHealing * 0.8 + ownShields * 1.1 + ownAbilityDamage * 0.18;
+    metric = "effective health + team utility";
+  } else if (role === "enchanter" || role === "support") {
+    score = ownAbilityDamage * 0.45 + effectiveHealth * 0.45 + teamUtility * 10 + stats.haste * 12 + hasHealing * 1.1 + ownShields * 1.25;
+    metric = "utility + effective health";
+  } else if (role === "marksman") {
+    score = ownAbilityDamage + autos.raw + onHitBonus + stats.attackSpeed * 7 + stats.crit * 2;
+    metric = "estimated 10s output";
+  } else if (role === "mage" || role === "assassin") {
+    score = ownAbilityDamage + autos.raw * 0.35 + liandry + antiHeal + stats.haste * 5;
+    metric = "estimated 10s output";
+  } else {
+    score = ownAbilityDamage * 0.75 + autos.raw * 0.65 + onHitBonus + effectiveHealth * 0.35 + stats.haste * 5;
+    metric = "damage + effective health";
+  }
+  const eventOrder = [];
+  if (hasAbilityDamage) eventOrder.push("ability/attack hit");
+  if (effects.some((effect) => effect.antiHeal)) eventOrder.push("apply 40% Wounds for 3s");
+  if (effects.some((effect) => effect.burn)) eventOrder.push("Liandry burn after the damaging ability, then periodic ticks");
+  if (hasHealing) eventOrder.push("healing resolves after incoming damage and modifiers");
+  if (targetShields > 0) eventOrder.push(`target shields absorb ${fmt(targetShields)} before later damage`);
+  if (ownShields > 0) eventOrder.push("champion shields resolve before subsequent incoming damage");
+  const wikiEvents = effects.flatMap((effect) => effect.eventOrder || []).filter((value, index, values) => values.indexOf(value) === index);
+  wikiEvents.forEach((value) => { if (!eventOrder.includes(value)) eventOrder.push(value); });
+  return { score, metric, stats, ownAbilityDamage, autos, antiHeal, liandry, targetShields, ownShields, eventOrder, targetHealing, role };
 }
 
 function rosterBisContext(path) {
@@ -1303,11 +1590,20 @@ function rosterBisStacks(path, candidateId) {
 
 function rosterBisCandidates(path, profile) {
   const currentIds = rosterBisIds(path, 0).filter(Boolean);
-  const magical = profile.baseDamage > 0 || profile.apRatio > 0;
-  const physical = profile.physicalDamage > 0 || profile.adRatio > 0;
+  const role = bisRole(profile);
   return DATA.items.filter((item) => {
     const completed = item.price >= 2200 && item.into.length === 0;
-    const relevant = (magical && (item.ap || item.pen || item.percentPen || [6653, 6655].includes(item.id))) || (physical && (item.ad || item.lethality || item.percentArmorPen || item.attackSpeed || item.crit));
+    const categories = new Set(item.categories || []);
+    const effect = bisItemEffects(item);
+    const defensive = effect.defensive || item.haste || categories.has("AbilityHaste") || categories.has("Aura") || categories.has("Active");
+    const offensive = item.ad || item.ap || item.attackSpeed || item.crit || item.pen || item.percentPen || item.lethality || item.percentArmorPen || categories.has("OnHit");
+    const relevant = role === "tank" || role === "warden"
+      ? defensive
+      : role === "enchanter" || role === "support"
+        ? (defensive || item.ap || effect.healing)
+        : role === "marksman"
+          ? Boolean(offensive)
+          : Boolean(offensive || defensive);
     return completed && relevant && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
   });
 }
@@ -1315,23 +1611,28 @@ function rosterBisCandidates(path, profile) {
 function openRosterBis(path) {
   const context = rosterBisContext(path);
   if (!context || !bisReadyForPath(path)) return;
-  const profile = statOnlyProfile(context.combatant);
-  const targetStats = context.opponents.map((target) => championStats(target.champion, target.level, target.items, target.itemStacks));
-  const scoreOptions = { profile, combatant: context.combatant, targetLoadouts: context.opponents, targetStats, useAbilities: false, summaryOnly: true };
+  const profile = bisChampionProfile(context.combatant);
+  const model = statOnlyProfile(context.combatant);
   const ranked = rosterBisCandidates(path, profile).filter((item) => legalOptimizerBuild(rosterBisIds(path, item.id).filter(Boolean))).map((item) => {
-    const result = calculateBuild(rosterBisIds(path, item.id), state.fight.rotations, rosterBisStacks(path, item.id), scoreOptions);
-    return { item, result, total: result.cumulative };
+    const buildIds = rosterBisIds(path, item.id);
+    const result = bisBuildScore(buildIds, context.combatant, context.opponents, path);
+    return { item, result, total: result.score };
   }).sort((a, b) => b.total - a.total).slice(0, 12);
   const baselineId = Number(pathValue(path)) || 0;
-  const baseline = calculateBuild(rosterBisIds(path, baselineId), state.fight.rotations, rosterBisStacks(path, baselineId), scoreOptions).cumulative;
+  const baseline = bisBuildScore(rosterBisIds(path, baselineId), context.combatant, context.opponents, path).score;
   const role = context.root === "allies" ? "Ally" : "Enemy";
   const slot = Number(String(path).split(".").at(-1)) + 1;
   $("bisTitle").textContent = `Best item for ${role} ${context.combatant.champion} · slot ${slot}`;
-  $("bisSummary").textContent = `${profile.label} · ${context.opponents.length} ${plural(context.opponents.length, "opponent")}`;
+  const top = ranked[0]?.result;
+  const eventSummary = top?.eventOrder?.length ? ` · ${top.eventOrder.slice(0, 2).join(" → ")}` : "";
+  $("bisSummary").textContent = `${model.label} · ${context.opponents.length} ${plural(context.opponents.length, "opponent")}${eventSummary}`;
   $("bisList").innerHTML = ranked.map((entry, index) => {
     const gain = baseline > 0 ? (entry.total / baseline - 1) * 100 : 0;
-    return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${itemImage(entry.item.id)}" alt="" /><div><strong>${escapeHtml(entry.item.name)}</strong><small>${escapeHtml(itemStatsLine(entry.item))}</small></div><p><strong>${fmt(entry.total)}</strong><span>Opponents · ${gain >= 0 ? "+" : ""}${one(gain)}%</span></p><button type="button" data-bis-value="${entry.item.id}">Use</button></article>`;
-  }).join("") || `<p class="picker-empty">No valid completed items match this stats-only preview.</p>`;
+    const detail = entry.result.metric === "estimated 10s output" && (entry.result.liandry || entry.result.antiHeal)
+      ? `${itemStatsLine(entry.item)} · ${entry.result.liandry ? `Liandry +${fmt(entry.result.liandry)}` : ""}${entry.result.antiHeal ? ` Wounds value +${fmt(entry.result.antiHeal)}` : ""}`
+      : itemStatsLine(entry.item);
+    return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${itemImage(entry.item.id)}" alt="" /><div><strong>${escapeHtml(entry.item.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.total)}</strong><span>${escapeHtml(entry.result.metric)} · ${gain >= 0 ? "+" : ""}${one(gain)}%</span></p><button type="button" data-bis-value="${entry.item.id}">Use</button></article>`;
+  }).join("") || `<p class="picker-empty">No valid completed items match the Wiki-derived ${escapeHtml(model.roles?.[0]?.toLowerCase() || "champion")} model.</p>`;
   bisContext = { path };
   $("bis").showModal();
 }
@@ -1535,6 +1836,27 @@ document.addEventListener("click", (event) => {
     setPath(levelButton.dataset.level, Math.max(1, Math.min(18, Number(pathValue(levelButton.dataset.level)) + Number(levelButton.dataset.delta))));
     return render();
   }
+  const rosterRankButton = event.target.closest("[data-roster-rank]");
+  if (rosterRankButton) {
+    invalidateOptimization();
+    const [root, indexText, slot] = rosterRankButton.dataset.rosterRank.split(".");
+    const loadout = state[root]?.[Number(indexText)];
+    const forms = BIS_PROFILES[loadout?.champion]?.abilities?.[slot] || [];
+    const maxRank = Math.max(...forms.map((ability) => ability.maxRank || (slot === "R" ? 3 : 5)), slot === "R" ? 3 : 5);
+    const current = bisRankFor(loadout, slot, maxRank);
+    const cap = slot === "R" ? ((loadout.level >= 16 ? 3 : loadout.level >= 11 ? 2 : loadout.level >= 6 ? 1 : 0)) : Math.min(5, Math.floor((loadout.level + 1) / 2));
+    const next = { ...defaultAbilityRanks(loadout), ...(loadout.abilityRanks || {}) };
+    next[slot] = Math.max(0, Math.min(maxRank, cap, current + Number(rosterRankButton.dataset.delta)));
+    const total = () => ["Q", "W", "E", "R"].reduce((sum, key) => sum + Number(next[key] || 0), 0);
+    const trimOrder = ["Q", "W", "E", "R"].filter((key) => key !== slot).sort((a, b) => Number(next[b] || 0) - Number(next[a] || 0));
+    while (total() > Math.max(1, Number(loadout.level) || 1)) {
+      const trim = trimOrder.find((key) => next[key] > 0);
+      if (!trim) break;
+      next[trim] -= 1;
+    }
+    loadout.abilityRanks = next;
+    return render();
+  }
   const stackButton = event.target.closest("[data-stack-path]");
   if (stackButton) {
     const path = stackButton.dataset.stackPath;
@@ -1597,7 +1919,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.targets.length < 5) {
       const index = state.targets.length;
-      state.targets.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0] });
+      state.targets.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], abilityRanks: {} });
       render();
       return openPicker("champion", `targets.${index}.champion`);
     }
@@ -1613,7 +1935,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.allies.length < 4) {
       const index = state.allies.length;
-      state.allies.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], allyEffectsEnabled: false });
+      state.allies.push({ champion: null, level: 1, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], abilityRanks: {}, allyEffectsEnabled: false });
       render();
       return openPicker("champion", `allies.${index}.champion`);
     }
@@ -1632,6 +1954,11 @@ document.addEventListener("click", (event) => {
     if (pickerContext.type === "item") setStackValue(pickerContext.path, 0);
     setPath(pickerContext.path, pickerContext.type === "item" ? Number(option.dataset.pickerValue) : option.dataset.pickerValue);
     if (pickerContext.type === "champion" && selectedPath === "attacker.champion") resetAbilityInputs();
+    if (pickerContext.type === "champion" && /^(targets|allies)\.\d+\.champion$/.test(selectedPath)) {
+      const [root, indexText] = selectedPath.split(".");
+      const loadout = state[root][Number(indexText)];
+      loadout.abilityRanks = defaultAbilityRanks(loadout);
+    }
     closePicker();
     return render();
   }
@@ -1677,10 +2004,14 @@ Promise.all([
   fetch("/api/champions").then((response) => { if (!response.ok) throw new Error("Champion availability failed to load"); return response.json(); }),
   fetch("/api/config").then((response) => { if (!response.ok) throw new Error("Calculator config failed to load"); return response.json(); }),
   fetch("/static/ability-catalog.json").then((response) => { if (!response.ok) throw new Error("Ability catalogue failed to load"); return response.json(); }),
+  fetch("/static/bis-profiles.json").then((response) => { if (!response.ok) throw new Error("Wiki BIS profile failed to load"); return response.json(); }),
+  fetch("/static/effect-catalog.json").then((response) => { if (!response.ok) throw new Error("Wiki effect catalogue failed to load"); return response.json(); }),
 ])
-  .then(([data, championAvailability, config, abilityCatalog]) => {
+  .then(([data, championAvailability, config, abilityCatalog, bisProfiles, effectCatalog]) => {
     DATA = data;
     mergeAbilityCatalog(abilityCatalog);
+    mergeBisProfiles(bisProfiles);
+    mergeEffectCatalog(effectCatalog);
     championAvailability.forEach((entry) => {
       engine.availability.set(entry.name, entry.availability || {});
       if (entry.availability?.ready) engine.reviewed.add(entry.name);
