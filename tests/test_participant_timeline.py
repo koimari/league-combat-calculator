@@ -1,10 +1,13 @@
 """Regression coverage for coupled participant combat receipts."""
 
+from types import SimpleNamespace
+
 from src.calculator.data_fetcher import get_champion
 from src.calculator.pipeline import FightParams, run_fight
 from src.app import _role_scoped_bis_candidates, app
 from src.calculator.item_coverage import optimizer_supported_items
 from src.calculator.optimizer import get_eligible_legendaries
+from src.calculator.participant_timeline import Combatant, _simulate_survival
 
 
 def _timed_params() -> FightParams:
@@ -175,6 +178,7 @@ def test_main_support_targets_selected_ally_and_uses_requested_rank():
     assert shield["target"] == "ally:Jinx"
     assert shield["target_policy"] == "first_selected_teammate"
     assert shield["amount"] == 230.0
+    assert shield["applied_amount"] == 230.0
     jinx = next(row for row in combat["participants"] if row["participant_id"] == "ally:Jinx")
     assert jinx["survival"]["support_shield_received"] == 230.0
 
@@ -424,3 +428,97 @@ def test_explicitly_disabled_ally_effects_are_not_injected_into_ehp():
         event["attacker"] == "ally:Lulu"
         for event in response.get_json()["combat"]["support_events"]
     )
+
+
+def _dummy_combatant(participant_id: str, team: str, health: float = 100.0) -> Combatant:
+    defenses = SimpleNamespace(
+        magic_shield=0.0,
+        physical_shield=0.0,
+        general_shield=0.0,
+    )
+    return Combatant(
+        participant_id=participant_id,
+        team=team,
+        champion_data={"name": participant_id},
+        level=1,
+        items=(),
+        stats={"health": health},
+        defenses=defenses,
+    )
+
+
+def test_simulator_orders_same_timestamp_events_without_comparing_payloads():
+    target = _dummy_combatant("target", "enemy")
+    source = _dummy_combatant("source", "main")
+    result = _simulate_survival(
+        [source, target],
+        {
+            "target": [
+                {
+                    "time": 0.0,
+                    "damage": 40.0,
+                    "damage_type": "physical",
+                    "attacker": "source",
+                    "sequence": 0,
+                    "_event_id": "first",
+                },
+                {
+                    "time": 0.0,
+                    "damage": 40.0,
+                    "damage_type": "physical",
+                    "attacker": "source",
+                    "sequence": 1,
+                    "_event_id": "second",
+                },
+            ]
+        },
+        {},
+        {},
+        10.0,
+    )
+    assert result["target"]["damage_taken"] == 80.0
+
+
+def test_simulator_scores_only_applied_support_and_healing_amounts():
+    source = _dummy_combatant("source", "main")
+    target = _dummy_combatant("target", "ally")
+    dead_target = _dummy_combatant("dead", "ally", health=50.0)
+    result = _simulate_survival(
+        [source, target, dead_target],
+        {
+            "dead": [
+                {
+                    "time": 0.0,
+                    "damage": 50.0,
+                    "damage_type": "physical",
+                    "attacker": "source",
+                    "sequence": 0,
+                    "_event_id": "kill",
+                }
+            ]
+        },
+        {
+            "target": [
+                {
+                    "time": 0.0,
+                    "amount": 50.0,
+                    "attacker": "source",
+                    "source": "already-full heal",
+                }
+            ]
+        },
+        {
+            "dead": [
+                {
+                    "time": 1.0,
+                    "amount": 50.0,
+                    "kind": "shield",
+                    "attacker": "source",
+                    "source": "late shield",
+                }
+            ]
+        },
+        10.0,
+    )
+    assert result["target"]["healing_received"] == 0.0
+    assert result["dead"]["support_shield_received"] == 0.0

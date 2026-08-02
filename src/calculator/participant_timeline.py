@@ -33,6 +33,42 @@ class Combatant:
     request: Any = None
 
 
+def _event_sequence(event: Mapping[str, Any]) -> int:
+    """Return a stable source sequence for simultaneous event ordering."""
+    value = event.get("sequence", event.get("_trigger_sequence", 0))
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _participant_order(participant_id: Any) -> tuple[int, str]:
+    """Use a deterministic side order when sources share a timestamp."""
+    text = str(participant_id or "")
+    if text == "main":
+        return (0, text)
+    if text.startswith("ally:"):
+        return (1, text)
+    if text.startswith("enemy:"):
+        return (2, text)
+    return (3, text)
+
+
+def _action_sort_key(row: tuple[float, int, str, dict[str, Any]]) -> tuple[Any, ...]:
+    """Sort event phases without ever comparing payload dictionaries."""
+    event_time, phase, participant_id, event = row
+    source_id = event.get("attacker", participant_id)
+    return (
+        float(event_time),
+        int(phase),
+        _event_sequence(event),
+        *_participant_order(source_id),
+        str(participant_id),
+        str(event.get("_event_id", "")),
+        str(event.get("source", event.get("source_key", ""))),
+    )
+
+
 def _from_loadout(
     participant_id: str,
     team: str,
@@ -245,7 +281,7 @@ def _simulate_survival(
             (float(event.get("time", 0.0)), 1, participant_id, event)
             for event in events
         )
-    actions.sort(key=lambda row: (row[0], row[1]))
+    actions.sort(key=_action_sort_key)
 
     for event_time, phase, participant_id, event in actions:
         state = states[participant_id]
@@ -254,6 +290,7 @@ def _simulate_survival(
             # A heal whose damage event was skipped because its target was
             # already dead must not survive as an unconnected recovery tick.
             if damage_event_status.get(str(trigger_id)) != "applied":
+                event["applied_amount"] = 0.0
                 event["skipped_reason"] = "trigger_event_skipped"
                 continue
         if state["death_time"] is not None:
@@ -263,6 +300,7 @@ def _simulate_survival(
             event["damage"] = 0.0
             event["live_damage"] = 0.0
             event["overkill"] = 0.0
+            event["applied_amount"] = 0.0
             event["skipped_reason"] = "target_dead"
             continue
         source_id = event.get("attacker")
@@ -273,6 +311,7 @@ def _simulate_survival(
             event["damage"] = 0.0
             event["live_damage"] = 0.0
             event["overkill"] = 0.0
+            event["applied_amount"] = 0.0
             event["skipped_reason"] = "attacker_dead"
             continue
         if phase == -1:
@@ -281,16 +320,19 @@ def _simulate_survival(
             if kind == "shield":
                 state["shields"]["general_shield"] += amount
                 state["support_shield_received"] += amount
+                event["applied_amount"] = round(amount, 6)
             elif kind == "heal":
                 received = min(amount, max(0.0, state["max_health"] - state["health"]))
                 state["health"] += received
                 state["healing_received"] += received
+                event["applied_amount"] = round(received, 6)
             continue
         if phase == 1:
             amount = max(0.0, float(event.get("amount", 0.0)))
             received = min(amount, max(0.0, state["max_health"] - state["health"]))
             state["health"] += received
             state["healing_received"] += received
+            event["applied_amount"] = round(received, 6)
             continue
 
         amount = max(0.0, float(event.get("damage", 0.0)))
@@ -578,13 +620,13 @@ def build_participant_timeline(
     )
     focus_survival = survival.get(focus_participant_id)
     focus_support = sum(
-        float(event.get("amount", 0.0))
+        float(event.get("applied_amount", 0.0))
         for events in support_effects.values()
         for event in events
         if event.get("attacker") == focus_participant_id
     )
     focus_healing = sum(
-        float(event.get("amount", 0.0))
+        float(event.get("applied_amount", 0.0))
         for event in healing.get(focus_participant_id, [])
     )
     return {
@@ -630,6 +672,9 @@ def build_participant_timeline(
                 "attacker": event.get("attacker"),
                 "source": event.get("source", ""),
                 "amount": round(float(event.get("amount", 0.0)), 1),
+                "applied_amount": round(
+                    float(event.get("applied_amount", event.get("amount", 0.0))), 1
+                ),
                 **(
                     {"skipped_reason": str(event["skipped_reason"])}
                     if event.get("skipped_reason")
@@ -647,7 +692,15 @@ def build_participant_timeline(
                 "source": event.get("source", ""),
                 "kind": event.get("kind", ""),
                 "amount": round(float(event.get("amount", 0.0)), 1),
+                "applied_amount": round(
+                    float(event.get("applied_amount", event.get("amount", 0.0))), 1
+                ),
                 "target_policy": event.get("target_policy", ""),
+                **(
+                    {"skipped_reason": str(event["skipped_reason"])}
+                    if event.get("skipped_reason")
+                    else {}
+                ),
             }
             for events in support_effects.values()
             for event in events
