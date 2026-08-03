@@ -47,7 +47,7 @@ const state = {
   targets: [],
   allies: [],
   fight: { rotations: 1, duration: 10, aaUptime: 0 },
-  optimizer: { running: false, summary: null, scope: null },
+  optimizer: { running: false, summary: null, scope: null, rosterErrors: {} },
 };
 
 const TIER_TWO_BOOTS = [3006, 3009, 3008, 3158, 3111, 3047, 3020];
@@ -495,6 +495,7 @@ function rosterCard(loadout, index, kind) {
     : "";
   const path = `${root}.${index}`;
   const rosterReady = Boolean(loadout.champion && bisReadyForPath(path));
+  const rosterError = state.optimizer.rosterErrors?.[path] || "";
   const itemSlotCount = loadout.includeBoots ? 5 : 6;
   return `<article class="target-card ${isAlly ? "ally-card" : ""}">
     <header>
@@ -507,6 +508,7 @@ function rosterCard(loadout, index, kind) {
     <button class="boots-toggle ${loadout.includeBoots ? "active" : ""}" type="button" data-include-roster-boots="${root}.${index}" aria-pressed="${Boolean(loadout.includeBoots)}">${loadout.includeBoots ? "Boots included" : "No boots"}</button>
     ${rosterRoleControls(loadout, path)}
     <div class="roster-build-actions"><button class="optimize-build roster-optimize" type="button" data-optimize-roster="${path}" ${rosterReady && !state.optimizer.running ? "" : "disabled"}>Optimize build</button></div>
+    ${rosterError ? `<p class="optimizer-card-error" role="status">${escapeHtml(rosterError)}</p>` : ""}
     ${rosterAbilityRankControls(loadout, index, root)}
     ${effectToggle}
     ${champion ? statMatrix(stats, null, true) : `<div class="matrix-placeholder">Choose a champion to show the full stat matrix.</div>`}
@@ -2385,12 +2387,15 @@ async function startRosterOptimization(rootOrPath) {
   state.optimizer.running = true;
   state.optimizer.scope = String(rootOrPath).includes(".") ? "roster" : rootOrPath;
   state.optimizer.summary = null;
+  state.optimizer.rosterErrors = {};
   renderBuilder();
   const started = performance.now();
   let tested = 0;
+  let activePath = null;
   try {
     const changed = [];
     for (const path of paths) {
+      activePath = path;
       tested += await optimizeRosterPathFromTimeline(path);
       // The main build is deliberately re-solved after each roster change;
       // an ally/enemy build can change the main champion's best response.
@@ -2408,6 +2413,7 @@ async function startRosterOptimization(rootOrPath) {
       label: `${scope} optimized from the coupled event timeline; Build A was rebalanced after each roster change.`,
     };
   } catch (error) {
+    if (activePath) state.optimizer.rosterErrors[activePath] = error.message;
     state.optimizer.summary = { tested, elapsedMs: performance.now() - started, label: `Optimization stopped: ${error.message}` };
   } finally {
     state.optimizer.running = false;

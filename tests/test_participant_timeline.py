@@ -496,6 +496,32 @@ def test_roster_bis_filters_items_with_unsupported_target_mechanics():
     assert "target-side coverage filtered" in body["target_coverage_note"].lower()
 
 
+def test_roster_bis_reports_actionable_target_coverage_for_blocked_mid_loadout():
+    """A blocked enemy card must explain why no replacement build was applied."""
+    app.config["TESTING"] = True
+    payload = _bis_request("enemy")
+    payload["enemies"][0]["role"] = "mid"
+    payload["enemies"][0]["role_quest_complete"] = True
+    payload["enemies"][0]["items"] = [
+        "Heartsteel",
+        "Banshee's Veil",
+    ]
+    payload["enemies"][0]["boots"] = "Armored Advance"
+
+    response = app.test_client().post("/api/bis", json=payload)
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["candidates"] == []
+    assert body["coverage"]["complete"] is False
+    assert body["target_coverage_filtered"] > 0
+    assert "target-side coverage filtered" in body["coverage"]["note"].lower()
+    assert any(
+        name in body["target_coverage_note"]
+        for name in ("Heartsteel", "Banshee's Veil", "Armored Advance")
+    )
+
+
 def test_bis_withholds_partial_event_order_instead_of_labeling_it_certified():
     app.config["TESTING"] = True
     payload = {

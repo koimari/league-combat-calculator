@@ -298,6 +298,7 @@ td:last-child { color: var(--olive); }
 .target-title span { display: block; margin-top: 2px; overflow: hidden; color: var(--muted); font: 7px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
 .target-build { display: flex; gap: 5px; margin: 10px 0; }
 .roster-build-actions { display: flex; justify-content: flex-end; margin: -2px 0 9px; }
+.optimizer-card-error { margin: -3px 0 9px; color: var(--accent); font: 8px var(--mono); line-height: 1.4; }
 .roster-optimize { min-height: 24px; padding: 5px 8px; font-size: 7px; }
 .target-build .slot-wrap, .target-build .item-slot, .target-build .item-icon { width: 34px; }
 .target-build .item-icon { height: 34px; }
