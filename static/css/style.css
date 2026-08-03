@@ -302,3 +302,71 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
   .champion-portrait-button { flex-basis: 82px; width: 82px; height: 98px; }
   .picker-grid { grid-template-columns: 1fr; }
 }
+
+/* Impeccable threefold pass: the live map is atmospheric context, not a text
+   surface. Give the operate path a stable paper reading plane, make the
+   scenario rail explicit, and make the empty champion state intentional. */
+.map-wash { filter: saturate(.82) contrast(1.02) brightness(.72); }
+.topbar { background: rgba(246,242,223,.9); }
+.app-shell { padding-top: 26px; }
+.scenario-rail {
+  grid-template-areas: "scenario state objective" "summary summary summary";
+  grid-template-rows: auto auto;
+  min-height: 0;
+  gap: 14px 22px;
+  padding: 18px 22px 20px;
+  border: 1px solid rgba(14,49,40,.42);
+  background: rgba(246,242,223,.9);
+}
+.scenario-rail > .scenario-block:first-child { grid-area: scenario; }
+.scenario-rail > .state-block { grid-area: state; }
+.scenario-rail > .objective-block { grid-area: objective; }
+.scenario-summary {
+  grid-area: summary;
+  max-width: 68ch;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.content-grid { margin-top: 20px; }
+.section-rule {
+  margin-bottom: 12px;
+  padding: 20px 22px 26px;
+  border: 1px solid rgba(22,72,58,.24);
+  background: rgba(246,242,223,.86);
+}
+.section-rule + .section-rule { padding-top: 20px; }
+.champion-card { background: rgba(255,253,244,.96); }
+.champion-identity > div { min-width: 0; }
+.champion-identity.is-empty h1 { max-width: 12ch; font-size: clamp(28px, 2.8vw, 36px); }
+.champion-identity.is-empty p { max-width: 25ch; }
+.champion-portrait-button.is-empty { position: relative; display: grid; place-items: center; border: 1px dashed var(--line-dark); background: var(--paper-deep); color: var(--ink-soft); }
+.champion-portrait-button.is-empty::before { content: "+"; font-size: 34px; font-weight: 500; line-height: 1; }
+.matrix-placeholder { display: grid; place-items: center; min-height: 100%; padding: 28px; color: var(--ink-soft); font-size: 12px; font-weight: 700; line-height: 1.45; text-align: center; }
+.ability-row > .roster-empty { border: 1px dashed var(--line-dark); background: rgba(255,253,244,.72); }
+.roster-empty { color: var(--ink-soft); font-size: 11px; line-height: 1.45; }
+.build-card, .roster-group, .range-control { background: rgba(255,253,244,.94); }
+.build-b { background: rgba(224,241,229,.78); }
+.select-wrap select, .state-button, .objective { background-color: rgba(255,253,244,.92); }
+.result-note { padding: 10px 12px; background: rgba(246,242,223,.9); }
+
+@media (max-width: 800px) {
+  .scenario-rail {
+    grid-template-areas: "scenario state" "objective objective" "summary summary";
+  }
+  .section-rule { padding-inline: 16px; }
+}
+
+@media (max-width: 560px) {
+  .scenario-rail {
+    grid-template-areas: "scenario" "state" "objective" "summary";
+    padding: 16px;
+  }
+  .scenario-block, .state-block { align-items: center; flex-wrap: wrap; }
+  .objective-block { display: grid; }
+  .objective-list { width: 100%; }
+  .section-rule { padding: 16px 14px 20px; }
+  .champion-identity.is-empty h1 { font-size: 30px; }
+}

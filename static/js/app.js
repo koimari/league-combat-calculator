@@ -1659,10 +1659,21 @@ function prototypeBuildScore(side) {
 function renderPrototypeChampion() {
   const champion = getChampion(state.attacker.champion);
   const stats = champion ? attackerChampionStats(buildAIds(), buildAStacks()) : null;
+  const portrait = $("championPicker");
+  const portraitImage = $("championImage");
   $("championName").textContent = champion?.name || "Choose a champion";
   $("championTitle").textContent = champion?.title || "Start with the champion you want to compare.";
-  $("championImage").src = champion ? championImage(champion.name) : "";
-  $("championImage").alt = champion?.name || "";
+  portrait.classList.toggle("is-empty", !champion);
+  portrait.setAttribute("aria-label", champion ? `Change ${champion.name}` : "Choose a champion");
+  portraitImage.hidden = !champion;
+  if (champion) {
+    portraitImage.src = championImage(champion.name);
+    portraitImage.alt = champion.name;
+  } else {
+    portraitImage.removeAttribute("src");
+    portraitImage.alt = "";
+  }
+  document.querySelector(".champion-identity")?.classList.toggle("is-empty", !champion);
   $("levelInput").value = state.attacker.level;
   $("levelInput").max = attackerLevelCap();
   $("questToggle").textContent = state.attacker.roleQuestComplete ? "Quest on" : "Quest off";
