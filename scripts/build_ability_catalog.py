@@ -15,7 +15,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-
 ABILITY_SLOTS = ("P", "Q", "W", "E", "R")
 
 
@@ -105,7 +104,9 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
                     for slot in ABILITY_SLOTS
                 ],
                 "complete": all(
-                    _ability_entry(slot, abilities.get(slot, [])).get("ingestion_status")
+                    _ability_entry(slot, abilities.get(slot, [])).get(
+                        "ingestion_status"
+                    )
                     == "metadata_ingested"
                     for slot in ABILITY_SLOTS
                 ),
@@ -129,9 +130,7 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--source", type=Path, default=root / "data" / "champions.json"
-    )
+    parser.add_argument("--source", type=Path, default=root / "data" / "champions.json")
     parser.add_argument(
         "--output", type=Path, default=root / "static" / "ability-catalog.json"
     )

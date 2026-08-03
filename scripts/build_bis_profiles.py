@@ -17,7 +17,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 ABILITY_SLOTS = ("P", "Q", "W", "E", "R")
 
 _DAMAGE_ATTRIBUTE = re.compile(
@@ -60,7 +59,12 @@ def _ratio_components(unit: str, attribute: str) -> dict[str, float]:
         result["bonusAd"] = 1.0 / 100.0
     elif ("% ad" in text or text.endswith(" ad")) and "per 100 ad" not in text:
         result["ad"] = 1.0 / 100.0
-    if "target" in text and "maximum health" in text or "target" in text and "max health" in text:
+    if (
+        "target" in text
+        and "maximum health" in text
+        or "target" in text
+        and "max health" in text
+    ):
         result["targetMaxHp"] = 1.0 / 100.0
     elif "target" in text and "current health" in text:
         result["targetCurrentHp"] = 1.0 / 100.0
@@ -129,7 +133,9 @@ def _cooldown_values(ability: dict[str, Any]) -> list[float]:
 
 
 def _damage_packet(attribute: str, leveling: dict[str, Any]) -> dict[str, Any] | None:
-    if not _DAMAGE_ATTRIBUTE.search(attribute) or _NON_DAMAGE_ATTRIBUTE.search(attribute):
+    if not _DAMAGE_ATTRIBUTE.search(attribute) or _NON_DAMAGE_ATTRIBUTE.search(
+        attribute
+    ):
         return None
     base: list[float] = []
     ratios: dict[str, list[float]] = {}
@@ -206,7 +212,10 @@ def _form_profile(slot: str, ability: dict[str, Any]) -> dict[str, Any]:
                 packets.append(packet)
             utility = _utility_packet(str(leveling.get("attribute", "")), leveling)
             if utility:
-                if "shield" in str(leveling.get("attribute", "")).lower() or "barrier" in str(leveling.get("attribute", "")).lower():
+                if (
+                    "shield" in str(leveling.get("attribute", "")).lower()
+                    or "barrier" in str(leveling.get("attribute", "")).lower()
+                ):
                     shields.append(utility)
                 else:
                     heals.append(utility)
@@ -216,21 +225,29 @@ def _form_profile(slot: str, ability: dict[str, Any]) -> dict[str, Any]:
     chosen: list[dict[str, Any]] = []
     families: dict[str, dict[str, Any]] = {}
     for packet in packets:
-        family = re.sub(r"(?i)minimum|maximum|total|enhanced|per tick|per hit", "", packet["attribute"])
+        family = re.sub(
+            r"(?i)minimum|maximum|total|enhanced|per tick|per hit",
+            "",
+            packet["attribute"],
+        )
         current = families.get(family)
         if current is None or packet["priority"] > current["priority"]:
             families[family] = packet
     chosen.extend(families.values())
     for packet in chosen:
         packet["damageType"] = ability.get("damageType")
+
     def choose_utility(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
         families: dict[str, dict[str, Any]] = {}
         for packet in entries:
-            family = re.sub(r"(?i)minimum|maximum|total|per tick|per hit", "", packet["attribute"])
+            family = re.sub(
+                r"(?i)minimum|maximum|total|per tick|per hit", "", packet["attribute"]
+            )
             current = families.get(family)
             if current is None or packet["priority"] > current["priority"]:
                 families[family] = packet
         return list(families.values())
+
     text = (description + " " + str(ability.get("blurb") or "")).lower()
     return {
         "name": ability.get("name") or slot,
@@ -244,11 +261,28 @@ def _form_profile(slot: str, ability: dict[str, Any]) -> dict[str, Any]:
         "shields": choose_utility(shields),
         "heals": choose_utility(heals),
         "signals": {
-            "attack": bool(re.search(r"basic attack|on-hit|on hit|next attack|empowered attack|per attack", text)),
-            "heal": bool(re.search(r"\bheal(?:ing)?\b|lifesteal|omnivamp|regenerat", text)),
+            "attack": bool(
+                re.search(
+                    r"basic attack|on-hit|on hit|next attack|empowered attack|per attack",
+                    text,
+                )
+            ),
+            "heal": bool(
+                re.search(r"\bheal(?:ing)?\b|lifesteal|omnivamp|regenerat", text)
+            ),
             "shield": "shield" in text,
-            "control": bool(re.search(r"stun|root|slow|knock|silence|immobil|suppress|charm|polymorph", text)),
-            "persistent": bool(re.search(r"per tick|per second|damage over time|recast|bounce|detonat|each hit", text)),
+            "control": bool(
+                re.search(
+                    r"stun|root|slow|knock|silence|immobil|suppress|charm|polymorph",
+                    text,
+                )
+            ),
+            "persistent": bool(
+                re.search(
+                    r"per tick|per second|damage over time|recast|bounce|detonat|each hit",
+                    text,
+                )
+            ),
             "hasDamage": bool(chosen),
         },
     }
@@ -265,7 +299,9 @@ def _load_meraki_kits(path: Path | None) -> dict[str, Any]:
 
 def _merge_auxiliary_damage(champions: dict[str, Any], kits: dict[str, Any]) -> int:
     merged = 0
-    by_name = {str(kit.get("name")): kit for kit in kits.values() if isinstance(kit, dict)}
+    by_name = {
+        str(kit.get("name")): kit for kit in kits.values() if isinstance(kit, dict)
+    }
     for name, champion in champions.items():
         kit = by_name.get(name)
         if not kit:
@@ -281,23 +317,28 @@ def _merge_auxiliary_damage(champions: dict[str, Any], kits: dict[str, Any]) -> 
             ratios = {
                 ratio.get("stat"): ratio.get("values", [])
                 for ratio in damage.get("ratios", [])
-                if ratio.get("stat") in {"ap", "ad", "bonusAd", "targetMaxHp", "targetMissingHp"}
+                if ratio.get("stat")
+                in {"ap", "ad", "bonusAd", "targetMaxHp", "targetMissingHp"}
             }
-            target["packets"] = [{
-                "attribute": "Auxiliary generated damage packet",
-                "base": damage.get("base", []),
-                "ratios": ratios,
-                "priority": -1,
-                "damageType": str(damage.get("type", "")).upper() + "_DAMAGE",
-                "source": "Axword Meraki generated kit",
-            }]
+            target["packets"] = [
+                {
+                    "attribute": "Auxiliary generated damage packet",
+                    "base": damage.get("base", []),
+                    "ratios": ratios,
+                    "priority": -1,
+                    "damageType": str(damage.get("type", "")).upper() + "_DAMAGE",
+                    "source": "Axword Meraki generated kit",
+                }
+            ]
             target["damageType"] = str(damage.get("type", "")).upper() + "_DAMAGE"
             target["signals"]["hasDamage"] = True
             merged += 1
     return merged
 
 
-def build_profiles(source: Path, patch: str, auxiliary_source: Path | None = None) -> dict[str, Any]:
+def build_profiles(
+    source: Path, patch: str, auxiliary_source: Path | None = None
+) -> dict[str, Any]:
     raw = json.loads(source.read_text(encoding="utf-8"))
     champions: dict[str, Any] = {}
     for champion in sorted(raw.values(), key=lambda item: str(item.get("name", ""))):
@@ -344,15 +385,26 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, default=root / "data" / "champions.json")
-    parser.add_argument("--output", type=Path, default=root / "static" / "bis-profiles.json")
+    parser.add_argument(
+        "--output", type=Path, default=root / "static" / "bis-profiles.json"
+    )
     parser.add_argument(
         "--auxiliary-source",
         type=Path,
-        default=root.parent / "lol-strength-analysis" / "src" / "data" / "generated" / "merakiAbilityKits.ts",
+        default=root.parent
+        / "lol-strength-analysis"
+        / "src"
+        / "data"
+        / "generated"
+        / "merakiAbilityKits.ts",
     )
     parser.add_argument("--patch", default="26.15")
     args = parser.parse_args()
-    profiles = build_profiles(args.source.resolve(), args.patch, args.auxiliary_source.resolve() if args.auxiliary_source.exists() else None)
+    profiles = build_profiles(
+        args.source.resolve(),
+        args.patch,
+        args.auxiliary_source.resolve() if args.auxiliary_source.exists() else None,
+    )
     if profiles["champion_count"] != 173:
         raise SystemExit(f"Expected 173 champions, got {profiles['champion_count']}")
     args.output.write_text(

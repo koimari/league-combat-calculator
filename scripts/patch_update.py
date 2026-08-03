@@ -217,8 +217,11 @@ def item_audit_lines(old_items, new_items):
         for name in added:
             lines.append(f"  + {name} (new item — consider /add-item-effect)")
         for name in removed:
-            implemented = " ** IMPLEMENTED — code must be updated **" \
-                if name in _ITEM_PARSE_CONFIG else ""
+            implemented = (
+                " ** IMPLEMENTED — code must be updated **"
+                if name in _ITEM_PARSE_CONFIG
+                else ""
+            )
             lines.append(f"  - {name}{implemented}")
     return lines
 
@@ -253,7 +256,9 @@ def print_detail(names):
         if not diffs:
             print("  (no changes)")
         for path, old_v, new_v in diffs:
-            print(f"  {path}:\n    OLD {_format_leaf(old_v)}\n    NEW {_format_leaf(new_v)}")
+            print(
+                f"  {path}:\n    OLD {_format_leaf(old_v)}\n    NEW {_format_leaf(new_v)}"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -312,8 +317,10 @@ def run_gates():
         [sys.executable, "-m", "pytest", "-q"], cwd=REPO_ROOT, check=False
     )
 
-    print("== Gate: golden compare (diffs below must be explained in the commit) ==",
-          flush=True)
+    print(
+        "== Gate: golden compare (diffs below must be explained in the commit) ==",
+        flush=True,
+    )
     # Diffs are expected after a real patch; the compare's exit code is
     # informational here, so no check.
     subprocess.run(
