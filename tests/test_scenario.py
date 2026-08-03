@@ -164,7 +164,9 @@ def test_loadout_applies_stateful_item_options():
     "items",
     [
         ["Lich Bane", "Trinity Force"],
+        ["Sheen", "Trinity Force"],
         ["Dark Seal", "Mejai's Soulstealer"],
+        ["Bami's Cinder", "Sunfire Aegis"],
     ],
 )
 def test_loadout_rejects_mutually_exclusive_items(items):

@@ -213,6 +213,45 @@ def test_force_of_nature_target_defense_fails_closed_with_stack_timing_diagnosti
         require_target_item_coverage([item])
 
 
+@pytest.mark.parametrize(
+    "item_name",
+    [
+        "Bami's Cinder",
+        "Bramble Vest",
+        "Fated Ashes",
+        "Haunting Guise",
+        "Hextech Alternator",
+        "Recurve Bow",
+        "Scout's Slingshot",
+        "Sheen",
+        "Tiamat",
+    ],
+)
+def test_issue_42_components_are_modeled_attacker_candidates(item_name):
+    """Every issue-42 component left review_pending for an explicit model."""
+    coverage = item_model_coverage(get_item_by_name(item_name))
+
+    assert coverage["status"] == "modeled_effect"
+    assert coverage["optimizer_eligible"] is True
+
+
+def test_bramble_vest_is_an_explicitly_modeled_target_item():
+    """Enemy Bramble retaliation is priced by the coupled timeline, so the
+    target classification must say so rather than fall through."""
+    coverage = target_item_model_coverage(get_item_by_name("Bramble Vest"))
+
+    assert coverage["status"] == "modeled"
+    assert "Thorns" in coverage["reason"]
+
+
+def test_thornmail_stays_blocked_until_its_values_are_registered():
+    """The finished item still fails closed — only the component shipped."""
+    assert item_model_coverage(get_item_by_name("Thornmail"))["status"] == "blocked"
+    assert (
+        target_item_model_coverage(get_item_by_name("Thornmail"))["status"] == "blocked"
+    )
+
+
 def test_unknown_target_passive_fails_closed():
     item = {"name": "Future Bulwark", "passives": [{"name": "Unknown"}]}
 

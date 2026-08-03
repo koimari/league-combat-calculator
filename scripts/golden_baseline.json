@@ -27059,9 +27059,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "immolate_Bami's Cinder"
         ],
-        "total_damage": 817.29
+        "total_damage": 870.86
       },
       "vayne": {
         "breakdown_keys": [
@@ -27070,9 +27071,10 @@
           "R",
           "W",
           "auto_attacks",
+          "immolate_Bami's Cinder",
           "on_hit_ability_W"
         ],
-        "total_damage": 788.1
+        "total_damage": 841.67
       }
     },
     "Bandleglass Mirror": {
@@ -28987,9 +28989,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "burn_Fated Ashes"
         ],
-        "total_damage": 899.14
+        "total_damage": 918.79
       },
       "vayne": {
         "breakdown_keys": [
@@ -28998,9 +29001,10 @@
           "R",
           "W",
           "auto_attacks",
+          "burn_Fated Ashes",
           "on_hit_ability_W"
         ],
-        "total_damage": 798.1
+        "total_damage": 814.17
       }
     },
     "Fiendhunter Bolts": {
@@ -29750,9 +29754,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "damage_amp_Haunting Guise"
         ],
-        "total_damage": 899.14
+        "total_damage": 926.12
       },
       "vayne": {
         "breakdown_keys": [
@@ -29761,9 +29766,10 @@
           "R",
           "W",
           "auto_attacks",
+          "damage_amp_Haunting Guise",
           "on_hit_ability_W"
         ],
-        "total_damage": 798.1
+        "total_damage": 822.04
       }
     },
     "Health Potion": {
@@ -29961,9 +29967,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "proc_Hextech Alternator"
         ],
-        "total_damage": 940.07
+        "total_damage": 986.5
       },
       "vayne": {
         "breakdown_keys": [
@@ -29972,9 +29979,10 @@
           "R",
           "W",
           "auto_attacks",
-          "on_hit_ability_W"
+          "on_hit_ability_W",
+          "proc_Hextech Alternator"
         ],
-        "total_damage": 803.1
+        "total_damage": 849.53
       }
     },
     "Hextech Gunblade": {
@@ -32088,9 +32096,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "on_hit_Recurve Bow"
         ],
-        "total_damage": 869.95
+        "total_damage": 909.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -32099,9 +32108,10 @@
           "R",
           "W",
           "auto_attacks",
+          "on_hit_Recurve Bow",
           "on_hit_ability_W"
         ],
-        "total_damage": 788.1
+        "total_damage": 828.1
       }
     },
     "Redemption": {
@@ -32527,9 +32537,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "proc_Scout's Slingshot"
         ],
-        "total_damage": 869.95
+        "total_damage": 898.52
       },
       "vayne": {
         "breakdown_keys": [
@@ -32538,9 +32549,10 @@
           "R",
           "W",
           "auto_attacks",
-          "on_hit_ability_W"
+          "on_hit_ability_W",
+          "proc_Scout's Slingshot"
         ],
-        "total_damage": 788.1
+        "total_damage": 816.67
       }
     },
     "Seeker's Armguard": {
@@ -32711,9 +32723,10 @@
           "Q",
           "R",
           "W",
-          "auto_attacks"
+          "auto_attacks",
+          "spellblade_Sheen"
         ],
-        "total_damage": 817.29
+        "total_damage": 922.62
       },
       "vayne": {
         "breakdown_keys": [
@@ -32722,9 +32735,10 @@
           "R",
           "W",
           "auto_attacks",
-          "on_hit_ability_W"
+          "on_hit_ability_W",
+          "spellblade_Sheen"
         ],
-        "total_damage": 788.1
+        "total_damage": 896.1
       }
     },
     "Shield of Molten Stone": {
@@ -33511,9 +33525,10 @@
           "Q",
           "R",
           "W",
+          "active_Tiamat",
           "auto_attacks"
         ],
-        "total_damage": 857.29
+        "total_damage": 906.79
       },
       "vayne": {
         "breakdown_keys": [
@@ -33521,10 +33536,11 @@
           "Q",
           "R",
           "W",
+          "active_Tiamat",
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 873.43
+        "total_damage": 948.93
       }
     },
     "Titanic Hydra": {
@@ -34305,7 +34321,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "3d2937228565b58731e0b2d817466409b9b5c826",
+    "git_head": "bdead0a9811bd659a8e9b24269774e5a55dc5bd8",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785725170.32038,

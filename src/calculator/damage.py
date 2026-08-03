@@ -5515,13 +5515,16 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             state.total_damage += periodic_mitigated
 
 
-def _ability_damage_proc_triggers(
+def _unique_ledger_hits(
     state: FightState,
     rotation: RotationResult,
-    effect: item_effects.CooldownProcEffect,
+    source_keys: set[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Schedule an ability-triggered proc onto legal damaging casts."""
-    cast_sources = set(state.cast_order)
+    """Distinct positive damage instances from the ordered ledger, in order.
+
+    ``source_keys`` narrows the walk to specific rows (ability casts for
+    ability-triggered procs); ``None`` keeps every damage source.
+    """
     ordered = _ordered_damage_events(
         state.breakdown,
         state.ability_damages,
@@ -5531,7 +5534,9 @@ def _ability_damage_proc_triggers(
     unique_hits: list[dict[str, Any]] = []
     seen: set[tuple[str, int, float]] = set()
     for event in ordered:
-        if event["source_key"] not in cast_sources or event["damage"] <= 0:
+        if event["damage"] <= 0:
+            continue
+        if source_keys is not None and event["source_key"] not in source_keys:
             continue
         identity = (
             event["source_key"],
@@ -5542,6 +5547,16 @@ def _ability_damage_proc_triggers(
             continue
         seen.add(identity)
         unique_hits.append(event)
+    return unique_hits
+
+
+def _ability_damage_proc_triggers(
+    state: FightState,
+    rotation: RotationResult,
+    effect: item_effects.CooldownProcEffect,
+) -> list[dict[str, Any]]:
+    """Schedule an ability-triggered proc onto legal damaging casts."""
+    unique_hits = _unique_ledger_hits(state, rotation, set(state.cast_order))
 
     proc_triggers: list[dict[str, Any]] = []
     ready_at = float("-inf")
@@ -5553,6 +5568,47 @@ def _ability_damage_proc_triggers(
         if not effect.repeat_on_cooldown:
             break
         ready_at = event_time + effect.cooldown
+    return proc_triggers
+
+
+def _champion_damage_proc_triggers(
+    state: FightState,
+    rotation: RotationResult,
+    effect: item_effects.CooldownProcEffect,
+) -> list[dict[str, Any]]:
+    """Schedule a damaging-a-champion proc onto the ordered ledger.
+
+    Any positive damage event arms the proc (Hextech Alternator's Revved
+    triggers on abilities, attacks, and item effects alike). Repeat procs
+    wait out the cooldown; each completed attack windup between procs
+    refunds ``on_attack_cooldown_refund`` seconds of it (Scout's
+    Slingshot's Bullseye).
+    """
+    unique_hits = _unique_ledger_hits(state, rotation)
+    swing_times = sorted(_auto_attack_timestamps(state))
+    refund = effect.on_attack_cooldown_refund
+
+    def cooldown_ready(last_proc_time: float, event_time: float) -> bool:
+        elapsed = event_time - last_proc_time
+        if refund > 0:
+            attacks_between = sum(
+                1 for swing in swing_times if last_proc_time < swing <= event_time
+            )
+            elapsed += refund * attacks_between
+        return elapsed + 1e-9 >= effect.cooldown
+
+    proc_triggers: list[dict[str, Any]] = []
+    last_proc_time: float | None = None
+    for event in unique_hits:
+        event_time = float(event["time"])
+        if last_proc_time is not None and not cooldown_ready(
+            last_proc_time, event_time
+        ):
+            continue
+        proc_triggers.append(event)
+        if not effect.repeat_on_cooldown:
+            break
+        last_proc_time = event_time
     return proc_triggers
 
 
@@ -5632,12 +5688,16 @@ def _add_item_proc_damage(
         if effect.late_phase:
             continue
         source = effect.source
-        proc_triggers = (
-            _ability_damage_proc_triggers(state, rotation, effect)
-            if effect.trigger == "ability_damage"
-            else []
-        )
-        if effect.trigger == "ability_damage" and not proc_triggers:
+        if effect.trigger == "ability_damage":
+            proc_triggers = _ability_damage_proc_triggers(state, rotation, effect)
+        elif effect.trigger == "champion_damage":
+            proc_triggers = _champion_damage_proc_triggers(state, rotation, effect)
+        else:
+            proc_triggers = []
+        if (
+            effect.trigger in {"ability_damage", "champion_damage"}
+            and not proc_triggers
+        ):
             continue
         procs = (
             len(proc_triggers)

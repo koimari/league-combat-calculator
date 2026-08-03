@@ -754,3 +754,26 @@ class TestValuesSourcedFromTheCache:
         assert hexplate["bonus_attack_speed_melee"] == 50.0
         assert hexplate["bonus_attack_speed_ranged"] == 35.0
         assert "bonus_attack_speed_percent" not in hexplate
+
+
+class TestThornsEffects:
+    """Bramble Vest's Thorns: the reactive packet the coupled timeline reads."""
+
+    def test_bramble_compiles_sourced_reactive_values(self) -> None:
+        (thorns,) = item_effects.thorns_effects(_build("Bramble Vest"))
+        assert thorns.item_name == "Bramble Vest"
+        assert thorns.damage == 10.0
+        assert thorns.damage_type == "magic"
+        assert thorns.grievous_duration == 3.0
+
+    def test_builds_without_thorns_items_compile_empty(self) -> None:
+        assert item_effects.thorns_effects(_build("Wit's End")) == ()
+
+    def test_missing_key_names_item_and_key(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(item_effects.ITEM_EFFECTS.get("Bramble Vest", {}))
+        broken.pop("base", None)
+        monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Bramble Vest", broken)
+        with pytest.raises(KeyError, match="Bramble Vest.*base"):
+            item_effects.thorns_effects(_build("Bramble Vest"))

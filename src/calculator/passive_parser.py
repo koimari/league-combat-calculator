@@ -657,6 +657,80 @@ def _parse_proc_flat_ap(text: str) -> dict[str, Any]:
     return result
 
 
+def _parse_proc_flat(
+    text: str,
+    cooldown_field: float | None = None,
+) -> dict[str, Any]:
+    """Parse a flat proc whose cooldown lives in the data's cooldown field
+    (Hextech Alternator's Revved)."""
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {
+        "damage_type": "magic" if "magic damage" in text.lower() else "physical",
+    }
+
+    base_match = re.search(r"deals?\s+\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
+    if base_match:
+        result["base"] = float(base_match.group(1))
+
+    if cooldown_field is not None:
+        result["cooldown"] = cooldown_field
+
+    return result
+
+
+def _parse_thorns(text: str) -> dict[str, Any]:
+    """Parse a reactive strike-back passive (Bramble Vest's Thorns).
+
+    Markup: ``When struck by a basic attack [[on-hit]], deal
+    {{as|10 magic damage}} to the attacker and ... inflict them with
+    {{tip|Grievous Wounds}} for 3 seconds.``
+    """
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {
+        "damage_type": "magic" if "magic damage" in text.lower() else "physical",
+    }
+
+    base_match = re.search(r"[Dd]eal\s+\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
+    if base_match:
+        result["base"] = float(base_match.group(1))
+
+    duration_match = re.search(
+        r"Grievous\s+Wounds\}?\}?\s+for\s+(\d+(?:\.\d+)?)\s+seconds",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if duration_match:
+        result["grievous_duration"] = float(duration_match.group(1))
+
+    return result
+
+
+def _parse_bullseye(text: str) -> dict[str, Any]:
+    """Parse Scout's Slingshot's Bullseye proc.
+
+    The text carries all three numbers: ``{{as|40 '''bonus''' magic
+    damage}} (40 second cooldown, reduced by 1 second {{tip|on-attack}})``.
+    """
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {
+        "damage_type": "magic" if "magic damage" in text.lower() else "physical",
+    }
+
+    base_match = re.search(r"deals?\s+\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
+    if base_match:
+        result["base"] = float(base_match.group(1))
+
+    cd_match = re.search(r"(\d+(?:\.\d+)?)\s+second\s+cooldown", text_resolved)
+    if cd_match:
+        result["cooldown"] = float(cd_match.group(1))
+
+    refund_match = re.search(r"reduced\s+by\s+(\d+(?:\.\d+)?)\s+second", text_resolved)
+    if refund_match:
+        result["on_attack_cooldown_refund"] = float(refund_match.group(1))
+
+    return result
+
+
 def _parse_stormsurge_trigger(text: str) -> dict[str, Any]:
     """Parse Stormsurge's Stormraider trigger for cooldown."""
     text_resolved = _resolve_simple_templates(text)
@@ -1781,6 +1855,7 @@ def _json_name(code_name: str) -> str:
 _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     # ── On-Hit ──
     "Nashor's Tooth": [("passive", "Icathian Bite", _parse_simple_on_hit, {})],
+    "Recurve Bow": [("passive", "Sting", _parse_simple_on_hit, {})],
     "Blade of the Ruined King": [
         ("passive", "Mist's Edge", _parse_current_hp_on_hit, {})
     ],
@@ -1802,6 +1877,7 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
         ("passive", "Awe", _parse_muramana_awe, {}),
     ],
     # ── Spellblade ──
+    "Sheen": [("passive", "Spellblade", _parse_spellblade, {})],
     "Trinity Force": [("passive", "Spellblade", _parse_spellblade, {})],
     "Lich Bane": [("passive", "Spellblade", _parse_spellblade, {})],
     "Essence Reaver": [("passive", "Spellblade", _parse_essence_reaver_spellblade, {})],
@@ -1822,8 +1898,10 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
         ("passive", "Baleful Blaze", _parse_burn_flat_ap, {}),
         ("passive", "Blackfire", _parse_blackfire_amp, {}),
     ],
+    "Fated Ashes": [("passive", "Inflame", _parse_burn_flat_ap, {})],
     "Sunfire Aegis": [("passive", "Immolate", _parse_immolate, {})],
     "Hollow Radiance": [("passive", "Immolate", _parse_immolate, {})],
+    "Bami's Cinder": [("passive", "Immolate", _parse_immolate, {})],
     # ── Proc ──
     "Luden's Echo": [("passive", "Echo", _parse_luden, {"use_cooldown_field": True})],
     "Statikk Shiv": [("passive", "Electrospark", _parse_statikk_shiv, {})],
@@ -1834,6 +1912,10 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Zaz'Zak's Realmspike": [
         ("passive", "Void Explosion", _parse_zazzak, {"use_cooldown_field": True})
     ],
+    "Hextech Alternator": [
+        ("passive", "Revved", _parse_proc_flat, {"use_cooldown_field": True})
+    ],
+    "Scout's Slingshot": [("passive", "Bullseye", _parse_bullseye, {})],
     # ── Ult Proc ──
     "Malignance": [("passive", "Hatefog", _parse_malignance, {})],
     # ── Active Items ──
@@ -1841,9 +1923,11 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Hextech Gunblade": [("active", "Lightning Bolt", _parse_gunblade_active, {})],
     "Profane Hydra": [("active", "Heretical Cleave", _parse_hydra_active, {})],
     "Ravenous Hydra": [("active", "Ravenous Crescent", _parse_hydra_active, {})],
+    "Tiamat": [("active", "Crescent", _parse_hydra_active, {})],
     "Stridebreaker": [("active", "Breaking Shockwave", _parse_hydra_active, {})],
     # ── Damage Amplification ──
     "Riftmaker": [("passive", "Void Corruption", _parse_damage_amp_per_second, {})],
+    "Haunting Guise": [("passive", "Madness", _parse_damage_amp_per_second, {})],
     "Lord Dominik's Regards": [("passive", "Giant Slayer", _parse_lord_dominik, {})],
     "Spear of Shojin": [
         ("passive", "Focused Will", _parse_spear_of_shojin, {}),
@@ -1909,6 +1993,8 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Unending Despair": [("passive", "Anguish", _parse_unending_despair, {})],
     # ── Conditional AS ──
     "Yun Tal Wildarrows": [("passive", "Flurry", _parse_yun_tal_flurry, {})],
+    # ── Reactive strike-back ──
+    "Bramble Vest": [("passive", "Thorns", _parse_thorns, {})],
     # ── Single-proc / Special ──
     "Dead Man's Plate": [("passive", "Shipwrecker", _parse_dead_mans_plate, {})],
     "Heartsteel": [("passive", "Colossal Consumption", _parse_heartsteel, {})],

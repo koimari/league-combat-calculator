@@ -17,7 +17,13 @@ from .pipeline import FightParams, require_fight_mode_support, run_fight
 from .scenario import ResolvedLoadout
 from .timeline_coverage import combine_timeline_coverages
 from .support_effects import derive_ally_effects
-from .healing_reduction import healing_reduction_profiles, matching_healing_reduction
+from .healing_reduction import (
+    GRIEVOUS_WOUNDS_FACTOR,
+    healing_reduction_profiles,
+    matching_healing_reduction,
+)
+from .item_effects import ThornsEffect, thorns_effects
+from .resistance import apply_magic_penetration, apply_resistance
 
 
 def require_roster_fight_window_support(
@@ -79,13 +85,15 @@ def _participant_order(participant_id: Any) -> tuple[int, str]:
     return (3, text)
 
 
-def _action_sort_key(row: tuple[float, int, str, dict[str, Any]]) -> tuple[Any, ...]:
+def _action_sort_key(
+    row: tuple[float, float, str, dict[str, Any]],
+) -> tuple[Any, ...]:
     """Sort event phases without ever comparing payload dictionaries."""
     event_time, phase, participant_id, event = row
     source_id = event.get("attacker", participant_id)
     return (
         float(event_time),
-        int(phase),
+        float(phase),
         _event_sequence(event),
         *_participant_order(source_id),
         str(participant_id),
@@ -261,6 +269,80 @@ def _attach_support_effects(
             )
 
 
+def _thorns_return_damage(
+    profile: ThornsEffect,
+    wearer: Combatant,
+    striker: Combatant,
+) -> float:
+    """Price one thorns strike-back against the striker's resistances.
+
+    Thorns damage benefits from the wearer's penetration and is mitigated
+    by the striker like any other damage of its type.
+    """
+    if profile.damage_type != "magic":
+        raise ValueError(
+            f"{profile.item_name} thorns damage type "
+            f"{profile.damage_type!r} is not supported"
+        )
+    resistance = apply_magic_penetration(
+        float(striker.stats.get("magic_resistance", 0.0)),
+        float(wearer.stats.get("magic_penetration_flat", 0.0)),
+        float(wearer.stats.get("magic_penetration_percent", 0.0)) / 100.0,
+    )
+    return apply_resistance(profile.damage, resistance)
+
+
+def _schedule_thorns_events(
+    all_actors: list[Combatant],
+    incoming: dict[str, list[dict[str, Any]]],
+    outgoing: dict[str, list[dict[str, Any]]],
+) -> None:
+    """Emit reactive Thorns events from modeled incoming basic attacks.
+
+    Every basic-attack swing that strikes a thorns wearer schedules one
+    return-damage event onto the striker at the swing's own timestamp,
+    linked to the strike so a skipped strike (dead striker or dead
+    wearer) never retaliates. The event also carries the wound window the
+    survival walk applies to the striker's healing.
+    """
+    combatant_by_id = {actor.participant_id: actor for actor in all_actors}
+    for wearer in all_actors:
+        profiles = thorns_effects(list(wearer.items))
+        if not profiles:
+            continue
+        strikes = [
+            event
+            for event in incoming.get(wearer.participant_id, [])
+            if event.get("source_key") == "auto_attacks"
+        ]
+        for index, strike in enumerate(strikes):
+            striker = combatant_by_id.get(str(strike.get("attacker")))
+            if striker is None:
+                continue
+            for profile in profiles:
+                event = {
+                    "time": float(strike.get("time", 0.0)),
+                    "damage": _thorns_return_damage(profile, wearer, striker),
+                    "damage_type": profile.damage_type,
+                    "source_key": f"thorns_{profile.item_name}",
+                    "source": f"{profile.item_name} (Thorns)",
+                    "attacker": wearer.participant_id,
+                    "target": striker.participant_id,
+                    "sequence": int(strike.get("sequence", 0) or 0),
+                    "event_precision": "exact",
+                    "_event_id": (
+                        f"{wearer.participant_id}:{striker.participant_id}"
+                        f":thorns:{profile.item_name}:{index}"
+                    ),
+                    "_trigger_event_id": strike.get("_event_id"),
+                    "_reactive": True,
+                    "grievous_duration": profile.grievous_duration,
+                    "_wound_source": f"{profile.item_name} · Thorns",
+                }
+                incoming.setdefault(striker.participant_id, []).append(event)
+                outgoing.setdefault(wearer.participant_id, []).append(event)
+
+
 def _simulate_survival(
     combatants: Iterable[Combatant],
     incoming: Mapping[str, list[dict[str, Any]]],
@@ -297,7 +379,7 @@ def _simulate_survival(
             "death_time": None,
         }
 
-    actions: list[tuple[float, int, str, dict[str, Any]]] = []
+    actions: list[tuple[float, float, str, dict[str, Any]]] = []
     damage_event_status: dict[str, str] = {}
     for participant_id, events in support_effects.items():
         for event in events:
@@ -310,10 +392,17 @@ def _simulate_survival(
                 (float(event.get("time", 0.0)), priority, participant_id, event)
             )
     # Damage resolves before self-healing and sourced recovery at the same
-    # timestamp, while shields remain before damage above.
+    # timestamp, while shields remain before damage above. Reactive
+    # strike-back damage (Thorns) resolves after the strikes that
+    # triggered it but still before same-timestamp healing.
     for participant_id, events in incoming.items():
         actions.extend(
-            (float(event.get("time", 0.0)), 0, participant_id, event)
+            (
+                float(event.get("time", 0.0)),
+                0.5 if event.get("_reactive") else 0,
+                participant_id,
+                event,
+            )
             for event in events
         )
     for participant_id, events in healing.items():
@@ -326,13 +415,21 @@ def _simulate_survival(
     for event_time, phase, participant_id, event in actions:
         state = states[participant_id]
         trigger_id = event.get("_trigger_event_id")
-        if phase == 1 and trigger_id is not None:
-            # A heal whose damage event was skipped because its target was
-            # already dead must not survive as an unconnected recovery tick.
-            if damage_event_status.get(str(trigger_id)) != "applied":
+        if trigger_id is not None and (
+            damage_event_status.get(str(trigger_id)) != "applied"
+        ):
+            # An effect whose trigger event was skipped (its target or
+            # attacker was already dead) must not survive on its own —
+            # neither a recovery tick nor a reactive strike-back.
+            if phase >= 1:
                 event["applied_amount"] = 0.0
-                event["skipped_reason"] = "trigger_event_skipped"
-                continue
+            else:
+                event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                event["damage"] = 0.0
+                event["live_damage"] = 0.0
+                event["overkill"] = 0.0
+            event["skipped_reason"] = "trigger_event_skipped"
+            continue
         if state["death_time"] is not None:
             # Preserve the scheduled source in the receipt, but do not let
             # a dead target contribute post-death damage to TTD/BIS.
@@ -344,9 +441,16 @@ def _simulate_survival(
             event["skipped_reason"] = "target_dead"
             continue
         source_id = event.get("attacker")
-        if source_id in states and states[source_id]["death_time"] is not None:
+        if (
+            source_id in states
+            and states[source_id]["death_time"] is not None
+            and not event.get("_reactive")
+        ):
             # A dead actor cannot continue an already-scheduled rotation or
-            # emit a support effect later in the shared window.
+            # emit a support effect later in the shared window. Reactive
+            # strike-back is exempt: its trigger linkage above already
+            # proves the wearer was alive when struck (a killing blow
+            # still takes the thorns with it).
             event.setdefault("pair_damage", float(event.get("damage", 0.0)))
             event["damage"] = 0.0
             event["live_damage"] = 0.0
@@ -474,6 +578,27 @@ def _simulate_survival(
                 state["healing_reduction_sources"].add(
                     f"{profile.get('item', '')} · {profile.get('source', '')}"
                 )
+            event["healing_reduction"] = {
+                "factor": round(state["healing_reduction_factor"], 6),
+                "until": round(state["healing_reduction_until"], 6),
+                "sources": sorted(state["healing_reduction_sources"]),
+            }
+        wound_duration = float(event.get("grievous_duration", 0.0) or 0.0)
+        if wound_duration > 0:
+            # A reactive wound (Thorns) rides its strike-back event and
+            # lands on this event's target — the striker — even when the
+            # return damage itself was fully absorbed by shields.
+            state["healing_reduction_until"] = max(
+                state["healing_reduction_until"],
+                event_time + wound_duration,
+            )
+            state["healing_reduction_factor"] = min(
+                state["healing_reduction_factor"],
+                GRIEVOUS_WOUNDS_FACTOR,
+            )
+            state["healing_reduction_sources"].add(
+                str(event.get("_wound_source", "Grievous Wounds"))
+            )
             event["healing_reduction"] = {
                 "factor": round(state["healing_reduction_factor"], 6),
                 "until": round(state["healing_reduction_until"], 6),
@@ -691,6 +816,8 @@ def build_participant_timeline(
         )
         _attach_support_effects(attacker, fallback, all_actors, support_effects)
         support_attached.add(attacker.participant_id)
+
+    _schedule_thorns_events(all_actors, incoming, outgoing)
 
     survival = _simulate_survival(
         all_actors,

@@ -701,7 +701,14 @@ class TestExclusivityGroupsAccessor:
 
     def test_all_groups_present(self):
         groups = exclusivity_groups()
-        assert set(groups) == {"Glory", "Spellblade", "Hydra", "Blight", "Fatality"}
+        assert set(groups) == {
+            "Glory",
+            "Spellblade",
+            "Hydra",
+            "Blight",
+            "Fatality",
+            "Immolate",
+        }
 
     def test_glory_group_members(self):
         groups = exclusivity_groups()

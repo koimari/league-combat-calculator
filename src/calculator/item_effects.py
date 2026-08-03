@@ -153,6 +153,12 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_type": "magic",
         "base": 45.0,
     },
+    "Recurve Bow": {
+        "type": "on_hit",
+        "formula": "flat",
+        "damage_type": "physical",
+        "base": 15.0,
+    },
     "Terminus": {
         "type": "on_hit",
         "formula": "flat_bonus_ad_ap",
@@ -208,6 +214,14 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "max_mana_to_ad_ratio": 0.02,
     },
     # ── Spellblade (after ability, next auto, mutually exclusive) ─────────
+    "Sheen": {
+        "type": "spellblade",
+        "formula": "base_ad",
+        "damage_type": "physical",
+        "base_ad_ratio": 1.0,
+        "cooldown": 1.5,
+        "weave_delay": 1.5,  # CD starts after empowered attack
+    },
     "Trinity Force": {
         "type": "spellblade",
         "formula": "base_ad",
@@ -264,6 +278,15 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "double_on_hit": True,  # Applies all on-hit effects again
     },
     # ── Burn / DoT ────────────────────────────────────────────────────────
+    "Fated Ashes": {
+        "type": "burn",
+        "formula": "flat",
+        "damage_type": "magic",
+        # Inflame: 2.5 per 0.5s for 3s = 15 total, no AP scaling
+        "base_total": 15.0,
+        "duration": 3.0,
+        "tick_interval": 0.5,
+    },
     "Liandry's Torment": {
         "type": "burn",
         "formula": "max_hp",
@@ -303,6 +326,13 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # 15 + 1% bonus HP per second
         "base_per_second": 15.0,
         "bonus_hp_ratio_per_second": 0.01,
+    },
+    "Bami's Cinder": {
+        "type": "immolate",
+        "formula": "flat_dps",
+        "damage_type": "magic",
+        # Flat 15 per second (bonus-health scaling removed in V14.19)
+        "base_per_second": 15.0,
     },
     # ── Proc Damage (cooldown-gated) ──────────────────────────────────────
     "Luden's Echo": {
@@ -346,6 +376,29 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_threshold_ratio": 0.25,
         "damage_threshold_window": 2.5,
         "is_ability_damage": True,  # Amplified by Actualizer
+    },
+    "Hextech Alternator": {
+        "type": "proc",
+        "formula": "flat",
+        "trigger": "champion_damage",
+        "damage_type": "magic",
+        # Revved: 65 bonus magic damage on damaging a champion, 40s CD
+        "base": 65.0,
+        "cooldown": 40.0,
+    },
+    "Scout's Slingshot": {
+        "type": "proc",
+        "formula": "flat",
+        "trigger": "champion_damage",
+        "damage_type": "magic",
+        # Bullseye: 40 bonus magic damage on damaging a champion.
+        # 40s CD, refunded 1s per completed attack windup.
+        "base": 40.0,
+        "cooldown": 40.0,
+        "attack_refund": True,
+        "on_attack_cooldown_refund": 1.0,
+        # Wiki notes: Bullseye's damage triggers spell effects.
+        "is_ability_damage": True,
     },
     "Zaz'Zak's Realmspike": {
         "type": "proc",
@@ -409,6 +462,22 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "total_ad_ratio": 0.80,
         "cooldown": 10.0,
     },
+    "Tiamat": {
+        "type": "active",
+        "formula": "total_ad",
+        "damage_type": "physical",
+        # Crescent: 75% total AD
+        "total_ad_ratio": 0.75,
+        "cooldown": 10.0,
+        # Cleave (the on-hit passive) strikes OTHER enemies in a radius
+        # around the attack target — it never damages the selected target,
+        # so its splash belongs to the shared multi-target roster model.
+        "unmodeled_splash_note": (
+            "Tiamat's Cleave splashes other enemies only and adds no damage "
+            "against the selected target; its splash belongs to the "
+            "multi-target roster model."
+        ),
+    },
     "Stridebreaker": {
         "type": "active",
         "formula": "total_ad",
@@ -426,6 +495,12 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # 2% per second in combat, up to 8% (4 stacks)
         "amp_per_second": 0.02,
         "amp_max": 0.08,
+    },
+    "Haunting Guise": {
+        "type": "damage_amp",
+        # Madness: 2% per second in combat, up to 6% (3 stacks)
+        "amp_per_second": 0.02,
+        "amp_max": 0.06,
     },
     "Lord Dominik's Regards": {
         "type": "damage_amp",
@@ -515,6 +590,16 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "lethality_ratio_melee": 1.5,
         "lethality_ratio_ranged": 0.75,
         "cooldown": 20.0,
+    },
+    # ── Reactive strike-back (consumed by the coupled timeline) ───────────
+    "Bramble Vest": {
+        "type": "thorns",
+        "damage_type": "magic",
+        # Thorns: 10 magic damage to each basic-attack striker, who is
+        # also wounded for 3 seconds. Fires only from modeled incoming
+        # attack events — never assumed in a one-attacker fight.
+        "base": 10.0,
+        "grievous_duration": 3.0,
     },
     # ── Resistance Reduction ──────────────────────────────────────────────
     "Black Cleaver": {
@@ -814,12 +899,15 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "is_ability_damage",
         "double_on_hit",
         "basic_damage",
+        "unmodeled_splash_note",
+        "attack_refund",
     }
 )
 
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Blade of the Ruined King": frozenset({"min_damage"}),
     "Blackfire Torch": frozenset({"tick_interval"}),
+    "Fated Ashes": frozenset({"tick_interval"}),
     "Hexdrinker": frozenset(
         {
             "health_threshold",
@@ -860,6 +948,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
         }
     ),
     "Ravenous Hydra": frozenset({"cooldown"}),
+    "Tiamat": frozenset({"cooldown"}),
     "Seraph's Embrace": frozenset(
         {"health_threshold", "shield_max_mana_ratio", "duration"}
     ),
@@ -1115,6 +1204,9 @@ class CooldownProcEffect:
     trigger: str = "coarse"
     damage_threshold_ratio: float = 0.0
     damage_threshold_window: float = 0.0
+    # Seconds refunded from a running cooldown per completed attack
+    # windup (Scout's Slingshot's Bullseye).
+    on_attack_cooldown_refund: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -1561,6 +1653,12 @@ def _compile_burn(item_name: str, values: Mapping[str, Any]) -> BurnEffect:
         def raw(inputs: DamageInputs) -> float:
             return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
 
+    elif formula == "flat":
+        base = required.number("base_total")
+
+        def raw(_inputs: DamageInputs) -> float:
+            return base
+
     else:
         raise ValueError(f"Unsupported burn formula {formula!r} for {item_name!r}")
     source = _damage_source(
@@ -1580,13 +1678,24 @@ def _compile_burn(item_name: str, values: Mapping[str, Any]) -> BurnEffect:
 def _compile_immolate(item_name: str, values: Mapping[str, Any]) -> DamageSource:
     """Compile one Immolate formula as raw damage per second."""
     required = _RequiredValues(item_name, values)
-    if required.value("formula") != "bonus_hp_dps":
-        raise ValueError(f"Unsupported Immolate formula for {item_name!r}")
-    base = required.number("base_per_second")
-    bonus_hp_ratio = required.number("bonus_hp_ratio_per_second")
+    formula = required.value("formula")
+    if formula == "bonus_hp_dps":
+        base = required.number("base_per_second")
+        bonus_hp_ratio = required.number("bonus_hp_ratio_per_second")
 
-    def raw(inputs: DamageInputs) -> float:
-        return base + bonus_hp_ratio * inputs.champion_stats.get("bonus_health", 0.0)
+        def raw(inputs: DamageInputs) -> float:
+            return base + bonus_hp_ratio * inputs.champion_stats.get(
+                "bonus_health", 0.0
+            )
+
+    elif formula == "flat_dps":
+        base = required.number("base_per_second")
+
+        def raw(_inputs: DamageInputs) -> float:
+            return base
+
+    else:
+        raise ValueError(f"Unsupported Immolate formula for {item_name!r}")
 
     return _damage_source(
         item_name,
@@ -1639,6 +1748,12 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         def raw(inputs: DamageInputs) -> float:
             return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
 
+    elif formula == "flat":
+        base = required.number("base")
+
+        def raw(_inputs: DamageInputs) -> float:
+            return base
+
     elif formula == "flat_ap_max_hp":
         base = required.number("base")
         ap_ratio = required.number("ap_ratio")
@@ -1678,6 +1793,14 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         ),
         damage_threshold_window=(
             required.number("damage_threshold_window") if threshold else 0.0
+        ),
+        # The structural flag decides whether a refund exists; its parsed
+        # value is then required, so a parse miss raises instead of
+        # silently compiling a refund-less Bullseye.
+        on_attack_cooldown_refund=(
+            required.number("on_attack_cooldown_refund")
+            if values.get("attack_refund")
+            else 0.0
         ),
     )
 
@@ -1992,6 +2115,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "target_mitigation",
         "target_threshold_health",
         "target_threshold_shield",
+        "thorns",
         "ult_attack_speed_buff",
         "ult_empowered_autos",
         "ult_proc",
@@ -2151,6 +2275,9 @@ def resolve_damage_effects(
                 required.number("reduction_per_stack"),
                 int(required.number("max_stacks")),
             )
+        splash_note = values.get("unmodeled_splash_note")
+        if splash_note:
+            conditional_notes.append(str(splash_note))
         secondary = values.get("secondary_behavior")
         if secondary == "auto_cooldown":
             auto_cooldowns.append(_compile_auto_cooldown(item_name, values))
@@ -2388,6 +2515,49 @@ def shield_reduction_fraction(items: list[dict[str, Any]], *, is_melee: bool) ->
         return 0.0
     key = "shield_reduction_melee" if is_melee else "shield_reduction_ranged"
     return float(required_effect_value("Serpent's Fang", key))
+
+
+@dataclass(frozen=True, slots=True)
+class ThornsEffect:
+    """One reactive strike-back packet consumed by the coupled timeline.
+
+    The wearer deals ``damage`` (pre-mitigation) to each champion whose
+    basic attack strikes them and wounds that attacker for
+    ``grievous_duration`` seconds. The Grievous Wounds strength itself is
+    the patch-wide rule in :mod:`healing_reduction`.
+    """
+
+    item_name: str
+    damage_type: DamageType
+    damage: float
+    grievous_duration: float
+
+
+def thorns_effects(items: Sequence[Mapping[str, Any]]) -> tuple[ThornsEffect, ...]:
+    """Compile the build's reactive Thorns packets (Bramble Vest).
+
+    Args:
+        items: The wearer's item data dicts.
+
+    Returns:
+        One packet per equipped thorns item; empty without one.
+    """
+    compiled: list[ThornsEffect] = []
+    for item in items:
+        item_name = str(item.get("name", ""))
+        values = ITEM_EFFECTS.get(item_name)
+        if not values or values.get("type") != "thorns":
+            continue
+        required = _RequiredValues(item_name, values)
+        compiled.append(
+            ThornsEffect(
+                item_name=item_name,
+                damage_type=required.value("damage_type"),
+                damage=required.number("base"),
+                grievous_duration=required.number("grievous_duration"),
+            )
+        )
+    return tuple(compiled)
 
 
 def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:

@@ -13,12 +13,20 @@ ITEM_EXCLUSIVITY_GROUPS: dict[str, frozenset[str]] = {
     "Glory": frozenset({"Dark Seal", "Mejai's Soulstealer"}),
     "Spellblade": frozenset(
         {
+            "Sheen",
             "Trinity Force",
             "Lich Bane",
             "Essence Reaver",
             "Iceborn Gauntlet",
             "Bloodsong",
             "Dusk and Dawn",
+        }
+    ),
+    "Immolate": frozenset(
+        {
+            "Bami's Cinder",
+            "Sunfire Aegis",
+            "Hollow Radiance",
         }
     ),
     "Hydra": frozenset(
