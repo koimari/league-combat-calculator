@@ -117,11 +117,14 @@ def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (
-        DamagePart("magic", first),
+        # The recast is available after 0.1 seconds; retaining that sourced
+        # delay matters for Spirit Abjuration's per-hit stack order.
+        DamagePart("magic", first, time_offset=0.0),
         DamagePart(
             "magic",
             amount=recast_min,  # static diagnostic; the engine uses the closure
             hp_scaled_damage=_expunge_scaled(recast_min, recast_max),
+            time_offset=0.1,
         ),
     )
     return entry

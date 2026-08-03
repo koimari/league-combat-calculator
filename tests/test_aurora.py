@@ -268,6 +268,8 @@ class TestFightEngineIntegration:
         passive = result["breakdown"]["on_hit_ability_passive"]
         assert passive["count"] == 1
         assert passive["total_damage"] == pytest.approx(74.0, abs=0.1)
+        assert [event["time"] for event in passive["damage_events"]] == [0.0]
+        assert "on_hit_ability_passive" in result["timeline_coverage"]["exact_sources"]
 
     def test_passive_procs_mix_autos_and_abilities(
         self, aurora_data, attacker_stats

@@ -293,6 +293,8 @@ class TestFightIntegration:
         assert row["count"] == 4
         assert row["unit"] == "stacks"
         assert row["total_damage"] == pytest.approx(1.75 * 50.0)
+        assert row["damage_events"]
+        assert "stacking_dot_passive" in result["timeline_coverage"]["exact_sources"]
 
     def test_one_rotation_w_row_is_base_swing_plus_bonus(self, briar_data):
         """No auto stream in one-rotation mode: the engine appends the

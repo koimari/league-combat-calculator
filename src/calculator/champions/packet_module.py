@@ -19,6 +19,16 @@ from .slotlib import damage_entry, simple_damage
 _ROOT = Path(__file__).resolve().parents[3]
 _PACKET_PATH = _ROOT / "static" / "reviewed-packets.json"
 
+# These packets are authored as one target hit, including their dynamic
+# target-health term.  Keep the certification list explicit: a generic
+# packet must not become exact merely because it happens to have one part.
+_SINGLE_HIT_EVENT_PACKETS = {
+    ("Hwei", "Q"),
+    ("Poppy", "Q"),
+    ("Viego", "Q"),
+    ("Warwick", "Q"),
+}
+
 
 @lru_cache(maxsize=1)
 def _packet_specs() -> dict[str, dict[str, Any]]:
@@ -40,7 +50,7 @@ def _ranked(values: list[float], rank: int) -> float:
     return float(values[min(max(rank, 1) - 1, len(values) - 1)])
 
 
-def _packet_parser(spec: dict[str, Any], slot: str):
+def _packet_parser(spec: dict[str, Any], slot: str, champion_name: str):
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         ability = ctx.ability()
         if ability is None:
@@ -101,6 +111,16 @@ def _packet_parser(spec: dict[str, Any], slot: str):
         )
         entry["parts"] = parts
         entry["total_raw"] = total_raw
+        # A packet can certify a dynamic-health cast when the authored
+        # packet is exactly one hit.  The damage engine still evaluates the
+        # current target health at the cast boundary; there is no hidden
+        # intra-cast ordering left to guess.  Multi-hit packets deliberately
+        # keep the conservative cast-boundary marker until their hit timing
+        # is sourced separately.
+        if (champion_name, slot) in _SINGLE_HIT_EVENT_PACKETS and int(
+            spec.get("count", 1)
+        ) == 1:
+            entry["event_order_certified"] = "single_hit"
         if spec.get("cast_time") is not None:
             entry["cast_time"] = float(spec["cast_time"])
         if spec.get("count", 1) != 1:
@@ -169,7 +189,7 @@ def build_packet_module(champion_name: str):
                         )
                     )
                 elif variant.get("kind") == "packet":
-                    variant_parsers.append(_packet_parser(variant, slot))
+                    variant_parsers.append(_packet_parser(variant, slot, champion_name))
                 else:
                     variant_parsers.append(
                         _no_formula_parser(
@@ -217,7 +237,7 @@ def build_packet_module(champion_name: str):
                 source=tuple(spec["source"]) if spec.get("source") else None,
             )
         elif spec.get("kind") == "packet":
-            slots[slot] = _packet_parser(spec, slot)
+            slots[slot] = _packet_parser(spec, slot, champion_name)
         elif spec.get("kind") == "no_damage":
             slots[slot] = _no_formula_parser(
                 slot,
