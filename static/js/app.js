@@ -3186,7 +3186,6 @@ Promise.all([
   <div class="design-review-pins" aria-hidden="true"></div>`;
   document.body.append(review);
 
-  const toolbar = review.querySelector(".design-review-toolbar");
   const editor = review.querySelector(".design-review-editor");
   const pins = review.querySelector(".design-review-pins");
   const count = review.querySelector(".design-review-count");
@@ -3289,7 +3288,7 @@ Promise.all([
     renderPins();
   };
 
-  toolbar.addEventListener("click", (event) => {
+  review.addEventListener("click", (event) => {
     const action = event.target.closest("[data-review-action]")?.dataset.reviewAction;
     if (!action) return;
     if (action === "arm") {
