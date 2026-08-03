@@ -582,6 +582,33 @@ main { width: min(1320px, calc(100% - 48px)); padding-top: 30px; }
 .method-grid { background: rgba(250, 248, 237, .62); }
 .method input { background: rgba(250, 248, 237, .8); color: #10241d; border-color: rgba(13, 49, 39, .24); }
 
+/* Live comparison-board structure: keep the existing engine-backed controls,
+   but give the real page the same task order as the approved prototype. */
+.hero-build { padding: 16px; }
+.build-comparison { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.build-comparison:has(> .build-b) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.build-comparison .complete-build { min-width: 0; margin-top: 0; }
+.build-comparison .complete-build-head { align-items: flex-start; }
+.build-comparison .complete-build-head strong { font-size: 17px; }
+.build-comparison .hero-slots { min-height: 78px; align-items: start; }
+.hero-build > .compare-toggle { width: 100%; margin-top: 14px; }
+.roster-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.roster-pair .board-section { min-width: 0; }
+.roster-pair .board-section + .board-section { border-top: 0; }
+.roster-pair .section-bar { min-height: 52px; align-items: flex-start; }
+.roster-pair .section-actions { flex-wrap: wrap; justify-content: flex-end; }
+.roster-pair .section-actions small { width: 100%; text-align: right; }
+.roster-pair .target-grid { grid-template-columns: 1fr; }
+.roster-pair .target-row { grid-template-columns: 42px minmax(90px, 1fr) 52px minmax(116px, 1fr) 26px; }
+.page-head { min-height: 104px; }
+.page-head h1 { max-width: 8ch; }
+
+@media (max-width: 1080px) {
+  .build-comparison:has(> .build-b) { grid-template-columns: 1fr; }
+  .roster-pair { grid-template-columns: 1fr; gap: 18px; }
+  .roster-pair .board-section + .board-section { border-top: 1px solid rgba(244, 242, 226, .26); }
+}
+
 @media (max-width: 960px) {
   .calculator-grid { grid-template-columns: 1fr; }
   .result-panel { position: static; }
@@ -621,6 +648,7 @@ main { width: min(1320px, calc(100% - 48px)); padding-top: 30px; }
   .role-rules > p { grid-column: auto; }
   .stat-matrix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .target-grid { grid-template-columns: 1fr; }
+  .build-comparison:has(> .build-b) { grid-template-columns: 1fr; }
   .target-card .stat-matrix { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .bis-intro { display: block; }
   .bis-intro span { display: block; margin-top: 5px; }

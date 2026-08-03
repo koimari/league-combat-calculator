@@ -655,11 +655,14 @@ function renderBuilder() {
         ${renderRoleControls()}
         <div class="build-label"><div><strong>Complete builds</strong><span>${optimizePackageReady ? "Every occupied slot is scored into the full enemy roster" : "Add a sourced skill rotation or manual damage package to optimize"}</span></div><button class="optimize-build" type="button" data-optimize-build title="${optimizePackageReady ? "Search the strongest complete Build A" : "No sourced damage package for this champion yet"}" ${optimizeReady && !state.optimizer.running ? "" : "disabled"}>${state.optimizer.running ? "Optimizing…" : "Optimize Build A"}</button></div>
         ${optimizerSummary}
-        ${renderBuildStrip("A")}
+        <div class="build-comparison">
+          ${renderBuildStrip("A")}
+          ${attacker.comparisonEnabled ? renderBuildStrip("B") : ""}
+        </div>
         <button class="compare-toggle" type="button" data-toggle-compare>${attacker.comparisonEnabled ? "Hide Build B" : "+ Compare another full build"}</button>
-        ${attacker.comparisonEnabled ? renderBuildStrip("B") : ""}
       </div>
     </section>
+    <div class="roster-pair">
     <section class="board-section">
       <div class="section-bar"><h2>Enemy roster</h2><div class="section-actions"><small>${state.targets.length}/5 · every card includes full stats</small><button class="text-button" type="button" data-optimize-roster-all="targets" ${state.targets.some((target) => target.champion) && !state.optimizer.running ? "" : "disabled"}>Optimize all enemies</button><button class="text-button" type="button" data-add-target ${state.targets.length >= 5 ? "disabled" : ""}>+ Add enemy</button></div></div>
       <div class="target-grid">${state.targets.length ? state.targets.map(targetCard).join("") : `<div class="empty-roster">Add an enemy champion to begin.</div>`}</div>
@@ -668,6 +671,7 @@ function renderBuilder() {
       <div class="section-bar"><h2>Allied context</h2><div class="section-actions"><small>${state.allies.length}/4 · buffs are opt-in and sourced</small><button class="text-button" type="button" data-optimize-roster-all="allies" ${state.allies.some((ally) => ally.champion) && !state.optimizer.running ? "" : "disabled"}>Optimize all allies</button><button class="text-button" type="button" data-add-ally ${state.allies.length >= 4 ? "disabled" : ""}>+ Add ally</button></div></div>
       <div class="target-grid">${state.allies.length ? state.allies.map(allyCard).join("") : `<div class="empty-roster">Add an ally to include their build and any explicitly modeled outgoing effect.</div>`}</div>
     </section>
+    </div>
     <section class="board-section">
       <div class="section-bar"><h2>Time window</h2><small>Applied to every target</small></div>
       <div class="fight-controls">
