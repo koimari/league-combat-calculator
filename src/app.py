@@ -1524,6 +1524,46 @@ def _roster_target_coverage(loadouts: list[ChampionLoadout]) -> list[dict[str, o
     return blocked
 
 
+def _enemy_bis_rank_key(
+    objective: Mapping[str, object],
+    survival: Mapping[str, object],
+    *,
+    duration: float,
+) -> tuple[float, ...]:
+    """Order enemy candidates by a survival-gated, event-derived objective.
+
+    A roster enemy must remain a live participant before its outgoing damage
+    can be useful, but surviving builds should not all collapse to a health
+    race.  The first components are a hard event gate (alive through the
+    requested window) and survival time, followed by damage dealt before
+    defeat (the timeline's TTD-truncated threat).  Effective health and
+    recovery actually applied by the timeline are deterministic tie-breakers.
+    This is deliberately champion/event based: it does not infer a role or
+    assign a damage/tank archetype from the champion name.
+    """
+    death_time = survival.get("death_time")
+    survival_time = float(duration if death_time is None else death_time)
+    threat = float(objective.get("focus_damage_before_death", 0.0))
+    effective_health = float(survival.get("effective_health", 0.0))
+    healing = float(survival.get("healing_received", 0.0))
+    support_shield = float(survival.get("support_shield_received", 0.0))
+    shield_absorbed = float(survival.get("shield_absorbed", 0.0))
+    # Survival is a gate, not an archetype prior.  Survival time still
+    # separates candidates that both die before the window; once candidates
+    # live equally long, modeled threat is the first discriminator.  Remaining
+    # event-derived durability/recovery fields only break ties.
+    survived_window = 1.0 if death_time is None else 0.0
+    return (
+        survived_window,
+        survival_time,
+        threat,
+        effective_health,
+        healing,
+        support_shield,
+        shield_absorbed,
+    )
+
+
 @app.route("/api/bis", methods=["POST"])
 def api_bis():
     """Rank one slot from the same coupled participant event model.
@@ -1674,14 +1714,12 @@ def api_bis():
                 }
             else:
                 # An enemy roster build is the opponent the selected main
-                # champion must actually fight.  Ranking only the opponent's
-                # outgoing damage makes every damage dealer a glass cannon:
-                # an AP proc can win even when that item does not improve the
-                # champion's sourced kit and the champion dies earlier.  Keep
-                # this objective explicit and event-derived rather than adding
-                # a class/archetype heuristic: first survive the window, then
-                # stay alive longer, then maximize the modeled eHP package,
-                # with outgoing threat as the final tie-break.
+                # champion must actually fight.  A survival gate plus survival
+                # time prevents an early-death glass cannon from winning on a
+                # large scheduled rotation, while threat leads among builds
+                # that survive equally long.  Every component comes from the
+                # simultaneous event timeline; no champion role/archetype is
+                # inferred here.
                 survival = focus["survival"]
                 duration = float(
                     combat.get("duration", fight_params.fight_duration_seconds)
@@ -1690,8 +1728,8 @@ def api_bis():
                 survival_time = duration if death_time is None else float(death_time)
                 threat = float(objective["focus_damage_before_death"])
                 effective_health = float(survival["effective_health"])
-                score = effective_health
-                metric = "enemy survival first · threat before defeat"
+                score = threat
+                metric = "enemy survival gate · threat before defeat"
                 components = {
                     "survival_time": round(survival_time, 3),
                     "effective_health": round(effective_health, 1),
@@ -1699,15 +1737,14 @@ def api_bis():
                     "healing": survival["healing_received"],
                     "shield_absorbed": survival["shield_absorbed"],
                 }
-                # Retain the exact multi-objective ordering separately from
-                # the displayed primary eHP score.  This avoids arbitrary
-                # magic weights while making the survival-first contract
-                # deterministic for equal event outcomes.
-                rank_key = (
-                    1 if death_time is None else 0,
-                    survival_time,
-                    effective_health,
-                    threat,
+                # Retain the exact survival-gated multi-objective ordering
+                # separately from the displayed threat score.  This avoids
+                # arbitrary magic weights while allowing a valid damage item
+                # to beat pure health when both builds survive the window.
+                rank_key = _enemy_bis_rank_key(
+                    objective,
+                    survival,
+                    duration=duration,
                 )
             ranked.append(
                 {
