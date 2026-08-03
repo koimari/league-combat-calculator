@@ -1824,8 +1824,10 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
         ("passive", "Baleful Blaze", _parse_burn_flat_ap, {}),
         ("passive", "Blackfire", _parse_blackfire_amp, {}),
     ],
+    "Fated Ashes": [("passive", "Inflame", _parse_burn_flat_ap, {})],
     "Sunfire Aegis": [("passive", "Immolate", _parse_immolate, {})],
     "Hollow Radiance": [("passive", "Immolate", _parse_immolate, {})],
+    "Bami's Cinder": [("passive", "Immolate", _parse_immolate, {})],
     # ── Proc ──
     "Luden's Echo": [("passive", "Echo", _parse_luden, {"use_cooldown_field": True})],
     "Statikk Shiv": [("passive", "Electrospark", _parse_statikk_shiv, {})],
@@ -1843,6 +1845,7 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Hextech Gunblade": [("active", "Lightning Bolt", _parse_gunblade_active, {})],
     "Profane Hydra": [("active", "Heretical Cleave", _parse_hydra_active, {})],
     "Ravenous Hydra": [("active", "Ravenous Crescent", _parse_hydra_active, {})],
+    "Tiamat": [("active", "Crescent", _parse_hydra_active, {})],
     "Stridebreaker": [("active", "Breaking Shockwave", _parse_hydra_active, {})],
     # ── Damage Amplification ──
     "Riftmaker": [("passive", "Void Corruption", _parse_damage_amp_per_second, {})],

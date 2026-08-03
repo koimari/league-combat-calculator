@@ -4947,3 +4947,160 @@ class TestHauntingGuiseMadness(_FightHarness):
         row = result["breakdown"]["damage_amp_Haunting Guise"]
         assert row["multiplier"] == pytest.approx(1.03)
         assert row["total_damage"] > 0
+
+
+class TestBamisCinderImmolate(_FightHarness):
+    """Bami's Cinder's Immolate: flat 15 magic damage per second aura."""
+
+    def test_parsed_values_match_expected(self) -> None:
+        """Parser extracts the flat DPS; no bonus-health scaling exists."""
+        from src.calculator.passive_parser import parse_item_effect
+        from src.calculator.data_fetcher import fetch_item_data
+
+        parsed = parse_item_effect("Bami's Cinder", fetch_item_data())
+        assert parsed is not None
+        assert parsed["base_per_second"] == 15.0
+        assert parsed["damage_type"] == "magic"
+        assert "bonus_hp_ratio_per_second" not in parsed
+
+    def test_flat_dps_ignores_bonus_health(self) -> None:
+        """The V14.19 flat Immolate must not scale with bonus health."""
+        effects = resolve_damage_effects(_build("Bami's Cinder"))
+        source = effects.immolates[0]
+        inputs = DamageInputs(
+            champion_stats={"bonus_health": 2000.0},
+            level=11,
+            is_melee=True,
+            target_max_health=1000.0,
+            target_current_health=1000.0,
+        )
+        assert source.raw_damage(inputs) == pytest.approx(15.0)
+
+    def test_fight_prices_dps_times_duration_with_mr_mitigation(self) -> None:
+        """5s vs 100 MR: 15 x 5 x 0.5 = 37.5 magic damage."""
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=100.0,
+            items=[{"name": "Bami's Cinder"}],
+        )
+
+        row = result["breakdown"]["immolate_Bami's Cinder"]
+        assert row["damage_type"] == "magic"
+        assert row["total_damage"] == pytest.approx(37.5)
+
+
+class TestFatedAshesInflame(_FightHarness):
+    """Fated Ashes' Inflame: 15 flat magic burn over 3s from ability damage."""
+
+    _Q = {
+        "name": "Test Q",
+        "parts": (DamagePart("magic", 200.0),),
+        "total_raw": 200.0,
+        "damage_type": "magic",
+        "cooldown": 6.0,
+    }
+
+    def test_parsed_values_match_expected(self) -> None:
+        """Parser extracts the flat burn total; there is no AP scaling."""
+        from src.calculator.passive_parser import parse_item_effect
+        from src.calculator.data_fetcher import fetch_item_data
+
+        parsed = parse_item_effect("Fated Ashes", fetch_item_data())
+        assert parsed is not None
+        assert parsed["base_total"] == 15.0
+        assert parsed["duration"] == 3.0
+        assert parsed["damage_type"] == "magic"
+        assert "ap_ratio_total" not in parsed
+
+    def test_flat_burn_ignores_ability_power(self) -> None:
+        """Inflame's total is 15 whether the caster has 0 or 500 AP."""
+        (burn,) = resolve_damage_effects(_build("Fated Ashes")).burns
+        assert burn.duration == pytest.approx(3.0)
+        assert burn.tick_interval == pytest.approx(0.5)
+        for ability_power in (0.0, 500.0):
+            raw = burn.source.raw_damage(
+                DamageInputs(
+                    {"ability_power": ability_power}, 11, False, 1000.0, 1000.0
+                )
+            )
+            assert raw == pytest.approx(15.0)
+
+    def test_single_cast_burn_prices_base_duration_with_mitigation(self) -> None:
+        """One Q, one rotation, 100 MR: the burn is 15 x 0.5 = 7.5 magic."""
+        result = self.fight(
+            self._make_stats(ability_power=100.0),
+            {"Q": dict(self._Q)},
+            target_magic_resistance=100.0,
+            cast_order=["Q"],
+            items=[{"name": "Fated Ashes"}],
+        )
+
+        row = result["breakdown"]["burn_Fated Ashes"]
+        assert row["damage_type"] == "magic"
+        assert row["total_damage"] == pytest.approx(7.5)
+        assert sum(
+            event["damage"] for event in row["damage_events"]
+        ) == pytest.approx(row["total_damage"])
+        assert "burn_Fated Ashes" in result["timeline_coverage"]["exact_sources"]
+
+
+class TestTiamatCrescent(_FightHarness):
+    """Tiamat's Crescent active: 75% AD physical on a 10s cooldown."""
+
+    def test_parsed_values_match_expected(self) -> None:
+        """Parser extracts the active's AD ratio from cached JSON."""
+        from src.calculator.passive_parser import parse_item_effect
+        from src.calculator.data_fetcher import fetch_item_data
+
+        parsed = parse_item_effect("Tiamat", fetch_item_data())
+        assert parsed is not None
+        assert parsed["total_ad_ratio"] == pytest.approx(0.75)
+        assert parsed["damage_type"] == "physical"
+
+    def test_registered_with_the_hydra_static_cooldown(self) -> None:
+        """The 10s cooldown is code-owned, like the finished Hydras'."""
+        from src.calculator.item_effects import ITEM_EFFECTS
+
+        effect = ITEM_EFFECTS.get("Tiamat")
+        assert effect is not None
+        assert effect["type"] == "active"
+        assert effect["cooldown"] == 10.0
+
+    def test_active_deals_three_quarters_total_ad_once(self) -> None:
+        """100 total AD vs 100 armor: one Crescent = 75 x 0.5 = 37.5."""
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=100.0,
+            target_magic_resistance=0.0,
+            items=[{"name": "Tiamat"}],
+        )
+
+        row = result["breakdown"]["active_Tiamat"]
+        assert row["damage_type"] == "physical"
+        assert row["total_damage"] == pytest.approx(37.5)
+        assert "active_Tiamat" in result["timeline_coverage"]["exact_sources"]
+
+    def test_cleave_is_disclosed_as_multi_target_scope(self) -> None:
+        """Cleave hits other enemies only; the fight notes must say so."""
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            items=[{"name": "Tiamat"}],
+        )
+
+        assert any(
+            "Cleave" in note and "other enemies" in note
+            for note in result.get("notes", [])
+        )

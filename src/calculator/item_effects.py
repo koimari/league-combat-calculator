@@ -278,6 +278,15 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "double_on_hit": True,  # Applies all on-hit effects again
     },
     # ── Burn / DoT ────────────────────────────────────────────────────────
+    "Fated Ashes": {
+        "type": "burn",
+        "formula": "flat",
+        "damage_type": "magic",
+        # Inflame: 2.5 per 0.5s for 3s = 15 total, no AP scaling
+        "base_total": 15.0,
+        "duration": 3.0,
+        "tick_interval": 0.5,
+    },
     "Liandry's Torment": {
         "type": "burn",
         "formula": "max_hp",
@@ -317,6 +326,13 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # 15 + 1% bonus HP per second
         "base_per_second": 15.0,
         "bonus_hp_ratio_per_second": 0.01,
+    },
+    "Bami's Cinder": {
+        "type": "immolate",
+        "formula": "flat_dps",
+        "damage_type": "magic",
+        # Flat 15 per second (bonus-health scaling removed in V14.19)
+        "base_per_second": 15.0,
     },
     # ── Proc Damage (cooldown-gated) ──────────────────────────────────────
     "Luden's Echo": {
@@ -422,6 +438,22 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Ravenous Crescent: 80% total AD
         "total_ad_ratio": 0.80,
         "cooldown": 10.0,
+    },
+    "Tiamat": {
+        "type": "active",
+        "formula": "total_ad",
+        "damage_type": "physical",
+        # Crescent: 75% total AD
+        "total_ad_ratio": 0.75,
+        "cooldown": 10.0,
+        # Cleave (the on-hit passive) strikes OTHER enemies in a radius
+        # around the attack target — it never damages the selected target,
+        # so its splash belongs to the shared multi-target roster model.
+        "unmodeled_splash_note": (
+            "Tiamat's Cleave splashes other enemies only and adds no damage "
+            "against the selected target; its splash belongs to the "
+            "multi-target roster model."
+        ),
     },
     "Stridebreaker": {
         "type": "active",
@@ -834,12 +866,14 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "is_ability_damage",
         "double_on_hit",
         "basic_damage",
+        "unmodeled_splash_note",
     }
 )
 
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Blade of the Ruined King": frozenset({"min_damage"}),
     "Blackfire Torch": frozenset({"tick_interval"}),
+    "Fated Ashes": frozenset({"tick_interval"}),
     "Hexdrinker": frozenset(
         {
             "health_threshold",
@@ -880,6 +914,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
         }
     ),
     "Ravenous Hydra": frozenset({"cooldown"}),
+    "Tiamat": frozenset({"cooldown"}),
     "Seraph's Embrace": frozenset(
         {"health_threshold", "shield_max_mana_ratio", "duration"}
     ),
@@ -1581,6 +1616,12 @@ def _compile_burn(item_name: str, values: Mapping[str, Any]) -> BurnEffect:
         def raw(inputs: DamageInputs) -> float:
             return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
 
+    elif formula == "flat":
+        base = required.number("base_total")
+
+        def raw(_inputs: DamageInputs) -> float:
+            return base
+
     else:
         raise ValueError(f"Unsupported burn formula {formula!r} for {item_name!r}")
     source = _damage_source(
@@ -1600,13 +1641,24 @@ def _compile_burn(item_name: str, values: Mapping[str, Any]) -> BurnEffect:
 def _compile_immolate(item_name: str, values: Mapping[str, Any]) -> DamageSource:
     """Compile one Immolate formula as raw damage per second."""
     required = _RequiredValues(item_name, values)
-    if required.value("formula") != "bonus_hp_dps":
-        raise ValueError(f"Unsupported Immolate formula for {item_name!r}")
-    base = required.number("base_per_second")
-    bonus_hp_ratio = required.number("bonus_hp_ratio_per_second")
+    formula = required.value("formula")
+    if formula == "bonus_hp_dps":
+        base = required.number("base_per_second")
+        bonus_hp_ratio = required.number("bonus_hp_ratio_per_second")
 
-    def raw(inputs: DamageInputs) -> float:
-        return base + bonus_hp_ratio * inputs.champion_stats.get("bonus_health", 0.0)
+        def raw(inputs: DamageInputs) -> float:
+            return base + bonus_hp_ratio * inputs.champion_stats.get(
+                "bonus_health", 0.0
+            )
+
+    elif formula == "flat_dps":
+        base = required.number("base_per_second")
+
+        def raw(_inputs: DamageInputs) -> float:
+            return base
+
+    else:
+        raise ValueError(f"Unsupported Immolate formula for {item_name!r}")
 
     return _damage_source(
         item_name,
@@ -2171,6 +2223,9 @@ def resolve_damage_effects(
                 required.number("reduction_per_stack"),
                 int(required.number("max_stacks")),
             )
+        splash_note = values.get("unmodeled_splash_note")
+        if splash_note:
+            conditional_notes.append(str(splash_note))
         secondary = values.get("secondary_behavior")
         if secondary == "auto_cooldown":
             auto_cooldowns.append(_compile_auto_cooldown(item_name, values))
