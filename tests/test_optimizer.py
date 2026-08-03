@@ -711,6 +711,7 @@ class TestExclusivityGroupsAccessor:
         # Spellblade was missing from the old hand-copied app.js table;
         # the served table must include it.
         groups = exclusivity_groups()
+        assert "Sheen" in groups["Spellblade"]
         assert "Trinity Force" in groups["Spellblade"]
         assert "Lich Bane" in groups["Spellblade"]
 

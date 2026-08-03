@@ -1802,6 +1802,7 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
         ("passive", "Awe", _parse_muramana_awe, {}),
     ],
     # ── Spellblade ──
+    "Sheen": [("passive", "Spellblade", _parse_spellblade, {})],
     "Trinity Force": [("passive", "Spellblade", _parse_spellblade, {})],
     "Lich Bane": [("passive", "Spellblade", _parse_spellblade, {})],
     "Essence Reaver": [("passive", "Spellblade", _parse_essence_reaver_spellblade, {})],

@@ -208,6 +208,14 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "max_mana_to_ad_ratio": 0.02,
     },
     # ── Spellblade (after ability, next auto, mutually exclusive) ─────────
+    "Sheen": {
+        "type": "spellblade",
+        "formula": "base_ad",
+        "damage_type": "physical",
+        "base_ad_ratio": 1.0,
+        "cooldown": 1.5,
+        "weave_delay": 1.5,  # CD starts after empowered attack
+    },
     "Trinity Force": {
         "type": "spellblade",
         "formula": "base_ad",
