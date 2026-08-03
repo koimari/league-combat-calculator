@@ -176,6 +176,22 @@ def test_target_build_coverage_and_guard_name_the_omitted_defense():
         require_target_item_coverage(items)
 
 
+def test_armored_advance_target_diagnostic_names_unmodeled_noxian_endurance():
+    """Do not imply upgraded Steelcaps are blocked for their modeled Plating.
+
+    Armored Advance combines the supported 10% basic-damage reduction with a
+    second, combat-triggered physical shield.  Until that ordered shield event
+    is represented, the complete target item must remain fail-closed and the
+    receipt should identify the actual missing mechanic.
+    """
+    coverage = target_item_model_coverage(get_item_by_name("Armored Advance"))
+
+    assert coverage["status"] == "blocked"
+    assert "Noxian Endurance" in coverage["reason"]
+    with pytest.raises(ValueError, match="Noxian Endurance"):
+        require_target_item_coverage([get_item_by_name("Armored Advance")])
+
+
 def test_force_of_nature_target_defense_fails_closed_with_stack_timing_diagnostic():
     """Do not price Steadfast as permanent +70 MR in target comparisons.
 
