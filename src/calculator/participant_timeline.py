@@ -504,9 +504,7 @@ def _simulate_survival(
             ),
             "remaining_shield": round(remaining_shields, 1),
             "starting_shield": round(state["starting_shield"], 1),
-            "healing_reduction_until": round(
-                state["healing_reduction_until"], 3
-            ),
+            "healing_reduction_until": round(state["healing_reduction_until"], 3),
             "healing_reduction_sources": sorted(state["healing_reduction_sources"]),
             "survived_window": state["death_time"] is None,
             "death_time": (
