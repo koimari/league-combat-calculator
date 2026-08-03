@@ -657,6 +657,55 @@ def _parse_proc_flat_ap(text: str) -> dict[str, Any]:
     return result
 
 
+def _parse_proc_flat(
+    text: str,
+    cooldown_field: float | None = None,
+) -> dict[str, Any]:
+    """Parse a flat proc whose cooldown lives in the data's cooldown field
+    (Hextech Alternator's Revved)."""
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {
+        "damage_type": "magic" if "magic damage" in text.lower() else "physical",
+    }
+
+    base_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
+    if base_match:
+        result["base"] = float(base_match.group(1))
+
+    if cooldown_field is not None:
+        result["cooldown"] = cooldown_field
+
+    return result
+
+
+def _parse_bullseye(text: str) -> dict[str, Any]:
+    """Parse Scout's Slingshot's Bullseye proc.
+
+    The text carries all three numbers: ``{{as|40 '''bonus''' magic
+    damage}} (40 second cooldown, reduced by 1 second {{tip|on-attack}})``.
+    """
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {
+        "damage_type": "magic" if "magic damage" in text.lower() else "physical",
+    }
+
+    base_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
+    if base_match:
+        result["base"] = float(base_match.group(1))
+
+    cd_match = re.search(r"(\d+(?:\.\d+)?)\s+second\s+cooldown", text_resolved)
+    if cd_match:
+        result["cooldown"] = float(cd_match.group(1))
+
+    refund_match = re.search(
+        r"reduced\s+by\s+(\d+(?:\.\d+)?)\s+second", text_resolved
+    )
+    if refund_match:
+        result["on_attack_cooldown_refund"] = float(refund_match.group(1))
+
+    return result
+
+
 def _parse_stormsurge_trigger(text: str) -> dict[str, Any]:
     """Parse Stormsurge's Stormraider trigger for cooldown."""
     text_resolved = _resolve_simple_templates(text)
@@ -1838,6 +1887,10 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Zaz'Zak's Realmspike": [
         ("passive", "Void Explosion", _parse_zazzak, {"use_cooldown_field": True})
     ],
+    "Hextech Alternator": [
+        ("passive", "Revved", _parse_proc_flat, {"use_cooldown_field": True})
+    ],
+    "Scout's Slingshot": [("passive", "Bullseye", _parse_bullseye, {})],
     # ── Ult Proc ──
     "Malignance": [("passive", "Hatefog", _parse_malignance, {})],
     # ── Active Items ──

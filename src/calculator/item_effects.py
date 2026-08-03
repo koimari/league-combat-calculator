@@ -377,6 +377,28 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_threshold_window": 2.5,
         "is_ability_damage": True,  # Amplified by Actualizer
     },
+    "Hextech Alternator": {
+        "type": "proc",
+        "formula": "flat",
+        "trigger": "champion_damage",
+        "damage_type": "magic",
+        # Revved: 65 bonus magic damage on damaging a champion, 40s CD
+        "base": 65.0,
+        "cooldown": 40.0,
+    },
+    "Scout's Slingshot": {
+        "type": "proc",
+        "formula": "flat",
+        "trigger": "champion_damage",
+        "damage_type": "magic",
+        # Bullseye: 40 bonus magic damage on damaging a champion.
+        # 40s CD, refunded 1s per completed attack windup.
+        "base": 40.0,
+        "cooldown": 40.0,
+        "on_attack_cooldown_refund": 1.0,
+        # Wiki notes: Bullseye's damage triggers spell effects.
+        "is_ability_damage": True,
+    },
     "Zaz'Zak's Realmspike": {
         "type": "proc",
         "formula": "flat_ap_max_hp",
@@ -1170,6 +1192,9 @@ class CooldownProcEffect:
     trigger: str = "coarse"
     damage_threshold_ratio: float = 0.0
     damage_threshold_window: float = 0.0
+    # Seconds refunded from a running cooldown per completed attack
+    # windup (Scout's Slingshot's Bullseye).
+    on_attack_cooldown_refund: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -1711,6 +1736,12 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         def raw(inputs: DamageInputs) -> float:
             return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
 
+    elif formula == "flat":
+        base = required.number("base")
+
+        def raw(_inputs: DamageInputs) -> float:
+            return base
+
     elif formula == "flat_ap_max_hp":
         base = required.number("base")
         ap_ratio = required.number("ap_ratio")
@@ -1750,6 +1781,9 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         ),
         damage_threshold_window=(
             required.number("damage_threshold_window") if threshold else 0.0
+        ),
+        on_attack_cooldown_refund=float(
+            values.get("on_attack_cooldown_refund", 0.0)
         ),
     )
 

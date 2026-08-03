@@ -5104,3 +5104,132 @@ class TestTiamatCrescent(_FightHarness):
             "Cleave" in note and "other enemies" in note
             for note in result.get("notes", [])
         )
+
+
+class TestHextechAlternatorRevved(_FightHarness):
+    """Hextech Alternator's Revved: 65 magic on champion damage, 40s CD."""
+
+    def test_parsed_values_match_expected(self) -> None:
+        """Parser extracts the flat proc and the cooldown field."""
+        from src.calculator.passive_parser import parse_item_effect
+        from src.calculator.data_fetcher import fetch_item_data
+
+        parsed = parse_item_effect("Hextech Alternator", fetch_item_data())
+        assert parsed is not None
+        assert parsed["base"] == 65.0
+        assert parsed["damage_type"] == "magic"
+        assert parsed["cooldown"] == 40.0
+
+    def test_compiles_as_champion_damage_proc_without_ap_scaling(self) -> None:
+        """Revved is a flat 65 whether the holder has 0 or 500 AP."""
+        (proc,) = resolve_damage_effects(_build("Hextech Alternator")).cooldown_procs
+        assert proc.trigger == "champion_damage"
+        assert proc.cooldown == pytest.approx(40.0)
+        for ability_power in (0.0, 500.0):
+            raw = proc.source.raw_damage(
+                DamageInputs(
+                    {"ability_power": ability_power}, 11, False, 1000.0, 1000.0
+                )
+            )
+            assert raw == pytest.approx(65.0)
+
+    def test_short_fight_procs_once_at_the_first_damage_event(self) -> None:
+        """A 5s fight yields one proc, stamped when damage first lands."""
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=100.0,
+            items=[{"name": "Hextech Alternator"}],
+        )
+
+        row = result["breakdown"]["proc_Hextech Alternator"]
+        assert row["damage_type"] == "magic"
+        assert row["total_damage"] == pytest.approx(32.5)  # 65 vs 100 MR
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0]
+        assert (
+            "proc_Hextech Alternator" in result["timeline_coverage"]["exact_sources"]
+        )
+
+    def test_long_fight_repeats_after_the_forty_second_cooldown(self) -> None:
+        """A 45s fight fits a second proc once the cooldown elapses."""
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=45.0,
+            auto_attack_uptime=1.0,
+            target_health=100000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            items=[{"name": "Hextech Alternator"}],
+        )
+
+        row = result["breakdown"]["proc_Hextech Alternator"]
+        events = row["damage_events"]
+        assert len(events) == 2
+        assert events[0]["time"] == 0.0
+        assert events[1]["time"] == pytest.approx(40.0)
+        assert row["total_damage"] == pytest.approx(130.0)
+
+    def test_no_damage_means_no_proc(self) -> None:
+        """With nothing landing, Revved has no trigger and no row."""
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=0.0,
+            items=[{"name": "Hextech Alternator"}],
+        )
+
+        assert "proc_Hextech Alternator" not in result["breakdown"]
+
+
+class TestScoutsSlingshotBullseye(_FightHarness):
+    """Scout's Slingshot's Bullseye: 40 magic on champion damage, 40s CD
+    refunded 1s per completed attack."""
+
+    def test_parsed_values_match_expected(self) -> None:
+        """Parser extracts the proc, its cooldown, and the attack refund."""
+        from src.calculator.passive_parser import parse_item_effect
+        from src.calculator.data_fetcher import fetch_item_data
+
+        parsed = parse_item_effect("Scout's Slingshot", fetch_item_data())
+        assert parsed is not None
+        assert parsed["base"] == 40.0
+        assert parsed["damage_type"] == "magic"
+        assert parsed["cooldown"] == 40.0
+        assert parsed["on_attack_cooldown_refund"] == 1.0
+
+    def test_compiles_with_spell_damage_and_refund(self) -> None:
+        """Bullseye is spell damage (unlike Revved) and carries its refund."""
+        (proc,) = resolve_damage_effects(_build("Scout's Slingshot")).cooldown_procs
+        assert proc.trigger == "champion_damage"
+        assert proc.cooldown == pytest.approx(40.0)
+        assert proc.on_attack_cooldown_refund == pytest.approx(1.0)
+        assert proc.source.is_ability_damage is True
+
+    def test_attack_refunds_halve_the_effective_cooldown(self) -> None:
+        """At 1.0 attacks/s each second refunds one extra second: procs
+        land at 0s, 20s, and 40s of a 45-second fight."""
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=45.0,
+            auto_attack_uptime=1.0,
+            target_health=100000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            items=[{"name": "Scout's Slingshot"}],
+        )
+
+        row = result["breakdown"]["proc_Scout's Slingshot"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 20.0, 40.0]
+        assert row["total_damage"] == pytest.approx(120.0)
+        assert (
+            "proc_Scout's Slingshot" in result["timeline_coverage"]["exact_sources"]
+        )
