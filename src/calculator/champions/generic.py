@@ -13,7 +13,6 @@ from typing import Any
 from .engine import build_parser
 from .slotlib import on_hit_auto, simple_damage
 
-
 # Every slot is present so the backend can register and parse a complete
 # P/Q/W/E/R kit for every champion in the local Wiki snapshot.  The factories
 # still apply the shared classifier/scaling/entry validation used by reviewed

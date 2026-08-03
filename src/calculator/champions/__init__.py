@@ -16,7 +16,6 @@ from typing import Any
 
 from .generic import GENERIC_SLOTS, parse_abilities as parse_generic_abilities
 
-
 # Map display name -> module name within this package.
 # Hand-authored modules own mechanics that need stateful timelines. The
 # generated packet modules below provide the same dedicated-module contract
@@ -101,8 +100,7 @@ def _wiki_cache_names() -> tuple[str, ...]:
 # not yet have a hand-authored stateful module. Each packet is a real module
 # import target, not an implicit runtime archetype fallback.
 _GENERATED_CHAMPION_MODULES: dict[str, str] = {
-    name: "generated."
-    + re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+    name: "generated." + re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
     for name in _wiki_cache_names()
     if name not in _CUSTOM_CHAMPION_MODULES
 }

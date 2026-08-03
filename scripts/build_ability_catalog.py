@@ -10,11 +10,14 @@ champion registry.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from scripts.source_receipt import source_receipt
 
 ABILITY_SLOTS = ("P", "Q", "W", "E", "R")
 
@@ -105,7 +108,9 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
                     for slot in ABILITY_SLOTS
                 ],
                 "complete": all(
-                    _ability_entry(slot, abilities.get(slot, [])).get("ingestion_status")
+                    _ability_entry(slot, abilities.get(slot, [])).get(
+                        "ingestion_status"
+                    )
                     == "metadata_ingested"
                     for slot in ABILITY_SLOTS
                 ),
@@ -117,11 +122,7 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
         "patch": patch,
         "champion_count": len(champions),
         "ability_slots": list(ABILITY_SLOTS),
-        "source": {
-            "kind": "local Wiki cache",
-            "path": str(source.relative_to(source.parents[1])),
-            "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
-        },
+        "source": source_receipt(source),
         "champions": champions,
     }
 
@@ -129,9 +130,7 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--source", type=Path, default=root / "data" / "champions.json"
-    )
+    parser.add_argument("--source", type=Path, default=root / "data" / "champions.json")
     parser.add_argument(
         "--output", type=Path, default=root / "static" / "ability-catalog.json"
     )

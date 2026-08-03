@@ -11,7 +11,6 @@ from src.calculator.champions import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
 
-
 RANKS = {"Q": 5, "W": 3, "E": 3, "R": 2}
 
 

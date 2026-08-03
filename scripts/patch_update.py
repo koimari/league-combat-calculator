@@ -20,7 +20,7 @@ Interpreting the report and finishing the update is the `patch-update`
 skill's job (.claude/skills/patch-update/SKILL.md).
 
 Usage:
-    python scripts/patch_update.py run             # pull + audit + gates
+    python scripts/patch_update.py run             # pull + audit + rebuild + gates
     python scripts/patch_update.py audit           # re-print audit, no pull
     python scripts/patch_update.py detail NAME...  # full leaf diff for any
                                                    # champion/item vs HEAD
@@ -217,8 +217,11 @@ def item_audit_lines(old_items, new_items):
         for name in added:
             lines.append(f"  + {name} (new item — consider /add-item-effect)")
         for name in removed:
-            implemented = " ** IMPLEMENTED — code must be updated **" \
-                if name in _ITEM_PARSE_CONFIG else ""
+            implemented = (
+                " ** IMPLEMENTED — code must be updated **"
+                if name in _ITEM_PARSE_CONFIG
+                else ""
+            )
             lines.append(f"  - {name}{implemented}")
     return lines
 
@@ -253,7 +256,9 @@ def print_detail(names):
         if not diffs:
             print("  (no changes)")
         for path, old_v, new_v in diffs:
-            print(f"  {path}:\n    OLD {_format_leaf(old_v)}\n    NEW {_format_leaf(new_v)}")
+            print(
+                f"  {path}:\n    OLD {_format_leaf(old_v)}\n    NEW {_format_leaf(new_v)}"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -300,6 +305,46 @@ def run_pull():
 # ---------------------------------------------------------------------------
 
 
+def rebuild_static_artifacts():
+    """Rebuild the derived catalogues the web UI fetches at runtime.
+
+    app.js loads ability-catalog, bis-profiles, and effect-catalog directly, so
+    a patch that refreshes data/ without rebuilding these leaves the UI serving
+    the previous patch's abilities and item effects. Skipping this step is what
+    left them stale before.
+
+    bis-profiles is deliberately not rebuilt here: it merges an Axword Meraki
+    kit reference from a sibling repo that supplies damage packets the wiki
+    parser cannot read, and rebuilding without that repo silently drops them.
+    Rebuild it by hand, with the sibling checked out, when its wiki inputs move.
+    """
+    print("== Rebuilding static catalogues ==", flush=True)
+    for builder in ("build_ability_catalog.py", "build_effect_catalog.py"):
+        result = subprocess.run(
+            [sys.executable, f"scripts/{builder}"], cwd=REPO_ROOT, check=False
+        )
+        if result.returncode != 0:
+            print(f"FAIL: scripts/{builder} exited {result.returncode}")
+            return result.returncode
+
+    auxiliary = (
+        REPO_ROOT.parent
+        / "lol-strength-analysis"
+        / "src"
+        / "data"
+        / "generated"
+        / "merakiAbilityKits.ts"
+    )
+    print(
+        "NOTE: static/bis-profiles.json not rebuilt (needs the Axword Meraki\n"
+        f"      sibling repo, {'present' if auxiliary.exists() else 'absent'}). "
+        "Rebuild manually if its wiki\n"
+        "      inputs changed:\n"
+        "          python scripts/build_bis_profiles.py"
+    )
+    return 0
+
+
 def run_gates():
     """pytest, golden compare, and (only on green tests) baseline re-capture.
 
@@ -312,8 +357,10 @@ def run_gates():
         [sys.executable, "-m", "pytest", "-q"], cwd=REPO_ROOT, check=False
     )
 
-    print("== Gate: golden compare (diffs below must be explained in the commit) ==",
-          flush=True)
+    print(
+        "== Gate: golden compare (diffs below must be explained in the commit) ==",
+        flush=True,
+    )
     # Diffs are expected after a real patch; the compare's exit code is
     # informational here, so no check.
     subprocess.run(
@@ -340,11 +387,14 @@ def run_gates():
 
 
 def run_full():
-    """Full patch-day run: clear caches, pull, audit, gates."""
+    """Full patch-day run: clear caches, pull, audit, rebuild catalogues, gates."""
     clear_wiki_caches()
     patch = run_pull()
     print(f"\nPulled patch: {patch}")
     print_audit()
+    rebuild_failed = rebuild_static_artifacts()
+    if rebuild_failed:
+        return rebuild_failed
     return run_gates()
 
 

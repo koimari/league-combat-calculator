@@ -1,0 +1,23 @@
+# Formatter configuration only. Packaging, pytest, and pylint settings
+# intentionally live elsewhere so this file has one job.
+#
+# line-length matches black's own default. It is stated explicitly anyway:
+# black's stable style changes annually, and an implicit "whatever the default
+# is this year" is not a contract. The formatter version is pinned in
+# requirements.txt; CI enforces the result with `black --check src/ tests/`.
+#
+# Deliberately NO target-version. The project runs 3.14 (Dockerfile, CI), but
+# declaring py314 lets black apply PEP 758 and rewrite
+#   except (TypeError, ValueError):  ->  except TypeError, ValueError:
+# across 9 files. That parses only on 3.14+, and it reads like the Python 2
+# `except Error, name:` bind-to-variable form. Letting black auto-detect per
+# file keeps the conservative spelling.
+#
+# The exclude keeps a bare `black .` off vendor/, which is external code
+# (CLAUDE.md rule 1). Written without a leading slash on purpose: `^/vendor/`
+# silently fails to match on Windows, while a bare `vendor/` matches on both
+# Windows and Linux CI.
+
+[tool.black]
+line-length = 88
+extend-exclude = "vendor/"

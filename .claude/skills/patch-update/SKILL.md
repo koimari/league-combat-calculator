@@ -9,7 +9,7 @@ One command does the mechanical work; your job is interpreting its report
 and finishing with an explained commit.
 
 ```bash
-python scripts/patch_update.py run             # pull + audit + gates (start here)
+python scripts/patch_update.py run             # pull + audit + rebuild + gates (start here)
 python scripts/patch_update.py audit           # re-print the audit, no pull
 python scripts/patch_update.py detail NAME...  # full leaf diff vs HEAD for ANY
                                                # champion/item (incl. generic-path)
@@ -17,8 +17,16 @@ python scripts/patch_update.py detail NAME...  # full leaf diff vs HEAD for ANY
 
 `run` clears lolstaticdata's page caches (stale caches silently "re-pull"
 the old patch), fetches the new data, diffs it against the last committed
-patch (git HEAD — `data/` is tracked), runs pytest and the golden compare,
-and re-captures the baseline **only if pytest is green**.
+patch (git HEAD — `data/` is tracked), rebuilds the static catalogues the web
+UI fetches, runs pytest and the golden compare, and re-captures the baseline
+**only if pytest is green**.
+
+The rebuild covers `static/ability-catalog.json` and `static/effect-catalog.json`.
+It deliberately skips `static/bis-profiles.json`, which merges an Axword Meraki
+kit reference from the `lol-strength-analysis` sibling repo supplying 24 damage
+packets the wiki parser cannot read — rebuilding without that repo checked out
+silently drops them. If its wiki inputs moved, check the sibling out and run
+`python scripts/build_bis_profiles.py` by hand.
 
 Modifier-parse ERROR spam during the pull ("FAILURE TO PARSE MODIFIER") is
 normal lolstaticdata noise; only the `Skipped N` summary lines mean data was

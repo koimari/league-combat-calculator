@@ -42,9 +42,7 @@ def _plasma_values(ctx: SlotCtx) -> tuple[float, float]:
     if passive is None:
         raise ValueError("Kai'Sa passive data is unavailable")
     base = find_named_leveling(passive, "Bonus Magic Damage", occurrence=0)
-    per_prior_stack = find_named_leveling(
-        passive, "Bonus Magic Damage", occurrence=1
-    )
+    per_prior_stack = find_named_leveling(passive, "Bonus Magic Damage", occurrence=1)
     if base is None or per_prior_stack is None:
         raise ValueError("Kai'Sa Plasma damage arrays are unavailable")
     return (
@@ -105,8 +103,7 @@ def _plasma_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
     target_health = float(ctx.target.get("target_max_health", 0.0))
     ability_power = float(ctx.stats.get("ability_power", 0.0))
     rupture_ratio = (
-        _RUPTURE_BASE_MISSING_HEALTH_RATIO
-        + _RUPTURE_RATIO_PER_AP * ability_power
+        _RUPTURE_BASE_MISSING_HEALTH_RATIO + _RUPTURE_RATIO_PER_AP * ability_power
     )
     parts: list[DamagePart] = []
     ruptures = 0

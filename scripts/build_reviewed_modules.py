@@ -13,9 +13,13 @@ import json
 import re
 import sqlite3
 import sys
+from functools import cache
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
+
+import black
+from black.files import find_pyproject_toml, parse_pyproject_toml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -24,7 +28,6 @@ from src.calculator.champions.attribute_classifier import (
     is_damage_attribute,
     is_primary_damage_attribute,
 )
-
 
 SLOTS = ("P", "Q", "W", "E", "R")
 WIKI_DB = Path("/Users/river/scryglass/data/lol/knowledge/league-wiki.sqlite3")
@@ -79,11 +82,15 @@ def _wiki_revisions() -> dict[str, dict[str, Any]]:
 
 def _damage_kind(ability: dict[str, Any], attribute: str) -> str:
     field = str(ability.get("damageType", ""))
-    return {
-        "MAGIC_DAMAGE": "magic",
-        "PHYSICAL_DAMAGE": "physical",
-        "TRUE_DAMAGE": "true",
-    }.get(field) or infer_damage_type_from_attribute(attribute) or "magic"
+    return (
+        {
+            "MAGIC_DAMAGE": "magic",
+            "PHYSICAL_DAMAGE": "physical",
+            "TRUE_DAMAGE": "true",
+        }.get(field)
+        or infer_damage_type_from_attribute(attribute)
+        or "magic"
+    )
 
 
 def _wiki_cooldown(ability: dict[str, Any]) -> float:
@@ -105,7 +112,11 @@ def _wiki_packet(
     """Translate one selected Wiki damage group into an explicit packet."""
     damage_type = _damage_kind(ability, str(levelings[0].get("attribute", "")))
     max_len = max(
-        (len(modifier.get("values", [])) for leveling in levelings for modifier in leveling.get("modifiers", [])),
+        (
+            len(modifier.get("values", []))
+            for leveling in levelings
+            for modifier in leveling.get("modifiers", [])
+        ),
         default=0,
     )
     if not max_len:
@@ -150,7 +161,10 @@ def _wiki_packet(
             [
                 str(ability.get("name", "")),
                 str(ability.get("blurb", "")),
-                " ".join(str(effect.get("description", "")) for effect in ability.get("effects", [])),
+                " ".join(
+                    str(effect.get("description", ""))
+                    for effect in ability.get("effects", [])
+                ),
             ]
         ).lower()
         if "bonus attack damage" in source_text or "bonus ad" in source_text:
@@ -162,6 +176,7 @@ def _wiki_packet(
         if "bonus health" in source_text:
             return "bonusHealth"
         return None
+
     for leveling in levelings:
         for modifier in leveling.get("modifiers", []):
             values = [float(value) for value in modifier.get("values", [])]
@@ -208,13 +223,19 @@ def _wiki_specs(entries: list[dict[str, Any]], slot: str) -> list[dict[str, Any]
                     or "damage reduction" in lower_attribute
                 ):
                     continue
-                if slot == "P" and "damage" not in str(ability.get("blurb", "")).lower():
+                if (
+                    slot == "P"
+                    and "damage" not in str(ability.get("blurb", "")).lower()
+                ):
                     continue
                 # Some Wiki effect groups attach a percentage state modifier
                 # to an effect that also mentions damage (notably Irelia W's
                 # incoming-damage reduction).  Do not mistake that modifier
                 # for the spell's outgoing damage packet.
-                if "reduces incoming" in effect_description or "damage reduction" in effect_description:
+                if (
+                    "reduces incoming" in effect_description
+                    or "damage reduction" in effect_description
+                ):
                     continue
                 if not any(
                     isinstance(modifier.get("values"), list) and modifier["values"]
@@ -225,7 +246,14 @@ def _wiki_specs(entries: list[dict[str, Any]], slot: str) -> list[dict[str, Any]
                 # generic AD/AP fallback. Prefer them when a passive lists a
                 # cap/auxiliary row beside the actual target-health damage.
                 attr_lower = attribute.lower()
-                if any(term in attr_lower for term in ("max health damage", "current health damage", "missing health damage")):
+                if any(
+                    term in attr_lower
+                    for term in (
+                        "max health damage",
+                        "current health damage",
+                        "missing health damage",
+                    )
+                ):
                     priority = -1
                 else:
                     priority = 0 if is_primary_damage_attribute(attribute) else 1
@@ -240,14 +268,17 @@ def _wiki_specs(entries: list[dict[str, Any]], slot: str) -> list[dict[str, Any]
                 if str(item.get("attribute", "")) == selected_attribute
             ]
             packet = _wiki_packet(ability, slot, ability_index, selected_levelings)
-            specs.append(packet or {
-                "kind": "wiki_attribute",
-                "attribute": selected_attribute,
-                "damage_type": _damage_kind(ability, selected_attribute),
-                "ranks": "level" if slot == "P" else "rank",
-                "source": [slot, ability_index],
-                "name": str(ability.get("name", slot)),
-            })
+            specs.append(
+                packet
+                or {
+                    "kind": "wiki_attribute",
+                    "attribute": selected_attribute,
+                    "damage_type": _damage_kind(ability, selected_attribute),
+                    "ranks": "level" if slot == "P" else "rank",
+                    "source": [slot, ability_index],
+                    "name": str(ability.get("name", slot)),
+                }
+            )
             continue
         if slot == "P" or not ability.get("damageType"):
             continue
@@ -259,7 +290,9 @@ def _wiki_specs(entries: list[dict[str, Any]], slot: str) -> list[dict[str, Any]
                     isinstance(modifier.get("values"), list) and modifier["values"]
                     for modifier in leveling.get("modifiers", [])
                 ):
-                    selected_attribute = str(leveling.get("attribute", "Per-Level Scaling"))
+                    selected_attribute = str(
+                        leveling.get("attribute", "Per-Level Scaling")
+                    )
                     selected_levelings = [
                         item
                         for effect in ability.get("effects", [])
@@ -296,7 +329,9 @@ def _axword_spec(ability: dict[str, Any]) -> dict[str, Any] | None:
         "kind": "packet",
         "name": str(ability.get("name", "")),
         "cooldown": float(ability.get("cooldown", 0.0)),
-        "damage_type": {"magical": "magic"}.get(str(damage.get("type")), str(damage.get("type", "magic"))),
+        "damage_type": {"magical": "magic"}.get(
+            str(damage.get("type")), str(damage.get("type", "magic"))
+        ),
         "base": [float(value) for value in damage.get("base", [])],
         "ratios": [
             {
@@ -308,7 +343,60 @@ def _axword_spec(ability: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-def build(source: Path, axword_source: Path, output: Path, modules: Path) -> dict[str, Any]:
+@cache
+def _black_mode() -> black.Mode:
+    """Format generated source the same way the repo's own `black` run would.
+
+    Reads [tool.black] from the project pyproject so the line length lives in
+    exactly one place; falls back to black's defaults if it is ever absent.
+    Cached because every rendered module asks for the same mode.
+    """
+    config_path = find_pyproject_toml((str(Path(__file__).resolve().parents[1]),), None)
+    config = parse_pyproject_toml(config_path) if config_path else {}
+    line_length = config.get("line_length")
+    return black.Mode(line_length=line_length) if line_length else black.Mode()
+
+
+def _format(source: str) -> str:
+    """Run generated source through black so regeneration cannot dirty the tree."""
+    return black.format_str(source, mode=_black_mode())
+
+
+def _slug(name: str) -> str:
+    """Map a champion name to its generated module filename stem."""
+    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+
+
+def _option_keys(slots: dict[str, Any]) -> list[str]:
+    """List the packet option keys a champion's variant slots expose."""
+    return sorted(
+        {
+            f"{slot.lower()}_variant"
+            for slot, spec in slots.items()
+            if spec.get("kind") == "variants"
+        }
+    )
+
+
+def _render_module(name: str, option_keys: list[str]) -> str:
+    """Render one champion's generated packet module, black-formatted."""
+    option_comment = (
+        f"# Packet option keys consumed by packet_module: {json.dumps(option_keys)}\n"
+        if option_keys
+        else ""
+    )
+    return _format(
+        f'"""Generated packet module for {name}."""\n\n'
+        f"from ..packet_module import build_packet_module\n\n"
+        f"{option_comment}"
+        f"parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module({name!r})\n"
+        "REVIEW_STATUS = 'reviewed_packet'\n"
+    )
+
+
+def build(
+    source: Path, axword_source: Path, output: Path, modules: Path
+) -> dict[str, Any]:
     raw = json.loads(source.read_text(encoding="utf-8"))
     axword = _axword_by_name(_load_axword(axword_source))
     revisions = _wiki_revisions()
@@ -326,8 +414,7 @@ def build(source: Path, axword_source: Path, output: Path, modules: Path) -> dic
             elif wiki_specs:
                 spec = wiki_specs[0]
             elif slot in ax_slots and any(
-                "damage" in str(ability.get("blurb", "")).lower()
-                for ability in entries
+                "damage" in str(ability.get("blurb", "")).lower() for ability in entries
             ):
                 spec = _axword_spec(ax_slots[slot])
             else:
@@ -349,17 +436,23 @@ def build(source: Path, axword_source: Path, output: Path, modules: Path) -> dic
                     ),
                     "source": [slot, 0],
                 }
-        source_url = "https://wiki.leagueoflegends.com/en-us/" + quote(name.replace(" ", "_"))
+        source_url = "https://wiki.leagueoflegends.com/en-us/" + quote(
+            name.replace(" ", "_")
+        )
         receipt = revisions.get(name, {})
         champions[name] = {
             "review_status": "reviewed_packet",
             "review_manifest": {
                 "module_kind": "dedicated_champion_module",
                 "formula_slots": sorted(
-                    slot for slot, value in slots.items() if value.get("kind") in {"packet", "variants", "wiki_attribute"}
+                    slot
+                    for slot, value in slots.items()
+                    if value.get("kind") in {"packet", "variants", "wiki_attribute"}
                 ),
                 "no_damage_slots": sorted(
-                    slot for slot, value in slots.items() if value.get("kind") == "no_damage"
+                    slot
+                    for slot, value in slots.items()
+                    if value.get("kind") == "no_damage"
                 ),
                 "event_model": "typed_packet_order",
             },
@@ -368,7 +461,9 @@ def build(source: Path, axword_source: Path, output: Path, modules: Path) -> dic
                 "Every slot is an explicit packet or sourced no-damage entry from the pinned local Wiki cache; no runtime archetype inference is used.",
                 "Numeric packets preserve rank/level arrays, typed scaling, target-health terms, and explicit variant selectors where the source lists them.",
             ],
-            "sources": [{"label": "Local League Wiki cache", "url": source_url, **receipt}],
+            "sources": [
+                {"label": "Local League Wiki cache", "url": source_url, **receipt}
+            ],
         }
 
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -390,31 +485,17 @@ def build(source: Path, axword_source: Path, output: Path, modules: Path) -> dic
 
     modules.mkdir(parents=True, exist_ok=True)
     (modules / "__init__.py").write_text(
-        '"""Generated explicit champion packet modules."""\n', encoding="utf-8"
+        _format('"""Generated explicit champion packet modules."""\n'), encoding="utf-8"
     )
-    for name in champions:
-        slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
-        option_keys = sorted(
-            {
-                f"{slot.lower()}_variant"
-                for slot, spec in champions[name]["slots"].items()
-                if spec.get("kind") == "variants"
-            }
+    for name, entry in champions.items():
+        (modules / f"{_slug(name)}.py").write_text(
+            _render_module(name, _option_keys(entry["slots"])), encoding="utf-8"
         )
-        option_comment = (
-            f"# Packet option keys consumed by packet_module: {json.dumps(option_keys)}\n"
-            if option_keys
-            else ""
-        )
-        (modules / f"{slug}.py").write_text(
-            f'''"""Generated packet module for {name}."""\n\n'''
-            f"from ..packet_module import build_packet_module\n\n"
-            f"{option_comment}"
-            f"parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module({name!r})\n"
-            "REVIEW_STATUS = 'reviewed_packet'\n",
-            encoding="utf-8",
-        )
-    return {"champion_count": len(champions), "output": str(output), "modules": str(modules)}
+    return {
+        "champion_count": len(champions),
+        "output": str(output),
+        "modules": str(modules),
+    }
 
 
 def main() -> None:
@@ -424,12 +505,25 @@ def main() -> None:
     parser.add_argument(
         "--axword-source",
         type=Path,
-        default=Path("/Users/river/Projects/lol-strength-analysis/src/data/generated/merakiAbilityKits.ts"),
+        default=Path(
+            "/Users/river/Projects/lol-strength-analysis/src/data/generated/merakiAbilityKits.ts"
+        ),
     )
-    parser.add_argument("--output", type=Path, default=root / "static" / "reviewed-packets.json")
-    parser.add_argument("--modules", type=Path, default=root / "src" / "calculator" / "champions" / "generated")
+    parser.add_argument(
+        "--output", type=Path, default=root / "static" / "reviewed-packets.json"
+    )
+    parser.add_argument(
+        "--modules",
+        type=Path,
+        default=root / "src" / "calculator" / "champions" / "generated",
+    )
     args = parser.parse_args()
-    result = build(args.source.resolve(), args.axword_source.resolve(), args.output.resolve(), args.modules.resolve())
+    result = build(
+        args.source.resolve(),
+        args.axword_source.resolve(),
+        args.output.resolve(),
+        args.modules.resolve(),
+    )
     print(json.dumps(result, sort_keys=True))
 
 

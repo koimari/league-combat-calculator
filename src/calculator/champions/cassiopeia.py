@@ -132,9 +132,10 @@ def _miasma(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    per_tick = extract_named(
-        ability, "Magic Damage Per Second", rank, ctx.stats, ctx.target
-    ) / 4.0
+    per_tick = (
+        extract_named(ability, "Magic Damage Per Second", rank, ctx.stats, ctx.target)
+        / 4.0
+    )
     total = per_tick * _W_TICKS
     entry = damage_entry(
         ability.get("name", "Miasma"),

@@ -14,10 +14,17 @@ from .engine import BUFF, SlotCtx, build_parser
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
 
+_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _ = (
+    build_packet_module("Aphelios")
+)
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _ = build_packet_module("Aphelios")
-
-_WEAPON_INDEX = {"calibrum": 0, "severum": 1, "gravitum": 2, "infernum": 3, "crescendum": 4}
+_WEAPON_INDEX = {
+    "calibrum": 0,
+    "severum": 1,
+    "gravitum": 2,
+    "infernum": 3,
+    "crescendum": 4,
+}
 _WEAPON_LABELS = {
     "calibrum": "Calibrum",
     "severum": "Severum",
@@ -38,25 +45,36 @@ def _weapon_master(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ad_points = min(max(int(ctx.options.get("aphelios_bonus_ad_points", 0)), 0), 6)
     as_points = min(max(int(ctx.options.get("aphelios_bonus_as_points", 0)), 0), 6)
-    lethality_points = min(max(int(ctx.options.get("aphelios_lethality_points", 0)), 0), 6)
+    lethality_points = min(
+        max(int(ctx.options.get("aphelios_lethality_points", 0)), 0), 6
+    )
     entry = damage_entry(ability["name"], 1, 0.0, 0.0, "physical")
     bonus_ad = 4.0 * ad_points
     bonus_as = 9.0 * as_points
     if bonus_ad:
         ctx.stats["attack_damage"] = ctx.stats.get("attack_damage", 0.0) + bonus_ad
-        ctx.stats["bonus_attack_damage"] = ctx.stats.get("bonus_attack_damage", 0.0) + bonus_ad
+        ctx.stats["bonus_attack_damage"] = (
+            ctx.stats.get("bonus_attack_damage", 0.0) + bonus_ad
+        )
     if bonus_as:
-        ctx.stats["bonus_attack_speed"] = ctx.stats.get("bonus_attack_speed", 0.0) + bonus_as
-        ctx.stats["attack_speed"] = ctx.stats.get("attack_speed", 0.0) + ctx.stats.get(
-            "attack_speed_ratio", 0.0
-        ) * bonus_as / 100.0
+        ctx.stats["bonus_attack_speed"] = (
+            ctx.stats.get("bonus_attack_speed", 0.0) + bonus_as
+        )
+        ctx.stats["attack_speed"] = (
+            ctx.stats.get("attack_speed", 0.0)
+            + ctx.stats.get("attack_speed_ratio", 0.0) * bonus_as / 100.0
+        )
     if lethality_points:
-        ctx.stats["lethality"] = ctx.stats.get("lethality", 0.0) + 4.5 * lethality_points
+        ctx.stats["lethality"] = (
+            ctx.stats.get("lethality", 0.0) + 4.5 * lethality_points
+        )
     entry["stat_buff"] = {
         "bonus_attack_damage": bonus_ad,
         "bonus_attack_speed": bonus_as,
     }
-    entry["detail"] = f"Weapon Master: {ad_points} AD / {as_points} AS / {lethality_points} lethality points"
+    entry["detail"] = (
+        f"Weapon Master: {ad_points} AD / {as_points} AS / {lethality_points} lethality points"
+    )
     return entry
 
 
@@ -120,9 +138,13 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     base = (125.0, 175.0, 225.0)[r_rank - 1]
     ad = float(ctx.stats.get("bonus_attack_damage", 0.0))
     ap = float(ctx.stats.get("ability_power", 0.0))
-    entry = damage_entry(ability["name"], r_rank, 120.0, base + 0.20 * ad + ap, "physical")
+    entry = damage_entry(
+        ability["name"], r_rank, 120.0, base + 0.20 * ad + ap, "physical"
+    )
     entry["parts"] = (DamagePart("physical", amount=base + 0.20 * ad + ap),)
-    entry["detail"] = f"Moonlight Vigil initial blast · {_WEAPON_LABELS[_main_weapon(ctx)]} follow-up is event-ordered separately"
+    entry["detail"] = (
+        f"Moonlight Vigil initial blast · {_WEAPON_LABELS[_main_weapon(ctx)]} follow-up is event-ordered separately"
+    )
     return entry
 
 
@@ -135,11 +157,34 @@ OPTIONS = [
         "type": "select",
         "default": "calibrum",
         "label": "Aphelios main weapon",
-        "choices": [{"value": key, "label": label} for key, label in _WEAPON_LABELS.items()],
+        "choices": [
+            {"value": key, "label": label} for key, label in _WEAPON_LABELS.items()
+        ],
     },
-    {"key": "aphelios_bonus_ad_points", "type": "int", "default": 0, "min": 0, "max": 6, "label": "Weapon Master AD points"},
-    {"key": "aphelios_bonus_as_points", "type": "int", "default": 0, "min": 0, "max": 6, "label": "Weapon Master AS points"},
-    {"key": "aphelios_lethality_points", "type": "int", "default": 0, "min": 0, "max": 6, "label": "Weapon Master lethality points"},
+    {
+        "key": "aphelios_bonus_ad_points",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 6,
+        "label": "Weapon Master AD points",
+    },
+    {
+        "key": "aphelios_bonus_as_points",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 6,
+        "label": "Weapon Master AS points",
+    },
+    {
+        "key": "aphelios_lethality_points",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 6,
+        "label": "Weapon Master lethality points",
+    },
 ]
 
 ASSUMPTIONS = [

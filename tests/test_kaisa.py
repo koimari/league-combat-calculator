@@ -13,7 +13,6 @@ from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.optimizer import _evaluate_build
 from src.calculator.pipeline import FightParams, run_fight
 
-
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
 
@@ -125,9 +124,7 @@ def test_build_owned_stats_automatically_unlock_each_evolution(kaisa_data):
         {"champion_options": {"q_evolved": "auto", "w_evolved": "auto"}}
     )
     empty = run_fight(kaisa_data, 12, [], params)
-    luden = run_fight(
-        kaisa_data, 12, [get_item_by_name("Luden's Echo")], params
-    )
+    luden = run_fight(kaisa_data, 12, [get_item_by_name("Luden's Echo")], params)
     bloodthirster = run_fight(
         kaisa_data, 12, [get_item_by_name("Bloodthirster")], params
     )
@@ -145,18 +142,14 @@ def test_build_owned_stats_automatically_unlock_each_evolution(kaisa_data):
     assert bloodthirster["champion_stats"]["evolution_attack_damage"] > 100
     assert bloodthirster["breakdown"]["Q"]["detail"].startswith("12 missiles")
     assert "AD from items + growth" in bloodthirster["breakdown"]["Q"]["detail"]
-    assert "2 successive" in bloodthirster["breakdown"]["passive_plasma"][
-        "detail"
-    ]
+    assert "2 successive" in bloodthirster["breakdown"]["passive_plasma"]["detail"]
 
 
 def test_temporary_ap_amp_cannot_unlock_w_evolution(kaisa_data):
     params = FightParams.from_request(
         {"champion_options": {"q_evolved": "auto", "w_evolved": "auto"}}
     )
-    result = run_fight(
-        kaisa_data, 12, [get_item_by_name("Blackfire Torch")], params
-    )
+    result = run_fight(kaisa_data, 12, [get_item_by_name("Blackfire Torch")], params)
 
     assert result["champion_stats"]["ability_power"] == 83
     assert result["champion_stats"]["evolution_ability_power"] == 80
@@ -201,9 +194,7 @@ def test_optimizer_evaluator_resolves_evolution_per_candidate(kaisa_data):
     item = get_item_by_name("Luden's Echo")
 
     auto_score = _evaluate_build(kaisa_data, 12, [item], auto, "total_damage")
-    base_score = _evaluate_build(
-        kaisa_data, 12, [item], forced_base, "total_damage"
-    )
+    base_score = _evaluate_build(kaisa_data, 12, [item], forced_base, "total_damage")
     evolved_score = _evaluate_build(
         kaisa_data, 12, [item], forced_evolved, "total_damage"
     )
@@ -258,9 +249,10 @@ def test_rotation_is_event_order_certified_and_resource_legal(kaisa_data):
     assert result["breakdown"]["passive_plasma"]["damage_events"][0][
         "time"
     ] == pytest.approx(result["breakdown"]["W"]["damage_events"][0]["time"])
-    assert result["breakdown"]["Q"]["damage_events"][0]["time"] > result[
-        "breakdown"
-    ]["W"]["damage_events"][0]["time"]
+    assert (
+        result["breakdown"]["Q"]["damage_events"][0]["time"]
+        > result["breakdown"]["W"]["damage_events"][0]["time"]
+    )
 
 
 def test_timed_and_auto_only_requests_fail_closed():
@@ -271,9 +263,10 @@ def test_timed_and_auto_only_requests_fail_closed():
             json={"champion": "Kai'Sa", "level": 12, "fight_mode": fight_mode},
         )
         assert response.status_code == 400
-        assert "Time-based Kai'Sa calculations are withheld" in response.get_json()[
-            "error"
-        ]
+        assert (
+            "Time-based Kai'Sa calculations are withheld"
+            in response.get_json()["error"]
+        )
 
     reordered = client.post(
         "/api/calculate",

@@ -30,16 +30,22 @@ These LoL-specific facts affect calculations and must be correct:
 ```bash
 pytest                # Run all tests
 pytest --cov=src      # Run tests with coverage
-black src/ tests/     # Format code
+black src/ tests/ scripts/          # Format code
+black --check src/ tests/ scripts/  # Formatting gate (CI runs this)
 pylint src/           # Lint code
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
 python scripts/patch_update.py run    # Patch day: re-pull wiki data, audit, gates (see /patch-update skill)
 ```
 
-`pytest` gates every task; `pylint src/` gates any code change. **The golden gate is the
-one with non-obvious semantics** — run it whenever calculation code changed: a pure
-refactor must show zero diffs, while a behavior fix re-captures the baseline with every
-diff explained in the commit.
+`pytest` gates every task; `pylint src/` and `black --check` gate any code change.
+Formatter settings live in `pyproject.toml`, and the version is pinned in
+`requirements.txt` — black's stable style shifts yearly, so an unpinned run reformats
+files it shouldn't. Generated champion modules are formatted by the generator itself
+(`scripts/build_reviewed_modules.py`), never by hand.
+
+**The golden gate is the one with non-obvious semantics** — run it whenever calculation
+code changed: a pure refactor must show zero diffs, while a behavior fix re-captures the
+baseline with every diff explained in the commit.
 
 ## Known Quirks
 
