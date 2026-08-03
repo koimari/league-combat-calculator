@@ -15,7 +15,7 @@ League Wiki cache
   -> app.js
 ```
 
-`src/calculator/data_updater.py` is the only network-writing path. Runtime calculations read the tracked cache through `data_fetcher.py`.
+`src/calculator/data_updater.py` is the only network-writing path. Runtime calculations read the tracked cache through `data_fetcher.py`. `item_source.py` owns what the cache records about an item's sources — see below.
 
 ## Rules and ownership
 
@@ -23,7 +23,8 @@ League Wiki cache
 - `resistance.py` owns armor, magic resistance, and penetration order.
 - `item_effects.py` owns item values and effect formulas. Item-specific numbers do not belong in routes or the interface.
 - `rune_effects.py` owns keystone rune values and effect formulas the same way, reading `data/runes.json` (parsed from the wiki's rune data templates by `rune_parser.py`). Only compiled keystones are selectable; the rest are served greyed out and fail closed if requested.
-- `item_coverage.py` classifies each optimizer candidate as modelled, reviewed stats-only, blocked, or pending review. New passive or active text fails closed until it is explicitly classified.
+- `item_source.py` owns the ingested-source view of an item: the complete branch list of every passive and active, map/mode availability, champion-granted and acquisition state, and the audit that reconciles the Wiki item table against Riot's description. Selection pools ask it whether an item is an ordinary Summoner's Rift purchase; nothing decides that from a name list. A source divergence is either a reviewed entry in `ACKNOWLEDGED_SOURCE_CONFLICTS` or it stops patch day — neither source is silently preferred.
+- `item_coverage.py` classifies each optimizer candidate as modelled, reviewed stats-only, blocked, or pending review. New passive or active text fails closed until it is explicitly classified. It answers whether a mechanic is *modelled*; `item_source.py` answers whether it was *ingested*.
 - `champions/<name>.py` owns reviewed champion formulas, options, and assumptions. The generic parser is useful for development coverage but is not a public exactness claim.
 - `loadout_rules.py` validates inventory capacity, boot tiers, duplicate items, and mutually exclusive item groups for both manual builds and optimization.
 - `defensive_effects.py` resolves defenses that are ready when combat begins. Starting shields, basic-damage modifiers, capped post-mitigation reductions, critical-strike reductions, and one-rotation threshold shields come from revision-backed Wiki mechanics. Timed threshold shields are priced from the certified event ledger; a timed fight with any uncertified damage source is withheld after computation, naming the coarse sources. Unregistered defenses remain explicitly outside the model.

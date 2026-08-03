@@ -40,6 +40,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from src.calculator.champions import registered_champion_names
 from src.calculator.passive_parser import _ITEM_PARSE_CONFIG
 from src.calculator.item_effects import _STATIC_VALUE_KEYS_BY_ITEM
+from src.calculator.item_source import branch_losses, source_audit
 
 GOLDEN_BASELINE = REPO_ROOT / "scripts" / "golden_baseline.json"
 # Wiki noise: cosmetic/bookkeeping fields whose churn never affects math.
@@ -226,8 +227,61 @@ def item_audit_lines(old_items, new_items):
     return lines
 
 
+def item_source_lines(old_items, new_items):
+    """Source-completeness section, plus whether the patch may proceed.
+
+    Two things stop a patch here. An effect branch that disappeared is almost
+    always a broken parse rather than a deleted mechanic, and a Riot-declared
+    effect the Wiki does not carry is a source conflict — either could
+    silently shrink what the calculator models. Both are releasable once
+    reviewed: a verified removal goes in ``APPROVED_BRANCH_REMOVALS``, an
+    explained divergence in ``ACKNOWLEDGED_SOURCE_CONFLICTS``, and one that is
+    genuinely unsettled in ``OPEN_SOURCE_CONFLICTS``, where it is re-reported
+    every patch day instead of quietly picking a source.
+    """
+    lines = ["== Item source completeness =="]
+    blocking = False
+
+    losses = branch_losses(old_items, new_items)
+    unapproved = [loss for loss in losses if not loss["approved"]]
+    for loss in losses:
+        flag = "approved" if loss["approved"] else "BLOCKING"
+        lines.append(f"  {flag}: {loss['effect']} — {loss['detail']}")
+        if loss["explanation"]:
+            lines.append(f"    {loss['explanation']}")
+    blocking = blocking or bool(unapproved)
+
+    audit = source_audit(new_items.values())
+    flags = {"explained": "explained", "open": "OPEN REVIEW", "unreviewed": "BLOCKING"}
+    for conflict in audit["conflicts"]:
+        lines.append(
+            f"  {flags[conflict['status']]} conflict: {conflict['item']} / "
+            f"{conflict['effect']} is declared by Riot but absent from the "
+            "Wiki item table"
+        )
+        lines.append(f"    {conflict['note']}")
+    blocking = blocking or bool(audit["unreviewed_conflicts"])
+
+    for warning in audit["warnings"]:
+        lines.append(f"  note: {warning}")
+
+    if len(lines) == 1:
+        lines.append("  (every source branch is accounted for)")
+    if blocking:
+        lines.append(
+            "  ** BLOCKING — verify each entry against Riot/CommunityDragon and "
+            "the Wiki, then record it in item_source (APPROVED_BRANCH_REMOVALS "
+            "or ACKNOWLEDGED_SOURCE_CONFLICTS) with how you confirmed it. **"
+        )
+    return lines, not blocking
+
+
 def print_audit():
-    """Print the full audit report (champions, items, deltas)."""
+    """Print the full audit report (champions, items, deltas).
+
+    Returns whether the source-completeness section is clear enough to
+    proceed; the prose sections above it are informational.
+    """
     old_champs, new_champs, old_items, new_items = load_old_and_new()
     print()
     print("#" * 70)
@@ -237,7 +291,11 @@ def print_audit():
         print(line)
     for line in item_audit_lines(old_items, new_items):
         print(line)
+    source_lines, source_ok = item_source_lines(old_items, new_items)
+    for line in source_lines:
+        print(line)
     print()
+    return source_ok
 
 
 def print_detail(names):
@@ -387,11 +445,21 @@ def run_gates():
 
 
 def run_full():
-    """Full patch-day run: clear caches, pull, audit, rebuild catalogues, gates."""
+    """Full patch-day run: clear caches, pull, audit, rebuild catalogues, gates.
+
+    A source-completeness failure stops the run before the gates: a cache that
+    lost an effect branch would make pytest and the golden baseline agree on
+    the wrong numbers.
+    """
     clear_wiki_caches()
     patch = run_pull()
     print(f"\nPulled patch: {patch}")
-    print_audit()
+    if not print_audit():
+        print(
+            "\nFAIL: the item cache lost source coverage. Resolve the BLOCKING\n"
+            "entries above before rebuilding artifacts or re-capturing golden."
+        )
+        return 1
     rebuild_failed = rebuild_static_artifacts()
     if rebuild_failed:
         return rebuild_failed
@@ -409,8 +477,7 @@ def main():
     if args.command == "run":
         sys.exit(run_full())
     if args.command == "audit":
-        print_audit()
-        sys.exit(0)
+        sys.exit(0 if print_audit() else 1)
     print_detail(args.names)
     sys.exit(0)
 

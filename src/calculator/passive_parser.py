@@ -1,9 +1,11 @@
 """Parse item passive/active effect descriptions from wiki markup in JSON data.
 
 Extracts numeric values (base damage, ratios, cooldowns, etc.) from the
-wiki-style markup used in the ``effects`` field of item passives/actives.
-These parsed values are consumed by ``item_effects.py`` to build the
-``ITEM_EFFECTS`` registry dynamically from the cached JSON data, so the
+wiki-style markup in an item's cached effect branches.  ``item_source`` joins
+every branch of one passive before parsing, so a mechanic split across two
+Wiki descriptions — Muramana Shock's attack and ability halves — is parsed as
+one text.  These parsed values are consumed by ``item_effects.py`` to build
+the ``ITEM_EFFECTS`` registry dynamically from the cached JSON data, so the
 calculator automatically picks up balance changes when data is refreshed.
 
 Markup reference (subset used by the parser):
@@ -21,6 +23,8 @@ import logging
 import math
 import re
 from typing import Any
+
+from .item_source import effect_text
 
 logger = logging.getLogger(__name__)
 
@@ -290,14 +294,14 @@ def _get_effect_text(
     source: str,
     name: str,
 ) -> str | None:
-    """Get effects text from a passive or active by name."""
+    """Get the complete text of a passive or active, every branch included."""
     if source == "passive":
         entry = _find_passive_by_name(item_data, name)
     elif source == "active":
         entry = _find_active_by_name(item_data, name)
     else:
         return None
-    return entry.get("effects", "") if entry else None
+    return effect_text(entry) if entry else None
 
 
 def _get_cooldown_field(
@@ -377,10 +381,29 @@ def _parse_max_hp_on_hit(text: str) -> dict[str, Any]:
 
 
 def _parse_mana_on_hit(text: str) -> dict[str, Any]:
-    """Parse Muramana's mana-scaling on-hit."""
+    """Parse Muramana Shock's attack and ability branches.
+
+    Shock is one passive with two Wiki branches: attacks take a flat share of
+    maximum mana on-hit, damaging abilities take a melee/ranged split. The
+    ability share is the ``{{rd|...}}`` share of maximum mana; the on-hit
+    share is whatever remains once those templates are removed, so branch
+    order cannot silently hand the on-hit branch the melee ability number.
+    """
     text = _resolve_simple_templates(text)
     result: dict[str, Any] = {"damage_type": "physical"}
-    mana_match = re.search(r"(\d+(?:\.\d+)?)%\s+'''maximum'''\s+mana", text)
+
+    ability_match = re.search(
+        r"(\{\{rd\|[^{}]*\}\})\s*'''maximum'''\s+mana",
+        text,
+    )
+    if ability_match:
+        ratios = _extract_rd_percentages(ability_match.group(1))
+        if ratios:
+            result["max_mana_ratio_ability_melee"] = ratios[0]
+            result["max_mana_ratio_ability_ranged"] = ratios[1]
+
+    without_splits = re.sub(r"\{\{rd\|[^{}]*\}\}", "", text)
+    mana_match = re.search(r"(\d+(?:\.\d+)?)%\s+'''maximum'''\s+mana", without_splits)
     if mana_match:
         result["max_mana_ratio_on_hit"] = float(mana_match.group(1)) / 100.0
     return result
@@ -1515,16 +1538,23 @@ def _parse_kraken_slayer(text: str) -> dict[str, Any]:
 
 
 def _parse_hexplate(text: str) -> dict[str, Any]:
-    """Parse Experimental Hexplate Overdrive passive."""
+    """Parse Experimental Hexplate Overdrive: melee/ranged attack speed.
+
+    Overdrive's attack speed is a ``{{rd|MELEE|RANGED}}`` split; reading only
+    the leading number gave ranged champions the melee value.
+    """
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {}
 
     as_match = re.search(
-        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+attack\s+speed",
+        r"(\{\{rd\|[^{}]*\}\})\s*'''bonus'''\s+attack\s+speed",
         text_resolved,
     )
     if as_match:
-        result["bonus_attack_speed_percent"] = float(as_match.group(1))
+        split = _extract_rd_numbers(as_match.group(1))
+        if split:
+            result["bonus_attack_speed_melee"] = split[0]
+            result["bonus_attack_speed_ranged"] = split[1]
 
     dur_match = re.search(r"for\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved)
     if dur_match:
