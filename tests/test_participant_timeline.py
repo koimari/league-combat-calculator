@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
-from src.app import _role_scoped_bis_candidates, app
+from src.app import _enemy_bis_rank_key, _role_scoped_bis_candidates, app
 from src.calculator.item_coverage import optimizer_supported_items
 from src.calculator.optimizer import get_eligible_legendaries
 from src.calculator.participant_timeline import Combatant, _simulate_survival
@@ -391,7 +391,7 @@ def test_bis_endpoint_keeps_ally_and_enemy_in_the_same_timeline():
     enemy_top = enemy.get_json()["candidates"][0]
     assert "main_team_damage_before_death" in ally_top["components"]
     assert "effective_health" in ally_top["components"]
-    assert enemy_top["metric"] == "enemy survival first · threat before defeat"
+    assert enemy_top["metric"] == "enemy survival gate · threat before defeat"
     assert enemy_top["components"]["effective_health"] > 0
 
 
@@ -444,9 +444,127 @@ def test_enemy_bis_prioritizes_event_survival_before_outgoing_threat(monkeypatch
     assert body["candidates"]
     top = body["candidates"][0]
     assert top["name"] != "Luden's Echo"
-    assert top["metric"] == "enemy survival first · threat before defeat"
+    assert top["metric"] == "enemy survival gate · threat before defeat"
     assert top["components"]["survival_time"] == 10.0
     assert top["components"]["effective_health"] == 2_000.0
+
+
+def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
+    """A live damage item beats pure health, but an early death does not."""
+
+    monkeypatch.setattr(
+        "src.app._bis_candidate_pool",
+        lambda *_args, **_kwargs: [
+            {"name": "Luden's Echo", "icon": "", "stats": {}},
+            {"name": "Warmog's Armor", "icon": "", "stats": {}},
+        ],
+    )
+
+    def fake_timeline(*_args, **kwargs):
+        enemy = kwargs["enemies"][0]
+        item_names = {item["name"] for item in enemy.item_data}
+        damage_item = "Luden's Echo" in item_names
+        survival = {
+            "max_health": 1_000.0 if damage_item else 2_500.0,
+            "effective_health": 1_000.0 if damage_item else 2_500.0,
+            "healing_received": 0.0,
+            "support_shield_received": 0.0,
+            "shield_absorbed": 0.0,
+            "death_time": None,
+            "survived_window": True,
+        }
+        focus_id = kwargs["focus_participant_id"]
+        threat = 1_000.0 if damage_item else 500.0
+        return {
+            "duration": 10.0,
+            "participants": [{"participant_id": focus_id, "survival": survival}],
+            "breakdown": [],
+            "objective": {
+                "focus_damage_before_death": threat,
+                "focus_support_value": 0.0,
+                "focus_healing": 0.0,
+                "main_team_damage_before_death": 0.0,
+            },
+            "timeline_coverage": {
+                "complete": True,
+                "exact_sources": [],
+                "coarse_sources": [],
+            },
+        }
+
+    monkeypatch.setattr("src.app.build_participant_timeline", fake_timeline)
+    response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["candidates"][0]["name"] == "Luden's Echo"
+    assert body["candidates"][0]["components"]["threat_before_defeat"] == 1_000.0
+
+    # The same damage item becomes ineligible once the event timeline records
+    # an early death, even though its pre-defeat threat is much larger.
+    def glass_cannon_timeline(*_args, **kwargs):
+        result = fake_timeline(*_args, **kwargs)
+        enemy = kwargs["enemies"][0]
+        if enemy.item_data[0]["name"] == "Luden's Echo":
+            result["participants"][0]["survival"].update(
+                death_time=2.0,
+                survived_window=False,
+            )
+            result["objective"]["focus_damage_before_death"] = 5_000.0
+        return result
+
+    monkeypatch.setattr("src.app.build_participant_timeline", glass_cannon_timeline)
+    response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
+    assert response.status_code == 200
+    assert response.get_json()["candidates"][0]["name"] == "Warmog's Armor"
+
+
+def test_enemy_bis_rank_key_is_deterministic_and_event_derived():
+    survived_damage = _enemy_bis_rank_key(
+        {"focus_damage_before_death": 1_000.0},
+        {
+            "death_time": None,
+            "effective_health": 1_000.0,
+            "healing_received": 0.0,
+            "support_shield_received": 0.0,
+            "shield_absorbed": 0.0,
+        },
+        duration=10.0,
+    )
+    survived_health = _enemy_bis_rank_key(
+        {"focus_damage_before_death": 500.0},
+        {
+            "death_time": None,
+            "effective_health": 2_500.0,
+            "healing_received": 0.0,
+            "support_shield_received": 0.0,
+            "shield_absorbed": 0.0,
+        },
+        duration=10.0,
+    )
+    early_glass = _enemy_bis_rank_key(
+        {"focus_damage_before_death": 5_000.0},
+        {
+            "death_time": 2.0,
+            "effective_health": 1_000.0,
+            "healing_received": 0.0,
+            "support_shield_received": 0.0,
+            "shield_absorbed": 0.0,
+        },
+        duration=10.0,
+    )
+    later_death = _enemy_bis_rank_key(
+        {"focus_damage_before_death": 100.0},
+        {
+            "death_time": 8.0,
+            "effective_health": 2_500.0,
+            "healing_received": 0.0,
+            "support_shield_received": 0.0,
+            "shield_absorbed": 0.0,
+        },
+        duration=10.0,
+    )
+    assert survived_damage > survived_health > later_death > early_glass
 
 
 def test_roster_bis_requires_an_explicit_role_instead_of_guessing_item_class():
