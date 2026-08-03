@@ -727,6 +727,15 @@ def build_participant_timeline(
         }
 
     public_breakdown = []
+    support_by_attacker: dict[str, float] = defaultdict(float)
+    healing_by_attacker: dict[str, float] = defaultdict(float)
+    for events in support_effects.values():
+        for event in events:
+            attacker_id = str(event.get("attacker", ""))
+            applied = float(event.get("applied_amount", 0.0))
+            support_by_attacker[attacker_id] += applied
+            if event.get("kind") == "heal":
+                healing_by_attacker[attacker_id] += applied
     for actor in all_actors:
         row = breakdown.get(actor.participant_id) or {
             "participant_id": actor.participant_id,
@@ -735,11 +744,32 @@ def build_participant_timeline(
             "total_damage": 0.0,
             "sources": {},
         }
+        actor_survival = survival[actor.participant_id]
         public_breakdown.append(
             {
                 **row,
                 "total_damage": round(float(row.get("total_damage", 0.0)), 1),
                 "sources": list(row.get("sources", {}).values()),
+                "outgoing_damage_before_death": round(
+                    float(row.get("total_damage", 0.0)), 1
+                ),
+                "incoming_damage": round(
+                    float(actor_survival.get("health_damage", 0.0))
+                    + float(actor_survival.get("shield_absorbed", 0.0)),
+                    1,
+                ),
+                "health_damage": actor_survival.get("health_damage", 0.0),
+                "shield_absorbed": actor_survival.get("shield_absorbed", 0.0),
+                "effective_health": actor_survival.get("effective_health", 0.0),
+                "healing_received": actor_survival.get("healing_received", 0.0),
+                "healing_reduced": actor_survival.get("healing_reduced", 0.0),
+                "support_shield_received": actor_survival.get(
+                    "support_shield_received", 0.0
+                ),
+                "support_value": round(support_by_attacker[actor.participant_id], 1),
+                "healing_output": round(healing_by_attacker[actor.participant_id], 1),
+                "survived_window": bool(actor_survival.get("survived_window")),
+                "death_time": actor_survival.get("death_time"),
             }
         )
     focus_row = next(
@@ -882,6 +912,27 @@ def build_participant_timeline(
             "focus_survival": focus_survival,
             "focus_support_value": round(focus_support, 1),
             "focus_healing": round(focus_healing, 1),
+            "main_team_effective_health": round(
+                sum(
+                    float(survival[actor.participant_id]["effective_health"])
+                    for actor in all_actors
+                    if actor.team in {"main", "ally"}
+                ),
+                1,
+            ),
+            "enemy_team_effective_health": round(
+                sum(
+                    float(survival[actor.participant_id]["effective_health"])
+                    for actor in all_actors
+                    if actor.team == "enemy"
+                ),
+                1,
+            ),
+            "total_support_value": round(sum(support_by_attacker.values()), 1),
+            "total_healing_reduced": round(
+                sum(float(state["healing_reduced"]) for state in survival.values()),
+                1,
+            ),
         },
         "timeline_coverage": combine_timeline_coverages(
             coverage_reports,
