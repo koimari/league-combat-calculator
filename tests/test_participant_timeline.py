@@ -734,8 +734,9 @@ def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
         items=(get_item_by_name("Bramble Vest"),),
     )
     incoming = {
-        "target": [_auto_strike("target", "source", time=0.0, damage=50.0,
-                                event_id="swing0")],
+        "target": [
+            _auto_strike("target", "source", time=0.0, damage=50.0, event_id="swing0")
+        ],
     }
     outgoing = {"source": list(incoming["target"]), "target": []}
     _schedule_thorns_events([striker, wearer], incoming, outgoing)
@@ -792,10 +793,10 @@ def test_thorns_from_a_skipped_strike_never_fires():
     )
     incoming = {
         "target": [
-            _auto_strike("target", "source", time=0.0, damage=60.0,
-                         event_id="kill"),
-            _auto_strike("target", "source", time=1.0, damage=40.0,
-                         event_id="post-death"),
+            _auto_strike("target", "source", time=0.0, damage=60.0, event_id="kill"),
+            _auto_strike(
+                "target", "source", time=1.0, damage=40.0, event_id="post-death"
+            ),
         ],
     }
     outgoing = {"source": list(incoming["target"]), "target": []}
@@ -827,9 +828,7 @@ def test_bramble_vest_retaliation_flows_through_the_calculate_pipeline():
     assert response.status_code == 200
     combat = response.get_json()["combat"]
     thorns_events = [
-        event
-        for event in combat["events"]
-        if event["source"] == "thorns_Bramble Vest"
+        event for event in combat["events"] if event["source"] == "thorns_Bramble Vest"
     ]
     assert thorns_events
     assert all(event["attacker"] == "main" for event in thorns_events)

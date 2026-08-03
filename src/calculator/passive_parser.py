@@ -724,9 +724,7 @@ def _parse_bullseye(text: str) -> dict[str, Any]:
     if cd_match:
         result["cooldown"] = float(cd_match.group(1))
 
-    refund_match = re.search(
-        r"reduced\s+by\s+(\d+(?:\.\d+)?)\s+second", text_resolved
-    )
+    refund_match = re.search(r"reduced\s+by\s+(\d+(?:\.\d+)?)\s+second", text_resolved)
     if refund_match:
         result["on_attack_cooldown_refund"] = float(refund_match.group(1))
 

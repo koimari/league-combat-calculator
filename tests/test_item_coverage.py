@@ -248,8 +248,7 @@ def test_thornmail_stays_blocked_until_its_values_are_registered():
     """The finished item still fails closed — only the component shipped."""
     assert item_model_coverage(get_item_by_name("Thornmail"))["status"] == "blocked"
     assert (
-        target_item_model_coverage(get_item_by_name("Thornmail"))["status"]
-        == "blocked"
+        target_item_model_coverage(get_item_by_name("Thornmail"))["status"] == "blocked"
     )
 
 

@@ -1792,9 +1792,7 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         damage_threshold_window=(
             required.number("damage_threshold_window") if threshold else 0.0
         ),
-        on_attack_cooldown_refund=float(
-            values.get("on_attack_cooldown_refund", 0.0)
-        ),
+        on_attack_cooldown_refund=float(values.get("on_attack_cooldown_refund", 0.0)),
     )
 
 

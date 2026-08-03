@@ -5043,9 +5043,9 @@ class TestFatedAshesInflame(_FightHarness):
         row = result["breakdown"]["burn_Fated Ashes"]
         assert row["damage_type"] == "magic"
         assert row["total_damage"] == pytest.approx(7.5)
-        assert sum(
-            event["damage"] for event in row["damage_events"]
-        ) == pytest.approx(row["total_damage"])
+        assert sum(event["damage"] for event in row["damage_events"]) == pytest.approx(
+            row["total_damage"]
+        )
         assert "burn_Fated Ashes" in result["timeline_coverage"]["exact_sources"]
 
 
@@ -5151,9 +5151,7 @@ class TestHextechAlternatorRevved(_FightHarness):
         assert row["total_damage"] == pytest.approx(32.5)  # 65 vs 100 MR
         events = row["damage_events"]
         assert [event["time"] for event in events] == [0.0]
-        assert (
-            "proc_Hextech Alternator" in result["timeline_coverage"]["exact_sources"]
-        )
+        assert "proc_Hextech Alternator" in result["timeline_coverage"]["exact_sources"]
 
     def test_long_fight_repeats_after_the_forty_second_cooldown(self) -> None:
         """A 45s fight fits a second proc once the cooldown elapses."""
@@ -5230,6 +5228,4 @@ class TestScoutsSlingshotBullseye(_FightHarness):
         events = row["damage_events"]
         assert [event["time"] for event in events] == [0.0, 20.0, 40.0]
         assert row["total_damage"] == pytest.approx(120.0)
-        assert (
-            "proc_Scout's Slingshot" in result["timeline_coverage"]["exact_sources"]
-        )
+        assert "proc_Scout's Slingshot" in result["timeline_coverage"]["exact_sources"]
