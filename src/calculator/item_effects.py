@@ -153,6 +153,12 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_type": "magic",
         "base": 45.0,
     },
+    "Recurve Bow": {
+        "type": "on_hit",
+        "formula": "flat",
+        "damage_type": "physical",
+        "base": 15.0,
+    },
     "Terminus": {
         "type": "on_hit",
         "formula": "flat_bonus_ad_ap",
@@ -208,6 +214,14 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "max_mana_to_ad_ratio": 0.02,
     },
     # ── Spellblade (after ability, next auto, mutually exclusive) ─────────
+    "Sheen": {
+        "type": "spellblade",
+        "formula": "base_ad",
+        "damage_type": "physical",
+        "base_ad_ratio": 1.0,
+        "cooldown": 1.5,
+        "weave_delay": 1.5,  # CD starts after empowered attack
+    },
     "Trinity Force": {
         "type": "spellblade",
         "formula": "base_ad",
@@ -426,6 +440,12 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # 2% per second in combat, up to 8% (4 stacks)
         "amp_per_second": 0.02,
         "amp_max": 0.08,
+    },
+    "Haunting Guise": {
+        "type": "damage_amp",
+        # Madness: 2% per second in combat, up to 6% (3 stacks)
+        "amp_per_second": 0.02,
+        "amp_max": 0.06,
     },
     "Lord Dominik's Regards": {
         "type": "damage_amp",

@@ -1781,6 +1781,7 @@ def _json_name(code_name: str) -> str:
 _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     # ── On-Hit ──
     "Nashor's Tooth": [("passive", "Icathian Bite", _parse_simple_on_hit, {})],
+    "Recurve Bow": [("passive", "Sting", _parse_simple_on_hit, {})],
     "Blade of the Ruined King": [
         ("passive", "Mist's Edge", _parse_current_hp_on_hit, {})
     ],
@@ -1802,6 +1803,7 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
         ("passive", "Awe", _parse_muramana_awe, {}),
     ],
     # ── Spellblade ──
+    "Sheen": [("passive", "Spellblade", _parse_spellblade, {})],
     "Trinity Force": [("passive", "Spellblade", _parse_spellblade, {})],
     "Lich Bane": [("passive", "Spellblade", _parse_spellblade, {})],
     "Essence Reaver": [("passive", "Spellblade", _parse_essence_reaver_spellblade, {})],
@@ -1844,6 +1846,7 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Stridebreaker": [("active", "Breaking Shockwave", _parse_hydra_active, {})],
     # ── Damage Amplification ──
     "Riftmaker": [("passive", "Void Corruption", _parse_damage_amp_per_second, {})],
+    "Haunting Guise": [("passive", "Madness", _parse_damage_amp_per_second, {})],
     "Lord Dominik's Regards": [("passive", "Giant Slayer", _parse_lord_dominik, {})],
     "Spear of Shojin": [
         ("passive", "Focused Will", _parse_spear_of_shojin, {}),

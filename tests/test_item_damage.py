@@ -4802,3 +4802,148 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
             row["total_damage"]
         )
         assert "active_Stridebreaker" in result["timeline_coverage"]["exact_sources"]
+
+
+class TestRecurveBowSting(_FightHarness):
+    """Recurve Bow's Sting: 15 bonus physical damage on-hit."""
+
+    def test_parsed_values_match_expected(self) -> None:
+        """Parser extracts the flat physical on-hit from cached JSON."""
+        from src.calculator.passive_parser import parse_item_effect
+        from src.calculator.data_fetcher import fetch_item_data
+
+        parsed = parse_item_effect("Recurve Bow", fetch_item_data())
+        assert parsed is not None
+        assert parsed["base"] == 15.0
+        assert parsed["damage_type"] == "physical"
+
+    def test_sting_rides_every_swing_with_armor_mitigation(self) -> None:
+        """Five swings vs 100 armor: 15 x 0.5 x 5 = 37.5 physical."""
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=100.0,
+            target_magic_resistance=0.0,
+            items=[{"name": "Recurve Bow"}],
+        )
+
+        row = result["breakdown"]["on_hit_Recurve Bow"]
+        assert row["damage_type"] == "physical"
+        assert row["total_damage"] == pytest.approx(37.5)
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_Recurve Bow" in result["timeline_coverage"]["exact_sources"]
+
+    def test_sting_stacks_with_other_named_on_hits(self) -> None:
+        """Sting and Wit's End Fray are distinct passives and both apply."""
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            items=[{"name": "Recurve Bow"}, {"name": "Wit's End"}],
+        )
+
+        assert result["breakdown"]["on_hit_Recurve Bow"]["total_damage"] == (
+            pytest.approx(75.0)
+        )
+        assert result["breakdown"]["on_hit_Wit's End"]["total_damage"] == (
+            pytest.approx(225.0)
+        )
+
+
+class TestSheenSpellblade:
+    """Sheen's Spellblade: 100% base AD physical on the post-cast attack."""
+
+    def test_registered_with_trinity_scheduling_values(self) -> None:
+        """Sheen carries the line's 1.5s cooldown that starts post-attack."""
+        from src.calculator.item_effects import ITEM_EFFECTS
+
+        effect = ITEM_EFFECTS.get("Sheen")
+        assert effect is not None
+        assert effect["type"] == "spellblade"
+        assert effect["base_ad_ratio"] == 1.0
+        assert effect["damage_type"] == "physical"
+        assert effect["cooldown"] == 1.5
+        assert effect["weave_delay"] == 1.5
+
+    def test_spellblade_damage_equals_base_ad(self) -> None:
+        """Sheen's proc is exactly 100% base AD with no AP scaling."""
+        stats = {"base_attack_damage": 104.0, "ability_power": 300.0}
+        effect = resolve_damage_effects(_build("Sheen")).spellblade
+        assert effect is not None
+        damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
+        assert damage == pytest.approx(104.0)
+
+    def test_two_procs_in_five_second_ahri_fight(self, ahri_data: dict) -> None:
+        """Sheen weaves twice in 5 seconds, like the rest of the line."""
+        from src.calculator.stats import calculate_total_stats
+        from src.calculator.data_fetcher import get_item_by_name
+
+        items = [get_item_by_name("Sheen")]
+        stats = calculate_total_stats(ahri_data, 18, items)
+        abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
+        fight = calculate_fight_damage(
+            stats,
+            abilities,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
+        )
+        sb = fight["breakdown"]["spellblade_Sheen"]
+        assert sb["count"] == 2
+        assert sb["damage_type"] == "physical"
+
+
+class TestHauntingGuiseMadness(_FightHarness):
+    """Haunting Guise's Madness: 2%/s in-combat amp, capped at 6%."""
+
+    def test_parsed_values_match_expected(self) -> None:
+        """Parser extracts the per-second ramp and its cap from cached JSON."""
+        from src.calculator.passive_parser import parse_item_effect
+        from src.calculator.data_fetcher import fetch_item_data
+
+        parsed = parse_item_effect("Haunting Guise", fetch_item_data())
+        assert parsed is not None
+        assert parsed["amp_per_second"] == pytest.approx(0.02)
+        assert parsed["amp_max"] == pytest.approx(0.06)
+
+    def test_amp_fraction_uses_the_riftmaker_ramp_model(self) -> None:
+        """Average ramp: half the per-second rate over the capped window."""
+        effects = resolve_damage_effects(_build("Haunting Guise"))
+        amp = {e.item_name: e for e in effects.damage_amplifiers}["Haunting Guise"]
+        assert amp.amp_fraction(2.0, 0.0) == pytest.approx(0.02)
+        # 6% cap is reached after 3 seconds; longer fights keep that average.
+        assert amp.amp_fraction(5.0, 0.0) == pytest.approx(0.03)
+
+    def test_fight_total_is_amplified_with_a_breakdown_row(self) -> None:
+        """A 5s auto fight gains the 3% averaged Madness multiplier."""
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            items=[{"name": "Haunting Guise"}],
+        )
+
+        row = result["breakdown"]["damage_amp_Haunting Guise"]
+        assert row["multiplier"] == pytest.approx(1.03)
+        assert row["total_damage"] > 0
