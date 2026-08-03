@@ -25,7 +25,7 @@ body {
   isolation: isolate;
   margin: 0;
   color: var(--ink);
-  background: #101516 url("/static/img/summoners-rift-bg.png") center / cover fixed no-repeat;
+  background: #101516 url("/static/img/rift-illustration-4k.webp") center / cover fixed no-repeat;
   font-family: var(--ui);
 }
 body::before {
@@ -44,8 +44,8 @@ body::after {
   inset: 58px 0 0;
   z-index: -1;
   pointer-events: none;
-  background: url("/static/img/summoners-rift-bg.png") center / cover fixed no-repeat;
-  opacity: .16;
+  background: url("/static/img/rift-illustration-4k.webp") center / cover fixed no-repeat;
+  opacity: .18;
   mix-blend-mode: screen;
 }
 button, input { font: inherit; }
@@ -431,6 +431,33 @@ td:last-child { color: var(--olive); }
 .damage-table .delta-b { color: var(--violet); }
 .damage-total td { border-top: 2px solid var(--line-strong); background: var(--paper-strong); }
 .damage-total td:not(:first-child) { font-size: 17px; }
+
+/* Impeccable control pass: make the action hierarchy obvious and keep every
+   compact control comfortable to hit without changing the calculator flow. */
+button:not(:disabled), select, input[type="range"] { transition: border-color .16s ease, background-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease; }
+button:not(:disabled):hover { border-color: var(--line-strong); }
+.text-button { min-height: 32px; padding: 7px 8px; border-radius: 2px; }
+.text-button:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.optimize-build { min-height: 38px; padding: 8px 14px; border-radius: 2px; background: var(--accent); color: var(--ink); box-shadow: 0 6px 18px rgba(197,18,11,.22); }
+.optimize-build:hover:not(:disabled) { background: #e0271d; border-color: #e0271d; transform: translateY(-1px); box-shadow: 0 9px 22px rgba(197,18,11,.3); }
+.level-control button, .target-level button, .ability-step button, .roster-rank button { min-width: 28px; min-height: 28px; }
+.level-control button:hover:not(:disabled), .target-level button:hover:not(:disabled), .ability-step button:hover:not(:disabled), .roster-rank button:hover:not(:disabled) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--paper-strong)); color: var(--ink); }
+.segmented button { min-height: 36px; }
+.segmented button:hover:not(.active) { border-color: var(--line-strong); background: color-mix(in srgb, var(--ink) 8%, var(--paper-strong)); }
+.role-picker button { min-height: 34px; }
+.role-picker button:hover:not(.active) { border-color: var(--line-strong); background: color-mix(in srgb, var(--ink) 8%, var(--paper-strong)); }
+.quest-toggle, .boots-toggle { min-height: 34px; }
+.quest-toggle:hover:not(:disabled), .boots-toggle:hover:not(:disabled) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--paper-strong)); }
+.add-button, .roster-optimize { min-height: 32px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 2px; }
+.add-button:hover:not(:disabled), .roster-optimize:hover:not(:disabled) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--paper-strong)); }
+.remove-target { min-width: 32px; min-height: 32px; }
+.remove-target:hover:not(:disabled), .picker-close:hover:not(:disabled) { border: 1px solid var(--line); background: var(--paper-strong); color: var(--ink); }
+.compare-toggle, .swap-bis { min-height: 36px; }
+.compare-toggle:hover:not(:disabled), .swap-bis:hover:not(:disabled) { border-style: solid; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.bis-trigger { min-width: 30px; min-height: 24px; }
+.bis-trigger:hover:not(:disabled), .bis-row > button:hover:not(:disabled) { background: var(--accent); color: var(--ink); }
+.picker-option { min-height: 64px; }
+.picker-option:hover:not(.locked) { transform: translateY(-1px); }
 
 @media (max-width: 960px) {
   .calculator-grid { grid-template-columns: 1fr; }

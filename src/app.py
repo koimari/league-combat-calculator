@@ -23,7 +23,16 @@ from urllib.parse import urlsplit
 # Ensure the src directory is on the path so calculator imports work
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from flask import Flask, Response, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 
 from calculator.data_fetcher import (
     fetch_champion_data,
@@ -846,6 +855,26 @@ def _local_dev_request() -> bool:
         return False
 
 
+def _prototype_local_request() -> bool:
+    """Keep the visual prototype available to loopback browsers only.
+
+    The prototype intentionally uses illustrative client-side data. It is a
+    useful design surface for local interaction review, but it must never be
+    mistaken for the calculator's production data path or be publicly served.
+    """
+    if not request.remote_addr:
+        return False
+    try:
+        peer_is_loopback = ipaddress.ip_address(request.remote_addr).is_loopback
+        host = urlsplit(f"//{request.host}").hostname
+        host_is_local = host == "localhost" or (
+            host is not None and ipaddress.ip_address(host).is_loopback
+        )
+        return peer_is_loopback and host_is_local
+    except ValueError:
+        return False
+
+
 def _https_icon(url: str) -> str:
     """Force https on icon URLs at the API boundary.
 
@@ -951,6 +980,24 @@ def index():
         input_limits=PUBLIC_INPUT_LIMITS,
         auth_user=session.get("username") if session else None,
     )
+
+
+@app.route("/prototype/manrope-blackwhite/")
+def manrope_prototype_index():
+    """Serve the local-only visual prototype without replacing the calculator."""
+    if not _prototype_local_request():
+        return Response(status=404)
+    root = Path(__file__).resolve().parent.parent / "prototypes" / "manrope-blackwhite"
+    return send_from_directory(root, "index.html")
+
+
+@app.route("/prototype/manrope-blackwhite/<path:asset_path>")
+def manrope_prototype_asset(asset_path: str):
+    """Serve prototype assets only to a loopback browser session."""
+    if not _prototype_local_request():
+        return Response(status=404)
+    root = Path(__file__).resolve().parent.parent / "prototypes" / "manrope-blackwhite"
+    return send_from_directory(root, asset_path)
 
 
 @app.route("/healthz")
