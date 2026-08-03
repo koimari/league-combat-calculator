@@ -11,11 +11,15 @@ browser-readable graph.  It is never presented as a reviewed event timeline.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from scripts.source_receipt import source_receipt, source_sha256
 
 ABILITY_SLOTS = ("P", "Q", "W", "E", "R")
 
@@ -364,19 +368,14 @@ def build_profiles(
         "schema_version": 1,
         "patch": patch,
         "champion_count": len(champions),
-        "source": {
-            "kind": "local Wiki cache",
-            # as_posix() so a Windows rebuild matches a macOS/Linux one.
-            "path": source.relative_to(source.parents[1]).as_posix(),
-            "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
-        },
+        "source": source_receipt(source),
         "champions": champions,
     }
     if auxiliary_source and auxiliary_kits:
         result["auxiliary_source"] = {
             "kind": "Axword local Meraki generated kit reference",
             "path": "local sibling: lol-strength-analysis/src/data/generated/merakiAbilityKits.ts",
-            "sha256": hashlib.sha256(auxiliary_source.read_bytes()).hexdigest(),
+            "sha256": source_sha256(auxiliary_source),
             "merged_damage_packets": auxiliary_merged,
         }
     return result

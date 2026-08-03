@@ -1,8 +1,8 @@
-import hashlib
 import json
 from pathlib import Path
 
 from scripts.build_ability_catalog import ABILITY_SLOTS, build_catalog
+from scripts.source_receipt import source_sha256
 
 ROOT = Path(__file__).resolve().parents[1]
 PATCH = "26.15"
@@ -48,8 +48,9 @@ def test_checked_in_catalog_is_not_stale():
 def test_checked_in_catalog_records_the_data_it_was_built_from():
     """Keep the provenance receipt honest — a wrong hash is worse than none.
 
-    Patch day rebuilds this artifact (scripts/patch_update.py), so the receipt
-    is expected to stay current rather than drift until someone notices.
+    Uses source_sha256 rather than a raw digest so this passes on Windows and
+    macOS/Linux alike: git rewrites line endings on checkout, so the same
+    tracked file has two different raw digests depending on the platform.
     """
     checked_in = json.loads(
         (ROOT / "static" / "ability-catalog.json").read_text(encoding="utf-8")
@@ -57,7 +58,6 @@ def test_checked_in_catalog_records_the_data_it_was_built_from():
     source = ROOT / "data" / "champions.json"
 
     assert checked_in["source"]["path"] == "data/champions.json"
-    assert (
-        checked_in["source"]["sha256"]
-        == hashlib.sha256(source.read_bytes()).hexdigest()
+    assert checked_in["source"]["sha256"] == source_sha256(
+        source
     ), f"provenance hash does not match data/champions.json — {REBUILD}"

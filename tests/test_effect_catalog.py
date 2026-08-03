@@ -1,8 +1,8 @@
-import hashlib
 import json
 from pathlib import Path
 
 from scripts.build_effect_catalog import build_catalog
+from scripts.source_receipt import source_sha256
 
 ROOT = Path(__file__).resolve().parents[1]
 PATCH = "26.15"
@@ -38,14 +38,17 @@ def test_checked_in_effect_catalog_is_not_stale():
 
 
 def test_checked_in_effect_catalog_records_the_data_it_was_built_from():
-    """Keep the provenance receipt honest; patch day rebuilds this artifact."""
+    """Keep the provenance receipt honest.
+
+    Uses source_sha256 so the digest is the same on Windows and macOS/Linux;
+    git rewrites line endings on checkout.
+    """
     checked_in = json.loads(
         (ROOT / "static" / "effect-catalog.json").read_text(encoding="utf-8")
     )
     source = ROOT / "data" / "items.json"
 
     assert checked_in["source"]["path"] == "data/items.json"
-    assert (
-        checked_in["source"]["sha256"]
-        == hashlib.sha256(source.read_bytes()).hexdigest()
+    assert checked_in["source"]["sha256"] == source_sha256(
+        source
     ), f"provenance hash does not match data/items.json — {REBUILD}"

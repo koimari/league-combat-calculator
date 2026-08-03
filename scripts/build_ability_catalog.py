@@ -10,10 +10,14 @@ champion registry.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from scripts.source_receipt import source_receipt
 
 ABILITY_SLOTS = ("P", "Q", "W", "E", "R")
 
@@ -118,12 +122,7 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
         "patch": patch,
         "champion_count": len(champions),
         "ability_slots": list(ABILITY_SLOTS),
-        "source": {
-            "kind": "local Wiki cache",
-            # as_posix() so a Windows rebuild matches a macOS/Linux one.
-            "path": source.relative_to(source.parents[1]).as_posix(),
-            "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
-        },
+        "source": source_receipt(source),
         "champions": champions,
     }
 

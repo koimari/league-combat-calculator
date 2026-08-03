@@ -10,11 +10,15 @@ roster BIS preview to reason about conditional value.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from scripts.source_receipt import source_receipt
 
 NUMBER_RE = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?%?")
 
@@ -119,12 +123,7 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
         "schema_version": 1,
         "patch": patch,
         "item_count": len(items),
-        "source": {
-            "kind": "local Wiki cache",
-            # as_posix() so a Windows rebuild matches a macOS/Linux one.
-            "path": source.relative_to(source.parents[1]).as_posix(),
-            "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
-        },
+        "source": source_receipt(source),
         "items": {str(item_id): effect for item_id, effect in sorted(items.items())},
     }
 
