@@ -1551,8 +1551,6 @@ function renderScenarioRail() {
   }
   const role = $("scenarioRole");
   if (role) role.textContent = model.role;
-  const championSelect = $("championSelect");
-  if (championSelect && state.attacker.champion) championSelect.value = state.attacker.champion;
   const roleSelect = $("roleSelect");
   if (roleSelect) roleSelect.value = state.attacker.role || "";
   const stateReadout = $("stateReadout");
@@ -1603,7 +1601,9 @@ function objectiveMetric(result, fallbackDamage = 0) {
 
 function objectiveFormat(value) {
   if (value == null) return "Unavailable";
-  return state.ui.objective === "kill" ? `${one(value)}s` : fmt(value);
+  if (state.ui.objective === "kill") return `${one(value)} s`;
+  const unit = { overall: "TDD", survival: "eHP", damage: "TDD", utility: "value" }[state.ui.objective] || "value";
+  return `${fmt(value)} ${unit}`;
 }
 
 function objectiveWinner(aValue, bValue) {
@@ -1614,12 +1614,14 @@ function objectiveWinner(aValue, bValue) {
 }
 
 function prototypeStats(stats) {
+  const champion = getChampion(state.attacker.champion);
+  const resourceLabel = champion?.resource || "Resource";
   const rows = [
-    ["HP", fmt(stats.hp)], ["Bonus HP", fmt(stats.bonusHp)], ["Total HP", fmt(stats.hp)], ["Resource", fmt(stats.mana)],
-    ["Attack damage", one(stats.ad)], ["Ability power", one(stats.ap)], ["Armor", one(stats.armor)], ["Magic resist", one(stats.mr)],
-    ["Attack speed", one(stats.attackSpeed)], ["Move speed", one(stats.moveSpeed)], ["Ability haste", one(stats.haste)], ["Crit chance", `${one(stats.crit)}%`],
+    ["HP", fmt(stats.hp), "HP"], ["Bonus HP", fmt(stats.bonusHp), "+HP"], ["Total HP", fmt(stats.hp), "MAX"], [resourceLabel, fmt(stats.mana), resourceLabel.slice(0, 3).toUpperCase()],
+    ["Attack damage", one(stats.ad), "AD"], ["Ability power", one(stats.ap), "AP"], ["Armor", one(stats.armor), "AR"], ["Magic resist", one(stats.mr), "MR"],
+    ["Attack speed", one(stats.attackSpeed), "AS"], ["Move speed", one(stats.moveSpeed), "MS"], ["Ability haste", one(stats.haste), "AH"], ["Crit chance", `${one(stats.crit)}%`, "CR"],
   ];
-  return rows.map(([label, value]) => `<div class="stat"><span>${label}</span><strong>${value}</strong></div>`).join("");
+  return rows.map(([label, value, icon]) => `<div class="stat"><span><i class="stat-icon" aria-hidden="true">${escapeHtml(icon)}</i>${escapeHtml(label)}</span><strong>${value}</strong></div>`).join("");
 }
 
 function prototypeAbilityCards(champion) {
@@ -1633,7 +1635,15 @@ function prototypeAbilityCards(champion) {
 
 function prototypeItemSlot(id, path, side) {
   const item = getItem(id);
-  return `<button class="slot ${item ? "" : "empty-slot"}" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}">${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>`;
+  return `<button class="slot ${item ? "" : "empty-slot"}" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}" title="${item ? escapeHtml(itemStatsLine(item)) : "Add item"}">${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>`;
+}
+
+function prototypeRosterItemSlot(root, index, loadout, slot) {
+  const isBoots = slot === "boots";
+  const id = isBoots ? loadout.boots : loadout.items[slot];
+  const path = isBoots ? `${root}.${index}.boots` : `${root}.${index}.items.${slot}`;
+  const item = getItem(id);
+  return `<button class="roster-item-slot ${item ? "" : "is-empty"}" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}" title="${item ? escapeHtml(itemStatsLine(item)) : "Add item"}">${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" />` : "+"}</button>`;
 }
 
 function prototypeBuildSlots(side) {
@@ -1674,8 +1684,11 @@ function renderPrototypeChampion() {
     portraitImage.alt = "";
   }
   document.querySelector(".champion-identity")?.classList.toggle("is-empty", !champion);
+  const roleSelect = $("roleSelect");
+  if (roleSelect) roleSelect.value = state.attacker.role || "";
   $("levelInput").value = state.attacker.level;
   $("levelInput").max = attackerLevelCap();
+  $("levelOutput").textContent = state.attacker.level;
   $("questToggle").textContent = state.attacker.roleQuestComplete ? "Quest on" : "Quest off";
   $("questToggle").setAttribute("aria-pressed", String(state.attacker.roleQuestComplete));
   $("bootsToggle").textContent = includeBootsForSide("A") ? "Boots on" : "Boots off";
@@ -1691,17 +1704,16 @@ function renderPrototypeRoster(kind) {
   container.innerHTML = entries.map((loadout, index) => {
     const champion = getChampion(loadout.champion);
     const label = kind === "targets" ? "enemy" : "ally";
-    return `<article class="roster-card"><button class="roster-pick" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant${loadout.role ? ` · ${escapeHtml(loadout.role)}` : ""}</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button></article>`;
+    const roleOptions = [["", "Choose role"], ["top", "Top"], ["jungle", "Jungle"], ["mid", "Mid"], ["bottom", "Bottom"], ["support", "Support"]];
+    const itemSlots = Array.from({ length: 5 }, (_, slot) => prototypeRosterItemSlot(root, index, loadout, slot)).join("");
+    const bootsSlot = loadout.includeBoots !== false ? prototypeRosterItemSlot(root, index, loadout, "boots") : "";
+    return `<article class="roster-card"><button class="roster-pick" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><label class="roster-role-control"><span>Role</span><select data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-item-strip">${itemSlots}${bootsSlot}</div></div></article>`;
   }).join("") || `<p class="roster-empty">Add ${kind === "targets" ? "a target" : "an ally"} to the coupled timeline.</p>`;
   $(kind === "targets" ? "enemyCount" : "allyCount").textContent = entries.length;
 }
 
 function renderPrototypeBuilder() {
   const champion = getChampion(state.attacker.champion);
-  const championSelect = $("championSelect");
-  if (championSelect && DATA?.champions?.length && !championSelect.options.length) {
-    championSelect.innerHTML = `<option value="">Choose champion</option>${DATA.champions.map((entry) => `<option value="${escapeHtml(entry.name)}">${escapeHtml(entry.name)}</option>`).join("")}`;
-  }
   renderPrototypeChampion();
   $("abilityRow").innerHTML = champion ? prototypeAbilityCards(champion) : `<p class="roster-empty">Choose a champion to load its sourced ability package.</p>`;
   $("slotsA").innerHTML = prototypeBuildSlots("a");
@@ -1722,9 +1734,9 @@ function renderPrototypeBuilder() {
   $("uptimeRange").value = Math.round(state.fight.aaUptime * 100);
 }
 
-function prototypeMetricRow(label, a, b, lower = false) {
+function prototypeMetricRow(label, a, b, lower = false, unit = "value") {
   const winner = objectiveWinner(a, b).winner;
-  const format = (value) => value == null ? "—" : lower ? `${one(value)}s` : fmt(value);
+  const format = (value) => value == null ? "—" : lower ? `${one(value)} s` : `${fmt(value)} ${unit}`;
   return `<div class="metric-row"><span>${label}</span><strong class="metric-a">${format(a)}</strong><strong class="metric-b">${format(b)}</strong><b>${winner === "A" || winner === "B" ? winner : "—"}</b></div>`;
 }
 
@@ -1750,19 +1762,21 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   $("scoreA").textContent = objectiveFormat(aValue);
   $("scoreB").textContent = objectiveFormat(bValue);
   $("metricList").innerHTML = [
-    prototypeMetricRow("Overall", aValues.overall, bValues.overall),
+    prototypeMetricRow("Overall", aValues.overall, bValues.overall, false, "TDD"),
     prototypeMetricRow("Kill time", aValues.kill, bValues.kill, true),
-    prototypeMetricRow("Survival", aValues.survival, bValues.survival),
-    prototypeMetricRow("Damage", aValues.damage, bValues.damage),
-    prototypeMetricRow("Utility", aValues.utility, bValues.utility),
+    prototypeMetricRow("Survival", aValues.survival, bValues.survival, false, "eHP"),
+    prototypeMetricRow("Damage", aValues.damage, bValues.damage, false, "TDD"),
+    prototypeMetricRow("Utility", aValues.utility, bValues.utility, false, "value"),
   ].join("");
   const participants = prototypeParticipants(aResult);
   $("healthRows").innerHTML = participants.map((person) => {
     const survival = person.survival || {};
-    const max = Number(survival.max_health || 0);
-    const health = Math.max(0, Number(survival.health_remaining ?? survival.current_health ?? max));
+    const max = Number(survival.max_health || survival.effective_health || person.stats?.health || person.health || 0);
+    const explicitHealth = survival.health_remaining ?? survival.current_health;
+    const incoming = Number(survival.health_damage ?? survival.incoming_damage ?? 0);
+    const health = explicitHealth != null ? Math.max(0, Number(explicitHealth)) : Math.max(0, max - incoming);
     const pct = max > 0 ? Math.max(0, Math.min(100, health / max * 100)) : 0;
-    const status = survival.survived_window === false ? "defeated" : `${Math.round(pct)}%`;
+    const status = survival.survived_window === false ? "defeated" : max > 0 ? `${Math.round(pct)}%` : incoming > 0 ? `-${fmt(incoming)} dmg` : "alive";
     return `<div class="health-row"><div class="health-person"><img src="${championImage(person.champion)}" alt="" /><span><strong>${escapeHtml(person.champion || person.participant_id || "Participant")}</strong><small>${escapeHtml(person.team || "participant")}</small></span></div><div class="health-track"><span style="width:${pct}%"></span></div><b>${status}</b></div>`;
   }).join("") || `<p class="roster-empty">Participant health appears after the reviewed engine returns.</p>`;
   const events = (aResult?.cast_timeline || []).map((event) => `<span style="left:${Math.min(100, Number(event.time || 0) / Math.max(1, state.fight.duration) * 100)}%">${escapeHtml(event.slot || "·")}</span>`).join("");
@@ -2787,6 +2801,13 @@ function updateDamagePackage() {
 }
 
 document.addEventListener("click", (event) => {
+  const levelButton = event.target.closest("[data-level-delta]");
+  if (levelButton) {
+    state.attacker.level = Math.max(1, Math.min(attackerLevelCap(), state.attacker.level + Number(levelButton.dataset.levelDelta)));
+    syncAbilityInputsToLevel();
+    invalidateOptimization();
+    return render();
+  }
   const objectiveButton = event.target.closest("[data-objective]");
   if (objectiveButton) {
     state.ui.objective = OBJECTIVES[objectiveButton.dataset.objective] ? objectiveButton.dataset.objective : "overall";
@@ -2908,15 +2929,15 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     return render();
   }
-  const levelButton = event.target.closest("[data-level]");
-  if (levelButton) {
-    const rosterLevel = levelButton.dataset.level.match(/^(targets|allies)\.(\d+)\.level$/);
+  const rosterLevelButton = event.target.closest("[data-level]");
+  if (rosterLevelButton) {
+    const rosterLevel = rosterLevelButton.dataset.level.match(/^(targets|allies)\.(\d+)\.level$/);
     const rosterLoadout = rosterLevel ? state[rosterLevel[1]]?.[Number(rosterLevel[2])] : null;
-    const cap = levelButton.dataset.level === "attacker.level"
+    const cap = rosterLevelButton.dataset.level === "attacker.level"
       ? attackerLevelCap()
       : (rosterLoadout?.role === "top" && rosterLoadout.roleQuestComplete ? 20 : 18);
-    setPath(levelButton.dataset.level, Math.max(1, Math.min(cap, Number(pathValue(levelButton.dataset.level)) + Number(levelButton.dataset.delta))));
-    if (levelButton.dataset.level === "attacker.level") syncAbilityInputsToLevel();
+    setPath(rosterLevelButton.dataset.level, Math.max(1, Math.min(cap, Number(pathValue(rosterLevelButton.dataset.level)) + Number(rosterLevelButton.dataset.delta))));
+    if (rosterLevelButton.dataset.level === "attacker.level") syncAbilityInputsToLevel();
     return render();
   }
   const rosterRankButton = event.target.closest("[data-roster-rank]");
@@ -3079,13 +3100,6 @@ document.addEventListener("input", (event) => {
 });
 
 document.addEventListener("change", (event) => {
-  const championSelect = event.target.closest("#championSelect");
-  if (championSelect) {
-    state.attacker.champion = championSelect.value || null;
-    resetAbilityInputs();
-    invalidateOptimization();
-    return render();
-  }
   const roleSelect = event.target.closest("#roleSelect");
   if (roleSelect) {
     state.attacker.role = roleSelect.value || null;
