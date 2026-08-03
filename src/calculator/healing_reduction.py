@@ -16,6 +16,11 @@ def _trigger_damage_types(text: str) -> frozenset[str]:
     lowered = text.lower()
     if "grievous wounds" not in lowered or "inflict" not in lowered:
         return frozenset()
+    if "when struck" in lowered:
+        # Reactive anti-heal (Bramble Vest's Thorns) wounds whoever strikes
+        # the wearer, not the wearer's own targets — the coupled timeline
+        # applies it from incoming attack events instead.
+        return frozenset()
     damage_types: set[str] = set()
     if "physical damage" in lowered:
         damage_types.add("physical")

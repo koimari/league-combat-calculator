@@ -7,7 +7,11 @@ from src.calculator.pipeline import FightParams, run_fight
 from src.app import _role_scoped_bis_candidates, app
 from src.calculator.item_coverage import optimizer_supported_items
 from src.calculator.optimizer import get_eligible_legendaries
-from src.calculator.participant_timeline import Combatant, _simulate_survival
+from src.calculator.participant_timeline import (
+    Combatant,
+    _schedule_thorns_events,
+    _simulate_survival,
+)
 
 
 def _timed_params() -> FightParams:
@@ -680,3 +684,162 @@ def test_simulator_applies_sourced_grievous_wounds_to_healing_in_event_order():
     assert result["target"]["healing_received"] == 50.0
     assert result["target"]["healing_reduced"] == 40.0
     assert result["target"]["healing_reduction_until"] == 3.0
+
+
+def _thorns_combatant(
+    participant_id: str,
+    team: str,
+    *,
+    health: float = 100.0,
+    magic_resistance: float = 0.0,
+    items: tuple = (),
+) -> Combatant:
+    defenses = SimpleNamespace(
+        magic_shield=0.0,
+        physical_shield=0.0,
+        general_shield=0.0,
+    )
+    return Combatant(
+        participant_id=participant_id,
+        team=team,
+        champion_data={"name": participant_id},
+        level=1,
+        items=items,
+        stats={"health": health, "magic_resistance": magic_resistance},
+        defenses=defenses,
+    )
+
+
+def _auto_strike(target_id, attacker_id, *, time, damage, event_id):
+    return {
+        "time": time,
+        "damage": damage,
+        "damage_type": "physical",
+        "source_key": "auto_attacks",
+        "attacker": attacker_id,
+        "target": target_id,
+        "sequence": 0,
+        "_event_id": event_id,
+    }
+
+
+def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
+    """A Bramble wearer returns mitigated magic damage per basic attack and
+    Grievous-Wounds the striker's later healing."""
+    striker = _thorns_combatant("source", "main", magic_resistance=100.0)
+    wearer = _thorns_combatant(
+        "target",
+        "enemy",
+        health=200.0,
+        items=(get_item_by_name("Bramble Vest"),),
+    )
+    incoming = {
+        "target": [_auto_strike("target", "source", time=0.0, damage=50.0,
+                                event_id="swing0")],
+    }
+    outgoing = {"source": list(incoming["target"]), "target": []}
+    _schedule_thorns_events([striker, wearer], incoming, outgoing)
+
+    thorns_events = [
+        event
+        for event in incoming.get("source", [])
+        if event.get("source_key") == "thorns_Bramble Vest"
+    ]
+    assert len(thorns_events) == 1
+    assert thorns_events[0]["time"] == 0.0
+    assert thorns_events[0]["damage_type"] == "magic"
+    assert thorns_events[0] in outgoing["target"]
+
+    result = _simulate_survival(
+        [striker, wearer],
+        incoming,
+        {
+            "source": [
+                {
+                    "time": 1.0,
+                    "amount": 20.0,
+                    "attacker": "source",
+                    "source": "striker heal",
+                }
+            ]
+        },
+        {},
+        10.0,
+    )
+    # 10 magic vs 100 MR = 5 damage back to the striker.
+    assert result["source"]["damage_taken"] == 5.0
+    # The 20 heal is wounded to 12; only 5 health is missing, so 5 lands.
+    assert result["source"]["healing_received"] == 5.0
+    assert result["source"]["healing_reduced"] == 8.0
+    assert result["source"]["healing_reduction_until"] == 3.0
+    assert any(
+        "Bramble Vest" in source
+        for source in result["source"]["healing_reduction_sources"]
+    )
+    assert result["target"]["damage_taken"] == 50.0
+
+
+def test_thorns_from_a_skipped_strike_never_fires():
+    """A strike that lands after the wearer died is skipped, and its thorns
+    must not survive as an unconnected retaliation tick; the killing blow's
+    thorns still fires (the wearer was alive when struck)."""
+    striker = _thorns_combatant("source", "main", magic_resistance=100.0)
+    wearer = _thorns_combatant(
+        "target",
+        "enemy",
+        health=50.0,
+        items=(get_item_by_name("Bramble Vest"),),
+    )
+    incoming = {
+        "target": [
+            _auto_strike("target", "source", time=0.0, damage=60.0,
+                         event_id="kill"),
+            _auto_strike("target", "source", time=1.0, damage=40.0,
+                         event_id="post-death"),
+        ],
+    }
+    outgoing = {"source": list(incoming["target"]), "target": []}
+    _schedule_thorns_events([striker, wearer], incoming, outgoing)
+
+    result = _simulate_survival([striker, wearer], incoming, {}, {}, 10.0)
+    assert result["target"]["survived_window"] is False
+    # Only the killing blow's thorns lands: 10 magic vs 100 MR = 5.
+    assert result["source"]["damage_taken"] == 5.0
+
+
+def test_bramble_vest_retaliation_flows_through_the_calculate_pipeline():
+    """Main with Bramble Vest: enemy autos generate thorns events attributed
+    to main, and the enemy is Grievous-Wounded."""
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Bramble Vest"],
+            "fight_mode": "time_based",
+            "fight_duration": 5,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+            "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    thorns_events = [
+        event
+        for event in combat["events"]
+        if event["source"] == "thorns_Bramble Vest"
+    ]
+    assert thorns_events
+    assert all(event["attacker"] == "main" for event in thorns_events)
+    assert all(event["target"] == "enemy:Aatrox" for event in thorns_events)
+    enemy = next(
+        participant
+        for participant in combat["participants"]
+        if participant["participant_id"] == "enemy:Aatrox"
+    )
+    assert any(
+        "Bramble Vest" in source
+        for source in enemy["survival"]["healing_reduction_sources"]
+    )

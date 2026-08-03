@@ -678,6 +678,33 @@ def _parse_proc_flat(
     return result
 
 
+def _parse_thorns(text: str) -> dict[str, Any]:
+    """Parse a reactive strike-back passive (Bramble Vest's Thorns).
+
+    Markup: ``When struck by a basic attack [[on-hit]], deal
+    {{as|10 magic damage}} to the attacker and ... inflict them with
+    {{tip|Grievous Wounds}} for 3 seconds.``
+    """
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {
+        "damage_type": "magic" if "magic damage" in text.lower() else "physical",
+    }
+
+    base_match = re.search(r"[Dd]eal\s+\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
+    if base_match:
+        result["base"] = float(base_match.group(1))
+
+    duration_match = re.search(
+        r"Grievous\s+Wounds\}?\}?\s+for\s+(\d+(?:\.\d+)?)\s+seconds",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if duration_match:
+        result["grievous_duration"] = float(duration_match.group(1))
+
+    return result
+
+
 def _parse_bullseye(text: str) -> dict[str, Any]:
     """Parse Scout's Slingshot's Bullseye proc.
 
@@ -1968,6 +1995,8 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Unending Despair": [("passive", "Anguish", _parse_unending_despair, {})],
     # ── Conditional AS ──
     "Yun Tal Wildarrows": [("passive", "Flurry", _parse_yun_tal_flurry, {})],
+    # ── Reactive strike-back ──
+    "Bramble Vest": [("passive", "Thorns", _parse_thorns, {})],
     # ── Single-proc / Special ──
     "Dead Man's Plate": [("passive", "Shipwrecker", _parse_dead_mans_plate, {})],
     "Heartsteel": [("passive", "Colossal Consumption", _parse_heartsteel, {})],

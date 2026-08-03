@@ -36,7 +36,8 @@ _BLOCKED_REASONS: dict[str, str] = {
     "Runaan's Hurricane": "Wind's Fury multi-target bolts and copied on-hits are not modelled.",
     "Swiftmarch": "Noxian Fervor's movement-speed-scaled adaptive force is not modelled.",
     "Thornmail": (
-        "Thorns' reactive magic damage requires incoming attack events that are not modelled."
+        "Thornmail's armor-scaled Thorns values are not yet registered; the "
+        "reactive machinery models only Bramble Vest so far."
     ),
     "Umbral Glaive": "Nightstalker's first-attack true damage is not modelled.",
     "Warmog's Armor": "Warmog's Vitality bonus item-health multiplier is not modelled.",
@@ -108,6 +109,10 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
 # package.  Any equipped mechanic that changes their incoming damage, health,
 # shields, or combat healing must either be represented here or stop the run.
 _TARGET_MODELED_REASONS: dict[str, str] = {
+    "Bramble Vest": (
+        "Thorns' reactive damage and Grievous Wounds are scheduled from the "
+        "attacker's modeled basic-attack events in the coupled timeline."
+    ),
     "Kaenic Rookern": "Magebane's ready maximum-health magic shield is modelled.",
     "Spirit Visage": "Boundless Vitality amplifies modelled starting shields.",
     "Warmog's Armor": (
@@ -203,7 +208,10 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Seeker's Armguard": "Time Stop's stasis is not modelled.",
     "Spectre's Cowl": "Incorporeal's post-damage regeneration is not modelled.",
     "Sundered Sky": "Lightshield Strike's target-side healing is not modelled.",
-    "Thornmail": "Thorns' reactive damage and attacker survival are not modelled.",
+    "Thornmail": (
+        "Thornmail's armor-scaled Thorns values are not yet registered; the "
+        "reactive machinery models only Bramble Vest so far."
+    ),
     "Unending Despair": "Anguish's periodic combat healing is not modelled.",
     "Verdant Barrier": (
         "Annul's first-hostile-ability spell shield is not modelled: the Wiki "

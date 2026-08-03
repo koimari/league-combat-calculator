@@ -590,6 +590,16 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "lethality_ratio_ranged": 0.75,
         "cooldown": 20.0,
     },
+    # ── Reactive strike-back (consumed by the coupled timeline) ───────────
+    "Bramble Vest": {
+        "type": "thorns",
+        "damage_type": "magic",
+        # Thorns: 10 magic damage to each basic-attack striker, who is
+        # also wounded for 3 seconds. Fires only from modeled incoming
+        # attack events — never assumed in a one-attacker fight.
+        "base": 10.0,
+        "grievous_duration": 3.0,
+    },
     # ── Resistance Reduction ──────────────────────────────────────────────
     "Black Cleaver": {
         "type": "armor_reduction",
@@ -2098,6 +2108,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "target_mitigation",
         "target_threshold_health",
         "target_threshold_shield",
+        "thorns",
         "ult_attack_speed_buff",
         "ult_empowered_autos",
         "ult_proc",
@@ -2497,6 +2508,49 @@ def shield_reduction_fraction(items: list[dict[str, Any]], *, is_melee: bool) ->
         return 0.0
     key = "shield_reduction_melee" if is_melee else "shield_reduction_ranged"
     return float(required_effect_value("Serpent's Fang", key))
+
+
+@dataclass(frozen=True, slots=True)
+class ThornsEffect:
+    """One reactive strike-back packet consumed by the coupled timeline.
+
+    The wearer deals ``damage`` (pre-mitigation) to each champion whose
+    basic attack strikes them and wounds that attacker for
+    ``grievous_duration`` seconds. The Grievous Wounds strength itself is
+    the patch-wide rule in :mod:`healing_reduction`.
+    """
+
+    item_name: str
+    damage_type: DamageType
+    damage: float
+    grievous_duration: float
+
+
+def thorns_effects(items: Sequence[Mapping[str, Any]]) -> tuple[ThornsEffect, ...]:
+    """Compile the build's reactive Thorns packets (Bramble Vest).
+
+    Args:
+        items: The wearer's item data dicts.
+
+    Returns:
+        One packet per equipped thorns item; empty without one.
+    """
+    compiled: list[ThornsEffect] = []
+    for item in items:
+        item_name = str(item.get("name", ""))
+        values = ITEM_EFFECTS.get(item_name)
+        if not values or values.get("type") != "thorns":
+            continue
+        required = _RequiredValues(item_name, values)
+        compiled.append(
+            ThornsEffect(
+                item_name=item_name,
+                damage_type=required.value("damage_type"),
+                damage=required.number("base"),
+                grievous_duration=required.number("grievous_duration"),
+            )
+        )
+    return tuple(compiled)
 
 
 def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
