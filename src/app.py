@@ -754,12 +754,18 @@ def _comparison_curve(
                         enemy.defenses.threshold_health_duration
                     ),
                 )
+                target_result = run_fight(champion_data, level, items, target_params)
+                # Every curve point is a timed fight, so it needs the same
+                # certified-timeline gate as a timed primary result — even
+                # when the request itself was one-rotation.
+                require_certified_target_timeline(
+                    list(enemy.item_data),
+                    target_result.get("timeline_coverage", {}),
+                )
                 target_results.append(
                     {
                         "target": _public_loadout_summary(enemy),
-                        "result": _serialize_fight_result(
-                            run_fight(champion_data, level, items, target_params)
-                        ),
+                        "result": _serialize_fight_result(target_result),
                     }
                 )
             result = _aggregate_public_results(
@@ -796,9 +802,19 @@ def _add_comparison_curve(
             "reason": reason,
         }
         return
-    response["comparison_curve"] = _comparison_curve(
-        champion_data, level, items, fight_params, enemies
-    )
+    try:
+        response["comparison_curve"] = _comparison_curve(
+            champion_data, level, items, fight_params, enemies
+        )
+    except ValueError as exc:
+        # The curve is an optional add-on: withhold it with the gate's own
+        # explanation instead of failing a valid primary result.
+        response["comparison_curve"] = []
+        response["comparison_curve_status"] = {
+            "available": False,
+            "reason": str(exc),
+        }
+        return
     response["comparison_curve_status"] = {"available": True}
 
 
@@ -1658,7 +1674,9 @@ def api_bis():
                 # stay alive longer, then maximize the modeled eHP package,
                 # with outgoing threat as the final tie-break.
                 survival = focus["survival"]
-                duration = float(combat.get("duration", fight_params.fight_duration_seconds))
+                duration = float(
+                    combat.get("duration", fight_params.fight_duration_seconds)
+                )
                 death_time = survival.get("death_time")
                 survival_time = duration if death_time is None else float(death_time)
                 threat = float(objective["focus_damage_before_death"])
@@ -1757,7 +1775,8 @@ def api_bis():
                         if target_coverage_filtered
                         else "BIS is withheld: every candidate still has partial or uncertified event order."
                     )
-                ) + (f" {target_coverage_note}" if target_coverage_note else ""),
+                )
+                + (f" {target_coverage_note}" if target_coverage_note else ""),
             },
             "target_coverage_filtered": len(target_coverage_filtered),
             "target_coverage_note": target_coverage_note,

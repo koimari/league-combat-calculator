@@ -400,6 +400,64 @@ def test_calculate_withholds_uncertified_timed_fight_against_lifeline():
     assert "not event-certified" in error
 
 
+def test_crossover_curve_fails_closed_for_uncertified_lifeline_enemy():
+    """The curve's timed windows need the same certified-timeline gate.
+
+    A one-rotation request keeps its primary result, but the crossover
+    curve silently re-runs the fight in timed mode; against a Lifeline
+    enemy that pricing needs a certified event order.
+    """
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 18,
+            "items": ["Muramana"],
+            "include_crossover": True,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 18,
+                    "items": ["Sterak's Gage"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["total_damage"] > 0
+    assert data["comparison_curve"] == []
+    status = data["comparison_curve_status"]
+    assert status["available"] is False
+    assert "Sterak's Gage" in status["reason"]
+    assert "not event-certified" in status["reason"]
+
+
+def test_crossover_curve_stays_available_for_certified_lifeline_enemy():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Liandry's Torment", "Shadowflame", "Rabadon's Deathcap"],
+            "include_crossover": True,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 18,
+                    "items": ["Sterak's Gage"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["comparison_curve_status"] == {"available": True}
+    assert len(data["comparison_curve"]) == 6
+
+
 def test_calculate_can_sum_one_damage_package_across_enemy_roster():
     client = app_module.app.test_client()
     payload = {
