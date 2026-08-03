@@ -275,20 +275,20 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .slot-locked { cursor: default; opacity: .55; }
 .result-note { display: flex; gap: 8px; margin-top: 12px; color: rgba(255,255,255,.62); font: 9px/1.4 var(--mono); }
 .note-mark { display: grid; place-items: center; width: 14px; height: 14px; border: 1px solid rgba(255,255,255,.5); border-radius: 50%; }
-.picker { width: min(760px, calc(100% - 26px)); height: min(680px, calc(100% - 42px)); max-width: none; max-height: none; padding: 0; border: 1px solid #10201b; background: #f6f2df; color: #10201b; }
+.picker { width: min(620px, calc(100% - 30px)); height: min(680px, calc(100% - 42px)); max-width: none; max-height: none; padding: 0; border: 1px solid #10201b; background: #f6f2df; color: #10201b; }
 .picker::backdrop { background: rgba(7,26,21,.64); backdrop-filter: blur(3px); }
 .picker-shell { display: grid; grid-template-rows: auto auto 1fr; height: 100%; }
 .picker header { display: flex; align-items: start; justify-content: space-between; padding: 18px 20px 13px; border-bottom: 1px solid rgba(22,72,58,.24); }
-.picker h2 { margin: 0; font-size: 25px; }
+.picker h2 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.07em; }
 .picker-close { width: 32px; height: 32px; border: 0; background: transparent; color: #10201b; cursor: pointer; font-size: 26px; line-height: 1; }
 .search-box { display: flex; align-items: center; gap: 9px; margin: 12px 14px; padding: 0 11px; border: 1px solid rgba(22,72,58,.38); background: rgba(224,239,217,.62); color: #10201b; }
 .search-box input { width: 100%; height: 38px; border: 0; outline: 0; background: transparent; color: #10201b; font: 500 16px/1 var(--font); }
 .search-box input::placeholder { color: #23443a; opacity: 1; }
-.picker-grid { overflow: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-content: start; gap: 1px; padding: 1px 14px 18px; }
-.picker-option { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 9px; align-items: center; min-width: 0; min-height: 58px; padding: 7px; border: 1px solid transparent; background: transparent; color: #10201b; cursor: pointer; text-align: left; }
+.picker-grid { overflow: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 6px; padding: 1px 14px 18px; }
+.picker-option { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; align-items: center; min-width: 0; min-height: 72px; padding: 7px; border: 1px solid rgba(22,72,58,.24); background: rgba(255,253,243,.72); color: #10201b; cursor: pointer; text-align: left; }
 .picker-option > span { display: block; min-width: 0; overflow: hidden; }
 .picker-option:hover { border-color: rgba(22,72,58,.38); background: rgba(224,239,217,.62); }
-.picker-option img, .picker-option .empty-icon { width: 42px; height: 42px; border: 1px solid rgba(22,72,58,.24); object-fit: cover; }
+.picker-option img, .picker-option .empty-icon { width: 48px; height: 48px; border: 1px solid rgba(22,72,58,.24); object-fit: cover; }
 .picker-option strong, .picker-option small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .picker-option strong { display: block; color: #10201b; font: 800 10px/1.2 var(--font); }
 .picker-option small { display: block; margin-top: 4px; color: #23443a; font: 500 8px/1.2 var(--mono); }
@@ -303,70 +303,31 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
   .picker-grid { grid-template-columns: 1fr; }
 }
 
-/* Impeccable threefold pass: the live map is atmospheric context, not a text
-   surface. Give the operate path a stable paper reading plane, make the
-   scenario rail explicit, and make the empty champion state intentional. */
-.map-wash { filter: saturate(.82) contrast(1.02) brightness(.72); }
-.topbar { background: rgba(246,242,223,.9); }
-.app-shell { padding-top: 26px; }
-.scenario-rail {
-  grid-template-areas: "scenario state objective" "summary summary summary";
-  grid-template-rows: auto auto;
-  min-height: 0;
-  gap: 14px 22px;
-  padding: 18px 22px 20px;
-  border: 1px solid rgba(14,49,40,.42);
-  background: rgba(246,242,223,.9);
+/* Impeccable prototype parity pass: preserve the prototype's open map
+   composition, but lift metadata that sits directly on the illustration into
+   a high-contrast white treatment. */
+.scenario-summary { display: none; }
+.scenario-rail > .micro-label,
+.scenario-rail > .scenario-block > .micro-label,
+.scenario-rail > .state-block > .micro-label,
+.scenario-rail > .objective-block > .micro-label,
+.section-heading > .micro-label,
+.section-heading > .section-note {
+  color: #fff;
+  font-weight: 800;
+  text-shadow: 0 1px 4px rgba(0,0,0,.65);
 }
-.scenario-rail > .scenario-block:first-child { grid-area: scenario; }
-.scenario-rail > .state-block { grid-area: state; }
-.scenario-rail > .objective-block { grid-area: objective; }
-.scenario-summary {
-  grid-area: summary;
-  max-width: 68ch;
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.45;
+.scenario-rail .state-button:not(.active),
+.scenario-rail .objective:not(.active) {
+  border-color: rgba(255,255,255,.7);
+  color: #fff;
+  font-weight: 800;
+  text-shadow: 0 1px 4px rgba(0,0,0,.65);
 }
-.content-grid { margin-top: 20px; }
-.section-rule {
-  margin-bottom: 12px;
-  padding: 20px 22px 26px;
-  border: 1px solid rgba(22,72,58,.24);
-  background: rgba(246,242,223,.86);
-}
-.section-rule + .section-rule { padding-top: 20px; }
-.champion-card { background: rgba(255,253,244,.96); }
 .champion-identity > div { min-width: 0; }
 .champion-identity.is-empty h1 { max-width: 12ch; font-size: clamp(28px, 2.8vw, 36px); }
 .champion-identity.is-empty p { max-width: 25ch; }
 .champion-portrait-button.is-empty { position: relative; display: grid; place-items: center; border: 1px dashed var(--line-dark); background: var(--paper-deep); color: var(--ink-soft); }
 .champion-portrait-button.is-empty::before { content: "+"; font-size: 34px; font-weight: 500; line-height: 1; }
 .matrix-placeholder { display: grid; place-items: center; min-height: 100%; padding: 28px; color: var(--ink-soft); font-size: 12px; font-weight: 700; line-height: 1.45; text-align: center; }
-.ability-row > .roster-empty { border: 1px dashed var(--line-dark); background: rgba(255,253,244,.72); }
-.roster-empty { color: var(--ink-soft); font-size: 11px; line-height: 1.45; }
-.build-card, .roster-group, .range-control { background: rgba(255,253,244,.94); }
-.build-b { background: rgba(224,241,229,.78); }
-.select-wrap select, .state-button, .objective { background-color: rgba(255,253,244,.92); }
-.result-note { padding: 10px 12px; background: rgba(246,242,223,.9); }
-
-@media (max-width: 800px) {
-  .scenario-rail {
-    grid-template-areas: "scenario state" "objective objective" "summary summary";
-  }
-  .section-rule { padding-inline: 16px; }
-}
-
-@media (max-width: 560px) {
-  .scenario-rail {
-    grid-template-areas: "scenario" "state" "objective" "summary";
-    padding: 16px;
-  }
-  .scenario-block, .state-block { align-items: center; flex-wrap: wrap; }
-  .objective-block { display: grid; }
-  .objective-list { width: 100%; }
-  .section-rule { padding: 16px 14px 20px; }
-  .champion-identity.is-empty h1 { font-size: 30px; }
-}
+.result-note { color: #fff; font-weight: 800; text-shadow: 0 1px 4px rgba(0,0,0,.65); }
