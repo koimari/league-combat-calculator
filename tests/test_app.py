@@ -864,6 +864,14 @@ def test_picker_rendering_never_puts_api_strings_into_inner_html():
     assert "createPickerContent" in source
 
 
+def test_frontend_uses_level_derived_ranks_for_nonstandard_kits():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert '"Elise", "Jayce", "Karma", "Nidalee", "Udyr"' in source
+    assert "if (usesLevelDerivedRanks(state.attacker.champion)) return null;" in source
+    assert "ability_ranks: usesLevelDerivedRanks(target.champion)" in source
+
+
 @pytest.mark.parametrize(
     "url",
     [
