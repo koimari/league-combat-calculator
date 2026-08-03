@@ -101,6 +101,25 @@ def _heal_from_damage(
     )
 
 
+# Every champion with a sourced self-heal rule in ``derive_self_healing``'s
+# dispatch below.  The scoring fast path reads this to know a fight's event
+# ledger feeds no heal author at all; a rule branch added without extending
+# this set would be silently skipped, so the pairing is pinned by a source
+# test in tests/test_participant_timeline.py.
+HEALING_RULE_CHAMPIONS = frozenset(
+    {
+        "Aatrox",
+        "Ambessa",
+        "Warwick",
+        "Dr. Mundo",
+        "Irelia",
+        "Renekton",
+        "Soraka",
+        "Briar",
+    }
+)
+
+
 def derive_self_healing(
     champion_data: dict[str, Any],
     champion_stats: dict[str, float],
@@ -116,6 +135,8 @@ def derive_self_healing(
     archetype estimate.
     """
     name = str(champion_data.get("name", ""))
+    if name not in HEALING_RULE_CHAMPIONS:
+        return []
     healing: list[dict[str, Any]] = []
 
     if name == "Aatrox":
