@@ -59,13 +59,26 @@ def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     per_bounce = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     total = per_bounce * _r_bounces(ctx.options)
-    return damage_entry(
+    entry = damage_entry(
         ability.get("name", "Pyroclasm"),
         rank,
         extract_cooldown(ability, rank),
         total,
         "magic",
     )
+    # Pyroclasm has a sourced 0.15-second delay between bounces. Keeping
+    # those hits separate lets Blaze stack applications and the ring
+    # detonation follow the same event clock.
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            per_bounce,
+            count=_r_bounces(ctx.options),
+            time_offset=0.0,
+            hit_interval=0.15,
+        ),
+    )
+    return entry
 
 
 def _blaze(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -124,6 +137,9 @@ def _blaze(ctx: SlotCtx) -> dict[str, Any] | None:
         # Ablaze ticks are ability damage for 4 s past the last cast,
         # so item burns (Liandry's, Blackfire) stay refreshed that long.
         "dot_duration": _ABLAZE_DURATION_S,
+        "dot_tick_interval": 0.25,
+        "timeline_event_model": "brand_blaze",
+        "dot_stack_count": stacks,
     }
 
 

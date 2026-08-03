@@ -11,6 +11,7 @@ from src.calculator.optimizer import (
     optimize_build as _optimize_build,
     get_selectable_items,
     _SPELLBLADE_ITEMS,
+    _hill_climb,
 )
 from src.calculator.pipeline import FightParams
 from src.calculator.loadout_rules import role_scoped_shop_items
@@ -175,6 +176,35 @@ def test_evaluate_build_sums_objective_across_target_roster(monkeypatch):
     score = _evaluate_build({}, 1, [], (first, second), "magic_damage")
 
     assert score == 350
+
+
+def test_hill_climb_reuses_greedy_score_without_duplicate_evaluation(monkeypatch):
+    monkeypatch.setattr(
+        "src.calculator.optimizer._evaluate_build",
+        lambda *_args, **_kwargs: pytest.fail("duplicate initial evaluation"),
+    )
+    item = {"name": "Rabadon's Deathcap"}
+    legendaries, boots, score, evals = _hill_climb(
+        {},
+        18,
+        [item],
+        None,
+        set(),
+        True,
+        [],
+        [],
+        {
+            "fight_params": FightParams.from_request({}, deterministic=True),
+            "objective": "total_damage",
+        },
+        max_iterations=0,
+        initial_score=42.0,
+    )
+
+    assert legendaries == [item]
+    assert boots is None
+    assert score == 42.0
+    assert evals == 0
 
 
 def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):

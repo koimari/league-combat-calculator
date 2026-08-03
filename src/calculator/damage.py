@@ -2220,6 +2220,7 @@ def _evaluate_cast_parts(
     on_hit: "Callable[[float], float] | None" = None,
     pricing: "tuple[CastPricing, ...] | None" = None,
     cast_times: "tuple[float, ...] | None" = None,
+    single_hit_event_certified: bool = False,
 ) -> tuple[float, float, dict[str, float], list[dict[str, Any]]]:
     """Evaluate an ability's typed damage parts over its casts.
 
@@ -2342,7 +2343,13 @@ def _evaluate_cast_parts(
                             "event_precision": (
                                 "hit"
                                 if part.time_offset is not None
-                                else "cast_boundary"
+                                else (
+                                    "exact"
+                                    if single_hit_event_certified
+                                    and hits == 1
+                                    and len(parts) == 1
+                                    else "cast_boundary"
+                                )
                             ),
                             "cast_ordinal": cast_index + 1,
                             "part_ordinal": part_index + 1,
@@ -3264,6 +3271,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             on_hit=shred_ramp.stage if shred_ramp is not None else None,
             pricing=pricing,
             cast_times=plan.times.get(ability_key),
+            single_hit_event_certified=(
+                ability_info.get("event_order_certified") == "single_hit"
+            ),
         )
 
         # Apply ability-specific damage amplifiers (e.g., Actualizer)
@@ -3449,7 +3459,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     return result
 
 
-def _add_precomputed_proc_damage(state: FightState) -> None:
+def _add_precomputed_proc_damage(
+    state: FightState, rotation: RotationResult | None = None
+) -> None:
     """Add fixed-count ability proc damage (e.g. Akali passive).
 
     Ability entries with a ``proc_count`` field represent damage that
@@ -3511,6 +3523,73 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
             "total_damage": proc_total,
             "damage_type": dtype,
         }
+        if (
+            rotation is not None
+            and info.get("timeline_event_model") == "brand_blaze"
+            and int(proc_count) == 1
+        ):
+            # Brand's packet supplies the 0.25s tick cadence and the
+            # two-second ring delay. The accepted cast ledger supplies the
+            # actual stack-application times, including Pyroclasm's sourced
+            # 0.15s bounce spacing, so no phase-order estimate is used.
+            stack_count = int(info.get("dot_stack_count", 0))
+            tick_interval = float(info.get("dot_tick_interval", 0.0))
+            ability_events = _ordered_damage_events(
+                state.breakdown,
+                state.ability_damages,
+                state.cast_order,
+                cast_events=rotation.cast_events,
+            )
+            stack_times = [
+                float(event["time"])
+                for event in ability_events
+                if event.get("phase") == "ability"
+                and event.get("source_key") in state.ability_damages
+            ][:stack_count]
+            dot_damage = (
+                priced_part_instances[0][1]
+                if stack_count > 0 and priced_part_instances
+                else 0.0
+            )
+            detonation_damage = (
+                priced_part_instances[stack_count][1]
+                if len(priced_part_instances) > stack_count
+                else 0.0
+            )
+            if (
+                stack_count > 0
+                and tick_interval > 0
+                and len(stack_times) == stack_count
+            ):
+                authored: list[dict[str, Any]] = []
+                ticks = int(round(float(info.get("dot_duration", 0.0)) / tick_interval))
+                for stack_time in stack_times:
+                    for tick_index in range(1, ticks + 1):
+                        authored.append(
+                            {
+                                "time": stack_time + tick_index * tick_interval,
+                                "damage_type": dtype,
+                                "damage": dot_damage / ticks,
+                                "event_precision": "exact",
+                            }
+                        )
+                if detonation_damage > 0:
+                    authored.append(
+                        {
+                            "time": stack_times[-1] + 2.0,
+                            "damage_type": dtype,
+                            "damage": detonation_damage,
+                            "event_precision": "exact",
+                        }
+                    )
+                if authored and math.isclose(
+                    sum(event["damage"] for event in authored),
+                    proc_total,
+                    rel_tol=1e-9,
+                    abs_tol=1e-6,
+                ):
+                    state.breakdown[key]["damage_events"] = authored
+                    state.breakdown[key]["event_phase"] = "effect"
         declared_events = info.get("damage_events")
         if isinstance(declared_events, list) and len(declared_events) == proc_count:
             # Champion modules may provide a sourced phase-order ledger for
@@ -4673,6 +4752,23 @@ def _layer_on_hit_effects(
                 swing_event_row(application_times, [per_hit] * hits, source.damage_type)
             )
 
+    # Ability-carried on-hit effects can be timestamped from the same
+    # accepted ability ledger that prices the cast.  This is required for
+    # stack counters such as Aurora's Spirit Abjuration: a fractional
+    # per-hit average would invent damage before the third stack exists.
+    ability_hit_times = [
+        float(event["time"])
+        for event in _ordered_damage_events(
+            state.breakdown,
+            state.ability_damages,
+            state.cast_order,
+            cast_events=rotation.cast_events,
+        )
+        if event.get("phase") == "ability"
+        and event.get("source_key") in state.ability_damages
+    ]
+    combined_application_times = ability_hit_times + application_times
+
     # Process ability on-hit effects (Case 2: abilities that add damage per
     # auto attack, e.g. Viego passive % health on-hit). These are passed in
     # ability_damages with an "on_hit" key containing per-hit damage info.
@@ -4753,6 +4849,13 @@ def _layer_on_hit_effects(
             and not (counts_ability_hits and rotation.total_ability_hits > 0)
             and hits <= len(application_times)
         )
+        ability_counter_stampable = (
+            counts_ability_hits
+            and rotation.total_ability_hits > 0
+            and len(combined_application_times) >= hits
+        )
+        if ability_counter_stampable:
+            stampable = True
         event_times: list[float] | None = None
         event_damages: list[float] | None = None
         if stack_ramp:
@@ -4811,9 +4914,9 @@ def _layer_on_hit_effects(
             ability_on_hit_damage = (
                 per_hit * stacks_required * (hits // stacks_required)
             )
-            if stampable:
+            if ability_counter_stampable:
                 event_times = [
-                    application_times[j * stacks_required - 1]
+                    combined_application_times[j * stacks_required - 1]
                     for j in range(1, hits // stacks_required + 1)
                 ]
                 event_damages = [per_hit * stacks_required] * (hits // stacks_required)
@@ -6797,7 +6900,7 @@ def calculate_fight_damage(
     # ── Ability rotation, precomputed procs, DoTs, and Shaped Charge ────
     rotation = _compute_ability_rotation(state)
     _author_ability_dot_events(state, rotation)
-    _add_precomputed_proc_damage(state)
+    _add_precomputed_proc_damage(state, rotation)
     _add_stacking_dot_damage(state)
     _add_shaped_charge_damage(state)
 

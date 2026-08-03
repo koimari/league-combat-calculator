@@ -93,6 +93,11 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # from aggregate totals.
         "damage_events",
         "event_phase",
+        # Explicit module-owned proof that a dynamic packet is one hit at
+        # the cast boundary; this is never inferred from part count alone.
+        "event_order_certified",
+        "timeline_event_model",
+        "dot_stack_count",
     }
 )
 
