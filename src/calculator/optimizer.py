@@ -27,7 +27,7 @@ from .loadout_rules import (
 )
 from .pipeline import FightParams, run_fight
 from .defensive_effects import resolve_starting_defenses
-from .participant_timeline import build_participant_timeline
+from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .stats import calculate_total_stats
 from .timeline_coverage import combine_timeline_coverages
 
@@ -119,6 +119,83 @@ def _evaluate_build(
     require_complete_timeline: bool = False,
     combat_context: dict[str, Any] | None = None,
 ) -> float:
+    """Evaluate a build, reusing this search's score for an exact repeat.
+
+    Hill climbing re-proposes builds the greedy phase already scored (a swap
+    trial that reverses an earlier improvement recreates a scored build).
+    Scoring is deterministic for an identical ordered item list, so a repeat
+    replays the recorded score and its ordering-audit contribution instead of
+    re-simulating the roster.  The public receipts are byte-identical.
+    """
+    score_memo = combat_context.get("score_memo") if combat_context else None
+    if score_memo is None:
+        return _evaluate_build_uncached(
+            champion_data,
+            level,
+            items,
+            fight_params,
+            objective,
+            gold_budget=gold_budget,
+            timeline_audit=timeline_audit,
+            require_complete_timeline=require_complete_timeline,
+            combat_context=combat_context,
+        )
+    memo_key = tuple(item["name"] for item in items)
+    hit = score_memo.get(memo_key)
+    if hit is not None:
+        score, audit_delta = hit
+        if timeline_audit is not None and audit_delta is not None:
+            timeline_audit["evaluations"] += audit_delta["evaluations"]
+            timeline_audit["partial_evaluations"] += audit_delta["partial_evaluations"]
+            timeline_audit["exact_sources"].update(audit_delta["exact_sources"])
+            timeline_audit["coarse_sources"].update(audit_delta["coarse_sources"])
+        return score
+    audit_before = (
+        None
+        if timeline_audit is None
+        else (
+            timeline_audit["evaluations"],
+            timeline_audit["partial_evaluations"],
+            set(timeline_audit["exact_sources"]),
+            set(timeline_audit["coarse_sources"]),
+        )
+    )
+    score = _evaluate_build_uncached(
+        champion_data,
+        level,
+        items,
+        fight_params,
+        objective,
+        gold_budget=gold_budget,
+        timeline_audit=timeline_audit,
+        require_complete_timeline=require_complete_timeline,
+        combat_context=combat_context,
+    )
+    audit_delta = None
+    if audit_before is not None:
+        audit_delta = {
+            "evaluations": timeline_audit["evaluations"] - audit_before[0],
+            "partial_evaluations": (
+                timeline_audit["partial_evaluations"] - audit_before[1]
+            ),
+            "exact_sources": timeline_audit["exact_sources"] - audit_before[2],
+            "coarse_sources": timeline_audit["coarse_sources"] - audit_before[3],
+        }
+    score_memo[memo_key] = (score, audit_delta)
+    return score
+
+
+def _evaluate_build_uncached(
+    champion_data: dict[str, Any],
+    level: int,
+    items: list[dict[str, Any]],
+    fight_params: FightParams | tuple[FightParams, ...],
+    objective: str,
+    gold_budget: int | None = None,
+    timeline_audit: dict[str, Any] | None = None,
+    require_complete_timeline: bool = False,
+    combat_context: dict[str, Any] | None = None,
+) -> float:
     """Evaluate a build and return the damage score for the given objective.
 
     Creates fresh copies of mutable state to avoid cross-call contamination.
@@ -155,6 +232,15 @@ def _evaluate_build(
                 enemies=list(combat_context.get("enemies", [])),
                 allies=list(combat_context.get("allies", [])),
                 pair_result_cache=combat_context.get("pair_result_cache"),
+                search_context=combat_context.get("search_context"),
+                # Typed objectives score from the serialized events list
+                # below, so they need the full receipt; total damage scores
+                # from the breakdown row and can take the scoring subset.
+                include_receipt=objective in ("physical_damage", "magic_damage"),
+                # ``stats`` above used this exact configuration; the claim
+                # only holds when no external ally bonuses were folded in,
+                # because pair fights strip those.
+                reuse_main_stats=not base_params.ally_stat_bonuses,
             )
         except ValueError as exc:
             # A candidate can introduce a target-state interaction that is
@@ -624,11 +710,15 @@ def optimize_build(
             else None
         ),
     }
-    # Pairwise roster receipts that do not touch the candidate main build are
-    # invariant across the search.  Keep one cache for this optimizer call;
-    # build_participant_timeline still recomputes all main-facing pairs.
+    # Pairwise roster receipts that do not depend on the candidate main
+    # build's offense are invariant across the search: roster-to-roster pairs
+    # always, and fights into the candidate whenever its defensive signature
+    # repeats.  The score memo replays exact repeated builds without
+    # re-simulating.  Both caches live for this optimizer call only.
     if eval_kwargs["combat_context"] is not None:
         eval_kwargs["combat_context"]["pair_result_cache"] = {}
+        eval_kwargs["combat_context"]["score_memo"] = {}
+        eval_kwargs["combat_context"]["search_context"] = CoupledSearchContext()
     coupled_objective = bool(enemy_loadouts or ally_loadouts)
 
     # Build item pools.  Keep the complete legal lists for the public coverage

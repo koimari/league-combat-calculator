@@ -124,6 +124,7 @@ import random
 from collections import Counter
 from dataclasses import dataclass, field, replace
 from collections.abc import Sequence
+from operator import itemgetter
 from typing import Any, Callable
 
 from . import item_effects
@@ -447,6 +448,10 @@ class FightState:
     # Caitlyn's Headshot rider) amplified by Hexoptics — already inside
     # their rows; surfaced on the basic-amp info row.
     basic_amp_ability_bonus: float = 0.0
+
+    # Set by calculate_fight_damage: receipts-only outputs (per-cast
+    # resource rows) may be skipped when True.
+    score_only: bool = False
 
 
 def _apply_basic_amp(
@@ -987,13 +992,19 @@ def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
     )
 
 
+# Phase precedence inside one timestamp of the reconstructed ledger.
+_EVENT_PHASE_ORDER = {"ability": 0, "auto": 1, "effect": 2, "amplifier": 3}
+
+
 def _ordered_damage_events(
     breakdown: dict[str, Any],
     ability_damages: dict[str, dict[str, Any]],
     cast_order: list[str],
     *,
     cast_events: list[dict[str, Any]] | None = None,
-) -> list[dict[str, Any]]:
+    light: bool = False,
+    lean: bool = False,
+) -> list[Any]:
     """Reconstruct the engine's certified damage order from its own rows.
 
     Ability rows are split into cast instances and follow the accepted cast
@@ -1004,13 +1015,28 @@ def _ordered_damage_events(
     already-known damage composition so shield accounting never invents a
     fourth damage type.
 
+    ``light=True`` returns ``(sort_key, damage, damage_type, source_key,
+    raw_formula, raw_damage)`` tuples instead of full rows — the same
+    events, the same ``(time, order, phase, sequence)`` order, one shared
+    iteration — for the mid-fight consumers (threshold-trigger scans,
+    amplifier delta authoring) that never serve the returned ledger
+    contract.
+
+    ``lean=True`` keeps dict rows but drops the display-only fields
+    (``ordinal``, ``phase``, ``order``, ``event_precision``,
+    ``source_missing_ratio``) nothing on the scoring path reads; the
+    fields that price, order, or link events are all present.  Only the
+    score-only pipeline may request it — public receipts serialize the
+    full rows.
+
     This ledger is deliberately internal. It is exact at the cast boundary,
     but it does not claim champion-specific spell-shield behavior within a
     multi-hit cast; those target items remain fail-closed until each ability
     supplies the necessary interaction metadata.
     """
-    events: list[dict[str, Any]] = []
+    events: list[Any] = []
     sequence = 0
+    typed_totals = {"physical": 0.0, "magic": 0.0, "true": 0.0}
 
     def add(
         source_key: str,
@@ -1026,27 +1052,55 @@ def _ordered_damage_events(
         source_missing_ratio: float | None = None,
         event_precision: str | None = None,
     ) -> None:
+        # Row schema (including ``_lk``) must mirror add_declared_events'
+        # inlined fast path below exactly; change them together.
         nonlocal sequence
         if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
             return
-        event = {
-            "source_key": source_key,
-            "damage_type": damage_type,
-            "damage": damage,
-            "time": time,
-            "ordinal": ordinal,
-            "phase": phase,
-            "sequence": sequence,
-            "order": float(sequence) if order is None else order,
-        }
+        order_value = float(sequence) if order is None else order
+        typed_totals[damage_type] += damage
+        if light:
+            events.append(
+                (
+                    (time, order_value, _EVENT_PHASE_ORDER[phase], sequence),
+                    damage,
+                    damage_type,
+                    source_key,
+                    raw_formula,
+                    0.0 if raw_damage is None else raw_damage,
+                )
+            )
+            sequence += 1
+            return
+        if lean:
+            event = {
+                "source_key": source_key,
+                "damage_type": damage_type,
+                "damage": damage,
+                "time": time,
+                "sequence": sequence,
+                "_lk": (time, order_value, _EVENT_PHASE_ORDER[phase], sequence),
+            }
+        else:
+            event = {
+                "source_key": source_key,
+                "damage_type": damage_type,
+                "damage": damage,
+                "time": time,
+                "ordinal": ordinal,
+                "phase": phase,
+                "sequence": sequence,
+                "order": order_value,
+                "_lk": (time, order_value, _EVENT_PHASE_ORDER[phase], sequence),
+            }
+            if source_missing_ratio is not None:
+                event["source_missing_ratio"] = source_missing_ratio
+            if event_precision is not None:
+                event["event_precision"] = event_precision
         if raw_damage is not None:
             event["raw_damage"] = raw_damage
         if raw_formula is not None:
             event["raw_formula"] = raw_formula
-        if source_missing_ratio is not None:
-            event["source_missing_ratio"] = source_missing_ratio
-        if event_precision is not None:
-            event["event_precision"] = event_precision
         events.append(event)
         sequence += 1
 
@@ -1056,50 +1110,87 @@ def _ordered_damage_events(
         *,
         default_phase: str,
     ) -> bool:
-        """Append an engine-authored event list, returning whether it existed."""
+        """Append an engine-authored event list, returning whether it existed.
+
+        This is the hot path of ledger reconstruction — module champions
+        declare nearly every event — so the row is built directly instead of
+        going through ``add``'s keyword plumbing for each declared hit.  The
+        row schema (including ``_lk``) must mirror ``add()`` above exactly;
+        change them together.
+        """
+        nonlocal sequence
         declared = entry.get("damage_events")
         if not isinstance(declared, list):
             return False
         phase = str(entry.get("event_phase", default_phase))
-        if phase not in {"ability", "auto", "effect", "amplifier"}:
+        if phase not in _EVENT_PHASE_ORDER:
             phase = default_phase
+        phase_rank = _EVENT_PHASE_ORDER[phase]
         for ordinal, event in enumerate(declared, start=1):
             if not isinstance(event, dict):
                 continue
-            add(
-                source_key,
-                str(event.get("damage_type", "")),
-                float(event.get("damage", 0.0)),
-                time=float(event.get("time", 0.0)),
-                ordinal=ordinal,
-                phase=phase,
-                order=(
-                    float(event["timeline_order"])
-                    if event.get("timeline_order") is not None
-                    else None
-                ),
-                raw_damage=(
-                    float(event["raw_damage"])
-                    if event.get("raw_damage") is not None
-                    else None
-                ),
-                raw_formula=event.get("raw_formula"),
-                source_missing_ratio=(
-                    float(event["source_missing_ratio"])
-                    if event.get("source_missing_ratio") is not None
-                    else None
-                ),
-                event_precision=(
-                    str(event["event_precision"])
-                    if event.get("event_precision") is not None
-                    else None
-                ),
-            )
+            damage = float(event.get("damage", 0.0))
+            damage_type = str(event.get("damage_type", ""))
+            if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
+                continue
+            order = event.get("timeline_order")
+            time = float(event.get("time", 0.0))
+            order_value = float(sequence) if order is None else float(order)
+            typed_totals[damage_type] += damage
+            if light:
+                events_append(
+                    (
+                        (time, order_value, phase_rank, sequence),
+                        damage,
+                        damage_type,
+                        source_key,
+                        event.get("raw_formula"),
+                        float(event.get("raw_damage", 0.0) or 0.0),
+                    )
+                )
+                sequence += 1
+                continue
+            if lean:
+                row = {
+                    "source_key": source_key,
+                    "damage_type": damage_type,
+                    "damage": damage,
+                    "time": time,
+                    "sequence": sequence,
+                    "_lk": (time, order_value, phase_rank, sequence),
+                }
+            else:
+                row = {
+                    "source_key": source_key,
+                    "damage_type": damage_type,
+                    "damage": damage,
+                    "time": time,
+                    "ordinal": ordinal,
+                    "phase": phase,
+                    "sequence": sequence,
+                    "order": order_value,
+                    "_lk": (time, order_value, phase_rank, sequence),
+                }
+                source_missing_ratio = event.get("source_missing_ratio")
+                if source_missing_ratio is not None:
+                    row["source_missing_ratio"] = float(source_missing_ratio)
+                event_precision = event.get("event_precision")
+                if event_precision is not None:
+                    row["event_precision"] = str(event_precision)
+            raw_damage = event.get("raw_damage")
+            if raw_damage is not None:
+                row["raw_damage"] = float(raw_damage)
+            raw_formula = event.get("raw_formula")
+            if raw_formula is not None:
+                row["raw_formula"] = raw_formula
+            events_append(row)
+            sequence += 1
         return True
 
-    timeline_by_slot: dict[str, list[dict[str, Any]]] = {}
-    for event in cast_events or []:
-        timeline_by_slot.setdefault(str(event.get("slot", "")), []).append(event)
+    events_append = events.append
+    # Built on first use: only the no-declared-events fallback below reads
+    # it, and module champions declare every event.
+    timeline_by_slot: dict[str, list[dict[str, Any]]] | None = None
 
     last_ability_time = 0.0
     for key in cast_order:
@@ -1114,6 +1205,12 @@ def _ordered_damage_events(
         # instead of flattening the row back into one aggregate cast value.
         if add_declared_events(key, entry, default_phase="ability"):
             continue
+        if timeline_by_slot is None:
+            timeline_by_slot = {}
+            for cast_event in cast_events or []:
+                timeline_by_slot.setdefault(str(cast_event.get("slot", "")), []).append(
+                    cast_event
+                )
         slot_timeline = timeline_by_slot.get(key, [])
         instances = max(1, int(ability_damages.get(key, {}).get("cast_instances", 1)))
         for cast_index in range(casts):
@@ -1173,14 +1270,16 @@ def _ordered_damage_events(
             if damage > 0:
                 untyped.append((key, damage))
 
-    typed_totals = {
-        dtype: sum(event["damage"] for event in events if event["damage_type"] == dtype)
-        for dtype in ("physical", "magic", "true")
-    }
-    typed_total = sum(typed_totals.values())
+    # ``typed_totals`` accumulated per add above, in the event order the
+    # per-type sums used to walk.  Distribution reads a snapshot so the
+    # rows it adds cannot skew a later type's share mid-loop.
+    distribution_totals = tuple(typed_totals.items())
+    typed_total = (
+        typed_totals["physical"] + typed_totals["magic"] + typed_totals["true"]
+    )
     if typed_total > 0:
         for key, damage in untyped:
-            for dtype, typed_damage in typed_totals.items():
+            for dtype, typed_damage in distribution_totals:
                 if typed_damage > 0:
                     add(
                         key,
@@ -1191,15 +1290,12 @@ def _ordered_damage_events(
                         phase="amplifier",
                     )
 
-    return sorted(
-        events,
-        key=lambda event: (
-            event["time"],
-            event["order"],
-            {"ability": 0, "auto": 1, "effect": 2, "amplifier": 3}[event["phase"]],
-            event["sequence"],
-        ),
-    )
+    # ``_lk`` is the (time, order, phase, sequence) key precomputed at
+    # event creation; sorting on it avoids rebuilding the tuple per event
+    # for every ledger reconstruction.  Light rows carry the same key as
+    # their first element.
+    events.sort(key=itemgetter(0) if light else itemgetter("_lk"))
+    return events
 
 
 def _event_timeline_coverage(
@@ -1208,6 +1304,7 @@ def _event_timeline_coverage(
     cast_order: list[str],
     *,
     num_auto_attacks: int = 0,
+    lean: bool = False,
 ) -> dict[str, Any]:
     """Certify which active rows have authored or cast-boundary ordering.
 
@@ -1225,16 +1322,21 @@ def _event_timeline_coverage(
         damage_events = entry.get("damage_events")
         if not isinstance(damage_events, list):
             damage_events = entry.get("timeline_events")
-        event_total = (
-            sum(float(event.get("damage", 0.0)) for event in damage_events)
-            if isinstance(damage_events, list) and damage_events
-            else None
-        )
-        if isinstance(damage_events, list) and any(
-            str(event.get("event_precision", "")) == "cast_boundary"
-            for event in damage_events
-            if isinstance(event, dict)
-        ):
+        # One pass computes both what two comprehensions used to: the
+        # authored total (in list order) and the cast-boundary downgrade.
+        event_total = None
+        has_boundary = False
+        if isinstance(damage_events, list) and damage_events:
+            event_total = 0.0
+            for event in damage_events:
+                event_total += float(event.get("damage", 0.0))
+                if (
+                    not has_boundary
+                    and isinstance(event, dict)
+                    and str(event.get("event_precision", "")) == "cast_boundary"
+                ):
+                    has_boundary = True
+        if has_boundary:
             coarse.append(key)
             continue
         if event_total is not None and math.isclose(
@@ -1254,6 +1356,28 @@ def _event_timeline_coverage(
             continue
         coarse.append(key)
     complete = not coarse
+    coupled_auto_sources = {
+        key
+        for key, info in ability_damages.items()
+        if info.get("requires_auto_timeline_coupling")
+        and num_auto_attacks > 0
+        and int(breakdown.get(key, {}).get("casts", 0)) > 0
+    }
+    if lean:
+        # Score-mode consumers only ever combine coverages by set union
+        # (combine_timeline_coverages); the certification strings, notes,
+        # and per-fight sorting never survive that, so skip building them.
+        if coupled_auto_sources:
+            return {
+                "complete": False,
+                "exact_sources": list(set(exact) - coupled_auto_sources),
+                "coarse_sources": list(set(coarse) | coupled_auto_sources),
+            }
+        return {
+            "complete": complete,
+            "exact_sources": exact,
+            "coarse_sources": coarse,
+        }
     coverage = {
         "complete": complete,
         "certification": (
@@ -1269,13 +1393,6 @@ def _event_timeline_coverage(
                 f"{' uses' if len(coarse) == 1 else 's use'} coarse phase ordering."
             )
         ),
-    }
-    coupled_auto_sources = {
-        key
-        for key, info in ability_damages.items()
-        if info.get("requires_auto_timeline_coupling")
-        and num_auto_attacks > 0
-        and int(breakdown.get(key, {}).get("casts", 0)) > 0
     }
     if coupled_auto_sources:
         coverage["complete"] = False
@@ -2290,8 +2407,66 @@ def _evaluate_cast_parts(
                 and raw > 0
                 and not rock_solid_consumed
             )
+            # Hits after the first are identical calls when nothing varies
+            # per hit: no per-hit event authoring, no on-hit MR seam, and
+            # no Hexoptics bonus tracking (its info-row accumulates per
+            # call).  Price one hit and replay the identical value — the
+            # same float added the same number of times in the same order.
+            repeat_pure = (
+                on_hit is None
+                and not has_dynamic_part
+                and part.time_offset is None
+                and not (part.basic_damage and state.basic_amp > 1.0)
+            )
+            repeat_damage = (
+                _mitigate_hits(state, part, raw, ability_mr, 1)
+                if repeat_pure and hits > 1
+                else None
+            )
+            # Dynamic target-health parts need to escape the aggregate
+            # breakdown as well.  The normal cast-boundary fallback prices
+            # them once against the pair's full-health target; the coupled
+            # participant ledger can then re-price the event against the
+            # live target HP.  When the source does not give sub-hit
+            # timing, all of the part's hits intentionally share the cast
+            # boundary and are marked as such below.  If one part reads
+            # live target HP, export every part of the cast so the coupled
+            # ledger does not lose a preceding flat hit (Akali R1 + R2 is
+            # the important example).  Everything constant across the hits
+            # is resolved here, once per part and cast.
+            emit_events = (
+                part.time_offset is not None
+                and (hits == 1 or part.hit_interval is not None)
+            ) or has_dynamic_part
+            if emit_events:
+                cast_time = (
+                    cast_times[cast_index]
+                    if cast_times is not None and cast_index < len(cast_times)
+                    else 0.0
+                )
+                event_base_time = cast_time + (
+                    part.time_offset if part.time_offset is not None else 0.0
+                )
+                event_interval = part.hit_interval or 0.0
+                event_precision = (
+                    "hit"
+                    if part.time_offset is not None
+                    else (
+                        "exact"
+                        if single_hit_event_certified and hits == 1 and len(parts) == 1
+                        else "cast_boundary"
+                    )
+                )
+                event_missing_ratio = (
+                    missing_ratio if part.hp_scaled_damage is not None else None
+                )
             mitigated = 0.0
             for hit_index in range(hits):
+                if repeat_damage is not None and (
+                    hit_index > 0 or not rock_solid_instances
+                ):
+                    mitigated += repeat_damage
+                    continue
                 hit_damage = _mitigate_hits(
                     state,
                     part,
@@ -2303,57 +2478,16 @@ def _evaluate_cast_parts(
                     ),
                 )
                 mitigated += hit_damage
-                # Dynamic target-health parts need to escape the aggregate
-                # breakdown as well.  The normal cast-boundary fallback prices
-                # them once against the pair's full-health target; the
-                # coupled participant ledger can then re-price the event
-                # against the live target HP.  When the source does not give
-                # sub-hit timing, all of the part's hits intentionally share
-                # the cast boundary and are marked as such below.
-                # If one part reads live target HP, export every part of the
-                # cast so the coupled ledger does not lose a preceding flat
-                # hit (Akali R1 + R2 is the important example).
-                emit_boundary_event = has_dynamic_part
-                if (
-                    part.time_offset is not None
-                    and (hits == 1 or part.hit_interval is not None)
-                ) or emit_boundary_event:
-                    cast_time = (
-                        cast_times[cast_index]
-                        if cast_times is not None and cast_index < len(cast_times)
-                        else 0.0
-                    )
-                    event_time = (
-                        cast_time
-                        + (part.time_offset if part.time_offset is not None else 0.0)
-                        + hit_index * (part.hit_interval or 0.0)
-                    )
+                if emit_events:
                     damage_events.append(
                         {
-                            "time": event_time,
+                            "time": event_base_time + hit_index * event_interval,
                             "damage_type": part.damage_type,
                             "damage": hit_damage,
                             "raw_damage": raw,
                             "raw_formula": part.hp_scaled_damage,
-                            "source_missing_ratio": (
-                                missing_ratio
-                                if part.hp_scaled_damage is not None
-                                else None
-                            ),
-                            "event_precision": (
-                                "hit"
-                                if part.time_offset is not None
-                                else (
-                                    "exact"
-                                    if single_hit_event_certified
-                                    and hits == 1
-                                    and len(parts) == 1
-                                    else "cast_boundary"
-                                )
-                            ),
-                            "cast_ordinal": cast_index + 1,
-                            "part_ordinal": part_index + 1,
-                            "hit_ordinal": hit_index + 1,
+                            "source_missing_ratio": event_missing_ratio,
+                            "event_precision": event_precision,
                         }
                     )
                 if on_hit is not None:
@@ -2770,11 +2904,14 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         accepted_ordinal = len(accepted[key])
         accepted[key].append(cast_time)
         accepted_ordinals[key].add(ordinal)
-        resource_by_cast[(key, accepted_ordinal)] = {
-            "resource_before": before,
-            "resource_restored": restored,
-            "resource_after": remaining,
-        }
+        if not state.score_only:
+            # Per-cast resource rows serve only the public cast-timeline
+            # receipt; nothing on the scoring path reads them.
+            resource_by_cast[(key, accepted_ordinal)] = {
+                "resource_before": before,
+                "resource_restored": restored,
+                "resource_after": remaining,
+            }
 
     counts = {key: len(times) for key, times in accepted.items()}
     last_cast_time = max(
@@ -4756,17 +4893,26 @@ def _layer_on_hit_effects(
     # accepted ability ledger that prices the cast.  This is required for
     # stack counters such as Aurora's Spirit Abjuration: a fractional
     # per-hit average would invent damage before the third stack exists.
-    ability_hit_times = [
-        float(event["time"])
-        for event in _ordered_damage_events(
-            state.breakdown,
-            state.ability_damages,
-            state.cast_order,
-            cast_events=rotation.cast_events,
+    # Only the ability on-hit loop below reads these times, so a kit with
+    # no ability-carried on-hit skips the ledger reconstruction entirely.
+    ability_hit_times = (
+        [
+            float(event["time"])
+            for event in _ordered_damage_events(
+                state.breakdown,
+                state.ability_damages,
+                state.cast_order,
+                cast_events=rotation.cast_events,
+            )
+            if event.get("phase") == "ability"
+            and event.get("source_key") in state.ability_damages
+        ]
+        if any(
+            ability_info.get("on_hit")
+            for ability_info in state.ability_damages.values()
         )
-        if event.get("phase") == "ability"
-        and event.get("source_key") in state.ability_damages
-    ]
+        else []
+    )
     combined_application_times = ability_hit_times + application_times
 
     # Process ability on-hit effects (Case 2: abilities that add damage per
@@ -5637,14 +5783,15 @@ def _damage_threshold_trigger_time(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        light=True,
     )
     window_sum = 0.0
     window_start = 0
-    for event in events:
-        event_time = float(event["time"])
-        window_sum += float(event["damage"])
-        while float(events[window_start]["time"]) < event_time - window - 1e-9:
-            window_sum -= float(events[window_start]["damage"])
+    for row in events:
+        event_time = row[0][0]
+        window_sum += row[1]
+        while events[window_start][0][0] < event_time - window - 1e-9:
+            window_sum -= events[window_start][1]
             window_start += 1
         if window_sum + 1e-6 >= threshold:
             return event_time
@@ -6562,7 +6709,7 @@ def _add_expose_weakness(
 
 
 def _amplifier_delta_events(
-    amped_events: list[dict[str, Any]],
+    amped_events: list,
     bonus: float,
 ) -> list[dict[str, Any]]:
     """Author an amplifier row's bonus onto the exact events it amplified.
@@ -6572,19 +6719,20 @@ def _amplifier_delta_events(
     event — expressed as a pro-rata share so the authored events sum
     exactly to the row total. Each delta keeps its amplified event's time
     and timeline order; the ``amplifier`` phase rank then places it
-    immediately after that event in the shared ledger.
+    immediately after that event in the shared ledger.  Consumes the light
+    ledger rows ``(sort_key, damage, damage_type, source_key)``.
     """
-    amped_total = sum(event["damage"] for event in amped_events)
+    amped_total = sum(row[1] for row in amped_events)
     if bonus <= 0 or amped_total <= 0:
         return []
     return [
         {
-            "damage_type": event["damage_type"],
-            "damage": bonus * event["damage"] / amped_total,
-            "time": event["time"],
-            "timeline_order": event["order"],
+            "damage_type": row[2],
+            "damage": bonus * row[1] / amped_total,
+            "time": row[0][0],
+            "timeline_order": row[0][1],
         }
-        for event in amped_events
+        for row in amped_events
     ]
 
 
@@ -6606,25 +6754,24 @@ def _hypershot_delta_events(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        light=True,
     )
     trigger_key = next((k for k in state.cast_order if k in state.breakdown), None)
-    trigger_times = [
-        event["time"] for event in events if event["source_key"] == trigger_key
-    ]
+    trigger_times = [row[0][0] for row in events if row[3] == trigger_key]
     if trigger_key is None or not trigger_times:
         return []
     trigger_time = min(trigger_times)
 
-    def is_trigger(event: dict[str, Any]) -> bool:
-        return event["source_key"] == trigger_key and event["time"] == trigger_time
+    def is_trigger(row) -> bool:
+        return row[3] == trigger_key and row[0][0] == trigger_time
 
-    trigger_damage = sum(event["damage"] for event in events if is_trigger(event))
+    trigger_damage = sum(row[1] for row in events if is_trigger(row))
     if not math.isclose(
         trigger_damage, rotation.first_ability_damage, rel_tol=1e-6, abs_tol=1e-3
     ):
         return []
     return _amplifier_delta_events(
-        [event for event in events if not is_trigger(event)], bonus
+        [row for row in events if not is_trigger(row)], bonus
     )
 
 
@@ -6653,6 +6800,7 @@ def _apply_general_amplifiers(state: FightState, rotation: RotationResult) -> No
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        light=True,
     )
     # Create per-source breakdown entries
     for source_name, source_amp in amp_sources:
@@ -6926,6 +7074,8 @@ def calculate_fight_damage(
     ability_damages: dict[str, dict[str, Any]],
     items: list[dict[str, Any]],
     config: FightConfig,
+    score_only: bool = False,
+    tuple_ledger: bool = False,
 ) -> dict[str, Any]:
     """Calculate total damage dealt over a fight duration.
 
@@ -6952,6 +7102,7 @@ def calculate_fight_damage(
 
     # ── Resolve resistances, penetration, amps, and attack timing ───────
     state = _resolve_combat_state(champion_stats, ability_damages, items, config)
+    state.score_only = score_only
     state.notes.extend(shield_reaver_notes)
 
     # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
@@ -7011,16 +7162,41 @@ def calculate_fight_damage(
     # ── Notes for conditional item assumptions ──────────────────────────
     _collect_fight_notes(state, rotation, on_hits)
 
-    shield_outcome = _resolve_starting_shield_outcome(state, config, rotation)
+    # The exact event ledger the shield/temporary-health resolver consumes is
+    # also the fight's returned ``damage_events``: nothing mutates the
+    # breakdown after this point, so reconstruct it once.  Downstream team
+    # simulation uses this same ordered ledger; it must never reconstruct
+    # timing from aggregate breakdown rows.
+    # ``tuple_ledger`` callers (the scoring fast path, for champions with
+    # no self-heal rules and no Protoplasm target) consume the ledger as
+    # light rows directly; every other caller gets the dict contract.
+    damage_events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+        light=tuple_ledger,
+        lean=score_only,
+    )
+    if score_only and config.target_threshold_health_heal <= 0:
+        # Score-mode consumers replay shields inside the coupled survival
+        # walk and never read the one-pair shield outcome.  The only
+        # engine-side consumer is the Protoplasm coverage downgrade below,
+        # which requires a positive threshold heal — so this skip cannot
+        # change any value the caller reads.
+        shield_outcome: dict[str, float] = {}
+    else:
+        shield_outcome = _resolve_starting_shield_outcome(state, config, damage_events)
     timeline_coverage = _event_timeline_coverage(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
         num_auto_attacks=state.num_auto_attacks,
+        lean=score_only,
     )
     if (
-        shield_outcome["threshold_health_triggered"]
-        and config.target_threshold_health_heal > 0
+        config.target_threshold_health_heal > 0
+        and shield_outcome["threshold_health_triggered"]
     ):
         timeline_coverage["complete"] = False
         timeline_coverage["certification"] = "partial_event_order"
@@ -7031,15 +7207,6 @@ def calculate_fight_damage(
             "Protoplasm Harness's sourced total healing is spread over five "
             "seconds; its internal heal tick cadence is not source-certified."
         )
-    # Keep the exact event ledger that the shield/temporary-health resolver
-    # just consumed.  Downstream team simulation uses this same ordered
-    # ledger; it must never reconstruct timing from aggregate breakdown rows.
-    damage_events = _ordered_damage_events(
-        state.breakdown,
-        state.ability_damages,
-        state.cast_order,
-        cast_events=rotation.cast_events,
-    )
     return {
         "breakdown": state.breakdown,
         "total_damage": state.total_damage,
@@ -7061,7 +7228,7 @@ def calculate_fight_damage(
 
 
 def _resolve_starting_shield_outcome(
-    state: FightState, config: FightConfig, rotation: RotationResult
+    state: FightState, config: FightConfig, damage_events: list[dict[str, Any]]
 ) -> dict[str, float]:
     """Split post-mitigation TDD into shield absorption and health damage.
 
@@ -7089,36 +7256,50 @@ def _resolve_starting_shield_outcome(
         duration=config.target_threshold_shield_duration,
         damage_type=config.target_threshold_shield_damage_type,
     )
-    for event in _ordered_damage_events(
-        state.breakdown,
-        state.ability_damages,
-        state.cast_order,
-        cast_events=rotation.cast_events,
-    ):
-        event_time = float(event["time"])
-        health_state.advance_to(event_time)
-        lifeline_shield.expire_at(event_time)
-        remaining = event["damage"]
-        if event["damage_type"] == "magic":
-            absorbed = min(magic_shield, remaining)
-            magic_shield -= absorbed
-            magic_absorbed += absorbed
-            remaining -= absorbed
-        elif event["damage_type"] == "physical":
-            absorbed = min(physical_shield, remaining)
-            physical_shield -= absorbed
-            physical_absorbed += absorbed
-            remaining -= absorbed
-        absorbed = min(general_shield, remaining)
-        general_shield -= absorbed
-        general_absorbed += absorbed
-        remaining -= absorbed
-
-        remaining -= lifeline_shield.absorb(
-            remaining, event["damage_type"], event_time, health_state.current_health
+    if (
+        magic_shield <= 0.0
+        and physical_shield <= 0.0
+        and general_shield <= 0.0
+        and (lifeline_shield.amount <= 0.0 or lifeline_shield.threshold_hp <= 0.0)
+        and (
+            health_state.bonus_health <= 0.0
+            or health_state.health_ratio <= 0.0
+            or health_state.duration <= 0.0
         )
-        health_state.trigger_before(remaining, event_time)
-        health_state.take_damage(remaining)
+    ):
+        # No shield can absorb and no threshold state can arm: every
+        # per-event absorption below is exactly ``- 0.0``, so the walk
+        # reduces bit-for-bit to sequential floored health subtraction.
+        current_health = health_state.current_health
+        for event in damage_events:
+            current_health = max(0.0, current_health - event["damage"])
+        health_state.current_health = current_health
+    else:
+        for event in damage_events:
+            event_time = float(event["time"])
+            health_state.advance_to(event_time)
+            lifeline_shield.expire_at(event_time)
+            remaining = event["damage"]
+            if event["damage_type"] == "magic":
+                absorbed = min(magic_shield, remaining)
+                magic_shield -= absorbed
+                magic_absorbed += absorbed
+                remaining -= absorbed
+            elif event["damage_type"] == "physical":
+                absorbed = min(physical_shield, remaining)
+                physical_shield -= absorbed
+                physical_absorbed += absorbed
+                remaining -= absorbed
+            absorbed = min(general_shield, remaining)
+            general_shield -= absorbed
+            general_absorbed += absorbed
+            remaining -= absorbed
+
+            remaining -= lifeline_shield.absorb(
+                remaining, event["damage_type"], event_time, health_state.current_health
+            )
+            health_state.trigger_before(remaining, event_time)
+            health_state.take_damage(remaining)
 
     threshold_absorbed = lifeline_shield.absorbed_total
     absorbed = (

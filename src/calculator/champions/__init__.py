@@ -116,6 +116,11 @@ _GENERIC_CHAMPION_MODULES = _GENERATED_CHAMPION_MODULES
 # every cached champion has a dedicated packet module.
 _CHAMPION_MODULES: dict[str, str] = _ENGINE_CHAMPION_MODULES
 
+# Resolved module ``parse_abilities`` callables — the import system already
+# caches modules, but the coupled optimizer dispatches thousands of parses
+# per request, so skip even the ``import_module`` lookup after the first.
+_MODULE_PARSERS: dict[str, Any] = {}
+
 
 # Option keys owned by the pipeline — never user input, never a module
 # OPTIONS declaration (tests/test_champion_options.py enforces the
@@ -174,8 +179,12 @@ def parse_abilities(
             champion_stats=champion_stats,
             target_stats=target_stats,
         )
-    module = importlib.import_module(f".{module_name}", package=__name__)
-    return module.parse_abilities(
+    module_parse = _MODULE_PARSERS.get(module_name)
+    if module_parse is None:
+        module = importlib.import_module(f".{module_name}", package=__name__)
+        module_parse = module.parse_abilities
+        _MODULE_PARSERS[module_name] = module_parse
+    return module_parse(
         champion_data,
         level,
         total_ability_power,

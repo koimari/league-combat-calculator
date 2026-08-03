@@ -25,7 +25,7 @@ from .damage import (
     split_by_damage_type,
 )
 from .item_effects import resolve_damage_effects, validate_item_input_options
-from .healing import derive_self_healing
+from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
 from .role_quests import max_champion_level, validate_role
 from .rune_effects import validate_keystone_request
 from .stats import calculate_total_stats
@@ -282,17 +282,45 @@ def run_fight(
     level: int,
     items: list[dict[str, Any]],
     params: FightParams,
+    precomputed_stats: dict[str, float] | None = None,
+    validated: bool = False,
+    score_only: bool = False,
 ) -> dict[str, Any]:
-    """Run stats, champion ability parsing, and fight damage as one pipeline."""
-    params.validate_for_champion(champion_data.get("name", ""), level)
-    champion_stats = calculate_total_stats(
-        champion_data,
-        level,
-        items,
-        item_options=params.item_options,
-        role=params.role,
-        role_quest_complete=params.role_quest_complete,
-        external_stat_bonuses=params.ally_stat_bonuses,
+    """Run stats, champion ability parsing, and fight damage as one pipeline.
+
+    ``precomputed_stats`` lets a caller that already ran this exact stat
+    calculation (same champion, level, items, options, role, and external
+    bonuses) hand it over instead of repeating it; the fight itself never
+    mutates it.  Callers own that equality claim.
+
+    ``validated=True`` is the same kind of caller-owned claim for
+    ``params.validate_for_champion(champion, level)``: the coupled search
+    validates its fixed per-pair params once instead of on each of
+    thousands of identical fights.
+
+    ``score_only=True`` skips result fields no scoring consumer reads —
+    the one-pair shield outcome (unless the Protoplasm coverage downgrade
+    needs it) and the auto/ability/type display splits.  Every field that
+    remains carries the identical value.  When the champion additionally
+    has no self-heal rule and the target arms no threshold heal, the
+    returned ``damage_events`` are the engine's light ledger rows
+    (``damage_events_tuple`` is set) — same events, same order, no dict
+    per event; only the scoring fast path consumes that shape.
+    """
+    if not validated:
+        params.validate_for_champion(champion_data.get("name", ""), level)
+    champion_stats = (
+        precomputed_stats
+        if precomputed_stats is not None
+        else calculate_total_stats(
+            champion_data,
+            level,
+            items,
+            item_options=params.item_options,
+            role=params.role,
+            role_quest_complete=params.role_quest_complete,
+            external_stat_bonuses=params.ally_stat_bonuses,
+        )
     )
 
     # Reserved option keys are pipeline-owned: strip whatever the caller
@@ -346,13 +374,30 @@ def run_fight(
         declared = get_champion_cast_order(champion_data.get("name", ""))
         if declared is not None:
             params = replace(params, cast_order=declared)
+    tuple_ledger = (
+        score_only
+        and params.target_threshold_health_heal <= 0
+        and champion_data.get("name", "") not in HEALING_RULE_CHAMPIONS
+    )
     result = calculate_fight_damage(
         fight_stats,
         ability_damages,
         items,
-        replace(params, enforce_resource_limits=True),
+        (
+            params
+            if params.enforce_resource_limits
+            else replace(params, enforce_resource_limits=True)
+        ),
+        score_only=score_only,
+        tuple_ledger=tuple_ledger,
     )
     result["champion_stats"] = fight_stats
+    if tuple_ledger:
+        # The predicate above IS derive_self_healing's dispatch gate, so
+        # the empty list is the exact value the call would return.
+        result["damage_events_tuple"] = True
+        result["self_healing_events"] = []
+        return result
     result["self_healing_events"] = derive_self_healing(
         champion_data,
         fight_stats,
@@ -361,6 +406,8 @@ def run_fight(
         list(result.get("cast_timeline", [])),
         params.fight_duration_seconds,
     )
+    if score_only:
+        return result
     result["self_healing"] = sum(
         float(event.get("amount", 0.0)) for event in result["self_healing_events"]
     )

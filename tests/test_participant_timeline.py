@@ -11,6 +11,7 @@ from src.calculator.participant_timeline import (
     Combatant,
     _schedule_thorns_events,
     _simulate_survival,
+    build_participant_timeline,
 )
 
 
@@ -842,3 +843,313 @@ def test_bramble_vest_retaliation_flows_through_the_calculate_pipeline():
         "Bramble Vest" in source
         for source in enemy["survival"]["healing_reduction_sources"]
     )
+
+
+def _coupled_fixture():
+    """One small coupled roster shared by the cache-equivalence tests."""
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.scenario import ChampionLoadout
+    from src.calculator.stats import calculate_total_stats
+
+    params = FightParams.from_request(
+        {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+    )
+    champion = get_champion("Cassiopeia")
+    enemies = [
+        ChampionLoadout(
+            champion="Alistar",
+            level=13,
+            role="support",
+            boots="Plated Steelcaps",
+            items=("Randuin's Omen", "Bramble Vest"),
+        ).resolve(),
+        ChampionLoadout(
+            champion="Dr. Mundo",
+            level=13,
+            role="top",
+            boots="Mercury's Treads",
+            items=("Kaenic Rookern", "Warmog's Armor"),
+        ).resolve(),
+    ]
+
+    def timeline(items, **kwargs):
+        stats = calculate_total_stats(champion, 13, items, role="mid")
+        defenses = resolve_starting_defenses(champion["name"], 13, stats, items)
+        return build_participant_timeline(
+            champion,
+            13,
+            items,
+            params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=enemies,
+            allies=[],
+            **kwargs,
+        )
+
+    return timeline
+
+
+def test_shared_pair_cache_replays_identical_coupled_receipts():
+    """Cache hits and misses must reproduce the no-cache receipt exactly.
+
+    Two offense-only builds share one defensive signature (the second is a
+    pure cache hit for the incoming fights); the health item changes the
+    signature and forces a miss.  Every cached receipt must deep-equal a
+    fresh no-cache computation.
+    """
+    timeline = _coupled_fixture()
+    cache: dict = {}
+    builds = [
+        [get_item_by_name("Rabadon's Deathcap")],
+        [get_item_by_name("Void Staff")],
+        [get_item_by_name("Rylai's Crystal Scepter")],
+    ]
+    for items in builds:
+        cached = timeline(items, pair_result_cache=cache)
+        fresh = timeline(items)
+        assert cached == fresh
+    assert cache, "the pair cache was never populated"
+
+
+def test_score_only_receipt_matches_full_receipt_numbers():
+    """include_receipt=False must change shape only, never a number."""
+    timeline = _coupled_fixture()
+    items = [get_item_by_name("Rabadon's Deathcap")]
+    full = timeline(items)
+    score_only = timeline(items, include_receipt=False)
+
+    assert score_only["timeline_coverage"] == full["timeline_coverage"]
+    full_rows = {row["participant_id"]: row for row in full["breakdown"]}
+    for row in score_only["breakdown"]:
+        assert row["total_damage"] == full_rows[row["participant_id"]]["total_damage"]
+    full_survival = {
+        participant["participant_id"]: participant["survival"]
+        for participant in full["participants"]
+    }
+    for participant in score_only["participants"]:
+        assert participant["survival"] == full_survival[participant["participant_id"]]
+
+
+def test_search_context_score_walk_matches_legacy_score_receipts():
+    """The compiled search-context walk is pure speed, never a number.
+
+    Scoring through a CoupledSearchContext (per-signature compiled panel of
+    invariant walk actions, no-copy flat walk) must deep-equal the legacy
+    score-only composition for every candidate: signature repeats reuse the
+    panel, a health item forces a new signature, and an exact build repeat
+    replays both paths again.
+    """
+    from src.calculator.participant_timeline import CoupledSearchContext
+
+    timeline = _coupled_fixture()
+    cache: dict = {}
+    context = CoupledSearchContext()
+    builds = [
+        [get_item_by_name("Rabadon's Deathcap")],
+        [get_item_by_name("Void Staff")],
+        [get_item_by_name("Rylai's Crystal Scepter")],
+        [get_item_by_name("Rabadon's Deathcap")],
+    ]
+    for items in builds:
+        fast = timeline(
+            items,
+            pair_result_cache=cache,
+            search_context=context,
+            include_receipt=False,
+        )
+        legacy = timeline(items, include_receipt=False)
+        assert fast == legacy
+    assert len(context.panels) == 2, "expected one shared and one new signature"
+
+
+def test_search_context_replays_the_rounded_death_cutoff():
+    """A dead attacker's outgoing total cuts at its ROUNDED death time.
+
+    The legacy composition filters each attacker's events by the survival
+    row's death time, which is rounded to three decimals — so an attacker's
+    own event landing at the exact death instant is applied by the walk but
+    excluded from the total whenever the true death time rounds down past
+    it.  A mirror matchup with equal attack speeds reproduces that
+    coincidence deterministically: main Aatrox (no items) dies to an
+    itemized enemy Aatrox mid-window with a same-instant auto of his own.
+    """
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.participant_timeline import CoupledSearchContext
+    from src.calculator.scenario import ChampionLoadout
+    from src.calculator.stats import calculate_total_stats
+
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 0.8,
+            "role": "top",
+        },
+        deterministic=True,
+    )
+    champion = get_champion("Aatrox")
+    enemies = [
+        ChampionLoadout(
+            champion="Aatrox",
+            level=13,
+            role="top",
+            items=("Bloodthirster", "Infinity Edge"),
+        ).resolve()
+    ]
+    stats = calculate_total_stats(champion, 13, [], role="top")
+    defenses = resolve_starting_defenses(champion["name"], 13, stats, [])
+
+    def timeline(**kwargs):
+        return build_participant_timeline(
+            champion,
+            13,
+            [],
+            params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=enemies,
+            allies=[],
+            reuse_main_stats=True,
+            **kwargs,
+        )
+
+    fast = timeline(
+        pair_result_cache={},
+        search_context=CoupledSearchContext(),
+        include_receipt=False,
+    )
+    legacy = timeline(include_receipt=False)
+    main_survival = next(
+        row["survival"]
+        for row in legacy["participants"]
+        if row["participant_id"] == "main"
+    )
+    assert (
+        main_survival["death_time"] is not None
+    ), "the fixture must kill the main mid-window to exercise the cutoff"
+    assert fast == legacy
+
+
+def test_support_attributes_match_the_profile_lookup_source():
+    """The support-candidate gate must cover exactly the profile lookups.
+
+    ``derive_ally_effects`` skips champions via ``_SUPPORT_ATTRIBUTES``;
+    an attribute added to ``_support_profile``'s lookups without extending
+    that set would silently drop the champion's packets, so the set is
+    pinned to the ``_first_attribute`` tuples actually in the source.
+    """
+    import inspect
+    import re as re_module
+
+    from src.calculator import support_effects
+
+    source = inspect.getsource(support_effects._support_profile)
+    lookups = re_module.findall(r"_first_attribute\(\s*ability,\s*\(([^)]*)\)", source)
+    assert lookups, "expected _first_attribute lookups in _support_profile"
+    named = set()
+    for group in lookups:
+        named.update(re_module.findall(r'"([^"]+)"', group))
+    assert named == set(support_effects._SUPPORT_ATTRIBUTES)
+
+
+def test_healing_rule_champions_matches_the_dispatch_source():
+    """The scoring fast path skips heal derivation via HEALING_RULE_CHAMPIONS.
+
+    A heal rule added to ``derive_self_healing``'s name dispatch without
+    extending that set would be silently skipped in scoring, so the set is
+    pinned to the dispatch branches actually present in the source.
+    """
+    import inspect
+    import re as re_module
+
+    from src.calculator import healing
+
+    source = inspect.getsource(healing.derive_self_healing)
+    dispatched = set(re_module.findall(r'name == "([^"]+)"', source))
+    assert dispatched == set(healing.HEALING_RULE_CHAMPIONS)
+
+
+def test_search_context_walk_matches_receipts_with_thorns_support_and_heals():
+    """The compiled walk must survive every coupled mechanic at once.
+
+    A timed fight with auto attacks exercises the paths the one-rotation
+    fixture cannot: Bramble thorns strike-backs and their Grievous window on
+    the main attacker, sourced enemy self-healing, an opt-in Lulu ally
+    shield, target-current-health repricing (Dr. Mundo's own kit), and
+    death cutoffs.  Fast and legacy score receipts must be deep-equal.
+    """
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.participant_timeline import CoupledSearchContext
+    from src.calculator.scenario import ChampionLoadout
+    from src.calculator.stats import calculate_total_stats
+
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 0.8,
+            "role": "top",
+        },
+        deterministic=True,
+    )
+    champion = get_champion("Dr. Mundo")
+    enemies = [
+        ChampionLoadout(
+            champion="Alistar",
+            level=13,
+            role="support",
+            boots="Plated Steelcaps",
+            items=("Bramble Vest",),
+        ).resolve(),
+        ChampionLoadout(
+            champion="Aatrox",
+            level=13,
+            role="top",
+            boots="Mercury's Treads",
+            items=("Spirit Visage",),
+        ).resolve(),
+    ]
+    allies = [
+        ChampionLoadout(
+            champion="Lulu",
+            level=13,
+            role="support",
+            items=("Dead Man's Plate",),
+            ally_effects_enabled=True,
+        ).resolve(),
+    ]
+
+    def timeline(items, **kwargs):
+        stats = calculate_total_stats(champion, 13, items, role="top")
+        defenses = resolve_starting_defenses(champion["name"], 13, stats, items)
+        return build_participant_timeline(
+            champion,
+            13,
+            items,
+            params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=enemies,
+            allies=allies,
+            reuse_main_stats=True,
+            **kwargs,
+        )
+
+    cache: dict = {}
+    context = CoupledSearchContext()
+    builds = [
+        [get_item_by_name("Oblivion Orb")],
+        [get_item_by_name("Warmog's Armor")],
+    ]
+    for items in builds:
+        fast = timeline(
+            items,
+            pair_result_cache=cache,
+            search_context=context,
+            include_receipt=False,
+        )
+        legacy = timeline(items, include_receipt=False)
+        assert fast == legacy
