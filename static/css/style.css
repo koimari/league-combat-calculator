@@ -10,6 +10,7 @@
   --black: #071a15;
   --radius: 2px;
   --font: "Manrope", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   --shadow: 0 24px 60px rgba(7, 26, 21, .22);
 }
 
@@ -54,7 +55,7 @@ select { min-width: 132px; height: 34px; appearance: none; padding: 0 30px 0 12p
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
 .champion-card { display: grid; grid-template-columns: minmax(240px, .78fr) 1.55fr; min-height: 228px; background: rgba(255,253,244,.62); backdrop-filter: blur(16px) saturate(145%); }
 .champion-identity { display: flex; gap: 18px; align-items: center; padding: 22px; border-right: 1px solid var(--line); }
-.champion-portrait { width: 112px; height: 132px; overflow: hidden; background: var(--paper-deep); }
+.champion-portrait { flex: 0 0 112px; width: 112px; height: 132px; overflow: hidden; background: var(--paper-deep); }
 .champion-portrait img { width: 100%; height: 100%; object-fit: cover; filter: saturate(1.08) contrast(1.06); }
 .champion-portrait img.image-missing { opacity: 0; }
 .champion-identity h1 { margin: 5px 0 2px; font-size: clamp(28px, 3vw, 42px); font-weight: 800; letter-spacing: -.075em; line-height: .98; }
@@ -235,7 +236,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
   .state-block { justify-content: start; }
   .objective-list { grid-template-columns: repeat(3, 1fr); }
   .champion-identity { align-items: start; padding: 16px; }
-  .champion-portrait { width: 82px; height: 98px; }
+  .champion-portrait { flex-basis: 82px; width: 82px; height: 98px; }
   .champion-identity h1 { font-size: 31px; }
   .stats-grid { grid-template-columns: repeat(3, 1fr); }
   .stat:nth-child(4n+1), .stat:nth-child(4n+2), .stat:nth-child(4n+3) { border-right: 0; }
@@ -259,8 +260,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .map-wash { background-image: linear-gradient(90deg, rgba(6,18,16,.14) 0%, rgba(6,18,16,.02) 44%, rgba(6,18,16,.2) 100%), linear-gradient(180deg, rgba(5,18,16,.04) 0%, rgba(5,18,16,.24) 100%), url("/static/img/rift-illustration-4k.webp"); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .app-shell > h1 { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-.champion-portrait-button { padding: 0; border: 0; cursor: pointer; }
-.champion-portrait-button img { width: 100%; height: 100%; object-fit: cover; }
+.champion-portrait-button { display: block; flex: 0 0 112px; width: 112px; height: 132px; padding: 0; border: 0; cursor: pointer; }
+.champion-portrait-button img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
 .ability-card { grid-template-columns: 34px 1fr; }
 .ability-icon-image { width: 34px; height: 34px; object-fit: cover; background: var(--paper-deep); }
 .ability-rank, .ability-casts { display: flex; align-items: center; gap: 5px; }
@@ -279,15 +280,25 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .picker-shell { display: grid; grid-template-rows: auto auto 1fr; height: 100%; }
 .picker header { display: flex; align-items: start; justify-content: space-between; padding: 18px 20px 13px; border-bottom: 1px solid rgba(22,72,58,.24); }
 .picker h2 { margin: 0; font-size: 25px; }
-.picker-close { width: 32px; height: 32px; border: 0; background: transparent; color: #3c6558; cursor: pointer; font-size: 26px; line-height: 1; }
-.search-box { display: flex; align-items: center; gap: 9px; margin: 12px 14px; padding: 0 11px; border: 1px solid rgba(22,72,58,.24); background: rgba(224,239,217,.5); }
-.search-box input { width: 100%; height: 38px; border: 0; outline: 0; background: transparent; color: #10201b; }
+.picker-close { width: 32px; height: 32px; border: 0; background: transparent; color: #10201b; cursor: pointer; font-size: 26px; line-height: 1; }
+.search-box { display: flex; align-items: center; gap: 9px; margin: 12px 14px; padding: 0 11px; border: 1px solid rgba(22,72,58,.38); background: rgba(224,239,217,.62); color: #10201b; }
+.search-box input { width: 100%; height: 38px; border: 0; outline: 0; background: transparent; color: #10201b; font: 500 16px/1 var(--font); }
+.search-box input::placeholder { color: #23443a; opacity: 1; }
 .picker-grid { overflow: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-content: start; gap: 1px; padding: 1px 14px 18px; }
-.picker-option { display: grid; grid-template-columns: 42px 1fr; gap: 9px; align-items: center; min-width: 0; min-height: 58px; padding: 7px; border: 1px solid transparent; background: transparent; cursor: pointer; text-align: left; }
-.picker-option:hover { border-color: rgba(22,72,58,.24); background: rgba(224,239,217,.5); }
+.picker-option { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 9px; align-items: center; min-width: 0; min-height: 58px; padding: 7px; border: 1px solid transparent; background: transparent; color: #10201b; cursor: pointer; text-align: left; }
+.picker-option > span { display: block; min-width: 0; overflow: hidden; }
+.picker-option:hover { border-color: rgba(22,72,58,.38); background: rgba(224,239,217,.62); }
 .picker-option img, .picker-option .empty-icon { width: 42px; height: 42px; border: 1px solid rgba(22,72,58,.24); object-fit: cover; }
-.picker-option strong { display: block; overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.picker-option small { display: block; margin-top: 4px; overflow: hidden; color: #3c6558; font: 8px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
-.picker-empty { grid-column: 1 / -1; padding: 45px; color: #3c6558; text-align: center; font-size: 12px; }
+.picker-option strong, .picker-option small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.picker-option strong { display: block; color: #10201b; font: 800 10px/1.2 var(--font); }
+.picker-option small { display: block; margin-top: 4px; color: #23443a; font: 500 8px/1.2 var(--mono); }
+.picker-empty { grid-column: 1 / -1; padding: 45px; color: #23443a; text-align: center; font: 500 12px/1.4 var(--font); }
 .bis-dialog .bis-intro { padding: 14px 20px; color: #3c6558; font-size: 11px; }
 .bis-dialog .bis-intro strong { display: block; color: #10201b; }
+
+/* Final geometry guardrails: keep flex children and compact picker copy from
+   stretching or collapsing at the viewport edges. */
+@media (max-width: 560px) {
+  .champion-portrait-button { flex-basis: 82px; width: 82px; height: 98px; }
+  .picker-grid { grid-template-columns: 1fr; }
+}
