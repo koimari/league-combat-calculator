@@ -53,6 +53,14 @@ const state = {
 const TIER_TWO_BOOTS = [3006, 3009, 3008, 3158, 3111, 3047, 3020];
 const TIER_THREE_BOOTS = [3172, 3170, 3168, 3171, 3173, 3174, 3175];
 const ALL_ROLE_BOOTS = new Set([...TIER_TWO_BOOTS, ...TIER_THREE_BOOTS]);
+// These kits do not have a standard five-rank Q/W/E plus three-rank R
+// allocation.  The backend owns their sourced level-derived rank order;
+// sending the generic UI allocation would be an invalid manual request.
+const LEVEL_DERIVED_RANK_CHAMPIONS = new Set(["Elise", "Jayce", "Karma", "Nidalee", "Udyr"]);
+
+function usesLevelDerivedRanks(championName) {
+  return LEVEL_DERIVED_RANK_CHAMPIONS.has(String(championName || ""));
+}
 
 const $ = (id) => document.getElementById(id);
 const fmt = (value) => Math.round(value).toLocaleString("en-US");
@@ -999,6 +1007,7 @@ function engineChampionOptions() {
 }
 
 function engineAbilityRanks() {
+  if (usesLevelDerivedRanks(state.attacker.champion)) return null;
   const requested = {};
   activeAbilityKit().forEach((ability) => {
     if (ability.slot === "P") return;
@@ -1036,7 +1045,12 @@ function engineTarget(target) {
     item_options: engineItemOptions(itemIds, target.itemStacks),
     role: target.role || "",
     role_quest_complete: Boolean(target.roleQuestComplete),
-    ability_ranks: Object.fromEntries(Object.entries(target.abilityRanks || {}).map(([slot, rank]) => [slot, Number(rank) || 0])),
+    // Let the backend apply the champion's sourced level order for
+    // transformation/stance kits; their generic rank controls are not a
+    // legal manual allocation.
+    ability_ranks: usesLevelDerivedRanks(target.champion)
+      ? null
+      : Object.fromEntries(Object.entries(target.abilityRanks || {}).map(([slot, rank]) => [slot, Number(rank) || 0])),
   };
 }
 
