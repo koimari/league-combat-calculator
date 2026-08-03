@@ -54,7 +54,10 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
     "Armored Advance": "Plating and Noxian Endurance are defensive effects.",
     "Bloodthirster": "Ichorshield is a defensive shield.",
     "Celestial Opposition": "Blessing of the Mountain is defensive mitigation.",
-    "Chempunk Chainsword": "Hackshorn applies anti-heal, not direct damage.",
+    "Chempunk Chainsword": (
+        "Hackshorn applies sourced three-second Grievous Wounds in the coupled "
+        "timeline; it does not add direct damage."
+    ),
     "Cosmic Drive": "Spelldance grants movement speed, not direct damage.",
     "Cryptbloom": "Life From Death is a post-takedown heal.",
     "Death's Dance": "Ignore Pain and Defy change incoming damage and healing.",
@@ -76,8 +79,14 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
     "Mercurial Scimitar": "Quicksilver cleanses crowd control and grants movement speed.",
     "Mikael's Blessing": "Purify cleanses and heals an ally.",
     "Moonstone Renewer": "Starlit Grace chains healing or shielding.",
-    "Morellonomicon": "Grievous Wounds applies anti-heal, not direct damage.",
-    "Mortal Reminder": "Grievous Wounds applies anti-heal, not direct damage.",
+    "Morellonomicon": (
+        "Grievous Wounds reduces recipient healing in the coupled timeline; it "
+        "does not add direct damage."
+    ),
+    "Mortal Reminder": (
+        "Grievous Wounds reduces recipient healing in the coupled timeline; it "
+        "does not add direct damage."
+    ),
     "Phantom Dancer": "Spectral Waltz grants ghosting.",
     "Plated Steelcaps": "Plating reduces incoming basic damage.",
     "Protoplasm Harness": "Lifeline is an incoming-damage defensive trigger.",

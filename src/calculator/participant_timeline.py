@@ -17,6 +17,7 @@ from .pipeline import FightParams, require_fight_mode_support, run_fight
 from .scenario import ResolvedLoadout
 from .timeline_coverage import combine_timeline_coverages
 from .support_effects import derive_ally_effects
+from .healing_reduction import healing_reduction_profiles, matching_healing_reduction
 
 
 def require_roster_fight_window_support(
@@ -268,8 +269,16 @@ def _simulate_survival(
     duration: float,
 ) -> dict[str, dict[str, Any]]:
     """Resolve damage, shields, healing, and death for every participant."""
+    combatant_list = list(combatants)
+    combatant_by_id = {
+        combatant.participant_id: combatant for combatant in combatant_list
+    }
+    reduction_profiles = {
+        participant_id: healing_reduction_profiles(combatant.items)
+        for participant_id, combatant in combatant_by_id.items()
+    }
     states: dict[str, dict[str, Any]] = {}
-    for combatant in combatants:
+    for combatant in combatant_list:
         states[combatant.participant_id] = {
             "health": max(0.0, float(combatant.stats.get("health", 0.0))),
             "max_health": max(0.0, float(combatant.stats.get("health", 0.0))),
@@ -280,7 +289,11 @@ def _simulate_survival(
             "health_damage": 0.0,
             "shield_absorbed": 0.0,
             "healing_received": 0.0,
+            "healing_reduced": 0.0,
             "support_shield_received": 0.0,
+            "healing_reduction_until": 0.0,
+            "healing_reduction_factor": 1.0,
+            "healing_reduction_sources": set(),
             "death_time": None,
         }
 
@@ -349,16 +362,42 @@ def _simulate_survival(
                 state["support_shield_received"] += amount
                 event["applied_amount"] = round(amount, 6)
             elif kind == "heal":
-                received = min(amount, max(0.0, state["max_health"] - state["health"]))
+                reduction_factor = (
+                    1.0
+                    if event_time >= state["healing_reduction_until"]
+                    else state["healing_reduction_factor"]
+                )
+                reduced_amount = amount * reduction_factor
+                state["healing_reduced"] += max(0.0, amount - reduced_amount)
+                received = min(
+                    reduced_amount,
+                    max(0.0, state["max_health"] - state["health"]),
+                )
                 state["health"] += received
                 state["healing_received"] += received
+                event["raw_amount"] = round(amount, 6)
+                event["reduced_amount"] = round(reduced_amount, 6)
+                event["healing_reduction_factor"] = round(reduction_factor, 6)
                 event["applied_amount"] = round(received, 6)
             continue
         if phase == 1:
             amount = max(0.0, float(event.get("amount", 0.0)))
-            received = min(amount, max(0.0, state["max_health"] - state["health"]))
+            reduction_factor = (
+                1.0
+                if event_time >= state["healing_reduction_until"]
+                else state["healing_reduction_factor"]
+            )
+            reduced_amount = amount * reduction_factor
+            state["healing_reduced"] += max(0.0, amount - reduced_amount)
+            received = min(
+                reduced_amount,
+                max(0.0, state["max_health"] - state["health"]),
+            )
             state["health"] += received
             state["healing_received"] += received
+            event["raw_amount"] = round(amount, 6)
+            event["reduced_amount"] = round(reduced_amount, 6)
+            event["healing_reduction_factor"] = round(reduction_factor, 6)
             event["applied_amount"] = round(received, 6)
             continue
 
@@ -414,6 +453,32 @@ def _simulate_survival(
         # and ``live_damage`` above for diagnostics without letting overkill
         # inflate team-fight TTD or BIS scores.
         event["damage"] = round(event_absorbed + applied_to_health, 6)
+        attacker_profiles = reduction_profiles.get(str(source_id), ())
+        matching_profiles = matching_healing_reduction(attacker_profiles, damage_type)
+        if matching_profiles and event["damage"] > 0:
+            # Grievous Wounds sources do not stack; refresh the strongest
+            # sourced window when another qualifying hit lands.
+            strongest = min(
+                matching_profiles,
+                key=lambda profile: float(profile.get("factor", 1.0)),
+            )
+            state["healing_reduction_until"] = max(
+                state["healing_reduction_until"],
+                event_time + float(strongest.get("duration", 0.0)),
+            )
+            state["healing_reduction_factor"] = min(
+                state["healing_reduction_factor"],
+                float(strongest.get("factor", 1.0)),
+            )
+            for profile in matching_profiles:
+                state["healing_reduction_sources"].add(
+                    f"{profile.get('item', '')} · {profile.get('source', '')}"
+                )
+            event["healing_reduction"] = {
+                "factor": round(state["healing_reduction_factor"], 6),
+                "until": round(state["healing_reduction_until"], 6),
+                "sources": sorted(state["healing_reduction_sources"]),
+            }
         if state["health"] <= 0.0 and state["death_time"] is None:
             state["death_time"] = min(float(duration), event_time)
 
@@ -428,6 +493,7 @@ def _simulate_survival(
             "health_damage": round(state["health_damage"], 1),
             "shield_absorbed": round(state["shield_absorbed"], 1),
             "healing_received": round(state["healing_received"], 1),
+            "healing_reduced": round(state["healing_reduced"], 1),
             "support_shield_received": round(state["support_shield_received"], 1),
             "effective_health": round(
                 state["max_health"]
@@ -438,6 +504,10 @@ def _simulate_survival(
             ),
             "remaining_shield": round(remaining_shields, 1),
             "starting_shield": round(state["starting_shield"], 1),
+            "healing_reduction_until": round(
+                state["healing_reduction_until"], 3
+            ),
+            "healing_reduction_sources": sorted(state["healing_reduction_sources"]),
             "survived_window": state["death_time"] is None,
             "death_time": (
                 round(state["death_time"], 3)
@@ -722,6 +792,11 @@ def build_participant_timeline(
                 "overkill": round(float(event.get("overkill", 0.0)), 1),
                 "event_precision": event.get("event_precision", "exact"),
                 **(
+                    {"healing_reduction": dict(event["healing_reduction"])}
+                    if event.get("healing_reduction")
+                    else {}
+                ),
+                **(
                     {"skipped_reason": str(event["skipped_reason"])}
                     if event.get("skipped_reason")
                     else {}
@@ -736,8 +811,17 @@ def build_participant_timeline(
                 "attacker": event.get("attacker"),
                 "source": event.get("source", ""),
                 "amount": round(float(event.get("amount", 0.0)), 1),
+                "raw_amount": round(
+                    float(event.get("raw_amount", event.get("amount", 0.0))), 1
+                ),
                 "applied_amount": round(
                     float(event.get("applied_amount", event.get("amount", 0.0))), 1
+                ),
+                "reduced_amount": round(
+                    float(event.get("reduced_amount", event.get("amount", 0.0))), 1
+                ),
+                "healing_reduction_factor": round(
+                    float(event.get("healing_reduction_factor", 1.0)), 3
                 ),
                 **(
                     {"skipped_reason": str(event["skipped_reason"])}

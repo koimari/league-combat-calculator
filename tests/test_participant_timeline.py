@@ -2,7 +2,7 @@
 
 from types import SimpleNamespace
 
-from src.calculator.data_fetcher import get_champion
+from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.app import _role_scoped_bis_candidates, app
 from src.calculator.item_coverage import optimizer_supported_items
@@ -593,3 +593,60 @@ def test_simulator_scores_only_applied_support_and_healing_amounts():
     )
     assert result["target"]["healing_received"] == 0.0
     assert result["dead"]["support_shield_received"] == 0.0
+
+
+def test_simulator_applies_sourced_grievous_wounds_to_healing_in_event_order():
+    source = _dummy_combatant(
+        "source",
+        "main",
+        health=100.0,
+    )
+    source = Combatant(
+        participant_id=source.participant_id,
+        team=source.team,
+        champion_data=source.champion_data,
+        level=source.level,
+        items=(get_item_by_name("Morellonomicon"),),
+        stats=source.stats,
+        defenses=source.defenses,
+    )
+    target = _dummy_combatant("target", "enemy", health=200.0)
+    result = _simulate_survival(
+        [source, target],
+        {
+            "target": [
+                {
+                    "time": 0.0,
+                    "damage": 50.0,
+                    "damage_type": "magic",
+                    "attacker": "source",
+                    "sequence": 0,
+                    "_event_id": "wound",
+                }
+            ]
+        },
+        {
+            "target": [
+                {
+                    "time": 1.0,
+                    "amount": 100.0,
+                    "attacker": "target",
+                    "source": "target heal",
+                },
+                {
+                    "time": 4.0,
+                    "amount": 100.0,
+                    "attacker": "target",
+                    "source": "post wound heal",
+                },
+            ]
+        },
+        {},
+        10.0,
+    )
+
+    # The first heal is reduced to 60, but only 50 can fit in the missing
+    # health; the post-window heal is correctly capped at full health.
+    assert result["target"]["healing_received"] == 50.0
+    assert result["target"]["healing_reduced"] == 40.0
+    assert result["target"]["healing_reduction_until"] == 3.0
