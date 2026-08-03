@@ -3473,16 +3473,26 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
                 "target-HP context)"
             )
         dtype = info["damage_type"]
-        per_proc = sum(
-            _apply_basic_amp(
+        # Keep the existing aggregate arithmetic, but retain the priced
+        # per-instance values for champion passives that explicitly need an
+        # authored event ledger.  Caitlyn's Headshot is one proc row whose
+        # parts may contain several distinct basic-attack instances (a trap
+        # headshot, E-granted headshots, and natural cadence headshots).  A
+        # single phase-order row made every Caitlyn build look uncertified to
+        # the coupled optimizer even when no other source was partial.
+        priced_part_instances: list[tuple[str, float]] = []
+        per_proc = 0.0
+        for part in parts:
+            mitigated_part = _apply_basic_amp(
                 state,
                 part,
-                _mitigate(part.amount, part.damage_type, resists, state.magic_amp)
-                * part.count,
-                procs=proc_count,
+                _mitigate(part.amount, part.damage_type, resists, state.magic_amp),
+                procs=part.count * proc_count,
             )
-            for part in parts
-        )
+            per_proc += mitigated_part * part.count
+            priced_part_instances.extend(
+                (part.damage_type, mitigated_part) for _ in range(part.count)
+            )
         if per_proc <= 0:
             continue
 
@@ -3513,6 +3523,45 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
             state.breakdown[key]["event_phase"] = str(
                 info.get("event_phase", "effect")
             )
+        elif (
+            key == "passive"
+            and info.get("name") == "Headshot"
+            and priced_part_instances
+        ):
+            # Headshot's module owns the ordering assumptions: with no
+            # ambient autos, the E/trap attacks are forced at the combo
+            # boundary; with autos, the first converted swings land on the
+            # same authored timestamps as the auto stream.  The parser's
+            # aggregate packet stays unchanged, so this ledger is runtime
+            # evidence rather than a new guessed formula.
+            if state.num_auto_attacks > 0 and state.auto_attack_uptime > 0:
+                auto_times = _auto_attack_timestamps(state)
+                # Caitlyn's timed packet emits the trap rider as the final
+                # part after the common E/cadence rider.  The Wiki ordering
+                # is trap first, then E grants, then natural cadence.
+                if len(priced_part_instances) > 1:
+                    ordered_instances = [
+                        priced_part_instances[-1],
+                        *priced_part_instances[:-1],
+                    ]
+                else:
+                    ordered_instances = priced_part_instances
+                event_times = auto_times[: len(ordered_instances)]
+                event_phase = "auto"
+            else:
+                ordered_instances = priced_part_instances
+                event_times = [0.0] * len(ordered_instances)
+                event_phase = "effect"
+            state.breakdown[key]["damage_events"] = [
+                {
+                    "time": event_times[index] if index < len(event_times) else 0.0,
+                    "damage_type": event_type,
+                    "damage": event_damage,
+                    "event_precision": "exact",
+                }
+                for index, (event_type, event_damage) in enumerate(ordered_instances)
+            ]
+            state.breakdown[key]["event_phase"] = event_phase
         elif coupled_to_autos and state.num_auto_attacks > 0:
             autos_per_second = state.attack_speed * state.auto_attack_uptime
             interval = 1.0 / autos_per_second if autos_per_second > 0 else 0.0
