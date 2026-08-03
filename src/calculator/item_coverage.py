@@ -180,7 +180,12 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
         "documents multi-hit and secondary-effect behavior as ability-specific."
     ),
     "Fimbulwinter": "Awe bonus health and Everlasting shields are not modelled.",
-    "Force of Nature": "Steadfast's combat magic-resistance stacks are not modelled.",
+    "Force of Nature": (
+        "Steadfast's target-side stack timing is not modelled: champion magic "
+        "damage grants at most one stack per incoming cast instance per second "
+        "(two on immobilize), stacks expire after 7s, and only 8 stacks grant "
+        "+70 bonus magic resistance."
+    ),
     "Frozen Heart": "Winter's Caress attack-speed reduction is not modelled.",
     "Guardian Angel": "Rebirth is not modelled in target health damage.",
     "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",

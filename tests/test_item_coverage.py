@@ -108,6 +108,7 @@ def test_optimizer_rejects_a_locked_item_with_unmodeled_damage_mechanics():
         ("Plated Steelcaps", "modeled"),
         ("Warden's Mail", "modeled"),
         ("Randuin's Omen", "modeled"),
+        ("Force of Nature", "blocked"),
         ("Immortal Shieldbow", "modeled_event_certified"),
         ("Hexdrinker", "modeled_event_certified"),
         ("Maw of Malmortius", "modeled_event_certified"),
@@ -173,6 +174,27 @@ def test_target_build_coverage_and_guard_name_the_omitted_defense():
     assert [entry["name"] for entry in coverage["blocked"]] == ["Banshee's Veil"]
     with pytest.raises(ValueError, match="Annul's first-hostile-ability"):
         require_target_item_coverage(items)
+
+
+def test_force_of_nature_target_defense_fails_closed_with_stack_timing_diagnostic():
+    """Do not price Steadfast as permanent +70 MR in target comparisons.
+
+    The passive is conditional on an ordered stream of incoming champion
+    damage/immobilize events and has a one-second per-cast-instance throttle;
+    aggregate damage rows cannot establish when the eighth stack is reached.
+    """
+    item = get_item_by_name("Force of Nature")
+    coverage = target_item_model_coverage(item)
+
+    assert coverage["status"] == "blocked"
+    assert coverage["calculation_eligible"] is False
+    assert (
+        "at most one stack per incoming cast instance per second" in coverage["reason"]
+    )
+    assert "+70 bonus magic resistance" in coverage["reason"]
+
+    with pytest.raises(ValueError, match="Force of Nature.*stack timing"):
+        require_target_item_coverage([item])
 
 
 def test_unknown_target_passive_fails_closed():
