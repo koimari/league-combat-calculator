@@ -473,6 +473,7 @@ def _hill_climb(
     boots_pool: list[dict[str, Any]],
     eval_kwargs: dict[str, Any],
     max_iterations: int = 10,
+    initial_score: float | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None, float, int]:
     """Iteratively swap items to improve the build. Returns (legendaries, boots, score, evals)."""
     current = list(legendaries)
@@ -480,13 +481,19 @@ def _hill_climb(
     evals = 0
 
     all_items = ([current_boots] if current_boots else []) + current
-    best_score = _evaluate_build(
-        champion_data,
-        level,
-        all_items,
-        **eval_kwargs,
-    )
-    evals += 1
+    if initial_score is None:
+        best_score = _evaluate_build(
+            champion_data,
+            level,
+            all_items,
+            **eval_kwargs,
+        )
+        evals += 1
+    else:
+        # Greedy fill already evaluated this exact ordered build. Reuse its
+        # score; no state is mutated by scoring, so this only removes a
+        # duplicate coupled timeline evaluation.
+        best_score = initial_score
 
     for _ in range(max_iterations):
         improved = False
@@ -808,6 +815,7 @@ def optimize_build(
             boots_pool,
             eval_kwargs,
             max_iterations=3 if coupled_objective else 10,
+            initial_score=greedy_score,
         )
         total_evals += hc_evals
         remember_candidate(legendaries, boots, hc_score)
