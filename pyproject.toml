@@ -1,5 +1,6 @@
-# Formatter configuration only. Packaging, pytest, and pylint settings
-# intentionally live elsewhere so this file has one job.
+# Runtime metadata is also declared here so Vercel can resolve the small
+# production dependency set with its native uv builder. Development and test
+# dependencies intentionally remain in requirements.txt.
 #
 # line-length matches black's own default. It is stated explicitly anyway:
 # black's stable style changes annually, and an implicit "whatever the default
@@ -17,6 +18,15 @@
 # (CLAUDE.md rule 1). Written without a leading slash on purpose: `^/vendor/`
 # silently fails to match on Windows, while a bare `vendor/` matches on both
 # Windows and Linux CI.
+
+[project]
+name = "league-combat-calculator"
+version = "0.0.0"
+requires-python = ">=3.14"
+dependencies = [
+  "Flask==3.1.3",
+  "gunicorn==26.0.0",
+]
 
 [tool.black]
 line-length = 88
