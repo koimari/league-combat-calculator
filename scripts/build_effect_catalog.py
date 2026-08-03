@@ -121,7 +121,8 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
         "item_count": len(items),
         "source": {
             "kind": "local Wiki cache",
-            "path": str(source.relative_to(source.parents[1])),
+            # as_posix() so a Windows rebuild matches a macOS/Linux one.
+            "path": source.relative_to(source.parents[1]).as_posix(),
             "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
         },
         "items": {str(item_id): effect for item_id, effect in sorted(items.items())},

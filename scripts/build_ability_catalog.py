@@ -120,7 +120,8 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
         "ability_slots": list(ABILITY_SLOTS),
         "source": {
             "kind": "local Wiki cache",
-            "path": str(source.relative_to(source.parents[1])),
+            # as_posix() so a Windows rebuild matches a macOS/Linux one.
+            "path": source.relative_to(source.parents[1]).as_posix(),
             "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
         },
         "champions": champions,
