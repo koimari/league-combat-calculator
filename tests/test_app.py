@@ -872,6 +872,18 @@ def test_frontend_uses_level_derived_ranks_for_nonstandard_kits():
     assert "ability_ranks: usesLevelDerivedRanks(target.champion)" in source
 
 
+def test_damage_breakdown_leads_with_result_and_keeps_event_audit_disclosed():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "function breakdownOutcome" in source
+    assert 'class="breakdown-outcome" role="status"' in source
+    assert "function survivalStatus" in source
+    assert "alive at window end" in source
+    assert "defeated at ${one(deathTime)}s" in source
+    assert 'class="breakdown-audit"' in source
+    assert 'aria-label="Event order audit"' in source
+
+
 @pytest.mark.parametrize(
     "url",
     [
