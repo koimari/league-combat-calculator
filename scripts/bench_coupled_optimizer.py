@@ -76,9 +76,35 @@ FIVE_CHAMPION_SCENARIO = {
     ],
 }
 
+# The issue's second live shape: a tank (enemy Dr. Mundo in the report,
+# run here as the optimized champion) built into a mixed enemy pair.
+MUNDO_SCENARIO = {
+    "champion": "Dr. Mundo",
+    "level": 13,
+    "fight_mode": "one_rotation",
+    "role": "top",
+    "enemies": [
+        {
+            "champion": "Cassiopeia",
+            "level": 13,
+            "role": "mid",
+            "boots": "Sorcerer's Shoes",
+            "items": ["Rabadon's Deathcap", "Void Staff"],
+        },
+        {
+            "champion": "Vayne",
+            "level": 13,
+            "role": "bottom",
+            "boots": "Berserker's Greaves",
+            "items": ["Kraken Slayer", "Phantom Dancer"],
+        },
+    ],
+}
+
 SCENARIOS = {
     "cassiopeia_3champ": CASSIOPEIA_SCENARIO,
     "cassiopeia_5champ": FIVE_CHAMPION_SCENARIO,
+    "mundo_3champ": MUNDO_SCENARIO,
 }
 
 
@@ -124,9 +150,7 @@ def main() -> None:
     args = parser.parse_args()
     app.config["RATE_LIMIT_ENABLED"] = False
 
-    selected = (
-        {args.scenario: SCENARIOS[args.scenario]} if args.scenario else SCENARIOS
-    )
+    selected = {args.scenario: SCENARIOS[args.scenario]} if args.scenario else SCENARIOS
 
     if args.profile:
         name, payload = next(iter(selected.items()))

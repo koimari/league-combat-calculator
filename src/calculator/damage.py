@@ -124,6 +124,7 @@ import random
 from collections import Counter
 from dataclasses import dataclass, field, replace
 from collections.abc import Sequence
+from operator import itemgetter
 from typing import Any, Callable
 
 from . import item_effects
@@ -1033,6 +1034,7 @@ def _ordered_damage_events(
         nonlocal sequence
         if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
             return
+        order_value = float(sequence) if order is None else order
         event = {
             "source_key": source_key,
             "damage_type": damage_type,
@@ -1041,7 +1043,8 @@ def _ordered_damage_events(
             "ordinal": ordinal,
             "phase": phase,
             "sequence": sequence,
-            "order": float(sequence) if order is None else order,
+            "order": order_value,
+            "_lk": (time, order_value, _EVENT_PHASE_ORDER[phase], sequence),
         }
         if raw_damage is not None:
             event["raw_damage"] = raw_damage
@@ -1073,6 +1076,7 @@ def _ordered_damage_events(
         phase = str(entry.get("event_phase", default_phase))
         if phase not in _EVENT_PHASE_ORDER:
             phase = default_phase
+        phase_rank = _EVENT_PHASE_ORDER[phase]
         for ordinal, event in enumerate(declared, start=1):
             if not isinstance(event, dict):
                 continue
@@ -1081,15 +1085,18 @@ def _ordered_damage_events(
             if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
                 continue
             order = event.get("timeline_order")
+            time = float(event.get("time", 0.0))
+            order_value = float(sequence) if order is None else float(order)
             row = {
                 "source_key": source_key,
                 "damage_type": damage_type,
                 "damage": damage,
-                "time": float(event.get("time", 0.0)),
+                "time": time,
                 "ordinal": ordinal,
                 "phase": phase,
                 "sequence": sequence,
-                "order": float(sequence) if order is None else float(order),
+                "order": order_value,
+                "_lk": (time, order_value, phase_rank, sequence),
             }
             raw_damage = event.get("raw_damage")
             if raw_damage is not None:
@@ -1201,15 +1208,11 @@ def _ordered_damage_events(
                         phase="amplifier",
                     )
 
-    return sorted(
-        events,
-        key=lambda event: (
-            event["time"],
-            event["order"],
-            _EVENT_PHASE_ORDER[event["phase"]],
-            event["sequence"],
-        ),
-    )
+    # ``_lk`` is the (time, order, phase, sequence) key precomputed at
+    # event creation; sorting on it avoids rebuilding the tuple per event
+    # for every ledger reconstruction.
+    events.sort(key=itemgetter("_lk"))
+    return events
 
 
 def _event_timeline_coverage(

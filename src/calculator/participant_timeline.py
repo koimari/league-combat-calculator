@@ -964,9 +964,10 @@ def build_participant_timeline(
                     }
                 )
                 row["total_damage"] += float(result.get("total_damage", 0.0))
-                row_sources = row["sources"]
-                for source, template in packet["source_names"].items():
-                    row_sources.setdefault(source, template)
+                if include_receipt:
+                    row_sources = row["sources"]
+                    for source, template in packet["source_names"].items():
+                        row_sources.setdefault(source, template)
 
     # A support source still has a cast schedule when no opposing target was
     # selected (for example, a main champion with allies but an empty enemy
@@ -1008,6 +1009,10 @@ def build_participant_timeline(
         row["total_damage"] = round(
             sum(float(event.get("damage", 0.0)) for event in events), 1
         )
+        if not include_receipt:
+            # The scoring subset carries damage totals, not per-source rows.
+            row["sources"] = {}
+            continue
         source_totals: dict[str, float] = defaultdict(float)
         for event in events:
             source_totals[str(event.get("source_key", ""))] += float(
