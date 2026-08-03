@@ -51,6 +51,10 @@ from .slotlib import (
 # https://wiki.leagueoflegends.com/en-us/Darius
 P_BLEED_BONUS_AD_RATIO = 0.30  # per stack, over the full 5s
 P_BLEED_DURATION = 5.0  # seconds per (refreshing) stack window
+# The bleed ticks every 1.25s — the JSON's own per-tick arrays are exactly
+# quarters of the 5s totals (test-locked in test_darius.py), so the cadence
+# is sourced; the engine authors bleed tick events from it.
+P_BLEED_TICK_INTERVAL = 1.25
 P_BLEED_MAX_STACKS = 5
 P_BLEED_EXTRA_STACK_EFFECTIVENESS = 1.0  # every stack ticks at full rate
 NOXIAN_MIGHT_DURATION = 5.0
@@ -163,6 +167,7 @@ def _hemorrhage(ctx: SlotCtx) -> dict[str, Any] | None:
             "single_stack_raw": single_stack,
             "single_stack_bonus_ad_ratio": P_BLEED_BONUS_AD_RATIO,
             "duration": P_BLEED_DURATION,
+            "tick_interval": P_BLEED_TICK_INTERVAL,
             "max_stacks": P_BLEED_MAX_STACKS,
             "extra_stack_effectiveness": P_BLEED_EXTRA_STACK_EFFECTIVENESS,
             "applied_by_autos": True,

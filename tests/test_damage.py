@@ -44,7 +44,7 @@ def _simulate_bork_damage(
 ):
     """Readable test adapter around the generic current-health simulation."""
     effect = resolve_damage_effects([{"name": "Blade of the Ruined King"}])
-    return _simulate_current_health_on_hit(
+    total, hits, _per_hit_damages = _simulate_current_health_on_hit(
         effect.per_hits[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
         target_health,
@@ -56,6 +56,7 @@ def _simulate_bork_damage(
         phantom_hit_autos,
         double_hit_all,
     )
+    return total, hits
 
 
 def _calculate_phantom_hits(num_auto_attacks, item_names):
@@ -284,6 +285,71 @@ class TestTimelineCoverage:
         assert secondary["health_damage"] == pytest.approx(675.0)
 
 
+class TestAbilityDotTickEvents:
+    """DoT ability rows with a sourced tick cadence author per-tick events."""
+
+    @staticmethod
+    def _dot_spell(*, tick_interval: float | None = 0.5) -> dict:
+        entry = {
+            "name": "Poison",
+            "rank": 1,
+            "cooldown": 4.0,
+            "damage_type": "magic",
+            "total_raw": 300.0,
+            "parts": (DamagePart("magic", 300.0),),
+            "dot_duration": 3.0,
+        }
+        if tick_interval is not None:
+            entry["dot_tick_interval"] = tick_interval
+        return {"Q": entry}
+
+    def test_sourced_cadence_authors_ticks_from_each_cast(self, fight, attacker_stats):
+        """Casts at t=0 and t=4 each spread six 0.5s ticks over their
+        3s window; the events sum to the row total and certify it."""
+        result = fight(
+            attacker_stats(),
+            self._dot_spell(),
+            target_magic_resistance=0.0,
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+        )
+
+        row = result["breakdown"]["Q"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == pytest.approx(
+            [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
+        )
+        assert all(event["damage"] == pytest.approx(50.0) for event in events)
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+
+    def test_authored_dot_ticks_lift_the_coverage_downgrade(
+        self, fight, attacker_stats
+    ):
+        """A dot_duration row whose events sum exactly is certified."""
+        result = fight(
+            attacker_stats(),
+            self._dot_spell(),
+            target_magic_resistance=0.0,
+        )
+
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert "Q" in coverage["exact_sources"]
+
+    def test_dot_without_sourced_cadence_stays_coarse(self, fight, attacker_stats):
+        """No sourced tick interval means no invented events: fail closed."""
+        result = fight(
+            attacker_stats(),
+            self._dot_spell(tick_interval=None),
+            target_magic_resistance=0.0,
+        )
+
+        assert "damage_events" not in result["breakdown"]["Q"]
+        assert "Q" in result["timeline_coverage"]["coarse_sources"]
+
+
 class TestOrderedDamageEvents:
     """The shared ledger keeps cast order and exact typed composition."""
 
@@ -390,6 +456,101 @@ class TestOrderedDamageEvents:
             if event["source_key"] == "damage_amp_Test"
             and event["damage_type"] == "magic"
         ) == pytest.approx(15.0)
+
+
+class TestAmplifierEventAttribution:
+    """damage_amp_<source> rows author their delta onto the amplified events."""
+
+    @staticmethod
+    def _test_spell(*, cooldown: float = 10.0) -> dict:
+        return {
+            "Q": {
+                "name": "Test spell",
+                "rank": 1,
+                "cooldown": cooldown,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+                "parts": (DamagePart("magic", 300.0),),
+            }
+        }
+
+    @pytest.fixture
+    def liandry_fight(self, fight, attacker_stats) -> dict:
+        """Timed fight where Liandry's Suffering amp has real events to ride."""
+        return fight(
+            attacker_stats(),
+            self._test_spell(),
+            items=[get_item_by_name("Liandry's Torment")],
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.5,
+        )
+
+    def test_general_amp_authors_delta_events_at_amplified_times(self, liandry_fight):
+        """The amp delta lands on the amplified events' own timestamps,
+        not lumped at one coarse stamp, and sums to the row total."""
+        amp_row = liandry_fight["breakdown"]["damage_amp_Liandry's Torment"]
+        amp_events = amp_row["damage_events"]
+        assert sum(event["damage"] for event in amp_events) == pytest.approx(
+            amp_row["total_damage"]
+        )
+        amp_times = {event["time"] for event in amp_events}
+        amplified_times = {
+            event["time"]
+            for event in liandry_fight["damage_events"]
+            if event["source_key"] != "damage_amp_Liandry's Torment"
+        }
+        assert amp_times <= amplified_times
+        assert len(amp_times) > 1
+
+    def test_general_amp_row_is_certified_exact(self, liandry_fight):
+        coverage = liandry_fight["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert "damage_amp_Liandry's Torment" in coverage["exact_sources"]
+
+    def test_amp_delta_mirrors_the_amplified_type_composition(self, liandry_fight):
+        """A fight-wide amp scales every type equally: the delta's per-type
+        split matches the pre-amp ledger's per-type split."""
+        amp_events = liandry_fight["breakdown"]["damage_amp_Liandry's Torment"][
+            "damage_events"
+        ]
+        amplified = [
+            event
+            for event in liandry_fight["damage_events"]
+            if event["source_key"] != "damage_amp_Liandry's Torment"
+        ]
+
+        def type_fraction(events: list, dtype: str) -> float:
+            total = sum(event["damage"] for event in events)
+            return sum(e["damage"] for e in events if e["damage_type"] == dtype) / total
+
+        for dtype in ("physical", "magic"):
+            assert type_fraction(amp_events, dtype) == pytest.approx(
+                type_fraction(amplified, dtype)
+            )
+
+    def test_hypershot_amp_excludes_the_trigger_cast(self, fight, attacker_stats):
+        """Horizon Focus amps everything except the first cast (the trigger):
+        its delta events cover every cast time but the first."""
+        result = fight(
+            attacker_stats(),
+            self._test_spell(cooldown=2.0),
+            items=[get_item_by_name("Horizon Focus")],
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=0.0,
+        )
+
+        amp_row = result["breakdown"]["damage_amp_Horizon Focus"]
+        amp_events = amp_row["damage_events"]
+        assert sum(event["damage"] for event in amp_events) == pytest.approx(
+            amp_row["total_damage"]
+        )
+        cast_times = {event["time"] for event in result["cast_timeline"]}
+        assert {event["time"] for event in amp_events} == cast_times - {min(cast_times)}
+        assert "damage_amp_Horizon Focus" in (
+            result["timeline_coverage"]["exact_sources"]
+        )
 
 
 class TestTargetIncomingDamageModifiers:
@@ -549,6 +710,43 @@ class TestTargetIncomingDamageModifiers:
         assert result["total_damage"] == pytest.approx(1000.0)
         assert result["threshold_shield_absorbed"] == pytest.approx(400.0)
         assert result["health_damage"] == pytest.approx(600.0)
+
+    def test_magic_threshold_shield_ignores_physical_damage(
+        self, fight, attacker_stats
+    ):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Magic trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 350.0,
+                    "parts": (DamagePart("magic", 350.0),),
+                },
+                "W": {
+                    "name": "Physical follow up",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 200.0,
+                    "parts": (DamagePart("physical", 200.0),),
+                },
+            },
+            target_health=1000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            target_threshold_shield_amount=500.0,
+            target_threshold_shield_health_ratio=0.90,
+            target_threshold_shield_duration=3.0,
+            target_threshold_shield_damage_type="magic",
+        )
+
+        # Q triggers the magic-only Lifeline shield and consumes 350 of it.
+        # The remaining 150 must not absorb W's physical damage.
+        assert result["threshold_shield_absorbed"] == pytest.approx(350.0)
+        assert result["health_damage"] == pytest.approx(200.0)
 
     def test_timed_auto_events_allow_threshold_shield_to_expire(
         self, fight, attacker_stats
@@ -790,6 +988,124 @@ class TestTargetIncomingDamageModifiers:
                 target_threshold_health_ratio=0.30,
                 target_threshold_health_duration=5.0,
             )
+
+
+class TestShieldReaver:
+    """Serpent's Fang venom cuts the target's non-magic shields."""
+
+    _TRIGGER_Q = {
+        "Q": {
+            "name": "Magic trigger",
+            "rank": 1,
+            "cooldown": 10.0,
+            "damage_type": "magic",
+            "total_raw": 800.0,
+            "parts": (DamagePart("magic", 800.0),),
+        }
+    }
+
+    def _fang_fight(self, fight, attacker_stats, **overrides):
+        return fight(
+            attacker_stats(**overrides.pop("stats", {})),
+            self._TRIGGER_Q,
+            items=[get_item_by_name("Serpent's Fang")],
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            **overrides,
+        )
+
+    def test_melee_cuts_general_lifeline_shield_by_half(self, fight, attacker_stats):
+        result = self._fang_fight(
+            fight,
+            attacker_stats,
+            target_threshold_shield_amount=400.0,
+            target_threshold_shield_health_ratio=0.30,
+            target_threshold_shield_duration=3.0,
+            target_threshold_shield_damage_type="all",
+        )
+
+        assert result["threshold_shield_absorbed"] == pytest.approx(200.0)
+        assert result["health_damage"] == pytest.approx(600.0)
+        assert any("Shield Reaver" in note for note in result["notes"])
+
+    def test_ranged_cuts_general_lifeline_shield_by_35_percent(
+        self, fight, attacker_stats
+    ):
+        result = self._fang_fight(
+            fight,
+            attacker_stats,
+            stats={"is_melee": False},
+            target_threshold_shield_amount=400.0,
+            target_threshold_shield_health_ratio=0.30,
+            target_threshold_shield_duration=3.0,
+            target_threshold_shield_damage_type="all",
+        )
+
+        assert result["threshold_shield_absorbed"] == pytest.approx(260.0)
+
+    def test_magic_lifeline_shield_is_unaffected(self, fight, attacker_stats):
+        result = self._fang_fight(
+            fight,
+            attacker_stats,
+            target_threshold_shield_amount=400.0,
+            target_threshold_shield_health_ratio=0.30,
+            target_threshold_shield_duration=3.0,
+            target_threshold_shield_damage_type="magic",
+        )
+
+        assert result["threshold_shield_absorbed"] == pytest.approx(400.0)
+
+    def test_starting_magic_shield_immune_but_general_shield_cut(
+        self, fight, attacker_stats
+    ):
+        result = self._fang_fight(
+            fight,
+            attacker_stats,
+            target_magic_shield=300.0,
+            target_general_shield=200.0,
+        )
+
+        assert result["magic_shield_absorbed"] == pytest.approx(300.0)
+        assert result["general_shield_absorbed"] == pytest.approx(100.0)
+
+    def test_starting_physical_shield_is_cut(self, fight, attacker_stats):
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Physical hit",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("physical", 800.0),),
+                }
+            },
+            items=[get_item_by_name("Serpent's Fang")],
+            target_health=1000.0,
+            target_armor=0.0,
+            target_physical_shield=300.0,
+        )
+
+        assert result["physical_shield_absorbed"] == pytest.approx(150.0)
+
+    def test_protoplasm_health_and_healing_are_not_shields(self, fight, attacker_stats):
+        result = self._fang_fight(
+            fight,
+            attacker_stats,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert result["threshold_health_bonus_gained"] == 200.0
+        assert result["target_effective_max_health"] == 1200.0
+
+    def test_no_note_without_target_shields(self, fight, attacker_stats):
+        result = self._fang_fight(fight, attacker_stats)
+
+        assert not any("Shield Reaver" in note for note in result["notes"])
 
 
 class TestBorkCurrentHpSimulation:
@@ -1196,6 +1512,189 @@ def test_coupled_auto_sources_are_coarse_in_coverage_itself():
     assert no_autos["exact_sources"] == ["Q"]
 
 
+class TestOnHitSwingEvents:
+    """On-hit rows author real per-swing timestamps in timed fights.
+
+    Phase 1 of timestamp certification: every on-hit application rides a
+    simulated auto swing, so the rows can author exact ``damage_events``
+    at those swing times instead of collapsing to the coarse effect
+    phase. Ability-carried on-hit applications have no authored
+    timestamps yet, so rows fed by them deliberately stay coarse.
+    """
+
+    @staticmethod
+    def _on_hit_shell(**extra) -> dict:
+        """Zero-direct-damage ability whose payload is a true on-hit."""
+        on_hit = {
+            "name": "Test on-hit",
+            "damage_per_hit": 30.0,
+            "damage_type": "true",
+        }
+        on_hit.update(extra)
+        return {
+            "W": {
+                "name": "Test on-hit",
+                "rank": 1,
+                "damage_type": "true",
+                "total_raw": 0.0,
+                "parts": (),
+                "on_hit": on_hit,
+            }
+        }
+
+    def _timed_fight(self, fight, attacker_stats, abilities, **overrides):
+        """5s timed fight at 1.0 AS / full uptime: swings at 0..4s."""
+        config = {
+            "one_rotation": False,
+            "fight_duration_seconds": 5.0,
+            "auto_attack_uptime": 1.0,
+            "target_armor": 0.0,
+            "target_magic_resistance": 0.0,
+        }
+        config.update(overrides)
+        return fight(attacker_stats(), abilities, **config)
+
+    def test_ability_on_hit_rides_authored_swing_times(
+        self, fight, attacker_stats
+    ) -> None:
+        """A one-per-attack passive authors one event per swing."""
+        result = self._timed_fight(fight, attacker_stats, self._on_hit_shell())
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        assert all(event["damage"] == pytest.approx(30.0) for event in events)
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_stacked_on_hit_smooths_partial_procs_onto_swings(
+        self, fight, attacker_stats
+    ) -> None:
+        """Vayne-W-style rows smear the per-proc damage over every swing.
+
+        The row's total is the smooth per-hit average (partial stacks
+        included), so its events must be per-swing shares — grouping
+        them into whole procs would break the sum contract.
+        """
+        result = self._timed_fight(
+            fight, attacker_stats, self._on_hit_shell(stacks_required=3)
+        )
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        assert all(event["damage"] == pytest.approx(30.0) for event in events)
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_max_procs_cap_consumes_the_earliest_swings(
+        self, fight, attacker_stats
+    ) -> None:
+        """A stock-limited on-hit (Bard meeps) procs on the first swings."""
+        result = self._timed_fight(
+            fight, attacker_stats, self._on_hit_shell(max_procs=2)
+        )
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0]
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_stack_ramp_on_hit_escalates_per_swing(self, fight, attacker_stats) -> None:
+        """Orianna-P-style events carry each swing's own stacked value."""
+        result = self._timed_fight(
+            fight,
+            attacker_stats,
+            self._on_hit_shell(stack_ramp={"damage_per_stack": 10.0, "max_stacks": 2}),
+        )
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        assert [event["damage"] for event in events] == pytest.approx(
+            [30.0, 40.0, 50.0, 50.0, 50.0]
+        )
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_ramping_on_hit_scales_with_swing_index(
+        self, fight, attacker_stats
+    ) -> None:
+        """Ramping proc k deals k×base AT swing k — not an even spread."""
+        result = self._timed_fight(
+            fight, attacker_stats, self._on_hit_shell(ramping=True)
+        )
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        assert [event["damage"] for event in events] == pytest.approx(
+            [30.0, 60.0, 90.0, 120.0, 150.0]
+        )
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_scheduled_cooldown_procs_land_on_their_swing_times(
+        self, fight, attacker_stats
+    ) -> None:
+        """Cooldown-gated current-HP procs (Jarvan P) stamp their swings."""
+        abilities = self._on_hit_shell(
+            proc_cooldown=2.5,
+            current_health_percent=10.0,
+            min_damage=10.0,
+            damage_type="physical",
+        )
+        del abilities["W"]["on_hit"]["damage_per_hit"]
+        result = self._timed_fight(fight, attacker_stats, abilities)
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        events = row["damage_events"]
+        # Procs at swings 0 (100 = 10% of 1000 HP) and 3 (HP has decayed
+        # by the proc plus three 100-damage autos: 10% of 600 = 60).
+        assert [event["time"] for event in events] == [0.0, 3.0]
+        assert [event["damage"] for event in events] == pytest.approx([100.0, 60.0])
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
+
+    def test_ability_hit_counted_on_hits_stay_coarse(
+        self, fight, attacker_stats
+    ) -> None:
+        """Shared auto+ability stack counters have untimestamped hits.
+
+        Ability-carried applications carry no authored timestamps yet,
+        so a row whose counter they feed (Aurora P) fails closed to
+        coarse instead of inventing swing times for ability hits.
+        """
+        abilities = self._on_hit_shell(stacks_required=2, count_ability_hits=True)
+        abilities["Q"] = {
+            "name": "Damaging spell",
+            "rank": 1,
+            "cooldown": 10.0,
+            "damage_type": "magic",
+            "total_raw": 300.0,
+            "parts": (DamagePart("magic", 300.0),),
+        }
+        result = self._timed_fight(fight, attacker_stats, abilities)
+
+        row = result["breakdown"]["on_hit_ability_W"]
+        assert row["total_damage"] > 0
+        assert "damage_events" not in row
+        assert "on_hit_ability_W" in result["timeline_coverage"]["coarse_sources"]
+
+
 class TestSplitAutoVsAbility:
     """Tests for split_auto_vs_ability — auto vs ability damage attribution.
 
@@ -1511,22 +2010,27 @@ class TestSplitByDamageType:
 # ---------------------------------------------------------------------------
 
 
-def _stacking_dot_passive(single_stack_raw=100.0, applied_by_autos=True):
+def _stacking_dot_passive(
+    single_stack_raw=100.0, applied_by_autos=True, tick_interval=None
+):
     """Passive entry declaring a hit-driven stacking DoT (Briar P shape)."""
+    spec = {
+        "name": "Bleed",
+        "damage_type": "physical",
+        "single_stack_raw": single_stack_raw,
+        "duration": 5.0,
+        "max_stacks": 5,
+        "extra_stack_effectiveness": 0.25,
+        "applied_by_autos": applied_by_autos,
+    }
+    if tick_interval is not None:
+        spec["tick_interval"] = tick_interval
     return {
         "name": "Bleed",
         "damage_type": "physical",
         "total_raw": single_stack_raw,
         "parts": (),
-        "stacking_dot": {
-            "name": "Bleed",
-            "damage_type": "physical",
-            "single_stack_raw": single_stack_raw,
-            "duration": 5.0,
-            "max_stacks": 5,
-            "extra_stack_effectiveness": 0.25,
-            "applied_by_autos": applied_by_autos,
-        },
+        "stacking_dot": spec,
     }
 
 
@@ -1710,6 +2214,89 @@ class TestStackingDot:
             target_armor=0.0,
         )
         assert "stacking_dot_passive" not in result["breakdown"]
+
+
+class TestStackingDotTickEvents:
+    """A sourced tick cadence turns the integrated bleed into tick events."""
+
+    def test_single_application_authors_its_four_ticks(
+        self, attacker_stats, fight
+    ) -> None:
+        """One stack over 5s at 1.25s cadence: four 25-raw ticks."""
+        abilities = {
+            "passive": _stacking_dot_passive(tick_interval=1.25),
+            "Q": _stack_applier(),
+        }
+        result = fight(attacker_stats(), abilities, target_armor=0.0)
+
+        row = result["breakdown"]["stacking_dot_passive"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == pytest.approx(
+            [1.25, 2.5, 3.75, 5.0]
+        )
+        assert all(event["damage"] == pytest.approx(25.0) for event in events)
+        assert all(event["damage_type"] == "physical" for event in events)
+        coverage = result["timeline_coverage"]
+        assert "stacking_dot_passive" in coverage["exact_sources"]
+
+    def test_tick_buckets_integrate_the_ramping_rate(
+        self, attacker_stats, fight
+    ) -> None:
+        """10 autos at 1/s: the first 1.25s tick spans the 1-stack second
+        (20) plus a quarter second at 2 stacks (6.25); the whole event
+        list conserves the row's 510 raw total through the tail at 14s."""
+        result = fight(
+            attacker_stats(),
+            {"passive": _stacking_dot_passive(tick_interval=1.25)},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=10.0,
+            auto_attack_uptime=1.0,
+        )
+
+        row = result["breakdown"]["stacking_dot_passive"]
+        events = row["damage_events"]
+        assert len(events) == 12  # 11 full ticks + the 14s tail remainder
+        assert events[0]["time"] == pytest.approx(1.25)
+        assert events[0]["damage"] == pytest.approx(26.25)
+        assert events[-1]["time"] == pytest.approx(14.0)
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert result["timeline_coverage"]["complete"] is True
+
+    def test_expired_chain_reanchors_the_tick_grid(self, attacker_stats, fight) -> None:
+        """Hits at t=0 and t=6 (gap > 5s): the first chain ticks on the
+        t=0 clock, the fresh chain ticks on the t=6 clock."""
+        result = fight(
+            attacker_stats(attack_speed=1.0 / 6.0),
+            {"passive": _stacking_dot_passive(tick_interval=1.25)},
+            target_armor=0.0,
+            one_rotation=False,
+            fight_duration_seconds=12.0,
+            auto_attack_uptime=1.0,
+        )
+
+        row = result["breakdown"]["stacking_dot_passive"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == pytest.approx(
+            [1.25, 2.5, 3.75, 5.0, 7.25, 8.5, 9.75, 11.0]
+        )
+        assert sum(event["damage"] for event in events) == pytest.approx(200.0)
+
+    def test_unsourced_cadence_keeps_the_row_coarse(
+        self, attacker_stats, fight
+    ) -> None:
+        """No sourced tick interval means no invented events: fail closed."""
+        abilities = {
+            "passive": _stacking_dot_passive(),
+            "Q": _stack_applier(),
+        }
+        result = fight(attacker_stats(), abilities, target_armor=0.0)
+
+        row = result["breakdown"]["stacking_dot_passive"]
+        assert "damage_events" not in row
+        assert "stacking_dot_passive" in result["timeline_coverage"]["coarse_sources"]
 
 
 # ---------------------------------------------------------------------------

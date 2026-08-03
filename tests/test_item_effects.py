@@ -27,6 +27,7 @@ from src.calculator.item_effects import (
     refresh_item_effects,
     resolve_damage_effects,
     resolve_stat_effects,
+    shield_reduction_fraction,
 )
 
 
@@ -689,3 +690,24 @@ class TestActualizerAbilityDamageAmp:
         items = [{"name": "Liandry's Torment"}]
         stats = {"bonus_mana": 300.0}
         assert resolve_damage_effects(items).ability_amp is None
+
+
+class TestShieldReductionFraction:
+    """Serpent's Fang Shield Reaver: the fraction cut from non-magic shields."""
+
+    def test_absent_returns_zero(self) -> None:
+        assert shield_reduction_fraction([], is_melee=True) == 0.0
+
+    def test_melee_and_ranged_sourced_values(self) -> None:
+        build = _build("Serpent's Fang")
+        assert shield_reduction_fraction(build, is_melee=True) == 0.50
+        assert shield_reduction_fraction(build, is_melee=False) == 0.35
+
+    def test_missing_key_names_item_and_key(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(item_effects.ITEM_EFFECTS.get("Serpent's Fang", {}))
+        broken.pop("shield_reduction_melee", None)
+        monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Serpent's Fang", broken)
+        with pytest.raises(KeyError, match="shield_reduction_melee"):
+            shield_reduction_fraction(_build("Serpent's Fang"), is_melee=True)

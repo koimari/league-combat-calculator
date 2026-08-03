@@ -34,7 +34,6 @@ _BLOCKED_REASONS: dict[str, str] = {
     "Redemption": "Intervention's target-max-health true damage is not modelled.",
     "Rod of Ages": "Timeless minute stacks and level gain are not modelled.",
     "Runaan's Hurricane": "Wind's Fury multi-target bolts and copied on-hits are not modelled.",
-    "Serpent's Fang": "Shield Reaver's active and future shield reduction is not modelled.",
     "Swiftmarch": "Noxian Fervor's movement-speed-scaled adaptive force is not modelled.",
     "Thornmail": (
         "Thorns' reactive magic damage requires incoming attack events that are not modelled."
@@ -115,31 +114,41 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
     ),
 }
 
-_TARGET_ONE_ROTATION_REASONS: dict[str, str] = {
+# Lifeline defenses trigger mid-fight, so pricing them consumes the ordered
+# damage ledger.  They are computed for one rotation and for timed fights whose
+# every damage event carries a certified timestamp; an uncertified timed fight
+# is withheld after computation instead of reporting a mis-timed trigger.
+_TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
     "Protoplasm Harness": (
-        "Lifeline's level-scaled temporary health and resist-scaled healing are "
-        "modeled for one rotation. The calculation fails closed if damage "
-        "reaches the unsourced temporary-health expiry boundary."
+        "Lifeline's level-scaled temporary health and resist-scaled healing "
+        "are modeled when every damage event is event-certified. The "
+        "calculation fails closed if damage reaches the unsourced "
+        "temporary-health expiry boundary."
     ),
     "Hexdrinker": (
-        "Lifeline's level-scaled 30%-health magic shield is modeled for one "
-        "rotation. Timed auto and item-effect timestamps are not certified yet."
+        "Lifeline's level-scaled 30%-health magic shield is modeled when "
+        "every damage event is event-certified; uncertified timed fights are "
+        "withheld."
     ),
     "Immortal Shieldbow": (
-        "Lifeline's level-scaled 30%-health shield is modeled for one rotation. "
-        "Timed auto and item-effect timestamps are not certified yet."
+        "Lifeline's level-scaled 30%-health shield is modeled when every "
+        "damage event is event-certified; uncertified timed fights are "
+        "withheld."
     ),
     "Maw of Malmortius": (
-        "Lifeline's bonus-AD-scaled 30%-health magic shield is modeled for one "
-        "rotation. Timed auto and item-effect timestamps are not certified yet."
+        "Lifeline's bonus-AD-scaled 30%-health magic shield is modeled when "
+        "every damage event is event-certified; uncertified timed fights are "
+        "withheld."
     ),
     "Seraph's Embrace": (
-        "Lifeline's maximum-mana-scaled 30%-health shield is modeled for one "
-        "rotation. Timed auto and item-effect timestamps are not certified yet."
+        "Lifeline's maximum-mana-scaled 30%-health shield is modeled when "
+        "every damage event is event-certified; uncertified timed fights are "
+        "withheld."
     ),
     "Sterak's Gage": (
-        "Lifeline's bonus-health-scaled 30%-health shield is modeled for one "
-        "rotation. Timed auto and item-effect timestamps are not certified yet."
+        "Lifeline's bonus-health-scaled 30%-health shield is modeled when "
+        "every damage event is event-certified; uncertified timed fights are "
+        "withheld."
     ),
 }
 
@@ -167,7 +176,6 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Guardian Angel": "Rebirth is not modelled in target health damage.",
     "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
     "Heartsteel": "Permanent Colossal Consumption health stacks are not modelled.",
-    "Immortal Shieldbow": "Lifeline's low-health shield is not modelled.",
     "Jak'Sho, The Protean": "Voidborn Resilience's combat resist stacks are not modelled.",
     "Knight's Vow": "Pledge damage redirection and healing are not modelled.",
     "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",
@@ -239,9 +247,9 @@ def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     if name in _TARGET_MODELED_REASONS:
         status = "modeled"
         reason = _TARGET_MODELED_REASONS[name]
-    elif name in _TARGET_ONE_ROTATION_REASONS:
-        status = "modeled_one_rotation"
-        reason = _TARGET_ONE_ROTATION_REASONS[name]
+    elif name in _TARGET_EVENT_CERTIFIED_REASONS:
+        status = "modeled_event_certified"
+        reason = _TARGET_EVENT_CERTIFIED_REASONS[name]
     elif name in _TARGET_BLOCKED_REASONS:
         status = "blocked"
         reason = _TARGET_BLOCKED_REASONS[name]
@@ -279,29 +287,44 @@ def target_build_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def require_target_item_coverage(
-    items: list[dict[str, Any]], *, one_rotation: bool | None = None
-) -> None:
+def require_target_item_coverage(items: list[dict[str, Any]]) -> None:
     """Reject target inventories that would silently omit a defense."""
-    conditional = next(
-        (
-            str(item.get("name", ""))
-            for item in items
-            if str(item.get("name", "")) in _TARGET_ONE_ROTATION_REASONS
-        ),
-        None,
-    )
-    if conditional and one_rotation is not True:
-        raise ValueError(
-            f"Enemy item {conditional} is supported only for one rotation: "
-            "timed auto and item-effect timestamps are not certified yet."
-        )
     coverage = target_build_coverage(items)
     if coverage["blocked"]:
         blocked = coverage["blocked"][0]
         raise ValueError(
             f"Enemy item {blocked['name']} is not supported yet: {blocked['reason']}"
         )
+
+
+def require_certified_target_timeline(
+    items: list[dict[str, Any]], timeline_coverage: dict[str, Any]
+) -> None:
+    """Withhold a computed timed fight that cannot price a Lifeline defense.
+
+    Lifeline triggers are priced from the ordered damage ledger, so a coarse
+    source would mis-time the trigger.  This runs after the fight so the
+    error can name the exact uncertified sources instead of guessing.
+    """
+    if bool(timeline_coverage.get("complete", False)):
+        return
+    conditional = next(
+        (
+            str(item.get("name", ""))
+            for item in items
+            if str(item.get("name", "")) in _TARGET_EVENT_CERTIFIED_REASONS
+        ),
+        None,
+    )
+    if conditional is None:
+        return
+    coarse = [str(source) for source in timeline_coverage.get("coarse_sources", [])]
+    named = ", ".join(coarse) if coarse else "at least one damage source"
+    verb = "is" if len(coarse) <= 1 else "are"
+    raise ValueError(
+        f"Result withheld: enemy item {conditional}'s Lifeline needs a "
+        f"certified event timeline, but {named} {verb} not event-certified."
+    )
 
 
 def optimizer_candidate_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
@@ -346,6 +369,7 @@ __all__ = [
     "item_model_coverage",
     "optimizer_candidate_coverage",
     "optimizer_supported_items",
+    "require_certified_target_timeline",
     "require_optimizer_item_coverage",
     "require_target_item_coverage",
     "target_build_coverage",

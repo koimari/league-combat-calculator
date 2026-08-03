@@ -34,13 +34,17 @@ from calculator.item_effects import item_input_options_meta, refresh_item_effect
 from calculator.rune_effects import keystone_catalog, refresh_rune_effects
 from calculator.item_coverage import (
     item_model_coverage,
+    require_certified_target_timeline,
     require_target_item_coverage,
     target_build_coverage,
 )
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import role_scoped_shop_items, validate_resolved_loadout
 from calculator.defensive_effects import resolve_starting_defenses
-from calculator.participant_timeline import build_participant_timeline
+from calculator.participant_timeline import (
+    build_participant_timeline,
+    require_roster_fight_window_support,
+)
 from calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
@@ -753,12 +757,18 @@ def _comparison_curve(
                         enemy.defenses.threshold_health_duration
                     ),
                 )
+                target_result = run_fight(champion_data, level, items, target_params)
+                # Every curve point is a timed fight, so it needs the same
+                # certified-timeline gate as a timed primary result — even
+                # when the request itself was one-rotation.
+                require_certified_target_timeline(
+                    list(enemy.item_data),
+                    target_result.get("timeline_coverage", {}),
+                )
                 target_results.append(
                     {
                         "target": _public_loadout_summary(enemy),
-                        "result": _serialize_fight_result(
-                            run_fight(champion_data, level, items, target_params)
-                        ),
+                        "result": _serialize_fight_result(target_result),
                     }
                 )
             result = _aggregate_public_results(
@@ -795,9 +805,19 @@ def _add_comparison_curve(
             "reason": reason,
         }
         return
-    response["comparison_curve"] = _comparison_curve(
-        champion_data, level, items, fight_params, enemies
-    )
+    try:
+        response["comparison_curve"] = _comparison_curve(
+            champion_data, level, items, fight_params, enemies
+        )
+    except ValueError as exc:
+        # The curve is an optional add-on: withhold it with the gate's own
+        # explanation instead of failing a valid primary result.
+        response["comparison_curve"] = []
+        response["comparison_curve_status"] = {
+            "available": False,
+            "reason": str(exc),
+        }
+        return
     response["comparison_curve_status"] = {"available": True}
 
 
@@ -990,9 +1010,7 @@ def api_champions():
                 "verified": availability["ready"],
                 "engine_registered": champ_data["name"] in _ENGINE_CHAMPIONS,
                 "engine_registration": engine_registration_kind(champ_data["name"]),
-                "engine_backend_enabled": (
-                    champ_data["name"] in _ENGINE_CHAMPIONS
-                ),
+                "engine_backend_enabled": (champ_data["name"] in _ENGINE_CHAMPIONS),
                 "availability": availability,
                 "patch_last_changed": champ_data.get("patchLastChanged"),
                 "abilities": ability_slots,
@@ -1194,10 +1212,11 @@ def api_calculate():
     try:
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
+        require_roster_fight_window_support(
+            fight_params, enemies=enemies, allies=allies
+        )
         for enemy in enemies:
-            require_target_item_coverage(
-                list(enemy.item_data), one_rotation=fight_params.one_rotation
-            )
+            require_target_item_coverage(list(enemy.item_data))
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
@@ -1319,11 +1338,22 @@ def api_calculate():
             target_threshold_health_ratio=enemy.defenses.threshold_health_ratio,
             target_threshold_health_duration=(enemy.defenses.threshold_health_duration),
         )
-        serialized = _serialize_fight_result(
-            run_fight(champion_data, level, items, target_params)
-        )
+        result = run_fight(champion_data, level, items, target_params)
+        if not fight_params.one_rotation:
+            # Lifeline defenses are priced from the ordered ledger; a timed
+            # fight whose event order is not certified is withheld here, after
+            # computation, so the error can name the coarse sources.
+            try:
+                require_certified_target_timeline(
+                    list(enemy.item_data), result.get("timeline_coverage", {})
+                )
+            except ValueError as exc:
+                return jsonify({"error": str(exc)}), 400
         target_results.append(
-            {"target": _public_loadout_summary(enemy), "result": serialized}
+            {
+                "target": _public_loadout_summary(enemy),
+                "result": _serialize_fight_result(result),
+            }
         )
 
     response = _aggregate_public_results(
@@ -1456,9 +1486,17 @@ def _bis_candidate_pool(
     boots_tier: int,
     role: str = "",
 ) -> list[dict]:
-    legal = get_eligible_boots(tier=boots_tier) if slot_kind == "boots" else get_eligible_legendaries()
+    legal = (
+        get_eligible_boots(tier=boots_tier)
+        if slot_kind == "boots"
+        else get_eligible_legendaries()
+    )
     supported = optimizer_supported_items(legal)
-    scoped = supported if slot_kind == "boots" else _role_scoped_bis_candidates(supported, role=role)
+    scoped = (
+        supported
+        if slot_kind == "boots"
+        else _role_scoped_bis_candidates(supported, role=role)
+    )
     return sorted(scoped, key=lambda item: item.get("name", ""))
 
 
@@ -1524,10 +1562,17 @@ def api_bis():
         main_loadout = main_request.resolve()
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
+        require_roster_fight_window_support(
+            fight_params, enemies=enemies, allies=allies
+        )
         subject_base = (
             main_request
             if subject_team == "main"
-            else (ally_requests[subject_index] if subject_team == "ally" else enemy_requests[subject_index])
+            else (
+                ally_requests[subject_index]
+                if subject_team == "ally"
+                else enemy_requests[subject_index]
+            )
         )
         if subject_team != "main" and not subject_base.role:
             raise ValueError(
@@ -1564,7 +1609,9 @@ def api_bis():
                 candidate_name=candidate["name"],
             )
             resolved_subject = candidate_request.resolve()
-            candidate_main = resolved_subject if subject_team == "main" else main_loadout
+            candidate_main = (
+                resolved_subject if subject_team == "main" else main_loadout
+            )
             candidate_enemies = list(enemies)
             candidate_allies = list(allies)
             if subject_team == "enemy":
@@ -1590,8 +1637,10 @@ def api_bis():
             )
             objective = combat["objective"]
             focus = next(
-                row for row in combat["participants"]
-                if row["participant_id"] == ("main" if subject_team == "main" else subject_id)
+                row
+                for row in combat["participants"]
+                if row["participant_id"]
+                == ("main" if subject_team == "main" else subject_id)
             )
             if subject_team == "main":
                 # TTD is already truncated at the focus participant's death
@@ -1604,15 +1653,21 @@ def api_bis():
                     "damage_before_death": objective["focus_damage_before_death"],
                     "effective_health": focus["survival"]["effective_health"],
                     "healing": focus["survival"]["healing_received"],
-                    "support_shield_received": focus["survival"]["support_shield_received"],
+                    "support_shield_received": focus["survival"][
+                        "support_shield_received"
+                    ],
                 }
             elif subject_team == "ally":
-                score = float(objective["main_team_damage_before_death"]) + float(
-                    objective["focus_support_value"]
-                ) + float(focus["survival"]["effective_health"])
+                score = (
+                    float(objective["main_team_damage_before_death"])
+                    + float(objective["focus_support_value"])
+                    + float(focus["survival"]["effective_health"])
+                )
                 metric = "team damage + ally utility + effective health"
                 components = {
-                    "main_team_damage_before_death": objective["main_team_damage_before_death"],
+                    "main_team_damage_before_death": objective[
+                        "main_team_damage_before_death"
+                    ],
                     "outgoing_support": objective["focus_support_value"],
                     "healing": objective["focus_healing"],
                     "effective_health": focus["survival"]["effective_health"],
@@ -1628,7 +1683,9 @@ def api_bis():
                 # stay alive longer, then maximize the modeled eHP package,
                 # with outgoing threat as the final tie-break.
                 survival = focus["survival"]
-                duration = float(combat.get("duration", fight_params.fight_duration_seconds))
+                duration = float(
+                    combat.get("duration", fight_params.fight_duration_seconds)
+                )
                 death_time = survival.get("death_time")
                 survival_time = duration if death_time is None else float(death_time)
                 threat = float(objective["focus_damage_before_death"])
@@ -1703,7 +1760,9 @@ def api_bis():
             "slot_index": slot_index,
             "slot_kind": slot_kind,
             "candidate_scope": (
-                f"role-tagged:{role}" if role and slot_kind != "boots" else "all-supported"
+                f"role-tagged:{role}"
+                if role and slot_kind != "boots"
+                else "all-supported"
             ),
             "candidates": certified_ranked[:12],
             "partial_candidates": partial_ranked,
@@ -1725,7 +1784,8 @@ def api_bis():
                         if target_coverage_filtered
                         else "BIS is withheld: every candidate still has partial or uncertified event order."
                     )
-                ) + (f" {target_coverage_note}" if target_coverage_note else ""),
+                )
+                + (f" {target_coverage_note}" if target_coverage_note else ""),
             },
             "target_coverage_filtered": len(target_coverage_filtered),
             "target_coverage_note": target_coverage_note,
@@ -1793,7 +1853,11 @@ def api_optimize():
     allowed_slots = (
         6
         if not include_boots
-        else (6 if fight_params.role == "bottom" and fight_params.role_quest_complete else 5)
+        else (
+            6
+            if fight_params.role == "bottom" and fight_params.role_quest_complete
+            else 5
+        )
     )
     if max_legendary_slots > allowed_slots:
         return (
@@ -1822,10 +1886,11 @@ def api_optimize():
     try:
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
+        require_roster_fight_window_support(
+            fight_params, enemies=enemies, allies=allies
+        )
         for enemy in enemies:
-            require_target_item_coverage(
-                list(enemy.item_data), one_rotation=fight_params.one_rotation
-            )
+            require_target_item_coverage(list(enemy.item_data))
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404

@@ -28,7 +28,7 @@ def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contra
     assert response.status_code == 200
     assert "Scryglass — Item calculator" in page
     assert 'class="brand" href="https://scryglass.xyz/"' in page
-    assert '<h1>Item calculator</h1>' in page
+    assert "<h1>Item calculator</h1>" in page
     for required_id in (
         "builder",
         "winnerVisual",
@@ -68,11 +68,17 @@ def test_password_auth_accepts_only_configured_accounts(monkeypatch):
     monkeypatch.setenv(
         "SCRYGLASS_AUTH_USERS",
         '{"LSAccessAccount":"%s","SkywayAccessAccount":"%s","KoiAccessAccount":"%s"}'
-        % (_test_password_hash(), _test_password_hash("skyway-secret"), _test_password_hash("koi-secret")),
+        % (
+            _test_password_hash(),
+            _test_password_hash("skyway-secret"),
+            _test_password_hash("koi-secret"),
+        ),
     )
     client = app_module.app.test_client()
     assert client.get("/", follow_redirects=False).status_code == 302
-    bad = client.post("/auth/login", data={"username": "LSAccessAccount", "password": "wrong"})
+    bad = client.post(
+        "/auth/login", data={"username": "LSAccessAccount", "password": "wrong"}
+    )
     assert bad.status_code == 401
     good = client.post(
         "/auth/login",
@@ -81,7 +87,9 @@ def test_password_auth_accepts_only_configured_accounts(monkeypatch):
     )
     assert good.status_code == 302
     assert good.headers["Location"].endswith("/")
-    assert client.get("/auth/status").get_json()["user"]["username"] == "LSAccessAccount"
+    assert (
+        client.get("/auth/status").get_json()["user"]["username"] == "LSAccessAccount"
+    )
     page = client.get("/")
     assert page.status_code == 200
     body = page.get_data(as_text=True)
@@ -97,11 +105,16 @@ def test_password_auth_accepts_only_configured_accounts(monkeypatch):
         follow_redirects=False,
     )
     assert koi.status_code == 302
-    assert client.get("/auth/status").get_json()["user"]["username"] == "KoiAccessAccount"
-    assert client.post(
-        "/auth/login",
-        data={"username": "Admin", "password": "koi-secret"},
-    ).status_code == 401
+    assert (
+        client.get("/auth/status").get_json()["user"]["username"] == "KoiAccessAccount"
+    )
+    assert (
+        client.post(
+            "/auth/login",
+            data={"username": "Admin", "password": "koi-secret"},
+        ).status_code
+        == 401
+    )
 
 
 def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
@@ -335,26 +348,170 @@ def test_calculate_applies_shieldbow_lifeline_in_one_rotation():
     assert target["result"]["threshold_shield_absorbed"] > 0
 
 
-def test_calculate_withholds_shieldbow_in_timed_mode():
+def test_calculate_prices_steraks_lifeline_in_certified_timed_fight():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Liandry's Torment", "Shadowflame", "Rabadon's Deathcap"],
+            "fight_mode": "timed",
+            "fight_duration": 10,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 18,
+                    "items": ["Sterak's Gage"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    target = response.get_json()["targets"][0]
+    assert target["result"]["timeline_coverage"]["complete"] is True
+    assert target["target"]["starting_defenses"]["threshold_shield"]["amount"] > 0
+    assert target["result"]["threshold_shield_absorbed"] > 0
+
+
+def test_calculate_withholds_uncertified_timed_fight_against_lifeline():
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
             "champion": "Ziggs",
             "level": 18,
+            "items": ["Muramana"],
             "fight_mode": "timed",
-            "fight_duration": 8,
+            "fight_duration": 10,
             "enemies": [
                 {
-                    "champion": "Kai'Sa",
+                    "champion": "Galio",
                     "level": 18,
-                    "items": ["Immortal Shieldbow"],
+                    "items": ["Sterak's Gage"],
                 }
             ],
         },
     )
 
     assert response.status_code == 400
-    assert "supported only for one rotation" in response.get_json()["error"]
+    error = response.get_json()["error"]
+    assert "Sterak's Gage" in error
+    assert "muramana_ability" in error
+    assert "not event-certified" in error
+
+
+def test_timed_fight_rejects_one_rotation_only_enemy_module_cleanly():
+    """The coupled timeline runs every roster member as an attacker, so a
+    timed window with a one-rotation-only enemy module is a clean 400
+    naming the member — never an uncaught 500 mid-timeline."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Rabadon's Deathcap"],
+            "fight_mode": "timed",
+            "fight_duration": 10,
+            "enemies": [{"champion": "Kai'Sa", "level": 18, "items": []}],
+        },
+    )
+
+    assert response.status_code == 400
+    error = response.get_json()["error"]
+    assert "Enemy Kai'Sa" in error
+    assert "One Rotation" in error
+
+
+def test_timed_fight_rejects_one_rotation_only_ally_module_cleanly():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Rabadon's Deathcap"],
+            "fight_mode": "timed",
+            "fight_duration": 10,
+            "allies": [{"champion": "Vi", "level": 18, "items": []}],
+        },
+    )
+
+    assert response.status_code == 400
+    error = response.get_json()["error"]
+    assert "Ally Vi" in error
+    assert "One Rotation" in error
+
+
+def test_one_rotation_fight_still_accepts_one_rotation_only_enemy_module():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Rabadon's Deathcap"],
+            "enemies": [{"champion": "Kai'Sa", "level": 18, "items": []}],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["scenario"]["primary_target"] == "Kai'Sa"
+
+
+def test_crossover_curve_fails_closed_for_uncertified_lifeline_enemy():
+    """The curve's timed windows need the same certified-timeline gate.
+
+    A one-rotation request keeps its primary result, but the crossover
+    curve silently re-runs the fight in timed mode; against a Lifeline
+    enemy that pricing needs a certified event order.
+    """
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 18,
+            "items": ["Muramana"],
+            "include_crossover": True,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 18,
+                    "items": ["Sterak's Gage"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["total_damage"] > 0
+    assert data["comparison_curve"] == []
+    status = data["comparison_curve_status"]
+    assert status["available"] is False
+    assert "Sterak's Gage" in status["reason"]
+    assert "not event-certified" in status["reason"]
+
+
+def test_crossover_curve_stays_available_for_certified_lifeline_enemy():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Liandry's Torment", "Shadowflame", "Rabadon's Deathcap"],
+            "include_crossover": True,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 18,
+                    "items": ["Sterak's Gage"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["comparison_curve_status"] == {"available": True}
+    assert len(data["comparison_curve"]) == 6
 
 
 def test_calculate_can_sum_one_damage_package_across_enemy_roster():
@@ -814,7 +971,10 @@ class TestIconUrlsAreHttps:
 
         assert len(champions) == 173
         assert all(champion["ability_ingestion"]["complete"] for champion in champions)
-        assert all(set(champion["abilities"]) == {"P", "Q", "W", "E", "R"} for champion in champions)
+        assert all(
+            set(champion["abilities"]) == {"P", "Q", "W", "E", "R"}
+            for champion in champions
+        )
         assert all(champion["verified"] for champion in champions)
 
 

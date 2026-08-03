@@ -725,7 +725,7 @@ def _simulate_stacking_on_hit_damage(
     proc_autos: list[int],
     effectiveness: float = 1.0,
     target_basic_damage_multiplier: float = 1.0,
-) -> float:
+) -> list[float]:
     """Simulate a stacking proc whose formula reads decreasing target HP.
 
     Kraken's bonus damage scales with the target's missing health at
@@ -747,16 +747,18 @@ def _simulate_stacking_on_hit_damage(
             the rare item proc that the Wiki tags as basic damage.
 
     Returns:
-        Total mitigated damage across all procs.
+        Each proc's mitigated damage in ascending-auto order — the same
+        order as sorted ``proc_autos`` — so callers can stamp per-swing
+        damage events (sum for the total).
     """
     if not proc_autos:
-        return 0.0
+        return []
 
     # Convert proc list to a counter: how many procs fire on each auto
     proc_counts: dict[int, int] = Counter(proc_autos)
 
     current_hp = target_health
-    total_damage = 0.0
+    proc_damages: list[float] = []
 
     for i in range(num_auto_attacks):
         procs_this_auto = proc_counts.get(i, 0)
@@ -778,7 +780,7 @@ def _simulate_stacking_on_hit_damage(
             )
             if effect.source.basic_damage and effect.source.damage_type != "true":
                 mitigated *= target_basic_damage_multiplier
-            total_damage += mitigated
+            proc_damages.append(mitigated)
             current_hp -= mitigated
 
         # Reduce HP from auto attack + other on-hit damage
@@ -786,36 +788,32 @@ def _simulate_stacking_on_hit_damage(
         if current_hp < 0:
             current_hp = 0
 
-    return total_damage
+    return proc_damages
 
 
 def _schedule_cooldown_procs(
-    num_auto_attacks: int,
-    autos_per_second: float,
+    swing_times: Sequence[float],
     proc_cooldown: float,
 ) -> list[int]:
-    """Schedule per-target-cooldown on-hit procs onto the auto timeline.
+    """Schedule per-target-cooldown on-hit procs onto the authored swings.
 
-    The first auto always procs; each later auto procs iff its timestamp
-    (auto index / effective attack rate) is at least ``proc_cooldown``
-    after the previous proc (Jarvan IV's Martial Cadence pattern).
+    The first swing always procs; each later swing procs iff its authored
+    timestamp is at least ``proc_cooldown`` after the previous proc
+    (Jarvan IV's Martial Cadence pattern). Consuming the same schedule
+    that stamps damage events keeps the scheduling decision and the
+    stamped time from diverging during empowered attack-speed windows.
 
     Args:
-        num_auto_attacks: Total auto attacks in the fight.
-        autos_per_second: Effective auto rate (attack_speed * uptime) —
-            the same rate ``num_auto_attacks`` was derived from, so auto
-            timestamps span the fight window.
+        swing_times: The fight's per-swing timestamps
+            (``_auto_attack_timestamps`` order).
         proc_cooldown: Per-target cooldown between procs, in seconds.
 
     Returns:
-        Sorted 0-indexed auto indices on which the effect procs.
+        Sorted 0-indexed swing indices on which the effect procs.
     """
-    if num_auto_attacks <= 0 or autos_per_second <= 0:
-        return []
     proc_autos: list[int] = []
     next_ready = 0.0
-    for i in range(num_auto_attacks):
-        timestamp = i / autos_per_second
+    for i, timestamp in enumerate(swing_times):
         if timestamp >= next_ready:
             proc_autos.append(i)
             next_ready = timestamp + proc_cooldown
@@ -832,7 +830,7 @@ def _simulate_cooldown_current_health_procs(
     magic_amp: float,
     proc_autos: list[int],
     effectiveness: float = 1.0,
-) -> float:
+) -> list[float]:
     """Simulate cooldown-gated current-health procs (Jarvan IV passive).
 
     Each proc deals ``current_health_percent`` of the target's decayed
@@ -852,10 +850,10 @@ def _simulate_cooldown_current_health_procs(
         effectiveness: On-hit effectiveness multiplier (Azir soldiers).
 
     Returns:
-        Total mitigated damage across all procs.
+        Each proc's mitigated damage, in proc order (sum for the total).
     """
     if not proc_autos:
-        return 0.0
+        return []
 
     pct = on_hit_data["current_health_percent"] / 100.0
     min_damage = on_hit_data.get("min_damage", 0.0)
@@ -863,19 +861,19 @@ def _simulate_cooldown_current_health_procs(
     proc_set = set(proc_autos)
 
     current_hp = target_health
-    total_damage = 0.0
+    proc_damages: list[float] = []
     for i in range(num_auto_attacks):
         if i in proc_set:
             raw_damage = max(pct * current_hp, min_damage) * effectiveness
             mitigated = _mitigate(raw_damage, dmg_type, resists, magic_amp)
-            total_damage += mitigated
+            proc_damages.append(mitigated)
             current_hp -= mitigated
 
         # Reduce HP from auto attack + other on-hit damage
         current_hp -= auto_damage_per_hit + other_on_hit_per_hit
         current_hp = max(current_hp, 0.0)
 
-    return total_damage
+    return proc_damages
 
 
 def _simulate_current_health_on_hit(
@@ -916,7 +914,9 @@ def _simulate_current_health_on_hit(
             damage (Azir soldiers apply on-hit at 50%).
 
     Returns:
-        Tuple of (total mitigated BoRK damage, total BoRK hit count).
+        Tuple of (total mitigated BoRK damage, total BoRK hit count,
+        each hit's mitigated damage in application order — one entry per
+        counted hit, so callers can stamp per-swing damage events).
     """
     if phantom_hit_autos is None:
         phantom_hit_autos = set()
@@ -924,6 +924,7 @@ def _simulate_current_health_on_hit(
     current_hp = target_health
     total_damage = 0.0
     total_hits = 0
+    hit_damages: list[float] = []
 
     for i in range(num_auto_attacks):
         # How many times BoRK procs this auto (1 normally, +1 on phantom hit,
@@ -951,6 +952,7 @@ def _simulate_current_health_on_hit(
             )
             total_damage += mitigated
             total_hits += 1
+            hit_damages.append(mitigated)
 
             current_hp -= mitigated
 
@@ -964,7 +966,7 @@ def _simulate_current_health_on_hit(
         if current_hp < 0:
             current_hp = 0
 
-    return total_damage, total_hits
+    return total_damage, total_hits, hit_damages
 
 
 def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
@@ -995,10 +997,12 @@ def _ordered_damage_events(
     """Reconstruct the engine's certified damage order from its own rows.
 
     Ability rows are split into cast instances and follow the accepted cast
-    timeline. Autos and item effects retain the engine's existing coarse
-    phase order after the selected rotation. Untyped amplifier rows are
-    distributed across the already-known damage composition so shield
-    accounting never invents a fourth damage type.
+    timeline. Rows with engine-authored ``damage_events`` (autos, per-swing
+    on-hit effects, timestamped procs) keep their own event order; item
+    effects without authored events retain the coarse phase order after the
+    selected rotation. Untyped amplifier rows are distributed across the
+    already-known damage composition so shield accounting never invents a
+    fourth damage type.
 
     This ledger is deliberately internal. It is exact at the cast boundary,
     but it does not claim champion-specific spell-shield behavior within a
@@ -1132,7 +1136,6 @@ def _ordered_damage_events(
                     )
 
     auto = breakdown.get("auto_attacks")
-    auto_event_times: list[float] = []
     if auto and not auto.get("informational"):
         if not add_declared_events("auto_attacks", auto, default_phase="auto"):
             hits = max(1, int(auto.get("count", 1)))
@@ -1146,11 +1149,6 @@ def _ordered_damage_events(
                         ordinal=hit_index + 1,
                         phase="auto",
                     )
-        auto_event_times = [
-            float(event.get("time", last_ability_time))
-            for event in events
-            if event.get("source_key") == "auto_attacks"
-        ]
 
     skipped = set(cast_order) | {"auto_attacks", "execute"}
     untyped: list[tuple[str, float]] = []
@@ -1159,39 +1157,6 @@ def _ordered_damage_events(
             continue
         if add_declared_events(key, entry, default_phase="effect"):
             continue
-        # A static ability on-hit row is exact when its count matches the
-        # engine-authored auto stream.  Align it to those swings instead of
-        # collapsing it to the end-of-rotation effect phase (Aatrox P and
-        # other one-per-attack champion passives rely on this boundary).
-        if (
-            key.startswith("on_hit_ability_")
-            and auto_event_times
-            and int(entry.get("count", 0)) == len(auto_event_times)
-        ):
-            parts = _row_damage_parts(entry)
-            if len(parts) == 1:
-                dtype, amount = parts[0]
-                per_hit = amount / len(auto_event_times)
-                aligned_events = []
-                for ordinal, event_time in enumerate(auto_event_times, start=1):
-                    aligned_events.append(
-                        {
-                            "time": event_time,
-                            "damage_type": dtype,
-                            "damage": per_hit,
-                        }
-                    )
-                    add(
-                        key,
-                        dtype,
-                        per_hit,
-                        time=event_time,
-                        ordinal=ordinal,
-                        phase="auto",
-                    )
-                entry["damage_events"] = aligned_events
-                entry["event_phase"] = "auto"
-                continue
         parts = _row_damage_parts(entry)
         if parts:
             for dtype, amount in parts:
@@ -1401,6 +1366,61 @@ class _ThresholdHealthState:
         self.current_health = max(0.0, self.current_health - max(0.0, damage))
 
 
+@dataclass
+class _LifelineShieldState:
+    """One-rotation Lifeline threshold shield: trigger, absorb, expire.
+
+    The shield arms before damage that would drop the target below its
+    health threshold, absorbs only its own damage type ("all", "magic",
+    or "physical"), and expires on its sourced duration. Both ordered
+    damage walks (_calculate_shadowflame_bonus and
+    _resolve_starting_shield_outcome) share this one rule.
+    """
+
+    amount: float
+    threshold_hp: float
+    duration: float
+    damage_type: str
+    shield: float = 0.0
+    expires: float = -1.0
+    triggered: bool = False
+    absorbed_total: float = 0.0
+
+    def expire_at(self, event_time: float) -> None:
+        """Drop an active shield whose duration lapsed before this event."""
+        if self.shield > 0 and event_time > self.expires:
+            self.shield = 0.0
+
+    def absorb(
+        self,
+        remaining: float,
+        damage_type: str,
+        event_time: float,
+        current_health: float,
+    ) -> float:
+        """Trigger on a threshold-crossing hit, then absorb matching damage."""
+        if remaining <= 0 or not self._matches(damage_type):
+            return 0.0
+        if (
+            not self.triggered
+            and self.amount > 0
+            and self.threshold_hp > 0
+            and current_health - remaining < self.threshold_hp
+        ):
+            self.triggered = True
+            self.shield = self.amount
+            self.expires = event_time + self.duration
+        if self.shield <= 0:
+            return 0.0
+        absorbed = min(self.shield, remaining)
+        self.shield -= absorbed
+        self.absorbed_total += absorbed
+        return absorbed
+
+    def _matches(self, damage_type: str) -> bool:
+        return self.damage_type in ("all", damage_type)
+
+
 _LIANDRY_BURN_KEY = "burn_Liandry's Torment"
 
 
@@ -1465,11 +1485,11 @@ def _calculate_shadowflame_bonus(
     magic_shield = max(0.0, target_magic_shield)
     physical_shield = max(0.0, target_physical_shield)
     general_shield = max(0.0, target_general_shield)
-    threshold_shield = 0.0
-    threshold_shield_expires = -1.0
-    threshold_triggered = False
-    lifeline_threshold_hp = target_health * max(
-        0.0, target_threshold_shield_health_ratio
+    lifeline_shield = _LifelineShieldState(
+        amount=target_threshold_shield_amount,
+        threshold_hp=target_health * max(0.0, target_threshold_shield_health_ratio),
+        duration=target_threshold_shield_duration,
+        damage_type=target_threshold_shield_damage_type,
     )
     total_bonus = 0.0
     bonus_by_type: dict[str, float] = {}
@@ -1490,8 +1510,7 @@ def _calculate_shadowflame_bonus(
         dtype = event["damage_type"]
         event_time = float(event["time"])
         health_state.advance_to(event_time)
-        if threshold_shield > 0 and event_time > threshold_shield_expires:
-            threshold_shield = 0.0
+        lifeline_shield.expire_at(event_time)
         source_key = str(event.get("source_key", ""))
         if (
             source_key == _LIANDRY_BURN_KEY
@@ -1542,25 +1561,9 @@ def _calculate_shadowflame_bonus(
             absorbed = min(general_shield, event_damage)
             general_shield -= absorbed
             event_damage -= absorbed
-        trigger_matches = (
-            target_threshold_shield_damage_type == "all"
-            or target_threshold_shield_damage_type == dtype
+        event_damage -= lifeline_shield.absorb(
+            event_damage, dtype, event_time, health_state.current_health
         )
-        if (
-            event_damage > 0
-            and not threshold_triggered
-            and target_threshold_shield_amount > 0
-            and lifeline_threshold_hp > 0
-            and trigger_matches
-            and health_state.current_health - event_damage < lifeline_threshold_hp
-        ):
-            threshold_triggered = True
-            threshold_shield = target_threshold_shield_amount
-            threshold_shield_expires = event_time + target_threshold_shield_duration
-        if threshold_shield > 0 and event_damage > 0:
-            absorbed = min(threshold_shield, event_damage)
-            threshold_shield -= absorbed
-            event_damage -= absorbed
         health_state.trigger_before(event_damage, event_time)
         health_state.take_damage(event_damage)
 
@@ -2319,9 +2322,11 @@ def _evaluate_cast_parts(
                         if cast_times is not None and cast_index < len(cast_times)
                         else 0.0
                     )
-                    event_time = cast_time + (
-                        part.time_offset if part.time_offset is not None else 0.0
-                    ) + hit_index * (part.hit_interval or 0.0)
+                    event_time = (
+                        cast_time
+                        + (part.time_offset if part.time_offset is not None else 0.0)
+                        + hit_index * (part.hit_interval or 0.0)
+                    )
                     damage_events.append(
                         {
                             "time": event_time,
@@ -2329,9 +2334,11 @@ def _evaluate_cast_parts(
                             "damage": hit_damage,
                             "raw_damage": raw,
                             "raw_formula": part.hp_scaled_damage,
-                            "source_missing_ratio": missing_ratio
-                            if part.hp_scaled_damage is not None
-                            else None,
+                            "source_missing_ratio": (
+                                missing_ratio
+                                if part.hp_scaled_damage is not None
+                                else None
+                            ),
                             "event_precision": (
                                 "hit"
                                 if part.time_offset is not None
@@ -3520,9 +3527,7 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
                 for event in declared_events
                 if isinstance(event, dict)
             ]
-            state.breakdown[key]["event_phase"] = str(
-                info.get("event_phase", "effect")
-            )
+            state.breakdown[key]["event_phase"] = str(info.get("event_phase", "effect"))
         elif (
             key == "passive"
             and info.get("name") == "Headshot"
@@ -3583,6 +3588,187 @@ def _add_precomputed_proc_damage(state: FightState) -> None:
         state.total_damage += proc_total
 
 
+def _ability_dot_tick_events(
+    entry: dict[str, Any],
+    info: dict[str, Any],
+    cast_times: list[float],
+) -> list[dict[str, float | str]] | None:
+    """One DoT ability row's per-tick events, or None to stay coarse.
+
+    A row qualifies when its ability declares both ``dot_duration`` and a
+    wiki-sourced ``dot_tick_interval``. Each accepted cast spreads its even
+    share of the row's typed damage across the DoT window from its cast
+    time, using the same full-tick/remainder split as item burns. Rows
+    without a sourced cadence author nothing (fail-closed — a cadence is
+    never invented), as do rows whose totals a later step may move
+    (``empowers_next_auto`` swings) or whose typed parts do not reproduce
+    the row total.
+    """
+    dot_duration = float(info.get("dot_duration", 0.0))
+    tick_interval = float(info.get("dot_tick_interval", 0.0))
+    if dot_duration <= 0 or tick_interval <= 0:
+        return None
+    if info.get("empowers_next_auto"):
+        return None  # the reattributed swing would break the event sum
+    casts = max(0, int(entry.get("casts", 0)))
+    if casts <= 0:
+        return None
+    parts = _row_damage_parts(entry)
+    if not parts or not math.isclose(
+        sum(amount for _, amount in parts),
+        float(entry.get("total_damage", 0.0)),
+        rel_tol=1e-9,
+        abs_tol=1e-6,
+    ):
+        return None
+    events: list[dict[str, float | str]] = []
+    for cast_index in range(casts):
+        cast_time = cast_times[cast_index] if cast_index < len(cast_times) else 0.0
+        for dtype, amount in parts:
+            for tick in _periodic_damage_events(
+                amount / casts, dtype, dot_duration, tick_interval
+            ):
+                events.append({**tick, "time": cast_time + float(tick["time"])})
+    events.sort(key=lambda tick: float(tick["time"]))
+    return events or None
+
+
+def _author_ability_dot_events(state: FightState, rotation: RotationResult) -> None:
+    """Author per-tick damage events for DoT ability rows with sourced cadence.
+
+    Ticks let the coverage classifier certify a ``dot_duration`` row
+    instead of downgrading it at the cast boundary; rows that stay
+    unsourced keep coarse ordering. Rows that already authored their own
+    event ledger are left alone.
+    """
+    times_by_slot: dict[str, list[float]] = {}
+    for event in rotation.cast_events:
+        slot = str(event.get("slot", ""))
+        times_by_slot.setdefault(slot, []).append(float(event.get("time", 0.0)))
+    for key in state.cast_order:
+        entry = state.breakdown.get(key)
+        info = state.ability_damages.get(key, {})
+        if not entry or entry.get("damage_events") is not None:
+            continue
+        events = _ability_dot_tick_events(entry, info, times_by_slot.get(key, []))
+        if events is not None:
+            entry["damage_events"] = events
+            entry["event_phase"] = "ability"
+
+
+class _DotTickLedger:
+    """Buckets a stacking DoT's continuous integral into sourced ticks.
+
+    Constructed with the spec's ``tick_interval`` (0 disables authoring —
+    an unsourced cadence is never invented) and the fight's rate integral.
+    ``accumulate`` integrates one constant-stack span, cutting it at the
+    tick boundaries riding the current chain's clock; ``open_chain``
+    anchors that clock at the application that opened a chain;
+    ``close_chain`` flushes the last partial tick where a chain's bleed
+    actually stopped. ``events`` scales the raw buckets to the mitigated
+    total, since mitigation is one linear factor.
+    """
+
+    def __init__(
+        self,
+        interval: float,
+        integrate: Callable[[float, float, int], float],
+    ) -> None:
+        self.interval = interval
+        self.authoring = interval > 0
+        self._integrate = integrate
+        self._raw_ticks: list[list[float]] = []  # [time, raw damage]
+        self._pending_raw = 0.0
+        self._next_tick: float | None = None
+
+    def open_chain(self, time: float) -> None:
+        """Anchor the tick clock when no chain is running."""
+        if self.authoring and self._next_tick is None:
+            self._next_tick = time + self.interval
+
+    def close_chain(self, time: float) -> None:
+        """Flush the chain's last partial tick and drop its clock."""
+        if self.authoring:
+            self._flush(time)
+            self._next_tick = None
+
+    def accumulate(self, start: float, end: float, stacks: int) -> float:
+        """Integrate [start, end), bucketing the raw damage into ticks."""
+        if not self.authoring:
+            return self._integrate(start, end, stacks)
+        raw = 0.0
+        cursor = start
+        while self._next_tick is not None and self._next_tick <= end:
+            raw += self._bucket(cursor, self._next_tick, stacks)
+            cursor = self._next_tick
+            self._flush(self._next_tick)
+            self._next_tick += self.interval
+        raw += self._bucket(cursor, end, stacks)
+        return raw
+
+    def _bucket(self, start: float, end: float, stacks: int) -> float:
+        segment = self._integrate(start, end, stacks)
+        self._pending_raw += segment
+        return segment
+
+    def _flush(self, time: float) -> None:
+        if self._pending_raw > 0:
+            self._raw_ticks.append([time, self._pending_raw])
+            self._pending_raw = 0.0
+
+    def events(
+        self, damage_type: str, total: float, raw_total: float
+    ) -> list[dict[str, Any]] | None:
+        """The mitigated per-tick event list, or None when not authoring."""
+        if not (self.authoring and self._raw_ticks and raw_total > 0 and total > 0):
+            return None
+        scale = total / raw_total
+        events: list[dict[str, Any]] = [
+            {"time": time, "damage_type": damage_type, "damage": raw * scale}
+            for time, raw in self._raw_ticks
+        ]
+        # Eliminate floating-point drift while preserving every tick's timing.
+        events[-1]["damage"] += total - sum(event["damage"] for event in events)
+        return events
+
+
+def _integrate_stack_chains(
+    timeline: StackTimeline,
+    duration: float,
+    ledger: _DotTickLedger,
+) -> float:
+    """Walk the stack applications, integrating every chain's raw damage.
+
+    Each span between applications ticks at the running stack count;
+    ticks stop ``duration`` after the last application even if the next
+    one comes later (the chain expired meanwhile), and the final
+    application commits its full window of ticks past the fight cutoff.
+    The ledger buckets the same integral into tick events as it goes.
+    """
+    raw_total = 0.0
+    stacks = timeline.starting_stacks
+    previous_hit = 0.0
+    if stacks > 0:
+        ledger.open_chain(0.0)  # the pre-fight chain is already running
+    for application in timeline.applications:
+        if stacks > 0:
+            chain_end = min(application.time, previous_hit + duration)
+            raw_total += ledger.accumulate(previous_hit, chain_end, stacks)
+            if application.stacks_before == 0:
+                # The chain expired before this hit: close its last
+                # (partial) tick where the bleed actually stopped.
+                ledger.close_chain(chain_end)
+        # A fresh chain's ticks ride this application's clock; a running
+        # chain keeps its anchor (open_chain is a no-op then).
+        ledger.open_chain(application.time)
+        stacks = application.stacks_after
+        previous_hit = application.time
+    # Committed tail: the last application's full window of ticks.
+    raw_total += ledger.accumulate(previous_hit, previous_hit + duration, stacks)
+    ledger.close_chain(previous_hit + duration)
+    return raw_total
+
+
 def _add_stacking_dot_damage(state: FightState) -> None:
     """Add hit-timeline stacking DoT damage (Case 4, e.g. Briar's bleed).
 
@@ -3597,6 +3783,13 @@ def _add_stacking_dot_damage(state: FightState) -> None:
     falls inside it, so a window opening mid-gap splits that gap. The
     DoT cannot crit and triggers nothing; it is mitigated once as its
     declared type.
+
+    A spec with a sourced ``tick_interval`` also authors per-tick damage
+    events: the same integral is bucketed at tick boundaries riding each
+    chain's clock (anchored at the application that opened the chain; a
+    gap of ``duration`` closes the chain's last partial tick where the
+    bleed stopped and the next application re-anchors the grid). Without
+    a sourced cadence no events are invented and the row stays coarse.
     """
     timeline = state.stack_timeline
     if timeline is None:
@@ -3643,27 +3836,15 @@ def _add_stacking_dot_damage(state: FightState) -> None:
             total_raw += tick_rate(stacks, False) * (end - cursor)
         return total_raw
 
-    raw_total = 0.0
-    stacks = timeline.starting_stacks
-    previous_hit = 0.0
-    for application in timeline.applications:
-        if stacks > 0:
-            # Ticks stop ``duration`` after the last application even if
-            # the next one comes later (the chain expired meanwhile).
-            raw_total += integrate(
-                previous_hit, min(application.time, previous_hit + duration), stacks
-            )
-        stacks = application.stacks_after
-        previous_hit = application.time
-    # Committed tail: the last application's full window of ticks.
-    raw_total += integrate(previous_hit, previous_hit + duration, stacks)
+    ledger = _DotTickLedger(float(spec.get("tick_interval", 0.0)), integrate)
+    raw_total = _integrate_stack_chains(timeline, duration, ledger)
 
     damage_type = spec.get("damage_type", "physical")
     total = _mitigate(raw_total, damage_type, state.resists, state.magic_amp)
     # A seeded-only fight lands no applications; the pre-fight stacks are
     # what the row is reporting, so they are its count.
     applications = len(timeline.applications) or timeline.starting_stacks
-    state.breakdown[f"stacking_dot_{dot_key}"] = {
+    row: dict[str, Any] = {
         "name": spec["name"],
         "count": applications,
         "damage_per_hit": total / applications,
@@ -3675,6 +3856,11 @@ def _add_stacking_dot_damage(state: FightState) -> None:
             f"the full {duration:g}s of ticks"
         ),
     }
+    events = ledger.events(damage_type, total, raw_total)
+    if events is not None:
+        row["damage_events"] = events
+        row["event_phase"] = "effect"
+    state.breakdown[f"stacking_dot_{dot_key}"] = row
     state.total_damage += total
 
 
@@ -4424,6 +4610,34 @@ def _layer_on_hit_effects(
     double_shot_extra = num_auto_attacks if autos.double_shot_info else 0
     on_hit_hits = num_auto_attacks + result.phantom_hit_count + double_shot_extra
 
+    # Every auto-segment on-hit application rides a timestamped swing, so
+    # the rows built below can author exact per-swing damage events. One
+    # entry per application, in the shared counter's order: the swing
+    # itself, its Rageblade phantom re-application, then a double-shot
+    # extra — all at that swing's authored time.
+    swing_times = _auto_attack_timestamps(state)
+    if len(swing_times) != num_auto_attacks:
+        swing_times = []  # unresolvable schedule: rows stay coarse
+    application_times: list[float] = []
+    for auto_index, swing_time in enumerate(swing_times):
+        application_times.append(swing_time)
+        if auto_index in result.phantom_hit_autos:
+            application_times.append(swing_time)
+        if double_shot_extra:
+            application_times.append(swing_time)
+
+    def swing_event_row(
+        times: list[float], damages: list[float], damage_type: str
+    ) -> dict[str, Any]:
+        """Row fields authoring one typed event per (time, damage) pair."""
+        return {
+            "event_phase": "auto",
+            "damage_events": [
+                {"time": time, "damage": damage, "damage_type": damage_type}
+                for time, damage in zip(times, damages)
+            ],
+        }
+
     # Process fixed-formula per-hit effects. Current-health effects are
     # simulated below because each application changes the next one's input.
     damage_inputs = _damage_inputs(state)
@@ -4454,6 +4668,10 @@ def _layer_on_hit_effects(
             "total_damage": item_damage,
             "damage_type": source.damage_type,
         }
+        if application_times:
+            breakdown[source.breakdown_key].update(
+                swing_event_row(application_times, [per_hit] * hits, source.damage_type)
+            )
 
     # Process ability on-hit effects (Case 2: abilities that add damage per
     # auto attack, e.g. Viego passive % health on-hit). These are passed in
@@ -4493,6 +4711,7 @@ def _layer_on_hit_effects(
         # applications immediately after their carrier; Akshan-style double
         # shots likewise add one application per ambient attack.
         carrier_effectiveness: list[float] | None = None
+        leading_carrier_hits = 0
         if carries_on_ability_on_hits:
             carrier_effectiveness = []
             on_hit_position = 0
@@ -4503,6 +4722,9 @@ def _layer_on_hit_effects(
                 if on_hit_position in result.phantom_ability_stack_positions:
                     carrier_effectiveness.append(app.effectiveness)
                 on_hit_position += 1
+            # Ability-carried applications have no authored timestamps
+            # yet — while any lead the counter, this row stays coarse.
+            leading_carrier_hits = len(carrier_effectiveness)
             for auto_index in range(num_auto_attacks):
                 carrier_effectiveness.append(on_hit_effectiveness)
                 if auto_index in result.phantom_hit_autos:
@@ -4520,6 +4742,19 @@ def _layer_on_hit_effects(
         stacks_required = on_hit_data.get("stacks_required", 0)
         ramping = bool(on_hit_data.get("ramping"))
         stack_ramp = on_hit_data.get("stack_ramp")
+
+        # Per-swing events are authorable only when every counted hit is
+        # an auto-segment application with an authored swing time —
+        # ability-carried hits (leading carriers, shared auto+ability
+        # counters) have no timestamps yet and keep the row coarse.
+        stampable = (
+            bool(application_times)
+            and leading_carrier_hits == 0
+            and not (counts_ability_hits and rotation.total_ability_hits > 0)
+            and hits <= len(application_times)
+        )
+        event_times: list[float] | None = None
+        event_damages: list[float] | None = None
         if stack_ramp:
             # Stack-ramped on-hit (Orianna P): each hit lands at the
             # CURRENT stack count then adds a stack (capped), so hit k
@@ -4534,6 +4769,12 @@ def _layer_on_hit_effects(
             max_stacks = int(stack_ramp["max_stacks"])
             stacked_hits = sum(min(k, max_stacks) for k in range(hits))
             ability_on_hit_damage = per_hit * hits + per_stack * stacked_hits
+            if stampable:
+                # Hit k lands at the CURRENT stack count — its own value.
+                event_times = application_times[:hits]
+                event_damages = [
+                    per_hit + min(k, max_stacks) * per_stack for k in range(hits)
+                ]
         elif ramping:
             # Ramping proc k deals k x its base. When abilities can carry the
             # on-hit, each application has its own effectiveness; otherwise
@@ -4541,25 +4782,49 @@ def _layer_on_hit_effects(
             # remains supported for pre-26.15 every-Nth formulations.
             procs = hits // max(1, stacks_required)
             if carrier_effectiveness is not None and stacks_required <= 1:
-                ability_on_hit_damage = sum(
+                carrier_damages = [
                     _mitigate(
                         raw_base * effectiveness * stack, dmg_type, resists, magic_amp
                     )
                     for stack, effectiveness in enumerate(
                         carrier_effectiveness, start=1
                     )
-                )
+                ]
+                ability_on_hit_damage = sum(carrier_damages)
+                if stampable:
+                    # No leading carriers: the carrier order IS the
+                    # auto-segment application order.
+                    event_times = application_times[:hits]
+                    event_damages = carrier_damages
             else:
                 ability_on_hit_damage = per_hit * procs * (procs + 1) / 2.0
+                if stampable:
+                    # Proc j fires on the application landing its Nth stack.
+                    interval = max(1, stacks_required)
+                    event_times = [
+                        application_times[j * interval - 1] for j in range(1, procs + 1)
+                    ]
+                    event_damages = [per_hit * j for j in range(1, procs + 1)]
         elif stacks_required > 1 and counts_ability_hits:
             # Shared auto+ability stack counter (e.g. Aurora P): only
             # complete procs deal damage — partial stacks expire.
             ability_on_hit_damage = (
                 per_hit * stacks_required * (hits // stacks_required)
             )
+            if stampable:
+                event_times = [
+                    application_times[j * stacks_required - 1]
+                    for j in range(1, hits // stacks_required + 1)
+                ]
+                event_damages = [per_hit * stacks_required] * (hits // stacks_required)
         else:
             # Autos-only on-hit (e.g. Vayne W): smooth per-hit average.
+            # The total includes partial stacks, so events are the same
+            # per-swing shares — the ledger must sum to the row exactly.
             ability_on_hit_damage = per_hit * hits
+            if stampable:
+                event_times = application_times[:hits]
+                event_damages = [per_hit] * hits
         on_hit_total += ability_on_hit_damage
         if max_procs is None and not ramping and not stack_ramp:
             static_share = per_hit
@@ -4605,12 +4870,20 @@ def _layer_on_hit_effects(
                 "total_damage": ability_on_hit_damage,
                 "damage_type": dmg_type,
             }
+        if event_times is not None and event_damages is not None:
+            breakdown[f"on_hit_ability_{ability_key}"].update(
+                swing_event_row(event_times, event_damages, dmg_type)
+            )
 
     # BoRK: simulate with decreasing target current HP per auto attack.
     # Phantom hit autos cause BoRK to proc twice (at different current HP).
     # Double shot (e.g. Akshan) also procs BoRK an extra time per auto.
     if current_health_effect is not None and num_auto_attacks > 0:
-        current_health_total, current_health_hits = _simulate_current_health_on_hit(
+        (
+            current_health_total,
+            current_health_hits,
+            current_health_hit_damages,
+        ) = _simulate_current_health_on_hit(
             effect=current_health_effect,
             base_inputs=_damage_inputs(state),
             target_health=state.target_health,
@@ -4639,6 +4912,18 @@ def _layer_on_hit_effects(
             "total_damage": current_health_total,
             "damage_type": source.damage_type,
         }
+        # The simulation walks the same application order the swing
+        # schedule authored, so its per-hit values stamp one event each.
+        if application_times and len(current_health_hit_damages) == len(
+            application_times
+        ):
+            breakdown[source.breakdown_key].update(
+                swing_event_row(
+                    application_times,
+                    current_health_hit_damages,
+                    source.damage_type,
+                )
+            )
 
     # Scheduled current-health on-hits ride the fight's auto timeline and
     # read the target's decayed current HP per proc. Two schedules:
@@ -4653,28 +4938,38 @@ def _layer_on_hit_effects(
     # must not re-apply it).
     if num_auto_attacks > 0:
         autos_per_second = state.attack_speed * state.auto_attack_uptime
+        # Both proc schedules read the same authored swing times that stamp
+        # their events; the uniform fallback only covers an unresolvable
+        # schedule, whose rows stay coarse anyway.
+        proc_schedule = swing_times or (
+            [i / autos_per_second for i in range(num_auto_attacks)]
+            if autos_per_second > 0
+            else []
+        )
         for ability_key, ability_info in state.ability_damages.items():
             on_hit_data = ability_info.get("on_hit")
             if not on_hit_data:
                 continue
             if "proc_cooldown" in on_hit_data:
                 proc_autos = _schedule_cooldown_procs(
-                    num_auto_attacks, autos_per_second, on_hit_data["proc_cooldown"]
+                    proc_schedule, on_hit_data["proc_cooldown"]
                 )
             elif "proc_window" in on_hit_data:
                 if breakdown.get(ability_key, {}).get("casts", 0) < 1:
                     continue  # rider exists only after the ability is cast
-                # Autos land at i / autos_per_second; the triggering auto
-                # at t=0 always fits a positive window.
+                # The triggering auto at t=0 always fits a positive window.
                 autos_in_window = max(
-                    1, int(autos_per_second * on_hit_data["proc_window"])
+                    1,
+                    sum(
+                        1 for time in proc_schedule if time < on_hit_data["proc_window"]
+                    ),
                 )
                 proc_autos = list(range(min(num_auto_attacks, autos_in_window)))
             else:
                 continue
             if not proc_autos:
                 continue
-            proc_total = _simulate_cooldown_current_health_procs(
+            proc_damages = _simulate_cooldown_current_health_procs(
                 on_hit_data,
                 state.target_health,
                 num_auto_attacks,
@@ -4685,15 +4980,26 @@ def _layer_on_hit_effects(
                 proc_autos,
                 effectiveness=on_hit_effectiveness,
             )
+            proc_total = sum(proc_damages)
             on_hit_total += proc_total
+            proc_damage_type = on_hit_data.get("damage_type", "physical")
             breakdown[f"on_hit_ability_{ability_key}"] = {
                 "name": on_hit_data.get("name", f"{ability_key} (on-hit)"),
                 "count": len(proc_autos),
                 "damage_per_hit": proc_total / len(proc_autos),
                 "total_damage": proc_total,
-                "damage_type": on_hit_data.get("damage_type", "physical"),
+                "damage_type": proc_damage_type,
                 "unit": "procs",
             }
+            if swing_times:
+                # Each proc rides one specific swing — stamp its time.
+                breakdown[f"on_hit_ability_{ability_key}"].update(
+                    swing_event_row(
+                        [swing_times[i] for i in proc_autos],
+                        proc_damages,
+                        proc_damage_type,
+                    )
+                )
 
     state.total_damage += on_hit_total
     return result
@@ -4711,11 +5017,43 @@ class SpellbladeResult:
     expose_weakness_ranged: float = 0.0
 
 
+def _spellblade_proc_times(
+    rotation: RotationResult,
+    effect: item_effects.SpellbladeEffect,
+    procs: int,
+) -> list[float]:
+    """Weave-timed spellblade proc times from the accepted cast timeline.
+
+    Each accepted cast arms one charge (the engine assumes charges
+    persist through the item cooldown, as its proc pricing already
+    does).  A charge is consumed one weave delay after the later of its
+    arming cast and the cooldown's end, and the cooldown restarts at the
+    consuming attack — matching the ``cooldown + weave_delay`` spacing
+    the proc count was priced with. Returns ``[]`` when the accepted
+    casts cannot reproduce the engine's priced proc count — the row then
+    stays coarse rather than carrying an event list that contradicts its
+    total.
+    """
+    if procs <= 0:
+        return []
+    cast_times = sorted(float(event["time"]) for event in rotation.cast_events)
+    times: list[float] = []
+    cooldown_ends = float("-inf")
+    for cast_time in cast_times:
+        if len(times) == procs:
+            break
+        proc_time = max(cast_time, cooldown_ends) + effect.weave_delay
+        times.append(proc_time)
+        cooldown_ends = proc_time + effect.cooldown
+    return times if len(times) == procs else []
+
+
 def _add_spellblade_true_rider(
     state: FightState,
     source: item_effects.DamageSource,
     raw_per_proc: float,
     procs: int,
+    proc_times: list[float],
 ) -> None:
     """Add a champion's true-damage rider on spellblade procs (Corki P).
 
@@ -4724,6 +5062,7 @@ def _add_spellblade_true_rider(
     PRE-mitigation damage again as true damage. This is ADDED ON TOP of
     the proc; its sibling ``spellblade_true_ratio`` (Camille Q2) instead
     CONVERTS that share of the proc out of the item's own damage type.
+    The rider shares the procs' weave-timed events when they exist.
     """
     ratio = max(
         (
@@ -4744,6 +5083,15 @@ def _add_spellblade_true_rider(
         "total_damage": rider_total,
         "damage_type": "true",
     }
+    if len(proc_times) == procs:
+        state.breakdown[f"{source.breakdown_key}_bonus_true"]["damage_events"] = [
+            {
+                "time": proc_time,
+                "damage": rider_total / procs,
+                "damage_type": "true",
+            }
+            for proc_time in proc_times
+        ]
     state.total_damage += rider_total
 
 
@@ -4841,6 +5189,12 @@ def _add_spellblade_damage(
         plain = result.procs - converted
         sb_total = result.damage_per_proc * plain + converted_per_proc * converted
 
+        # Weave-timed events: authored only when the accepted casts
+        # reproduce the priced proc count, and only for unconverted
+        # builds (the true-conversion split's proc-to-cast assignment
+        # is an assumption, not a certified order).
+        proc_times = _spellblade_proc_times(rotation, effect, result.procs)
+
         if plain > 0 or converted == 0:  # unconverted builds keep the row as-is
             state.breakdown[source.breakdown_key] = {
                 "name": source.display_name,
@@ -4850,6 +5204,15 @@ def _add_spellblade_damage(
                 "total_damage": result.damage_per_proc * plain,
                 "damage_type": source.damage_type,
             }
+            if converted == 0 and proc_times:
+                state.breakdown[source.breakdown_key]["damage_events"] = [
+                    {
+                        "time": proc_time,
+                        "damage": result.damage_per_proc,
+                        "damage_type": source.damage_type,
+                    }
+                    for proc_time in proc_times
+                ]
         if converted > 0:
             converted_by_type = {"true": raw_sb * converted_ratio * converted}
             if converted_ratio < 1.0:
@@ -4865,7 +5228,7 @@ def _add_spellblade_damage(
                 **_damage_type_fields(converted_by_type),
             }
         state.total_damage += sb_total
-        _add_spellblade_true_rider(state, source, raw_sb, result.procs)
+        _add_spellblade_true_rider(state, source, raw_sb, result.procs, proc_times)
 
     # ── Double on-hit from spellblade (Dusk and Dawn) ──
     if effect is not None and result.procs > 0:
@@ -5090,6 +5453,45 @@ def _ability_damage_proc_triggers(
     return proc_triggers
 
 
+def _damage_threshold_trigger_time(
+    state: FightState,
+    rotation: RotationResult,
+    effect: item_effects.CooldownProcEffect,
+) -> float | None:
+    """Time the rolling damage window first crosses the item's threshold.
+
+    Walks the certified ledger built so far (abilities at cast times,
+    autos at swing times, earlier authored item events) and returns the
+    moment a ``damage_threshold`` trigger (Stormsurge's Squall) first
+    held ``damage_threshold_ratio`` of the target's max health within
+    ``damage_threshold_window`` seconds. Returns ``None`` when the model
+    never crosses the threshold — the row then stays coarse (the engine
+    still prices the proc, but cannot certify when it fires).
+    """
+    ratio = effect.damage_threshold_ratio
+    window = effect.damage_threshold_window
+    if ratio <= 0 or window <= 0:
+        return None
+    threshold = ratio * state.target_health
+    events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
+    window_sum = 0.0
+    window_start = 0
+    for event in events:
+        event_time = float(event["time"])
+        window_sum += float(event["damage"])
+        while float(events[window_start]["time"]) < event_time - window - 1e-9:
+            window_sum -= float(events[window_start]["damage"])
+            window_start += 1
+        if window_sum + 1e-6 >= threshold:
+            return event_time
+    return None
+
+
 def _charged_proc_target_share(
     state: FightState,
     source: item_effects.DamageSource,
@@ -5143,6 +5545,14 @@ def _add_item_proc_damage(
                 else 1
             )
         )
+        # A damage-threshold trigger (Stormsurge) fires once, at the
+        # ledger moment the rolling burst window first fills.  Resolve
+        # the time before this row lands in the breakdown it walks.
+        threshold_time = (
+            _damage_threshold_trigger_time(state, rotation, effect)
+            if effect.trigger == "damage_threshold" and procs == 1
+            else None
+        )
         raw_per_proc = source.raw_damage(_damage_inputs(state))
         mitigated_per_proc = _mitigate(
             raw_per_proc, source.damage_type, resists, state.magic_amp
@@ -5168,6 +5578,14 @@ def _add_item_proc_damage(
                     "damage_type": source.damage_type,
                 }
                 for trigger in proc_triggers
+            ]
+        elif threshold_time is not None:
+            state.breakdown[source.breakdown_key]["damage_events"] = [
+                {
+                    "time": threshold_time,
+                    "damage": proc_mitigated,
+                    "damage_type": source.damage_type,
+                }
             ]
         if source.multi_target_charges:
             state.breakdown[source.breakdown_key]["targeting"] = {
@@ -5202,6 +5620,22 @@ def _add_item_proc_damage(
             "total_damage": ult_proc_mitigated,
             "damage_type": source.damage_type,
         }
+        # The zone opens at R1: stamp the proc at the cast timeline's
+        # first R cast.  Without a timestamped R cast the row stays
+        # coarse (a stat-only R never reaches here — r_info exists).
+        r_cast_times = [
+            float(event["time"])
+            for event in rotation.cast_events
+            if event.get("slot") == "R"
+        ]
+        if r_cast_times:
+            state.breakdown[source.breakdown_key]["damage_events"] = [
+                {
+                    "time": min(r_cast_times),
+                    "damage": ult_proc_mitigated,
+                    "damage_type": source.damage_type,
+                }
+            ]
         state.total_damage += ult_proc_mitigated
 
 
@@ -5568,11 +6002,18 @@ def _add_keystone_proc_amp_damage(state: FightState, rotation: RotationResult) -
         )
 
 
-def _add_item_active_damage(state: FightState) -> None:
-    """Add active-item damage (skipped when actives are excluded)."""
+def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None:
+    """Add active-item damage (skipped when actives are excluded).
+
+    Each active is cast once. The engine's standing assumption — the
+    same one the coarse ledger encoded — is that it fires with the end
+    of the rotation opener, so its event is stamped at the last accepted
+    damaging cast (fight start when there are no casts).
+    """
     if not state.include_actives:
         return
     resists = state.resists
+    active_time = max(_damaging_cast_times(state, rotation), default=0.0)
     for source in state.damage_effects.actives:
         raw_active = source.raw_damage(_damage_inputs(state))
         active_mitigated = _mitigate(
@@ -5583,6 +6024,13 @@ def _add_item_active_damage(state: FightState) -> None:
             "name": source.display_name,
             "total_damage": active_mitigated,
             "damage_type": source.damage_type,
+            "damage_events": [
+                {
+                    "time": active_time,
+                    "damage": active_mitigated,
+                    "damage_type": source.damage_type,
+                }
+            ],
         }
         state.total_damage += active_mitigated
 
@@ -5618,6 +6066,13 @@ def _add_single_proc_on_hits(
     num_auto_attacks = state.num_auto_attacks
     effectiveness = _on_hit_effectiveness(state)
 
+    # The auto stream's authored per-swing schedule.  Swing-riding procs
+    # stamp their events at these times; an empty list (no stream, or a
+    # count mismatch) keeps those rows coarse.
+    swing_times = _auto_attack_timestamps(state)
+    if len(swing_times) != num_auto_attacks:
+        swing_times = []
+
     if num_auto_attacks > 0:
         inputs = _damage_inputs(state)
         for effect in state.damage_effects.first_autos:
@@ -5637,6 +6092,17 @@ def _add_single_proc_on_hits(
                 "total_damage": mitigated,
                 "damage_type": source.damage_type,
             }
+            # First-hit procs ride the opening swings of the stream.
+            if swing_times:
+                breakdown[source.breakdown_key]["event_phase"] = "auto"
+                breakdown[source.breakdown_key]["damage_events"] = [
+                    {
+                        "time": swing_times[proc_index],
+                        "damage": mitigated / procs,
+                        "damage_type": source.damage_type,
+                    }
+                    for proc_index in range(procs)
+                ]
             state.total_damage += mitigated
 
     if num_auto_attacks > 0:
@@ -5661,6 +6127,27 @@ def _add_single_proc_on_hits(
                 "total_damage": mitigated,
                 "damage_type": source.damage_type,
             }
+            # Each empowered swing is the first one at/after the effect's
+            # cooldown gate.  Authored only when the swing schedule
+            # reproduces the priced proc count exactly.
+            proc_times: list[float] = []
+            ready = 0.0
+            for swing_time in swing_times:
+                if len(proc_times) == procs:
+                    break
+                if swing_time + 1e-9 >= ready:
+                    proc_times.append(swing_time)
+                    ready = swing_time + effect.cooldown
+            if len(proc_times) == procs:
+                breakdown[source.breakdown_key]["event_phase"] = "auto"
+                breakdown[source.breakdown_key]["damage_events"] = [
+                    {
+                        "time": proc_time,
+                        "damage": mitigated / procs,
+                        "damage_type": source.damage_type,
+                    }
+                    for proc_time in proc_times
+                ]
             state.total_damage += mitigated
 
     apps = rotation.ability_item_applications
@@ -5669,6 +6156,9 @@ def _add_single_proc_on_hits(
         if on_hits.has_current_health_on_hit and on_hits.current_health_on_hit_avg > 0:
             other_on_hit_per_hit += on_hits.current_health_on_hit_avg
 
+        # Auto-segment procs ride specific swings, whose times the auto
+        # stream already authored (``swing_times`` above); ability-segment
+        # procs have no timestamps yet, so any of those keeps the row coarse.
         for effect in state.damage_effects.stacking_on_hits:
             source = effect.source
             # The item taxonomy decides which ability applications
@@ -5718,9 +6208,10 @@ def _add_single_proc_on_hits(
 
             # Auto-segment procs: unchanged auto-timeline behavior at
             # the auto stream's effectiveness.
+            auto_proc_damages: list[float] = []
             if proc_autos:
                 if effect.tracks_target_health:
-                    total_damage += _simulate_stacking_on_hit_damage(
+                    auto_proc_damages = _simulate_stacking_on_hit_damage(
                         effect,
                         _damage_inputs(state),
                         state.target_health,
@@ -5735,18 +6226,23 @@ def _add_single_proc_on_hits(
                             state.target_basic_damage_multiplier
                         ),
                     )
+                    total_damage += sum(auto_proc_damages)
                 else:
                     raw = (
                         source.raw_damage(_damage_inputs(state))
                         * len(proc_autos)
                         * effectiveness
                     )
-                    total_damage += _mitigate(
+                    auto_segment_total = _mitigate(
                         raw, source.damage_type, resists, state.magic_amp
                     ) * (
                         state.target_basic_damage_multiplier
                         if source.basic_damage and source.damage_type != "true"
                         else 1.0
+                    )
+                    total_damage += auto_segment_total
+                    auto_proc_damages = [auto_segment_total / len(proc_autos)] * len(
+                        proc_autos
                     )
 
             breakdown[source.breakdown_key] = {
@@ -5757,6 +6253,19 @@ def _add_single_proc_on_hits(
                 "total_damage": total_damage,
                 "damage_type": source.damage_type,
             }
+            # Every proc fired on a timestamped swing: author its events.
+            # Ability-segment procs carry no authored timestamps yet, so
+            # a row containing any stays coarse deliberately.
+            if not ability_procs and auto_proc_damages and swing_times:
+                breakdown[source.breakdown_key]["event_phase"] = "auto"
+                breakdown[source.breakdown_key]["damage_events"] = [
+                    {
+                        "time": swing_times[auto_index],
+                        "damage": damage,
+                        "damage_type": source.damage_type,
+                    }
+                    for auto_index, damage in zip(sorted(proc_autos), auto_proc_damages)
+                ]
             state.total_damage += total_damage
 
     for effect in state.damage_effects.cooldown_procs:
@@ -5889,17 +6398,79 @@ def _add_expose_weakness(
     state.total_damage += expose_bonus
 
 
-def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> None:
-    """Apply fight-wide damage amplifiers and their breakdown rows.
+def _amplifier_delta_events(
+    amped_events: list[dict[str, Any]],
+    bonus: float,
+) -> list[dict[str, Any]]:
+    """Author an amplifier row's bonus onto the exact events it amplified.
 
-    General amps (Lord Dominik's Regards, Riftmaker-class) multiply the
-    whole running total, one ``damage_amp_<source>`` row per source. The
-    Actualizer ability amp was already applied per-ability/per-proc, so
-    its row is informational only. Horizon Focus amplifies everything
-    except the first ability cast (the trigger).
+    A fight-wide amplifier prices its bonus as one fraction of the running
+    total, so its per-event delta is that same fraction of each amplified
+    event — expressed as a pro-rata share so the authored events sum
+    exactly to the row total. Each delta keeps its amplified event's time
+    and timeline order; the ``amplifier`` phase rank then places it
+    immediately after that event in the shared ledger.
     """
-    breakdown = state.breakdown
+    amped_total = sum(event["damage"] for event in amped_events)
+    if bonus <= 0 or amped_total <= 0:
+        return []
+    return [
+        {
+            "damage_type": event["damage_type"],
+            "damage": bonus * event["damage"] / amped_total,
+            "time": event["time"],
+            "timeline_order": event["order"],
+        }
+        for event in amped_events
+    ]
 
+
+def _hypershot_delta_events(
+    state: FightState,
+    rotation: RotationResult,
+    bonus: float,
+) -> list[dict[str, Any]]:
+    """Author Horizon Focus's amp onto every event after the trigger cast.
+
+    The first ability cast triggers Hypershot and is not amped, so its
+    ledger events are excluded from the attribution pool. If the trigger
+    cast cannot be isolated to events matching the rotation's recorded
+    trigger damage (e.g. a mixed-type opener whose non-triggering part is
+    amped), no events are authored and the row stays explicitly coarse.
+    """
+    events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
+    trigger_key = next((k for k in state.cast_order if k in state.breakdown), None)
+    trigger_times = [
+        event["time"] for event in events if event["source_key"] == trigger_key
+    ]
+    if trigger_key is None or not trigger_times:
+        return []
+    trigger_time = min(trigger_times)
+
+    def is_trigger(event: dict[str, Any]) -> bool:
+        return event["source_key"] == trigger_key and event["time"] == trigger_time
+
+    trigger_damage = sum(event["damage"] for event in events if is_trigger(event))
+    if not math.isclose(
+        trigger_damage, rotation.first_ability_damage, rel_tol=1e-6, abs_tol=1e-3
+    ):
+        return []
+    return _amplifier_delta_events(
+        [event for event in events if not is_trigger(event)], bonus
+    )
+
+
+def _apply_general_amplifiers(state: FightState, rotation: RotationResult) -> None:
+    """Apply whole-total amps (Lord Dominik's, Riftmaker, Liandry-class).
+
+    Each source gets one ``damage_amp_<source>`` row whose delta events
+    ride the pre-amp ledger's timestamps.
+    """
     amp_sources = [
         (
             effect.item_name,
@@ -5911,18 +6482,47 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
         for effect in state.damage_effects.damage_amplifiers
     ]
     amp = 1.0 + sum(source_amp for _, source_amp in amp_sources)
-    if amp > 1.0:
-        amp_bonus = state.total_damage * (amp - 1.0)
-        # Create per-source breakdown entries
-        for source_name, source_amp in amp_sources:
-            if source_amp > 0:
-                source_bonus = state.total_damage * source_amp
-                breakdown[f"damage_amp_{source_name}"] = {
-                    "name": f"Damage Amplification ({source_name})",
-                    "multiplier": 1.0 + source_amp,
-                    "total_damage": source_bonus,
-                }
-        state.total_damage += amp_bonus
+    if amp <= 1.0:
+        return
+    amp_bonus = state.total_damage * (amp - 1.0)
+    amped_events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
+    # Create per-source breakdown entries
+    for source_name, source_amp in amp_sources:
+        if source_amp > 0:
+            source_bonus = state.total_damage * source_amp
+            row = {
+                "name": f"Damage Amplification ({source_name})",
+                "multiplier": 1.0 + source_amp,
+                "total_damage": source_bonus,
+            }
+            delta_events = _amplifier_delta_events(amped_events, source_bonus)
+            if delta_events:
+                row["damage_events"] = delta_events
+                row["event_phase"] = "amplifier"
+            state.breakdown[f"damage_amp_{source_name}"] = row
+    state.total_damage += amp_bonus
+
+
+def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> None:
+    """Apply fight-wide damage amplifiers and their breakdown rows.
+
+    General amps (Lord Dominik's Regards, Riftmaker-class) multiply the
+    whole running total, one ``damage_amp_<source>`` row per source. The
+    Actualizer ability amp was already applied per-ability/per-proc, so
+    its row is informational only. Horizon Focus amplifies everything
+    except the first ability cast (the trigger). Each amp row authors its
+    delta back onto the events it amplified, at their times, so shield
+    and threshold accounting sees the amp when the damage landed; a row
+    whose amplified pool cannot be event-isolated stays coarse and rides
+    the ledger's explicit untyped fail-soft instead.
+    """
+    breakdown = state.breakdown
+    _apply_general_amplifiers(state, rotation)
 
     # Actualizer ability damage amp — show as separate breakdown entry.
     # The amp was already applied per-ability in the rotation and per-proc
@@ -5961,11 +6561,16 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
     if state.hypershot_amp > 1.0:
         amped_damage = state.total_damage - rotation.first_ability_damage
         hypershot_bonus = amped_damage * (state.hypershot_amp - 1.0)
-        breakdown["damage_amp_Horizon Focus"] = {
+        row = {
             "name": "Damage Amplification (Horizon Focus)",
             "multiplier": state.hypershot_amp,
             "total_damage": hypershot_bonus,
         }
+        delta_events = _hypershot_delta_events(state, rotation, hypershot_bonus)
+        if delta_events:
+            row["damage_events"] = delta_events
+            row["event_phase"] = "amplifier"
+        breakdown["damage_amp_Horizon Focus"] = row
         state.total_damage += hypershot_bonus
 
 
@@ -6100,6 +6705,59 @@ def _reattribute_empowered_swings(state: FightState) -> None:
         auto_row["num_non_crits"] = remaining - crits
 
 
+def _apply_shield_reaver_venom(
+    config: FightConfig,
+    items: list[dict[str, Any]],
+    champion_stats: dict[str, float],
+) -> tuple[FightConfig, list[str]]:
+    """Cut the target's non-magic shields for the attacker's Shield Reaver.
+
+    Serpent's Fang's venom reduces the target's active shields on first
+    damage and any shields gained while the attacker keeps dealing damage —
+    a sustained rotation keeps the venom applied throughout. Magic-damage
+    shields (Hexdrinker, Maw of Malmortius, Kaenic Rookern, ability magic
+    shields) are unaffected, and Protoplasm Harness's temporary health and
+    healing are not shields.
+    """
+    is_melee = bool(champion_stats.get("is_melee", True))
+    fraction = item_effects.shield_reduction_fraction(items, is_melee=is_melee)
+    if fraction <= 0.0:
+        return config, []
+
+    keep = 1.0 - fraction
+    threshold_is_cuttable = (
+        config.target_threshold_shield_damage_type != "magic"
+        and config.target_threshold_shield_amount > 0
+    )
+    if (
+        config.target_physical_shield <= 0
+        and config.target_general_shield <= 0
+        and not threshold_is_cuttable
+    ):
+        return config, []
+
+    reduced = replace(
+        config,
+        target_physical_shield=config.target_physical_shield * keep,
+        target_general_shield=config.target_general_shield * keep,
+        target_threshold_shield_amount=(
+            config.target_threshold_shield_amount * keep
+            if threshold_is_cuttable
+            else config.target_threshold_shield_amount
+        ),
+    )
+    venom_seconds = float(
+        item_effects.required_effect_value("Serpent's Fang", "venom_duration")
+    )
+    note = (
+        f"Serpent's Fang: Shield Reaver cuts the target's non-magic shields "
+        f"by {fraction:.0%} ({'melee' if is_melee else 'ranged'}) — the "
+        f"rotation keeps its {venom_seconds:g}-second venom applied; "
+        "magic-damage shields are unaffected."
+    )
+    return reduced, [note]
+
+
 def calculate_fight_damage(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
@@ -6124,14 +6782,21 @@ def calculate_fight_damage(
     Returns:
         Dictionary with damage breakdown and total.
     """
+    # ── Shield Reaver venom cuts the target's non-magic shields ─────────
+    config, shield_reaver_notes = _apply_shield_reaver_venom(
+        config, items, champion_stats
+    )
+
     # ── Resolve resistances, penetration, amps, and attack timing ───────
     state = _resolve_combat_state(champion_stats, ability_damages, items, config)
+    state.notes.extend(shield_reaver_notes)
 
     # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
     _apply_stat_buff_ultimates(state)
 
     # ── Ability rotation, precomputed procs, DoTs, and Shaped Charge ────
     rotation = _compute_ability_rotation(state)
+    _author_ability_dot_events(state, rotation)
     _add_precomputed_proc_damage(state)
     _add_stacking_dot_damage(state)
     _add_shaped_charge_damage(state)
@@ -6158,7 +6823,7 @@ def calculate_fight_damage(
     _add_keystone_ability_proc_damage(state, rotation)
 
     # ── Active item damage ──────────────────────────────────────────────
-    _add_item_active_damage(state)
+    _add_item_active_damage(state, rotation)
 
     # ── Single-proc on-hits, Shadowflame, and Expose Weakness ───────────
     _add_single_proc_on_hits(state, rotation, autos, on_hits, spellblade)
@@ -6246,7 +6911,6 @@ def _resolve_starting_shield_outcome(
     magic_absorbed = 0.0
     physical_absorbed = 0.0
     general_absorbed = 0.0
-    threshold_absorbed = 0.0
     health_state = _ThresholdHealthState(
         base_max_health=state.target_health,
         current_health=state.target_health,
@@ -6255,11 +6919,12 @@ def _resolve_starting_shield_outcome(
         health_ratio=max(0.0, config.target_threshold_health_ratio),
         duration=max(0.0, config.target_threshold_health_duration),
     )
-    threshold_shield = 0.0
-    threshold_shield_expires = -1.0
-    threshold_triggered = False
-    threshold_hp = state.target_health * max(
-        0.0, config.target_threshold_shield_health_ratio
+    lifeline_shield = _LifelineShieldState(
+        amount=config.target_threshold_shield_amount,
+        threshold_hp=state.target_health
+        * max(0.0, config.target_threshold_shield_health_ratio),
+        duration=config.target_threshold_shield_duration,
+        damage_type=config.target_threshold_shield_damage_type,
     )
     for event in _ordered_damage_events(
         state.breakdown,
@@ -6269,8 +6934,7 @@ def _resolve_starting_shield_outcome(
     ):
         event_time = float(event["time"])
         health_state.advance_to(event_time)
-        if threshold_shield > 0 and event_time > threshold_shield_expires:
-            threshold_shield = 0.0
+        lifeline_shield.expire_at(event_time)
         remaining = event["damage"]
         if event["damage_type"] == "magic":
             absorbed = min(magic_shield, remaining)
@@ -6287,30 +6951,13 @@ def _resolve_starting_shield_outcome(
         general_absorbed += absorbed
         remaining -= absorbed
 
-        trigger_type = config.target_threshold_shield_damage_type
-        trigger_matches = trigger_type == "all" or trigger_type == event["damage_type"]
-        if (
-            remaining > 0
-            and not threshold_triggered
-            and config.target_threshold_shield_amount > 0
-            and threshold_hp > 0
-            and trigger_matches
-            and health_state.current_health - remaining < threshold_hp
-        ):
-            threshold_triggered = True
-            threshold_shield = config.target_threshold_shield_amount
-            threshold_shield_expires = (
-                event_time + config.target_threshold_shield_duration
-            )
-
-        if threshold_shield > 0 and remaining > 0:
-            absorbed = min(threshold_shield, remaining)
-            threshold_shield -= absorbed
-            threshold_absorbed += absorbed
-            remaining -= absorbed
+        remaining -= lifeline_shield.absorb(
+            remaining, event["damage_type"], event_time, health_state.current_health
+        )
         health_state.trigger_before(remaining, event_time)
         health_state.take_damage(remaining)
 
+    threshold_absorbed = lifeline_shield.absorbed_total
     absorbed = (
         magic_absorbed + physical_absorbed + general_absorbed + threshold_absorbed
     )

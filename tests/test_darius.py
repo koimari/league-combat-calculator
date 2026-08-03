@@ -206,6 +206,13 @@ class TestSlotFlags:
         """Item burns must stay refreshed through the bleed's 5s tail."""
         assert _abilities(darius_data)["passive"]["dot_duration"] == 5.0
 
+    def test_bleed_declares_its_sourced_tick_cadence(self, darius_data) -> None:
+        """The JSON's per-tick arrays are quarters of the 5s totals
+        (test-locked above), so the bleed ticks every 1.25 seconds —
+        the cadence the engine uses to author bleed tick events."""
+        dot = _abilities(darius_data)["passive"]["stacking_dot"]
+        assert dot["tick_interval"] == pytest.approx(1.25)
+
 
 class TestStartingHemorrhageStacks:
     """``starting_hemorrhage_stacks`` seeds ONE fight state.

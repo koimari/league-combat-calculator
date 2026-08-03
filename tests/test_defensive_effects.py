@@ -26,9 +26,7 @@ def _stats(**overrides):
         (18, False, 210.0),
     ],
 )
-def test_hexdrinker_lifeline_scales_by_level_and_range_type(
-    level, is_melee, expected
-):
+def test_hexdrinker_lifeline_scales_by_level_and_range_type(level, is_melee, expected):
     defenses = resolve_starting_defenses(
         "Kai'Sa",
         level,
@@ -58,6 +56,36 @@ def test_maw_lifeline_scales_from_bonus_ad_and_range_type(is_melee, expected):
     assert defenses.threshold_shield_duration == 3.0
 
 
+@pytest.mark.parametrize(
+    ("level", "expected"),
+    [(1, 400.0), (8, 400.0), (9, 430.0), (18, 700.0)],
+)
+def test_shieldbow_lifeline_is_a_level_scaled_general_shield(level, expected):
+    defenses = resolve_starting_defenses(
+        "Kai'Sa",
+        level,
+        _stats(),
+        [{"name": "Immortal Shieldbow"}],
+    )
+
+    assert defenses.threshold_shield_amount == pytest.approx(expected)
+    assert defenses.threshold_shield_damage_type == "all"
+    assert defenses.threshold_shield_duration == 3.0
+
+
+def test_lifeline_missing_damage_type_fails_closed(monkeypatch):
+    from src.calculator import item_effects
+
+    broken = dict(item_effects.ITEM_EFFECTS["Immortal Shieldbow"])
+    broken.pop("damage_type", None)
+    monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Immortal Shieldbow", broken)
+
+    with pytest.raises(KeyError, match="Immortal Shieldbow.*damage_type"):
+        resolve_starting_defenses(
+            "Kai'Sa", 18, _stats(), [{"name": "Immortal Shieldbow"}]
+        )
+
+
 def test_seraph_lifeline_scales_from_maximum_mana():
     defenses = resolve_starting_defenses(
         "Orianna",
@@ -80,7 +108,9 @@ def test_sterak_lifeline_scales_from_bonus_health_and_spirit_visage():
 
     assert defenses.threshold_shield_amount == pytest.approx(375.0)
     assert defenses.threshold_shield_duration == 4.5
-    assert any("increases every modeled shield" in note for note in defenses.assumptions)
+    assert any(
+        "increases every modeled shield" in note for note in defenses.assumptions
+    )
 
 
 def test_lifeline_summary_carries_revision_backed_source():

@@ -216,20 +216,8 @@ class FightParams(FightConfig):
         closed until their individual allocation rules are represented.
         """
         if level > max_champion_level(self.role, self.role_quest_complete):
-            raise ValueError(
-                f"Level {level} requires the completed top role quest"
-            )
-        supported_modes = get_supported_fight_modes(champion_name)
-        requested_mode = (
-            "one_rotation"
-            if self.one_rotation
-            else ("auto_only" if self.auto_attacks_only else "time_based")
-        )
-        if supported_modes is not None and requested_mode not in supported_modes:
-            reason = get_unsupported_fight_mode_reason(champion_name)
-            raise ValueError(
-                reason or f"{requested_mode} is not certified for {champion_name}"
-            )
+            raise ValueError(f"Level {level} requires the completed top role quest")
+        require_fight_mode_support(self, champion_name)
 
         custom_order_reason = get_custom_cast_order_unavailable_reason(champion_name)
         if self.cast_order is not None and custom_order_reason is not None:
@@ -267,6 +255,26 @@ class FightParams(FightConfig):
             raise ValueError(
                 "Ability ranks spend more skill points than the champion level allows"
             )
+
+
+def require_fight_mode_support(params: "FightParams", champion_name: str) -> None:
+    """Reject a fight mode the champion's certified module cannot run.
+
+    The one home for the mode rule: ``validate_for_champion`` applies it to
+    the main attacker, and the participant timeline applies it to every
+    roster member it will run as an attacker.
+    """
+    supported_modes = get_supported_fight_modes(champion_name)
+    requested_mode = (
+        "one_rotation"
+        if params.one_rotation
+        else ("auto_only" if params.auto_attacks_only else "time_based")
+    )
+    if supported_modes is not None and requested_mode not in supported_modes:
+        reason = get_unsupported_fight_mode_reason(champion_name)
+        raise ValueError(
+            reason or f"{requested_mode} is not certified for {champion_name}"
+        )
 
 
 def run_fight(
@@ -354,8 +362,7 @@ def run_fight(
         params.fight_duration_seconds,
     )
     result["self_healing"] = sum(
-        float(event.get("amount", 0.0))
-        for event in result["self_healing_events"]
+        float(event.get("amount", 0.0)) for event in result["self_healing_events"]
     )
     auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
     result["auto_attack_damage"] = auto_damage

@@ -69,6 +69,9 @@ _W_TICKS = 5
 _W_DURATION = 2.5
 _E_TICKS = 16
 _E_DURATION = 4.0
+# The engine authors per-tick damage events from these sourced cadences.
+_W_TICK_INTERVAL = _W_DURATION / _W_TICKS  # "every 0.5 seconds"
+_E_TICK_INTERVAL = _E_DURATION / _E_TICKS  # "every 0.25 seconds"
 # Each Gatling stack lasts 2s but REFRESHES on every tick, so the
 # shred is up until 2s after the last one ("applying a stack ... for
 # 2 seconds, refreshing with subsequent hits").
@@ -150,6 +153,7 @@ def _valkyrie(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["dot_duration"] = _W_DURATION * uptime
+    entry["dot_tick_interval"] = _W_TICK_INTERVAL
     entry["detail"] = f"{ticks} tick(s) of one blazing patch over {_W_DURATION:g}s"
     return entry
 
@@ -183,6 +187,7 @@ def _gatling_gun(ctx: SlotCtx) -> dict[str, Any] | None:
         "total_raw": per_tick * ticks,
         "parts": (DamagePart("physical", per_tick, count=ticks),) if ticks else (),
         "dot_duration": _E_DURATION * uptime,
+        "dot_tick_interval": _E_TICK_INTERVAL,
     }
     if stacks > 0:
         shred = extract_value(ability, "Resistances Reduction Per Stack", rank) * stacks

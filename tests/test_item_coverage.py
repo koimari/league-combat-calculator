@@ -6,6 +6,7 @@ from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
     item_model_coverage,
     optimizer_candidate_coverage,
+    require_certified_target_timeline,
     require_target_item_coverage,
     target_build_coverage,
     target_item_model_coverage,
@@ -35,6 +36,7 @@ def test_every_current_optimizer_candidate_has_an_explicit_classification():
         ("Immortal Path", "blocked"),
         ("Mejai's Soulstealer", "modeled_state"),
         ("Rabadon's Deathcap", "modeled_effect"),
+        ("Serpent's Fang", "modeled_effect"),
         ("Kaenic Rookern", "stats_only"),
         ("Void Staff", "stats_only"),
     ],
@@ -106,12 +108,13 @@ def test_optimizer_rejects_a_locked_item_with_unmodeled_damage_mechanics():
         ("Plated Steelcaps", "modeled"),
         ("Warden's Mail", "modeled"),
         ("Randuin's Omen", "modeled"),
-        ("Immortal Shieldbow", "modeled_one_rotation"),
-        ("Hexdrinker", "modeled_one_rotation"),
-        ("Maw of Malmortius", "modeled_one_rotation"),
-        ("Seraph's Embrace", "modeled_one_rotation"),
-        ("Sterak's Gage", "modeled_one_rotation"),
-        ("Protoplasm Harness", "modeled_one_rotation"),
+        ("Immortal Shieldbow", "modeled_event_certified"),
+        ("Hexdrinker", "modeled_event_certified"),
+        ("Maw of Malmortius", "modeled_event_certified"),
+        ("Seraph's Embrace", "modeled_event_certified"),
+        ("Sterak's Gage", "modeled_event_certified"),
+        ("Protoplasm Harness", "modeled_event_certified"),
+        ("Serpent's Fang", "not_target_relevant"),
         ("Void Staff", "not_target_relevant"),
     ],
 )
@@ -133,12 +136,33 @@ def test_target_item_coverage_is_mechanic_specific(item_name, status):
         "Protoplasm Harness",
     ],
 )
-def test_lifeline_target_coverage_requires_one_rotation(item_name):
-    items = [get_item_by_name(item_name)]
+def test_lifeline_target_items_pass_precompute_coverage(item_name):
+    require_target_item_coverage([get_item_by_name(item_name)])
 
-    require_target_item_coverage(items, one_rotation=True)
-    with pytest.raises(ValueError, match="supported only for one rotation"):
-        require_target_item_coverage(items, one_rotation=False)
+
+def test_certified_timeline_guard_allows_certified_lifeline_fights():
+    require_certified_target_timeline(
+        [get_item_by_name("Sterak's Gage")],
+        {"complete": True, "coarse_sources": []},
+    )
+
+
+def test_certified_timeline_guard_withholds_uncertified_lifeline_fights():
+    with pytest.raises(
+        ValueError,
+        match=r"Sterak's Gage.*muramana_ability is not event-certified",
+    ):
+        require_certified_target_timeline(
+            [get_item_by_name("Sterak's Gage")],
+            {"complete": False, "coarse_sources": ["muramana_ability"]},
+        )
+
+
+def test_certified_timeline_guard_ignores_targets_without_lifeline_items():
+    require_certified_target_timeline(
+        [get_item_by_name("Kaenic Rookern")],
+        {"complete": False, "coarse_sources": ["passive"]},
+    )
 
 
 def test_target_build_coverage_and_guard_name_the_omitted_defense():

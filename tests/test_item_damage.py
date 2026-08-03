@@ -45,7 +45,7 @@ def _simulate_bork_damage(
 ):
     """Readable test adapter around the generic current-health simulation."""
     effect = resolve_damage_effects([{"name": "Blade of the Ruined King"}])
-    return _simulate_current_health_on_hit(
+    total, hits, _per_hit_damages = _simulate_current_health_on_hit(
         effect.per_hits[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
         target_health,
@@ -57,6 +57,7 @@ def _simulate_bork_damage(
         phantom_hit_autos,
         double_hit_all,
     )
+    return total, hits
 
 
 def _calculate_phantom_hits(num_auto_attacks, item_names):
@@ -86,16 +87,18 @@ def _simulate_kraken_damage(
     """Readable test adapter around the generic stacking-proc simulation."""
     effects = resolve_damage_effects([{"name": "Kraken Slayer"}])
     effect = effects.stacking_on_hits[0]
-    return _simulate_stacking_on_hit_damage(
-        effect,
-        DamageInputs({}, level, is_melee, target_health, target_health),
-        target_health,
-        num_auto_attacks,
-        auto_damage_per_hit,
-        other_on_hit_per_hit,
-        SimpleNamespace(effective_armor=effective_armor, effective_mr=0.0),
-        1.0,
-        kraken_proc_autos,
+    return sum(
+        _simulate_stacking_on_hit_damage(
+            effect,
+            DamageInputs({}, level, is_melee, target_health, target_health),
+            target_health,
+            num_auto_attacks,
+            auto_damage_per_hit,
+            other_on_hit_per_hit,
+            SimpleNamespace(effective_armor=effective_armor, effective_mr=0.0),
+            1.0,
+            kraken_proc_autos,
+        )
     )
 
 
@@ -4511,3 +4514,290 @@ class TestCollectorThreshold(_FightHarness):
         )
         entry = result["breakdown"]["execute"]
         assert entry["execution_threshold_hp"] == 200.0  # 10% of 2000
+
+
+class TestOnHitItemSwingEvents(_FightHarness):
+    """On-hit item rows author per-swing damage events (phase 1).
+
+    Every on-hit application in these fights rides a simulated auto
+    swing, so the item rows stamp their events at those swing times and
+    the timeline classifier certifies them exact. Event sums must equal
+    the row totals — that IS the classifier's exactness contract.
+    """
+
+    def _timed_fight(self, items, *, duration=5.0):
+        """Timed fight at 1.0 AS / full uptime: swings at 0..duration-1."""
+        return self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=duration,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            items=items,
+        )
+
+    def test_static_on_hit_item_authors_per_swing_events(self) -> None:
+        """Wit's End stamps one uniform event per auto swing."""
+        result = self._timed_fight([{"name": "Wit's End"}])
+
+        row = result["breakdown"]["on_hit_Wit's End"]
+        events = row["damage_events"]
+        auto_times = [
+            event["time"]
+            for event in result["breakdown"]["auto_attacks"]["damage_events"]
+        ]
+        assert [event["time"] for event in events] == auto_times
+        assert all(
+            event["damage"] == pytest.approx(row["damage_per_hit"]) for event in events
+        )
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_Wit's End" in result["timeline_coverage"]["exact_sources"]
+
+    def test_bork_authors_declining_per_swing_events(self) -> None:
+        """BoRK's current-HP simulation emits its per-swing values."""
+        result = self._timed_fight([{"name": "Blade of the Ruined King"}])
+
+        row = result["breakdown"]["on_hit_Blade of the Ruined King"]
+        events = row["damage_events"]
+        assert len(events) == row["count"]
+        assert [event["time"] for event in events] == [0.0, 1.0, 2.0, 3.0, 4.0]
+        damages = [event["damage"] for event in events]
+        assert damages == sorted(damages, reverse=True)  # HP decays per swing
+        assert damages[0] > damages[-1]
+        assert sum(damages) == pytest.approx(row["total_damage"])
+        assert (
+            "on_hit_Blade of the Ruined King"
+            in result["timeline_coverage"]["exact_sources"]
+        )
+
+    def test_phantom_hits_double_the_events_on_their_swings(self) -> None:
+        """A Rageblade phantom swing carries a second on-hit event."""
+        result = self._timed_fight(
+            [{"name": "Guinsoo's Rageblade"}, {"name": "Wit's End"}],
+            duration=10.0,
+        )
+
+        assert result["phantom_hit_autos"] == {5, 8}
+        row = result["breakdown"]["on_hit_Wit's End"]
+        events = row["damage_events"]
+        assert len(events) == 12  # 10 swings + 2 phantom applications
+        times = [event["time"] for event in events]
+        assert times.count(5.0) == 2
+        assert times.count(8.0) == 2
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_Wit's End" in result["timeline_coverage"]["exact_sources"]
+        assert (
+            "on_hit_Guinsoo's Rageblade" in result["timeline_coverage"]["exact_sources"]
+        )
+
+    def test_kraken_counter_procs_author_swing_events(self) -> None:
+        """Kraken's every-3rd-hit procs stamp the swing that landed them."""
+        result = self._timed_fight([{"name": "Kraken Slayer"}], duration=9.0)
+
+        row = result["breakdown"]["on_hit_Kraken Slayer"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [2.0, 5.0, 8.0]
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_Kraken Slayer" in result["timeline_coverage"]["exact_sources"]
+
+
+class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
+    """Single-proc and scheduled effects author real event times (phase 2).
+
+    On-hit-once procs ride their triggering swing, Titanic's Crescent
+    rides cooldown-gated swings, Stormsurge stamps the ledger moment its
+    burst threshold was crossed, Malignance's Hatefog starts at the R
+    cast, spellblades emit weave-timed events per proc, and item actives
+    stamp the engine's rotation-position assumption. Event sums must
+    equal the row totals — that IS the classifier's exactness contract.
+    """
+
+    def _timed_fight(self, items, *, duration=5.0, **overrides):
+        """Timed fight at 1.0 AS / full uptime: swings at 0..duration-1."""
+        config = {
+            "one_rotation": False,
+            "fight_duration_seconds": duration,
+            "auto_attack_uptime": 1.0,
+            "target_health": 3000.0,
+            "target_armor": 0.0,
+            "target_magic_resistance": 0.0,
+            "items": items,
+        }
+        config.update(overrides)
+        return self.fight(self._make_stats(), **config)
+
+    def _ahri_fight(self, champion_data, item_names, **overrides):
+        """Timed 10s fight with real casts and the named items."""
+        from src.calculator.stats import calculate_total_stats
+        from src.calculator.data_fetcher import get_item_by_name
+
+        items = [get_item_by_name(name) for name in item_names]
+        stats = calculate_total_stats(champion_data, 18, items)
+        abilities = parse_ahri_abilities(champion_data, 18, stats["ability_power"])
+        config = {
+            "target_health": 3000.0,
+            "target_armor": 100.0,
+            "target_magic_resistance": 0.0,
+            "fight_duration_seconds": 10.0,
+            "auto_attack_uptime": 0.1,
+            "one_rotation": False,
+            "deterministic": True,
+        }
+        config.update(overrides)
+        return calculate_fight_damage(stats, abilities, items, FightConfig(**config))
+
+    def test_statikk_shiv_stamps_its_triggering_swing(self) -> None:
+        """The energized proc's event rides the first qualifying auto."""
+        result = self._timed_fight([{"name": "Statikk Shiv"}])
+
+        row = result["breakdown"]["on_hit_once_Statikk Shiv"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0]
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert (
+            "on_hit_once_Statikk Shiv" in result["timeline_coverage"]["exact_sources"]
+        )
+
+    def test_titanic_crescent_stamps_cooldown_gated_swings(self) -> None:
+        """Titanic's empowered Cleave rides the first swing off cooldown."""
+        result = self._timed_fight([{"name": "Titanic Hydra"}], duration=12.0)
+
+        row = result["breakdown"]["active_Titanic Hydra"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 10.0]
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "active_Titanic Hydra" in result["timeline_coverage"]["exact_sources"]
+
+    def test_stormsurge_stamps_the_burst_threshold_crossing(self, ahri_data) -> None:
+        """Squall's event lands when the rolling burst window first fills."""
+        fight = self._ahri_fight(ahri_data, ["Stormsurge"])
+
+        row = fight["breakdown"]["proc_Stormsurge"]
+        events = row["damage_events"]
+        assert len(events) == 1
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "proc_Stormsurge" in fight["timeline_coverage"]["exact_sources"]
+
+        # The stamp is the ledger moment the rolling window held the
+        # item's threshold share of the target's max health.
+        effect = resolve_damage_effects(_build("Stormsurge")).cooldown_procs[0]
+        proc_time = events[0]["time"]
+        window = [
+            event
+            for event in fight["damage_events"]
+            if event["source_key"] != "proc_Stormsurge"
+            and proc_time - effect.damage_threshold_window - 1e-9
+            <= event["time"]
+            <= proc_time + 1e-9
+        ]
+        assert sum(event["damage"] for event in window) >= (
+            effect.damage_threshold_ratio * 3000.0 - 1e-6
+        )
+
+    def test_stormsurge_stays_coarse_when_threshold_unreachable(
+        self, ahri_data
+    ) -> None:
+        """No certified crossing time means the row fails closed as coarse."""
+        fight = self._ahri_fight(ahri_data, ["Stormsurge"], target_health=10_000_000.0)
+
+        row = fight["breakdown"]["proc_Stormsurge"]
+        assert "damage_events" not in row
+        assert "proc_Stormsurge" in fight["timeline_coverage"]["coarse_sources"]
+
+    def test_malignance_hatefog_stamps_the_ult_cast_time(self, ahri_data) -> None:
+        """Hatefog's event starts where the cast timeline puts R1."""
+        fight = self._ahri_fight(ahri_data, ["Malignance"])
+
+        r_times = [
+            event["time"] for event in fight["cast_timeline"] if event["slot"] == "R"
+        ]
+        row = fight["breakdown"]["ult_proc_Malignance"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [min(r_times)]
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "ult_proc_Malignance" in fight["timeline_coverage"]["exact_sources"]
+
+    def test_spellblade_stamps_weave_timed_events(self, ahri_data) -> None:
+        """Each spellblade proc lands one weave delay after its cast."""
+        fight = self._ahri_fight(
+            ahri_data,
+            ["Bloodsong"],
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+        )
+
+        row = fight["breakdown"]["spellblade_Bloodsong"]
+        events = row["damage_events"]
+        assert len(events) == row["count"] == 2
+        effect = resolve_damage_effects(_build("Bloodsong")).spellblade
+        first_cast = min(event["time"] for event in fight["cast_timeline"])
+        assert events[0]["time"] == pytest.approx(first_cast + effect.weave_delay)
+        assert events[1]["time"] >= events[0]["time"] + effect.cooldown
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "spellblade_Bloodsong" in fight["timeline_coverage"]["exact_sources"]
+
+    def test_spellblade_bonus_true_rider_shares_proc_times(self, corki_data) -> None:
+        """Corki's Hextech Munitions rider stamps the same weave times."""
+        fight = self._ahri_fight(
+            corki_data,
+            ["Trinity Force"],
+            auto_attack_uptime=1.0,
+        )
+
+        plain = fight["breakdown"]["spellblade_Trinity Force"]
+        rider = fight["breakdown"]["spellblade_Trinity Force_bonus_true"]
+        assert [event["time"] for event in rider["damage_events"]] == [
+            event["time"] for event in plain["damage_events"]
+        ]
+        assert sum(
+            event["damage"] for event in plain["damage_events"]
+        ) == pytest.approx(plain["total_damage"])
+        assert sum(
+            event["damage"] for event in rider["damage_events"]
+        ) == pytest.approx(rider["total_damage"])
+        exact = fight["timeline_coverage"]["exact_sources"]
+        assert "spellblade_Trinity Force" in exact
+        assert "spellblade_Trinity Force_bonus_true" in exact
+
+    def test_item_active_stamps_the_rotation_position(self, ahri_data) -> None:
+        """An item active stamps the engine's after-the-rotation assumption."""
+        fight = self._ahri_fight(ahri_data, ["Stridebreaker"])
+
+        row = fight["breakdown"]["active_Stridebreaker"]
+        events = row["damage_events"]
+        last_cast = max(event["time"] for event in fight["cast_timeline"])
+        assert [event["time"] for event in events] == [pytest.approx(last_cast)]
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "active_Stridebreaker" in fight["timeline_coverage"]["exact_sources"]
+
+    def test_item_active_without_casts_stamps_fight_start(self) -> None:
+        """With no ability casts the active is assumed used at time zero."""
+        result = self._timed_fight([{"name": "Stridebreaker"}])
+
+        row = result["breakdown"]["active_Stridebreaker"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0]
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "active_Stridebreaker" in result["timeline_coverage"]["exact_sources"]
