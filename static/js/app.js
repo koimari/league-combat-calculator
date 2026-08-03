@@ -1692,7 +1692,7 @@ function renderPrototypeRoster(kind) {
     const champion = getChampion(loadout.champion);
     const label = kind === "targets" ? "enemy" : "ally";
     return `<article class="roster-card"><button class="roster-pick" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant${loadout.role ? ` · ${escapeHtml(loadout.role)}` : ""}</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button></article>`;
-  }).join("") || `<p class="roster-empty">Add a ${kind === "targets" ? "target" : "ally"} to the coupled timeline.</p>`;
+  }).join("") || `<p class="roster-empty">Add ${kind === "targets" ? "a target" : "an ally"} to the coupled timeline.</p>`;
   $(kind === "targets" ? "enemyCount" : "allyCount").textContent = entries.length;
 }
 

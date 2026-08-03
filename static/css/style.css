@@ -331,3 +331,76 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .champion-portrait-button.is-empty::before { content: "+"; font-size: 34px; font-weight: 500; line-height: 1; }
 .matrix-placeholder { display: grid; place-items: center; min-height: 100%; padding: 28px; color: var(--ink-soft); font-size: 12px; font-weight: 700; line-height: 1.45; text-align: center; }
 .result-note { color: #fff; font-weight: 800; text-shadow: 0 1px 4px rgba(0,0,0,.65); }
+
+/* Type scale: keep the prototype's geometry while raising the smallest
+   operational copy to a comfortable reading size. */
+.brand { font-size: 19px; }
+.topbar-meta, .quiet-button, .text-button { font-size: 12px; }
+.micro-label, .eyebrow, .build-kicker, .build-caption, .section-note, .result-status, .roster-meta, .ability-card small, .stat span, .metric-row, .health-person small, .result-top, .result-overline { font-size: 12px; }
+select { font-size: 13px; }
+.state-button, .objective { font-size: 12px; }
+.champion-identity h1 { font-size: clamp(34px, 3.6vw, 50px); }
+.champion-identity p { font-size: 14px; }
+.identity-controls label { font-size: 12px; }
+.outline-button { font-size: 11px; }
+.stat span { font-size: 10px; }
+.stat strong { font-size: 22px; }
+.ability-icon { font-size: 14px; }
+.ability-card strong { font-size: 13px; }
+.ability-card small { font-size: 10px; }
+.ability-rank output { font-size: 12px; }
+.build-kicker { font-size: 11px; }
+.build-header strong { font-size: 41px; }
+.build-caption { font-size: 10px; }
+.item-badge { font-size: 8px; }
+.slot strong { font-size: 11px; }
+.slot small, .empty-slot small { font-size: 10px; }
+.empty-slot span { font-size: 29px; }
+.compare-link { font-size: 13px; }
+.roster-label, .add-button { font-size: 12px; }
+.roster-card strong { font-size: 13px; }
+.roster-card span { font-size: 10px; }
+.roster-meta { font-size: 9px; }
+.remove-roster { font-size: 22px; }
+.range-control span { font-size: 12px; }
+.range-control output { font-size: 16px; }
+.result-answer > strong { font-size: clamp(115px, 12vw, 170px); }
+.result-answer span { font-size: 13px; }
+.result-answer b { font-size: 31px; }
+.result-hero p { font-size: 14px; }
+.score-col span { font-size: 11px; }
+.score-col strong { font-size: 30px; }
+.metric-legend { font-size: 10px; }
+.metric-row { font-size: 10px; }
+.metric-row strong { font-size: 14px; }
+.metric-row b { font-size: 11px; }
+.ledger-heading { font-size: 11px; }
+.health-person strong { font-size: 12px; }
+.health-person small { font-size: 9px; }
+.health-row > b { font-size: 11px; }
+.proof-details summary { font-size: 12px; }
+.timeline-axis { font-size: 10px; }
+.timeline-label { font-size: 11px; }
+.ledger-line { font-size: 12px; }
+.picker-option strong { font-size: 12px; }
+.picker-option small { font-size: 10px; }
+
+.ability-row > .roster-empty,
+.roster-group .roster-empty {
+  display: block;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(255,255,255,.55);
+  background: rgba(7,26,21,.84);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.45;
+  text-shadow: none;
+}
+
+@media (max-width: 560px) {
+  .champion-identity h1, .champion-identity.is-empty h1 { font-size: 37px; }
+  .result-answer > strong { font-size: 120px; }
+  .slot strong, .slot small { font-size: 9px; }
+}
