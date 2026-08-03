@@ -380,6 +380,14 @@ td:last-child { color: var(--olive); }
 
 .damage-breakdown { margin-top: 16px; border: 1px solid var(--line); background: var(--paper); }
 .damage-breakdown[hidden] { display: none; }
+.breakdown-outcome { margin: 0; padding: 13px 20px; border-bottom: 1px solid var(--line); color: var(--ink); font: 600 14px/1.35 var(--serif); }
+.breakdown-audit { border-bottom: 1px solid var(--line); }
+.breakdown-audit > summary { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 11px 20px; cursor: pointer; list-style: none; color: var(--ink); font: 600 11px var(--mono); }
+.breakdown-audit > summary::-webkit-details-marker { display: none; }
+.breakdown-audit > summary::after { content: "+"; color: var(--accent); font: 700 14px var(--mono); }
+.breakdown-audit[open] > summary::after { content: "−"; }
+.breakdown-audit > summary span { margin-left: auto; color: var(--muted); font: 8px var(--mono); text-transform: uppercase; }
+.breakdown-audit .combat-event-ledger { border-top: 1px solid var(--line); }
 .damage-breakdown > header { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 18px 20px 14px; border-bottom: 1px solid var(--line); }
 .damage-breakdown h2 { margin: 2px 0 0; font: 500 25px var(--serif); letter-spacing: -.025em; }
 .damage-breakdown > header > span { color: var(--muted); font: 8px var(--mono); text-transform: uppercase; }

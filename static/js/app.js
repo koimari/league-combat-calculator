@@ -909,6 +909,21 @@ function resultReason(winnerName, winnerIds, winner, loser) {
   return `<strong>${escapeHtml(winnerName)}</strong> wins ${advantages.length ? `through ${advantages.join(" and ")}` : "on the selected stats and damage package"}.`;
 }
 
+function survivalStatus(survival = {}) {
+  if (survival?.survived_window || survival?.death_time == null) return "alive at window end";
+  const deathTime = Number(survival.death_time);
+  return Number.isFinite(deathTime) ? `defeated at ${one(deathTime)}s` : "alive at window end";
+}
+
+function breakdownOutcome(aTotal, bTotal = null) {
+  if (bTotal == null) return `Build A is the selected build: ${fmt(aTotal)} damage in this window.`;
+  if (Math.abs(aTotal - bTotal) < 0.5) return `Build A and Build B are effectively tied at this window: ${fmt(aTotal)} damage each.`;
+  const winner = aTotal > bTotal ? "Build A" : "Build B";
+  const winnerTotal = Math.max(aTotal, bTotal);
+  const loserTotal = Math.min(aTotal, bTotal);
+  return `${winner} wins this window: ${fmt(winnerTotal)} damage vs ${fmt(loserTotal)}.`;
+}
+
 function renderResistanceOutput(aBuild, bBuild) {
   const host = $("resistanceOutput");
   if (!aBuild || !state.targets.length) {
@@ -956,7 +971,8 @@ function renderDamageBreakdown(aResult, bResult) {
   }).join("");
   const comparisonHead = bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : "";
   const comparisonTotal = bResult ? `<td>${fmt(bResult.cumulative)}</td><td>${Math.abs(aResult.cumulative - bResult.cumulative) < .5 ? "—" : `${aResult.cumulative > bResult.cumulative ? "+" : ""}${fmt(aResult.cumulative - bResult.cumulative)}`}</td>` : "";
-  host.innerHTML = `<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header>
+  const outcome = `<p class="breakdown-outcome" role="status">${escapeHtml(breakdownOutcome(aResult.cumulative, bResult?.cumulative))}</p>`;
+  host.innerHTML = `${outcome}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header>
     <div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${comparisonHead}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage dealt</strong><small>After selected enemy resistances</small></td><td>${fmt(aResult.cumulative)}</td>${comparisonTotal}</tr></tbody></table></div>`;
 }
 
@@ -1184,11 +1200,12 @@ function renderExactBreakdown(aResult, bResult) {
   // enemy.  Surface those participant/source pairs here so the detailed
   // table cannot silently look like a one-sided calculation when the ledger
   // above already contains a bidirectional event timeline.
+  const survivalByParticipant = new Map((aResult?.combat?.participants || []).map((participant) => [participant.participant_id, participant.survival || {}]));
   const ingestCombatSources = (result, side) => (result?.combat?.breakdown || []).forEach((participant) => {
     (participant.sources || []).forEach((source) => {
       const participantLabel = `${participant.champion || "Participant"} · ${participant.team || ""}`.trim();
       const sourceLabel = `${participantLabel} · ${source.name || "Damage source"}`;
-      const detail = "Event-ordered output before defeat";
+      const detail = `Before defeat · ${survivalStatus(survivalByParticipant.get(participant.participant_id))}`;
       const key = `${sourceLabel}:${detail}`;
       const row = rows.get(key) || { source: sourceLabel, detail, damage: 0, a: 0, b: 0 };
       row[side] += Number(source.total_damage || 0);
@@ -1205,14 +1222,16 @@ function renderExactBreakdown(aResult, bResult) {
   const aMainTotal = mainTotal(aResult);
   const bMainTotal = bResult ? mainTotal(bResult) : 0;
   const totalB = bResult ? `<td>${fmt(bMainTotal)}</td><td>${Math.abs(aMainTotal - bMainTotal) < .5 ? "—" : `${aMainTotal > bMainTotal ? "+" : ""}${fmt(aMainTotal - bMainTotal)}`}</td>` : "";
-  const combatRows = (aResult?.combat?.breakdown || []).map((entry) => {
-    const survival = (aResult.combat.participants || []).find((participant) => participant.participant_id === entry.participant_id)?.survival || {};
-    const status = survival.survived_window ? "alive at window end" : `defeated at ${one(survival.death_time)}s`;
+  const combatRows = (aResult?.combat?.participants || []).map((participant) => {
+    const entry = (aResult?.combat?.breakdown || []).find((row) => row.participant_id === participant.participant_id) || {};
+    const survival = participant.survival || {};
+    const status = survivalStatus(survival);
+    const participantLabel = `${entry.champion || participant.champion || participant.participant_id || "Participant"}${entry.team || participant.team ? ` · ${entry.team || participant.team}` : ""}`;
     const appliedIncoming = Number(survival.health_damage || 0) + Number(survival.shield_absorbed || 0);
     const reduced = Number(survival.healing_reduced || 0);
-    return `<tr><td><strong>${escapeHtml(`${entry.champion} · ${entry.team}`)}</strong><small>${escapeHtml(status)} · ${fmt(survival.effective_health || 0)} eHP · ${fmt(survival.healing_received || 0)} healing${reduced ? ` · ${fmt(reduced)} anti-heal prevented` : ""}</small></td><td>${fmt(entry.total_damage)}</td><td>${fmt(appliedIncoming)}</td>${bResult ? `<td>—</td><td>—</td>` : ""}</tr>`;
+    return `<tr><td><strong>${escapeHtml(participantLabel)}</strong><small>${escapeHtml(status)} · ${fmt(survival.effective_health || 0)} eHP · ${fmt(survival.healing_received || 0)} healing${reduced ? ` · ${fmt(reduced)} anti-heal prevented` : ""}</small></td><td>${fmt(entry.total_damage || 0)}</td><td>${fmt(appliedIncoming)}</td>${bResult ? `<td>—</td><td>—</td>` : ""}</tr>`;
   }).join("");
-  const combatSection = combatRows ? `<section class="combat-participant-ledger"><header><div><p class="eyebrow">Team-fight ledger</p><h2>Every selected champion participates</h2></div><span>Event-ordered output · applied incoming damage · eHP</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Participant</th><th><i class="legend-a"></i>Output before defeat</th><th>Applied incoming damage</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${combatRows}</tbody></table></div></section>` : "";
+  const combatSection = combatRows ? `<section class="combat-participant-ledger"><header><div><p class="eyebrow">Team-fight ledger</p><h2>Participant survival</h2></div><span>Output · incoming · endpoint</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Participant</th><th><i class="legend-a"></i>Output before defeat</th><th>Applied incoming damage</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${combatRows}</tbody></table></div></section>` : "";
   const labels = new Map((aResult?.combat?.participants || []).map((participant) => [participant.participant_id, `${participant.champion} · ${participant.team}`]));
   const eventRows = (aResult?.combat?.events || []).filter((event) => Number(event.damage || 0) > 0 || event.skipped_reason).map((event) => `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(labels.get(event.target) || event.target || "Target")} · ${escapeHtml(event.source || "event")} · ${escapeHtml(event.event_precision || "exact")}${event.skipped_reason ? ` · ${escapeHtml(event.skipped_reason)}` : ""}</small></td><td>${fmt(event.damage || 0)}</td></tr>`).join("");
   const healingRows = (aResult?.combat?.healing_events || []).filter((event) => Number(event.raw_amount || event.amount || 0) > 0).map((event) => {
@@ -1220,8 +1239,9 @@ function renderExactBreakdown(aResult, bResult) {
     const wound = factor < 1 ? ` · Grievous Wounds ${Math.round((1 - factor) * 100)}%` : "";
     return `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(event.source || "healing")} · ${escapeHtml(event.kind || "heal")}${wound}</small></td><td>${fmt(event.applied_amount || 0)}<small>${fmt(event.raw_amount || event.amount || 0)} sourced</small></td></tr>`;
   }).join("");
-  const eventSection = eventRows || healingRows ? `<section class="combat-event-ledger"><header><div><p class="eyebrow">Event order</p><h2>Outgoing, incoming and recovery events</h2></div><span>Every selected champion · timestamped</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Event</th><th>Applied value</th></tr></thead><tbody>${eventRows}${healingRows}</tbody></table></div></section>` : "";
-  $("damageBreakdown").innerHTML = `${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Every skill, proc and burn · all participants</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output from the coupled participant timeline</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
+  const eventSection = eventRows || healingRows ? `<details class="breakdown-audit"><summary>Audit trail <span>Event order · timestamps</span></summary><section class="combat-event-ledger" aria-label="Event order audit"><header><div><p class="eyebrow">Event order</p><h2>Timestamped events</h2></div><span>Outgoing · incoming · recovery</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Event</th><th>Applied value</th></tr></thead><tbody>${eventRows}${healingRows}</tbody></table></div></section></details>` : "";
+  const outcome = `<p class="breakdown-outcome" role="status">${escapeHtml(breakdownOutcome(aMainTotal, bResult ? bMainTotal : null))}</p>`;
+  $("damageBreakdown").innerHTML = `${outcome}${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output · ${escapeHtml(survivalStatus((aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main")?.survival))}</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
 }
 
 function fightOrderAbility(slot) {
