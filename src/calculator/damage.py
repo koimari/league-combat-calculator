@@ -1031,6 +1031,8 @@ def _ordered_damage_events(
         source_missing_ratio: float | None = None,
         event_precision: str | None = None,
     ) -> None:
+        # Row schema (including ``_lk``) must mirror add_declared_events'
+        # inlined fast path below exactly; change them together.
         nonlocal sequence
         if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
             return
@@ -1067,7 +1069,9 @@ def _ordered_damage_events(
 
         This is the hot path of ledger reconstruction — module champions
         declare nearly every event — so the row is built directly instead of
-        going through ``add``'s keyword plumbing for each declared hit.
+        going through ``add``'s keyword plumbing for each declared hit.  The
+        row schema (including ``_lk``) must mirror ``add()`` above exactly;
+        change them together.
         """
         nonlocal sequence
         declared = entry.get("damage_events")
@@ -7131,32 +7135,32 @@ def _resolve_starting_shield_outcome(
         for event in damage_events:
             current_health = max(0.0, current_health - event["damage"])
         health_state.current_health = current_health
-        damage_events = ()
-    for event in damage_events:
-        event_time = float(event["time"])
-        health_state.advance_to(event_time)
-        lifeline_shield.expire_at(event_time)
-        remaining = event["damage"]
-        if event["damage_type"] == "magic":
-            absorbed = min(magic_shield, remaining)
-            magic_shield -= absorbed
-            magic_absorbed += absorbed
+    else:
+        for event in damage_events:
+            event_time = float(event["time"])
+            health_state.advance_to(event_time)
+            lifeline_shield.expire_at(event_time)
+            remaining = event["damage"]
+            if event["damage_type"] == "magic":
+                absorbed = min(magic_shield, remaining)
+                magic_shield -= absorbed
+                magic_absorbed += absorbed
+                remaining -= absorbed
+            elif event["damage_type"] == "physical":
+                absorbed = min(physical_shield, remaining)
+                physical_shield -= absorbed
+                physical_absorbed += absorbed
+                remaining -= absorbed
+            absorbed = min(general_shield, remaining)
+            general_shield -= absorbed
+            general_absorbed += absorbed
             remaining -= absorbed
-        elif event["damage_type"] == "physical":
-            absorbed = min(physical_shield, remaining)
-            physical_shield -= absorbed
-            physical_absorbed += absorbed
-            remaining -= absorbed
-        absorbed = min(general_shield, remaining)
-        general_shield -= absorbed
-        general_absorbed += absorbed
-        remaining -= absorbed
 
-        remaining -= lifeline_shield.absorb(
-            remaining, event["damage_type"], event_time, health_state.current_health
-        )
-        health_state.trigger_before(remaining, event_time)
-        health_state.take_damage(remaining)
+            remaining -= lifeline_shield.absorb(
+                remaining, event["damage_type"], event_time, health_state.current_health
+            )
+            health_state.trigger_before(remaining, event_time)
+            health_state.take_damage(remaining)
 
     threshold_absorbed = lifeline_shield.absorbed_total
     absorbed = (

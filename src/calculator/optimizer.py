@@ -232,6 +232,9 @@ def _evaluate_build_uncached(
                 enemies=list(combat_context.get("enemies", [])),
                 allies=list(combat_context.get("allies", [])),
                 pair_result_cache=combat_context.get("pair_result_cache"),
+                # Typed objectives score from the serialized events list
+                # below, so they need the full receipt; total damage scores
+                # from the breakdown row and can take the scoring subset.
                 include_receipt=objective in ("physical_damage", "magic_damage"),
                 # ``stats`` above used this exact configuration; the claim
                 # only holds when no external ally bonuses were folded in,

@@ -890,3 +890,64 @@ class TestSixVsFiveSlots:
             max_legendary_slots=6,
         )
         assert result_6["total_damage"] >= result_5["total_damage"]
+
+
+def test_coupled_optimizer_caches_do_not_change_results(monkeypatch):
+    """The score memo and pair caches are pure speed: force-disabling both
+    must reproduce the identical coupled search result and receipts."""
+    from src.calculator import optimizer
+    from src.calculator.scenario import ChampionLoadout
+
+    real_supported = optimizer.optimizer_supported_items
+    keep = {
+        "Rabadon's Deathcap",
+        "Void Staff",
+        "Rylai's Crystal Scepter",
+        "Stormsurge",
+        "Sorcerer's Shoes",
+        "Ionian Boots of Lucidity",
+    }
+
+    def small_pool(items):
+        supported = real_supported(items)
+        narrowed = [item for item in supported if item["name"] in keep]
+        return narrowed or supported
+
+    monkeypatch.setattr(optimizer, "optimizer_supported_items", small_pool)
+
+    enemies = [
+        ChampionLoadout(
+            champion="Alistar",
+            level=13,
+            role="support",
+            boots="Plated Steelcaps",
+            items=("Randuin's Omen", "Bramble Vest"),
+        ).resolve(),
+    ]
+    common = dict(
+        champion_data=get_champion("Cassiopeia"),
+        level=13,
+        fight_params=FightParams.from_request(
+            {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+        ),
+        max_legendary_slots=2,
+        require_complete_timeline=True,
+        enemy_loadouts=enemies,
+    )
+    baseline = _optimize_build(**common)
+
+    monkeypatch.setattr(
+        optimizer, "_evaluate_build", optimizer._evaluate_build_uncached
+    )
+    real_timeline = optimizer.build_participant_timeline
+
+    def no_cache_timeline(*args, **kwargs):
+        kwargs["pair_result_cache"] = None
+        return real_timeline(*args, **kwargs)
+
+    monkeypatch.setattr(optimizer, "build_participant_timeline", no_cache_timeline)
+    uncached = _optimize_build(**common)
+
+    baseline.pop("optimization_time_ms")
+    uncached.pop("optimization_time_ms")
+    assert baseline == uncached

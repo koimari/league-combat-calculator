@@ -11,6 +11,7 @@ from src.calculator.participant_timeline import (
     Combatant,
     _schedule_thorns_events,
     _simulate_survival,
+    build_participant_timeline,
 )
 
 
@@ -842,3 +843,89 @@ def test_bramble_vest_retaliation_flows_through_the_calculate_pipeline():
         "Bramble Vest" in source
         for source in enemy["survival"]["healing_reduction_sources"]
     )
+
+
+def _coupled_fixture():
+    """One small coupled roster shared by the cache-equivalence tests."""
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.scenario import ChampionLoadout
+    from src.calculator.stats import calculate_total_stats
+
+    params = FightParams.from_request(
+        {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+    )
+    champion = get_champion("Cassiopeia")
+    enemies = [
+        ChampionLoadout(
+            champion="Alistar",
+            level=13,
+            role="support",
+            boots="Plated Steelcaps",
+            items=("Randuin's Omen", "Bramble Vest"),
+        ).resolve(),
+        ChampionLoadout(
+            champion="Dr. Mundo",
+            level=13,
+            role="top",
+            boots="Mercury's Treads",
+            items=("Kaenic Rookern", "Warmog's Armor"),
+        ).resolve(),
+    ]
+
+    def timeline(items, **kwargs):
+        stats = calculate_total_stats(champion, 13, items, role="mid")
+        defenses = resolve_starting_defenses(champion["name"], 13, stats, items)
+        return build_participant_timeline(
+            champion,
+            13,
+            items,
+            params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=enemies,
+            allies=[],
+            **kwargs,
+        )
+
+    return timeline
+
+
+def test_shared_pair_cache_replays_identical_coupled_receipts():
+    """Cache hits and misses must reproduce the no-cache receipt exactly.
+
+    Two offense-only builds share one defensive signature (the second is a
+    pure cache hit for the incoming fights); the health item changes the
+    signature and forces a miss.  Every cached receipt must deep-equal a
+    fresh no-cache computation.
+    """
+    timeline = _coupled_fixture()
+    cache: dict = {}
+    builds = [
+        [get_item_by_name("Rabadon's Deathcap")],
+        [get_item_by_name("Void Staff")],
+        [get_item_by_name("Rylai's Crystal Scepter")],
+    ]
+    for items in builds:
+        cached = timeline(items, pair_result_cache=cache)
+        fresh = timeline(items)
+        assert cached == fresh
+    assert cache, "the pair cache was never populated"
+
+
+def test_score_only_receipt_matches_full_receipt_numbers():
+    """include_receipt=False must change shape only, never a number."""
+    timeline = _coupled_fixture()
+    items = [get_item_by_name("Rabadon's Deathcap")]
+    full = timeline(items)
+    score_only = timeline(items, include_receipt=False)
+
+    assert score_only["timeline_coverage"] == full["timeline_coverage"]
+    full_rows = {row["participant_id"]: row for row in full["breakdown"]}
+    for row in score_only["breakdown"]:
+        assert row["total_damage"] == full_rows[row["participant_id"]]["total_damage"]
+    full_survival = {
+        participant["participant_id"]: participant["survival"]
+        for participant in full["participants"]
+    }
+    for participant in score_only["participants"]:
+        assert participant["survival"] == full_survival[participant["participant_id"]]

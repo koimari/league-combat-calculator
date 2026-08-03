@@ -97,6 +97,14 @@ def _action_key(
     This is the survival walk's total order.  Pair packets precompute it per
     event (``_sk``) because the walk re-sorts the same roster events for
     every optimizer candidate.
+
+    The ``_event_id`` component is a dead tie-break for engine damage
+    events: ``sequence`` is unique per pair fight, and events from
+    different pairs already differ at the source/participant components.
+    ``_pair_packet``'s pair-local event numbering depends on that — if an
+    engine event ever arrived without its sequence, the id string would
+    start deciding order, so the packet builder rejects that instead of
+    letting numbering become order-relevant.
     """
     source_id = event.get("attacker", participant_id)
     return (
@@ -226,6 +234,14 @@ def _pair_packet(
     events: list[dict[str, Any]] = []
     event_ids_by_key: dict[tuple[str, float, int], str] = {}
     for index, event in enumerate(result.get("damage_events", [])):
+        if "sequence" not in event:
+            # See _action_key: pair-local event ids stay order-irrelevant
+            # only while every engine event carries its per-fight sequence.
+            raise ValueError(
+                f"{attacker_id} damage event {event.get('source_key', '')!r} "
+                "has no sequence; the walk's tie-break order would depend on "
+                "event-id numbering"
+            )
         enriched = {
             **event,
             "attacker": attacker_id,
