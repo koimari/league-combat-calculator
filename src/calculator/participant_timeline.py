@@ -259,7 +259,18 @@ def _pair_packet(
             float(event.get("time", 0.0)), 1.0, attacker_id, enriched_heal
         )
         heals.append(enriched_heal)
-    return {"result": result, "events": events, "heals": heals}
+    return {
+        "result": result,
+        "events": events,
+        "heals": heals,
+        # Display-name rows for the attacker breakdown; never mutated (the
+        # post-survival pass rebuilds source rows wholesale), so they are
+        # shared across evaluations as-is.
+        "source_names": {
+            source: {"name": entry.get("name", source), "total_damage": 0.0}
+            for source, entry in result.get("breakdown", {}).items()
+        },
+    }
 
 
 def _actor_params(base: FightParams, actor: Combatant) -> FightParams:
@@ -692,7 +703,11 @@ def _simulate_survival(
         # inflate team-fight TTD or BIS scores.
         event["damage"] = round(event_absorbed + applied_to_health, 6)
         attacker_profiles = reduction_profiles.get(str(source_id), ())
-        matching_profiles = matching_healing_reduction(attacker_profiles, damage_type)
+        matching_profiles = (
+            matching_healing_reduction(attacker_profiles, damage_type)
+            if attacker_profiles
+            else ()
+        )
         if matching_profiles and event["damage"] > 0:
             # Grievous Wounds sources do not stack; refresh the strongest
             # sourced window when another qualifying hit lands.
@@ -902,11 +917,15 @@ def build_participant_timeline(
                     if cacheable and pair_result_cache is not None:
                         pair_result_cache[cache_key] = packet
                 result = packet["result"]
-                coverage_reports.append(dict(result.get("timeline_coverage", {})))
+                coverage_reports.append(result.get("timeline_coverage", {}))
+                # A packet that lives in the cache serves later evaluations,
+                # so this one only takes copies (the walk mutates its rows).
+                # A single-use packet's rows are appended directly.
+                copy_templates = cacheable and pair_result_cache is not None
                 attacker_outgoing = outgoing[attacker.participant_id]
                 defender_incoming = incoming[defender.participant_id]
                 for template in packet["events"]:
-                    enriched = dict(template)
+                    enriched = dict(template) if copy_templates else template
                     attacker_outgoing.append(enriched)
                     defender_incoming.append(enriched)
                 attacker_healing = healing[attacker.participant_id]
@@ -921,7 +940,9 @@ def build_participant_timeline(
                         )
                         if duplicate:
                             continue
-                    attacker_healing.append(dict(template))
+                    attacker_healing.append(
+                        dict(template) if copy_templates else template
+                    )
                 if attacker.participant_id not in support_attached:
                     support_templates = packet.get("support")
                     if support_templates is None:
@@ -930,7 +951,9 @@ def build_participant_timeline(
                         )
                         packet["support"] = support_templates
                     for template in support_templates:
-                        support_effects[template["target"]].append(dict(template))
+                        support_effects[template["target"]].append(
+                            dict(template) if copy_templates else template
+                        )
                     support_attached.add(attacker.participant_id)
                 row = breakdown[attacker.participant_id]
                 row.update(
@@ -941,11 +964,9 @@ def build_participant_timeline(
                     }
                 )
                 row["total_damage"] += float(result.get("total_damage", 0.0))
-                for source, entry in result.get("breakdown", {}).items():
-                    row["sources"].setdefault(
-                        source,
-                        {"name": entry.get("name", source), "total_damage": 0.0},
-                    )
+                row_sources = row["sources"]
+                for source, template in packet["source_names"].items():
+                    row_sources.setdefault(source, template)
 
     # A support source still has a cast schedule when no opposing target was
     # selected (for example, a main champion with allies but an empty enemy

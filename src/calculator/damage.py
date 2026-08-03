@@ -7110,6 +7110,25 @@ def _resolve_starting_shield_outcome(
         duration=config.target_threshold_shield_duration,
         damage_type=config.target_threshold_shield_damage_type,
     )
+    if (
+        magic_shield <= 0.0
+        and physical_shield <= 0.0
+        and general_shield <= 0.0
+        and (lifeline_shield.amount <= 0.0 or lifeline_shield.threshold_hp <= 0.0)
+        and (
+            health_state.bonus_health <= 0.0
+            or health_state.health_ratio <= 0.0
+            or health_state.duration <= 0.0
+        )
+    ):
+        # No shield can absorb and no threshold state can arm: every
+        # per-event absorption below is exactly ``- 0.0``, so the walk
+        # reduces bit-for-bit to sequential floored health subtraction.
+        current_health = health_state.current_health
+        for event in damage_events:
+            current_health = max(0.0, current_health - event["damage"])
+        health_state.current_health = current_health
+        damage_events = ()
     for event in damage_events:
         event_time = float(event["time"])
         health_state.advance_to(event_time)

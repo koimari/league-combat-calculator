@@ -1050,6 +1050,8 @@ def refresh_item_effects() -> None:
     """
     ITEM_EFFECTS.clear()
     ITEM_EFFECTS.update(_build_item_effects())
+    # Compiled-build memo derives from this registry; drop it with the data.
+    _RESOLVED_DAMAGE_EFFECTS.clear()
 
 
 # Build the live registry at import time.
@@ -2124,6 +2126,40 @@ _KNOWN_EFFECT_TYPES = frozenset(
 
 
 def resolve_damage_effects(
+    items: Sequence[Mapping[str, Any]],
+) -> BuildDamageEffects:
+    """Compile a build's registered damage behaviors from the live registry.
+
+    The compilation is a pure function of the item names and their registry
+    entries, and the result is immutable, so repeat builds (the optimizer
+    scores thousands per search) reuse one compiled object.  A hit is valid
+    only while every referenced registry entry is the identical object —
+    replacing an entry (tests, data refresh) invalidates it naturally, and
+    ``refresh_item_effects`` clears the memo wholesale.
+    """
+    memo_key = tuple(str(item.get("name", "")) for item in items)
+    cached = _RESOLVED_DAMAGE_EFFECTS.get(memo_key)
+    if cached is not None:
+        resolved, entry_refs = cached
+        if all(ITEM_EFFECTS.get(name) is ref for name, ref in entry_refs):
+            return resolved
+    resolved = _resolve_damage_effects_uncached(items)
+    if len(_RESOLVED_DAMAGE_EFFECTS) >= 4096:
+        _RESOLVED_DAMAGE_EFFECTS.clear()
+    _RESOLVED_DAMAGE_EFFECTS[memo_key] = (
+        resolved,
+        tuple((name, ITEM_EFFECTS.get(name)) for name in memo_key),
+    )
+    return resolved
+
+
+_RESOLVED_DAMAGE_EFFECTS: dict[
+    tuple[str, ...],
+    tuple[BuildDamageEffects, tuple[tuple[str, Any], ...]],
+] = {}
+
+
+def _resolve_damage_effects_uncached(
     items: Sequence[Mapping[str, Any]],
 ) -> BuildDamageEffects:
     """Compile a build's registered damage behaviors from the live registry."""
