@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, replace
+from operator import itemgetter
 from typing import Any, Iterable, Mapping
 
 from .pipeline import FightParams, require_fight_mode_support, run_fight
@@ -85,11 +86,18 @@ def _participant_order(participant_id: Any) -> tuple[int, str]:
     return (3, text)
 
 
-def _action_sort_key(
-    row: tuple[float, float, str, dict[str, Any]],
+def _action_key(
+    event_time: float,
+    phase: float,
+    participant_id: str,
+    event: Mapping[str, Any],
 ) -> tuple[Any, ...]:
-    """Sort event phases without ever comparing payload dictionaries."""
-    event_time, phase, participant_id, event = row
+    """Order event phases without ever comparing payload dictionaries.
+
+    This is the survival walk's total order.  Pair packets precompute it per
+    event (``_sk``) because the walk re-sorts the same roster events for
+    every optimizer candidate.
+    """
     source_id = event.get("attacker", participant_id)
     return (
         float(event_time),
@@ -201,6 +209,59 @@ def _defensive_signature(defender: Combatant) -> tuple[Any, ...]:
     return tuple(_target_overrides(defender).values())
 
 
+def _pair_packet(
+    result: Mapping[str, Any],
+    attacker_id: str,
+    defender_id: str,
+) -> dict[str, Any]:
+    """Enrich one pair fight's events exactly once.
+
+    The coupled optimizer replays cached pair results for thousands of
+    candidates, so everything derivable from the result alone — attacker and
+    target ids, per-pair event ids, heal trigger links, and the survival
+    walk's precomputed sort key — lives on templates here.  Applying a packet
+    to one evaluation only shallow-copies each template, because the walk
+    mutates its copy's top-level fields.
+    """
+    events: list[dict[str, Any]] = []
+    event_ids_by_key: dict[tuple[str, float, int], str] = {}
+    for index, event in enumerate(result.get("damage_events", [])):
+        enriched = {
+            **event,
+            "attacker": attacker_id,
+            "target": defender_id,
+            "_event_id": f"{attacker_id}:{defender_id}:{index}",
+        }
+        enriched["_sk"] = _action_key(
+            float(event.get("time", 0.0)), 0.0, defender_id, enriched
+        )
+        events.append(enriched)
+        event_ids_by_key[
+            (
+                str(event.get("source_key", "")),
+                round(float(event.get("time", 0.0)), 9),
+                int(event.get("sequence", 0) or 0),
+            )
+        ] = enriched["_event_id"]
+    heals: list[dict[str, Any]] = []
+    for event in result.get("self_healing_events", []):
+        enriched_heal = {**event, "attacker": attacker_id}
+        trigger_id = event_ids_by_key.get(
+            (
+                str(event.get("_trigger_source", "")),
+                round(float(event.get("_trigger_time", 0.0)), 9),
+                int(event.get("_trigger_sequence", 0) or 0),
+            )
+        )
+        if trigger_id is not None:
+            enriched_heal["_trigger_event_id"] = trigger_id
+        enriched_heal["_sk"] = _action_key(
+            float(event.get("time", 0.0)), 1.0, attacker_id, enriched_heal
+        )
+        heals.append(enriched_heal)
+    return {"result": result, "events": events, "heals": heals}
+
+
 def _actor_params(base: FightParams, actor: Combatant) -> FightParams:
     """Use a roster actor's role while preserving the selected fight window."""
     request = actor.request
@@ -257,17 +318,22 @@ def _support_target_ids(
     return [teammates[0].participant_id], "first_selected_teammate"
 
 
-def _attach_support_effects(
+def _support_effect_templates(
     attacker: Combatant,
     result: Mapping[str, Any],
     all_actors: list[Combatant],
-    support_effects: dict[str, list[dict[str, Any]]],
-) -> None:
-    """Attach one actor's sourced shield/heal packets exactly once."""
+) -> list[dict[str, Any]]:
+    """Derive one actor's sourced shield/heal packets, resolved to targets.
+
+    Returned templates are reusable across optimizer candidates (the roster
+    and each cached pair result are fixed), so they ride the pair packet;
+    application shallow-copies each one because the survival walk annotates
+    its copy.
+    """
     if attacker.team == "ally" and not getattr(
         attacker.request, "ally_effects_enabled", False
     ):
-        return
+        return []
     request = attacker.request
     effects = derive_ally_effects(
         attacker.champion_data,
@@ -276,10 +342,11 @@ def _attach_support_effects(
         list(result.get("cast_timeline", [])),
         ability_ranks=getattr(request, "ability_ranks", None),
     )
+    templates = []
     for effect in effects:
         target_ids, target_policy = _support_target_ids(attacker, effect, all_actors)
         for target_id in target_ids:
-            support_effects[target_id].append(
+            templates.append(
                 {
                     **effect,
                     "attacker": attacker.participant_id,
@@ -287,6 +354,18 @@ def _attach_support_effects(
                     "target_policy": target_policy,
                 }
             )
+    return templates
+
+
+def _attach_support_effects(
+    attacker: Combatant,
+    result: Mapping[str, Any],
+    all_actors: list[Combatant],
+    support_effects: dict[str, list[dict[str, Any]]],
+) -> None:
+    """Attach one actor's sourced shield/heal packets exactly once."""
+    for template in _support_effect_templates(attacker, result, all_actors):
+        support_effects[template["target"]].append(dict(template))
 
 
 def _thorns_return_damage(
@@ -399,7 +478,7 @@ def _simulate_survival(
             "death_time": None,
         }
 
-    actions: list[tuple[float, float, str, dict[str, Any]]] = []
+    actions: list[tuple[tuple[Any, ...], str, dict[str, Any]]] = []
     damage_event_status: dict[str, str] = {}
     for participant_id, events in support_effects.items():
         for event in events:
@@ -407,19 +486,32 @@ def _simulate_survival(
             # is a post-damage recovery event.  They must not share one
             # priority merely because both are support effects.
             kind = str(event.get("kind", ""))
-            priority = -1 if kind == "shield" else 1
+            priority = -1.0 if kind == "shield" else 1.0
             actions.append(
-                (float(event.get("time", 0.0)), priority, participant_id, event)
+                (
+                    _action_key(
+                        float(event.get("time", 0.0)), priority, participant_id, event
+                    ),
+                    participant_id,
+                    event,
+                )
             )
     # Damage resolves before self-healing and sourced recovery at the same
     # timestamp, while shields remain before damage above. Reactive
     # strike-back damage (Thorns) resolves after the strikes that
-    # triggered it but still before same-timestamp healing.
+    # triggered it but still before same-timestamp healing.  Pair packets
+    # carry their precomputed key (``_sk``); events authored outside a
+    # packet (thorns strike-backs) compute theirs here.
     for participant_id, events in incoming.items():
         actions.extend(
             (
-                float(event.get("time", 0.0)),
-                0.5 if event.get("_reactive") else 0,
+                event.get("_sk")
+                or _action_key(
+                    float(event.get("time", 0.0)),
+                    0.5 if event.get("_reactive") else 0.0,
+                    participant_id,
+                    event,
+                ),
                 participant_id,
                 event,
             )
@@ -427,12 +519,20 @@ def _simulate_survival(
         )
     for participant_id, events in healing.items():
         actions.extend(
-            (float(event.get("time", 0.0)), 1, participant_id, event)
+            (
+                event.get("_sk")
+                or _action_key(
+                    float(event.get("time", 0.0)), 1.0, participant_id, event
+                ),
+                participant_id,
+                event,
+            )
             for event in events
         )
-    actions.sort(key=_action_sort_key)
+    actions.sort(key=itemgetter(0))
 
-    for event_time, phase, participant_id, event in actions:
+    for action_key, participant_id, event in actions:
+        event_time, phase = action_key[0], action_key[1]
         state = states[participant_id]
         trigger_id = event.get("_trigger_event_id")
         if trigger_id is not None and (
@@ -672,7 +772,8 @@ def build_participant_timeline(
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
     focus_participant_id: str = "main",
-    pair_result_cache: dict[tuple[Any, ...], Mapping[str, Any]] | None = None,
+    pair_result_cache: dict[tuple[Any, ...], dict[str, Any]] | None = None,
+    include_receipt: bool = True,
 ) -> dict[str, Any]:
     """Compose all selected actors and return the coupled combat receipt.
 
@@ -680,6 +781,11 @@ def build_participant_timeline(
     visible calculate response keeps the default focus on the main champion,
     while ally/enemy slot optimization can score the selected roster member
     without creating a fake one-attacker scenario.
+
+    ``include_receipt=False`` returns the scoring subset only — survival,
+    per-actor breakdown, and the ordering receipt — with identical numbers;
+    optimizer candidate evaluation uses it because nothing ever displays a
+    candidate's serialized timeline.
     """
     require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
@@ -747,72 +853,54 @@ def build_participant_timeline(
                     )
                 else:
                     cache_key = (attacker.participant_id, defender.participant_id)
-                if (
-                    cacheable
-                    and pair_result_cache is not None
-                    and cache_key in pair_result_cache
-                ):
-                    result = pair_result_cache[cache_key]
-                else:
-                    result = run_fight(
-                        attacker.champion_data,
-                        attacker.level,
-                        list(attacker.items),
-                        _target_params(actor_params, defender),
+                packet = (
+                    pair_result_cache.get(cache_key)
+                    if cacheable and pair_result_cache is not None
+                    else None
+                )
+                if packet is None:
+                    packet = _pair_packet(
+                        run_fight(
+                            attacker.champion_data,
+                            attacker.level,
+                            list(attacker.items),
+                            _target_params(actor_params, defender),
+                        ),
+                        attacker.participant_id,
+                        defender.participant_id,
                     )
                     if cacheable and pair_result_cache is not None:
-                        pair_result_cache[cache_key] = result
+                        pair_result_cache[cache_key] = packet
+                result = packet["result"]
                 coverage_reports.append(dict(result.get("timeline_coverage", {})))
-                result_events = list(result.get("damage_events", []))
-                for event in result_events:
-                    enriched = {
-                        **event,
-                        "attacker": attacker.participant_id,
-                        "target": defender.participant_id,
-                    }
-                    event_index = len(outgoing[attacker.participant_id])
-                    enriched["_event_id"] = (
-                        f"{attacker.participant_id}:{defender.participant_id}:{event_index}"
-                    )
-                    outgoing[attacker.participant_id].append(enriched)
-                    incoming[defender.participant_id].append(enriched)
-                event_ids_by_key = {
-                    (
-                        str(event.get("source_key", "")),
-                        round(float(event.get("time", 0.0)), 9),
-                        int(event.get("sequence", 0) or 0),
-                    ): event.get("_event_id")
-                    for event in outgoing[attacker.participant_id]
-                    if event.get("target") == defender.participant_id
-                }
-                for event in result.get("self_healing_events", []):
-                    enriched_heal = {**event, "attacker": attacker.participant_id}
-                    trigger_key = (
-                        str(event.get("_trigger_source", "")),
-                        round(float(event.get("_trigger_time", 0.0)), 9),
-                        int(event.get("_trigger_sequence", 0) or 0),
-                    )
-                    trigger_id = event_ids_by_key.get(trigger_key)
-                    if trigger_id is not None:
-                        enriched_heal["_trigger_event_id"] = trigger_id
-                    if event.get("actor_wide"):
+                attacker_outgoing = outgoing[attacker.participant_id]
+                defender_incoming = incoming[defender.participant_id]
+                for template in packet["events"]:
+                    enriched = dict(template)
+                    attacker_outgoing.append(enriched)
+                    defender_incoming.append(enriched)
+                attacker_healing = healing[attacker.participant_id]
+                for template in packet["heals"]:
+                    if template.get("actor_wide"):
                         duplicate = any(
                             existing.get("actor_wide")
-                            and existing.get("source") == event.get("source")
+                            and existing.get("source") == template.get("source")
                             and float(existing.get("time", 0.0))
-                            == float(event.get("time", 0.0))
-                            for existing in healing[attacker.participant_id]
+                            == float(template.get("time", 0.0))
+                            for existing in attacker_healing
                         )
                         if duplicate:
                             continue
-                    healing[attacker.participant_id].append(enriched_heal)
+                    attacker_healing.append(dict(template))
                 if attacker.participant_id not in support_attached:
-                    _attach_support_effects(
-                        attacker,
-                        result,
-                        all_actors,
-                        support_effects,
-                    )
+                    support_templates = packet.get("support")
+                    if support_templates is None:
+                        support_templates = _support_effect_templates(
+                            attacker, result, all_actors
+                        )
+                        packet["support"] = support_templates
+                    for template in support_templates:
+                        support_effects[template["target"]].append(dict(template))
                     support_attached.add(attacker.participant_id)
                 row = breakdown[attacker.participant_id]
                 row.update(
@@ -928,6 +1016,30 @@ def build_participant_timeline(
                 "death_time": actor_survival.get("death_time"),
             }
         )
+    if not include_receipt:
+        # Optimizer scoring reads only the survival rows, the per-actor
+        # damage breakdown, and the ordering receipt.  Skip the public
+        # event/healing/support serialization for the thousands of candidate
+        # evaluations that never show a timeline to anyone.
+        return {
+            "duration": float(params.fight_duration_seconds),
+            "participants": [
+                {
+                    "participant_id": actor.participant_id,
+                    "team": actor.team,
+                    "champion": actor.champion_data.get("name", ""),
+                    "level": actor.level,
+                    "survival": survival[actor.participant_id],
+                }
+                for actor in all_actors
+            ],
+            "breakdown": public_breakdown,
+            "timeline_coverage": combine_timeline_coverages(
+                coverage_reports,
+                target_count=len(coverage_reports),
+            ),
+        }
+
     focus_row = next(
         (
             row
