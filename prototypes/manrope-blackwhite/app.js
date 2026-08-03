@@ -51,6 +51,7 @@ const $ = (id) => document.getElementById(id);
 const champImage = (name) => `${imageRoot}/champion/${champions[name]?.key || name}.png`;
 const itemImage = (name) => `${imageRoot}/item/${items[name]?.id || 0}.png`;
 const number = (value) => Math.round(value).toLocaleString("en-US");
+const metricNumber = (value, lowerIsBetter = false) => lowerIsBetter ? `${Number(value).toFixed(1)}s` : number(value);
 
 function setImage(img, src, alt) {
   img.src = src;
@@ -58,13 +59,43 @@ function setImage(img, src, alt) {
   img.onerror = () => { img.removeAttribute("src"); img.classList.add("image-missing"); };
 }
 
-function scores() {
+function metricValues() {
   const buildValues = Object.fromEntries(["a", "b"].map((side) => [side, state.builds[side].reduce((sum, item) => sum + (items[item]?.value || 0), 0)]));
   const base = state.level * 80 + state.enemies.length * 38 + state.allies.length * 12 + (state.stateMode === "live" ? 17 : 0);
-  const objectiveWeight = { overall: [1, 1], kill: [1.08, 1.17], survival: [0.92, 1.05], damage: [1.03, 1.12], utility: [0.98, 1.08] }[state.objective];
-  const a = Math.round((base + buildValues.a * objectiveWeight[0] + state.uptime * 1.6 + state.rotations * 18));
-  const b = Math.round((base + buildValues.b * objectiveWeight[1] + state.uptime * 1.4 + state.rotations * 22));
-  return { a, b, delta: Math.abs(a - b), winner: a >= b ? "a" : "b" };
+  const pressure = state.enemies.length * 14 + state.rotations * 10;
+  return {
+    overall: {
+      a: Math.round(base + buildValues.a + state.uptime * 1.6 + state.rotations * 18),
+      b: Math.round(base + buildValues.b + state.uptime * 1.4 + state.rotations * 22),
+      lowerIsBetter: false
+    },
+    kill: {
+      a: Number((8.2 - buildValues.a * 0.008 - state.uptime * 0.004 - state.rotations * 0.12).toFixed(1)),
+      b: Number((8.2 - buildValues.b * 0.015 - state.uptime * 0.003 - state.rotations * 0.15).toFixed(1)),
+      lowerIsBetter: true
+    },
+    survival: {
+      a: Math.round(1940 + buildValues.a * 3 + state.level * 14 + state.allies.length * 46 - pressure),
+      b: Math.round(1880 + buildValues.b * 2.25 + state.level * 14 + state.allies.length * 52 - pressure),
+      lowerIsBetter: false
+    },
+    damage: {
+      a: Math.round(base + buildValues.a * 1.03 + state.uptime * 1.6 + state.rotations * 18),
+      b: Math.round(base + buildValues.b * 1.12 + state.uptime * 1.4 + state.rotations * 22),
+      lowerIsBetter: false
+    },
+    utility: {
+      a: Math.round(188 + buildValues.a * 0.56 + state.allies.length * 18 + state.rotations * 7),
+      b: Math.round(198 + buildValues.b * 0.63 + state.allies.length * 22 + state.rotations * 9),
+      lowerIsBetter: false
+    }
+  };
+}
+
+function scores() {
+  const metric = metricValues()[state.objective];
+  const winner = metric.a === metric.b ? "tie" : metric.lowerIsBetter ? (metric.a < metric.b ? "a" : "b") : (metric.a > metric.b ? "a" : "b");
+  return { a: metric.a, b: metric.b, delta: Math.abs(metric.a - metric.b), winner, lowerIsBetter: metric.lowerIsBetter };
 }
 
 function renderChampionOptions() {
@@ -107,9 +138,9 @@ function renderSlots(side) {
 function renderBuilds() {
   renderSlots("a"); renderSlots("b");
   const result = scores();
-  $("buildAScore").textContent = number(result.a);
-  $("buildBScore").textContent = number(result.b);
-  $("winnerCaption").textContent = `${result.winner === "b" ? "winner · " : "lead · "}${state.objective}`;
+  $("buildAScore").textContent = metricNumber(result.a, result.lowerIsBetter);
+  $("buildBScore").textContent = metricNumber(result.b, result.lowerIsBetter);
+  $("winnerCaption").textContent = `${result.winner === "tie" ? "tie · " : result.winner === "b" ? "winner · " : "lead · "}${state.objective}`;
   document.querySelector(".build-a").classList.toggle("is-winner", result.winner === "a");
   document.querySelector(".build-b").classList.toggle("is-winner", result.winner === "b");
 }
@@ -122,24 +153,26 @@ function renderRoster(kind) {
 
 function renderResult() {
   const result = scores();
-  const winnerName = result.winner === "a" ? "Build A" : "Build B";
+  const winnerName = result.winner === "tie" ? "Neither build" : result.winner === "a" ? "Build A" : "Build B";
   const objectiveName = state.objective[0].toUpperCase() + state.objective.slice(1);
   $("resultObjective").textContent = objectiveName;
-  $("winnerLetter").textContent = result.winner.toUpperCase();
-  $("winnerLabel").textContent = "wins";
-  $("resultDelta").textContent = `+${number(result.delta)}`;
-  $("resultSummary").textContent = `${winnerName} carries the strongest ${state.objective} package against this roster.`;
+  $("winnerLetter").textContent = result.winner === "tie" ? "—" : result.winner.toUpperCase();
+  $("winnerLabel").textContent = result.winner === "tie" ? "tie" : "wins";
+  $("resultDelta").textContent = result.winner === "tie" ? "—" : `+${result.lowerIsBetter ? `${result.delta.toFixed(1)}s` : number(result.delta)}`;
+  $("resultSummary").textContent = result.winner === "tie" ? `No meaningful ${state.objective} difference at this game state.` : `${winnerName} carries the strongest ${state.objective} package against this roster.`;
   $("metricLegend").textContent = "A / B · higher is better except Kill time";
-  $("scoreA").textContent = number(result.a); $("scoreB").textContent = number(result.b);
+  $("scoreA").textContent = metricNumber(result.a, result.lowerIsBetter); $("scoreB").textContent = metricNumber(result.b, result.lowerIsBetter);
+  const allMetrics = metricValues();
   const metrics = [
-    ["Overall", result.a, result.b], ["Kill time", 7.4, 6.8], ["Survival", 2218, 2076], ["Damage", result.a, result.b], ["Utility", 240, 260]
+    ["Overall", allMetrics.overall], ["Kill time", allMetrics.kill], ["Survival", allMetrics.survival], ["Damage", allMetrics.damage], ["Utility", allMetrics.utility]
   ];
-  $("metricList").innerHTML = metrics.map(([label, a, b]) => {
-    const lowerIsBetter = label === "Kill time";
-    const lead = lowerIsBetter ? (a <= b ? "A" : "B") : (a >= b ? "A" : "B");
-    return `<div class="metric-row"><span>${label}</span><strong class="metric-a">${typeof a === "number" && a % 1 ? a.toFixed(1) : number(a)}</strong><strong class="metric-b">${typeof b === "number" && b % 1 ? b.toFixed(1) : number(b)}</strong><b>${lead}</b></div>`;
+  $("metricList").innerHTML = metrics.map(([label, metric]) => {
+    const lowerIsBetter = metric.lowerIsBetter;
+    const lead = lowerIsBetter ? (metric.a <= metric.b ? "A" : "B") : (metric.a >= metric.b ? "A" : "B");
+    const format = (value) => typeof value === "number" && value % 1 ? value.toFixed(1) : number(value);
+    return `<div class="metric-row"><span>${label}</span><strong class="metric-a">${format(metric.a)}</strong><strong class="metric-b">${format(metric.b)}</strong><b>${lead}</b></div>`;
   }).join("");
-  const participants = [{ name: state.champion, kind: "main", hp: result.winner === "a" ? 66 : 73 }, ...state.enemies.map((name, index) => ({ name, kind: "enemy", hp: Math.max(0, 21 - index * 16) })), ...state.allies.map((name) => ({ name, kind: "ally", hp: 62 }))];
+  const participants = [{ name: state.champion, kind: "main", hp: result.winner === "tie" ? 70 : result.winner === "a" ? 66 : 73 }, ...state.enemies.map((name, index) => ({ name, kind: "enemy", hp: Math.max(0, 21 - index * 16) })), ...state.allies.map((name) => ({ name, kind: "ally", hp: 62 }))];
   $("healthRows").innerHTML = participants.map((person) => `<div class="health-row"><div class="health-person"><img src="${champImage(person.name)}" alt="" /><span><strong>${person.name}</strong><small>${person.kind}</small></span></div><div class="health-track"><span style="width:${person.hp}%"></span></div><b>${person.hp === 0 ? "defeated" : `${person.hp}%`}</b></div>`).join("");
   $("timeline").innerHTML = `<div class="timeline-axis"><span>0:00</span><span>0:01</span><span>0:03</span><span>0:05</span><span>0:07</span><span>0:10</span></div><div class="timeline-row"><span class="timeline-label">${state.champion}</span><div class="timeline-line"><i style="left:12%">Q</i><i style="left:32%">P</i><i style="left:56%">E</i><i style="left:74%">R</i></div></div><div class="timeline-row"><span class="timeline-label">${state.enemies[0] || "Enemy"}</span><div class="timeline-line muted-line"><i style="left:34%">E</i><i style="left:69%">R</i></div></div>`;
   $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Damage before defeat</span><strong>${number(result.a + result.b)}</strong></div><div class="ledger-line"><span>${state.enemies[0] || "Enemy"} · health at end</span><strong>${participants[1]?.hp === 0 ? "defeated" : `${participants[1]?.hp || 0}%`}</strong></div>`;
