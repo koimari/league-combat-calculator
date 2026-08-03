@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-
 # The cached item packets describe the trigger and three-second window.  The
 # patch-wide Grievous Wounds rule supplies the current 40% reduction.
 GRIEVOUS_WOUNDS_FACTOR = 0.60
@@ -52,7 +51,8 @@ def healing_reduction_profiles(
 
 
 def matching_healing_reduction(
-    profiles: Iterable[dict[str, Any]], damage_type: str,
+    profiles: Iterable[dict[str, Any]],
+    damage_type: str,
 ) -> tuple[dict[str, Any], ...]:
     """Return profiles whose Wiki trigger includes *damage_type*."""
     return tuple(
