@@ -115,6 +115,10 @@ def test_api_includes_enemy_output_and_main_effective_health():
     assert response.status_code == 200
     combat = response.get_json()["combat"]
     assert {row["champion"] for row in combat["breakdown"]} == {"Aatrox", "Ambessa"}
+    assert all(
+        {"incoming_damage", "effective_health", "survived_window"}.issubset(row)
+        for row in combat["breakdown"]
+    )
     main = next(
         row for row in combat["participants"] if row["participant_id"] == "main"
     )
@@ -148,6 +152,7 @@ def test_api_includes_sourced_lulu_ally_shield_in_main_ehp():
         row for row in combat["participants"] if row["participant_id"] == "main"
     )
     assert main["survival"]["support_shield_received"] > 0
+    assert combat["objective"]["main_team_effective_health"] > 0
 
 
 def test_main_support_targets_selected_ally_and_uses_requested_rank():
