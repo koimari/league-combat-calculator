@@ -21,6 +21,7 @@ from .loadout_rules import (
     conflicts_with_groups,
     exclusivity_groups,
     occupied_groups,
+    role_scoped_shop_items,
     validate_resolved_loadout,
 )
 from .pipeline import FightParams, run_fight
@@ -154,17 +155,32 @@ def _evaluate_build(
         defenses = resolve_starting_defenses(
             champion_data["name"], level, stats, items
         )
-        combat = build_participant_timeline(
-            champion_data,
-            level,
-            items,
-            base_params,
-            main_stats=stats,
-            main_defenses=defenses,
-            enemies=list(combat_context.get("enemies", [])),
-            allies=list(combat_context.get("allies", [])),
-            pair_result_cache=combat_context.get("pair_result_cache"),
-        )
+        try:
+            combat = build_participant_timeline(
+                champion_data,
+                level,
+                items,
+                base_params,
+                main_stats=stats,
+                main_defenses=defenses,
+                enemies=list(combat_context.get("enemies", [])),
+                allies=list(combat_context.get("allies", [])),
+                pair_result_cache=combat_context.get("pair_result_cache"),
+            )
+        except ValueError as exc:
+            # A candidate can introduce a target-state interaction that is
+            # deliberately fail-closed by the fight engine (for example,
+            # Protoplasm's temporary maximum-health expiry combined with an
+            # enemy max-health ability).  That makes this candidate ineligible
+            # for this exact search; it must not abort every other legal build.
+            # Keep unrelated validation errors visible to the API caller.
+            if "Protoplasm Harness" not in str(exc):
+                raise
+            if timeline_audit is not None:
+                timeline_audit["evaluations"] += 1
+                timeline_audit["partial_evaluations"] += 1
+                timeline_audit["coarse_sources"].add("target_Protoplasm Harness")
+            return float("-inf")
         coverage = combat.get("timeline_coverage", {})
         if timeline_audit is not None:
             timeline_audit["evaluations"] += 1
@@ -220,11 +236,32 @@ def _evaluate_build(
         if objective == "total_damage":
             # The participant timeline already truncates the main actor's
             # output at its event-ordered death time.  Effective health is a
-            # receipt component describing that survival window; adding it to
-            # damage here double-counts the same defensive value and causes
-            # glass-cannon candidates to lose to pure-health builds.
-            return float(main_row.get("total_damage", 0.0))
-        return float(main_row.get("total_damage", 0.0))
+            # receipt component describing that survival window; it is not
+            # part of the primary damage score.
+            primary_score = float(main_row.get("total_damage", 0.0))
+        else:
+            primary_score = float(main_row.get("total_damage", 0.0))
+
+        # Equal-damage coupled builds still need a deterministic, sourced
+        # decision.  Use the timeline's own effective-health receipt as an
+        # infinitesimal tie-break only; it cannot change a material damage
+        # ordering or the public rounded score.  This prevents an unrelated
+        # AP item from winning merely because it appeared earlier in the
+        # candidate list when the target was already dead at the first event.
+        if timeline_audit is not None:
+            main_survival = next(
+                (
+                    row.get("survival", {})
+                    for row in combat.get("participants", [])
+                    if row.get("participant_id") == "main"
+                ),
+                {},
+            )
+            effective_health = max(
+                0.0, float(main_survival.get("effective_health", 0.0))
+            )
+            return primary_score + effective_health * 1e-9
+        return primary_score
     results: list[dict[str, Any]] = []
     for target_params in targets:
         result = run_fight(champion_data, level, items, target_params)
@@ -595,7 +632,14 @@ def optimize_build(
     # represented by the fight model.
     legal_legendaries = get_eligible_legendaries()
     legal_boots = get_eligible_boots(tier=boots_tier)
-    all_legendaries = optimizer_supported_items(legal_legendaries)
+    base_params = fight_params[0] if isinstance(fight_params, tuple) else fight_params
+    # The main champion uses the same sourced role-shop boundary already used
+    # by roster BIS.  Previously only /api/bis applied this filter, allowing a
+    # top-lane main search to rank support-only items such as Shurelya's
+    # Battlesong.  No archetype or stat heuristic is added here.
+    all_legendaries = role_scoped_shop_items(
+        optimizer_supported_items(legal_legendaries), base_params.role
+    )
     all_boots = optimizer_supported_items(legal_boots)
 
     # Resolve locked items
@@ -854,6 +898,8 @@ def optimize_build(
             }
         )
 
+    # Keep the receipt over every legal item packet, including role-filtered
+    # entries, so coverage never claims the unsearched shop scope is complete.
     coverage_candidates = list(legal_legendaries)
     if not boots_locked:
         coverage_candidates.extend(legal_boots)

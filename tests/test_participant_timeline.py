@@ -368,8 +368,62 @@ def test_bis_endpoint_keeps_ally_and_enemy_in_the_same_timeline():
     enemy_top = enemy.get_json()["candidates"][0]
     assert "main_team_damage_before_death" in ally_top["components"]
     assert "effective_health" in ally_top["components"]
-    assert enemy_top["metric"] == "enemy TTD (survival-coupled)"
+    assert enemy_top["metric"] == "enemy survival first · threat before defeat"
     assert enemy_top["components"]["effective_health"] > 0
+
+
+def test_enemy_bis_prioritizes_event_survival_before_outgoing_threat(monkeypatch):
+    """A high-damage enemy that dies early cannot beat a surviving build."""
+
+    def fake_timeline(*_args, **kwargs):
+        enemy = kwargs["enemies"][0]
+        item_names = {item["name"] for item in enemy.item_data}
+        glass_cannon = "Luden's Echo" in item_names
+        survival = {
+            "max_health": 1_000.0 if glass_cannon else 2_000.0,
+            "effective_health": 1_000.0 if glass_cannon else 2_000.0,
+            "healing_received": 0.0,
+            "shield_absorbed": 0.0,
+            "death_time": 2.0 if glass_cannon else None,
+            "survived_window": not glass_cannon,
+        }
+        focus_id = kwargs["focus_participant_id"]
+        return {
+            "duration": 10.0,
+            "participants": [
+                {"participant_id": focus_id, "survival": survival},
+            ],
+            "breakdown": [
+                {
+                    "participant_id": focus_id,
+                    "team": "enemy",
+                    "total_damage": 5_000.0 if glass_cannon else 500.0,
+                }
+            ],
+            "objective": {
+                "focus_damage_before_death": 5_000.0 if glass_cannon else 500.0,
+                "focus_support_value": 0.0,
+                "focus_healing": 0.0,
+                "main_team_damage_before_death": 0.0,
+            },
+            "timeline_coverage": {
+                "complete": True,
+                "exact_sources": [],
+                "coarse_sources": [],
+            },
+        }
+
+    monkeypatch.setattr("src.app.build_participant_timeline", fake_timeline)
+    response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["candidates"]
+    top = body["candidates"][0]
+    assert top["name"] != "Luden's Echo"
+    assert top["metric"] == "enemy survival first · threat before defeat"
+    assert top["components"]["survival_time"] == 10.0
+    assert top["components"]["effective_health"] == 2_000.0
 
 
 def test_roster_bis_requires_an_explicit_role_instead_of_guessing_item_class():
@@ -393,6 +447,22 @@ def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
     assert "Locket of the Iron Solari" not in top
 
 
+def test_roster_bis_filters_items_with_unsupported_target_mechanics():
+    """A roster BIS result must remain safe when reused as a passive target."""
+    app.config["TESTING"] = True
+    response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
+    assert response.status_code == 200
+    body = response.get_json()
+    names = {
+        candidate["name"]
+        for candidate in [*body["candidates"], *body["partial_candidates"]]
+    }
+
+    assert "Zhonya's Hourglass" not in names
+    assert body["target_coverage_filtered"] > 0
+    assert "target-side coverage filtered" in body["target_coverage_note"].lower()
+
+
 def test_bis_withholds_partial_event_order_instead_of_labeling_it_certified():
     app.config["TESTING"] = True
     payload = {
@@ -401,7 +471,8 @@ def test_bis_withholds_partial_event_order_instead_of_labeling_it_certified():
         "items": [],
         "fight_mode": "time_based",
         "fight_duration": 3.5,
-        "include_auto_attacks": False,
+        "include_auto_attacks": True,
+        "auto_attack_uptime": 1.0,
         "ability_ranks": {"Q": 3, "W": 1, "E": 1, "R": 1},
         "subject_team": "main",
         "subject_index": 0,

@@ -3409,15 +3409,16 @@
           "cast_time": 0.25,
           "cooldown": 3.5,
           "damage_type": "magic",
+          "detail": "7 poison ticks at 0.429s intervals",
           "dot_duration": 3.0,
           "name": "Noxious Blast",
           "parts": [
-            "DamagePart(magic, amount=145.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=20.71, count=7, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.429, hit_interval=0.429)"
           ],
           "rank": 3,
           "resource_cost": 60.0,
           "resource_type": "MANA",
-          "total_raw": 145.0
+          "total_raw": 144.97
         },
         "R": {
           "cast_time": 0.5,
@@ -3436,15 +3437,16 @@
           "cast_time": 0.25,
           "cooldown": 24.0,
           "damage_type": "magic",
+          "detail": "19 zone ticks at 0.263s intervals",
           "dot_duration": 5.0,
           "name": "Miasma",
           "parts": [
-            "DamagePart(magic, amount=100.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=5.0, count=19, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.263, hit_interval=0.263)"
           ],
           "rank": 1,
           "resource_cost": 70.0,
           "resource_type": "MANA",
-          "total_raw": 100.0
+          "total_raw": 95.0
         }
       },
       "stats": {
@@ -4228,7 +4230,7 @@
           "detail": "Current-health damage with rank-scaled minimum floor",
           "name": "Infected Bonesaw",
           "parts": [
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0, time_offset=0.0)"
           ],
           "rank": 5,
           "target_max_health_sensitive": true,
@@ -4253,7 +4255,8 @@
           "dot_duration": 3.0,
           "name": "Heart Zapper",
           "parts": [
-            "DamagePart(magic, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=5.0, count=12, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.25, hit_interval=0.25)",
+            "DamagePart(magic, amount=20.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=3.0)"
           ],
           "rank": 1,
           "total_raw": 80.0
@@ -34293,7 +34296,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "438abe5d855138c111dfc16418dcfe9d3a887b86",
+    "git_head": "b9b8325fbeb2d68ca8bdb2113eb63a598e088fd7",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785669778.9014,
@@ -38261,88 +38264,89 @@
         "magic_build": {
           "breakdown_totals": {
             "E": 399.44,
-            "Q": 345.84,
+            "Q": 345.92,
             "R": 376.8,
-            "W": 256.8,
+            "W": 243.96,
             "auto_attacks": 0.0,
-            "proc_Luden's Echo": 155.36
+            "proc_Luden's Echo": 155.36,
+            "shadowflame_Shadowflame": 63.03
           },
-          "total_damage": 1534.24
+          "total_damage": 1584.52
         },
         "no_items": {
           "breakdown_totals": {
             "E": 151.43,
-            "Q": 103.57,
+            "Q": 103.55,
             "R": 178.57,
-            "W": 71.43,
+            "W": 67.86,
             "auto_attacks": 0.0
           },
-          "total_damage": 505.0
+          "total_damage": 501.41
         },
         "physical_build": {
           "breakdown_totals": {
             "E": 151.43,
-            "Q": 103.57,
+            "Q": 103.55,
             "R": 178.57,
-            "W": 71.43,
+            "W": 67.86,
             "auto_attacks": 0.0
           },
-          "total_damage": 505.0
+          "total_damage": 501.41
         },
         "spellblade_build": {
           "breakdown_totals": {
             "E": 151.43,
-            "Q": 103.57,
+            "Q": 103.55,
             "R": 178.57,
-            "W": 71.43,
+            "W": 67.86,
             "auto_attacks": 0.0
           },
-          "total_damage": 505.0
+          "total_damage": 501.41
         },
         "sustained": {
           "magic_build": {
             "breakdown_totals": {
               "E": 2396.64,
-              "Q": 691.68,
+              "Q": 691.84,
               "R": 376.8,
-              "W": 256.8,
+              "W": 243.96,
               "auto_attacks": 158.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 543.97
+              "shadowflame_Shadowflame": 466.79
             },
-            "total_damage": 4579.25
+            "total_damage": 4489.39
           },
           "no_items": {
             "breakdown_totals": {
               "E": 908.57,
-              "Q": 207.14,
+              "Q": 207.1,
               "R": 178.57,
-              "W": 71.43,
+              "W": 67.86,
               "auto_attacks": 158.0
             },
-            "total_damage": 1523.71
+            "total_damage": 1520.1
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 908.57,
-              "Q": 207.14,
+              "Q": 207.1,
               "R": 178.57,
-              "W": 71.43,
+              "W": 67.86,
               "auto_attacks": 1165.58,
               "on_hit_Kraken Slayer": 121.39
             },
-            "total_damage": 2652.69
+            "total_damage": 2649.08
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 908.57,
-              "Q": 207.14,
+              "Q": 207.1,
               "R": 178.57,
-              "W": 71.43,
+              "W": 67.86,
               "auto_attacks": 839.17,
               "spellblade_Trinity Force": 210.67
             },
-            "total_damage": 2415.55
+            "total_damage": 2411.93
           }
         }
       },
@@ -38350,89 +38354,89 @@
         "magic_build": {
           "breakdown_totals": {
             "E": 421.84,
-            "Q": 401.84,
+            "Q": 401.92,
             "R": 456.8,
-            "W": 336.8,
+            "W": 319.96,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36,
-            "shadowflame_Shadowflame": 91.36
+            "shadowflame_Shadowflame": 107.94
           },
-          "total_damage": 1864.0
+          "total_damage": 1863.82
         },
         "no_items": {
           "breakdown_totals": {
             "E": 171.43,
-            "Q": 153.57,
+            "Q": 153.55,
             "R": 250.0,
-            "W": 142.86,
+            "W": 135.71,
             "auto_attacks": 0.0
           },
-          "total_damage": 717.86
+          "total_damage": 710.69
         },
         "physical_build": {
           "breakdown_totals": {
             "E": 171.43,
-            "Q": 153.57,
+            "Q": 153.55,
             "R": 250.0,
-            "W": 142.86,
+            "W": 135.71,
             "auto_attacks": 0.0
           },
-          "total_damage": 717.86
+          "total_damage": 710.69
         },
         "spellblade_build": {
           "breakdown_totals": {
             "E": 171.43,
-            "Q": 153.57,
+            "Q": 153.55,
             "R": 250.0,
-            "W": 142.86,
+            "W": 135.71,
             "auto_attacks": 0.0
           },
-          "total_damage": 717.86
+          "total_damage": 710.69
         },
         "sustained": {
           "magic_build": {
             "breakdown_totals": {
               "E": 2531.04,
-              "Q": 803.68,
+              "Q": 803.84,
               "R": 456.8,
-              "W": 336.8,
+              "W": 319.96,
               "auto_attacks": 277.33,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 593.57
+              "shadowflame_Shadowflame": 616.9
             },
-            "total_damage": 5154.58
+            "total_damage": 5161.24
           },
           "no_items": {
             "breakdown_totals": {
               "E": 1028.57,
-              "Q": 307.14,
+              "Q": 307.1,
               "R": 250.0,
-              "W": 142.86,
+              "W": 135.71,
               "auto_attacks": 277.33
             },
-            "total_damage": 2005.9
+            "total_damage": 1998.72
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 1028.57,
-              "Q": 307.14,
+              "Q": 307.1,
               "R": 250.0,
-              "W": 142.86,
+              "W": 135.71,
               "auto_attacks": 1612.64,
               "on_hit_Kraken Slayer": 149.96
             },
-            "total_damage": 3491.18
+            "total_damage": 3483.99
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 1028.57,
-              "Q": 307.14,
+              "Q": 307.1,
               "R": 250.0,
-              "W": 142.86,
+              "W": 135.71,
               "auto_attacks": 949.58,
               "spellblade_Trinity Force": 277.33
             },
-            "total_damage": 2955.49
+            "total_damage": 2948.3
           }
         }
       }
@@ -39342,9 +39346,9 @@
               "W": 256.0,
               "auto_attacks": 496.67,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 72.96
+              "shadowflame_Shadowflame": 92.16
             },
-            "total_damage": 1985.1
+            "total_damage": 2004.3
           },
           "no_items": {
             "breakdown_totals": {

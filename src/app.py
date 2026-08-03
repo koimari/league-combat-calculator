@@ -36,9 +36,10 @@ from calculator.item_coverage import (
     item_model_coverage,
     require_certified_target_timeline,
     require_target_item_coverage,
+    target_build_coverage,
 )
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
-from calculator.loadout_rules import validate_resolved_loadout
+from calculator.loadout_rules import role_scoped_shop_items, validate_resolved_loadout
 from calculator.defensive_effects import resolve_starting_defenses
 from calculator.participant_timeline import build_participant_timeline
 from calculator.champions import (
@@ -1454,22 +1455,7 @@ def _role_scoped_bis_candidates(
     candidate-legality boundary, not a champion archetype or damage heuristic;
     the surviving candidates are still scored by the coupled event timeline.
     """
-    normalized = str(role or "").strip().lower()
-    if normalized == "support":
-        return [
-            item
-            for item in candidates
-            if "SUPPORT"
-            in {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
-        ]
-    if normalized in {"top", "jungle", "mid", "bottom"}:
-        return [
-            item
-            for item in candidates
-            if "SUPPORT"
-            not in {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
-        ]
-    return candidates
+    return role_scoped_shop_items(candidates, role)
 
 
 def _bis_candidate_pool(
@@ -1490,6 +1476,30 @@ def _bis_candidate_pool(
         else _role_scoped_bis_candidates(supported, role=role)
     )
     return sorted(scoped, key=lambda item: item.get("name", ""))
+
+
+def _roster_target_coverage(loadouts: list[ChampionLoadout]) -> list[dict[str, object]]:
+    """Return unsupported target mechanics for the coupled roster.
+
+    Roster BIS candidates are later used as passive targets by the main
+    champion's event timeline. Do not apply a candidate whose target-side
+    item effect is outside the sourced target model; that would either fail
+    the next main optimization late or silently ignore the mechanic.
+    """
+    blocked: list[dict[str, object]] = []
+    for loadout in loadouts:
+        coverage = target_build_coverage(list(loadout.item_data))
+        for entry in coverage.get("blocked", []):
+            blocked.append(
+                {
+                    "champion": loadout.champion_data.get(
+                        "name", loadout.request.champion
+                    ),
+                    "name": entry.get("name", ""),
+                    "reason": entry.get("reason", ""),
+                }
+            )
+    return blocked
 
 
 @app.route("/api/bis", methods=["POST"])
@@ -1564,6 +1574,7 @@ def api_bis():
         return rate_limit_response
 
     ranked: list[dict] = []
+    target_coverage_filtered: list[dict[str, object]] = []
     for candidate in candidates:
         try:
             candidate_request = _bis_replaced_loadout(
@@ -1582,6 +1593,12 @@ def api_bis():
                 candidate_enemies[subject_index] = resolved_subject
             elif subject_team == "ally":
                 candidate_allies[subject_index] = resolved_subject
+            blocked_targets = _roster_target_coverage(
+                [*candidate_enemies, *candidate_allies]
+            )
+            if blocked_targets:
+                target_coverage_filtered.extend(blocked_targets)
+                continue
             combat = build_participant_timeline(
                 candidate_main.champion_data,
                 candidate_main.request.level,
@@ -1631,14 +1648,40 @@ def api_bis():
                     "effective_health": focus["survival"]["effective_health"],
                 }
             else:
-                score = float(objective["focus_damage_before_death"])
-                metric = "enemy TTD (survival-coupled)"
+                # An enemy roster build is the opponent the selected main
+                # champion must actually fight.  Ranking only the opponent's
+                # outgoing damage makes every damage dealer a glass cannon:
+                # an AP proc can win even when that item does not improve the
+                # champion's sourced kit and the champion dies earlier.  Keep
+                # this objective explicit and event-derived rather than adding
+                # a class/archetype heuristic: first survive the window, then
+                # stay alive longer, then maximize the modeled eHP package,
+                # with outgoing threat as the final tie-break.
+                survival = focus["survival"]
+                duration = float(combat.get("duration", fight_params.fight_duration_seconds))
+                death_time = survival.get("death_time")
+                survival_time = duration if death_time is None else float(death_time)
+                threat = float(objective["focus_damage_before_death"])
+                effective_health = float(survival["effective_health"])
+                score = effective_health
+                metric = "enemy survival first · threat before defeat"
                 components = {
-                    "damage_before_death": objective["focus_damage_before_death"],
-                    "effective_health": focus["survival"]["effective_health"],
-                    "healing": focus["survival"]["healing_received"],
-                    "shield_absorbed": focus["survival"]["shield_absorbed"],
+                    "survival_time": round(survival_time, 3),
+                    "effective_health": round(effective_health, 1),
+                    "threat_before_defeat": round(threat, 1),
+                    "healing": survival["healing_received"],
+                    "shield_absorbed": survival["shield_absorbed"],
                 }
+                # Retain the exact multi-objective ordering separately from
+                # the displayed primary eHP score.  This avoids arbitrary
+                # magic weights while making the survival-first contract
+                # deterministic for equal event outcomes.
+                rank_key = (
+                    1 if death_time is None else 0,
+                    survival_time,
+                    effective_health,
+                    threat,
+                )
             ranked.append(
                 {
                     "name": candidate["name"],
@@ -1649,6 +1692,7 @@ def api_bis():
                     "stats": candidate.get("stats", {}),
                     "survival": focus["survival"],
                     "timeline_coverage": combat["timeline_coverage"],
+                    **({"_rank_key": rank_key} if subject_team == "enemy" else {}),
                 }
             )
         except (KeyError, ValueError):
@@ -1656,7 +1700,12 @@ def api_bis():
             # never assigned a zero or a heuristic replacement score.
             continue
 
-    ranked.sort(key=lambda row: row["score"], reverse=True)
+    if subject_team == "enemy":
+        ranked.sort(key=lambda row: row["_rank_key"], reverse=True)
+        for row in ranked:
+            row.pop("_rank_key", None)
+    else:
+        ranked.sort(key=lambda row: row["score"], reverse=True)
     # A row with coarse or missing event order is useful as an audit receipt,
     # but it is not a defensible BIS recommendation.  Keep those rows separate
     # so the browser cannot silently apply an uncertified build.
@@ -1670,6 +1719,13 @@ def api_bis():
         for candidate in ranked
         if candidate["timeline_coverage"].get("complete", False)
     ]
+    target_coverage_note = ""
+    if target_coverage_filtered:
+        first = target_coverage_filtered[0]
+        target_coverage_note = (
+            f"Target-side coverage filtered {len(target_coverage_filtered)} candidate "
+            f"receipts; {first['champion']} · {first['name']}: {first['reason']}"
+        )
     return jsonify(
         {
             "subject_team": subject_team,
@@ -1695,9 +1751,16 @@ def api_bis():
                 "note": (
                     "Only candidates with complete sourced event order are shown as BIS."
                     if certified_ranked
-                    else "BIS is withheld: every candidate still has partial or uncertified event order."
-                ),
+                    else (
+                        "BIS is withheld: a selected roster item is outside the sourced "
+                        "target model."
+                        if target_coverage_filtered
+                        else "BIS is withheld: every candidate still has partial or uncertified event order."
+                    )
+                ) + (f" {target_coverage_note}" if target_coverage_note else ""),
             },
+            "target_coverage_filtered": len(target_coverage_filtered),
+            "target_coverage_note": target_coverage_note,
         }
     )
 

@@ -13,6 +13,7 @@ from src.calculator.optimizer import (
     _SPELLBLADE_ITEMS,
 )
 from src.calculator.pipeline import FightParams
+from src.calculator.loadout_rules import role_scoped_shop_items
 
 _FIGHT_PARAM_KEYS = {
     "target_health",
@@ -81,6 +82,35 @@ class TestItemPools:
         assert "Doran's Ring" in names
         assert "Boots of Swiftness" not in names
 
+    def test_main_optimizer_uses_the_sourced_role_shop_scope(self):
+        candidates = get_eligible_legendaries()
+        top = {item["name"] for item in role_scoped_shop_items(candidates, "top")}
+        support = {
+            item["name"] for item in role_scoped_shop_items(candidates, "support")
+        }
+
+        assert "Shurelya's Battlesong" not in top
+        assert "Shurelya's Battlesong" in support
+        assert "Warmog's Armor" in top
+        assert "Warmog's Armor" not in support
+
+    def test_top_search_never_evaluates_a_support_only_candidate(self, monkeypatch):
+        def fake_evaluate(_champion, _level, items, **_kwargs):
+            assert "Shurelya's Battlesong" not in {item["name"] for item in items}
+            return 1.0
+
+        monkeypatch.setattr("src.calculator.optimizer._evaluate_build", fake_evaluate)
+        params = FightParams.from_request({"role": "top"}, deterministic=True)
+        result = _optimize_build(
+            get_champion("Aatrox"),
+            6,
+            fight_params=params,
+            max_legendary_slots=1,
+            include_boots=False,
+        )
+
+        assert "Shurelya's Battlesong" not in result["items"]
+
 
 def test_evaluate_build_sums_objective_across_target_roster(monkeypatch):
     """One candidate build is scored into every selected enemy."""
@@ -131,6 +161,78 @@ def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):
     )
 
     assert score == 125.0
+
+
+def test_coupled_equal_damage_uses_event_health_only_as_tie_break(monkeypatch):
+    def fake_timeline(*_args, **kwargs):
+        items = kwargs.get("items") or _args[2]
+        health = 2_000.0 if any(item["name"] == "Warmog's Armor" for item in items) else 1_000.0
+        return {
+            "breakdown": [{"participant_id": "main", "total_damage": 500.0}],
+            "participants": [
+                {"participant_id": "main", "survival": {"effective_health": health}}
+            ],
+            "events": [],
+            "timeline_coverage": {"complete": True, "exact_sources": [], "coarse_sources": []},
+        }
+
+    monkeypatch.setattr("src.calculator.optimizer.build_participant_timeline", fake_timeline)
+    result = optimize_build(
+        "Aatrox",
+        get_champion("Aatrox"),
+        level=6,
+        role="top",
+        max_legendary_slots=1,
+        include_boots=False,
+        enemy_loadouts=[object()],
+        require_complete_timeline=True,
+    )
+
+    assert result["total_damage"] == 500.0
+    assert "Warmog's Armor" in result["items"]
+
+
+def test_coupled_candidate_with_fail_closed_protoplasm_is_skipped(monkeypatch):
+    """One unsupported target-state candidate must not abort the search."""
+
+    def fake_timeline(*_args, **kwargs):
+        items = kwargs.get("items") or _args[2]
+        if any(item["name"] == "Protoplasm Harness" for item in items):
+            raise ValueError(
+                "This damage package scales from target maximum health and "
+                "cannot yet be certified against Protoplasm Harness's "
+                "temporary maximum-health change."
+            )
+        return {
+            "breakdown": [{"participant_id": "main", "total_damage": 10.0}],
+            "participants": [
+                {"participant_id": "main", "survival": {"effective_health": 1.0}}
+            ],
+            "events": [],
+            "timeline_coverage": {
+                "complete": True,
+                "exact_sources": [],
+                "coarse_sources": [],
+            },
+        }
+
+    monkeypatch.setattr(
+        "src.calculator.optimizer.build_participant_timeline", fake_timeline
+    )
+    params = FightParams.from_request({"role": "top"}, deterministic=True)
+    result = _optimize_build(
+        get_champion("Aatrox"),
+        6,
+        fight_params=params,
+        max_legendary_slots=1,
+        include_boots=False,
+        enemy_loadouts=[object()],
+        require_complete_timeline=True,
+    )
+
+    assert result["items"]
+    assert "Protoplasm Harness" not in result["items"]
+    assert result["timeline_withheld_evaluations"] > 0
 
 
 def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch):
