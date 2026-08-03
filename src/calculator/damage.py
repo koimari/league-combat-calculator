@@ -987,6 +987,10 @@ def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
     )
 
 
+# Phase precedence inside one timestamp of the reconstructed ledger.
+_EVENT_PHASE_ORDER = {"ability": 0, "auto": 1, "effect": 2, "amplifier": 3}
+
+
 def _ordered_damage_events(
     breakdown: dict[str, Any],
     ability_damages: dict[str, dict[str, Any]],
@@ -1056,45 +1060,51 @@ def _ordered_damage_events(
         *,
         default_phase: str,
     ) -> bool:
-        """Append an engine-authored event list, returning whether it existed."""
+        """Append an engine-authored event list, returning whether it existed.
+
+        This is the hot path of ledger reconstruction — module champions
+        declare nearly every event — so the row is built directly instead of
+        going through ``add``'s keyword plumbing for each declared hit.
+        """
+        nonlocal sequence
         declared = entry.get("damage_events")
         if not isinstance(declared, list):
             return False
         phase = str(entry.get("event_phase", default_phase))
-        if phase not in {"ability", "auto", "effect", "amplifier"}:
+        if phase not in _EVENT_PHASE_ORDER:
             phase = default_phase
         for ordinal, event in enumerate(declared, start=1):
             if not isinstance(event, dict):
                 continue
-            add(
-                source_key,
-                str(event.get("damage_type", "")),
-                float(event.get("damage", 0.0)),
-                time=float(event.get("time", 0.0)),
-                ordinal=ordinal,
-                phase=phase,
-                order=(
-                    float(event["timeline_order"])
-                    if event.get("timeline_order") is not None
-                    else None
-                ),
-                raw_damage=(
-                    float(event["raw_damage"])
-                    if event.get("raw_damage") is not None
-                    else None
-                ),
-                raw_formula=event.get("raw_formula"),
-                source_missing_ratio=(
-                    float(event["source_missing_ratio"])
-                    if event.get("source_missing_ratio") is not None
-                    else None
-                ),
-                event_precision=(
-                    str(event["event_precision"])
-                    if event.get("event_precision") is not None
-                    else None
-                ),
-            )
+            damage = float(event.get("damage", 0.0))
+            damage_type = str(event.get("damage_type", ""))
+            if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
+                continue
+            order = event.get("timeline_order")
+            row = {
+                "source_key": source_key,
+                "damage_type": damage_type,
+                "damage": damage,
+                "time": float(event.get("time", 0.0)),
+                "ordinal": ordinal,
+                "phase": phase,
+                "sequence": sequence,
+                "order": float(sequence) if order is None else float(order),
+            }
+            raw_damage = event.get("raw_damage")
+            if raw_damage is not None:
+                row["raw_damage"] = float(raw_damage)
+            raw_formula = event.get("raw_formula")
+            if raw_formula is not None:
+                row["raw_formula"] = raw_formula
+            source_missing_ratio = event.get("source_missing_ratio")
+            if source_missing_ratio is not None:
+                row["source_missing_ratio"] = float(source_missing_ratio)
+            event_precision = event.get("event_precision")
+            if event_precision is not None:
+                row["event_precision"] = str(event_precision)
+            events.append(row)
+            sequence += 1
         return True
 
     timeline_by_slot: dict[str, list[dict[str, Any]]] = {}
@@ -1196,7 +1206,7 @@ def _ordered_damage_events(
         key=lambda event: (
             event["time"],
             event["order"],
-            {"ability": 0, "auto": 1, "effect": 2, "amplifier": 3}[event["phase"]],
+            _EVENT_PHASE_ORDER[event["phase"]],
             event["sequence"],
         ),
     )
@@ -7011,7 +7021,18 @@ def calculate_fight_damage(
     # ── Notes for conditional item assumptions ──────────────────────────
     _collect_fight_notes(state, rotation, on_hits)
 
-    shield_outcome = _resolve_starting_shield_outcome(state, config, rotation)
+    # The exact event ledger the shield/temporary-health resolver consumes is
+    # also the fight's returned ``damage_events``: nothing mutates the
+    # breakdown after this point, so reconstruct it once.  Downstream team
+    # simulation uses this same ordered ledger; it must never reconstruct
+    # timing from aggregate breakdown rows.
+    damage_events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+    )
+    shield_outcome = _resolve_starting_shield_outcome(state, config, damage_events)
     timeline_coverage = _event_timeline_coverage(
         state.breakdown,
         state.ability_damages,
@@ -7031,15 +7052,6 @@ def calculate_fight_damage(
             "Protoplasm Harness's sourced total healing is spread over five "
             "seconds; its internal heal tick cadence is not source-certified."
         )
-    # Keep the exact event ledger that the shield/temporary-health resolver
-    # just consumed.  Downstream team simulation uses this same ordered
-    # ledger; it must never reconstruct timing from aggregate breakdown rows.
-    damage_events = _ordered_damage_events(
-        state.breakdown,
-        state.ability_damages,
-        state.cast_order,
-        cast_events=rotation.cast_events,
-    )
     return {
         "breakdown": state.breakdown,
         "total_damage": state.total_damage,
@@ -7061,7 +7073,7 @@ def calculate_fight_damage(
 
 
 def _resolve_starting_shield_outcome(
-    state: FightState, config: FightConfig, rotation: RotationResult
+    state: FightState, config: FightConfig, damage_events: list[dict[str, Any]]
 ) -> dict[str, float]:
     """Split post-mitigation TDD into shield absorption and health damage.
 
@@ -7089,12 +7101,7 @@ def _resolve_starting_shield_outcome(
         duration=config.target_threshold_shield_duration,
         damage_type=config.target_threshold_shield_damage_type,
     )
-    for event in _ordered_damage_events(
-        state.breakdown,
-        state.ability_damages,
-        state.cast_order,
-        cast_events=rotation.cast_events,
-    ):
+    for event in damage_events:
         event_time = float(event["time"])
         health_state.advance_to(event_time)
         lifeline_shield.expire_at(event_time)

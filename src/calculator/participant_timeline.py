@@ -149,36 +149,56 @@ def _main_combatant(
     )
 
 
-def _target_params(base: FightParams, defender: Combatant) -> FightParams:
+def _target_overrides(defender: Combatant) -> dict[str, float | str]:
+    """Everything a one-pair fight reads from its target, as replace() kwargs.
+
+    This dict is also the pair-result cache signature for fights against a
+    candidate main build: two candidates with equal overrides produce
+    byte-identical incoming fights, so keeping the params and the signature
+    in one place guarantees the cache can never ignore a field the engine
+    reads.
+    """
     defenses = defender.defenses
-    return replace(
-        base,
-        target_health=float(defender.stats.get("health", 0.0)),
-        target_bonus_health=float(defender.stats.get("bonus_health", 0.0)),
-        target_armor=float(defender.stats.get("armor", 0.0)),
-        target_magic_resistance=float(defender.stats.get("magic_resistance", 0.0)),
-        target_magic_shield=float(defenses.magic_shield),
-        target_physical_shield=float(defenses.physical_shield),
-        target_general_shield=float(defenses.general_shield),
-        target_basic_damage_multiplier=float(defenses.basic_damage_multiplier),
-        target_basic_damage_flat_reduction=float(defenses.basic_damage_flat_reduction),
-        target_basic_damage_flat_reduction_cap=float(
+    return {
+        "target_health": float(defender.stats.get("health", 0.0)),
+        "target_bonus_health": float(defender.stats.get("bonus_health", 0.0)),
+        "target_armor": float(defender.stats.get("armor", 0.0)),
+        "target_magic_resistance": float(defender.stats.get("magic_resistance", 0.0)),
+        "target_magic_shield": float(defenses.magic_shield),
+        "target_physical_shield": float(defenses.physical_shield),
+        "target_general_shield": float(defenses.general_shield),
+        "target_basic_damage_multiplier": float(defenses.basic_damage_multiplier),
+        "target_basic_damage_flat_reduction": float(
+            defenses.basic_damage_flat_reduction
+        ),
+        "target_basic_damage_flat_reduction_cap": float(
             defenses.basic_damage_flat_reduction_cap
         ),
-        target_critical_strike_damage_multiplier=float(
+        "target_critical_strike_damage_multiplier": float(
             defenses.critical_strike_damage_multiplier
         ),
-        target_threshold_shield_amount=float(defenses.threshold_shield_amount),
-        target_threshold_shield_health_ratio=float(
+        "target_threshold_shield_amount": float(defenses.threshold_shield_amount),
+        "target_threshold_shield_health_ratio": float(
             defenses.threshold_shield_health_ratio
         ),
-        target_threshold_shield_duration=float(defenses.threshold_shield_duration),
-        target_threshold_shield_damage_type=str(defenses.threshold_shield_damage_type),
-        target_threshold_health_bonus=float(defenses.threshold_health_bonus),
-        target_threshold_health_heal=float(defenses.threshold_health_heal),
-        target_threshold_health_ratio=float(defenses.threshold_health_ratio),
-        target_threshold_health_duration=float(defenses.threshold_health_duration),
-    )
+        "target_threshold_shield_duration": float(defenses.threshold_shield_duration),
+        "target_threshold_shield_damage_type": str(
+            defenses.threshold_shield_damage_type
+        ),
+        "target_threshold_health_bonus": float(defenses.threshold_health_bonus),
+        "target_threshold_health_heal": float(defenses.threshold_health_heal),
+        "target_threshold_health_ratio": float(defenses.threshold_health_ratio),
+        "target_threshold_health_duration": float(defenses.threshold_health_duration),
+    }
+
+
+def _target_params(base: FightParams, defender: Combatant) -> FightParams:
+    return replace(base, **_target_overrides(defender))
+
+
+def _defensive_signature(defender: Combatant) -> tuple[Any, ...]:
+    """A hashable key equal exactly when ``_target_params`` would be equal."""
+    return tuple(_target_overrides(defender).values())
 
 
 def _actor_params(base: FightParams, actor: Combatant) -> FightParams:
@@ -652,7 +672,7 @@ def build_participant_timeline(
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
     focus_participant_id: str = "main",
-    pair_result_cache: dict[tuple[str, str], Mapping[str, Any]] | None = None,
+    pair_result_cache: dict[tuple[Any, ...], Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Compose all selected actors and return the coupled combat receipt.
 
@@ -708,16 +728,25 @@ def build_participant_timeline(
                 continue
             actor_params = _actor_params(params, attacker)
             for defender in defenders:
-                # Roster-to-roster pairs do not depend on the candidate main
-                # build.  The coupled optimizer evaluates thousands of main
-                # candidates, so reuse those immutable pair receipts while
-                # still recomputing every pair that touches ``main`` (the
-                # candidate changes its stats, defenses, and event order).
-                cache_key = (attacker.participant_id, defender.participant_id)
-                cacheable = (
-                    attacker.participant_id != "main"
-                    and defender.participant_id != "main"
-                )
+                # The coupled optimizer evaluates thousands of main candidates
+                # against one fixed roster, so pair fights that cannot differ
+                # between evaluations are cached.  Roster-to-roster pairs do
+                # not depend on the candidate main build at all.  A fight INTO
+                # the main candidate depends on it only through the target
+                # fields ``_target_overrides`` feeds the engine, so its cache
+                # key carries that defensive signature: a candidate swap that
+                # changes no defensive stat replays the identical incoming
+                # fights instead of re-simulating them.  Fights the candidate
+                # attacks with are always recomputed.
+                cacheable = attacker.participant_id != "main"
+                if defender.participant_id == "main":
+                    cache_key = (
+                        attacker.participant_id,
+                        defender.participant_id,
+                        _defensive_signature(defender),
+                    )
+                else:
+                    cache_key = (attacker.participant_id, defender.participant_id)
                 if (
                     cacheable
                     and pair_result_cache is not None
