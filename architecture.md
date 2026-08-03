@@ -44,6 +44,8 @@ The cast schedule is chronological. Some legacy damage layers still aggregate re
 
 The same selected damage package is evaluated against every selected enemy. Target-limited item procs are allocated once across the roster. Aggregate TDD is the sum of the resulting per-target damage, not a synthetic average target.
 
+`participant_timeline.py` composes the per-pair event ledgers into one coupled survival walk. Reactive strike-back items (`item_effects.thorns_effects`) live here rather than in the one-attacker engine: each modeled basic attack that strikes a wearer schedules mitigated return damage and a Grievous Wounds window onto the striker, linked to the triggering event so retaliation dies with a skipped strike. In a fight with no incoming attacks, a thorns item correctly contributes nothing.
+
 ## Optimization
 
 `optimizer.py` scores legal builds through the same `run_fight` pipeline used by manual calculations. The objective is modeled TDD unless the user explicitly selects physical or magic damage.

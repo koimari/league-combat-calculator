@@ -15,7 +15,7 @@ from src.calculator.healing_reduction import (
 
 
 def _item(name: str, effects: str) -> dict:
-    return {"name": name, "passives": [{"name": "Test Passive", "effects": effects}]}
+    return {"name": name, "passives": [{"name": "Test Passive", "branches": [effects]}]}
 
 
 def test_outgoing_anti_heal_text_produces_a_profile() -> None:
