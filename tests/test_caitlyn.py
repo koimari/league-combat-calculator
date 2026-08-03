@@ -493,6 +493,38 @@ class TestHexopticsBasicDamage:
 class TestFightIntegration:
     """Headshot rides the fight as a fixed proc entry."""
 
+    def test_headshot_emits_an_event_ordered_ledger_for_optimizer(self, caitlyn_data) -> None:
+        """Forced Headshots are exact events, not an aggregate coarse proc."""
+        result = run_fight(
+            caitlyn_data,
+            6,
+            [],
+            FightParams(
+                target_health=4000.0,
+                target_bonus_health=0.0,
+                target_armor=80.0,
+                target_magic_resistance=50.0,
+                fight_duration_seconds=10.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                include_actives=True,
+                cast_order=None,
+                auto_attacks_only=False,
+                ability_ranks={"Q": 3, "W": 1, "E": 1, "R": 1},
+                champion_options=None,
+                deterministic=True,
+            ),
+        )
+
+        passive = result["breakdown"]["passive"]
+        assert passive["damage_events"]
+        assert sum(event["damage"] for event in passive["damage_events"]) == pytest.approx(
+            passive["total_damage"]
+        )
+        assert result["timeline_coverage"]["complete"] is True
+        assert "passive" in result["timeline_coverage"]["exact_sources"]
+        assert "passive" not in result["timeline_coverage"]["coarse_sources"]
+
     def test_one_rotation_passive_row_matches_raw(
         self, caitlyn_data, parse_at, fight
     ) -> None:
