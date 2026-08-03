@@ -20,7 +20,34 @@
 
 * { box-sizing: border-box; }
 html { background: var(--canvas); }
-body { margin: 0; color: var(--ink); background: var(--canvas); font-family: var(--ui); }
+body {
+  position: relative;
+  isolation: isolate;
+  margin: 0;
+  color: var(--ink);
+  background: #101516 url("/static/img/summoners-rift-bg.png") center / cover fixed no-repeat;
+  font-family: var(--ui);
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(125deg, rgba(7, 11, 12, .88) 3%, rgba(7, 11, 12, .65) 48%, rgba(7, 11, 12, .91) 100%),
+    radial-gradient(circle at 70% 16%, rgba(85, 137, 124, .13), transparent 46%);
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 58px 0 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("/static/img/summoners-rift-bg.png") center / cover fixed no-repeat;
+  opacity: .16;
+  mix-blend-mode: screen;
+}
 button, input { font: inherit; }
 button { color: inherit; }
 button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -30,8 +57,8 @@ img { display: block; }
 .header-inner { width: min(1180px, calc(100% - 40px)); height: 100%; margin: auto; display: flex; align-items: center; gap: 18px; }
 .brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--ink); }
 .brand strong { font-size: 14px; letter-spacing: .075em; text-transform: uppercase; }
-.brand-mark { position: relative; width: 15px; height: 15px; border: 1px solid var(--accent); transform: rotate(45deg); }
-.brand-mark::after { content: ""; position: absolute; inset: 3px; border: 1px solid var(--accent); }
+.brand-symbol { width: 23px; height: 23px; flex: 0 0 auto; color: var(--accent); }
+.brand:hover .brand-symbol { color: var(--ink); }
 nav { display: flex; align-items: center; gap: 18px; flex: 1; }
 nav a { color: var(--muted); font-size: 12px; text-decoration: none; }
 nav a:hover, nav a.active { color: var(--ink); }
