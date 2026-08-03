@@ -12,8 +12,9 @@ from .engine import BUFF, SlotCtx, build_parser
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_value
 
-
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _ = build_packet_module("Jinx")
+_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _ = (
+    build_packet_module("Jinx")
+)
 
 
 def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -44,11 +45,14 @@ def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
         first = extract_value(ability, "Bonus Attack Speed", rank)
         subsequent = extract_value(ability, "Attack Speed per Subsequent Stack", rank)
         bonus_as = 0.0 if stacks <= 0 else first + max(0, stacks - 1) * subsequent
-        ctx.stats["attack_speed"] = ctx.stats.get("attack_speed", 0.0) + ctx.stats.get(
-            "attack_speed_ratio", 0.0
-        ) * bonus_as / 100.0
+        ctx.stats["attack_speed"] = (
+            ctx.stats.get("attack_speed", 0.0)
+            + ctx.stats.get("attack_speed_ratio", 0.0) * bonus_as / 100.0
+        )
         entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
-        entry["detail"] = f"Pow-Pow: {stacks} Rev'd Up stack(s), {bonus_as:g}% bonus attack speed"
+        entry["detail"] = (
+            f"Pow-Pow: {stacks} Rev'd Up stack(s), {bonus_as:g}% bonus attack speed"
+        )
     return entry
 
 
@@ -72,7 +76,9 @@ def _get_excited(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["stat_buff"] = {"total_attack_speed_percent": bonus_total_as}
-    entry["detail"] = f"{stacks} champion takedown stack(s), {bonus_total_as:g}% total attack speed"
+    entry["detail"] = (
+        f"{stacks} champion takedown stack(s), {bonus_total_as:g}% total attack speed"
+    )
     return entry
 
 

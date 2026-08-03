@@ -16,7 +16,6 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, simple_damage
 
-
 _ROOT = Path(__file__).resolve().parents[3]
 _PACKET_PATH = _ROOT / "static" / "reviewed-packets.json"
 
@@ -26,7 +25,9 @@ def _packet_specs() -> dict[str, dict[str, Any]]:
     try:
         payload = json.loads(_PACKET_PATH.read_text(encoding="utf-8"))
     except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
-        raise RuntimeError(f"Reviewed packet asset is unavailable: {_PACKET_PATH}") from exc
+        raise RuntimeError(
+            f"Reviewed packet asset is unavailable: {_PACKET_PATH}"
+        ) from exc
     champions = payload.get("champions") if isinstance(payload, dict) else None
     if not isinstance(champions, dict):
         raise RuntimeError("Reviewed packet asset has no champion map")
@@ -118,7 +119,9 @@ def _packet_parser(spec: dict[str, Any], slot: str):
     return parse
 
 
-def _no_formula_parser(slot: str, *, reason: str = "No enemy damage is listed for this ability."):
+def _no_formula_parser(
+    slot: str, *, reason: str = "No enemy damage is listed for this ability."
+):
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         ability = ctx.ability()
         if ability is None:
@@ -158,7 +161,11 @@ def build_packet_module(champion_name: str):
                             attr=str(variant["attribute"]),
                             dmg_type=str(variant.get("damage_type", "auto")),
                             ranks=str(variant.get("ranks", "rank")),
-                            source=tuple(variant["source"]) if variant.get("source") else None,
+                            source=(
+                                tuple(variant["source"])
+                                if variant.get("source")
+                                else None
+                            ),
                         )
                     )
                 elif variant.get("kind") == "packet":
@@ -167,12 +174,22 @@ def build_packet_module(champion_name: str):
                     variant_parsers.append(
                         _no_formula_parser(
                             slot,
-                            reason=str(variant.get("reason", "No enemy damage is listed for this variant.")),
+                            reason=str(
+                                variant.get(
+                                    "reason",
+                                    "No enemy damage is listed for this variant.",
+                                )
+                            ),
                         )
                     )
             option_key = f"{slot.lower()}_variant"
 
-            def select_variant(ctx: SlotCtx, parsers=variant_parsers, key=option_key, default=spec.get("default", 0)):
+            def select_variant(
+                ctx: SlotCtx,
+                parsers=variant_parsers,
+                key=option_key,
+                default=spec.get("default", 0),
+            ):
                 try:
                     index = int(ctx.options.get(key, default))
                 except (TypeError, ValueError):
@@ -204,7 +221,9 @@ def build_packet_module(champion_name: str):
         elif spec.get("kind") == "no_damage":
             slots[slot] = _no_formula_parser(
                 slot,
-                reason=str(spec.get("reason", "No enemy damage is listed for this ability.")),
+                reason=str(
+                    spec.get("reason", "No enemy damage is listed for this ability.")
+                ),
             )
         else:
             slots[slot] = _no_formula_parser(slot)

@@ -3,7 +3,6 @@ from pathlib import Path
 
 from scripts.build_effect_catalog import build_catalog
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -13,7 +12,10 @@ def test_effect_catalog_preserves_wiki_order_signals():
     assert "healing_reduction" in catalog["items"]["3165"]["tags"]
     assert "damage_over_time" in catalog["items"]["6653"]["tags"]
     assert catalog["items"]["6653"]["eventOrder"]
-    assert "apply healing reduction after the triggering damage" in catalog["items"]["3165"]["eventOrder"]
+    assert (
+        "apply healing reduction after the triggering damage"
+        in catalog["items"]["3165"]["eventOrder"]
+    )
 
 
 def test_checked_in_effect_catalog_matches_wiki_source():

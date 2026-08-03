@@ -296,8 +296,7 @@ def calculate_total_stats(
     # temporary combat passives. Keep the three owned totals first-class so
     # every optimizer candidate can resolve its own evolution state.
     level_attack_damage_growth = (
-        base_stats["attack_damage"]
-        - champion_data["stats"]["attackDamage"]["flat"]
+        base_stats["attack_damage"] - champion_data["stats"]["attackDamage"]["flat"]
     )
     evolution_attack_damage = (
         level_attack_damage_growth
@@ -305,9 +304,7 @@ def calculate_total_stats(
         + bonuses.permanent_bonus_ad
     )
     external_ability_power = float(external.get("ability_power", 0.0))
-    item_flat_ability_power = (
-        total_item_stats["ability_power"] - external_ability_power
-    )
+    item_flat_ability_power = total_item_stats["ability_power"] - external_ability_power
     evolution_ability_power = (
         item_flat_ability_power + bonuses.permanent_bonus_ap
     ) * bonuses.permanent_ap_multiplier

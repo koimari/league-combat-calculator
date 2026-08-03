@@ -2,7 +2,6 @@ from pathlib import Path
 
 from scripts.build_ability_catalog import ABILITY_SLOTS, build_catalog
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -13,7 +12,10 @@ def test_cached_catalog_contains_all_five_slots_for_all_champions():
     assert len(catalog["champions"]) == 173
     assert all(
         [ability["slot"] for ability in champion["abilities"]] == list(ABILITY_SLOTS)
-        and all(ability["ingestion_status"] == "metadata_ingested" for ability in champion["abilities"])
+        and all(
+            ability["ingestion_status"] == "metadata_ingested"
+            for ability in champion["abilities"]
+        )
         for champion in catalog["champions"]
     )
 

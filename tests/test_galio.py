@@ -66,9 +66,7 @@ def test_charge_and_travel_options_author_hit_times(galio_data):
     assert abilities["W"]["total_raw"] == pytest.approx(150.0)
     assert abilities["W"]["parts"][0].time_offset == pytest.approx(0.32)
     assert abilities["W"]["cast_time"] == pytest.approx(0.72)
-    assert abilities["E"]["parts"][0].time_offset == pytest.approx(
-        0.4 + 250.0 / 2300.0
-    )
+    assert abilities["E"]["parts"][0].time_offset == pytest.approx(0.4 + 250.0 / 2300.0)
 
 
 def test_q_emits_five_ordered_damage_events(galio_data):
@@ -186,9 +184,7 @@ def test_colossal_smash_does_not_replace_later_ordinary_swings(galio_data):
     assert result["breakdown"]["on_hit_ability_passive"][
         "total_damage"
     ] == pytest.approx(283.82, abs=0.02)
-    assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
-        50.0
-    )
+    assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(50.0)
     assert result["total_damage"] == pytest.approx(333.82, abs=0.02)
     assert result["timeline_coverage"]["complete"] is True
 

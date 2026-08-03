@@ -146,7 +146,11 @@ def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):
                 {"participant_id": "main", "survival": {"effective_health": 4000.0}}
             ],
             "events": [],
-            "timeline_coverage": {"complete": True, "exact_sources": [], "coarse_sources": []},
+            "timeline_coverage": {
+                "complete": True,
+                "exact_sources": [],
+                "coarse_sources": [],
+            },
         },
     )
     params = FightParams.from_request({}, deterministic=True)
@@ -166,17 +170,27 @@ def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):
 def test_coupled_equal_damage_uses_event_health_only_as_tie_break(monkeypatch):
     def fake_timeline(*_args, **kwargs):
         items = kwargs.get("items") or _args[2]
-        health = 2_000.0 if any(item["name"] == "Warmog's Armor" for item in items) else 1_000.0
+        health = (
+            2_000.0
+            if any(item["name"] == "Warmog's Armor" for item in items)
+            else 1_000.0
+        )
         return {
             "breakdown": [{"participant_id": "main", "total_damage": 500.0}],
             "participants": [
                 {"participant_id": "main", "survival": {"effective_health": health}}
             ],
             "events": [],
-            "timeline_coverage": {"complete": True, "exact_sources": [], "coarse_sources": []},
+            "timeline_coverage": {
+                "complete": True,
+                "exact_sources": [],
+                "coarse_sources": [],
+            },
         }
 
-    monkeypatch.setattr("src.calculator.optimizer.build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(
+        "src.calculator.optimizer.build_participant_timeline", fake_timeline
+    )
     result = optimize_build(
         "Aatrox",
         get_champion("Aatrox"),
@@ -401,8 +415,7 @@ def test_one_open_slot_is_certified_when_candidates_and_timelines_are_complete(
     assert result["search_timeline_coverage"]["complete"] is True
     assert result["timeline_coverage"]["complete"] is True
     assert all(
-        build["timeline_coverage"]["complete"]
-        for build in result["ranked_builds"]
+        build["timeline_coverage"]["complete"] for build in result["ranked_builds"]
     )
 
 

@@ -224,8 +224,10 @@ def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     raw = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    sequence_start = _e_hit_time(ctx) if ctx.rank_for("E") > 0 else (
-        _q_geometry(ctx)[3] if ctx.rank_for("Q") > 0 else 0.0
+    sequence_start = (
+        _e_hit_time(ctx)
+        if ctx.rank_for("E") > 0
+        else (_q_geometry(ctx)[3] if ctx.rank_for("Q") > 0 else 0.0)
     )
     distance = _clamp(
         float(ctx.options.get("r_start_distance", 800.0)),

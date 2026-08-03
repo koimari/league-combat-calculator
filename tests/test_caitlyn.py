@@ -493,7 +493,9 @@ class TestHexopticsBasicDamage:
 class TestFightIntegration:
     """Headshot rides the fight as a fixed proc entry."""
 
-    def test_headshot_emits_an_event_ordered_ledger_for_optimizer(self, caitlyn_data) -> None:
+    def test_headshot_emits_an_event_ordered_ledger_for_optimizer(
+        self, caitlyn_data
+    ) -> None:
         """Forced Headshots are exact events, not an aggregate coarse proc."""
         result = run_fight(
             caitlyn_data,
@@ -518,9 +520,9 @@ class TestFightIntegration:
 
         passive = result["breakdown"]["passive"]
         assert passive["damage_events"]
-        assert sum(event["damage"] for event in passive["damage_events"]) == pytest.approx(
-            passive["total_damage"]
-        )
+        assert sum(
+            event["damage"] for event in passive["damage_events"]
+        ) == pytest.approx(passive["total_damage"])
         assert result["timeline_coverage"]["complete"] is True
         assert "passive" in result["timeline_coverage"]["exact_sources"]
         assert "passive" not in result["timeline_coverage"]["coarse_sources"]

@@ -100,7 +100,10 @@ def test_aphelios_onslaught_scales_hit_count_from_bonus_attack_speed():
         0,
         champion_stats=stats,
         target_stats=target,
-        champion_options={"aphelios_main_weapon": "severum", "aphelios_bonus_as_points": 0},
+        champion_options={
+            "aphelios_main_weapon": "severum",
+            "aphelios_bonus_as_points": 0,
+        },
     )
     high = parse_champion_abilities(
         champion,
@@ -108,7 +111,10 @@ def test_aphelios_onslaught_scales_hit_count_from_bonus_attack_speed():
         0,
         champion_stats=stats,
         target_stats=target,
-        champion_options={"aphelios_main_weapon": "severum", "aphelios_bonus_as_points": 6},
+        champion_options={
+            "aphelios_main_weapon": "severum",
+            "aphelios_bonus_as_points": 6,
+        },
     )
     assert low["Q"]["parts"][0].count == 6
     assert high["Q"]["parts"][0].count > low["Q"]["parts"][0].count

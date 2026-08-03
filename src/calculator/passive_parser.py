@@ -1213,9 +1213,7 @@ def _parse_kaenic_magebane(text: str) -> dict[str, Any]:
     )
     if not ratio_match:
         return {}
-    return {
-        "magic_shield_max_health_ratio": float(ratio_match.group(1)) / 100.0
-    }
+    return {"magic_shield_max_health_ratio": float(ratio_match.group(1)) / 100.0}
 
 
 def _parse_spirit_visage_vitality(text: str) -> dict[str, Any]:
@@ -1228,10 +1226,7 @@ def _parse_spirit_visage_vitality(text: str) -> dict[str, Any]:
     )
     if not increase_match:
         return {}
-    return {
-        "shield_received_multiplier": 1.0
-        + float(increase_match.group(1)) / 100.0
-    }
+    return {"shield_received_multiplier": 1.0 + float(increase_match.group(1)) / 100.0}
 
 
 def _parse_plating(text: str) -> dict[str, Any]:
@@ -1865,23 +1860,15 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Bandlepipes": [("passive", "Fanfare", _parse_bandlepipes_fanfare, {})],
     "Staff of Flowing Water": [("passive", "Rapids", _parse_flowing_water_rapids, {})],
     "Sterak's Gage": [("passive", "The Claws that Catch", _parse_steraks_claws, {})],
-    "Warmog's Armor": [
-        ("passive", "Warmog's Vitality", _parse_warmogs_vitality, {})
-    ],
-    "Kaenic Rookern": [
-        ("passive", "Magebane", _parse_kaenic_magebane, {})
-    ],
+    "Warmog's Armor": [("passive", "Warmog's Vitality", _parse_warmogs_vitality, {})],
+    "Kaenic Rookern": [("passive", "Magebane", _parse_kaenic_magebane, {})],
     "Spirit Visage": [
         ("passive", "Boundless Vitality", _parse_spirit_visage_vitality, {})
     ],
     "Plated Steelcaps": [("passive", "Plating", _parse_plating, {})],
     "Warden's Mail": [("passive", "Rock Solid", _parse_rock_solid, {})],
-    "Randuin's Omen": [
-        ("passive", "Resilience", _parse_critical_resilience, {})
-    ],
-    "Immortal Shieldbow": [
-        ("passive", "Lifeline", _parse_shieldbow_lifeline, {})
-    ],
+    "Randuin's Omen": [("passive", "Resilience", _parse_critical_resilience, {})],
+    "Immortal Shieldbow": [("passive", "Lifeline", _parse_shieldbow_lifeline, {})],
     # ── Energized ──
     "Rapid Firecannon": [("passive", "Sharpshooter", _parse_simple_on_hit, {})],
     "Stormrazor": [("passive", "Bolt", _parse_stormrazor_bolt, {})],

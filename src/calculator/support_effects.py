@@ -55,8 +55,7 @@ def derive_ally_effects(
         if shield_attr is None and heal_attr is None:
             continue
         description = " ".join(
-            str(effect.get("description", ""))
-            for effect in ability.get("effects", [])
+            str(effect.get("description", "")) for effect in ability.get("effects", [])
         ).lower()
         target_self = any(
             marker in description
@@ -84,7 +83,11 @@ def derive_ally_effects(
                 "all allies",
             )
         )
-        target_scope = "self" if target_self else "all_teammates" if all_teammates else "one_teammate"
+        target_scope = (
+            "self"
+            if target_self
+            else "all_teammates" if all_teammates else "one_teammate"
+        )
         casts = [event for event in cast_timeline if event.get("slot") == slot]
         for cast in casts:
             if shield_attr is not None:

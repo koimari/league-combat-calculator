@@ -56,7 +56,8 @@ def _is_persistent(event: dict[str, Any]) -> bool:
 
 
 def _attributed_events(
-    events: Iterable[dict[str, Any]], predicate,
+    events: Iterable[dict[str, Any]],
+    predicate,
 ) -> list[dict[str, Any]]:
     return [event for event in events if predicate(_event_source(event), event)]
 
@@ -139,7 +140,9 @@ def derive_self_healing(
             float(champion_stats.get("bonus_health", 0.0)) / 100.0
         )
         r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
-        r_inc = _leveling_value(_ability(champion_data, "R"), "Increased Healing", r_rank)
+        r_inc = _leveling_value(
+            _ability(champion_data, "R"), "Increased Healing", r_rank
+        )
         healing_amp = 1.0 + r_inc / 100.0 if r_rank > 0 else 1.0
 
         for event in passive_events:
@@ -175,7 +178,9 @@ def derive_self_healing(
 
     elif name == "Ambessa":
         r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
-        ratio = _leveling_value(_ability(champion_data, "R"), "Healing Percentage", r_rank)
+        ratio = _leveling_value(
+            _ability(champion_data, "R"), "Healing Percentage", r_rank
+        )
         # Public Execution heals from post-mitigation active ability damage.
         if ratio > 0:
             for event in damage_events:
@@ -204,11 +209,18 @@ def derive_self_healing(
         for event in damage_events:
             source = _event_source(event)
             if source == "Q":
-                _heal_from_damage(healing, event, float(event.get("damage", 0.0)) * q_ratio / 100.0, "Jaws of the Beast")
+                _heal_from_damage(
+                    healing,
+                    event,
+                    float(event.get("damage", 0.0)) * q_ratio / 100.0,
+                    "Jaws of the Beast",
+                )
             elif source == "R":
                 # Infinite Duress explicitly heals for 100% of all
                 # post-mitigation damage dealt to its target.
-                _heal_from_damage(healing, event, float(event.get("damage", 0.0)), "Infinite Duress")
+                _heal_from_damage(
+                    healing, event, float(event.get("damage", 0.0)), "Infinite Duress"
+                )
 
     elif name == "Dr. Mundo":
         # Maximum Dosage is an actor-wide regeneration stream, independent of
@@ -294,7 +306,10 @@ def derive_self_healing(
                     healing.append(
                         {
                             "time": float(event.get("time", 0.0)) + index * 0.25,
-                            "amount": min(float(per_tick), max(0.0, maximum - per_tick * (index - 1))),
+                            "amount": min(
+                                float(per_tick),
+                                max(0.0, maximum - per_tick * (index - 1)),
+                            ),
                             "source": "Chilling Scream",
                             "kind": "champion_ability",
                             **_trigger_fields(event),

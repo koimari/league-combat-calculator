@@ -42,13 +42,15 @@ def test_ambessa_self_healing_uses_public_execution_formula():
 
     assert result["self_healing"] > 0
     assert all(
-        event["source"] == "Public Execution"
-        for event in result["self_healing_events"]
+        event["source"] == "Public Execution" for event in result["self_healing_events"]
     )
 
 
 def test_warwick_and_irelia_use_explicit_wiki_heal_attributes():
-    for champion, source in (("Warwick", "Jaws of the Beast"), ("Irelia", "Bladesurge")):
+    for champion, source in (
+        ("Warwick", "Jaws of the Beast"),
+        ("Irelia", "Bladesurge"),
+    ):
         result = run_fight(get_champion(champion), 18, [], _timed_params())
         assert result["self_healing"] > 0
         assert any(event["source"] == source for event in result["self_healing_events"])
@@ -113,7 +115,9 @@ def test_api_includes_enemy_output_and_main_effective_health():
     assert response.status_code == 200
     combat = response.get_json()["combat"]
     assert {row["champion"] for row in combat["breakdown"]} == {"Aatrox", "Ambessa"}
-    main = next(row for row in combat["participants"] if row["participant_id"] == "main")
+    main = next(
+        row for row in combat["participants"] if row["participant_id"] == "main"
+    )
     assert main["survival"]["effective_health"] >= main["survival"]["max_health"]
 
 
@@ -138,10 +142,11 @@ def test_api_includes_sourced_lulu_ally_shield_in_main_ehp():
     assert response.status_code == 200
     combat = response.get_json()["combat"]
     assert any(
-        event["source"].startswith("Help, Pix!")
-        for event in combat["support_events"]
+        event["source"].startswith("Help, Pix!") for event in combat["support_events"]
     )
-    main = next(row for row in combat["participants"] if row["participant_id"] == "main")
+    main = next(
+        row for row in combat["participants"] if row["participant_id"] == "main"
+    )
     assert main["survival"]["support_shield_received"] > 0
 
 
@@ -179,7 +184,9 @@ def test_main_support_targets_selected_ally_and_uses_requested_rank():
     assert shield["target_policy"] == "first_selected_teammate"
     assert shield["amount"] == 230.0
     assert shield["applied_amount"] == 230.0
-    jinx = next(row for row in combat["participants"] if row["participant_id"] == "ally:Jinx")
+    jinx = next(
+        row for row in combat["participants"] if row["participant_id"] == "ally:Jinx"
+    )
     assert jinx["survival"]["support_shield_received"] == 230.0
 
 
@@ -231,12 +238,19 @@ def test_coupled_timeline_stops_output_after_main_champion_is_defeated():
     )
     assert response.status_code == 200
     combat = response.get_json()["combat"]
-    main = next(row for row in combat["participants"] if row["participant_id"] == "main")
+    main = next(
+        row for row in combat["participants"] if row["participant_id"] == "main"
+    )
     assert main["survival"]["survived_window"] is False
     assert main["survival"]["death_time"] is not None
     # The enemy's later event stream is not counted as if Aatrox remained
     # alive for the whole rotation.
-    assert next(row for row in combat["breakdown"] if row["participant_id"] == "main")["total_damage"] <= 138.5
+    assert (
+        next(row for row in combat["breakdown"] if row["participant_id"] == "main")[
+            "total_damage"
+        ]
+        <= 138.5
+    )
 
 
 def test_coupled_timeline_reprices_current_health_damage_for_each_attacker():
@@ -301,11 +315,15 @@ def test_coupled_timeline_caps_overkill_and_skips_post_death_events():
     assert response.status_code == 200
     combat = response.get_json()["combat"]
     enemy = next(row for row in combat["participants"] if row["team"] == "enemy")
-    main_row = next(row for row in combat["breakdown"] if row["participant_id"] == "main")
+    main_row = next(
+        row for row in combat["breakdown"] if row["participant_id"] == "main"
+    )
     assert enemy["survival"]["survived_window"] is False
     assert enemy["survival"]["overkill"] > 0
     assert main_row["total_damage"] <= enemy["survival"]["max_health"]
-    assert any(event.get("skipped_reason") == "target_dead" for event in combat["events"])
+    assert any(
+        event.get("skipped_reason") == "target_dead" for event in combat["events"]
+    )
 
 
 def _bis_request(subject_team: str) -> dict:
@@ -432,12 +450,17 @@ def test_roster_bis_requires_an_explicit_role_instead_of_guessing_item_class():
     payload["enemies"][0].pop("role")
     response = app.test_client().post("/api/bis", json=payload)
     assert response.status_code == 400
-    assert response.get_json()["error"] == "enemy role is required before roster BIS can be scored"
+    assert (
+        response.get_json()["error"]
+        == "enemy role is required before roster BIS can be scored"
+    )
 
 
 def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
     candidates = optimizer_supported_items(get_eligible_legendaries())
-    support = {item["name"] for item in _role_scoped_bis_candidates(candidates, role="support")}
+    support = {
+        item["name"] for item in _role_scoped_bis_candidates(candidates, role="support")
+    }
     top = {item["name"] for item in _role_scoped_bis_candidates(candidates, role="top")}
 
     assert "Locket of the Iron Solari" in support
@@ -501,7 +524,9 @@ def test_explicitly_disabled_ally_effects_are_not_injected_into_ehp():
     )
 
 
-def _dummy_combatant(participant_id: str, team: str, health: float = 100.0) -> Combatant:
+def _dummy_combatant(
+    participant_id: str, team: str, health: float = 100.0
+) -> Combatant:
     defenses = SimpleNamespace(
         magic_shield=0.0,
         physical_shield=0.0,

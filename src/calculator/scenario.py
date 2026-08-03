@@ -228,15 +228,21 @@ def _validate_ability_ranks(
     for slot, rank in effective.items():
         maximum = _ability_max_rank(champion_data, slot)
         if rank < 0 or rank > maximum:
-            raise ValueError(f"{field}.{slot} rank {rank} exceeds the authored maximum {maximum}")
+            raise ValueError(
+                f"{field}.{slot} rank {rank} exceeds the authored maximum {maximum}"
+            )
         if slot == "R":
             minimum_level = (0, 6, 11, 16)[min(rank, 3)]
         else:
             minimum_level = max(1, 2 * rank - 1) if rank else 0
         if rank and level < minimum_level:
-            raise ValueError(f"{field}.{slot} rank {rank} requires champion level {minimum_level}")
+            raise ValueError(
+                f"{field}.{slot} rank {rank} requires champion level {minimum_level}"
+            )
     if sum(effective.values()) > min(level, 18):
-        raise ValueError(f"{field} spends more skill points than champion level {level} allows")
+        raise ValueError(
+            f"{field} spends more skill points than champion level {level} allows"
+        )
 
 
 def parse_roster(

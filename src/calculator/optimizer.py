@@ -152,9 +152,7 @@ def _evaluate_build(
             role_quest_complete=base_params.role_quest_complete,
             external_stat_bonuses=base_params.ally_stat_bonuses,
         )
-        defenses = resolve_starting_defenses(
-            champion_data["name"], level, stats, items
-        )
+        defenses = resolve_starting_defenses(champion_data["name"], level, stats, items)
         try:
             combat = build_participant_timeline(
                 champion_data,
@@ -200,7 +198,11 @@ def _evaluate_build(
         # but preserve the partial receipt so the result cannot be presented
         # as a fully certified BIS claim.
         main_row = next(
-            (row for row in combat.get("breakdown", []) if row.get("participant_id") == "main"),
+            (
+                row
+                for row in combat.get("breakdown", [])
+                if row.get("participant_id") == "main"
+            ),
             None,
         )
         if main_row is None:
@@ -211,7 +213,9 @@ def _evaluate_build(
                 for row in combat.get("participants", [])
                 if row.get("participant_id") == "main"
             )
-            cutoff = base_params.fight_duration_seconds if death_time is None else death_time
+            cutoff = (
+                base_params.fight_duration_seconds if death_time is None else death_time
+            )
             return sum(
                 float(event.get("damage", 0.0))
                 for event in combat.get("events", [])
@@ -225,7 +229,9 @@ def _evaluate_build(
                 for row in combat.get("participants", [])
                 if row.get("participant_id") == "main"
             )
-            cutoff = base_params.fight_duration_seconds if death_time is None else death_time
+            cutoff = (
+                base_params.fight_duration_seconds if death_time is None else death_time
+            )
             return sum(
                 float(event.get("damage", 0.0))
                 for event in combat.get("events", [])
@@ -948,15 +954,15 @@ def optimize_build(
         "selection_certification": (
             "event_ordered_local_search"
             if coupled_objective and require_complete_timeline and ranked
-            else "exhaustive_event_ordered"
-            if certified_best
-            else "partial_or_unexhaustive"
+            else (
+                "exhaustive_event_ordered"
+                if certified_best
+                else "partial_or_unexhaustive"
+            )
         ),
         "candidate_coverage": candidate_coverage,
         "timeline_withheld_evaluations": (
-            timeline_audit["partial_evaluations"]
-            if require_complete_timeline
-            else 0
+            timeline_audit["partial_evaluations"] if require_complete_timeline else 0
         ),
         "gold_budget": gold_budget,
     }
