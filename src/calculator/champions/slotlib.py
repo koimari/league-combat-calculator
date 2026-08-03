@@ -52,6 +52,13 @@ from .scaling import is_flat_unit, resolve_scaling
 ModifierOverride = Callable[[str, float], float | None]
 
 
+_MODIFIER_PAIRS_MEMO: dict[tuple[int, int], tuple[dict, tuple]] = {}
+# Attribute-lookup memos over the same cached JSON, keyed and
+# identity-verified the same way.
+_NAMED_LEVELING_MEMO: dict[tuple[int, str, int], tuple[dict, Any]] = {}
+_PRIMARY_LEVELING_MEMO: dict[int, tuple[dict, Any]] = {}
+
+
 def sum_modifiers(
     leveling: dict[str, Any],
     rank: int,
@@ -70,17 +77,27 @@ def sum_modifiers(
     Returns:
         Total raw damage contribution of this leveling entry.
     """
+    # The (value, unit) pair at a rank is pure cached-JSON data; memoize it
+    # by leveling-entry identity (verified on every hit) so the optimizer's
+    # thousands of identical parses skip the JSON walk.
+    memo_key = (id(leveling), rank)
+    memo = _MODIFIER_PAIRS_MEMO.get(memo_key)
+    if memo is not None and memo[0] is leveling:
+        pairs = memo[1]
+    else:
+        pairs = []
+        for modifier in leveling.get("modifiers", []):
+            values = modifier.get("values", [])
+            units = modifier.get("units", [])
+            if not values:
+                continue
+            idx = min(rank - 1, len(values) - 1)
+            pairs.append((float(values[idx]), units[idx] if idx < len(units) else ""))
+        pairs = tuple(pairs)
+        _MODIFIER_PAIRS_MEMO[memo_key] = (leveling, pairs)
+
     total = 0.0
-    for modifier in leveling.get("modifiers", []):
-        values = modifier.get("values", [])
-        units = modifier.get("units", [])
-        if not values:
-            continue
-
-        idx = min(rank - 1, len(values) - 1)
-        value = float(values[idx])
-        unit = units[idx] if idx < len(units) else ""
-
+    for value, unit in pairs:
         overridden = modifier_override(unit, value) if modifier_override else None
         if overridden is not None:
             total += overridden
@@ -112,11 +129,10 @@ def extract_named(
     Returns:
         Total raw damage at the given rank, or 0.0 if not found.
     """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute", "") == attribute:
-                return sum_modifiers(leveling, rank, stats, target)
-    return 0.0
+    leveling = find_named_leveling(ability, attribute)
+    if leveling is None:
+        return 0.0
+    return sum_modifiers(leveling, rank, stats, target)
 
 
 def _find_primary_damage_leveling(
@@ -127,15 +143,24 @@ def _find_primary_damage_leveling(
     Tiered: exact matches like "Magic Damage" win over compound names
     like "Damage Per Pass"; first match wins within a tier.
     """
+    memo = _PRIMARY_LEVELING_MEMO.get(id(ability))
+    if memo is not None and memo[0] is ability:
+        return memo[1]
+    found: dict[str, Any] | None = None
     fallback: dict[str, Any] | None = None
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
             attribute = leveling.get("attribute", "")
             if is_primary_damage_attribute(attribute):
-                return leveling
+                found = leveling
+                break
             if fallback is None and is_damage_attribute(attribute):
                 fallback = leveling
-    return fallback
+        if found is not None:
+            break
+    result = found if found is not None else fallback
+    _PRIMARY_LEVELING_MEMO[id(ability)] = (ability, result)
+    return result
 
 
 def extract_auto(
@@ -177,14 +202,23 @@ def find_named_leveling(
     generic attribute (Diana P keeps base AND tripled attack speed as two
     "Per-Level Scaling" entries); the default 0 is the plain first match.
     """
+    memo_key = (id(ability), attribute, occurrence)
+    memo = _NAMED_LEVELING_MEMO.get(memo_key)
+    if memo is not None and memo[0] is ability:
+        return memo[1]
+    found = None
     seen = 0
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute", "") == attribute:
                 if seen == occurrence:
-                    return leveling
+                    found = leveling
+                    break
                 seen += 1
-    return None
+        if found is not None:
+            break
+    _NAMED_LEVELING_MEMO[memo_key] = (ability, found)
+    return found
 
 
 def _modifier_value(

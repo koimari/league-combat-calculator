@@ -122,6 +122,14 @@ def get_champion_base_stats(
     }
 
 
+# The optimizer recomputes candidate stats thousands of times over the same
+# cached item dicts, so the pure extraction below is memoized by item-data
+# identity.  Each entry keeps a strong reference to its source dict and is
+# re-verified on every hit, so a data refresh that rebuilds the item cache
+# can never serve stale stats through a recycled ``id()``.
+_ITEM_STATS_MEMO: dict[int, tuple[dict[str, Any], dict[str, float]]] = {}
+
+
 def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
     """Extract stat bonuses from an item.
 
@@ -129,8 +137,13 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         item_data: Item data dictionary from the CDN.
 
     Returns:
-        Dictionary with stat names and their flat values.
+        Dictionary with stat names and their flat values.  Treat it as
+        read-only: the same dict is returned for repeated lookups of the
+        same cached item.
     """
+    memo = _ITEM_STATS_MEMO.get(id(item_data))
+    if memo is not None and memo[0] is item_data:
+        return memo[1]
     stats = item_data.get("stats", {})
 
     def get_flat(stat_name: str) -> float:
@@ -145,7 +158,7 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
             return stat.get("percent", 0.0)
         return 0.0
 
-    return {
+    extracted = {
         "health": get_flat("health"),
         "attack_damage": get_flat("attackDamage"),
         "ability_power": get_flat("abilityPower"),
@@ -166,6 +179,8 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "move_speed_flat": get_flat("movespeed"),
         "move_speed_percent": get_percent("movespeed"),
     }
+    _ITEM_STATS_MEMO[id(item_data)] = (item_data, extracted)
+    return extracted
 
 
 def calculate_total_stats(

@@ -77,19 +77,27 @@ def resolve_scaling(
     if target_stats is None:
         target_stats = {}
 
-    # Merge target stats into lookup (prefixed keys take priority)
-    all_stats = {**champion_stats, **target_stats}
+    # Target stats take priority over champion stats on shared keys —
+    # the same rule the old ``{**champion, **target}`` merge expressed,
+    # without building a merged dict per modifier on the hot parse path.
 
     # Simple unit lookup
-    if unit_clean in _SIMPLE_UNITS:
-        stat_key, divisor = _SIMPLE_UNITS[unit_clean]
-        stat_value = all_stats.get(stat_key, 0.0)
+    simple = _SIMPLE_UNITS.get(unit_clean)
+    if simple is not None:
+        stat_key, divisor = simple
+        if stat_key in target_stats:
+            stat_value = target_stats[stat_key]
+        else:
+            stat_value = champion_stats.get(stat_key, 0.0)
         return (value / divisor) * stat_value
 
     # Per-100 scaling
-    if unit_clean in _PER_100_UNITS:
-        stat_key = _PER_100_UNITS[unit_clean]
-        stat_value = all_stats.get(stat_key, 0.0)
+    per_100_key = _PER_100_UNITS.get(unit_clean)
+    if per_100_key is not None:
+        if per_100_key in target_stats:
+            stat_value = target_stats[per_100_key]
+        else:
+            stat_value = champion_stats.get(per_100_key, 0.0)
         return (value / 100.0) * (stat_value / 100.0) * 100.0
         # e.g. 2% per 100 AP with 300 AP = 2 * 3 = 6% = 6.0 (returned as flat)
 
@@ -97,9 +105,12 @@ def resolve_scaling(
     if unit_clean == "%":
         return value  # Return as-is; caller decides meaning
 
-    # Complex compound units with embedded formulas
+    # Complex compound units with embedded formulas — rare enough that the
+    # merged lookup dict is built only here.
     # e.g. "% (+ 1.5% per 100 AP) of target's maximum health"
-    compound = _parse_compound_unit(unit_clean, value, all_stats)
+    compound = _parse_compound_unit(
+        unit_clean, value, {**champion_stats, **target_stats}
+    )
     if compound is not None:
         return compound
 

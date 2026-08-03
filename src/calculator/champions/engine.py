@@ -131,7 +131,7 @@ _ALLOWED_POST_HIT_PROC_KEYS = frozenset(
 # ---------------------------------------------------------------------------
 
 
-@dataclass
+@dataclass(slots=True)
 class SlotCtx:
     """Everything a slot parser may read (and, per phase, mutate).
 
@@ -174,6 +174,16 @@ class SlotCtx:
 # ---------------------------------------------------------------------------
 
 
+# The coupled optimizer re-parses the same champion for thousands of fights,
+# so values derived purely from the cached ability JSON are memoized by
+# object identity.  Entries keep a strong reference to their source dict and
+# verify it on every hit (the ``resolve_damage_effects`` pattern), so a
+# data refresh that rebuilds the champion cache can never serve stale
+# values through a recycled ``id()``.
+_CAST_TIME_MEMO: dict[int, tuple[dict[str, Any], float]] = {}
+_RESOURCE_COST_MEMO: dict[tuple[int, int, int], tuple[dict[str, Any], float]] = {}
+
+
 def _stamp_cast_time(
     entry: dict[str, Any], ability_json: dict[str, Any] | None
 ) -> None:
@@ -187,12 +197,17 @@ def _stamp_cast_time(
     """
     if "cooldown" not in entry or "cast_time" in entry or ability_json is None:
         return
-    # Deferred import: slotlib imports the phase constants from this
-    # module, so engine.py must not import slotlib at module level.
-    # pylint: disable-next=import-outside-toplevel,cyclic-import
-    from .slotlib import extract_cast_time
+    memo = _CAST_TIME_MEMO.get(id(ability_json))
+    if memo is not None and memo[0] is ability_json:
+        cast_time = memo[1]
+    else:
+        # Deferred import: slotlib imports the phase constants from this
+        # module, so engine.py must not import slotlib at module level.
+        # pylint: disable-next=import-outside-toplevel,cyclic-import
+        from .slotlib import extract_cast_time
 
-    cast_time = extract_cast_time(ability_json)
+        cast_time = extract_cast_time(ability_json)
+        _CAST_TIME_MEMO[id(ability_json)] = (ability_json, cast_time)
     if cast_time > 0:
         entry["cast_time"] = cast_time
 
@@ -214,19 +229,28 @@ def _stamp_resource_cost(
     if entry.get("recast_of"):
         entry["resource_cost"] = 0.0
         return
+    memo_key = (id(ability_json), rank, level)
+    memo = _RESOURCE_COST_MEMO.get(memo_key)
+    if memo is not None and memo[0] is ability_json:
+        entry["resource_cost"] = memo[1]
+        return
     modifiers = (ability_json.get("cost") or {}).get("modifiers", [])
-    if not modifiers:
-        entry["resource_cost"] = 0.0
-        return
-    values = modifiers[0].get("values", [])
+    values = modifiers[0].get("values", []) if modifiers else []
     if not values:
-        entry["resource_cost"] = 0.0
-        return
-    index = level - 1 if len(values) >= 18 else rank - 1
-    if index < 0:
-        entry["resource_cost"] = 0.0
-        return
-    entry["resource_cost"] = float(values[min(index, len(values) - 1)])
+        cost = 0.0
+    else:
+        index = level - 1 if len(values) >= 18 else rank - 1
+        cost = 0.0 if index < 0 else float(values[min(index, len(values) - 1)])
+    _RESOURCE_COST_MEMO[memo_key] = (ability_json, cost)
+    entry["resource_cost"] = cost
+
+
+# Key shapes that already passed validation.  Entries are rebuilt per
+# parse but their key sets are fixed per (champion, slot, options) code
+# path, so the optimizer's thousands of identical parses validate once.
+# A never-seen shape — including one produced by a code change — is
+# always fully checked.
+_VALIDATED_ENTRY_SHAPES: set[tuple[Any, ...]] = set()
 
 
 def _validate_entry_keys(
@@ -239,6 +263,17 @@ def _validate_entry_keys(
     A misspelled key must never silently zero an ability (or, one level
     down, silently shred nothing).
     """
+    post_hit_proc = entry.get("post_hit_proc") or {}
+    shape = (
+        champion_name,
+        result_key,
+        tuple(entry),
+        tuple(entry.get("target_debuff", ())),
+        tuple(post_hit_proc),
+        tuple(post_hit_proc.get("target_debuff", ()) if post_hit_proc else ()),
+    )
+    if shape in _VALIDATED_ENTRY_SHAPES:
+        return
     for keys, allowed, label, constant in (
         (set(entry), _ALLOWED_ENTRY_KEYS, "entry", "_ALLOWED_ENTRY_KEYS"),
         (
@@ -267,6 +302,7 @@ def _validate_entry_keys(
                 f"key(s) {sorted(unknown)} (allowed keys are defined by "
                 f"engine.{constant})"
             )
+    _VALIDATED_ENTRY_SHAPES.add(shape)
 
 
 def _result_key(slot: str) -> str:
