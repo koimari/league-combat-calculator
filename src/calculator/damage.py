@@ -5515,13 +5515,16 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             state.total_damage += periodic_mitigated
 
 
-def _ability_damage_proc_triggers(
+def _unique_ledger_hits(
     state: FightState,
     rotation: RotationResult,
-    effect: item_effects.CooldownProcEffect,
+    source_keys: set[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Schedule an ability-triggered proc onto legal damaging casts."""
-    cast_sources = set(state.cast_order)
+    """Distinct positive damage instances from the ordered ledger, in order.
+
+    ``source_keys`` narrows the walk to specific rows (ability casts for
+    ability-triggered procs); ``None`` keeps every damage source.
+    """
     ordered = _ordered_damage_events(
         state.breakdown,
         state.ability_damages,
@@ -5531,7 +5534,9 @@ def _ability_damage_proc_triggers(
     unique_hits: list[dict[str, Any]] = []
     seen: set[tuple[str, int, float]] = set()
     for event in ordered:
-        if event["source_key"] not in cast_sources or event["damage"] <= 0:
+        if event["damage"] <= 0:
+            continue
+        if source_keys is not None and event["source_key"] not in source_keys:
             continue
         identity = (
             event["source_key"],
@@ -5542,6 +5547,16 @@ def _ability_damage_proc_triggers(
             continue
         seen.add(identity)
         unique_hits.append(event)
+    return unique_hits
+
+
+def _ability_damage_proc_triggers(
+    state: FightState,
+    rotation: RotationResult,
+    effect: item_effects.CooldownProcEffect,
+) -> list[dict[str, Any]]:
+    """Schedule an ability-triggered proc onto legal damaging casts."""
+    unique_hits = _unique_ledger_hits(state, rotation, set(state.cast_order))
 
     proc_triggers: list[dict[str, Any]] = []
     ready_at = float("-inf")
@@ -5569,27 +5584,7 @@ def _champion_damage_proc_triggers(
     refunds ``on_attack_cooldown_refund`` seconds of it (Scout's
     Slingshot's Bullseye).
     """
-    ordered = _ordered_damage_events(
-        state.breakdown,
-        state.ability_damages,
-        state.cast_order,
-        cast_events=rotation.cast_events,
-    )
-    unique_hits: list[dict[str, Any]] = []
-    seen: set[tuple[str, int, float]] = set()
-    for event in ordered:
-        if event["damage"] <= 0:
-            continue
-        identity = (
-            event["source_key"],
-            int(event["ordinal"]),
-            float(event["time"]),
-        )
-        if identity in seen:
-            continue
-        seen.add(identity)
-        unique_hits.append(event)
-
+    unique_hits = _unique_ledger_hits(state, rotation)
     swing_times = sorted(_auto_attack_timestamps(state))
     refund = effect.on_attack_cooldown_refund
 

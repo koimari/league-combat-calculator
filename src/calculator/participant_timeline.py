@@ -332,7 +332,7 @@ def _schedule_thorns_events(
                     "event_precision": "exact",
                     "_event_id": (
                         f"{wearer.participant_id}:{striker.participant_id}"
-                        f":thorns:{index}"
+                        f":thorns:{profile.item_name}:{index}"
                     ),
                     "_trigger_event_id": strike.get("_event_id"),
                     "_reactive": True,
@@ -379,7 +379,7 @@ def _simulate_survival(
             "death_time": None,
         }
 
-    actions: list[tuple[float, int, str, dict[str, Any]]] = []
+    actions: list[tuple[float, float, str, dict[str, Any]]] = []
     damage_event_status: dict[str, str] = {}
     for participant_id, events in support_effects.items():
         for event in events:

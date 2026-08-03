@@ -5210,6 +5210,20 @@ class TestScoutsSlingshotBullseye(_FightHarness):
         assert proc.on_attack_cooldown_refund == pytest.approx(1.0)
         assert proc.source.is_ability_damage is True
 
+    def test_missing_refund_value_fails_loudly(self) -> None:
+        """A parse miss on the refund must raise, not default to no refund."""
+        from src.calculator import item_effects
+
+        broken = dict(item_effects.ITEM_EFFECTS["Scout's Slingshot"])
+        broken.pop("on_attack_cooldown_refund", None)
+        with pytest.MonkeyPatch.context() as patcher:
+            patcher.setitem(item_effects.ITEM_EFFECTS, "Scout's Slingshot", broken)
+            with pytest.raises(KeyError) as exc_info:
+                resolve_damage_effects(_build("Scout's Slingshot"))
+        message = exc_info.value.args[0]
+        assert "Scout's Slingshot" in message
+        assert "on_attack_cooldown_refund" in message
+
     def test_attack_refunds_halve_the_effective_cooldown(self) -> None:
         """At 1.0 attacks/s each second refunds one extra second: procs
         land at 0s, 20s, and 40s of a 45-second fight."""

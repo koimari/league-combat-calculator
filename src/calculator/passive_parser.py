@@ -668,7 +668,7 @@ def _parse_proc_flat(
         "damage_type": "magic" if "magic damage" in text.lower() else "physical",
     }
 
-    base_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
+    base_match = re.search(r"deals?\s+\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
     if base_match:
         result["base"] = float(base_match.group(1))
 
@@ -716,7 +716,7 @@ def _parse_bullseye(text: str) -> dict[str, Any]:
         "damage_type": "magic" if "magic damage" in text.lower() else "physical",
     }
 
-    base_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
+    base_match = re.search(r"deals?\s+\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
     if base_match:
         result["base"] = float(base_match.group(1))
 

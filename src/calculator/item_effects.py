@@ -395,6 +395,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # 40s CD, refunded 1s per completed attack windup.
         "base": 40.0,
         "cooldown": 40.0,
+        "attack_refund": True,
         "on_attack_cooldown_refund": 1.0,
         # Wiki notes: Bullseye's damage triggers spell effects.
         "is_ability_damage": True,
@@ -899,6 +900,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "double_on_hit",
         "basic_damage",
         "unmodeled_splash_note",
+        "attack_refund",
     }
 )
 
@@ -1792,7 +1794,14 @@ def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffe
         damage_threshold_window=(
             required.number("damage_threshold_window") if threshold else 0.0
         ),
-        on_attack_cooldown_refund=float(values.get("on_attack_cooldown_refund", 0.0)),
+        # The structural flag decides whether a refund exists; its parsed
+        # value is then required, so a parse miss raises instead of
+        # silently compiling a refund-less Bullseye.
+        on_attack_cooldown_refund=(
+            required.number("on_attack_cooldown_refund")
+            if values.get("attack_refund")
+            else 0.0
+        ),
     )
 
 
