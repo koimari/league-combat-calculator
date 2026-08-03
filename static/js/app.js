@@ -3148,3 +3148,193 @@ Promise.all([
     render();
   })
   .catch(() => { $("builder").innerHTML = `<p class="empty-roster">The patch snapshot could not load. Refresh to try again.</p>`; });
+
+// Temporary local design-review mode. It is opt-in via ?review=1 and has no
+// effect on the calculator's normal interaction or persisted calculation state.
+(function initDesignReview() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("review")) return;
+
+  const storageKey = `scryglass-design-review:${window.location.pathname}`;
+  let savedNotes = [];
+  try { savedNotes = JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { savedNotes = []; }
+  const state = {
+    armed: false,
+    suppressClick: false,
+    target: null,
+    editing: null,
+    notes: Array.isArray(savedNotes) ? savedNotes : [],
+  };
+  const review = document.createElement("div");
+  review.className = "design-review-ui";
+  review.innerHTML = `<div class="design-review-toolbar" role="toolbar" aria-label="Design review tools">
+    <strong>Design review</strong><span class="design-review-count">0 notes</span>
+    <button type="button" data-review-action="arm">Add note</button>
+    <button type="button" data-review-action="export">Export</button>
+    <button type="button" data-review-action="copy">Copy Markdown</button>
+    <button type="button" data-review-action="clear">Clear</button>
+    <a href="${window.location.pathname}" data-review-action="exit">Exit</a>
+  </div>
+  <div class="design-review-editor" hidden>
+    <div class="design-review-editor-head"><strong class="design-review-editor-title">New note</strong><button type="button" data-review-action="cancel" aria-label="Close note editor">×</button></div>
+    <p class="design-review-target-summary"></p>
+    <label>What is wrong?<textarea data-review-field="problem" rows="3" placeholder="e.g. This label is too faint against the map."></textarea></label>
+    <label>Expected / reference<textarea data-review-field="expected" rows="2" placeholder="e.g. Match the prototype: white, bold, 14px."></textarea></label>
+    <label>Priority<select data-review-field="priority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></label>
+    <div class="design-review-editor-actions"><button type="button" data-review-action="cancel">Cancel</button><button type="button" data-review-action="save">Save note</button></div>
+  </div>
+  <div class="design-review-pins" aria-hidden="true"></div>`;
+  document.body.append(review);
+
+  const toolbar = review.querySelector(".design-review-toolbar");
+  const editor = review.querySelector(".design-review-editor");
+  const pins = review.querySelector(".design-review-pins");
+  const count = review.querySelector(".design-review-count");
+  const armButton = review.querySelector('[data-review-action="arm"]');
+  const field = (name) => review.querySelector(`[data-review-field="${name}"]`);
+
+  const persist = () => localStorage.setItem(storageKey, JSON.stringify(state.notes));
+  const escapeSelector = (value) => {
+    if (window.CSS?.escape) return CSS.escape(value);
+    return String(value).replace(/([ #;?%&,.+*~':!^$[\]()=>|/@])/g, "\\$1");
+  };
+  const selectorFor = (element) => {
+    if (element.id) return `#${escapeSelector(element.id)}`;
+    const parts = [];
+    let node = element;
+    while (node && node !== document.body && node.nodeType === 1) {
+      let part = node.tagName.toLowerCase();
+      const classes = [...node.classList].filter((name) => !name.startsWith("design-review"));
+      if (classes.length) part += `.${classes.slice(0, 2).map(escapeSelector).join(".")}`;
+      const siblings = node.parentElement ? [...node.parentElement.children].filter((child) => child.tagName === node.tagName) : [];
+      if (siblings.length > 1) part += `:nth-of-type(${siblings.indexOf(node) + 1})`;
+      parts.unshift(part);
+      node = node.parentElement;
+    }
+    return parts.join(" > ") || element.tagName.toLowerCase();
+  };
+  const targetFor = (element) => element.closest("button,select,input,textarea,label,section,article,aside,h1,h2,h3,p,.stat,.slot") || element;
+  const textFor = (element) => (element.getAttribute("aria-label") || element.innerText || element.textContent || "").replace(/\s+/g, " ").trim().slice(0, 180);
+  const highlight = (element) => {
+    document.querySelectorAll(".design-review-target").forEach((node) => node.classList.remove("design-review-target"));
+    element?.classList.add("design-review-target");
+  };
+  const locate = (note) => {
+    try { return document.querySelector(note.selector); } catch { return null; }
+  };
+  const updateCount = () => { count.textContent = `${state.notes.length} ${state.notes.length === 1 ? "note" : "notes"}`; };
+  const renderPins = () => {
+    pins.replaceChildren();
+    state.notes.forEach((note, index) => {
+      const element = locate(note);
+      const rect = element?.getBoundingClientRect();
+      const pin = document.createElement("button");
+      pin.type = "button";
+      pin.className = `design-review-pin priority-${note.priority || "medium"}`;
+      pin.dataset.reviewIndex = String(index);
+      pin.textContent = String(index + 1);
+      pin.title = note.problem || `Review note ${index + 1}`;
+      pin.style.left = `${rect ? rect.left + Math.min(rect.width, 28) : note.rect.x - window.scrollX}px`;
+      pin.style.top = `${rect ? Math.max(8, rect.top - 12) : note.rect.y - window.scrollY}px`;
+      pins.append(pin);
+    });
+    updateCount();
+  };
+  const closeEditor = () => {
+    editor.hidden = true;
+    highlight(null);
+    state.target = null;
+    state.editing = null;
+  };
+  const openEditor = (element, note = null) => {
+    state.target = element || locate(note);
+    state.editing = note;
+    highlight(state.target);
+    review.querySelector(".design-review-editor-title").textContent = note ? `Edit note ${state.notes.indexOf(note) + 1}` : "New note";
+    review.querySelector(".design-review-target-summary").textContent = state.target ? `${state.target.tagName.toLowerCase()} · ${selectorFor(state.target)}\n“${textFor(state.target)}”` : "Target is no longer present in this state.";
+    field("problem").value = note?.problem || "";
+    field("expected").value = note?.expected || "";
+    field("priority").value = note?.priority || "medium";
+    editor.hidden = false;
+    field("problem").focus();
+  };
+  const markdown = () => `# Scryglass design review\n\n${state.notes.map((note, index) => `## ${index + 1}. ${note.priority.toUpperCase()}\n- **Problem:** ${note.problem}\n- **Expected:** ${note.expected || "Not specified"}\n- **Target:** \`${note.selector}\`\n- **Viewport:** ${note.viewport.width}×${note.viewport.height}\n- **Snapshot:** ${note.snapshot || "(no visible text)"}\n`).join("\n")}`;
+  const download = (filename, content, type) => {
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  const saveNote = () => {
+    const problem = field("problem").value.trim();
+    if (!problem) { field("problem").focus(); return; }
+    const rect = state.target?.getBoundingClientRect();
+    const note = state.editing || {};
+    Object.assign(note, {
+      problem,
+      expected: field("expected").value.trim(),
+      priority: field("priority").value,
+      selector: state.target ? selectorFor(state.target) : note.selector,
+      snapshot: state.target ? textFor(state.target) : note.snapshot,
+      rect: { x: rect ? rect.left + window.scrollX : note.rect?.x || 0, y: rect ? rect.top + window.scrollY : note.rect?.y || 0, width: rect?.width || note.rect?.width || 0, height: rect?.height || note.rect?.height || 0 },
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      path: window.location.pathname + window.location.search,
+      updatedAt: new Date().toISOString(),
+    });
+    if (!state.editing) state.notes.push(note);
+    persist();
+    closeEditor();
+    renderPins();
+  };
+
+  toolbar.addEventListener("click", (event) => {
+    const action = event.target.closest("[data-review-action]")?.dataset.reviewAction;
+    if (!action) return;
+    if (action === "arm") {
+      state.armed = !state.armed;
+      armButton.classList.toggle("active", state.armed);
+      armButton.textContent = state.armed ? "Click an element…" : "Add note";
+    } else if (action === "export") {
+      download("scryglass-design-review.json", JSON.stringify({ exportedAt: new Date().toISOString(), url: window.location.href, notes: state.notes }, null, 2), "application/json");
+    } else if (action === "copy") {
+      const copied = navigator.clipboard?.writeText(markdown());
+      if (copied) copied.then(() => { event.target.textContent = "Copied"; setTimeout(() => { event.target.textContent = "Copy Markdown"; }, 1200); });
+      else download("scryglass-design-review.md", markdown(), "text/markdown");
+    } else if (action === "clear" && state.notes.length && window.confirm("Clear all design review notes for this page?")) {
+      state.notes = [];
+      persist();
+      renderPins();
+    } else if (action === "cancel") {
+      closeEditor();
+    } else if (action === "save") {
+      saveNote();
+    }
+  });
+  review.addEventListener("click", (event) => {
+    const pin = event.target.closest("[data-review-index]");
+    if (pin) openEditor(null, state.notes[Number(pin.dataset.reviewIndex)]);
+  });
+  document.addEventListener("pointerdown", (event) => {
+    if (!state.armed || event.target.closest(".design-review-ui")) return;
+    const element = targetFor(event.target);
+    if (!element || element === document.body || element === document.documentElement) return;
+    event.preventDefault();
+    event.stopPropagation();
+    state.armed = false;
+    state.suppressClick = true;
+    armButton.classList.remove("active");
+    armButton.textContent = "Add note";
+    openEditor(element);
+  }, true);
+  document.addEventListener("click", (event) => {
+    if (!state.suppressClick) return;
+    state.suppressClick = false;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+  window.addEventListener("resize", renderPins);
+  window.addEventListener("scroll", renderPins, { passive: true });
+  renderPins();
+})();
