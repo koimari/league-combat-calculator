@@ -963,6 +963,97 @@ def test_search_context_score_walk_matches_legacy_score_receipts():
     assert len(context.panels) == 2, "expected one shared and one new signature"
 
 
+def test_search_context_replays_the_rounded_death_cutoff():
+    """A dead attacker's outgoing total cuts at its ROUNDED death time.
+
+    The legacy composition filters each attacker's events by the survival
+    row's death time, which is rounded to three decimals — so an attacker's
+    own event landing at the exact death instant is applied by the walk but
+    excluded from the total whenever the true death time rounds down past
+    it.  A mirror matchup with equal attack speeds reproduces that
+    coincidence deterministically: main Aatrox (no items) dies to an
+    itemized enemy Aatrox mid-window with a same-instant auto of his own.
+    """
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.participant_timeline import CoupledSearchContext
+    from src.calculator.scenario import ChampionLoadout
+    from src.calculator.stats import calculate_total_stats
+
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 0.8,
+            "role": "top",
+        },
+        deterministic=True,
+    )
+    champion = get_champion("Aatrox")
+    enemies = [
+        ChampionLoadout(
+            champion="Aatrox",
+            level=13,
+            role="top",
+            items=("Bloodthirster", "Infinity Edge"),
+        ).resolve()
+    ]
+    stats = calculate_total_stats(champion, 13, [], role="top")
+    defenses = resolve_starting_defenses(champion["name"], 13, stats, [])
+
+    def timeline(**kwargs):
+        return build_participant_timeline(
+            champion,
+            13,
+            [],
+            params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=enemies,
+            allies=[],
+            reuse_main_stats=True,
+            **kwargs,
+        )
+
+    fast = timeline(
+        pair_result_cache={},
+        search_context=CoupledSearchContext(),
+        include_receipt=False,
+    )
+    legacy = timeline(include_receipt=False)
+    main_survival = next(
+        row["survival"]
+        for row in legacy["participants"]
+        if row["participant_id"] == "main"
+    )
+    assert (
+        main_survival["death_time"] is not None
+    ), "the fixture must kill the main mid-window to exercise the cutoff"
+    assert fast == legacy
+
+
+def test_support_attributes_match_the_profile_lookup_source():
+    """The support-candidate gate must cover exactly the profile lookups.
+
+    ``derive_ally_effects`` skips champions via ``_SUPPORT_ATTRIBUTES``;
+    an attribute added to ``_support_profile``'s lookups without extending
+    that set would silently drop the champion's packets, so the set is
+    pinned to the ``_first_attribute`` tuples actually in the source.
+    """
+    import inspect
+    import re as re_module
+
+    from src.calculator import support_effects
+
+    source = inspect.getsource(support_effects._support_profile)
+    lookups = re_module.findall(r"_first_attribute\(\s*ability,\s*\(([^)]*)\)", source)
+    assert lookups, "expected _first_attribute lookups in _support_profile"
+    named = set()
+    for group in lookups:
+        named.update(re_module.findall(r'"([^"]+)"', group))
+    assert named == set(support_effects._SUPPORT_ATTRIBUTES)
+
+
 def test_healing_rule_champions_matches_the_dispatch_source():
     """The scoring fast path skips heal derivation via HEALING_RULE_CHAMPIONS.
 

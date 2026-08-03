@@ -179,7 +179,9 @@ class SlotCtx:
 # object identity.  Entries keep a strong reference to their source dict and
 # verify it on every hit (the ``resolve_damage_effects`` pattern), so a
 # data refresh that rebuilds the champion cache can never serve stale
-# values through a recycled ``id()``.
+# values through a recycled ``id()``.  Superseded generations are kept, not
+# evicted — a deliberate, patch-cadence-bounded leak shared by every
+# identity memo in this codebase.
 _CAST_TIME_MEMO: dict[int, tuple[dict[str, Any], float]] = {}
 _RESOURCE_COST_MEMO: dict[tuple[int, int, int], tuple[dict[str, Any], float]] = {}
 

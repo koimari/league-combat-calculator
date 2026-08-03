@@ -820,14 +820,25 @@ def _simulate_survival(
 # champion's fresh outgoing fights, concatenates, re-sorts (a cheap two-run
 # merge), and walks without copying or mutating a single event dict.  The
 # walk reproduces ``_simulate_survival``'s arithmetic exactly — same
-# operations, same order, same rounding, and per-attacker sums replayed in
-# the legacy list order so float addition cannot drift — pinned by the
-# equivalence tests in tests/test_participant_timeline.py.
+# operations, same order, same rounding — and the assembly replays both
+# the legacy per-attacker float-addition order and its rounded
+# death-time cutoff (an attacker's own event at the exact death instant
+# is applied by the walk but excluded from the outgoing total whenever
+# the true death time rounds down past it) — pinned by the equivalence
+# tests in tests/test_participant_timeline.py.
 
 _KIND_DAMAGE, _KIND_HEAL, _KIND_SHIELD, _KIND_PLAIN_DAMAGE = 0, 1, 2, 3
 # _KIND_PLAIN_DAMAGE marks a damage action with no trigger link, no
 # live-health repricing, no Grievous pack, and no wound — the walk
 # skips those four branch reads.  Classified at compile time only.
+
+# Positional layout of one compiled walk action (built by _WalkCompiler,
+# consumed by _compiled_survival_walk).  Slot 0 is the sort key; every
+# compiler site fills ``attacker`` with a real participant index, so the
+# walk never sees a negative one.
+_A_KIND, _A_SUBJECT, _A_ATTACKER, _A_TRIGGER, _A_AIDX = 1, 2, 3, 4, 5
+_A_AMOUNT, _A_DTYPE, _A_RAW_FORMULA, _A_RAW_DAMAGE = 6, 7, 8, 9
+_A_GRIEVOUS, _A_WOUND, _A_REACTIVE, _A_TIME = 10, 11, 12, 13
 _DTYPE_CODES = {"physical": 0, "magic": 1}
 
 
@@ -908,7 +919,7 @@ class _WalkCompiler:
         defender_i: int,
         grievous_by_dtype: Mapping[str, Any],
         duration: float,
-        heal_dedup: set[tuple[str, float]],
+        heal_dedup: dict[tuple[str, float], float],
     ) -> None:
         """Compile one pair packet's damage events and self-heals.
 
@@ -956,7 +967,7 @@ class _WalkCompiler:
                 )
             )
             if time_value <= duration:
-                order_append(aidx)
+                order_append((aidx, time_value))
             if aidx_by_key is not None:
                 aidx_by_key[
                     (event["source_key"], round(time_value, 9), event["sequence"])
@@ -969,8 +980,8 @@ class _WalkCompiler:
             trigger = aidx_by_key.get(_heal_trigger_key(event), -1)
             if event.get("actor_wide"):
                 if "_trigger_source" in event:
-                    # Cross-pair dedup below keeps whichever value-identical
-                    # copy compiled first; a trigger link would make copies
+                    # Cross-pair dedup below keeps the copy that compiled
+                    # first; a trigger link would make copies
                     # pair-dependent, so fail closed instead of guessing.
                     raise ValueError(
                         "actor-wide self-heal carries a trigger link; "
@@ -980,9 +991,18 @@ class _WalkCompiler:
                     str(event.get("source", "")),
                     float(event.get("time", 0.0)),
                 )
-                if dedup_key in heal_dedup:
+                amount = max(0.0, float(event.get("amount", 0.0)))
+                kept = heal_dedup.get(dedup_key)
+                if kept is not None:
+                    if kept != amount:
+                        # The dedup keeps one copy per (source, time); that
+                        # is only sound while every copy is value-identical.
+                        raise ValueError(
+                            "actor-wide self-heal copies disagree across "
+                            "pair fights; the compiled dedup cannot keep one"
+                        )
                     continue
-                heal_dedup.add(dedup_key)
+                heal_dedup[dedup_key] = amount
             aidx = self.next_aidx
             self.next_aidx += 1
             actions_append(
@@ -1014,7 +1034,7 @@ class _WalkCompiler:
         defender_i: int,
         grievous_by_dtype: Mapping[str, Any],
         duration: float,
-        heal_dedup: set[tuple[str, float]],
+        heal_dedup: dict[tuple[str, float], float],
         id_strings: list[str],
     ) -> None:
         """Compile a fresh one-pair fight straight from the engine rows.
@@ -1086,7 +1106,7 @@ class _WalkCompiler:
                     )
                 )
                 if time_value <= duration:
-                    order_append(aidx)
+                    order_append((aidx, time_value))
                 if source_key == "auto_attacks":
                     strikes_append((aidx, time_value, key[3], attacker_i))
                 aidx += 1
@@ -1157,7 +1177,7 @@ class _WalkCompiler:
                 )
             )
             if time_value <= duration:
-                order_append(aidx)
+                order_append((aidx, time_value))
             if aidx_by_key is not None:
                 aidx_by_key[(source_key, round(time_value, 9), sequence)] = aidx
             if source_key == "auto_attacks":
@@ -1177,9 +1197,16 @@ class _WalkCompiler:
                     str(event.get("source", "")),
                     float(event.get("time", 0.0)),
                 )
-                if dedup_key in heal_dedup:
+                amount = max(0.0, float(event.get("amount", 0.0)))
+                kept = heal_dedup.get(dedup_key)
+                if kept is not None:
+                    if kept != amount:
+                        raise ValueError(
+                            "actor-wide self-heal copies disagree across "
+                            "pair fights; the compiled dedup cannot keep one"
+                        )
                     continue
-                heal_dedup.add(dedup_key)
+                heal_dedup[dedup_key] = amount
             aidx = self.next_aidx
             self.next_aidx += 1
             time_value = float(event.get("time", 0.0))
@@ -1223,6 +1250,15 @@ class _WalkCompiler:
             subject_i = index_of[target_id]
             kind = str(template.get("kind", ""))
             priority = -1.0 if kind == "shield" else 1.0
+            if template.get("_trigger_event_id") is not None:
+                # No current support author emits a trigger link; resolving
+                # one would need the same cross-pair id map as heals, so
+                # fail closed instead of silently skipping what the legacy
+                # walk might apply.
+                raise ValueError(
+                    "support template carries a trigger link; the compiled "
+                    "walk cannot resolve it"
+                )
             aidx = self.next_aidx
             self.next_aidx += 1
             time_value = float(template.get("time", 0.0))
@@ -1232,7 +1268,7 @@ class _WalkCompiler:
                     _KIND_SHIELD if kind == "shield" else _KIND_HEAL,
                     subject_i,
                     attacker_i,
-                    -1 if template.get("_trigger_event_id") is None else -2,
+                    -1,
                     aidx,
                     max(0.0, float(template.get("amount", 0.0))),
                     2,
@@ -1319,7 +1355,7 @@ class _WalkCompiler:
                     )
                 )
                 if strike_time <= duration:
-                    order.append(aidx)
+                    order.append((aidx, strike_time))
 
 
 class CoupledSearchContext:
@@ -1362,7 +1398,7 @@ class CoupledSearchContext:
         self.pair_id_strings: dict[str, list[str]] = defaultdict(list)
         self.base_compiler: _WalkCompiler | None = None
         self.base_sorted: list[tuple[Any, ...]] = []
-        self.base_heal_dedup: dict[int, set[tuple[str, float]]] = {}
+        self.base_heal_dedup: dict[int, dict[tuple[str, float], float]] = {}
         self.validated_roster_window = False
 
 
@@ -1438,20 +1474,20 @@ def _compiled_survival_walk(
     # of the stream and takes the first branch without reading any of the
     # four fields it cannot carry.
     for action in actions:
-        kind = action[1]
+        kind = action[_A_KIND]
         if kind == _KIND_PLAIN_DAMAGE:
-            subject_i = action[2]
+            subject_i = action[_A_SUBJECT]
             if death[subject_i] is not None:
                 continue
-            attacker_i = action[3]
+            attacker_i = action[_A_ATTACKER]
             if death[attacker_i] is not None:
                 continue
-            aidx = action[5]
+            aidx = action[_A_AIDX]
             status[aidx] = 1
-            amount = action[6]
+            amount = action[_A_AMOUNT]
             damage_taken[subject_i] += amount
             event_absorbed = 0.0
-            dtype = action[7]
+            dtype = action[_A_DTYPE]
             if dtype == 1:
                 absorbed = min(sh_magic[subject_i], amount)
                 sh_magic[subject_i] -= absorbed
@@ -1475,25 +1511,29 @@ def _compiled_survival_walk(
             health_damage[subject_i] += applied_to_health
             applied[aidx] = round(event_absorbed + applied_to_health, 6)
             if health[subject_i] <= 0.0 and death[subject_i] is None:
-                death[subject_i] = min(float(duration), action[13])
+                death[subject_i] = min(float(duration), action[_A_TIME])
             continue
-        trigger = action[4]
+        trigger = action[_A_TRIGGER]
         if trigger != -1 and (trigger < 0 or not status[trigger]):
             continue
-        subject_i = action[2]
+        subject_i = action[_A_SUBJECT]
         if death[subject_i] is not None:
             continue
-        attacker_i = action[3]
-        if attacker_i >= 0 and death[attacker_i] is not None and not action[12]:
+        attacker_i = action[_A_ATTACKER]
+        if (
+            attacker_i >= 0
+            and death[attacker_i] is not None
+            and not action[_A_REACTIVE]
+        ):
             continue
-        amount = action[6]
+        amount = action[_A_AMOUNT]
         if kind == _KIND_SHIELD:
             sh_general[subject_i] += amount
             support_shield_received[subject_i] += amount
-            applied[action[5]] = round(amount, 6)
+            applied[action[_A_AIDX]] = round(amount, 6)
             continue
         if kind == _KIND_HEAL:
-            time_value = action[13]
+            time_value = action[_A_TIME]
             factor = 1.0 if time_value >= hr_until[subject_i] else hr_factor[subject_i]
             reduced = amount * factor
             healing_reduced[subject_i] += max(0.0, amount - reduced)
@@ -1502,20 +1542,20 @@ def _compiled_survival_walk(
             )
             health[subject_i] += received
             healing_received[subject_i] += received
-            applied[action[5]] = round(received, 6)
+            applied[action[_A_AIDX]] = round(received, 6)
             continue
 
-        aidx = action[5]
-        time_value = action[13]
+        aidx = action[_A_AIDX]
+        time_value = action[_A_TIME]
         status[aidx] = 1
-        raw_formula = action[8]
+        raw_formula = action[_A_RAW_FORMULA]
         if raw_formula is not None:
             subject_max = max_healths[subject_i]
             if subject_max > 0:
                 missing_ratio = max(
                     0.0, min(1.0, 1.0 - health[subject_i] / subject_max)
                 )
-                raw_damage = action[9]
+                raw_damage = action[_A_RAW_DAMAGE]
                 try:
                     live_raw = max(0.0, float(raw_formula(missing_ratio)))
                 except (TypeError, ValueError):
@@ -1523,7 +1563,7 @@ def _compiled_survival_walk(
                 amount *= live_raw / raw_damage
         damage_taken[subject_i] += amount
         event_absorbed = 0.0
-        dtype = action[7]
+        dtype = action[_A_DTYPE]
         if dtype == 1:
             absorbed = min(sh_magic[subject_i], amount)
             sh_magic[subject_i] -= absorbed
@@ -1548,7 +1588,7 @@ def _compiled_survival_walk(
         overkill[subject_i] += event_overkill
         event_damage = round(event_absorbed + applied_to_health, 6)
         applied[aidx] = event_damage
-        grievous = action[10]
+        grievous = action[_A_GRIEVOUS]
         if grievous is not None and event_damage > 0:
             strongest_factor, strongest_duration, labels = grievous
             hr_until[subject_i] = max(
@@ -1556,7 +1596,7 @@ def _compiled_survival_walk(
             )
             hr_factor[subject_i] = min(hr_factor[subject_i], strongest_factor)
             hr_sources[subject_i].update(labels)
-        wound = action[11]
+        wound = action[_A_WOUND]
         if wound is not None:
             wound_duration, wound_label = wound
             hr_until[subject_i] = max(hr_until[subject_i], time_value + wound_duration)
@@ -1691,7 +1731,7 @@ def _context_setup(
     # signature-dependent and live in each signature's sig compiler.
     base = _WalkCompiler(0)
     context.base_heal_dedup = {
-        context.index_of[actor.participant_id]: set() for actor in context.roster_actors
+        context.index_of[actor.participant_id]: {} for actor in context.roster_actors
     }
     support_attached: set[str] = set()
     base_pairs = [
@@ -1809,7 +1849,7 @@ def _build_signature_panel(
             0,
             context.grievous_packs[attacker_i],
             duration,
-            set(context.base_heal_dedup.get(attacker_i, ())),
+            dict(context.base_heal_dedup.get(attacker_i) or {}),
         )
         support_templates = packet.get("support")
         if support_templates is None:
@@ -1838,8 +1878,10 @@ def _score_with_search_context(
     """Score one candidate through the compiled panel walk.
 
     Returns the exact score-only receipt ``build_participant_timeline``
-    would produce — same fields, same rounding, same float-addition order —
-    while compiling only the main champion's fresh outgoing fights.
+    would produce — same fields, same rounding, same float-addition order,
+    and the same rounded death-time cutoff on each attacker's outgoing
+    total — while compiling only the main champion's fresh outgoing
+    fights.
     """
     if context.roster_actors is None:
         setup_allies = [
@@ -1898,7 +1940,7 @@ def _score_with_search_context(
         for damage_type in ("physical", "magic", "true")
     }
     reusable_stats = main.stats if reuse_main_stats else None
-    heal_dedup: set[tuple[str, float]] = set()
+    heal_dedup: dict[tuple[str, float], float] = {}
     first_result = None
     enemy_actors = [actor for actor in roster if actor.team == "enemy"]
     for defender, pair_params in context.main_pair_params:
@@ -2017,6 +2059,11 @@ def _score_with_search_context(
         # allies), then thorns in strike order (fresh strikes precede the
         # roster's).  One running total over the ordered parts keeps the
         # exact same addition sequence without building a concat list.
+        # A dead attacker's total also replays the legacy cutoff against
+        # its ROUNDED death time: the walk applies an attacker's own
+        # event at the exact death instant, but the legacy sum excludes
+        # it whenever the true death time rounds down past it.
+        death_cutoff = survival_rows[index]["death_time"]
         running = 0.0
         for order in (
             sig_damage_order.get(index),
@@ -2026,8 +2073,13 @@ def _score_with_search_context(
             base_thorns_order.get(index),
         ):
             if order:
-                for aidx in order:
-                    running += applied[aidx]
+                if death_cutoff is None:
+                    for aidx, _event_time in order:
+                        running += applied[aidx]
+                else:
+                    for aidx, event_time in order:
+                        if event_time <= death_cutoff:
+                            running += applied[aidx]
         total = round(running, 1)
         actor_survival = survival_rows[index]
         public_breakdown.append(
