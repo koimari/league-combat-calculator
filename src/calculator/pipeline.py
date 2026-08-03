@@ -282,17 +282,28 @@ def run_fight(
     level: int,
     items: list[dict[str, Any]],
     params: FightParams,
+    precomputed_stats: dict[str, float] | None = None,
 ) -> dict[str, Any]:
-    """Run stats, champion ability parsing, and fight damage as one pipeline."""
+    """Run stats, champion ability parsing, and fight damage as one pipeline.
+
+    ``precomputed_stats`` lets a caller that already ran this exact stat
+    calculation (same champion, level, items, options, role, and external
+    bonuses) hand it over instead of repeating it; the fight itself never
+    mutates it.  Callers own that equality claim.
+    """
     params.validate_for_champion(champion_data.get("name", ""), level)
-    champion_stats = calculate_total_stats(
-        champion_data,
-        level,
-        items,
-        item_options=params.item_options,
-        role=params.role,
-        role_quest_complete=params.role_quest_complete,
-        external_stat_bonuses=params.ally_stat_bonuses,
+    champion_stats = (
+        precomputed_stats
+        if precomputed_stats is not None
+        else calculate_total_stats(
+            champion_data,
+            level,
+            items,
+            item_options=params.item_options,
+            role=params.role,
+            role_quest_complete=params.role_quest_complete,
+            external_stat_bonuses=params.ally_stat_bonuses,
+        )
     )
 
     # Reserved option keys are pipeline-owned: strip whatever the caller

@@ -4766,17 +4766,26 @@ def _layer_on_hit_effects(
     # accepted ability ledger that prices the cast.  This is required for
     # stack counters such as Aurora's Spirit Abjuration: a fractional
     # per-hit average would invent damage before the third stack exists.
-    ability_hit_times = [
-        float(event["time"])
-        for event in _ordered_damage_events(
-            state.breakdown,
-            state.ability_damages,
-            state.cast_order,
-            cast_events=rotation.cast_events,
+    # Only the ability on-hit loop below reads these times, so a kit with
+    # no ability-carried on-hit skips the ledger reconstruction entirely.
+    ability_hit_times = (
+        [
+            float(event["time"])
+            for event in _ordered_damage_events(
+                state.breakdown,
+                state.ability_damages,
+                state.cast_order,
+                cast_events=rotation.cast_events,
+            )
+            if event.get("phase") == "ability"
+            and event.get("source_key") in state.ability_damages
+        ]
+        if any(
+            ability_info.get("on_hit")
+            for ability_info in state.ability_damages.values()
         )
-        if event.get("phase") == "ability"
-        and event.get("source_key") in state.ability_damages
-    ]
+        else []
+    )
     combined_application_times = ability_hit_times + application_times
 
     # Process ability on-hit effects (Case 2: abilities that add damage per

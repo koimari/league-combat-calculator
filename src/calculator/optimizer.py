@@ -233,6 +233,10 @@ def _evaluate_build_uncached(
                 allies=list(combat_context.get("allies", [])),
                 pair_result_cache=combat_context.get("pair_result_cache"),
                 include_receipt=objective in ("physical_damage", "magic_damage"),
+                # ``stats`` above used this exact configuration; the claim
+                # only holds when no external ally bonuses were folded in,
+                # because pair fights strip those.
+                reuse_main_stats=not base_params.ally_stat_bonuses,
             )
         except ValueError as exc:
             # A candidate can introduce a target-state interaction that is

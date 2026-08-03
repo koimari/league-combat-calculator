@@ -448,8 +448,15 @@ def _simulate_survival(
     healing: Mapping[str, list[dict[str, Any]]],
     support_effects: Mapping[str, list[dict[str, Any]]],
     duration: float,
+    annotate: bool = True,
 ) -> dict[str, dict[str, Any]]:
-    """Resolve damage, shields, healing, and death for every participant."""
+    """Resolve damage, shields, healing, and death for every participant.
+
+    ``annotate=False`` skips the per-event diagnostic fields that only the
+    serialized public receipt reads (pair/live damage, overkill, healing
+    receipts); every survival number and every field the breakdown sums —
+    including each event's applied ``damage`` — is written either way.
+    """
     combatant_list = list(combatants)
     combatant_by_id = {
         combatant.participant_id: combatant for combatant in combatant_list
@@ -544,19 +551,21 @@ def _simulate_survival(
             if phase >= 1:
                 event["applied_amount"] = 0.0
             else:
-                event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                if annotate:
+                    event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                    event["live_damage"] = 0.0
+                    event["overkill"] = 0.0
                 event["damage"] = 0.0
-                event["live_damage"] = 0.0
-                event["overkill"] = 0.0
             event["skipped_reason"] = "trigger_event_skipped"
             continue
         if state["death_time"] is not None:
             # Preserve the scheduled source in the receipt, but do not let
             # a dead target contribute post-death damage to TTD/BIS.
-            event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+            if annotate:
+                event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                event["live_damage"] = 0.0
+                event["overkill"] = 0.0
             event["damage"] = 0.0
-            event["live_damage"] = 0.0
-            event["overkill"] = 0.0
             event["applied_amount"] = 0.0
             event["skipped_reason"] = "target_dead"
             continue
@@ -571,10 +580,11 @@ def _simulate_survival(
             # strike-back is exempt: its trigger linkage above already
             # proves the wearer was alive when struck (a killing blow
             # still takes the thorns with it).
-            event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+            if annotate:
+                event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                event["live_damage"] = 0.0
+                event["overkill"] = 0.0
             event["damage"] = 0.0
-            event["live_damage"] = 0.0
-            event["overkill"] = 0.0
             event["applied_amount"] = 0.0
             event["skipped_reason"] = "attacker_dead"
             continue
@@ -599,9 +609,10 @@ def _simulate_survival(
                 )
                 state["health"] += received
                 state["healing_received"] += received
-                event["raw_amount"] = round(amount, 6)
-                event["reduced_amount"] = round(reduced_amount, 6)
-                event["healing_reduction_factor"] = round(reduction_factor, 6)
+                if annotate:
+                    event["raw_amount"] = round(amount, 6)
+                    event["reduced_amount"] = round(reduced_amount, 6)
+                    event["healing_reduction_factor"] = round(reduction_factor, 6)
                 event["applied_amount"] = round(received, 6)
             continue
         if phase == 1:
@@ -619,9 +630,10 @@ def _simulate_survival(
             )
             state["health"] += received
             state["healing_received"] += received
-            event["raw_amount"] = round(amount, 6)
-            event["reduced_amount"] = round(reduced_amount, 6)
-            event["healing_reduction_factor"] = round(reduction_factor, 6)
+            if annotate:
+                event["raw_amount"] = round(amount, 6)
+                event["reduced_amount"] = round(reduced_amount, 6)
+                event["healing_reduction_factor"] = round(reduction_factor, 6)
             event["applied_amount"] = round(received, 6)
             continue
 
@@ -646,8 +658,9 @@ def _simulate_survival(
             except (TypeError, ValueError):
                 live_raw = raw_damage
             amount *= live_raw / raw_damage
-        event["pair_damage"] = round(original_amount, 6)
-        event["live_damage"] = round(amount, 6)
+        if annotate:
+            event["pair_damage"] = round(original_amount, 6)
+            event["live_damage"] = round(amount, 6)
         state["damage_taken"] += amount
         damage_type = str(event.get("damage_type", ""))
         event_absorbed = 0.0
@@ -671,7 +684,8 @@ def _simulate_survival(
         state["health"] = max(0.0, state["health"] - applied_to_health)
         state["health_damage"] += applied_to_health
         state["overkill"] += overkill
-        event["overkill"] = round(overkill, 6)
+        if annotate:
+            event["overkill"] = round(overkill, 6)
         # The event's post-mitigation value is replaced with the amount that
         # actually consumed the target's shield/health.  Keep ``pair_damage``
         # and ``live_damage`` above for diagnostics without letting overkill
@@ -698,11 +712,12 @@ def _simulate_survival(
                 state["healing_reduction_sources"].add(
                     f"{profile.get('item', '')} · {profile.get('source', '')}"
                 )
-            event["healing_reduction"] = {
-                "factor": round(state["healing_reduction_factor"], 6),
-                "until": round(state["healing_reduction_until"], 6),
-                "sources": sorted(state["healing_reduction_sources"]),
-            }
+            if annotate:
+                event["healing_reduction"] = {
+                    "factor": round(state["healing_reduction_factor"], 6),
+                    "until": round(state["healing_reduction_until"], 6),
+                    "sources": sorted(state["healing_reduction_sources"]),
+                }
         wound_duration = float(event.get("grievous_duration", 0.0) or 0.0)
         if wound_duration > 0:
             # A reactive wound (Thorns) rides its strike-back event and
@@ -719,11 +734,12 @@ def _simulate_survival(
             state["healing_reduction_sources"].add(
                 str(event.get("_wound_source", "Grievous Wounds"))
             )
-            event["healing_reduction"] = {
-                "factor": round(state["healing_reduction_factor"], 6),
-                "until": round(state["healing_reduction_until"], 6),
-                "sources": sorted(state["healing_reduction_sources"]),
-            }
+            if annotate:
+                event["healing_reduction"] = {
+                    "factor": round(state["healing_reduction_factor"], 6),
+                    "until": round(state["healing_reduction_until"], 6),
+                    "sources": sorted(state["healing_reduction_sources"]),
+                }
         if state["health"] <= 0.0 and state["death_time"] is None:
             state["death_time"] = min(float(duration), event_time)
 
@@ -774,6 +790,7 @@ def build_participant_timeline(
     focus_participant_id: str = "main",
     pair_result_cache: dict[tuple[Any, ...], dict[str, Any]] | None = None,
     include_receipt: bool = True,
+    reuse_main_stats: bool = False,
 ) -> dict[str, Any]:
     """Compose all selected actors and return the coupled combat receipt.
 
@@ -786,6 +803,13 @@ def build_participant_timeline(
     per-actor breakdown, and the ordering receipt — with identical numbers;
     optimizer candidate evaluation uses it because nothing ever displays a
     candidate's serialized timeline.
+
+    ``reuse_main_stats=True`` is a caller-owned claim that ``main_stats``
+    was calculated with exactly the configuration a main pair fight would
+    use (same role, item options, and no external ally bonuses), letting
+    those fights skip one identical stat calculation per enemy.  Leave it
+    False when the main stats came from a loadout whose role or options can
+    differ from ``params`` (the roster BIS path).
     """
     require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
@@ -859,12 +883,18 @@ def build_participant_timeline(
                     else None
                 )
                 if packet is None:
+                    reusable_stats = (
+                        attacker.stats
+                        if reuse_main_stats and attacker.participant_id == "main"
+                        else None
+                    )
                     packet = _pair_packet(
                         run_fight(
                             attacker.champion_data,
                             attacker.level,
                             list(attacker.items),
                             _target_params(actor_params, defender),
+                            precomputed_stats=reusable_stats,
                         ),
                         attacker.participant_id,
                         defender.participant_id,
@@ -942,6 +972,7 @@ def build_participant_timeline(
         healing,
         support_effects,
         params.fight_duration_seconds,
+        annotate=include_receipt,
     )
     # An actor's damage after their death is not part of team-fight value.
     for actor in all_actors:
