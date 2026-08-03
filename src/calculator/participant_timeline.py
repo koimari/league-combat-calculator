@@ -808,6 +808,1276 @@ def _simulate_survival(
     return result
 
 
+# ---------------------------------------------------------------------------
+# Compiled score walk — the coupled optimizer's fast path
+# ---------------------------------------------------------------------------
+# A coupled search walks the same roster events for thousands of candidates.
+# Score mode therefore compiles every event into one flat action tuple —
+# sort key, participant indices, trigger slot, pre-resolved Grievous pack —
+# and keeps everything a candidate swap cannot change (roster pair fights,
+# their heals and support packets, roster-strike thorns) in a presorted
+# per-defensive-signature panel.  An evaluation compiles only the main
+# champion's fresh outgoing fights, concatenates, re-sorts (a cheap two-run
+# merge), and walks without copying or mutating a single event dict.  The
+# walk reproduces ``_simulate_survival``'s arithmetic exactly — same
+# operations, same order, same rounding, and per-attacker sums replayed in
+# the legacy list order so float addition cannot drift — pinned by the
+# equivalence tests in tests/test_participant_timeline.py.
+
+_KIND_DAMAGE, _KIND_HEAL, _KIND_SHIELD, _KIND_PLAIN_DAMAGE = 0, 1, 2, 3
+# _KIND_PLAIN_DAMAGE marks a damage action with no trigger link, no
+# live-health repricing, no Grievous pack, and no wound — the walk
+# skips those four branch reads.  Classified at compile time only.
+_DTYPE_CODES = {"physical": 0, "magic": 1}
+
+
+def _heal_trigger_key(event: Mapping[str, Any]) -> tuple[str, float, int]:
+    """The trigger identity carried by an engine self-heal event."""
+    return (
+        str(event.get("_trigger_source", "")),
+        round(float(event.get("_trigger_time", 0.0)), 9),
+        int(event.get("_trigger_sequence", 0) or 0),
+    )
+
+
+def _grievous_pack(
+    profiles: tuple[Any, ...], damage_type: str
+) -> tuple[float, float, tuple[str, ...]] | None:
+    """Pre-resolve one attacker's Grievous application for one damage type.
+
+    The legacy walk matches reduction profiles per event; the compiled walk
+    does it once per (attacker, damage type) because both are fixed for a
+    compiled action.  Returns (strongest factor, strongest duration, all
+    matching source labels) exactly as the per-event code would derive them.
+    """
+    matching = matching_healing_reduction(profiles, damage_type) if profiles else ()
+    if not matching:
+        return None
+    strongest = min(matching, key=lambda profile: float(profile.get("factor", 1.0)))
+    labels = tuple(
+        f"{profile.get('item', '')} · {profile.get('source', '')}"
+        for profile in matching
+    )
+    return (
+        float(strongest.get("factor", 1.0)),
+        float(strongest.get("duration", 0.0)),
+        labels,
+    )
+
+
+class _WalkCompiler:
+    """Accumulates flat walk actions with stable per-action ids.
+
+    One compiler builds the invariant panel (roster pairs), another builds
+    an evaluation's fresh actions starting after the panel's id range so
+    trigger references and the per-eval ``applied`` array stay aligned.
+
+    Action tuple layout (walk-unpacked positionally):
+    ``(sort_key, kind, subject_i, attacker_i, trigger_aidx, aidx, amount,
+    dtype, raw_formula, raw_damage, grievous_pack, wound, reactive, time)``.
+    ``trigger_aidx`` is -1 for none and -2 for a trigger id that cannot
+    resolve (the legacy walk skips such an event; no current author emits
+    one, but the semantics must not silently change if one appears).
+    """
+
+    __slots__ = (
+        "actions",
+        "damage_order",
+        "thorns_order",
+        "support_entries",
+        "auto_strikes_into",
+        "coverage",
+        "next_aidx",
+    )
+
+    def __init__(self, first_aidx: int = 0) -> None:
+        self.actions: list[tuple[Any, ...]] = []
+        self.damage_order: dict[int, list[int]] = defaultdict(list)
+        self.thorns_order: dict[int, list[int]] = defaultdict(list)
+        self.support_entries: list[tuple[str, int, int, bool]] = []
+        self.auto_strikes_into: dict[int, list[tuple[int, float, int, int]]] = (
+            defaultdict(list)
+        )
+        self.coverage: list[dict[str, Any]] = []
+        self.next_aidx = first_aidx
+
+    def add_packet(
+        self,
+        packet: Mapping[str, Any],
+        attacker_i: int,
+        defender_i: int,
+        grievous_by_dtype: Mapping[str, Any],
+        duration: float,
+        heal_dedup: set[tuple[str, float]],
+    ) -> None:
+        """Compile one pair packet's damage events and self-heals.
+
+        ``heal_dedup`` spans the attacker's packets, replaying the legacy
+        actor-wide heal deduplication across that attacker's pair fights.
+        """
+        actions_append = self.actions.append
+        order_append = self.damage_order[attacker_i].append
+        strikes_append = self.auto_strikes_into[defender_i].append
+        heals = packet["heals"]
+        aidx_by_key: dict[tuple[str, float, int], int] | None = {} if heals else None
+        aidx = self.next_aidx
+        for event in packet["events"]:
+            # Packet events are enriched engine-ledger rows: these fields
+            # are written unconditionally, so index them directly.
+            time_value = event["time"]
+            damage_type = event["damage_type"]
+            damage = event["damage"]
+            raw_formula = event.get("raw_formula")
+            raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
+            live_formula = (
+                raw_formula if callable(raw_formula) and raw_damage > 0 else None
+            )
+            grievous = grievous_by_dtype.get(damage_type)
+            actions_append(
+                (
+                    event["_sk"],
+                    (
+                        _KIND_PLAIN_DAMAGE
+                        if live_formula is None and grievous is None
+                        else _KIND_DAMAGE
+                    ),
+                    defender_i,
+                    attacker_i,
+                    -1,
+                    aidx,
+                    damage if damage > 0.0 else 0.0,
+                    _DTYPE_CODES.get(damage_type, 2),
+                    live_formula,
+                    raw_damage,
+                    grievous,
+                    None,
+                    False,
+                    time_value,
+                )
+            )
+            if time_value <= duration:
+                order_append(aidx)
+            if aidx_by_key is not None:
+                aidx_by_key[
+                    (event["source_key"], round(time_value, 9), event["sequence"])
+                ] = aidx
+            if event["source_key"] == "auto_attacks":
+                strikes_append((aidx, time_value, event["sequence"], attacker_i))
+            aidx += 1
+        self.next_aidx = aidx
+        for event in heals:
+            trigger = aidx_by_key.get(_heal_trigger_key(event), -1)
+            if event.get("actor_wide"):
+                if "_trigger_source" in event:
+                    # Cross-pair dedup below keeps whichever value-identical
+                    # copy compiled first; a trigger link would make copies
+                    # pair-dependent, so fail closed instead of guessing.
+                    raise ValueError(
+                        "actor-wide self-heal carries a trigger link; "
+                        "the panel compiler cannot deduplicate it"
+                    )
+                dedup_key = (
+                    str(event.get("source", "")),
+                    float(event.get("time", 0.0)),
+                )
+                if dedup_key in heal_dedup:
+                    continue
+                heal_dedup.add(dedup_key)
+            aidx = self.next_aidx
+            self.next_aidx += 1
+            actions_append(
+                (
+                    event["_sk"],
+                    _KIND_HEAL,
+                    attacker_i,
+                    attacker_i,
+                    trigger,
+                    aidx,
+                    max(0.0, float(event.get("amount", 0.0))),
+                    2,
+                    None,
+                    0.0,
+                    None,
+                    None,
+                    False,
+                    float(event.get("time", 0.0)),
+                )
+            )
+        self.coverage.append(packet["result"].get("timeline_coverage", {}))
+
+    def add_engine_result(
+        self,
+        result: Mapping[str, Any],
+        attacker_id: str,
+        attacker_i: int,
+        defender_id: str,
+        defender_i: int,
+        grievous_by_dtype: Mapping[str, Any],
+        duration: float,
+        heal_dedup: set[tuple[str, float]],
+        id_strings: list[str],
+    ) -> None:
+        """Compile a fresh one-pair fight straight from the engine rows.
+
+        Equivalent to ``_pair_packet`` + :meth:`add_packet` — identical sort
+        keys, trigger linkage, and heal dedup — minus the per-event dict
+        enrichment nothing in score mode ever reads.  The sort-key layout is
+        ``_action_key``'s; both must change together.  ``id_strings`` is the
+        search-lifetime cache of this pair's positional event-id strings.
+        """
+        actions_append = self.actions.append
+        order_append = self.damage_order[attacker_i].append
+        strikes_append = self.auto_strikes_into[defender_i].append
+        source_order = _participant_order(attacker_id)
+        order_a, order_b = source_order
+        known_ids = len(id_strings)
+        aidx = self.next_aidx
+        if result.get("damage_events_tuple"):
+            # The engine's light ledger rows: (sort_key, damage, damage_type,
+            # source_key, raw_formula, raw_damage), guaranteed heal-free by
+            # the pipeline's tuple-ledger predicate, so no trigger linkage
+            # can exist.  Every field below reads the same engine value the
+            # dict path would.
+            for index, row in enumerate(result.get("damage_events", [])):
+                key = row[0]
+                time_value = key[0]
+                source_key = row[3]
+                raw_formula = row[4]
+                raw_damage = row[5]
+                if index < known_ids:
+                    event_id = id_strings[index]
+                else:
+                    event_id = f"{attacker_id}:{defender_id}:{index}"
+                    id_strings.append(event_id)
+                    known_ids += 1
+                live_formula = (
+                    raw_formula if callable(raw_formula) and raw_damage > 0 else None
+                )
+                grievous = grievous_by_dtype.get(row[2])
+                actions_append(
+                    (
+                        (
+                            time_value,
+                            0.0,
+                            key[3],
+                            order_a,
+                            order_b,
+                            defender_id,
+                            event_id,
+                            source_key,
+                        ),
+                        (
+                            _KIND_PLAIN_DAMAGE
+                            if live_formula is None and grievous is None
+                            else _KIND_DAMAGE
+                        ),
+                        defender_i,
+                        attacker_i,
+                        -1,
+                        aidx,
+                        row[1],
+                        _DTYPE_CODES.get(row[2], 2),
+                        live_formula,
+                        raw_damage,
+                        grievous,
+                        None,
+                        False,
+                        time_value,
+                    )
+                )
+                if time_value <= duration:
+                    order_append(aidx)
+                if source_key == "auto_attacks":
+                    strikes_append((aidx, time_value, key[3], attacker_i))
+                aidx += 1
+            self.next_aidx = aidx
+            self.coverage.append(result.get("timeline_coverage", {}))
+            return
+        heals = result.get("self_healing_events", [])
+        # The trigger-linkage index costs a key tuple per damage event, so
+        # a fight with no self-heals (most candidates) never builds it.
+        aidx_by_key: dict[tuple[str, float, int], int] | None = {} if heals else None
+        for index, event in enumerate(result.get("damage_events", [])):
+            if "sequence" not in event:
+                # See _action_key: pair-local event ids stay order-irrelevant
+                # only while every engine event carries its per-fight sequence.
+                raise ValueError(
+                    f"{attacker_id} damage event {event.get('source_key', '')!r} "
+                    "has no sequence; the walk's tie-break order would depend on "
+                    "event-id numbering"
+                )
+            # The engine ledger writes these five fields unconditionally
+            # (damage.add / add_declared_events), so index them directly.
+            time_value = event["time"]
+            sequence = event["sequence"]
+            source_key = event["source_key"]
+            damage_type = event["damage_type"]
+            damage = event["damage"]
+            raw_formula = event.get("raw_formula")
+            raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
+            if index < known_ids:
+                event_id = id_strings[index]
+            else:
+                event_id = f"{attacker_id}:{defender_id}:{index}"
+                id_strings.append(event_id)
+                known_ids += 1
+            live_formula = (
+                raw_formula if callable(raw_formula) and raw_damage > 0 else None
+            )
+            grievous = grievous_by_dtype.get(damage_type)
+            actions_append(
+                (
+                    (
+                        time_value,
+                        0.0,
+                        sequence,
+                        order_a,
+                        order_b,
+                        defender_id,
+                        event_id,
+                        str(event.get("source", source_key)),
+                    ),
+                    (
+                        _KIND_PLAIN_DAMAGE
+                        if live_formula is None and grievous is None
+                        else _KIND_DAMAGE
+                    ),
+                    defender_i,
+                    attacker_i,
+                    -1,
+                    aidx,
+                    damage if damage > 0.0 else 0.0,
+                    _DTYPE_CODES.get(damage_type, 2),
+                    live_formula,
+                    raw_damage,
+                    grievous,
+                    None,
+                    False,
+                    time_value,
+                )
+            )
+            if time_value <= duration:
+                order_append(aidx)
+            if aidx_by_key is not None:
+                aidx_by_key[(source_key, round(time_value, 9), sequence)] = aidx
+            if source_key == "auto_attacks":
+                strikes_append((aidx, time_value, sequence, attacker_i))
+            aidx += 1
+        self.next_aidx = aidx
+        for event in heals:
+            trigger = aidx_by_key.get(_heal_trigger_key(event), -1)
+            if event.get("actor_wide"):
+                if "_trigger_source" in event:
+                    # Same invariant as add_packet's dedup above.
+                    raise ValueError(
+                        "actor-wide self-heal carries a trigger link; "
+                        "the panel compiler cannot deduplicate it"
+                    )
+                dedup_key = (
+                    str(event.get("source", "")),
+                    float(event.get("time", 0.0)),
+                )
+                if dedup_key in heal_dedup:
+                    continue
+                heal_dedup.add(dedup_key)
+            aidx = self.next_aidx
+            self.next_aidx += 1
+            time_value = float(event.get("time", 0.0))
+            actions_append(
+                (
+                    (
+                        time_value,
+                        1.0,
+                        _event_sequence(event),
+                        *source_order,
+                        attacker_id,
+                        "",
+                        str(event.get("source", event.get("source_key", ""))),
+                    ),
+                    _KIND_HEAL,
+                    attacker_i,
+                    attacker_i,
+                    trigger,
+                    aidx,
+                    max(0.0, float(event.get("amount", 0.0))),
+                    2,
+                    None,
+                    0.0,
+                    None,
+                    None,
+                    False,
+                    time_value,
+                )
+            )
+        self.coverage.append(result.get("timeline_coverage", {}))
+
+    def add_support_templates(
+        self,
+        templates: Iterable[Mapping[str, Any]],
+        attacker_i: int,
+        index_of: Mapping[str, int],
+    ) -> None:
+        """Compile one attacker's resolved support packets."""
+        for template in templates:
+            target_id = str(template["target"])
+            subject_i = index_of[target_id]
+            kind = str(template.get("kind", ""))
+            priority = -1.0 if kind == "shield" else 1.0
+            aidx = self.next_aidx
+            self.next_aidx += 1
+            time_value = float(template.get("time", 0.0))
+            self.actions.append(
+                (
+                    _action_key(time_value, priority, target_id, template),
+                    _KIND_SHIELD if kind == "shield" else _KIND_HEAL,
+                    subject_i,
+                    attacker_i,
+                    -1 if template.get("_trigger_event_id") is None else -2,
+                    aidx,
+                    max(0.0, float(template.get("amount", 0.0))),
+                    2,
+                    None,
+                    0.0,
+                    None,
+                    None,
+                    False,
+                    time_value,
+                )
+            )
+            self.support_entries.append((target_id, attacker_i, aidx, kind == "heal"))
+
+    def add_thorns(
+        self,
+        wearer: Combatant,
+        wearer_i: int,
+        strikes: Iterable[tuple[int, float, int, Combatant, str]],
+        profiles: tuple[ThornsEffect, ...],
+        grievous_by_dtype: Mapping[str, Any],
+        duration: float,
+        id_namespace: str,
+    ) -> None:
+        """Compile the wearer's strike-back events for a run of strikes.
+
+        ``strikes`` carries ``(strike_aidx, time, sequence, striker,
+        striker_i)`` in the legacy incoming-list order.  The synthetic
+        event-id string participates only in the sort key, where every pair
+        of distinct thorns events already differs at the sequence or
+        participant component, so panel and fresh namespaces may number
+        independently without affecting order.
+        """
+        actions = self.actions
+        order = self.thorns_order[wearer_i]
+        wearer_order = _participant_order(wearer.participant_id)
+        return_damage: dict[tuple[str, int], float] = {}
+        for index, (
+            strike_aidx,
+            strike_time,
+            strike_sequence,
+            striker,
+            striker_i,
+        ) in enumerate(strikes):
+            for profile in profiles:
+                damage_key = (profile.item_name, striker_i)
+                damage = return_damage.get(damage_key)
+                if damage is None:
+                    damage = _thorns_return_damage(profile, wearer, striker)
+                    return_damage[damage_key] = damage
+                aidx = self.next_aidx
+                self.next_aidx += 1
+                sort_key = (
+                    strike_time,
+                    0.5,
+                    strike_sequence,
+                    *wearer_order,
+                    striker.participant_id,
+                    (
+                        f"{wearer.participant_id}:{striker.participant_id}"
+                        f":thorns:{profile.item_name}:{id_namespace}{index}"
+                    ),
+                    f"{profile.item_name} (Thorns)",
+                )
+                actions.append(
+                    (
+                        sort_key,
+                        _KIND_DAMAGE,
+                        striker_i,
+                        wearer_i,
+                        strike_aidx,
+                        aidx,
+                        max(0.0, damage),
+                        _DTYPE_CODES.get(profile.damage_type, 2),
+                        None,
+                        0.0,
+                        grievous_by_dtype.get(profile.damage_type),
+                        (
+                            (profile.grievous_duration, f"{profile.item_name} · Thorns")
+                            if profile.grievous_duration > 0
+                            else None
+                        ),
+                        True,
+                        strike_time,
+                    )
+                )
+                if strike_time <= duration:
+                    order.append(aidx)
+
+
+class CoupledSearchContext:
+    """Reusable composition state for one coupled optimizer search.
+
+    Everything here is derived from the fixed request — the roster, the
+    fight params, and per-defensive-signature panels of compiled invariant
+    walk actions — so it must only ever be shared across evaluations of one
+    ``optimize_build`` call.  It is pure speed: force-disabling it must
+    reproduce identical results (pinned by the optimizer equivalence test).
+    """
+
+    __slots__ = (
+        "panels",
+        "roster_actors",
+        "actor_params",
+        "main_request",
+        "index_of",
+        "grievous_packs",
+        "thorns_profiles",
+        "main_pair_params",
+        "roster_pair_params",
+        "pair_id_strings",
+        "base_compiler",
+        "base_sorted",
+        "base_heal_dedup",
+        "validated_roster_window",
+    )
+
+    def __init__(self) -> None:
+        self.panels: dict[tuple[Any, ...], "_SignaturePanel"] = {}
+        self.roster_actors: list[Combatant] | None = None
+        self.actor_params: dict[str, FightParams] = {}
+        self.main_request: Any = None
+        self.index_of: dict[str, int] = {}
+        self.grievous_packs: dict[int, dict[str, Any]] = {}
+        self.thorns_profiles: dict[int, tuple[ThornsEffect, ...]] = {}
+        self.main_pair_params: list[tuple[Combatant, FightParams]] = []
+        self.roster_pair_params: dict[tuple[str, str], FightParams] = {}
+        self.pair_id_strings: dict[str, list[str]] = defaultdict(list)
+        self.base_compiler: _WalkCompiler | None = None
+        self.base_sorted: list[tuple[Any, ...]] = []
+        self.base_heal_dedup: dict[int, set[tuple[str, float]]] = {}
+        self.validated_roster_window = False
+
+
+class _SignaturePanel:
+    """The invariant walk actions for one main defensive signature.
+
+    ``sig`` holds only the fights into this signature (enemies into the
+    candidate main); everything signature-independent lives in the search
+    context's base compiler.  ``sorted_actions`` is the presorted merge of
+    both.
+    """
+
+    __slots__ = ("sig", "n_actions", "sorted_actions")
+
+    def __init__(self, base_sorted: list[tuple[Any, ...]], sig: _WalkCompiler) -> None:
+        self.sig = sig
+        self.n_actions = sig.next_aidx
+        merged = base_sorted + sorted(sig.actions, key=itemgetter(0))
+        merged.sort(key=itemgetter(0))
+        self.sorted_actions = merged
+
+
+def _grievous_packs_for(
+    context: CoupledSearchContext, actor_i: int, profiles: tuple[Any, ...]
+) -> dict[str, Any]:
+    """Per-damage-type Grievous packs for one attacker's fixed profiles."""
+    packs = context.grievous_packs.get(actor_i)
+    if packs is None:
+        packs = {
+            damage_type: _grievous_pack(profiles, damage_type)
+            for damage_type in ("physical", "magic", "true")
+        }
+        context.grievous_packs[actor_i] = packs
+    return packs
+
+
+def _compiled_survival_walk(
+    actions: list[tuple[Any, ...]],
+    n_actions: int,
+    max_healths: list[float],
+    shield_triples: list[tuple[float, float, float]],
+    duration: float,
+) -> tuple[list[dict[str, Any]], list[float]]:
+    """Run the flat-action survival walk.
+
+    Arithmetic, operation order, and rounding mirror ``_simulate_survival``
+    line for line; the only difference is representation — parallel arrays
+    and one write-once ``applied`` array instead of mutated event dicts.
+    """
+    count = len(max_healths)
+    health = list(max_healths)
+    sh_physical = [triple[0] for triple in shield_triples]
+    sh_magic = [triple[1] for triple in shield_triples]
+    sh_general = [triple[2] for triple in shield_triples]
+    damage_taken = [0.0] * count
+    overkill = [0.0] * count
+    health_damage = [0.0] * count
+    shield_absorbed = [0.0] * count
+    healing_received = [0.0] * count
+    healing_reduced = [0.0] * count
+    support_shield_received = [0.0] * count
+    hr_until = [0.0] * count
+    hr_factor = [1.0] * count
+    hr_sources: list[set[str]] = [set() for _ in range(count)]
+    death: list[float | None] = [None] * count
+
+    applied = [0.0] * n_actions
+    status = bytearray(n_actions)
+
+    # Hot loop: actions are read by index (see _WalkCompiler's tuple
+    # layout) so the common skip paths never unpack the full row.  Plain
+    # damage — no trigger, no repricing, no Grievous, no wound — is most
+    # of the stream and takes the first branch without reading any of the
+    # four fields it cannot carry.
+    for action in actions:
+        kind = action[1]
+        if kind == _KIND_PLAIN_DAMAGE:
+            subject_i = action[2]
+            if death[subject_i] is not None:
+                continue
+            attacker_i = action[3]
+            if death[attacker_i] is not None:
+                continue
+            aidx = action[5]
+            status[aidx] = 1
+            amount = action[6]
+            damage_taken[subject_i] += amount
+            event_absorbed = 0.0
+            dtype = action[7]
+            if dtype == 1:
+                absorbed = min(sh_magic[subject_i], amount)
+                sh_magic[subject_i] -= absorbed
+                amount -= absorbed
+                shield_absorbed[subject_i] += absorbed
+                event_absorbed += absorbed
+            elif dtype == 0:
+                absorbed = min(sh_physical[subject_i], amount)
+                sh_physical[subject_i] -= absorbed
+                amount -= absorbed
+                shield_absorbed[subject_i] += absorbed
+                event_absorbed += absorbed
+            general_absorbed = min(sh_general[subject_i], amount)
+            sh_general[subject_i] -= general_absorbed
+            amount -= general_absorbed
+            shield_absorbed[subject_i] += general_absorbed
+            event_absorbed += general_absorbed
+            applied_to_health = min(amount, health[subject_i])
+            overkill[subject_i] += max(0.0, amount - applied_to_health)
+            health[subject_i] = max(0.0, health[subject_i] - applied_to_health)
+            health_damage[subject_i] += applied_to_health
+            applied[aidx] = round(event_absorbed + applied_to_health, 6)
+            if health[subject_i] <= 0.0 and death[subject_i] is None:
+                death[subject_i] = min(float(duration), action[13])
+            continue
+        trigger = action[4]
+        if trigger != -1 and (trigger < 0 or not status[trigger]):
+            continue
+        subject_i = action[2]
+        if death[subject_i] is not None:
+            continue
+        attacker_i = action[3]
+        if attacker_i >= 0 and death[attacker_i] is not None and not action[12]:
+            continue
+        amount = action[6]
+        if kind == _KIND_SHIELD:
+            sh_general[subject_i] += amount
+            support_shield_received[subject_i] += amount
+            applied[action[5]] = round(amount, 6)
+            continue
+        if kind == _KIND_HEAL:
+            time_value = action[13]
+            factor = 1.0 if time_value >= hr_until[subject_i] else hr_factor[subject_i]
+            reduced = amount * factor
+            healing_reduced[subject_i] += max(0.0, amount - reduced)
+            received = min(
+                reduced, max(0.0, max_healths[subject_i] - health[subject_i])
+            )
+            health[subject_i] += received
+            healing_received[subject_i] += received
+            applied[action[5]] = round(received, 6)
+            continue
+
+        aidx = action[5]
+        time_value = action[13]
+        status[aidx] = 1
+        raw_formula = action[8]
+        if raw_formula is not None:
+            subject_max = max_healths[subject_i]
+            if subject_max > 0:
+                missing_ratio = max(
+                    0.0, min(1.0, 1.0 - health[subject_i] / subject_max)
+                )
+                raw_damage = action[9]
+                try:
+                    live_raw = max(0.0, float(raw_formula(missing_ratio)))
+                except (TypeError, ValueError):
+                    live_raw = raw_damage
+                amount *= live_raw / raw_damage
+        damage_taken[subject_i] += amount
+        event_absorbed = 0.0
+        dtype = action[7]
+        if dtype == 1:
+            absorbed = min(sh_magic[subject_i], amount)
+            sh_magic[subject_i] -= absorbed
+            amount -= absorbed
+            shield_absorbed[subject_i] += absorbed
+            event_absorbed += absorbed
+        elif dtype == 0:
+            absorbed = min(sh_physical[subject_i], amount)
+            sh_physical[subject_i] -= absorbed
+            amount -= absorbed
+            shield_absorbed[subject_i] += absorbed
+            event_absorbed += absorbed
+        general_absorbed = min(sh_general[subject_i], amount)
+        sh_general[subject_i] -= general_absorbed
+        amount -= general_absorbed
+        shield_absorbed[subject_i] += general_absorbed
+        event_absorbed += general_absorbed
+        applied_to_health = min(amount, health[subject_i])
+        event_overkill = max(0.0, amount - applied_to_health)
+        health[subject_i] = max(0.0, health[subject_i] - applied_to_health)
+        health_damage[subject_i] += applied_to_health
+        overkill[subject_i] += event_overkill
+        event_damage = round(event_absorbed + applied_to_health, 6)
+        applied[aidx] = event_damage
+        grievous = action[10]
+        if grievous is not None and event_damage > 0:
+            strongest_factor, strongest_duration, labels = grievous
+            hr_until[subject_i] = max(
+                hr_until[subject_i], time_value + strongest_duration
+            )
+            hr_factor[subject_i] = min(hr_factor[subject_i], strongest_factor)
+            hr_sources[subject_i].update(labels)
+        wound = action[11]
+        if wound is not None:
+            wound_duration, wound_label = wound
+            hr_until[subject_i] = max(hr_until[subject_i], time_value + wound_duration)
+            hr_factor[subject_i] = min(hr_factor[subject_i], GRIEVOUS_WOUNDS_FACTOR)
+            hr_sources[subject_i].add(wound_label)
+        if health[subject_i] <= 0.0 and death[subject_i] is None:
+            death[subject_i] = min(float(duration), time_value)
+
+    survival_rows = []
+    for index in range(count):
+        triple = shield_triples[index]
+        starting_shield = triple[0] + triple[1] + triple[2]
+        remaining_shields = sh_physical[index] + sh_magic[index] + sh_general[index]
+        survival_rows.append(
+            {
+                "max_health": round(max_healths[index], 1),
+                "ending_health": round(health[index], 1),
+                "damage_taken": round(damage_taken[index], 1),
+                "overkill": round(overkill[index], 1),
+                "health_damage": round(health_damage[index], 1),
+                "shield_absorbed": round(shield_absorbed[index], 1),
+                "healing_received": round(healing_received[index], 1),
+                "healing_reduced": round(healing_reduced[index], 1),
+                "support_shield_received": round(support_shield_received[index], 1),
+                "effective_health": round(
+                    max_healths[index]
+                    + starting_shield
+                    + support_shield_received[index]
+                    + healing_received[index],
+                    1,
+                ),
+                "remaining_shield": round(remaining_shields, 1),
+                "starting_shield": round(starting_shield, 1),
+                "healing_reduction_until": round(hr_until[index], 3),
+                "healing_reduction_sources": sorted(hr_sources[index]),
+                "survived_window": death[index] is None,
+                "death_time": (
+                    round(death[index], 3) if death[index] is not None else None
+                ),
+            }
+        )
+    return survival_rows, applied
+
+
+def _context_setup(
+    context: CoupledSearchContext,
+    params: FightParams,
+    enemies: list[ResolvedLoadout],
+    allies: list[ResolvedLoadout],
+    champion_name: str,
+    level: int,
+    pair_result_cache: dict[tuple[Any, ...], dict[str, Any]],
+    all_actors_by_index: list[Combatant],
+) -> None:
+    """Derive the search-invariant roster state on the context's first use.
+
+    Everything prebuilt here is per-pair, not per-candidate: actor and
+    target fight params (with ``enforce_resource_limits`` pre-set so the
+    engine's own forcing replace becomes a no-op), their one-time
+    ``validate_for_champion`` runs, thorns profiles, and Grievous packs.
+    """
+    if context.roster_actors is not None:
+        return
+    if not context.validated_roster_window:
+        require_roster_fight_window_support(params, enemies=enemies, allies=allies)
+        context.validated_roster_window = True
+    ally_actors = [
+        _from_loadout(f"ally:{loadout.champion_data['name']}", "ally", loadout)
+        for loadout in allies
+    ]
+    enemy_actors = [
+        _from_loadout(f"enemy:{loadout.champion_data['name']}", "enemy", loadout)
+        for loadout in enemies
+    ]
+    context.roster_actors = [*ally_actors, *enemy_actors]
+    context.index_of = {"main": 0}
+    for offset, actor in enumerate(context.roster_actors, start=1):
+        context.index_of[actor.participant_id] = offset
+        context.actor_params[actor.participant_id] = _actor_params(params, actor)
+        context.thorns_profiles[offset] = thorns_effects(list(actor.items))
+        _grievous_packs_for(context, offset, healing_reduction_profiles(actor.items))
+    context.main_request = type(
+        "MainRequest",
+        (),
+        {
+            "role": params.role,
+            "role_quest_complete": params.role_quest_complete,
+            "ability_ranks": params.ability_ranks,
+            "champion_options": params.champion_options,
+        },
+    )()
+    main_params = _actor_params(
+        params,
+        Combatant(
+            participant_id="main",
+            team="main",
+            champion_data={},
+            level=0,
+            items=(),
+            stats={},
+            defenses=None,
+            request=context.main_request,
+        ),
+    )
+    context.actor_params["main"] = main_params
+    for defender in enemy_actors:
+        pair_params = replace(
+            main_params,
+            enforce_resource_limits=True,
+            **_target_overrides(defender),
+        )
+        pair_params.validate_for_champion(champion_name, level)
+        context.main_pair_params.append((defender, pair_params))
+    for attacker in context.roster_actors:
+        attacker_params = context.actor_params[attacker.participant_id]
+        attacker_params.validate_for_champion(
+            str(attacker.champion_data.get("name", "")), attacker.level
+        )
+        defenders = enemy_actors if attacker.team == "ally" else ally_actors
+        for defender in defenders:
+            context.roster_pair_params[
+                (attacker.participant_id, defender.participant_id)
+            ] = replace(
+                attacker_params,
+                enforce_resource_limits=True,
+                **_target_overrides(defender),
+            )
+
+    # The signature-independent pair fights — allies into enemies, enemies
+    # into allies — compile once for the whole search.  Enemy attackers'
+    # support packets and their fights into the candidate main are
+    # signature-dependent and live in each signature's sig compiler.
+    base = _WalkCompiler(0)
+    context.base_heal_dedup = {
+        context.index_of[actor.participant_id]: set() for actor in context.roster_actors
+    }
+    support_attached: set[str] = set()
+    base_pairs = [
+        (attacker, defender) for attacker in ally_actors for defender in enemy_actors
+    ] + [(attacker, defender) for attacker in enemy_actors for defender in ally_actors]
+    for attacker, defender in base_pairs:
+        cache_key = (attacker.participant_id, defender.participant_id)
+        packet = pair_result_cache.get(cache_key)
+        if packet is None:
+            packet = _pair_packet(
+                run_fight(
+                    attacker.champion_data,
+                    attacker.level,
+                    list(attacker.items),
+                    context.roster_pair_params[cache_key],
+                    validated=True,
+                ),
+                attacker.participant_id,
+                defender.participant_id,
+            )
+            pair_result_cache[cache_key] = packet
+        attacker_i = context.index_of[attacker.participant_id]
+        base.add_packet(
+            packet,
+            attacker_i,
+            context.index_of[defender.participant_id],
+            context.grievous_packs[attacker_i],
+            params.fight_duration_seconds,
+            context.base_heal_dedup[attacker_i],
+        )
+        if attacker.team == "ally" and attacker.participant_id not in support_attached:
+            support_templates = packet.get("support")
+            if support_templates is None:
+                support_templates = _support_effect_templates(
+                    attacker, packet["result"], all_actors_by_index
+                )
+                packet["support"] = support_templates
+            base.add_support_templates(support_templates, attacker_i, context.index_of)
+            support_attached.add(attacker.participant_id)
+    for actor in context.roster_actors:
+        wearer_i = context.index_of[actor.participant_id]
+        profiles = context.thorns_profiles[wearer_i]
+        if not profiles:
+            continue
+        strikes = [
+            (aidx, time_value, sequence, all_actors_by_index[striker_i], striker_i)
+            for aidx, time_value, sequence, striker_i in (
+                base.auto_strikes_into.get(wearer_i, ())
+            )
+        ]
+        if strikes:
+            base.add_thorns(
+                actor,
+                wearer_i,
+                strikes,
+                profiles,
+                context.grievous_packs[wearer_i],
+                params.fight_duration_seconds,
+                "base",
+            )
+    context.base_compiler = base
+    context.base_sorted = sorted(base.actions, key=itemgetter(0))
+
+
+def _build_signature_panel(
+    context: CoupledSearchContext,
+    main: Combatant,
+    params: FightParams,
+    pair_result_cache: dict[tuple[Any, ...], dict[str, Any]],
+    signature: tuple[Any, ...],
+    all_actors: list[Combatant],
+) -> "_SignaturePanel":
+    """Compile every roster pair fight for one main defensive signature.
+
+    Pair packets come from (or land in) the shared ``pair_result_cache``
+    with the same keys the legacy path uses, so both paths interoperate.
+    Compilation order mirrors the legacy attack-group order with the main
+    attacker's fresh pairs skipped: allies into enemies, then enemies into
+    the main and allies.
+    """
+    duration = params.fight_duration_seconds
+    base = context.base_compiler
+    assert base is not None, "context setup must precede panel builds"
+    sig = _WalkCompiler(base.next_aidx)
+    roster = context.roster_actors or []
+    enemy_actors = [actor for actor in roster if actor.team == "enemy"]
+    for attacker in enemy_actors:
+        cache_key = (attacker.participant_id, "main", signature)
+        packet = pair_result_cache.get(cache_key)
+        if packet is None:
+            packet = _pair_packet(
+                run_fight(
+                    attacker.champion_data,
+                    attacker.level,
+                    list(attacker.items),
+                    replace(
+                        context.actor_params[attacker.participant_id],
+                        enforce_resource_limits=True,
+                        **_target_overrides(main),
+                    ),
+                    validated=True,
+                ),
+                attacker.participant_id,
+                "main",
+            )
+            pair_result_cache[cache_key] = packet
+        attacker_i = context.index_of[attacker.participant_id]
+        # Actor-wide heals must dedup across this attacker's base pairs
+        # too, but a sig build may never grow the shared base sets: a key
+        # recorded by one signature would silently drop another
+        # signature's only copy of that heal.
+        sig.add_packet(
+            packet,
+            attacker_i,
+            0,
+            context.grievous_packs[attacker_i],
+            duration,
+            set(context.base_heal_dedup.get(attacker_i, ())),
+        )
+        support_templates = packet.get("support")
+        if support_templates is None:
+            support_templates = _support_effect_templates(
+                attacker, packet["result"], all_actors
+            )
+            packet["support"] = support_templates
+        sig.add_support_templates(support_templates, attacker_i, context.index_of)
+    return _SignaturePanel(context.base_sorted, sig)
+
+
+def _score_with_search_context(
+    champion_data: dict[str, Any],
+    level: int,
+    items: list[dict[str, Any]],
+    params: FightParams,
+    *,
+    main_stats: dict[str, float],
+    main_defenses: Any,
+    enemies: list[ResolvedLoadout],
+    allies: list[ResolvedLoadout],
+    pair_result_cache: dict[tuple[Any, ...], dict[str, Any]],
+    context: CoupledSearchContext,
+    reuse_main_stats: bool,
+) -> dict[str, Any]:
+    """Score one candidate through the compiled panel walk.
+
+    Returns the exact score-only receipt ``build_participant_timeline``
+    would produce — same fields, same rounding, same float-addition order —
+    while compiling only the main champion's fresh outgoing fights.
+    """
+    if context.roster_actors is None:
+        setup_allies = [
+            _from_loadout(f"ally:{loadout.champion_data['name']}", "ally", loadout)
+            for loadout in allies
+        ]
+        setup_enemies = [
+            _from_loadout(f"enemy:{loadout.champion_data['name']}", "enemy", loadout)
+            for loadout in enemies
+        ]
+        placeholder = Combatant(
+            participant_id="main",
+            team="main",
+            champion_data=champion_data,
+            level=level,
+            items=tuple(items),
+            stats=main_stats,
+            defenses=main_defenses,
+            request=None,
+        )
+        _context_setup(
+            context,
+            params,
+            enemies,
+            allies,
+            str(champion_data.get("name", "")),
+            level,
+            pair_result_cache,
+            [placeholder, *setup_allies, *setup_enemies],
+        )
+    duration = params.fight_duration_seconds
+    main = Combatant(
+        participant_id="main",
+        team="main",
+        champion_data=champion_data,
+        level=level,
+        items=tuple(items),
+        stats=main_stats,
+        defenses=main_defenses,
+        request=context.main_request,
+    )
+    roster = context.roster_actors or []
+    all_actors = [main, *roster]
+    signature = _defensive_signature(main)
+    panel = context.panels.get(signature)
+    if panel is None:
+        panel = _build_signature_panel(
+            context, main, params, pair_result_cache, signature, all_actors
+        )
+        context.panels[signature] = panel
+
+    fresh = _WalkCompiler(panel.n_actions)
+    main_profiles = healing_reduction_profiles(main.items)
+    main_packs = {
+        damage_type: _grievous_pack(main_profiles, damage_type)
+        for damage_type in ("physical", "magic", "true")
+    }
+    reusable_stats = main.stats if reuse_main_stats else None
+    heal_dedup: set[tuple[str, float]] = set()
+    first_result = None
+    enemy_actors = [actor for actor in roster if actor.team == "enemy"]
+    for defender, pair_params in context.main_pair_params:
+        result = run_fight(
+            main.champion_data,
+            main.level,
+            list(main.items),
+            pair_params,
+            precomputed_stats=reusable_stats,
+            validated=True,
+            score_only=True,
+        )
+        if first_result is None:
+            first_result = result
+        fresh.add_engine_result(
+            result,
+            "main",
+            0,
+            defender.participant_id,
+            context.index_of[defender.participant_id],
+            main_packs,
+            duration,
+            heal_dedup,
+            context.pair_id_strings[defender.participant_id],
+        )
+    if first_result is not None:
+        fresh.add_support_templates(
+            _support_effect_templates(main, first_result, all_actors),
+            0,
+            context.index_of,
+        )
+    # Thorns from this candidate's fresh strikes (enemy wearers), then the
+    # candidate's own thorns items struck by the invariant roster autos.
+    for defender in enemy_actors:
+        wearer_i = context.index_of[defender.participant_id]
+        profiles = context.thorns_profiles[wearer_i]
+        if not profiles:
+            continue
+        strikes = [
+            (aidx, time_value, sequence, main, 0)
+            for aidx, time_value, sequence, _striker_i in (
+                fresh.auto_strikes_into.get(wearer_i, ())
+            )
+        ]
+        if strikes:
+            fresh.add_thorns(
+                defender,
+                wearer_i,
+                strikes,
+                profiles,
+                context.grievous_packs[wearer_i],
+                duration,
+                "fresh",
+            )
+    main_thorns = thorns_effects(list(main.items))
+    if main_thorns:
+        strikes = [
+            (aidx, time_value, sequence, all_actors[striker_i], striker_i)
+            for aidx, time_value, sequence, striker_i in (
+                panel.sig.auto_strikes_into.get(0, ())
+            )
+        ]
+        if strikes:
+            fresh.add_thorns(
+                main, 0, strikes, main_thorns, main_packs, duration, "fresh"
+            )
+
+    actions = panel.sorted_actions + sorted(fresh.actions, key=itemgetter(0))
+    actions.sort(key=itemgetter(0))
+    max_healths = [
+        max(0.0, float(actor.stats.get("health", 0.0))) for actor in all_actors
+    ]
+    shield_triples = []
+    for actor in all_actors:
+        defenses = _participant_defenses(actor.defenses)
+        shield_triples.append(
+            (
+                defenses["physical_shield"],
+                defenses["magic_shield"],
+                defenses["general_shield"],
+            )
+        )
+    survival_rows, applied = _compiled_survival_walk(
+        actions, fresh.next_aidx, max_healths, shield_triples, duration
+    )
+
+    count = len(all_actors)
+    base = context.base_compiler
+    support_value = [0.0] * count
+    healing_output = [0.0] * count
+    # Legacy attach order — main (fresh), allies (base), enemies (sig) —
+    # decides both target-key insertion and per-target list order.
+    by_target: dict[str, list[tuple[int, int, bool]]] = {}
+    for target_id, attacker_i, aidx, is_heal in fresh.support_entries:
+        by_target.setdefault(target_id, []).append((attacker_i, aidx, is_heal))
+    for target_id, attacker_i, aidx, is_heal in base.support_entries:
+        by_target.setdefault(target_id, []).append((attacker_i, aidx, is_heal))
+    for target_id, attacker_i, aidx, is_heal in panel.sig.support_entries:
+        by_target.setdefault(target_id, []).append((attacker_i, aidx, is_heal))
+    for entries in by_target.values():
+        for attacker_i, aidx, is_heal in entries:
+            amount = applied[aidx]
+            support_value[attacker_i] += amount
+            if is_heal:
+                healing_output[attacker_i] += amount
+
+    public_breakdown = []
+    sig_damage_order = panel.sig.damage_order
+    base_damage_order = base.damage_order
+    fresh_damage_order = fresh.damage_order
+    fresh_thorns_order = fresh.thorns_order
+    base_thorns_order = base.thorns_order
+    for index, actor in enumerate(all_actors):
+        # Per-attacker float-sum order replays the legacy outgoing list:
+        # pair fights in defender order (enemies hit the main first, then
+        # allies), then thorns in strike order (fresh strikes precede the
+        # roster's).  One running total over the ordered parts keeps the
+        # exact same addition sequence without building a concat list.
+        running = 0.0
+        for order in (
+            sig_damage_order.get(index),
+            base_damage_order.get(index),
+            fresh_damage_order.get(index),
+            fresh_thorns_order.get(index),
+            base_thorns_order.get(index),
+        ):
+            if order:
+                for aidx in order:
+                    running += applied[aidx]
+        total = round(running, 1)
+        actor_survival = survival_rows[index]
+        public_breakdown.append(
+            {
+                "participant_id": actor.participant_id,
+                "team": actor.team,
+                "champion": actor.champion_data.get("name", ""),
+                "total_damage": round(float(total), 1),
+                "sources": [],
+                "outgoing_damage_before_death": round(float(total), 1),
+                "incoming_damage": round(
+                    float(actor_survival.get("health_damage", 0.0))
+                    + float(actor_survival.get("shield_absorbed", 0.0)),
+                    1,
+                ),
+                "health_damage": actor_survival.get("health_damage", 0.0),
+                "shield_absorbed": actor_survival.get("shield_absorbed", 0.0),
+                "effective_health": actor_survival.get("effective_health", 0.0),
+                "healing_received": actor_survival.get("healing_received", 0.0),
+                "healing_reduced": actor_survival.get("healing_reduced", 0.0),
+                "support_shield_received": actor_survival.get(
+                    "support_shield_received", 0.0
+                ),
+                "support_value": round(support_value[index], 1),
+                "healing_output": round(healing_output[index], 1),
+                "survived_window": bool(actor_survival.get("survived_window")),
+                "death_time": actor_survival.get("death_time"),
+            }
+        )
+    coverage_reports = fresh.coverage + base.coverage + panel.sig.coverage
+    return {
+        "duration": float(duration),
+        "participants": [
+            {
+                "participant_id": actor.participant_id,
+                "team": actor.team,
+                "champion": actor.champion_data.get("name", ""),
+                "level": actor.level,
+                "survival": survival_rows[index],
+            }
+            for index, actor in enumerate(all_actors)
+        ],
+        "breakdown": public_breakdown,
+        "timeline_coverage": combine_timeline_coverages(
+            coverage_reports,
+            target_count=len(coverage_reports),
+        ),
+    }
+
+
 def build_participant_timeline(
     champion_data: dict[str, Any],
     level: int,
@@ -822,6 +2092,7 @@ def build_participant_timeline(
     pair_result_cache: dict[tuple[Any, ...], dict[str, Any]] | None = None,
     include_receipt: bool = True,
     reuse_main_stats: bool = False,
+    search_context: CoupledSearchContext | None = None,
 ) -> dict[str, Any]:
     """Compose all selected actors and return the coupled combat receipt.
 
@@ -841,7 +2112,32 @@ def build_participant_timeline(
     those fights skip one identical stat calculation per enemy.  Leave it
     False when the main stats came from a loadout whose role or options can
     differ from ``params`` (the roster BIS path).
+
+    ``search_context`` opts scoring into the compiled panel walk: the
+    optimizer creates one :class:`CoupledSearchContext` per search (fixed
+    params and roster) and every score-mode evaluation then replays the
+    presorted invariant actions instead of re-enriching them.  Identical
+    numbers by construction and by test; ignored outside score mode.
     """
+    if (
+        search_context is not None
+        and not include_receipt
+        and pair_result_cache is not None
+        and enemies
+    ):
+        return _score_with_search_context(
+            champion_data,
+            level,
+            items,
+            params,
+            main_stats=main_stats,
+            main_defenses=main_defenses,
+            enemies=enemies,
+            allies=allies,
+            pair_result_cache=pair_result_cache,
+            context=search_context,
+            reuse_main_stats=reuse_main_stats,
+        )
     require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
         champion_data,

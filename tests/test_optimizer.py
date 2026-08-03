@@ -943,6 +943,7 @@ def test_coupled_optimizer_caches_do_not_change_results(monkeypatch):
 
     def no_cache_timeline(*args, **kwargs):
         kwargs["pair_result_cache"] = None
+        kwargs["search_context"] = None
         return real_timeline(*args, **kwargs)
 
     monkeypatch.setattr(optimizer, "build_participant_timeline", no_cache_timeline)

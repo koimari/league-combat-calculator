@@ -27,7 +27,7 @@ from .loadout_rules import (
 )
 from .pipeline import FightParams, run_fight
 from .defensive_effects import resolve_starting_defenses
-from .participant_timeline import build_participant_timeline
+from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .stats import calculate_total_stats
 from .timeline_coverage import combine_timeline_coverages
 
@@ -232,6 +232,7 @@ def _evaluate_build_uncached(
                 enemies=list(combat_context.get("enemies", [])),
                 allies=list(combat_context.get("allies", [])),
                 pair_result_cache=combat_context.get("pair_result_cache"),
+                search_context=combat_context.get("search_context"),
                 # Typed objectives score from the serialized events list
                 # below, so they need the full receipt; total damage scores
                 # from the breakdown row and can take the scoring subset.
@@ -717,6 +718,7 @@ def optimize_build(
     if eval_kwargs["combat_context"] is not None:
         eval_kwargs["combat_context"]["pair_result_cache"] = {}
         eval_kwargs["combat_context"]["score_memo"] = {}
+        eval_kwargs["combat_context"]["search_context"] = CoupledSearchContext()
     coupled_objective = bool(enemy_loadouts or ally_loadouts)
 
     # Build item pools.  Keep the complete legal lists for the public coverage

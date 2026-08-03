@@ -929,3 +929,136 @@ def test_score_only_receipt_matches_full_receipt_numbers():
     }
     for participant in score_only["participants"]:
         assert participant["survival"] == full_survival[participant["participant_id"]]
+
+
+def test_search_context_score_walk_matches_legacy_score_receipts():
+    """The compiled search-context walk is pure speed, never a number.
+
+    Scoring through a CoupledSearchContext (per-signature compiled panel of
+    invariant walk actions, no-copy flat walk) must deep-equal the legacy
+    score-only composition for every candidate: signature repeats reuse the
+    panel, a health item forces a new signature, and an exact build repeat
+    replays both paths again.
+    """
+    from src.calculator.participant_timeline import CoupledSearchContext
+
+    timeline = _coupled_fixture()
+    cache: dict = {}
+    context = CoupledSearchContext()
+    builds = [
+        [get_item_by_name("Rabadon's Deathcap")],
+        [get_item_by_name("Void Staff")],
+        [get_item_by_name("Rylai's Crystal Scepter")],
+        [get_item_by_name("Rabadon's Deathcap")],
+    ]
+    for items in builds:
+        fast = timeline(
+            items,
+            pair_result_cache=cache,
+            search_context=context,
+            include_receipt=False,
+        )
+        legacy = timeline(items, include_receipt=False)
+        assert fast == legacy
+    assert len(context.panels) == 2, "expected one shared and one new signature"
+
+
+def test_healing_rule_champions_matches_the_dispatch_source():
+    """The scoring fast path skips heal derivation via HEALING_RULE_CHAMPIONS.
+
+    A heal rule added to ``derive_self_healing``'s name dispatch without
+    extending that set would be silently skipped in scoring, so the set is
+    pinned to the dispatch branches actually present in the source.
+    """
+    import inspect
+    import re as re_module
+
+    from src.calculator import healing
+
+    source = inspect.getsource(healing.derive_self_healing)
+    dispatched = set(re_module.findall(r'name == "([^"]+)"', source))
+    assert dispatched == set(healing.HEALING_RULE_CHAMPIONS)
+
+
+def test_search_context_walk_matches_receipts_with_thorns_support_and_heals():
+    """The compiled walk must survive every coupled mechanic at once.
+
+    A timed fight with auto attacks exercises the paths the one-rotation
+    fixture cannot: Bramble thorns strike-backs and their Grievous window on
+    the main attacker, sourced enemy self-healing, an opt-in Lulu ally
+    shield, target-current-health repricing (Dr. Mundo's own kit), and
+    death cutoffs.  Fast and legacy score receipts must be deep-equal.
+    """
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.participant_timeline import CoupledSearchContext
+    from src.calculator.scenario import ChampionLoadout
+    from src.calculator.stats import calculate_total_stats
+
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 0.8,
+            "role": "top",
+        },
+        deterministic=True,
+    )
+    champion = get_champion("Dr. Mundo")
+    enemies = [
+        ChampionLoadout(
+            champion="Alistar",
+            level=13,
+            role="support",
+            boots="Plated Steelcaps",
+            items=("Bramble Vest",),
+        ).resolve(),
+        ChampionLoadout(
+            champion="Aatrox",
+            level=13,
+            role="top",
+            boots="Mercury's Treads",
+            items=("Spirit Visage",),
+        ).resolve(),
+    ]
+    allies = [
+        ChampionLoadout(
+            champion="Lulu",
+            level=13,
+            role="support",
+            items=("Dead Man's Plate",),
+            ally_effects_enabled=True,
+        ).resolve(),
+    ]
+
+    def timeline(items, **kwargs):
+        stats = calculate_total_stats(champion, 13, items, role="top")
+        defenses = resolve_starting_defenses(champion["name"], 13, stats, items)
+        return build_participant_timeline(
+            champion,
+            13,
+            items,
+            params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=enemies,
+            allies=allies,
+            reuse_main_stats=True,
+            **kwargs,
+        )
+
+    cache: dict = {}
+    context = CoupledSearchContext()
+    builds = [
+        [get_item_by_name("Oblivion Orb")],
+        [get_item_by_name("Warmog's Armor")],
+    ]
+    for items in builds:
+        fast = timeline(
+            items,
+            pair_result_cache=cache,
+            search_context=context,
+            include_receipt=False,
+        )
+        legacy = timeline(items, include_receipt=False)
+        assert fast == legacy
