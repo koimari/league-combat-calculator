@@ -1669,15 +1669,10 @@ class TestOnHitSwingEvents:
         )
         assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
 
-    def test_ability_hit_counted_on_hits_stay_coarse(
+    def test_ability_hit_counted_on_hits_use_cast_and_swing_timestamps(
         self, fight, attacker_stats
     ) -> None:
-        """Shared auto+ability stack counters have untimestamped hits.
-
-        Ability-carried applications carry no authored timestamps yet,
-        so a row whose counter they feed (Aurora P) fails closed to
-        coarse instead of inventing swing times for ability hits.
-        """
+        """Shared counters use the accepted ability and auto event clocks."""
         abilities = self._on_hit_shell(stacks_required=2, count_ability_hits=True)
         abilities["Q"] = {
             "name": "Damaging spell",
@@ -1691,8 +1686,11 @@ class TestOnHitSwingEvents:
 
         row = result["breakdown"]["on_hit_ability_W"]
         assert row["total_damage"] > 0
-        assert "damage_events" not in row
-        assert "on_hit_ability_W" in result["timeline_coverage"]["coarse_sources"]
+        assert len(row["damage_events"]) == row["count"]
+        assert sum(event["damage"] for event in row["damage_events"]) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "on_hit_ability_W" in result["timeline_coverage"]["exact_sources"]
 
 
 class TestSplitAutoVsAbility:

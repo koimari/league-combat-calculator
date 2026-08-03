@@ -218,6 +218,10 @@ def _comeuppance(ctx: SlotCtx) -> dict[str, Any] | None:
             crit_effectiveness=_R_CRIT_EFFECTIVENESS,
         ),
     )
+    # Comeuppance is one authored barrage event.  Its missing-health curve
+    # is evaluated at that cast boundary; there is no hidden sub-hit timing
+    # in the single-target packet.
+    entry["event_order_certified"] = "single_hit"
     return entry
 
 

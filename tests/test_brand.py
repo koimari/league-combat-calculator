@@ -192,4 +192,8 @@ class TestBrandFightIntegration:
         blaze = result["breakdown"]["passive"]
         assert blaze["count"] == 1
         assert blaze["total_damage"] == pytest.approx(100.0)
+        assert sum(
+            event["damage"] for event in blaze["damage_events"]
+        ) == pytest.approx(blaze["total_damage"])
+        assert "passive" in result["timeline_coverage"]["exact_sources"]
         assert result["total_damage"] > 0

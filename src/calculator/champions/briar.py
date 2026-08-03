@@ -95,6 +95,8 @@ def _crimson_curse(ctx: SlotCtx) -> dict[str, Any] | None:
             "max_stacks": P_BLEED_MAX_STACKS,
             "extra_stack_effectiveness": P_BLEED_EXTRA_STACK_EFFECTIVENESS,
             "applied_by_autos": True,
+            # The ingested ability description specifies 0.5-second ticks.
+            "tick_interval": 0.5,
         },
     }
 
