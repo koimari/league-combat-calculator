@@ -219,22 +219,40 @@ class TestPassiveParse:
 
 
 class TestCooldownProcScheduler:
-    """_schedule_cooldown_procs: first auto procs, then CD-gated re-procs."""
+    """_schedule_cooldown_procs: first swing procs, then CD-gated re-procs.
+
+    The scheduler consumes the authored per-swing schedule — the same one
+    that stamps damage events — so scheduling decisions and stamped times
+    can never diverge.
+    """
 
     def test_one_auto_per_second_cd6(self) -> None:
         """Autos at t=0..9, CD 6: procs at t=0 and t=6."""
-        assert _schedule_cooldown_procs(10, 1.0, 6.0) == [0, 6]
+        swings = [float(i) for i in range(10)]
+        assert _schedule_cooldown_procs(swings, 6.0) == [0, 6]
 
     def test_fractional_spacing(self) -> None:
         """2 autos/s (t=i*0.5), CD 3: procs at t=0 and t=3 (auto 6)."""
-        assert _schedule_cooldown_procs(10, 2.0, 3.0) == [0, 6]
+        swings = [i * 0.5 for i in range(10)]
+        assert _schedule_cooldown_procs(swings, 3.0) == [0, 6]
 
     def test_cooldown_not_multiple_of_spacing(self) -> None:
         """1.375 autos/s, CD 5: first auto at/after t=5 is index 7."""
-        assert _schedule_cooldown_procs(14, 1.375, 5.0) == [0, 7]
+        swings = [i / 1.375 for i in range(14)]
+        assert _schedule_cooldown_procs(swings, 5.0) == [0, 7]
 
     def test_no_autos_no_procs(self) -> None:
-        assert not _schedule_cooldown_procs(0, 1.0, 6.0)
+        assert not _schedule_cooldown_procs([], 6.0)
+
+    def test_buffed_opening_window_schedules_from_real_swing_times(self) -> None:
+        """An empowered attack-speed opening compresses the early swings.
+
+        A uniform 1/s reading of the same seven swings would proc on
+        [0, 2, 4, 6]; the authored schedule lands the early swings faster,
+        so CD=2.0 re-procs at t=2.4 (index 4) and t=4.4 (index 6).
+        """
+        swings = [0.0, 0.4, 0.8, 1.2, 2.4, 3.4, 4.4]
+        assert _schedule_cooldown_procs(swings, 2.0) == [0, 4, 6]
 
 
 # ---------------------------------------------------------------------------

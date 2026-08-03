@@ -792,32 +792,28 @@ def _simulate_stacking_on_hit_damage(
 
 
 def _schedule_cooldown_procs(
-    num_auto_attacks: int,
-    autos_per_second: float,
+    swing_times: Sequence[float],
     proc_cooldown: float,
 ) -> list[int]:
-    """Schedule per-target-cooldown on-hit procs onto the auto timeline.
+    """Schedule per-target-cooldown on-hit procs onto the authored swings.
 
-    The first auto always procs; each later auto procs iff its timestamp
-    (auto index / effective attack rate) is at least ``proc_cooldown``
-    after the previous proc (Jarvan IV's Martial Cadence pattern).
+    The first swing always procs; each later swing procs iff its authored
+    timestamp is at least ``proc_cooldown`` after the previous proc
+    (Jarvan IV's Martial Cadence pattern). Consuming the same schedule
+    that stamps damage events keeps the scheduling decision and the
+    stamped time from diverging during empowered attack-speed windows.
 
     Args:
-        num_auto_attacks: Total auto attacks in the fight.
-        autos_per_second: Effective auto rate (attack_speed * uptime) —
-            the same rate ``num_auto_attacks`` was derived from, so auto
-            timestamps span the fight window.
+        swing_times: The fight's per-swing timestamps
+            (``_auto_attack_timestamps`` order).
         proc_cooldown: Per-target cooldown between procs, in seconds.
 
     Returns:
-        Sorted 0-indexed auto indices on which the effect procs.
+        Sorted 0-indexed swing indices on which the effect procs.
     """
-    if num_auto_attacks <= 0 or autos_per_second <= 0:
-        return []
     proc_autos: list[int] = []
     next_ready = 0.0
-    for i in range(num_auto_attacks):
-        timestamp = i / autos_per_second
+    for i, timestamp in enumerate(swing_times):
         if timestamp >= next_ready:
             proc_autos.append(i)
             next_ready = timestamp + proc_cooldown
@@ -4893,21 +4889,31 @@ def _layer_on_hit_effects(
     # must not re-apply it).
     if num_auto_attacks > 0:
         autos_per_second = state.attack_speed * state.auto_attack_uptime
+        # Both proc schedules read the same authored swing times that stamp
+        # their events; the uniform fallback only covers an unresolvable
+        # schedule, whose rows stay coarse anyway.
+        proc_schedule = swing_times or (
+            [i / autos_per_second for i in range(num_auto_attacks)]
+            if autos_per_second > 0
+            else []
+        )
         for ability_key, ability_info in state.ability_damages.items():
             on_hit_data = ability_info.get("on_hit")
             if not on_hit_data:
                 continue
             if "proc_cooldown" in on_hit_data:
                 proc_autos = _schedule_cooldown_procs(
-                    num_auto_attacks, autos_per_second, on_hit_data["proc_cooldown"]
+                    proc_schedule, on_hit_data["proc_cooldown"]
                 )
             elif "proc_window" in on_hit_data:
                 if breakdown.get(ability_key, {}).get("casts", 0) < 1:
                     continue  # rider exists only after the ability is cast
-                # Autos land at i / autos_per_second; the triggering auto
-                # at t=0 always fits a positive window.
+                # The triggering auto at t=0 always fits a positive window.
                 autos_in_window = max(
-                    1, int(autos_per_second * on_hit_data["proc_window"])
+                    1,
+                    sum(
+                        1 for time in proc_schedule if time < on_hit_data["proc_window"]
+                    ),
                 )
                 proc_autos = list(range(min(num_auto_attacks, autos_in_window)))
             else:

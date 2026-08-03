@@ -375,9 +375,9 @@ class TestRHextechUltimatum:
     def test_r_rider_procs_within_zone_in_timed_mode(
         self, camille_data, parse_at
     ) -> None:
-        """Timed fight with autos: rider procs = autos within the zone
-        duration, each vs decaying current health from 3000 (first proc
-        8% x 3000 = 240 magic vs 0 MR)."""
+        """Timed fight with autos: rider procs = autos landing inside the
+        zone duration, each vs decaying current health from 3000 (first
+        proc 8% x 3000 = 240 magic vs 0 MR)."""
         stats, abilities = parse_at(camille_data, 18)
         result = calculate_fight_damage(
             stats,
@@ -396,7 +396,12 @@ class TestRHextechUltimatum:
         row = result["breakdown"]["on_hit_ability_R"]
         # E's stat buff mutates stats in place — fight-effective AS.
         autos_in_fight = int(stats["attack_speed"] * 8.0)
-        autos_in_zone = max(1, int(stats["attack_speed"] * 4.0))
+        # A swing at index i lands at i / AS; it procs iff it lands before
+        # the zone expires (landing-time rule, not a floor of rate x window).
+        autos_in_zone = max(
+            1,
+            len([i for i in range(autos_in_fight) if i / stats["attack_speed"] < 4.0]),
+        )
         assert row["unit"] == "procs"
         assert row["damage_type"] == "magic"
         assert row["count"] == min(autos_in_zone, autos_in_fight)

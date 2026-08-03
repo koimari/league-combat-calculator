@@ -41,7 +41,10 @@ from calculator.item_coverage import (
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from calculator.loadout_rules import role_scoped_shop_items, validate_resolved_loadout
 from calculator.defensive_effects import resolve_starting_defenses
-from calculator.participant_timeline import build_participant_timeline
+from calculator.participant_timeline import (
+    build_participant_timeline,
+    require_roster_fight_window_support,
+)
 from calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
@@ -1209,6 +1212,9 @@ def api_calculate():
     try:
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
+        require_roster_fight_window_support(
+            fight_params, enemies=enemies, allies=allies
+        )
         for enemy in enemies:
             require_target_item_coverage(list(enemy.item_data))
     except KeyError as exc:
@@ -1556,6 +1562,9 @@ def api_bis():
         main_loadout = main_request.resolve()
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
+        require_roster_fight_window_support(
+            fight_params, enemies=enemies, allies=allies
+        )
         subject_base = (
             main_request
             if subject_team == "main"
@@ -1877,6 +1886,9 @@ def api_optimize():
     try:
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
+        require_roster_fight_window_support(
+            fight_params, enemies=enemies, allies=allies
+        )
         for enemy in enemies:
             require_target_item_coverage(list(enemy.item_data))
     except KeyError as exc:

@@ -13,10 +13,34 @@ from collections import defaultdict
 from dataclasses import dataclass, replace
 from typing import Any, Iterable, Mapping
 
-from .pipeline import FightParams, run_fight
+from .pipeline import FightParams, require_fight_mode_support, run_fight
 from .scenario import ResolvedLoadout
 from .timeline_coverage import combine_timeline_coverages
 from .support_effects import derive_ally_effects
+
+
+def require_roster_fight_window_support(
+    params: FightParams,
+    *,
+    enemies: Iterable[ResolvedLoadout] = (),
+    allies: Iterable[ResolvedLoadout] = (),
+) -> None:
+    """Reject a fight window a selected roster member cannot join.
+
+    The coupled timeline runs every selected ally and enemy as an attacker
+    through the same certified fight pipeline as the main champion, so a
+    member whose module supports only one rotation cannot join a timed
+    window. Failing here names the member instead of crashing mid-timeline.
+    """
+    for side, roster in (("Enemy", enemies), ("Ally", allies)):
+        for loadout in roster:
+            name = str(loadout.champion_data.get("name", ""))
+            try:
+                require_fight_mode_support(params, name)
+            except ValueError as exc:
+                raise ValueError(
+                    f"{side} {name} cannot join this fight window: {exc}"
+                ) from exc
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,8 +218,7 @@ def _support_target_ids(
     teammates = [
         actor
         for actor in all_actors
-        if ("main" if actor.team in {"main", "ally"} else actor.team)
-        == attacker_side
+        if ("main" if actor.team in {"main", "ally"} else actor.team) == attacker_side
         and actor.participant_id != attacker.participant_id
     ]
     if not teammates:
@@ -212,7 +235,9 @@ def _attach_support_effects(
     support_effects: dict[str, list[dict[str, Any]]],
 ) -> None:
     """Attach one actor's sourced shield/heal packets exactly once."""
-    if attacker.team == "ally" and not getattr(attacker.request, "ally_effects_enabled", False):
+    if attacker.team == "ally" and not getattr(
+        attacker.request, "ally_effects_enabled", False
+    ):
         return
     request = attacker.request
     effects = derive_ally_effects(
@@ -268,7 +293,9 @@ def _simulate_survival(
             # priority merely because both are support effects.
             kind = str(event.get("kind", ""))
             priority = -1 if kind == "shield" else 1
-            actions.append((float(event.get("time", 0.0)), priority, participant_id, event))
+            actions.append(
+                (float(event.get("time", 0.0)), priority, participant_id, event)
+            )
     # Damage resolves before self-healing and sourced recovery at the same
     # timestamp, while shields remain before damage above.
     for participant_id, events in incoming.items():
@@ -441,6 +468,7 @@ def build_participant_timeline(
     while ally/enemy slot optimization can score the selected roster member
     without creating a fake one-attacker scenario.
     """
+    require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
         champion_data,
         level,
@@ -464,7 +492,13 @@ def build_participant_timeline(
     support_effects: dict[str, list[dict[str, Any]]] = defaultdict(list)
     support_attached: set[str] = set()
     breakdown: dict[str, dict[str, Any]] = defaultdict(
-        lambda: {"participant_id": "", "team": "", "champion": "", "total_damage": 0.0, "sources": {}}
+        lambda: {
+            "participant_id": "",
+            "team": "",
+            "champion": "",
+            "total_damage": 0.0,
+            "sources": {},
+        }
     )
     coverage_reports: list[dict[str, Any]] = []
 
@@ -601,9 +635,15 @@ def build_participant_timeline(
     for actor in all_actors:
         death_time = survival[actor.participant_id]["death_time"]
         cutoff = params.fight_duration_seconds if death_time is None else death_time
-        events = [event for event in outgoing[actor.participant_id] if float(event.get("time", 0.0)) <= cutoff]
+        events = [
+            event
+            for event in outgoing[actor.participant_id]
+            if float(event.get("time", 0.0)) <= cutoff
+        ]
         row = breakdown[actor.participant_id]
-        row["total_damage"] = round(sum(float(event.get("damage", 0.0)) for event in events), 1)
+        row["total_damage"] = round(
+            sum(float(event.get("damage", 0.0)) for event in events), 1
+        )
         source_totals: dict[str, float] = defaultdict(float)
         for event in events:
             source_totals[str(event.get("source_key", ""))] += float(
@@ -635,7 +675,11 @@ def build_participant_timeline(
             }
         )
     focus_row = next(
-        (row for row in public_breakdown if row["participant_id"] == focus_participant_id),
+        (
+            row
+            for row in public_breakdown
+            if row["participant_id"] == focus_participant_id
+        ),
         None,
     )
     focus_survival = survival.get(focus_participant_id)
@@ -735,7 +779,11 @@ def build_participant_timeline(
                 1,
             ),
             "enemy_team_damage_before_death": round(
-                sum(row["total_damage"] for row in public_breakdown if row["team"] == "enemy"),
+                sum(
+                    row["total_damage"]
+                    for row in public_breakdown
+                    if row["team"] == "enemy"
+                ),
                 1,
             ),
             "surviving_main_team": sum(

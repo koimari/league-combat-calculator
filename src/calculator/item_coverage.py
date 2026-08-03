@@ -320,7 +320,7 @@ def require_certified_target_timeline(
         return
     coarse = [str(source) for source in timeline_coverage.get("coarse_sources", [])]
     named = ", ".join(coarse) if coarse else "at least one damage source"
-    verb = "is" if len(coarse) == 1 else "are"
+    verb = "is" if len(coarse) <= 1 else "are"
     raise ValueError(
         f"Result withheld: enemy item {conditional}'s Lifeline needs a "
         f"certified event timeline, but {named} {verb} not event-certified."

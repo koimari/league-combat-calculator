@@ -400,6 +400,62 @@ def test_calculate_withholds_uncertified_timed_fight_against_lifeline():
     assert "not event-certified" in error
 
 
+def test_timed_fight_rejects_one_rotation_only_enemy_module_cleanly():
+    """The coupled timeline runs every roster member as an attacker, so a
+    timed window with a one-rotation-only enemy module is a clean 400
+    naming the member — never an uncaught 500 mid-timeline."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Rabadon's Deathcap"],
+            "fight_mode": "timed",
+            "fight_duration": 10,
+            "enemies": [{"champion": "Kai'Sa", "level": 18, "items": []}],
+        },
+    )
+
+    assert response.status_code == 400
+    error = response.get_json()["error"]
+    assert "Enemy Kai'Sa" in error
+    assert "One Rotation" in error
+
+
+def test_timed_fight_rejects_one_rotation_only_ally_module_cleanly():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Rabadon's Deathcap"],
+            "fight_mode": "timed",
+            "fight_duration": 10,
+            "allies": [{"champion": "Vi", "level": 18, "items": []}],
+        },
+    )
+
+    assert response.status_code == 400
+    error = response.get_json()["error"]
+    assert "Ally Vi" in error
+    assert "One Rotation" in error
+
+
+def test_one_rotation_fight_still_accepts_one_rotation_only_enemy_module():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Rabadon's Deathcap"],
+            "enemies": [{"champion": "Kai'Sa", "level": 18, "items": []}],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["scenario"]["primary_target"] == "Kai'Sa"
+
+
 def test_crossover_curve_fails_closed_for_uncertified_lifeline_enemy():
     """The curve's timed windows need the same certified-timeline gate.
 
