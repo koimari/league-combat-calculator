@@ -162,7 +162,11 @@ _TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
 }
 
 _TARGET_BLOCKED_REASONS: dict[str, str] = {
-    "Armored Advance": "Plating's incoming physical-damage reduction is not modelled.",
+    "Armored Advance": (
+        "Noxian Endurance's physical-damage shield trigger is not modelled; "
+        "the item's separately sourced Plating reduction is not enough to "
+        "price the complete target loadout."
+    ),
     "Banshee's Veil": (
         "Annul's first-hostile-ability spell shield is not modelled: the Wiki "
         "documents multi-hit and secondary-effect behavior as ability-specific."
