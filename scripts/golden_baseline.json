@@ -28897,7 +28897,7 @@
           "W",
           "auto_attacks"
         ],
-        "total_damage": 1135.29
+        "total_damage": 1055.95
       },
       "vayne": {
         "breakdown_keys": [
@@ -34305,10 +34305,10 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "c6534942f44a02da758c614b3a7d92b51dfa5279",
+    "git_head": "3d2937228565b58731e0b2d817466409b9b5c826",
     "item_count": 324,
     "item_sweep_error_count": 0,
-    "items_fetched_at": 1785669778.9014,
+    "items_fetched_at": 1785725170.32038,
     "patch_last_changed_max": "26.15",
     "registered_champion_count": 173
   },

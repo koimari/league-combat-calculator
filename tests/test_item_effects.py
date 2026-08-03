@@ -427,13 +427,17 @@ class TestPassiveAttackSpeedBonus:
 
     def test_hexplate_and_yun_tal_sum(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(
-            monkeypatch, "Experimental Hexplate", bonus_attack_speed_percent=50.0
+            monkeypatch,
+            "Experimental Hexplate",
+            bonus_attack_speed_melee=50.0,
+            bonus_attack_speed_ranged=35.0,
         )
         _patch_effect(
             monkeypatch, "Yun Tal Wildarrows", bonus_attack_speed_percent=30.0
         )
         build = _build("Experimental Hexplate", "Yun Tal Wildarrows")
-        assert _passive_attack_speed_bonus(build, is_melee=False) == 80.0
+        assert _passive_attack_speed_bonus(build, is_melee=True) == 80.0
+        assert _passive_attack_speed_bonus(build, is_melee=False) == 65.0
 
 
 class TestBonusAdConversions:
@@ -711,3 +715,42 @@ class TestShieldReductionFraction:
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Serpent's Fang", broken)
         with pytest.raises(KeyError, match="shield_reduction_melee"):
             shield_reduction_fraction(_build("Serpent's Fang"), is_melee=True)
+
+
+class TestValuesSourcedFromTheCache:
+    """Values the Wiki text supplies must not be rescued by static literals.
+
+    A code-owned literal wins silently when the parser breaks, so any value
+    the cache can state has to leave ``_STATIC_VALUE_KEYS_BY_ITEM`` and come
+    back through ``passive_parser``.
+    """
+
+    def test_muramana_shock_ability_ratios_are_parsed(self) -> None:
+        from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        assert "Muramana" not in item_effects._STATIC_VALUE_KEYS_BY_ITEM
+        parsed = parse_item_effect("Muramana", fetch_item_data())
+
+        assert parsed["max_mana_ratio_on_hit"] == pytest.approx(0.012)
+        assert parsed["max_mana_ratio_ability_melee"] == pytest.approx(0.04)
+        assert parsed["max_mana_ratio_ability_ranged"] == pytest.approx(0.03)
+
+    def test_hexplate_overdrive_range_split_is_parsed(self) -> None:
+        from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        assert "Experimental Hexplate" not in item_effects._STATIC_VALUE_KEYS_BY_ITEM
+        parsed = parse_item_effect("Experimental Hexplate", fetch_item_data())
+
+        assert parsed["bonus_attack_speed_melee"] == 50.0
+        assert parsed["bonus_attack_speed_ranged"] == 35.0
+
+    def test_refresh_keeps_both_range_values(self) -> None:
+        """A refresh must not collapse a split back onto one number."""
+        refresh_item_effects()
+        hexplate = ITEM_EFFECTS["Experimental Hexplate"]
+
+        assert hexplate["bonus_attack_speed_melee"] == 50.0
+        assert hexplate["bonus_attack_speed_ranged"] == 35.0
+        assert "bonus_attack_speed_percent" not in hexplate

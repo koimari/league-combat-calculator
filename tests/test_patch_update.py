@@ -6,6 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 from patch_update import (
+    item_source_lines,
     drop_noise,
     is_numeric_diff,
     leaf_diffs,
@@ -81,3 +82,64 @@ class TestNameDelta:
 
     def test_no_changes_gives_empty_lists(self) -> None:
         assert name_delta({"A": {}}, {"A": {}}) == ([], [])
+
+
+class TestItemSourceGate:
+    """Patch day stops when the cache loses source coverage."""
+
+    @staticmethod
+    def _item(name, effect_name, branch_texts, riot=""):
+        return {
+            "name": name,
+            "riotDescription": riot,
+            "passives": [{"name": effect_name, "branches": list(branch_texts)}],
+            "active": [],
+        }
+
+    def test_unchanged_cache_passes(self) -> None:
+        items = {"Cull": self._item("Cull", "Reap", ["gold", "payout"])}
+        lines, ok = item_source_lines(items, items)
+
+        assert ok is True
+        assert any("accounted for" in line for line in lines)
+
+    def test_lost_branch_blocks_the_patch(self) -> None:
+        old = {"Cull": self._item("Cull", "Reap", ["gold", "payout"])}
+        new = {"Cull": self._item("Cull", "Reap", ["gold"])}
+        lines, ok = item_source_lines(old, new)
+
+        assert ok is False
+        assert any("BLOCKING" in line and "Reap" in line for line in lines)
+
+    def test_item_leaving_the_shop_is_the_shop_delta_not_a_loss(self) -> None:
+        old = {"Cull": self._item("Cull", "Reap", ["gold", "payout"])}
+        lines, ok = item_source_lines(old, {})
+
+        assert ok is True
+        assert not any("Reap" in line for line in lines)
+
+    def test_unreviewed_source_conflict_blocks_the_patch(self) -> None:
+        items = {
+            "Cull": self._item(
+                "Cull", "Reap", ["gold"], riot="<passive>Unrecorded Reaping</passive>"
+            )
+        }
+        lines, ok = item_source_lines(items, items)
+
+        assert ok is False
+        assert any("Unrecorded Reaping" in line for line in lines)
+
+    def test_reviewed_removal_releases_the_patch(self, monkeypatch) -> None:
+        from src.calculator import item_source
+
+        monkeypatch.setitem(
+            item_source.APPROVED_BRANCH_REMOVALS,
+            "Cull / passive Reap",
+            "Patch 26.16 folded the payout into the gold branch.",
+        )
+        old = {"Cull": self._item("Cull", "Reap", ["gold", "payout"])}
+        new = {"Cull": self._item("Cull", "Reap", ["gold"])}
+        lines, ok = item_source_lines(old, new)
+
+        assert ok is True
+        assert any("approved" in line for line in lines)

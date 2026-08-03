@@ -4,6 +4,8 @@ from dataclasses import dataclass
 import re
 from typing import Any
 
+from .item_source import effect_text
+
 
 @dataclass(frozen=True, slots=True)
 class AllyStatEffect:
@@ -23,7 +25,7 @@ def _staff_of_flowing_water(item: dict[str, Any]) -> AllyStatEffect | None:
         stats = passive.get("stats", {})
         duration_match = re.search(
             r"for\s+(\d+(?:\.\d+)?)\s+seconds?",
-            str(passive.get("effects", "")),
+            effect_text(passive),
             flags=re.IGNORECASE,
         )
         if duration_match is None:

@@ -96,6 +96,7 @@ from lolstaticdata.champions.__main__ import get_ability_filenames
 from lolstaticdata.items.__main__ import main as run_items_generator
 
 from .data_fetcher import DEFAULT_DATA_DIR, _read_cache, _write_cache
+from .item_source import merge_item_sources
 from .rune_parser import parse_effects, rune_payload
 
 # Only one update can run at a time
@@ -328,18 +329,66 @@ def _process_champions(
     return champions, skipped
 
 
+def _wiki_item_table() -> dict[str, Any]:
+    """Decode the Wiki's ``Module:ItemData/data`` table, keyed by item name.
+
+    The generator reads the same page but keeps only the first description of
+    each effect and drops mode availability entirely, so ``item_source`` needs
+    the raw table to record what the cache would otherwise lose.
+    """
+    from lolstaticdata.items.pull_items_wiki import get_item_urls
+
+    return get_item_urls(False)
+
+
+def _riot_item_descriptions() -> dict[int, str]:
+    """Riot's rich item descriptions from CommunityDragon, keyed by item id.
+
+    Caching them is what lets the source audit verify the Wiki cache against
+    Riot offline, on any machine, without a second patch-day pull.
+    """
+    from lolstaticdata.items.pull_items_dragon import DragonItem
+
+    return {
+        int(entry["id"]): str(entry.get("description") or "")
+        for entry in DragonItem.get_cdragon()
+        if entry.get("id") is not None
+    }
+
+
 def _process_items() -> dict[str, Any] | None:
     """Run the lolstaticdata items generator and read the output.
 
-    Returns the parsed items dict, or None if generation failed.
+    Returns the source-merged items dict, or None if generation failed.
     """
     run_items_generator()
 
     items_path = _LOLSTATICDATA_ROOT / "items.json"
     if items_path.exists():
         with open(items_path, "r", encoding="utf-8") as items_file:
-            return json.load(items_file)
+            generated = json.load(items_file)
+        return merge_item_sources(
+            generated, _wiki_item_table(), _riot_item_descriptions()
+        )
     return None
+
+
+def refresh_item_sources(data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
+    """Re-read the source tables into the tracked item cache.
+
+    Maintenance path for ingestion fixes, the item counterpart of
+    ``reparse_cached_rune_effects``: it re-merges mode availability, champion
+    restriction, acquisition, and the complete effect branches without
+    regenerating the whole cache, so an ingestion change reaches ``data/``
+    without dragging unrelated patch churn along with it.
+    """
+    merged = merge_item_sources(
+        _read_cache(data_dir, "items.json"),
+        _wiki_item_table(),
+        _riot_item_descriptions(),
+    )
+    _write_cache(data_dir, "items.json", merged)
+    return merged
 
 
 def _rune_icon_map(latest_version: str) -> dict[str, str]:

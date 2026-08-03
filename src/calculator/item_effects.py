@@ -474,8 +474,10 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Ultimate-Triggered Attack Speed Buffs ──────────────────────────────
     "Experimental Hexplate": {
         "type": "ult_attack_speed_buff",
-        # Overdrive: 50% bonus AS + 20% MS for 8s on R cast (30s CD)
-        "bonus_attack_speed_percent": 50.0,
+        # Overdrive: melee 50% / ranged 35% bonus AS (+ MS) for 8s on R cast,
+        # 30s CD.
+        "bonus_attack_speed_melee": 50.0,
+        "bonus_attack_speed_ranged": 35.0,
         "duration": 8.0,
         "cooldown": 30.0,
     },
@@ -818,7 +820,6 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Blade of the Ruined King": frozenset({"min_damage"}),
     "Blackfire Torch": frozenset({"tick_interval"}),
-    "Experimental Hexplate": frozenset({"bonus_attack_speed_percent"}),
     "Hexdrinker": frozenset(
         {
             "health_threshold",
@@ -843,9 +844,6 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "shield_ranged_bonus_ad_ratio",
             "duration",
         }
-    ),
-    "Muramana": frozenset(
-        {"max_mana_ratio_ability_melee", "max_mana_ratio_ability_ranged"}
     ),
     "Profane Hydra": frozenset({"cooldown"}),
     "Protoplasm Harness": frozenset(
@@ -2096,8 +2094,9 @@ def resolve_damage_effects(
             conditional_notes.append(
                 "R is assumed to be cast at the start of the fight. "
                 f"{item_name} Overdrive "
-                f"({required.number('bonus_attack_speed_percent'):.0f}% bonus AS) "
-                "is applied from time 0."
+                f"({required.number('bonus_attack_speed_melee'):.0f}% melee / "
+                f"{required.number('bonus_attack_speed_ranged'):.0f}% ranged "
+                "bonus AS) is applied from time 0."
             )
         elif effect_type == "magic_true_crit":
             required = _RequiredValues(item_name, values)
@@ -2323,12 +2322,14 @@ def _passive_attack_speed_bonus(
     """
     names = _item_names(items)
     bonus = 0.0
-    if "Bandlepipes" in names:
-        key = "bonus_attack_speed_melee" if is_melee else "bonus_attack_speed_ranged"
-        bonus += required_effect_value("Bandlepipes", key)
-    for name in ("Experimental Hexplate", "Yun Tal Wildarrows"):
+    split_key = "bonus_attack_speed_melee" if is_melee else "bonus_attack_speed_ranged"
+    for name in ("Bandlepipes", "Experimental Hexplate"):
         if name in names:
-            bonus += required_effect_value(name, "bonus_attack_speed_percent")
+            bonus += required_effect_value(name, split_key)
+    if "Yun Tal Wildarrows" in names:
+        bonus += required_effect_value(
+            "Yun Tal Wildarrows", "bonus_attack_speed_percent"
+        )
     return bonus
 
 
