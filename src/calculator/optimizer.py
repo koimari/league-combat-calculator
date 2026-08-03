@@ -15,6 +15,7 @@ from .item_coverage import (
     optimizer_supported_items,
     require_optimizer_item_coverage,
 )
+from .item_source import is_ordinary_sr_item
 from .loadout_rules import (
     ITEM_EXCLUSIVITY_GROUPS,
     ITEM_TO_EXCLUSIVITY_GROUPS,
@@ -30,23 +31,6 @@ from .participant_timeline import build_participant_timeline
 from .stats import calculate_total_stats
 from .timeline_coverage import combine_timeline_coverages
 
-# Items unavailable on Summoner's Rift.
-ITEM_BLOCKLIST = {
-    "Anathema's Chains",
-    "Atma's Reckoning",
-    "Bandleglass Mirror",
-    "Bounty of Worlds",
-    "Ghostcrawlers",
-    "Hellfire Hatchet",
-    "Multitool",
-    "Perplexity",
-    "Rite of Ruin",
-    "Spectral Cutlass",
-    "Sword of Blossoming Dawn",
-    "Wordless Promise",
-    "Zephyr",
-}
-
 # Item exclusivity groups — at most one item from each group per build
 # (e.g. Spellblade items are mutually exclusive in-game). This table is
 # the single source of truth: the frontend fetches it via /api/config
@@ -55,16 +39,28 @@ ITEM_BLOCKLIST = {
 _SPELLBLADE_ITEMS = ITEM_EXCLUSIVITY_GROUPS["Spellblade"]
 
 
-def get_eligible_legendaries() -> list[dict[str, Any]]:
-    """Return all legendary items eligible for the optimizer."""
-    items = fetch_item_data()
+def _ordinary_sr_items() -> list[dict[str, Any]]:
+    """Every cached item an ordinary Summoner's Rift build can hold.
+
+    Availability comes from the cached source data — map/mode table, champion
+    restriction, acquisition — through ``item_source``, so an ARAM starter or
+    a champion-granted item leaves the pool because the sources say so, not
+    because someone remembered to add its name to a list.
+    """
     return [
         item_data
-        for item_data in items.values()
+        for item_data in fetch_item_data().values()
+        if item_data.get("name") and is_ordinary_sr_item(item_data)
+    ]
+
+
+def get_eligible_legendaries() -> list[dict[str, Any]]:
+    """Return all legendary items eligible for the optimizer."""
+    return [
+        item_data
+        for item_data in _ordinary_sr_items()
         if "LEGENDARY" in item_data.get("rank", [])
         and "BOOTS" not in item_data.get("rank", [])
-        and item_data.get("name")
-        and item_data["name"] not in ITEM_BLOCKLIST
     ]
 
 
@@ -78,11 +74,9 @@ def get_selectable_items() -> list[dict[str, Any]]:
     allowed_ranks = {"BASIC", "EPIC", "STARTER", "LEGENDARY"}
     return [
         item_data
-        for item_data in fetch_item_data().values()
+        for item_data in _ordinary_sr_items()
         if allowed_ranks.intersection(item_data.get("rank", []))
         and "BOOTS" not in item_data.get("rank", [])
-        and item_data.get("name")
-        and item_data["name"] not in ITEM_BLOCKLIST
     ]
 
 
@@ -92,15 +86,12 @@ def get_eligible_boots(tier: int | None = 2) -> list[dict[str, Any]]:
     Ordinary builds use tier 2. Completed mid-lane quests use tier 3.
     Passing ``None`` returns both tiers for the role-aware manual picker.
     """
-    items = fetch_item_data()
     return [
         item_data
-        for item_data in items.values()
+        for item_data in _ordinary_sr_items()
         if "BOOTS" in item_data.get("rank", [])
         and item_data.get("tier", 0) >= 2
         and (tier is None or item_data.get("tier") == tier)
-        and item_data.get("name")
-        and item_data["name"] not in ITEM_BLOCKLIST
     ]
 
 

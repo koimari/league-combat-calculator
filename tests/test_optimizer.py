@@ -82,6 +82,47 @@ class TestItemPools:
         assert "Doran's Ring" in names
         assert "Boots of Swiftness" not in names
 
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "Guardian's Amulet",
+            "Guardian's Blade",
+            "Guardian's Dirk",
+            "Guardian's Hammer",
+            "Guardian's Horn",
+            "Guardian's Orb",
+            "Guardian's Shroud",
+            "Lifeline",
+        ],
+    )
+    def test_pool_excludes_items_absent_from_summoners_rift(self, name):
+        """ARAM starters and the Arena-only Soul Anchor item are not SR builds."""
+        assert name not in {item["name"] for item in get_selectable_items()}
+
+    def test_pool_excludes_champion_granted_items(self):
+        """Black Spear is handed to Kalista and Sylas, never bought."""
+        assert "Black Spear" not in {item["name"] for item in get_selectable_items()}
+
+    def test_pool_excludes_quest_transforms_that_are_never_sold(self):
+        """Bounty of Worlds only exists once the support quest transforms it."""
+        pools = (
+            get_selectable_items()
+            + get_eligible_legendaries()
+            + get_eligible_boots(None)
+        )
+        assert "Bounty of Worlds" not in {item["name"] for item in pools}
+
+    def test_every_pool_item_is_available_on_summoners_rift(self):
+        pools = (
+            get_selectable_items()
+            + get_eligible_legendaries()
+            + get_eligible_boots(None)
+        )
+        off_rift = [
+            item["name"] for item in pools if not item["modes"].get("classic sr 5v5")
+        ]
+        assert off_rift == []
+
     def test_main_optimizer_uses_the_sourced_role_shop_scope(self):
         candidates = get_eligible_legendaries()
         top = {item["name"] for item in role_scoped_shop_items(candidates, "top")}

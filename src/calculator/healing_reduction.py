@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
+from .item_source import effect_text
+
 # The cached item packets describe the trigger and three-second window.  The
 # patch-wide Grievous Wounds rule supplies the current 40% reduction.
 GRIEVOUS_WOUNDS_FACTOR = 0.60
@@ -34,8 +36,7 @@ def healing_reduction_profiles(
     for item in items:
         item_name = str(item.get("name", ""))
         for passive in item.get("passives") or ():
-            effects = str(passive.get("effects", ""))
-            damage_types = _trigger_damage_types(effects)
+            damage_types = _trigger_damage_types(effect_text(passive))
             if not damage_types:
                 continue
             profiles.append(

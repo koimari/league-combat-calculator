@@ -2003,7 +2003,7 @@ class TestEclipseEverRisingMoon:
 
 
 class TestExperimentalHexplate:
-    """Tests for Experimental Hexplate Overdrive (50% bonus AS on R cast)."""
+    """Tests for Overdrive (melee 50% / ranged 35% bonus AS on R cast)."""
 
     def test_hexplate_registered_in_item_effects(self) -> None:
         """Hexplate should be registered in ITEM_EFFECTS."""
@@ -2012,7 +2012,8 @@ class TestExperimentalHexplate:
         effect = ITEM_EFFECTS.get("Experimental Hexplate")
         assert effect is not None
         assert effect["type"] == "ult_attack_speed_buff"
-        assert effect["bonus_attack_speed_percent"] == 50.0
+        assert effect["bonus_attack_speed_melee"] == 50.0
+        assert effect["bonus_attack_speed_ranged"] == 35.0
         assert effect["duration"] == 8.0
 
     def test_hexplate_increases_auto_count(self) -> None:

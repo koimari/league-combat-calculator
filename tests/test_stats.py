@@ -224,7 +224,7 @@ class TestCalculateTotalStats:
         )
 
     def test_hexplate_overdrive_attack_speed(self, ahri_data: dict) -> None:
-        """Experimental Hexplate Overdrive: 50% bonus AS assumed always active."""
+        """Overdrive is a melee/ranged split: Ahri is ranged, so 35%."""
         from src.calculator.data_fetcher import get_item_by_name
 
         hexplate = get_item_by_name("Experimental Hexplate")
@@ -235,9 +235,9 @@ class TestCalculateTotalStats:
             .get("attackSpeedRatio", {})
             .get("flat", ahri_data["stats"]["attackSpeed"]["flat"])
         )
-        # 50% bonus AS from Overdrive + any AS from item stats
+        # 35% ranged bonus AS from Overdrive + any AS from item stats
         hexplate_item_as = get_item_stats(hexplate).get("attack_speed_percent", 0.0)
-        expected_bonus_as = as_ratio * (50.0 + hexplate_item_as) / 100.0
+        expected_bonus_as = as_ratio * (35.0 + hexplate_item_as) / 100.0
         actual_diff = stats_with["attack_speed"] - stats_without["attack_speed"]
         assert abs(actual_diff - expected_bonus_as) < 0.01
 

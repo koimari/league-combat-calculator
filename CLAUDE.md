@@ -9,7 +9,8 @@ Module map and pipeline: see `architecture.md`.
 3. **All calculation functions must have corresponding tests.**
 4. **Run tests before considering any task complete.**
 5. **No item numbers outside `item_effects.py`** — All numeric item values come from `item_effects` typed accessors, with NO literal fallbacks at call sites (a `.get(key, stale_literal)` silently wins when the parser breaks — that exact failure hid a 3× Statikk Shiv overstatement). Missing keys must raise, naming the item and key. Keystone runes follow the same rule through `rune_effects.py` over `data/runes.json`; only compiled keystones are selectable and everything else fails closed.
-6. **Only module champions are trusted** — a champion without a `src/calculator/champions/<name>.py` module runs the unvalidated generic path; treat its numbers as estimates, never cite them as correct. The record so far: every champion analyzed has needed a module (Aurora's generic parse misread her passive's monster cap as a flat 200 on-hit and missed the Q recast entirely).
+6. **Item availability comes from cached source data, never a name list** — `item_source.py` decides what an ordinary Summoner's Rift build may hold from the cached `modes` table, champion restriction, and acquisition note. An item whose sources are missing is withheld, not assumed available. Effect text lives in `passives[].branches` / `active[].branches` (every Wiki `description`, `description2`, … of one effect); read it through `item_source.effect_text`, never by indexing a single description.
+7. **Only module champions are trusted** — a champion without a `src/calculator/champions/<name>.py` module runs the unvalidated generic path; treat its numbers as estimates, never cite them as correct. The record so far: every champion analyzed has needed a module (Aurora's generic parse misread her passive's monster cap as a flat 200 on-hit and missed the Q recast entirely).
 
 ## Domain Knowledge
 

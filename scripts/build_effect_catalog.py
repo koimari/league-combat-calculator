@@ -19,6 +19,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.source_receipt import source_receipt
+from src.calculator.item_source import effect_text
 
 NUMBER_RE = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?%?")
 
@@ -26,7 +27,7 @@ NUMBER_RE = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?%?")
 def _text(item: dict[str, Any]) -> str:
     parts = [str(item.get("simpleDescription") or ""), str(item.get("active") or "")]
     parts.extend(
-        str(effect.get("effects") or "")
+        effect_text(effect)
         for effect in item.get("passives", [])
         if isinstance(effect, dict)
     )
@@ -103,10 +104,10 @@ def _effect(item: dict[str, Any]) -> dict[str, Any]:
         "formulas": formulas,
         "eventOrder": order,
         "passives": [
-            {"name": effect.get("name") or "", "text": effect.get("effects") or ""}
+            {"name": effect.get("name") or "", "text": effect_text(effect)}
             for effect in item.get("passives", [])
             if isinstance(effect, dict)
-            and (effect.get("name") or effect.get("effects"))
+            and (effect.get("name") or effect.get("branches"))
         ],
         "active": item.get("active") or None,
     }
