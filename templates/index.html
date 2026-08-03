@@ -1,110 +1,83 @@
 <!doctype html>
 <html lang="en" data-theme="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#121212" />
-    <meta name="description" content="Compare League of Legends item builds against a complete target roster." />
-    <title>Scryglass — Item calculator</title>
-    <link rel="preconnect" href="https://ddragon.leagueoflegends.com" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/css/style.css" />
-  </head>
-  <body>
-    <header class="site-header">
-      <div class="header-inner">
-        <a class="brand" href="https://scryglass.xyz/" aria-label="Scryglass home">
-          <svg class="brand-symbol" viewBox="0 0 32 32" role="img" aria-label="Scryglass mark">
-            <path d="M16 2 28 9v14l-12 7L4 23V9L16 2Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
-            <path d="m16 7 7 4v7l-7 4-7-4v-7l7-4Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
-            <path d="m16 7 3.5 8.2L16 22l-3.5-6.8L16 7Z" fill="currentColor" opacity=".82"/>
-          </svg>
-          <strong>Scryglass</strong>
-        </a>
-        <span class="patch"><i></i>26.15</span>
-        {% if auth_user %}
-          <div class="auth-identity"><span class="auth-dot"></span><span>Signed in as <strong>{{ auth_user }}</strong></span><a href="/auth/logout">Log out</a></div>
-        {% endif %}
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f6f2df" />
+  <meta name="description" content="Compare League of Legends builds against a complete event-ordered roster." />
+  <title>Scryglass — Item calculator</title>
+  <link rel="preconnect" href="https://ddragon.leagueoflegends.com" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="map-wash" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="https://scryglass.xyz/" aria-label="Scryglass home"><span class="brand-mark" aria-hidden="true">◈</span><span>Scryglass</span></a>
+    <div class="topbar-meta"><span class="live-dot"></span><span>26.15</span>{% if auth_user %}<span class="signed-in">Signed in as <strong>{{ auth_user }}</strong></span><a class="quiet-button" href="/auth/logout">Log out</a>{% endif %}</div>
+  </header>
+
+  <main class="app-shell">
+    <h1>Item calculator</h1>
+    <section class="scenario-rail" aria-label="Scenario controls">
+      <div class="scenario-block">
+        <span class="micro-label">Scenario</span>
+        <label class="select-wrap"><select id="championSelect" aria-label="Champion"></select></label>
+        <label class="select-wrap"><select id="roleSelect" aria-label="Role"><option value="top">Top</option><option value="jungle">Jungle</option><option value="mid" selected>Mid</option><option value="bottom">Bottom</option><option value="support">Support</option></select></label>
       </div>
-    </header>
-
-    <main>
-      <header class="page-head">
-        <div>
-          <p class="eyebrow">Scenario lab</p>
-          <h1>Item calculator</h1>
+      <div class="scenario-block state-block">
+        <span class="micro-label">Game state</span>
+        <button class="state-button active" id="stateTheory" type="button" data-game-state="theory" aria-pressed="true">Theory</button>
+        <button class="state-button" id="stateLive" type="button" data-game-state="live" aria-pressed="false">Snapshot lens</button>
+      </div>
+      <div class="objective-block">
+        <span class="micro-label">Objective</span>
+        <div class="objective-list" role="group" aria-label="Objective">
+          <button class="objective active" data-objective="overall" aria-pressed="true" type="button">Overall</button>
+          <button class="objective" data-objective="kill" aria-pressed="false" type="button">Kill</button>
+          <button class="objective" data-objective="survival" aria-pressed="false" type="button">Survival</button>
+          <button class="objective" data-objective="damage" aria-pressed="false" type="button">Damage</button>
+          <button class="objective" data-objective="utility" aria-pressed="false" type="button">Utility</button>
         </div>
-        <p id="scenarioSentence" class="scenario-sentence" aria-live="polite"></p>
-      </header>
+      </div>
+      <p id="scenarioSentence" class="scenario-summary" aria-live="polite"></p>
+    </section>
 
-      <div class="calculator-grid">
-        <section id="builder" class="builder" aria-label="Scenario builder"></section>
-
-        <aside class="result-panel" aria-live="polite">
-          <div class="result-topline">
-            <span>Result</span>
-            <span id="resultContext"></span>
-          </div>
-          <div id="winnerVisual" class="winner-visual"></div>
-          <div class="score-grid" id="scoreGrid"></div>
-          <div class="resistance-output" id="resistanceOutput"></div>
-          <p class="why" id="why"></p>
-          <div class="threshold" id="threshold"></div>
-          <div class="mechanics-output" id="mechanicsOutput"></div>
-          <details class="rotation-details">
-            <summary>Rotation by rotation <span>Open table</span></summary>
-            <div class="rotation-table-wrap">
-              <table>
-                <thead><tr><th>Rot.</th><th id="tableA">Build A</th><th id="tableB">Build B</th><th>Lead</th></tr></thead>
-                <tbody id="rotationTable"></tbody>
-              </table>
+    <div class="content-grid">
+      <section class="builder-column" aria-label="Scenario builder">
+        <section class="champion-section section-rule">
+          <div class="section-heading"><span class="micro-label">Champion</span><span id="stateReadout" class="section-note">Theory state</span></div>
+          <div class="champion-card">
+            <div class="champion-identity">
+              <button class="champion-portrait champion-portrait-button" id="championPicker" type="button" data-picker="champion" data-path="attacker.champion" aria-label="Choose champion"><img id="championImage" alt="" /></button>
+              <div><div class="eyebrow">Main champion</div><h1 id="championName">Choose a champion</h1><p id="championTitle">Start with the champion you want to compare.</p><div class="identity-controls"><label>Level <input id="levelInput" type="number" min="1" max="18" value="1" /></label><button class="outline-button" id="questToggle" type="button" aria-pressed="false">Quest off</button><button class="outline-button active-outline" id="bootsToggle" type="button" aria-pressed="true">Boots on</button></div></div>
             </div>
-          </details>
-          <p class="result-footnote" id="resultFootnote">DPS uses the selected window per rotation. TDD sums every selected target.</p>
-        </aside>
-      </div>
+            <div class="stats-grid" id="statsGrid"></div>
+          </div>
+        </section>
 
-      <section id="damageBreakdown" class="damage-breakdown" aria-live="polite"></section>
+        <section class="abilities-section section-rule"><div class="section-heading"><span class="micro-label">Abilities</span><span class="section-note">Ranks · casts</span></div><div class="ability-row" id="abilityRow"></div></section>
 
-      <details class="method">
-        <summary>Damage package &amp; calculation boundary</summary>
-        <div class="method-grid">
-          <label>Magic base damage<input id="baseDamage" type="number" min="0" step="1" value="0" /></label>
-          <label>Total AP ratio<input id="apRatio" type="number" min="0" step="0.05" value="0" /></label>
-          <label>Physical base damage<input id="physicalDamage" type="number" min="0" step="1" value="0" /></label>
-          <label>Total AD ratio<input id="adRatio" type="number" min="0" step="0.05" value="0" /></label>
-          <p>Champion growth and item stats are patch-pinned. Item-specific conditions appear in the output; unmodelled passives, runes and shields are never silently assumed.</p>
-        </div>
-      </details>
-    </main>
+        <section class="builds-section section-rule"><div class="section-heading"><span class="micro-label">Builds</span><span class="section-note">6 slots · compare</span></div><div class="build-grid"><article class="build-card build-a" data-build="a"><header class="build-header"><div><span class="build-kicker">Build A</span><strong id="buildAScore">—</strong></div><button class="text-button" type="button" data-copy="b">Copy B → A</button></header><div class="build-caption">baseline</div><div class="slot-grid" id="slotsA"></div></article><article class="build-card build-b" data-build="b"><header class="build-header"><div><span class="build-kicker">Build B</span><strong id="buildBScore">—</strong></div><button class="text-button" type="button" data-copy="a">Copy A → B</button></header><div class="build-caption winner-caption" id="winnerCaption">comparison off</div><div class="slot-grid" id="slotsB"></div></article></div><button class="compare-link" id="bisButton" type="button"><span>+</span> Find best item for a slot</button></section>
 
-    <dialog id="picker" class="picker">
-      <div class="picker-shell">
-        <header>
-          <div><p class="eyebrow" id="pickerKind">Choose</p><h2 id="pickerTitle">Select</h2></div>
-          <button class="picker-close" id="pickerClose" type="button" aria-label="Close picker">×</button>
-        </header>
-        <label class="search-box">
-          <span aria-hidden="true">⌕</span>
-          <input id="pickerSearch" type="search" autocomplete="off" placeholder="Search" aria-label="Search choices" />
-        </label>
-        <div id="pickerGrid" class="picker-grid"></div>
-      </div>
-    </dialog>
+        <section class="roster-section section-rule"><div class="section-heading"><span class="micro-label">Roster</span><span class="section-note"><span id="enemyCount">0</span> enemies · <span id="allyCount">0</span> allies</span></div><div class="roster-grid"><div class="roster-group"><div class="roster-label"><span>Enemies</span><button class="add-button" id="addEnemy" type="button">+ Add</button></div><div id="enemies" class="roster-list"></div></div><div class="roster-group"><div class="roster-label"><span>Allies</span><button class="add-button" id="addAlly" type="button">+ Add</button></div><div id="allies" class="roster-list"></div></div></div></section>
 
-    <dialog id="bis" class="picker bis-dialog">
-      <div class="picker-shell">
-        <header>
-          <div><p class="eyebrow">Best in slot · scenario</p><h2 id="bisTitle">Rank this slot</h2></div>
-          <button class="picker-close" id="bisClose" type="button" aria-label="Close Best in Slot">×</button>
-        </header>
-        <div class="bis-intro"><strong id="bisSummary"></strong><span>Every candidate is scored into the selected scenario context.</span></div>
-        <div id="bisList" class="bis-list"></div>
-      </div>
-    </dialog>
+        <section class="window-section section-rule"><div class="section-heading"><span class="micro-label">Window</span><span class="section-note">Assumed actions land</span></div><div class="window-controls"><label class="range-control"><span>Rotations</span><output id="rotationOutput">1</output><input id="rotationRange" type="range" min="1" max="6" value="1" data-proto-range="rotations" /></label><label class="range-control"><span>Auto uptime</span><output id="uptimeOutput">0%</output><input id="uptimeRange" type="range" min="0" max="100" value="0" data-proto-range="aaUptime" /></label></div></section>
+      </section>
 
-    <script src="/static/js/app.js"></script>
-  </body>
+      <aside class="result-column" aria-label="Comparison result"><section class="result-card"><div class="result-top"><span class="micro-label">Result</span><span class="result-status" id="resultStatus">waiting</span></div><div class="result-hero"><div class="result-overline" id="resultObjective">Overall</div><div class="result-answer"><strong id="winnerLetter">—</strong><div><span id="winnerLabel">waiting</span><b id="resultDelta">—</b></div></div><p id="resultSummary">Choose a champion, a complete build, and an enemy roster.</p></div><div class="score-compare"><div class="score-col score-a"><span>Build A</span><strong id="scoreA">—</strong></div><div class="score-divider"></div><div class="score-col score-b"><span>Build B</span><strong id="scoreB">—</strong></div></div><div class="metric-legend" id="metricLegend">A / B · higher is better except Kill time</div><div class="metric-list" id="metricList"></div><div class="health-ledger"><div class="ledger-heading"><span>Team fight</span><span>HP at end</span></div><div id="healthRows"></div></div><details class="proof-details"><summary><span>Open event ledger</span><span>↘</span></summary><div class="timeline" id="timeline"></div><div class="ledger-table" id="ledgerTable"></div></details></section><div class="result-note"><span class="note-mark">i</span><span>Live engine output · incomplete mechanics remain visibly qualified.</span></div></aside>
+    </div>
+
+    <section id="builder" hidden aria-hidden="true"></section>
+    <div id="winnerVisual" hidden></div><div id="scoreGrid" hidden></div><div id="resistanceOutput" hidden></div><div id="why" hidden></div><div id="threshold" hidden></div><div id="mechanicsOutput" hidden></div><div id="rotationTable" hidden></div><span id="resultContext" hidden></span><span id="resultFootnote" hidden></span><span id="tableA" hidden></span><span id="tableB" hidden></span>
+    <section id="damageBreakdown" hidden aria-hidden="true"></section>
+    <details class="method" hidden><summary>Damage package &amp; calculation boundary</summary><div class="method-grid"><input id="baseDamage" type="number" value="0" /><input id="apRatio" type="number" value="0" /><input id="physicalDamage" type="number" value="0" /><input id="adRatio" type="number" value="0" /></div></details>
+  </main>
+
+  <dialog id="picker" class="picker"><div class="picker-shell"><header><div><p class="eyebrow" id="pickerKind">Choose</p><h2 id="pickerTitle">Select</h2></div><button class="picker-close" id="pickerClose" type="button" aria-label="Close picker">×</button></header><label class="search-box"><span aria-hidden="true">⌕</span><input id="pickerSearch" type="search" autocomplete="off" placeholder="Search" aria-label="Search choices" /></label><div id="pickerGrid" class="picker-grid"></div></div></dialog>
+  <dialog id="bis" class="picker bis-dialog"><div class="picker-shell"><header><div><p class="eyebrow">Best in slot · scenario</p><h2 id="bisTitle">Rank this slot</h2></div><button class="picker-close" id="bisClose" type="button" aria-label="Close Best in Slot">×</button></header><div class="bis-intro"><strong id="bisSummary"></strong><span>Every candidate is scored into the selected scenario context.</span></div><div id="bisList" class="bis-list"></div></div></dialog>
+  <script src="/static/js/app.js"></script>
+</body>
 </html>

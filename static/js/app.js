@@ -22,10 +22,14 @@ const engine = {
 };
 
 const state = {
+  ui: {
+    objective: "overall",
+    gameState: "theory",
+  },
   attacker: {
     champion: null,
     level: 1,
-    role: null,
+    role: "mid",
     roleQuestComplete: false,
     buildA: [0, 0, 0, 0, 0, 0],
     buildAStacks: [0, 0, 0, 0, 0, 0],
@@ -48,6 +52,14 @@ const state = {
   allies: [],
   fight: { rotations: 1, duration: 10, aaUptime: 0 },
   optimizer: { running: false, summary: null, scope: null, rosterErrors: {} },
+};
+
+const OBJECTIVES = {
+  overall: { label: "Overall", direction: "higher" },
+  kill: { label: "Kill pressure", direction: "lower", metric: "targetClose" },
+  survival: { label: "Survival", direction: "higher", metric: "mainEhp" },
+  damage: { label: "Damage", direction: "higher", metric: "teamDamage" },
+  utility: { label: "Utility", direction: "higher", metric: "utility" },
 };
 
 const TIER_TWO_BOOTS = [3006, 3009, 3008, 3158, 3111, 3047, 3020];
@@ -1295,14 +1307,17 @@ function renderExactResults(aResult, bResult) {
   const participantTotal = (result, fallback) => Number(result?.combat?.breakdown?.find((entry) => entry.participant_id === "main")?.total_damage ?? fallback);
   const aTotal = participantTotal(aResult, Number(aPoint.total_damage || 0));
   const bTotal = bPoint ? participantTotal(bResult, Number(bPoint.total_damage || 0)) : 0;
-  const tied = bResult && Math.abs(aTotal - bTotal) < .5;
-  const aWins = !bResult || aTotal > bTotal;
-  const winner = bResult ? (aWins ? "Build A" : "Build B") : "Build A";
+  const aObjective = objectiveMetric(aResult, aTotal);
+  const bObjective = bResult ? objectiveMetric(bResult, bTotal) : null;
+  const outcome = objectiveWinner(aObjective, bObjective);
+  const tied = bResult && outcome.winner === "tie";
+  const aWins = !bResult || outcome.winner === "A";
+  const winner = bResult ? (outcome.winner === "A" ? "Build A" : outcome.winner === "B" ? "Build B" : "Tie") : "Build A";
   const outputLabel = "Reviewed engine output";
-  const edge = bResult && Math.min(aTotal, bTotal) > 0 ? Math.abs(aTotal / bTotal - 1) * 100 : 0;
+  const edge = bResult && aObjective != null && bObjective != null && Math.min(aObjective, bObjective) > 0 ? Math.abs(aObjective / bObjective - 1) * 100 : 0;
   $("resultContext").textContent = `${state.targets.length} ${plural(state.targets.length, "enemy")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
-  $("winnerVisual").innerHTML = tied ? `<div></div><div><span>${outputLabel}</span><strong>Tie</strong><b>Less than 1 damage apart</b></div>` : `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${bResult ? "Better here" : outputLabel}</span><strong>${winner}</strong><b>${bResult ? `${percent(edge)} more total damage` : "Event-ordered result"}</b></div>`;
-  $("scoreGrid").innerHTML = [{ name: "Build A", total: aTotal, point: aPoint, winner: aWins && !tied }, ...(bResult ? [{ name: "Build B", total: bTotal, point: bPoint, winner: !aWins && !tied }] : [])].map((entry) => `<div class="score ${entry.winner ? "winner" : ""} ${bResult ? "" : "single-score"}"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>${entry.name}</span></header><strong>${fmt(entry.total)}</strong><small>TDD · ${fmt(entry.point.dps || entry.total / Math.max(1, state.fight.duration))} DPS</small></div>`).join("");
+  $("winnerVisual").innerHTML = tied ? `<div></div><div><span>${outputLabel}</span><strong>Tie</strong><b>No meaningful ${escapeHtml(OBJECTIVES[state.ui.objective].label.toLowerCase())} difference</b></div>` : `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${bResult ? "Better here" : outputLabel}</span><strong>${winner}</strong><b>${bResult && outcome.delta != null ? `${percent(edge)} objective edge` : "Event-ordered result"}</b></div>`;
+  $("scoreGrid").innerHTML = [{ name: "Build A", total: aObjective, damage: aTotal, point: aPoint, winner: aWins && !tied }, ...(bResult ? [{ name: "Build B", total: bObjective, damage: bTotal, point: bPoint, winner: !aWins && !tied }] : [])].map((entry) => `<div class="score ${entry.winner ? "winner" : ""} ${bResult ? "" : "single-score"}"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>${entry.name}</span></header><strong>${objectiveFormat(entry.total)}</strong><small>${escapeHtml(OBJECTIVES[state.ui.objective].label)} · ${fmt(entry.damage)} TDD</small></div>`).join("");
   renderExactStatMatrix(aResult, bResult);
   renderExactResistance(aResult, bResult);
   const certification = aResult.timeline_coverage?.certification || "event ordered";
@@ -1312,7 +1327,7 @@ function renderExactResults(aResult, bResult) {
   const mainSurvival = mainParticipant?.survival;
   const combatNote = mainSurvival ? ` · ${fmt(mainSurvival.effective_health || 0)} eHP · ${mainSurvival.survived_window ? "alive through the window" : `defeated at ${one(mainSurvival.death_time)}s`}` : "";
   $("why").innerHTML = `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed · ${fmt(resource)} resource remaining${combatNote}.`;
-  $("threshold").innerHTML = `<span>Crossover</span><strong>${bResult ? (tied ? "No meaningful difference at this window" : `${escapeHtml(winner)} leads at the selected window`) : `${fmt(aTotal)} event-ordered damage`}</strong>`;
+  $("threshold").innerHTML = `<span>${escapeHtml(OBJECTIVES[state.ui.objective].label)}</span><strong>${bResult ? (tied ? "No meaningful difference at this window" : `${escapeHtml(winner)} leads at the selected window`) : `${objectiveFormat(aObjective)} event-ordered output`}</strong>`;
   const aCurve = aResult.comparison_curve || [{ rotation: state.fight.rotations, total_damage: aTotal }];
   const bCurve = bResult?.comparison_curve || [];
   $("tableA").textContent = "Build A";
@@ -1348,7 +1363,9 @@ function scheduleEngineCalculation() {
           return;
         }
         engine.responses = { a: results[0], b: results[1] || null };
-        renderExactResults(engine.responses.a, engine.responses.b);
+        renderPrototypeBuilder();
+        renderPrototypeResult(engine.responses.a, engine.responses.b);
+        renderScenarioRail();
       })
       .catch((error) => {
         if (requestId === engine.requestId) $("why").textContent = `Engine request failed: ${error.message}`;
@@ -1378,17 +1395,18 @@ function renderResults() {
   const aCurrent = calculateBuild(buildAIds(), state.fight.rotations, buildAStacks());
   const aAll = state.fight.rotations === 6 ? aCurrent : calculateBuild(buildAIds(), 6, buildAStacks());
   const aTotal = aCurrent.cumulative;
+  const fallbackObjective = ["overall", "damage"].includes(state.ui.objective) ? aTotal : null;
   const seconds = state.fight.rotations * state.fight.duration;
   $("resultContext").textContent = `${state.targets.length} ${plural(state.targets.length, "enemy")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
 
   if (!hasB) {
     $("winnerVisual").innerHTML = `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${reviewedAttacker ? "Modeled output" : "Wiki-derived estimate"}</span><strong>Build A</strong><b>${buildAIds().filter(Boolean).length} items scored</b></div>`;
-    $("scoreGrid").innerHTML = `<div class="score winner single-score"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>Build A</span></header><strong>${fmt(aTotal)}</strong><small>TDD · ${fmt(aTotal / seconds)} DPS</small></div>`;
+    $("scoreGrid").innerHTML = `<div class="score winner single-score"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>Build A</span></header><strong>${objectiveFormat(fallbackObjective)}</strong><small>${escapeHtml(OBJECTIVES[state.ui.objective].label)} · ${fmt(aTotal)} TDD</small></div>`;
     renderResistanceOutput(aCurrent.build, null);
     $("why").innerHTML = reviewedAttacker
       ? `<strong>Build A</strong> is scored as one complete build. Enable Build B only for a full-build comparison.`
       : `<strong>Build A</strong> is scored with the Wiki-derived champion packets and item event catalogue. The exact registry has not yet certified this champion.`;
-    $("threshold").innerHTML = `<span>Six-rotation total</span><strong>${fmt(aAll.cumulative)} modeled damage</strong>`;
+    $("threshold").innerHTML = `<span>${escapeHtml(OBJECTIVES[state.ui.objective].label)}</span><strong>${fallbackObjective == null ? "Unavailable until the reviewed engine responds" : `${fmt(aAll.cumulative)} modeled damage`}</strong>`;
     $("tableA").textContent = "Build A";
     $("tableB").textContent = "—";
     $("rotationTable").innerHTML = aAll.ledger.map((row) => `<tr><td>${row.rotation}</td><td>${fmt(row.cumulative)}</td><td>—</td><td>Build A</td></tr>`).join("");
@@ -1400,8 +1418,10 @@ function renderResults() {
   const bCurrent = calculateBuild(buildBIds(), state.fight.rotations, buildBStacks());
   const bAll = state.fight.rotations === 6 ? bCurrent : calculateBuild(buildBIds(), 6, buildBStacks());
   const bTotal = bCurrent.cumulative;
-  const tied = Math.abs(aTotal - bTotal) < 0.5;
-  const aWins = aTotal > bTotal;
+  const bFallbackObjective = ["overall", "damage"].includes(state.ui.objective) ? bTotal : null;
+  const fallbackOutcome = objectiveWinner(fallbackObjective, bFallbackObjective);
+  const tied = fallbackOutcome.winner === "tie";
+  const aWins = fallbackOutcome.winner === "A";
   const winner = aWins ? { ...aAll, cumulative: aTotal } : { ...bAll, cumulative: bTotal };
   const loser = aWins ? { ...bAll, cumulative: bTotal } : { ...aAll, cumulative: aTotal };
   const winnerIds = aWins ? buildAIds() : buildBIds();
@@ -1409,15 +1429,17 @@ function renderResults() {
   const aName = "Build A";
   const bName = "Build B";
 
-  $("winnerVisual").innerHTML = tied
-    ? `<div></div><div><span>Dead even</span><strong>Tie</strong><b>Less than 1 damage apart</b></div>`
+  $("winnerVisual").innerHTML = !fallbackOutcome.winner
+    ? `<div></div><div><span>Calculation boundary</span><strong>Unavailable</strong><b>Reviewed engine output required</b></div>`
+    : tied
+      ? `<div></div><div><span>Dead even</span><strong>Tie</strong><b>Less than 1 damage apart</b></div>`
     : `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>Better here</span><strong>${aWins ? "Build A" : "Build B"}</strong><b>${percent(edge)} more total damage</b></div>`;
   $("scoreGrid").innerHTML = [
-    { total: aTotal, name: aName, winner: aWins && !tied },
-    { total: bTotal, name: bName, winner: !aWins && !tied },
-  ].map((entry) => `<div class="score ${entry.winner ? "winner" : ""}"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>${entry.name}</span></header><strong>${fmt(entry.total)}</strong><small>TDD · ${fmt(entry.total / seconds)} DPS</small></div>`).join("");
+    { total: fallbackObjective, damage: aTotal, name: aName, winner: aWins && !tied },
+    { total: bFallbackObjective, damage: bTotal, name: bName, winner: !aWins && !tied && Boolean(fallbackOutcome.winner) },
+  ].map((entry) => `<div class="score ${entry.winner ? "winner" : ""}"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>${entry.name}</span></header><strong>${objectiveFormat(entry.total)}</strong><small>${escapeHtml(OBJECTIVES[state.ui.objective].label)} · ${fmt(entry.damage)} TDD</small></div>`).join("");
   renderResistanceOutput(aCurrent.build, bCurrent.build);
-  $("why").innerHTML = tied ? "Both builds deal effectively the same damage in this setup." : resultReason(aWins ? "Build A" : "Build B", winnerIds, winner, loser);
+  $("why").innerHTML = !fallbackOutcome.winner ? `<strong>${escapeHtml(OBJECTIVES[state.ui.objective].label)}</strong> is unavailable on the local estimate; reviewed engine output is required.` : tied ? "Both builds deal effectively the same damage in this setup." : resultReason(aWins ? "Build A" : "Build B", winnerIds, winner, loser);
 
   const leads = aAll.ledger.map((row, rowIndex) => Math.sign(row.cumulative - bAll.ledger[rowIndex].cumulative));
   const firstLead = leads[0];
@@ -1500,12 +1522,247 @@ function scenarioSentence() {
   const allyText = allyNames.length ? ` · ${allyNames.length} ${plural(allyNames.length, "ally")} in context` : "";
   const keystoneA = getKeystone(state.attacker.keystoneA);
   const keystoneText = keystoneA ? ` running ${escapeHtml(keystoneA.name)}` : "";
-  return `<strong>${escapeHtml(state.attacker.champion)} level ${state.attacker.level}</strong>${buildA.length ? ` with ${escapeHtml(buildA.join(" + "))}` : ""}${keystoneText}${compareText}${targetText} over ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")} · ${one(state.fight.duration)}s each · ${Math.round(state.fight.aaUptime * 100)}% auto uptime${allyText}.`;
+  const stateLabel = state.ui.gameState === "live" ? "snapshot lens" : "theory state";
+  const objectiveLabel = OBJECTIVES[state.ui.objective]?.label || "Overall";
+  return `<strong>${escapeHtml(state.attacker.champion)} level ${state.attacker.level}</strong>${buildA.length ? ` with ${escapeHtml(buildA.join(" + "))}` : ""}${keystoneText}${compareText}${targetText} · ${escapeHtml(objectiveLabel)} · ${stateLabel} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")} · ${one(state.fight.duration)}s each · ${Math.round(state.fight.aaUptime * 100)}% auto uptime${allyText}.`;
+}
+
+function scenarioViewModel() {
+  const champion = getChampion(state.attacker.champion);
+  const role = state.attacker.role ? state.attacker.role.toUpperCase() : "ROLE NOT SET";
+  const objective = OBJECTIVES[state.ui.objective] || OBJECTIVES.overall;
+  return {
+    champion: champion?.name || "Choose champion",
+    role,
+    level: state.attacker.level,
+    objective: objective.label,
+    gameState: state.ui.gameState === "live" ? "Snapshot" : "Theory",
+    roster: state.targets.filter((target) => target.champion).length,
+    comparison: Boolean(state.attacker.comparisonEnabled),
+  };
+}
+
+function renderScenarioRail() {
+  const model = scenarioViewModel();
+  const championButton = $("scenarioChampion");
+  if (championButton) {
+    championButton.textContent = model.champion;
+    championButton.setAttribute("aria-label", `${model.champion}; choose champion`);
+  }
+  const role = $("scenarioRole");
+  if (role) role.textContent = model.role;
+  const championSelect = $("championSelect");
+  if (championSelect && state.attacker.champion) championSelect.value = state.attacker.champion;
+  const roleSelect = $("roleSelect");
+  if (roleSelect) roleSelect.value = state.attacker.role || "";
+  const stateReadout = $("stateReadout");
+  if (stateReadout) stateReadout.textContent = `${model.gameState} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
+  document.querySelectorAll("[data-objective]").forEach((button) => {
+    const selected = button.dataset.objective === state.ui.objective;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  document.querySelectorAll("[data-game-state]").forEach((button) => {
+    const selected = button.dataset.gameState === state.ui.gameState;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+}
+
+function participantRows(result) {
+  const breakdown = result?.combat?.breakdown || [];
+  const participants = result?.combat?.participants || [];
+  const byId = new Map(participants.map((row) => [row.participant_id, row]));
+  return breakdown.map((row) => ({ ...(byId.get(row.participant_id) || {}), ...row, survival: row.survival || byId.get(row.participant_id)?.survival })).concat(
+    participants.filter((row) => !breakdown.some((entry) => entry.participant_id === row.participant_id)),
+  );
+}
+
+function exactObjectiveMetric(result, fallbackDamage = 0) {
+  const rows = participantRows(result);
+  const main = rows.find((row) => row.participant_id === "main") || {};
+  const enemies = rows.filter((row) => String(row.participant_id || "").startsWith("enemy:"));
+  const teamDamage = rows.reduce((sum, row) => sum + Number(row.total_damage || 0), 0);
+  const firstDeath = enemies.map((row) => Number(row.survival?.death_time)).filter(Number.isFinite).sort((a, b) => a - b)[0];
+  return {
+    overall: Number(main.total_damage ?? fallbackDamage),
+    damage: teamDamage || Number(main.total_damage ?? fallbackDamage),
+    kill: firstDeath == null ? null : firstDeath,
+    survival: Number(main.survival?.effective_health),
+    utility: result?.shield_absorbed == null && result?.healing_received == null
+      ? null
+      : Number(result?.shield_absorbed || 0) + Number(result?.healing_received || 0),
+  };
+}
+
+function objectiveMetric(result, fallbackDamage = 0) {
+  const key = state.ui.objective;
+  const value = exactObjectiveMetric(result, fallbackDamage)[key];
+  return Number.isFinite(value) ? value : null;
+}
+
+function objectiveFormat(value) {
+  if (value == null) return "Unavailable";
+  return state.ui.objective === "kill" ? `${one(value)}s` : fmt(value);
+}
+
+function objectiveWinner(aValue, bValue) {
+  if (aValue == null || bValue == null) return { winner: null, delta: null };
+  const lower = OBJECTIVES[state.ui.objective]?.direction === "lower";
+  if (Math.abs(aValue - bValue) < (lower ? 0.05 : 0.5)) return { winner: "tie", delta: 0 };
+  return { winner: lower ? (aValue < bValue ? "A" : "B") : (aValue > bValue ? "A" : "B"), delta: Math.abs(aValue - bValue) };
+}
+
+function prototypeStats(stats) {
+  const rows = [
+    ["HP", fmt(stats.hp)], ["Bonus HP", fmt(stats.bonusHp)], ["Total HP", fmt(stats.hp)], ["Resource", fmt(stats.mana)],
+    ["Attack damage", one(stats.ad)], ["Ability power", one(stats.ap)], ["Armor", one(stats.armor)], ["Magic resist", one(stats.mr)],
+    ["Attack speed", one(stats.attackSpeed)], ["Move speed", one(stats.moveSpeed)], ["Ability haste", one(stats.haste)], ["Crit chance", `${one(stats.crit)}%`],
+  ];
+  return rows.map(([label, value]) => `<div class="stat"><span>${label}</span><strong>${value}</strong></div>`).join("");
+}
+
+function prototypeAbilityCards(champion) {
+  return (champion?.abilities || []).map((ability) => {
+    const input = abilityInput(ability.slot);
+    const rank = ability.slot === "P" ? 1 : input.rank;
+    const rankControl = ability.slot === "P" ? `<span class="ability-rank"><small>Level scales</small><output>Lv ${state.attacker.level}</output></span>` : `<span class="ability-rank"><small>Rank</small><button type="button" data-ability-rank="${ability.slot}" data-delta="-1">−</button><output>${rank}</output><button type="button" data-ability-rank="${ability.slot}" data-delta="1">+</button></span>`;
+    return `<article class="ability-card"><img class="ability-icon-image" src="${abilityImage(ability)}" alt="" /><div><strong>${escapeHtml(ability.name)}</strong><small>${escapeHtml(ability.formulaSource === "Wiki-derived local cache" ? "Wiki formula" : "Reviewed formula")}</small></div>${rankControl}<span class="ability-casts"><small>${ability.slot === "P" ? "Procs" : "Casts"}</small><button type="button" data-ability-casts="${ability.slot}" data-delta="-1">−</button><output>${input.casts}</output><button type="button" data-ability-casts="${ability.slot}" data-delta="1">+</button></span></article>`;
+  }).join("");
+}
+
+function prototypeItemSlot(id, path, side) {
+  const item = getItem(id);
+  return `<button class="slot ${item ? "" : "empty-slot"}" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}">${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>`;
+}
+
+function prototypeBuildSlots(side) {
+  const sideUpper = side.toUpperCase();
+  const ids = buildArray(sideUpper);
+  const count = ordinarySlotCount(sideUpper);
+  const slots = [];
+  for (let index = 0; index < 6; index += 1) {
+    if (index < count) slots.push(prototypeItemSlot(ids[index], `attacker.build${sideUpper}.${index}`, sideUpper));
+    else if (includeBootsForSide(sideUpper) && index === count) slots.push(prototypeItemSlot(state.attacker[`questBoot${sideUpper}`], questBootPath(sideUpper), sideUpper));
+    else slots.push(`<span class="slot empty-slot slot-locked" aria-hidden="true"><span>·</span></span>`);
+  }
+  return slots.join("");
+}
+
+function prototypeBuildScore(side) {
+  const ids = side === "a" ? buildAIds() : buildBIds();
+  if (!ids.some(Boolean)) return "—";
+  if (engine.responses) return objectiveFormat(objectiveMetric(engine.responses[side], 0));
+  return objectiveFormat(["overall", "damage"].includes(state.ui.objective) ? calculateBuild(ids, state.fight.rotations, side === "a" ? buildAStacks() : buildBStacks()).cumulative : null);
+}
+
+function renderPrototypeChampion() {
+  const champion = getChampion(state.attacker.champion);
+  const stats = champion ? attackerChampionStats(buildAIds(), buildAStacks()) : null;
+  $("championName").textContent = champion?.name || "Choose a champion";
+  $("championTitle").textContent = champion?.title || "Start with the champion you want to compare.";
+  $("championImage").src = champion ? championImage(champion.name) : "";
+  $("championImage").alt = champion?.name || "";
+  $("levelInput").value = state.attacker.level;
+  $("levelInput").max = attackerLevelCap();
+  $("questToggle").textContent = state.attacker.roleQuestComplete ? "Quest on" : "Quest off";
+  $("questToggle").setAttribute("aria-pressed", String(state.attacker.roleQuestComplete));
+  $("bootsToggle").textContent = includeBootsForSide("A") ? "Boots on" : "Boots off";
+  $("bootsToggle").setAttribute("aria-pressed", String(includeBootsForSide("A")));
+  $("stateReadout").textContent = `${state.ui.gameState === "live" ? "Snapshot lens" : "Theory state"} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
+  $("statsGrid").innerHTML = stats ? prototypeStats(stats) : `<div class="matrix-placeholder">Select a champion to resolve patch-pinned stats.</div>`;
+}
+
+function renderPrototypeRoster(kind) {
+  const root = kind === "targets" ? "targets" : "allies";
+  const container = $(kind === "targets" ? "enemies" : "allies");
+  const entries = state[root] || [];
+  container.innerHTML = entries.map((loadout, index) => {
+    const champion = getChampion(loadout.champion);
+    const label = kind === "targets" ? "enemy" : "ally";
+    return `<article class="roster-card"><button class="roster-pick" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant${loadout.role ? ` · ${escapeHtml(loadout.role)}` : ""}</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button></article>`;
+  }).join("") || `<p class="roster-empty">Add a ${kind === "targets" ? "target" : "ally"} to the coupled timeline.</p>`;
+  $(kind === "targets" ? "enemyCount" : "allyCount").textContent = entries.length;
+}
+
+function renderPrototypeBuilder() {
+  const champion = getChampion(state.attacker.champion);
+  const championSelect = $("championSelect");
+  if (championSelect && DATA?.champions?.length && !championSelect.options.length) {
+    championSelect.innerHTML = `<option value="">Choose champion</option>${DATA.champions.map((entry) => `<option value="${escapeHtml(entry.name)}">${escapeHtml(entry.name)}</option>`).join("")}`;
+  }
+  renderPrototypeChampion();
+  $("abilityRow").innerHTML = champion ? prototypeAbilityCards(champion) : `<p class="roster-empty">Choose a champion to load its sourced ability package.</p>`;
+  $("slotsA").innerHTML = prototypeBuildSlots("a");
+  $("slotsB").innerHTML = prototypeBuildSlots("b");
+  $("buildAScore").textContent = prototypeBuildScore("a");
+  $("buildBScore").textContent = state.attacker.comparisonEnabled ? prototypeBuildScore("b") : "—";
+  const aValue = state.attacker.comparisonEnabled ? objectiveMetric(engine.responses?.a, Number(prototypeBuildScore("a")) || null) : null;
+  const bValue = state.attacker.comparisonEnabled ? objectiveMetric(engine.responses?.b, Number(prototypeBuildScore("b")) || null) : null;
+  const outcome = objectiveWinner(aValue, bValue);
+  $("winnerCaption").textContent = !state.attacker.comparisonEnabled ? "comparison off" : outcome.winner === "B" ? "winner · selected objective" : outcome.winner === "A" ? "lead · selected objective" : outcome.winner === "tie" ? "tie · selected objective" : "awaiting reviewed output";
+  document.querySelector(".build-a")?.classList.toggle("is-winner", outcome.winner === "A");
+  document.querySelector(".build-b")?.classList.toggle("is-winner", outcome.winner === "B");
+  renderPrototypeRoster("targets");
+  renderPrototypeRoster("allies");
+  $("rotationOutput").textContent = state.fight.rotations;
+  $("rotationRange").value = state.fight.rotations;
+  $("uptimeOutput").textContent = `${Math.round(state.fight.aaUptime * 100)}%`;
+  $("uptimeRange").value = Math.round(state.fight.aaUptime * 100);
+}
+
+function prototypeMetricRow(label, a, b, lower = false) {
+  const winner = objectiveWinner(a, b).winner;
+  const format = (value) => value == null ? "—" : lower ? `${one(value)}s` : fmt(value);
+  return `<div class="metric-row"><span>${label}</span><strong class="metric-a">${format(a)}</strong><strong class="metric-b">${format(b)}</strong><b>${winner === "A" || winner === "B" ? winner : "—"}</b></div>`;
+}
+
+function prototypeParticipants(result) {
+  return result?.combat?.participants || [];
+}
+
+function renderPrototypeResult(aResult = null, bResult = null) {
+  const aTotal = aResult ? Number(aResult.combat?.breakdown?.find((row) => row.participant_id === "main")?.total_damage ?? aResult.total_damage ?? 0) : (buildAIds().some(Boolean) ? calculateBuild(buildAIds(), state.fight.rotations, buildAStacks()).cumulative : null);
+  const bTotal = bResult ? Number(bResult.combat?.breakdown?.find((row) => row.participant_id === "main")?.total_damage ?? bResult.total_damage ?? 0) : (state.attacker.comparisonEnabled && buildBIds().some(Boolean) ? calculateBuild(buildBIds(), state.fight.rotations, buildBStacks()).cumulative : null);
+  const aValues = aResult ? exactObjectiveMetric(aResult, aTotal) : { overall: aTotal, damage: aTotal, kill: null, survival: null, utility: null };
+  const bValues = bResult ? exactObjectiveMetric(bResult, bTotal) : { overall: bTotal, damage: bTotal, kill: null, survival: null, utility: null };
+  const aValue = aValues[state.ui.objective];
+  const bValue = bValues[state.ui.objective];
+  const outcome = objectiveWinner(aValue, bValue);
+  const objective = OBJECTIVES[state.ui.objective];
+  $("resultStatus").textContent = aResult ? "reviewed" : "waiting";
+  $("resultObjective").textContent = objective.label;
+  $("winnerLetter").textContent = outcome.winner === "A" ? "A" : outcome.winner === "B" ? "B" : outcome.winner === "tie" ? "—" : "?";
+  $("winnerLabel").textContent = outcome.winner === "tie" ? "tie" : outcome.winner ? "wins" : "waiting";
+  $("resultDelta").textContent = outcome.delta == null ? "—" : state.ui.objective === "kill" ? `+${one(outcome.delta)}s` : `+${fmt(outcome.delta)}`;
+  $("resultSummary").textContent = outcome.winner ? `${outcome.winner === "A" ? "Build A" : outcome.winner === "B" ? "Build B" : "Neither build"} carries the strongest ${objective.label.toLowerCase()} package against this roster.` : "Choose a complete scenario to receive a reviewed comparison.";
+  $("scoreA").textContent = objectiveFormat(aValue);
+  $("scoreB").textContent = objectiveFormat(bValue);
+  $("metricList").innerHTML = [
+    prototypeMetricRow("Overall", aValues.overall, bValues.overall),
+    prototypeMetricRow("Kill time", aValues.kill, bValues.kill, true),
+    prototypeMetricRow("Survival", aValues.survival, bValues.survival),
+    prototypeMetricRow("Damage", aValues.damage, bValues.damage),
+    prototypeMetricRow("Utility", aValues.utility, bValues.utility),
+  ].join("");
+  const participants = prototypeParticipants(aResult);
+  $("healthRows").innerHTML = participants.map((person) => {
+    const survival = person.survival || {};
+    const max = Number(survival.max_health || 0);
+    const health = Math.max(0, Number(survival.health_remaining ?? survival.current_health ?? max));
+    const pct = max > 0 ? Math.max(0, Math.min(100, health / max * 100)) : 0;
+    const status = survival.survived_window === false ? "defeated" : `${Math.round(pct)}%`;
+    return `<div class="health-row"><div class="health-person"><img src="${championImage(person.champion)}" alt="" /><span><strong>${escapeHtml(person.champion || person.participant_id || "Participant")}</strong><small>${escapeHtml(person.team || "participant")}</small></span></div><div class="health-track"><span style="width:${pct}%"></span></div><b>${status}</b></div>`;
+  }).join("") || `<p class="roster-empty">Participant health appears after the reviewed engine returns.</p>`;
+  const events = (aResult?.cast_timeline || []).map((event) => `<span style="left:${Math.min(100, Number(event.time || 0) / Math.max(1, state.fight.duration) * 100)}%">${escapeHtml(event.slot || "·")}</span>`).join("");
+  $("timeline").innerHTML = events ? `<div class="timeline-axis"><span>0:00</span><span>${one(state.fight.duration / 2)}s</span><span>${one(state.fight.duration)}s</span></div><div class="timeline-row"><span class="timeline-label">${escapeHtml(state.attacker.champion || "Main")}</span><div class="timeline-line">${events}</div></div>` : `<p class="roster-empty">No cast timeline returned.</p>`;
+  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${aResult?.timeline_coverage?.certification || "pending"}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : fmt(aTotal)}</strong></div>`;
 }
 
 function render() {
-  renderBuilder();
-  renderResults();
+  renderPrototypeBuilder();
+  renderPrototypeResult(engine.responses?.a || null, engine.responses?.b || null);
+  renderScenarioRail();
   $("scenarioSentence").innerHTML = scenarioSentence();
   scheduleEngineCalculation();
 }
@@ -2412,7 +2669,7 @@ async function startRosterOptimization(rootOrPath) {
   state.optimizer.scope = String(rootOrPath).includes(".") ? "roster" : rootOrPath;
   state.optimizer.summary = null;
   state.optimizer.rosterErrors = {};
-  renderBuilder();
+  render();
   const started = performance.now();
   let tested = 0;
   let activePath = null;
@@ -2489,7 +2746,7 @@ async function startOptimizeBuild() {
   if (state.optimizer.running || !state.attacker.champion || !optimizerDamagePackageReady() || !state.targets.length || !state.targets.every((target) => target.champion)) return;
   state.optimizer.running = true;
   state.optimizer.summary = null;
-  renderBuilder();
+  render();
   try {
     await optimizeMainBuildFromBackend();
   } catch (error) {
@@ -2519,6 +2776,57 @@ function updateDamagePackage() {
 }
 
 document.addEventListener("click", (event) => {
+  const objectiveButton = event.target.closest("[data-objective]");
+  if (objectiveButton) {
+    state.ui.objective = OBJECTIVES[objectiveButton.dataset.objective] ? objectiveButton.dataset.objective : "overall";
+    renderScenarioRail();
+    renderPrototypeBuilder();
+    renderPrototypeResult(engine.responses?.a || null, engine.responses?.b || null);
+    return;
+  }
+  const gameStateButton = event.target.closest("[data-game-state]");
+  if (gameStateButton) {
+    state.ui.gameState = gameStateButton.dataset.gameState === "live" ? "live" : "theory";
+    return render();
+  }
+  const copyButton = event.target.closest("[data-copy]");
+  if (copyButton) {
+    const from = copyButton.dataset.copy === "a" ? "A" : "B";
+    const to = from === "A" ? "B" : "A";
+    state.attacker[`build${to}`] = [...state.attacker[`build${from}`]];
+    state.attacker[`build${to}Stacks`] = [...state.attacker[`build${from}Stacks`]];
+    state.attacker[`questBoot${to}`] = state.attacker[`questBoot${from}`];
+    state.attacker.comparisonEnabled = true;
+    invalidateOptimization();
+    return render();
+  }
+  if (event.target.closest("#questToggle")) {
+    state.attacker.roleQuestComplete = !state.attacker.roleQuestComplete;
+    state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
+    invalidateOptimization();
+    return render();
+  }
+  if (event.target.closest("#bootsToggle")) {
+    state.attacker.includeBootsA = !state.attacker.includeBootsA;
+    if (!state.attacker.includeBootsA) state.attacker.questBootA = 0;
+    invalidateOptimization();
+    return render();
+  }
+  if (event.target.closest("#addEnemy")) {
+    if (state.targets.length >= 5) return;
+    const index = state.targets.length;
+    state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {} });
+    render();
+    return openPicker("champion", `targets.${index}.champion`);
+  }
+  if (event.target.closest("#addAlly")) {
+    if (state.allies.length >= 4) return;
+    const index = state.allies.length;
+    state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {}, allyEffectsEnabled: false });
+    render();
+    return openPicker("champion", `allies.${index}.champion`);
+  }
+  if (event.target.closest("#bisButton")) return openBis("attacker.buildA.0");
   const rosterOptimizeAll = event.target.closest("[data-optimize-roster-all]");
   if (rosterOptimizeAll) return startRosterOptimization(rosterOptimizeAll.dataset.optimizeRosterAll);
   const rosterOptimize = event.target.closest("[data-optimize-roster]");
@@ -2554,7 +2862,10 @@ document.addEventListener("click", (event) => {
     return render();
   }
   const pickerButton = event.target.closest("[data-picker]");
-  if (pickerButton) return openPicker(pickerButton.dataset.picker, pickerButton.dataset.path);
+  if (pickerButton) {
+    if (pickerButton.dataset.path?.startsWith("attacker.buildB")) state.attacker.comparisonEnabled = true;
+    return openPicker(pickerButton.dataset.picker, pickerButton.dataset.path);
+  }
   const bisButton = event.target.closest("[data-bis-path]");
   if (bisButton) return openBis(bisButton.dataset.bisPath);
   const bootsButton = event.target.closest("[data-include-boots]");
@@ -2733,6 +3044,13 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("input", (event) => {
+  const protoRange = event.target.closest("[data-proto-range]");
+  if (protoRange) {
+    invalidateOptimization();
+    const key = protoRange.dataset.protoRange;
+    state.fight[key] = key === "aaUptime" ? Number(protoRange.value) / 100 : Number(protoRange.value);
+    return render();
+  }
   const range = event.target.closest("[data-fight-range]");
   if (!range) return;
   invalidateOptimization();
@@ -2744,17 +3062,38 @@ document.addEventListener("input", (event) => {
   const statsB = attackerChampionStats(buildBIds(), buildBStacks());
   const autoCount = document.querySelector(".auto-count strong");
   if (autoCount) autoCount.innerHTML = `<i class="legend-a"></i>A ${autoAttacksForStats(statsA)}${state.attacker.comparisonEnabled ? ` <i class="legend-b"></i>B ${autoAttacksForStats(statsB)}` : ""}`;
-  renderResults();
+  render();
   $("scenarioSentence").innerHTML = scenarioSentence();
   scheduleEngineCalculation();
 });
 
 document.addEventListener("change", (event) => {
-  const roleSelect = event.target.closest("[data-roster-role]");
-  if (!roleSelect) return;
-  const loadout = pathValue(roleSelect.dataset.rosterRole.replace(/\.role$/, ""));
+  const championSelect = event.target.closest("#championSelect");
+  if (championSelect) {
+    state.attacker.champion = championSelect.value || null;
+    resetAbilityInputs();
+    invalidateOptimization();
+    return render();
+  }
+  const roleSelect = event.target.closest("#roleSelect");
+  if (roleSelect) {
+    state.attacker.role = roleSelect.value || null;
+    state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
+    invalidateOptimization();
+    return render();
+  }
+  const levelInput = event.target.closest("#levelInput");
+  if (levelInput) {
+    state.attacker.level = Math.max(1, Math.min(attackerLevelCap(), Number(levelInput.value) || 1));
+    syncAbilityInputsToLevel();
+    invalidateOptimization();
+    return render();
+  }
+  const rosterRoleSelect = event.target.closest("[data-roster-role]");
+  if (!rosterRoleSelect) return;
+  const loadout = pathValue(rosterRoleSelect.dataset.rosterRole.replace(/\.role$/, ""));
   if (!loadout) return;
-  loadout.role = roleSelect.value;
+  loadout.role = rosterRoleSelect.value;
   if (!loadout.role) loadout.roleQuestComplete = false;
   if (loadout.role !== "top" && loadout.level > 18) loadout.level = 18;
   invalidateOptimization();
@@ -2762,7 +3101,7 @@ document.addEventListener("change", (event) => {
 });
 
 document.addEventListener("change", (event) => {
-  if (event.target.closest("[data-fight-range]")) renderBuilder();
+  if (event.target.closest("[data-fight-range]")) render();
 });
 
 $("pickerSearch").addEventListener("input", (event) => renderPicker(event.target.value));
