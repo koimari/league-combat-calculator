@@ -2,10 +2,11 @@
 
 Each registered champion is sent through the real local Flask
 ``/api/optimize`` path with one locked item so the sweep stays bounded.  The
-report records elapsed time, status/error text, and candidate coverage.  A
-partial HTTP 200 or a known fail-closed HTTP 400 is classified explicitly;
-partial results fail the matrix and neither outcome is promoted to a
-successful recommendation.
+report records elapsed time, status/error text, event-order coverage, and the
+item-candidate scope.  Issue #38 certifies champion event packages; incomplete
+item coverage is owned by issue #40 and is recorded as a separate scope gap.
+A partial event timeline or an unexpected HTTP result still fails the matrix;
+an in-scope champion result is never promoted to a global BIS claim.
 
 Usage::
 
@@ -46,13 +47,25 @@ def _payload(champion: str) -> dict[str, Any]:
 
 
 def _classify(status: int, body: Mapping[str, Any]) -> str:
-    """Classify an API result without treating partial output as success."""
+    """Classify a result by champion timeline, then disclose item scope.
+
+    ``is_certified_best`` is deliberately not the champion-matrix predicate:
+    the optimizer can withhold a global BIS claim because the item umbrella
+    still has known out-of-scope candidates while the champion's own event
+    package is complete.  Those are separate work streams.  Keep that fact in
+    the outcome instead of mislabeling every generic champion as a partial
+    champion.
+    """
     if status == 200:
         coverage = body.get("search_timeline_coverage")
         if isinstance(coverage, Mapping) and coverage.get("complete"):
             if bool(body.get("is_certified_best")):
                 return "certified"
-            return "partial_or_unexhaustive"
+            candidate_coverage = body.get("candidate_coverage")
+            if isinstance(candidate_coverage, Mapping) and not bool(
+                candidate_coverage.get("complete")
+            ):
+                return "certified_with_item_scope_gap"
         return "partial_or_unexhaustive"
     error = body.get("error")
     if (
@@ -86,6 +99,12 @@ def run_matrix(
                 "error": body.get("error"),
                 "elapsed_ms": elapsed_ms,
                 "search_timeline_coverage": coverage,
+                "candidate_coverage": (
+                    body.get("candidate_coverage", {})
+                    if isinstance(body.get("candidate_coverage", {}), dict)
+                    else {}
+                ),
+                "selection_certification": body.get("selection_certification"),
                 "outcome": _classify(int(status), body),
                 "build": (
                     {"items": body.get("items"), "boots": body.get("boots")}
@@ -112,9 +131,10 @@ def run_matrix(
         "exercised_count": len(observed_names),
         "all_registered_exercised": integrity_ok,
         "outcome_counts": dict(sorted(counts.items())),
-        # A matrix that contains a partial result has not certified that
-        # champion.  Treating it as a pass was the source of a misleading
-        # 173/173 result with 164 partial champions.
+        # A matrix that contains a partial event timeline has not certified
+        # that champion.  Item-scope gaps are reported separately because
+        # they are the issue #40 track, not evidence that the champion module
+        # itself is partial.
         "passed": (
             integrity_ok
             and counts.get("unexpected_failure", 0) == 0

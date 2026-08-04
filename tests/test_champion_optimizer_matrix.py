@@ -32,6 +32,32 @@ def test_partial_and_expected_withholding_fail_the_matrix_and_are_not_certified(
     }
 
 
+def test_item_scope_gap_does_not_withhold_a_complete_champion_package():
+    def post(_path, payload):
+        assert payload["champion"] == "Aatrox"
+        return 200, {
+            "items": ["Shadowflame"],
+            "boots": None,
+            "is_certified_best": False,
+            "selection_certification": "partial_or_unexhaustive",
+            "search_timeline_coverage": {
+                "complete": True,
+                "certification": "candidate_event_order_certified",
+                "coarse_sources": [],
+            },
+            "candidate_coverage": {
+                "complete": False,
+                "excluded_count": 21,
+                "excluded": [{"name": "Redemption", "reason": "active"}],
+            },
+        }
+
+    report = run_matrix(post, ["Aatrox"])
+    assert report["passed"] is True
+    assert report["outcome_counts"] == {"certified_with_item_scope_gap": 1}
+    assert report["results"][0]["candidate_coverage"]["excluded_count"] == 21
+
+
 def test_matrix_requires_every_registered_name_and_elapsed_receipt():
     def post(_path, payload):
         return 200, {
