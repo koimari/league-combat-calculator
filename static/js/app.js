@@ -248,6 +248,10 @@ function capabilityReason(descriptor, fallback = "This input is unavailable in t
   return descriptor?.reason || fallback;
 }
 
+function capabilityTitle(descriptor) {
+  return descriptor?.supported === false ? capabilityReason(descriptor) : "";
+}
+
 function capabilityDescriptorAttributes(field, descriptor, extra = {}) {
   const supported = descriptor.supported !== false;
   const reason = capabilityReason(descriptor);
@@ -794,9 +798,10 @@ function itemSlot(path, id, compact = false, allowBis = false) {
   const bisReady = bisReadyForPath(path);
   const kind = participantKindForPath(path);
   const field = path.endsWith(".boots") || path.includes("questBoot") ? "boots" : "items";
+  const emptyTitle = capabilityTitle(capabilityFor(kind, field));
   const controlAttrs = capabilityAttributes(kind, field);
   return `<div class="slot-wrap ${compact ? "compact" : ""}">
-    <button class="item-slot" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"} ${item ? "" : escapeHtml(capabilityReason(capabilityFor(kind, field)))}">
+    <button class="item-slot" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}${item || !emptyTitle ? "" : ` ${escapeHtml(emptyTitle)}`}"${emptyTitle ? ` title="${escapeHtml(emptyTitle)}"` : ""}>
       <span class="item-icon ${item ? "" : "empty"}">${item ? `<img src="${itemImage(id)}" alt="" />` : `<span aria-hidden="true">+</span>`}</span>
       ${compact ? "" : `<small>${escapeHtml(item?.name || "Add item")}</small>`}
     </button>
@@ -2111,7 +2116,7 @@ function renderScenarioRail() {
     roleSelect.value = state.attacker.role || "";
     const roleCapability = capabilityFor("main", "role");
     roleSelect.disabled = roleCapability.supported === false;
-    roleSelect.title = capabilityReason(roleCapability);
+    roleSelect.title = capabilityTitle(roleCapability);
     roleSelect.dataset.capabilityField = "role";
   }
   const stateReadout = $("stateReadout");
@@ -2217,8 +2222,10 @@ function prototypeItemSlot(id, path, side) {
   const item = getItem(id);
   const field = path.includes("questBoot") ? "boots" : "items";
   const kind = participantKindForPath(path);
+  const emptyTitle = capabilityTitle(capabilityFor(kind, field));
   const controlAttrs = capabilityAttributes(kind, field);
-  return `<div class="slot-wrap"><button class="slot ${item ? "" : "empty-slot"}" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}" title="${item ? escapeHtml(itemStatsLine(item)) : escapeHtml(capabilityReason(capabilityFor(kind, field)))}">${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>${item && stackSpec(id) ? stackControl(path, id) : ""}</div>`;
+  const title = item ? escapeHtml(itemStatsLine(item)) : escapeHtml(emptyTitle);
+  return `<div class="slot-wrap"><button class="slot ${item ? "" : "empty-slot"}" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}"${title ? ` title="${title}"` : ""}>${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>${item && stackSpec(id) ? stackControl(path, id) : ""}</div>`;
 }
 
 function prototypeRosterItemSlot(root, index, loadout, slot) {
@@ -2280,7 +2287,7 @@ function renderPrototypeChampion() {
   if (roleSelect) {
     roleSelect.value = state.attacker.role || "";
     roleSelect.disabled = roleCapability.supported === false;
-    roleSelect.title = capabilityReason(roleCapability);
+    roleSelect.title = capabilityTitle(roleCapability);
     roleSelect.dataset.capabilityField = "role";
   }
   const levelCapability = capabilityFor("main", "level");
@@ -2288,11 +2295,11 @@ function renderPrototypeChampion() {
   levelInput.value = state.attacker.level;
   levelInput.max = attackerLevelCap();
   levelInput.disabled = levelCapability.supported === false;
-  levelInput.title = capabilityReason(levelCapability);
+  levelInput.title = capabilityTitle(levelCapability);
   levelInput.dataset.capabilityField = "level";
   document.querySelectorAll("[data-level-delta]").forEach((button) => {
     button.disabled = levelCapability.supported === false;
-    button.title = capabilityReason(levelCapability);
+    button.title = capabilityTitle(levelCapability);
     button.dataset.capabilityField = "level";
   });
   $("levelOutput").textContent = state.attacker.level;
@@ -2300,13 +2307,13 @@ function renderPrototypeChampion() {
   $("questToggle").textContent = state.attacker.roleQuestComplete ? "Quest on" : "Quest off";
   $("questToggle").setAttribute("aria-pressed", String(state.attacker.roleQuestComplete));
   $("questToggle").disabled = questCapability.supported === false || !state.attacker.role;
-  $("questToggle").title = capabilityReason(questCapability);
+  $("questToggle").title = capabilityTitle(questCapability);
   $("questToggle").dataset.capabilityField = "role_quest_complete";
   const bootsCapability = capabilityFor("main", "include_boots");
   $("bootsToggle").textContent = includeBootsForSide("A") ? "Boots on" : "Boots off";
   $("bootsToggle").setAttribute("aria-pressed", String(includeBootsForSide("A")));
   $("bootsToggle").disabled = bootsCapability.supported === false;
-  $("bootsToggle").title = capabilityReason(bootsCapability);
+  $("bootsToggle").title = capabilityTitle(bootsCapability);
   $("bootsToggle").dataset.capabilityField = "include_boots";
   $("stateReadout").textContent = `${state.ui.gameState === "live" ? "Snapshot lens" : "Theory state"} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
   $("statsGrid").innerHTML = stats ? prototypeStats(stats) : `<div class="matrix-placeholder">Select a champion to resolve patch-pinned stats.</div>`;
@@ -2363,7 +2370,7 @@ function renderPrototypeBuilder() {
   $("rotationRange").value = state.fight.rotations;
   const rotationCapability = scenarioCapabilityFor("rotations");
   $("rotationRange").disabled = rotationCapability.supported === false;
-  $("rotationRange").title = capabilityReason(rotationCapability);
+  $("rotationRange").title = capabilityTitle(rotationCapability);
   $("rotationRange").dataset.capabilityField = "rotations";
   const durationRange = $("durationRange");
   const durationOutput = $("durationOutput");
@@ -2374,7 +2381,7 @@ function renderPrototypeBuilder() {
     durationRange.max = durationMax;
     durationRange.value = state.fight.duration;
     durationRange.disabled = durationCapability.supported === false;
-    durationRange.title = capabilityReason(durationCapability);
+    durationRange.title = capabilityTitle(durationCapability);
     durationRange.dataset.capabilityField = "window";
   }
   if (durationOutput) durationOutput.textContent = `${one(state.fight.duration)}s`;
@@ -2389,7 +2396,7 @@ function renderPrototypeBuilder() {
   $("uptimeRange").value = Math.round(state.fight.aaUptime * 100);
   const uptimeCapability = scenarioCapabilityFor("auto_attack_uptime");
   $("uptimeRange").disabled = calculated || uptimeCapability.supported === false;
-  $("uptimeRange").title = calculated ? "Calculated uptime is owned by the backend auto-attack policy." : capabilityReason(uptimeCapability);
+  $("uptimeRange").title = calculated ? "Calculated uptime is owned by the backend auto-attack policy." : capabilityTitle(uptimeCapability);
   $("uptimeRange").dataset.capabilityField = "auto_attack_uptime";
   const modeButton = $("uptimeModeToggle");
   if (modeButton) {
@@ -2397,7 +2404,7 @@ function renderPrototypeBuilder() {
     modeButton.setAttribute("aria-pressed", String(calculated));
     const modeCapability = scenarioCapabilityFor("auto_attack_uptime_mode");
     modeButton.disabled = modeCapability.supported === false;
-    modeButton.title = capabilityReason(modeCapability);
+    modeButton.title = capabilityTitle(modeCapability);
     modeButton.dataset.capabilityField = "auto_attack_uptime_mode";
   }
 }
