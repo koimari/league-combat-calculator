@@ -161,6 +161,37 @@ def test_spirit_visage_increases_protoplasm_healing_not_temporary_health():
 
     assert defenses.threshold_health_bonus == 300.0
     assert defenses.threshold_health_heal == pytest.approx(609.375)
+    assert defenses.healing_received_multiplier == pytest.approx(1.25)
+
+
+def test_spirit_visage_exposes_received_healing_multiplier_without_a_starting_shield():
+    defenses = resolve_starting_defenses(
+        "Aatrox",
+        18,
+        _stats(),
+        [{"name": "Spirit Visage"}],
+    )
+
+    assert defenses.healing_received_multiplier == pytest.approx(1.25)
+    assert any("all modeled healing received" in note for note in defenses.assumptions)
+
+
+def test_guardian_angel_resolves_sourced_base_health_rebirth():
+    defenses = resolve_starting_defenses(
+        "Aatrox",
+        18,
+        _stats(base_health=1800.0),
+        [{"name": "Guardian Angel"}],
+    )
+
+    assert defenses.revive_health_amount == pytest.approx(900.0)
+    assert defenses.revive_delay == pytest.approx(4.0)
+    assert defenses.revive_cooldown == pytest.approx(300.0)
+    assert defenses.public_summary()["revive"] == {
+        "health_amount": 900.0,
+        "delay": 4.0,
+        "cooldown": 300.0,
+    }
 
 
 def test_level_scaled_defenses_cap_at_level_eighteen():
@@ -173,3 +204,19 @@ def test_level_scaled_defenses_cap_at_level_eighteen():
 
     assert defenses.threshold_health_bonus == 300.0
     assert defenses.threshold_health_heal == 400.0
+
+
+@pytest.mark.parametrize(
+    "item_name",
+    ["Banshee's Veil", "Edge of Night", "Verdant Barrier"],
+)
+def test_annul_is_ready_as_an_opening_spell_shield(item_name):
+    defenses = resolve_starting_defenses("Ahri", 18, _stats(), [{"name": item_name}])
+
+    assert defenses.spell_shield_ready is True
+    assert defenses.spell_shield_source == f"{item_name} — Annul"
+    summary = defenses.public_summary()
+    assert summary["spell_shield"] == {
+        "ready": True,
+        "source": f"{item_name} — Annul",
+    }

@@ -23,48 +23,191 @@ logger = logging.getLogger(__name__)
 # sourced numeric mechanics live here so routes/UI never carry item constants.
 ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
     "Dark Seal": {
-        "glory_stacks": {
-            "type": "int",
-            "label": "Glory stacks",
-            "default": 0,
-            "min": 0,
-            "max": 10,
-            "step": 1,
+        "options": {
+            "glory_stacks": {
+                "type": "int",
+                "label": "Glory stacks",
+                "default": 0,
+                "min": 0,
+                "max": 10,
+                "step": 1,
+                "bonus_ap_per_unit": 4.0,
+            }
         },
         "bonus_ap_per_stack": 4.0,
         "source_url": "https://wiki.leagueoflegends.com/en-us/Dark_Seal",
         "source_revision_id": 4015213,
     },
     "Mejai's Soulstealer": {
-        "glory_stacks": {
-            "type": "int",
-            "label": "Glory stacks",
-            "default": 0,
-            "min": 0,
-            "max": 25,
-            "step": 1,
+        "options": {
+            "glory_stacks": {
+                "type": "int",
+                "label": "Glory stacks",
+                "default": 0,
+                "min": 0,
+                "max": 25,
+                "step": 1,
+                "bonus_ap_per_unit": 5.0,
+                "move_speed_threshold": 10,
+                "move_speed_percent": 10.0,
+            }
         },
         "bonus_ap_per_stack": 5.0,
-        "move_speed_threshold": 10,
-        "move_speed_percent": 10.0,
         "source_url": "https://wiki.leagueoflegends.com/en-us/Mejai's_Soulstealer",
         "source_revision_id": 3902926,
+    },
+    "Heartsteel": {
+        "options": {
+            "bonus_health": {
+                "type": "int",
+                "label": "Permanent bonus health",
+                "default": 0,
+                "min": 0,
+                "max": 10000,
+                "step": 10,
+                "bonus_health_per_unit": 1.0,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Heartsteel",
+        "source_revision_id": 4044274,
+    },
+    "Rod of Ages": {
+        "options": {
+            "timeless_stacks": {
+                "type": "int",
+                "label": "Timeless stacks",
+                "default": 0,
+                "min": 0,
+                "max": 10,
+                "step": 1,
+                "bonus_ap_per_unit": 3.0,
+                "bonus_health_per_unit": 10.0,
+                "bonus_mana_per_unit": 30.0,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Rod_of_Ages",
+        "source_revision_id": 3984371,
+    },
+    "Yun Tal Wildarrows": {
+        "options": {
+            "crit_stacks": {
+                "type": "int",
+                "label": "Practice Makes Lethal stacks",
+                "default": 0,
+                "min": 0,
+                "max": 125,
+                "step": 1,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Yun_Tal_Wildarrows",
+        "source_revision_id": 4046569,
+    },
+    "Overlord's Bloodmail": {
+        "options": {
+            "missing_health_percent": {
+                "type": "int",
+                "label": "Starting missing health",
+                "default": 0,
+                "min": 0,
+                "max": 70,
+                "step": 5,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Overlord%27s_Bloodmail",
+        "source_revision_id": 4046569,
     },
 }
 
 
+def _item_option_schemas(config: Mapping[str, Any]) -> Mapping[str, Mapping[str, Any]]:
+    """Return the typed state controls for one item configuration."""
+    # Keep compatibility with the original two-option schema while all new
+    # controls use the explicit ``options`` mapping.
+    if "options" in config:
+        return config["options"]
+    legacy = config.get("glory_stacks")
+    return {"glory_stacks": legacy} if isinstance(legacy, Mapping) else {}
+
+
 def item_input_options_meta() -> dict[str, dict[str, Any]]:
     """Return the browser-safe controls and provenance for stateful items."""
-    return {
-        item_name: {
+    metadata: dict[str, dict[str, Any]] = {}
+    for item_name, config in ITEM_INPUT_OPTIONS.items():
+        schemas = _item_option_schemas(config)
+        metadata[item_name] = {
             "options": {
-                "glory_stacks": dict(config["glory_stacks"]),
+                key: {
+                    key2: value2
+                    for key2, value2 in schema.items()
+                    if not key2.endswith("_per_unit")
+                }
+                for key, schema in schemas.items()
+            },
+            "stat_effects": {
+                key: {
+                    key2: value2
+                    for key2, value2 in schema.items()
+                    if key2.endswith("_per_unit")
+                    or key2 in {"move_speed_threshold", "move_speed_percent"}
+                }
+                for key, schema in schemas.items()
+                if any(
+                    key2.endswith("_per_unit")
+                    or key2 in {"move_speed_threshold", "move_speed_percent"}
+                    for key2 in schema
+                )
             },
             "source_url": config["source_url"],
             "source_revision_id": config["source_revision_id"],
         }
-        for item_name, config in ITEM_INPUT_OPTIONS.items()
-    }
+    # Yun Tal's crit conversion is sourced from ITEM_EFFECTS rather than the
+    # input schema because its melee/ranged caps are part of the item packet.
+    if "Yun Tal Wildarrows" in metadata:
+        metadata["Yun Tal Wildarrows"]["derived"] = {
+            key: required_effect_value("Yun Tal Wildarrows", key)
+            for key in (
+                "crit_chance_per_stack_melee",
+                "crit_chance_per_stack_ranged",
+                "crit_stack_max_melee",
+                "crit_stack_max_ranged",
+                "crit_chance_cap",
+            )
+        }
+    return metadata
+
+
+def stat_conversion_metadata(item_name: str) -> dict[str, float]:
+    """Return browser-safe sourced stat-conversion metadata for one item."""
+    effect = ITEM_EFFECTS.get(item_name, {})
+    metadata = {}
+    keys = (
+        "bonus_mana_to_ap_ratio",
+        "bonus_mana_to_health_ratio",
+        "bonus_health_to_ap_ratio",
+        "max_mana_to_ad_ratio",
+        "bonus_health_to_ad_ratio",
+        "base_ad_to_bonus_ad_ratio",
+        "retribution_missing_health_max",
+        "item_bonus_health_ratio",
+        "ap_per_mana_regen_unit",
+        "mana_regen_threshold_percent",
+        "rapids_bonus_ap",
+    )
+    if item_name in {"Bandlepipes", "Experimental Hexplate"}:
+        keys += ("bonus_attack_speed_melee", "bonus_attack_speed_ranged")
+    if item_name == "Yun Tal Wildarrows":
+        keys += ("bonus_attack_speed_percent",)
+    if item_name == "Endless Hunger":
+        keys += (
+            "famine_base_ability_haste",
+            "famine_bonus_ad_to_ability_haste_melee",
+            "famine_bonus_ad_to_ability_haste_ranged",
+        )
+    for key in keys:
+        value = effect.get(key)
+        if value is not None:
+            metadata[key] = float(value)
+    return metadata
 
 
 def validate_item_input_options(value: object) -> dict[str, dict[str, int]]:
@@ -82,47 +225,90 @@ def validate_item_input_options(value: object) -> dict[str, dict[str, int]]:
         if not isinstance(raw_options, Mapping):
             raise ValueError(f"item_options.{item_name} must be an object")
         config = ITEM_INPUT_OPTIONS[item_name]
-        declared = {"glory_stacks"}
+        schemas = _item_option_schemas(config)
+        declared = set(schemas)
         unknown_options = set(raw_options) - declared
         if unknown_options:
             raise ValueError(
                 f"Unknown option for {item_name}: {sorted(unknown_options)[0]}"
             )
-        option = config["glory_stacks"]
-        stacks = raw_options.get("glory_stacks", option["default"])
-        if isinstance(stacks, bool) or not isinstance(stacks, int):
-            raise ValueError(
-                f"item_options.{item_name}.glory_stacks must be an integer"
-            )
-        if not option["min"] <= stacks <= option["max"]:
-            raise ValueError(
-                f"item_options.{item_name}.glory_stacks must be between "
-                f"{option['min']} and {option['max']}"
-            )
-        parsed[item_name] = {"glory_stacks": stacks}
+        parsed[item_name] = {}
+        for option_name, option in schemas.items():
+            supplied = raw_options.get(option_name, option["default"])
+            if option["type"] == "int" and (
+                isinstance(supplied, bool) or not isinstance(supplied, int)
+            ):
+                raise ValueError(
+                    f"item_options.{item_name}.{option_name} must be an integer"
+                )
+            if not option["min"] <= supplied <= option["max"]:
+                raise ValueError(
+                    f"item_options.{item_name}.{option_name} must be between "
+                    f"{option['min']} and {option['max']}"
+                )
+            parsed[item_name][option_name] = supplied
     return parsed
 
 
 def _input_option_stat_bonuses(
     items: list[dict[str, Any]],
     item_options: Mapping[str, Mapping[str, int]] | None,
-) -> tuple[float, float]:
-    """Return bonus AP and percent move speed from equipped item state."""
+) -> tuple[float, float, float, float]:
+    """Return AP, move speed, health, and mana from equipped item state."""
     if not item_options:
-        return 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0
     equipped = _item_names(items)
     bonus_ap = 0.0
     move_speed_percent = 0.0
+    bonus_health = 0.0
+    bonus_mana = 0.0
     for item_name, options in item_options.items():
         if item_name not in equipped or item_name not in ITEM_INPUT_OPTIONS:
             continue
         config = ITEM_INPUT_OPTIONS[item_name]
-        stacks = options.get("glory_stacks", 0)
-        bonus_ap += stacks * config["bonus_ap_per_stack"]
-        threshold = config.get("move_speed_threshold")
-        if threshold is not None and stacks >= threshold:
-            move_speed_percent += config["move_speed_percent"]
-    return bonus_ap, move_speed_percent
+        for option_name, schema in _item_option_schemas(config).items():
+            units = options.get(option_name, schema["default"])
+            bonus_ap += units * schema.get("bonus_ap_per_unit", 0.0)
+            bonus_health += units * schema.get("bonus_health_per_unit", 0.0)
+            bonus_mana += units * schema.get("bonus_mana_per_unit", 0.0)
+            threshold = schema.get("move_speed_threshold")
+            if threshold is not None and units >= threshold:
+                move_speed_percent += schema["move_speed_percent"]
+    return bonus_ap, move_speed_percent, bonus_health, bonus_mana
+
+
+def input_option_stat_bonuses(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+) -> tuple[float, float, float, float]:
+    """Return sourced stat deltas from explicit item state controls."""
+    return _input_option_stat_bonuses(items, item_options)
+
+
+def input_option_crit_chance(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+    *,
+    is_melee: bool,
+) -> float:
+    """Return explicit permanent crit chance from item state, in percent.
+
+    Yun Tal's Practice Makes Lethal stacks are long-lived scenario state. The
+    typed accessor owns the melee/ranged caps and parser-backed per-stack
+    values; this adapter only converts its fractional result to the percent
+    units used by the public stat bundle.
+    """
+    if "Yun Tal Wildarrows" not in _item_names(items) or not item_options:
+        return 0.0
+    options = item_options.get("Yun Tal Wildarrows")
+    if not options:
+        return 0.0
+    stacks = options.get("crit_stacks", 0)
+    return 100.0 * yun_tal_permanent_crit_chance(
+        stacks=stacks,
+        is_melee=is_melee,
+        item_name="Yun Tal Wildarrows",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -132,6 +318,14 @@ def _input_option_stat_bonuses(
 # explicit whole-system fallback and the parity reference for parser updates.
 _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── On-Hit (per auto attack) ──────────────────────────────────────────
+    "Cull": {
+        "type": "on_hit_heal",
+        # Reap's Riot description explicitly says each on-hit restores 3
+        # health.  The cached passive branch only contains the quest/gold
+        # progression, so this sourced value is intentionally code-owned;
+        # the progression remains fail-closed in item_coverage.py.
+        "health_per_on_hit": 3.0,
+    },
     "Nashor's Tooth": {
         "type": "on_hit",
         "formula": "flat_ap",
@@ -181,9 +375,14 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_type": "physical",
         "max_hp_ratio_melee": 0.01,
         "max_hp_ratio_ranged": 0.005,
+        # Cleave cone packet to each nearby secondary target.
+        "secondary_max_hp_ratio_melee": 0.03,
+        "secondary_max_hp_ratio_ranged": 0.015,
         # Titanic Crescent active: empowered Cleave on next auto (10s CD)
         "active_max_hp_ratio_melee": 0.04,
         "active_max_hp_ratio_ranged": 0.02,
+        "active_secondary_max_hp_ratio_melee": 0.09,
+        "active_secondary_max_hp_ratio_ranged": 0.045,
         "active_cooldown": 10.0,
     },
     "Guinsoo's Rageblade": {
@@ -201,6 +400,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "phantom_hit": True,
         "stacking_autos": 5,  # Autos before first phantom hit (6th triggers)
         "phantom_interval": 3,  # Every 3rd auto after first phantom hit
+        "seething_attack_speed_per_stack": 0.08,
+        "seething_max_stacks": 4,
+        "seething_duration": 3.0,
+        "phantom_duration": 6.0,
+        "phantom_stacks_required": 2,
     },
     "Muramana": {
         "type": "on_hit",
@@ -212,6 +416,12 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "max_mana_ratio_ability_ranged": 0.03,
         # Awe passive: 2% max mana as bonus AD (stat conversion)
         "max_mana_to_ad_ratio": 0.02,
+    },
+    "Endless Hunger": {
+        "type": "stat_conversion",
+        "famine_base_ability_haste": 5.0,
+        "famine_bonus_ad_to_ability_haste_melee": 0.13,
+        "famine_bonus_ad_to_ability_haste_ranged": 0.10,
     },
     # ── Spellblade (after ability, next auto, mutually exclusive) ─────────
     "Sheen": {
@@ -236,6 +446,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_type": "magic",
         "base_ad_ratio": 0.75,
         "ap_ratio": 0.45,
+        # Spellblade's empowered attack also gains 50% bonus attack speed.
+        "bonus_attack_speed_percent": 50.0,
         "cooldown": 1.5,
         "weave_delay": 1.5,  # CD starts after empowered attack
     },
@@ -246,6 +458,10 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "base_ad_ratio": 1.25,
         # Bonus damage scales 0-50 based on crit chance
         "crit_bonus_max": 50.0,
+        # Manaflow restores half of Spellblade's damage formula: 62.5% base
+        # AD plus up to 25% of bonus AD at 100% crit chance.
+        "mana_restore_base_ad_ratio": 0.625,
+        "mana_restore_crit_ratio": 0.25,
         "cooldown": 1.5,
         "weave_delay": 1.5,  # CD starts after empowered attack
     },
@@ -276,6 +492,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "cooldown": 1.5,
         "weave_delay": 1.5,  # CD starts after empowered attack
         "double_on_hit": True,  # Applies all on-hit effects again
+        "self_heal_ap_ratio": 0.10,
+        "self_heal_bonus_health_ratio": 0.03,
     },
     # ── Burn / DoT ────────────────────────────────────────────────────────
     "Fated Ashes": {
@@ -315,6 +533,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "immolate",
         "formula": "bonus_hp_dps",
         "damage_type": "magic",
+        "event_interval": 1.0,
         # 20 + 1% bonus HP per second
         "base_per_second": 20.0,
         "bonus_hp_ratio_per_second": 0.01,
@@ -323,6 +542,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "immolate",
         "formula": "bonus_hp_dps",
         "damage_type": "magic",
+        "event_interval": 1.0,
         # 15 + 1% bonus HP per second
         "base_per_second": 15.0,
         "bonus_hp_ratio_per_second": 0.01,
@@ -331,6 +551,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "immolate",
         "formula": "flat_dps",
         "damage_type": "magic",
+        "event_interval": 1.0,
         # Flat 15 per second (bonus-health scaling removed in V14.19)
         "base_per_second": 15.0,
     },
@@ -360,6 +581,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "empowered_auto_count": 1,
         "chain_targets_min": 4,
         "chain_targets_max": 8,
+        "energized_max_stacks": 100,
+        "energized_attack_stacks": 15,
     },
     "Stormsurge": {
         "type": "proc",
@@ -438,8 +661,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Profane Hydra": {
         "type": "active",
+        "cleave_on_hit": True,
         "formula": "total_ad",
         "damage_type": "physical",
+        "secondary_ad_ratio_melee": 0.40,
+        "secondary_ad_ratio_ranged": 0.20,
         # Active: 80% total AD
         "total_ad_ratio": 0.80,
         "cooldown": 10.0,
@@ -456,16 +682,32 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Ravenous Hydra": {
         "type": "active",
+        "cleave_on_hit": True,
         "formula": "total_ad",
         "damage_type": "physical",
+        "secondary_ad_ratio_melee": 0.40,
+        "secondary_ad_ratio_ranged": 0.20,
         # Ravenous Crescent: 80% total AD
         "total_ad_ratio": 0.80,
+        # Cleave and Ravenous Crescent both explicitly apply life steal at
+        # full effectiveness.  This value is parser-owned from the cached
+        # branch text, not a call-site fallback.
+        "lifesteal_effectiveness": 1.0,
         "cooldown": 10.0,
+    },
+    "Runaan's Hurricane": {
+        "type": "secondary_target",
+        "secondary_ad_ratio": 0.55,
+        "max_secondary_targets": 2,
+        "applies_on_hit": True,
     },
     "Tiamat": {
         "type": "active",
+        "cleave_on_hit": True,
         "formula": "total_ad",
         "damage_type": "physical",
+        "secondary_ad_ratio_melee": 0.40,
+        "secondary_ad_ratio_ranged": 0.20,
         # Crescent: 75% total AD
         "total_ad_ratio": 0.75,
         "cooldown": 10.0,
@@ -480,8 +722,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Stridebreaker": {
         "type": "active",
+        "cleave_on_hit": True,
         "formula": "total_ad",
         "damage_type": "physical",
+        "secondary_ad_ratio_melee": 0.40,
+        "secondary_ad_ratio_ranged": 0.20,
         # Breaking Shockwave: 80% total AD + slow
         "total_ad_ratio": 0.80,
         "cooldown": 15.0,
@@ -495,6 +740,9 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # 2% per second in combat, up to 8% (4 stacks)
         "amp_per_second": 0.02,
         "amp_max": 0.08,
+        "max_stack_omnivamp": 10.0,
+        # Void Infusion: 2% of bonus health as ability power.
+        "bonus_health_to_ap_ratio": 0.02,
     },
     "Haunting Guise": {
         "type": "damage_amp",
@@ -578,6 +826,10 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Melee 6% / Ranged 4% of target's maximum health
         "target_max_hp_ratio_melee": 0.06,
         "target_max_hp_ratio_ranged": 0.04,
+        # The passive arms on two separate champion hits within this window;
+        # the completed pair starts the per-target cooldown.
+        "stack_required": 2,
+        "stack_window": 2.0,
         "cooldown": 6.0,
     },
     # ── Lethality Proc (ability damage trigger) ──────────────────────────
@@ -599,6 +851,14 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # also wounded for 3 seconds. Fires only from modeled incoming
         # attack events — never assumed in a one-attacker fight.
         "base": 10.0,
+        "bonus_armor_ratio": 0.0,
+        "grievous_duration": 3.0,
+    },
+    "Thornmail": {
+        "type": "thorns",
+        "damage_type": "magic",
+        "base": 20.0,
+        "bonus_armor_ratio": 0.10,
         "grievous_duration": 3.0,
     },
     # ── Resistance Reduction ──────────────────────────────────────────────
@@ -650,6 +910,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_type": "magic",
         # Sharpshooter: 40 bonus magic damage on first energized auto
         "base": 40.0,
+        "energized_max_stacks": 100,
     },
     # ── Other single-proc items ───────────────────────────────────────────
     "Dead Man's Plate": {
@@ -722,6 +983,14 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "stat_conversion",
         "bonus_mana_to_ap_ratio": 0.01,
     },
+    "Fimbulwinter": {
+        "type": "stat_conversion",
+        "bonus_mana_to_health_ratio": 0.15,
+    },
+    "Winter's Approach": {
+        "type": "stat_conversion",
+        "bonus_mana_to_health_ratio": 0.15,
+    },
     "Dawncore": {
         "type": "stat_conversion",
         "ap_per_mana_regen_unit": 10.0,
@@ -732,9 +1001,23 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "bonus_attack_speed_melee": 30.0,
         "bonus_attack_speed_ranged": 20.0,
     },
+    "Hubris": {
+        "type": "stat_conversion",
+        "eminence_base_ad": 12.0,
+        "eminence_ad_per_stack": 3.0,
+        "eminence_duration": 90.0,
+    },
+    "Axiom Arc": {
+        "type": "stat_conversion",
+        "ultimate_refund_base_ratio": 0.10,
+        "ultimate_refund_per_lethality_ratio": 0.0025,
+        "ultimate_refund_trigger_window": 3.0,
+    },
     "Overlord's Bloodmail": {
         "type": "stat_conversion",
         "bonus_health_to_ad_ratio": 0.025,
+        "retribution_missing_health_min": 0.0,
+        "retribution_missing_health_max": 0.70,
     },
     "Staff of Flowing Water": {
         "type": "stat_conversion",
@@ -762,9 +1045,42 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "basic_damage_flat_reduction": 15.0,
         "basic_damage_flat_reduction_cap": 0.20,
     },
+    "Frozen Heart": {
+        "type": "target_attack_speed_aura",
+        # Winter's Caress cripples nearby champions' total attack speed by 20%.
+        "attack_speed_reduction": 0.20,
+    },
     "Randuin's Omen": {
         "type": "target_mitigation",
         "critical_strike_damage_multiplier": 0.70,
+    },
+    "Guardian Angel": {
+        "type": "defensive_start",
+        # Rebirth: after lethal damage, resurrect after four seconds with
+        # 50% of base health.  The timeline owns the trigger because the
+        # lethal packet is target-state dependent.
+        "revive_health_ratio": 0.50,
+        "revive_delay": 4.0,
+        "revive_cooldown": 300.0,
+    },
+    # Annul is ready at the opening of a modeled exchange.  The timeline
+    # consumes it on the first authored hostile ability; cooldown/rearm is
+    # intentionally not inferred from an item's name or from unscheduled
+    # damage events.
+    "Banshee's Veil": {
+        "type": "defensive_start",
+        "spell_shield_ready": True,
+        "spell_shield_cooldown": 40.0,
+    },
+    "Edge of Night": {
+        "type": "defensive_start",
+        "spell_shield_ready": True,
+        "spell_shield_cooldown": 40.0,
+    },
+    "Verdant Barrier": {
+        "type": "defensive_start",
+        "spell_shield_ready": True,
+        "spell_shield_cooldown": 60.0,
     },
     "Immortal Shieldbow": {
         "type": "target_threshold_shield",
@@ -840,6 +1156,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "display_name": "Stormrazor (Bolt)",
         "damage_type": "magic",
         "base": 100.0,
+        "energized_max_stacks": 100,
     },
     # ── Sundered Sky (first-auto crit modifier) ─────────────────────────────
     "Sundered Sky": {
@@ -848,6 +1165,13 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Overrides natural crit even if you would have crit normally
         "reduced_crit_ratio": 0.80,
         "cooldown": 10.0,
+        # Lightshield Strike also heals the attacker for base AD plus 6% of
+        # missing health.  The latter is evaluated against the live
+        # participant state when the ordered ledger is replayed.
+        "heal_base_ad_ratio": 1.0,
+        "heal_missing_health_ratio": 0.06,
+        # Excess Lightshield Strike healing becomes bonus health for 8 seconds.
+        "temporary_health_duration": 8.0,
     },
     # ── Voltaic Cyclosword (energized first-auto) ───────────────────────────
     "Voltaic Cyclosword": {
@@ -861,6 +1185,10 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "current_hp_ratio_melee": 0.09,
         "current_hp_ratio_ranged": 0.07,
         "damage_cap": 200.0,
+        "temporary_lethality_melee": 15.0,
+        "temporary_lethality_ranged": 12.0,
+        "temporary_lethality_duration": 4.0,
+        "energized_max_stacks": 100,
     },
     # ── Unending Despair (periodic AoE damage) ──────────────────────────────
     "Unending Despair": {
@@ -870,6 +1198,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Anguish: every 4 seconds, deal 3% bonus health as magic damage
         "interval": 4.0,
         "bonus_hp_ratio": 0.03,
+        # Anguish heals the wearer for 250% of post-mitigation damage dealt.
+        "self_heal_post_mitigation_multiplier": 2.50,
     },
     # ── Yun Tal Wildarrows (conditional AS on attack) ───────────────────────
     "Yun Tal Wildarrows": {
@@ -878,6 +1208,13 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "bonus_attack_speed_percent": 30.0,
         "duration": 6.0,
         "cooldown": 30.0,
+        "attack_refund_base": 1.0,
+        "attack_refund_crit": 2.0,
+        "crit_chance_per_stack_melee": 0.004,
+        "crit_chance_per_stack_ranged": 0.002,
+        "crit_stack_max_melee": 63,
+        "crit_stack_max_ranged": 125,
+        "crit_chance_cap": 0.25,
     },
 }
 
@@ -901,12 +1238,20 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "basic_damage",
         "unmodeled_splash_note",
         "attack_refund",
+        "applies_on_hit",
+        "energized_max_stacks",
+        "cleave_on_hit",
     }
 )
 
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
+    "Cull": frozenset({"health_per_on_hit"}),
+    "Banshee's Veil": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
+    "Edge of Night": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
+    "Verdant Barrier": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
     "Blade of the Ruined King": frozenset({"min_damage"}),
     "Blackfire Torch": frozenset({"tick_interval"}),
+    "Bami's Cinder": frozenset({"event_interval"}),
     "Fated Ashes": frozenset({"tick_interval"}),
     "Hexdrinker": frozenset(
         {
@@ -921,8 +1266,14 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Hexoptics C44": frozenset({"melee_assumed_distance"}),
     "Hextech Gunblade": frozenset({"base_min", "base_max", "cooldown"}),
     "Hextech Rocketbelt": frozenset({"cooldown"}),
+    "Bramble Vest": frozenset({"bonus_armor_ratio"}),
+    "Frozen Heart": frozenset({"attack_speed_reduction"}),
+    "Guardian Angel": frozenset(
+        {"revive_health_ratio", "revive_delay", "revive_cooldown"}
+    ),
     "Malignance": frozenset({"base", "ap_ratio", "duration"}),
     "Liandry's Torment": frozenset({"tick_interval"}),
+    "Hollow Radiance": frozenset({"event_interval"}),
     "Maw of Malmortius": frozenset(
         {
             "health_threshold",
@@ -933,6 +1284,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "duration",
         }
     ),
+    "Sunfire Aegis": frozenset({"event_interval"}),
     "Profane Hydra": frozenset({"cooldown"}),
     "Protoplasm Harness": frozenset(
         {
@@ -949,6 +1301,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     ),
     "Ravenous Hydra": frozenset({"cooldown"}),
     "Tiamat": frozenset({"cooldown"}),
+    "Thornmail": frozenset({"bonus_armor_ratio"}),
     "Seraph's Embrace": frozenset(
         {"health_threshold", "shield_max_mana_ratio", "duration"}
     ),
@@ -959,8 +1312,16 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
         {"health_threshold", "shield_bonus_health_ratio", "duration"}
     ),
     "Stormsurge": frozenset({"damage_threshold_ratio", "damage_threshold_window"}),
+    "Eclipse": frozenset({"stack_required", "stack_window"}),
     "Stridebreaker": frozenset({"cooldown"}),
     "Titanic Hydra": frozenset({"active_cooldown"}),
+    "Sundered Sky": frozenset(
+        {
+            "heal_base_ad_ratio",
+            "heal_missing_health_ratio",
+            "temporary_health_duration",
+        }
+    ),
 }
 
 
@@ -1080,6 +1441,11 @@ def _item_names(items: list[dict[str, Any]]) -> set[str]:
     return {item.get("name", "") for item in items}
 
 
+def has_item(items: list[dict[str, Any]], item_name: str) -> bool:
+    """Return whether a resolved build contains one canonical item name."""
+    return item_name in _item_names(items)
+
+
 # ---------------------------------------------------------------------------
 # Compiled fight-engine boundary
 # ---------------------------------------------------------------------------
@@ -1143,6 +1509,13 @@ class DamageSource:
     repeated_target_multiplier: float = 1.0
     single_target_multiplier: float = 1.0
     basic_damage: bool = False
+    # Some active packets explicitly inherit life steal.  The parser carries
+    # that sourced effectiveness into the runtime source; zero means no
+    # life-steal sibling is eligible.
+    lifesteal_effectiveness: float = 0.0
+    # Sourced cadence for continuous item damage (for example Immolate).
+    # ``None`` means the aggregate row must remain untimed.
+    event_interval: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1162,6 +1535,14 @@ class PerHitEffect:
 
 
 @dataclass(frozen=True, slots=True)
+class OnHitHealEffect:
+    """Health restored by one authored on-hit application."""
+
+    item_name: str
+    amount: float
+
+
+@dataclass(frozen=True, slots=True)
 class SpellbladeEffect:
     """One mutually-exclusive spellblade behavior."""
 
@@ -1171,6 +1552,11 @@ class SpellbladeEffect:
     double_on_hit: bool = False
     expose_weakness_melee: float = 0.0
     expose_weakness_ranged: float = 0.0
+    bonus_attack_speed_percent: float = 0.0
+    mana_restore_base_ad_ratio: float = 0.0
+    mana_restore_crit_ratio: float = 0.0
+    self_heal_ap_ratio: float = 0.0
+    self_heal_bonus_health_ratio: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -1188,6 +1574,7 @@ class PeriodicEffect:
 
     source: DamageSource
     interval: float
+    self_heal_post_mitigation_multiplier: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -1209,6 +1596,11 @@ class CooldownProcEffect:
     # Seconds refunded from a running cooldown per completed attack
     # windup (Scout's Slingshot's Bullseye).
     on_attack_cooldown_refund: float = 0.0
+    # Optional stack gate for effects such as Eclipse's two-hit trigger.
+    # Values are parser-owned in ITEM_EFFECTS and remain zero for ordinary
+    # cooldown procs.
+    stack_required: int = 0
+    stack_window: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -1226,6 +1618,13 @@ class FirstAutoEffect:
 
     source: DamageSource
     max_procs: int = 1
+    temporary_lethality_melee: float = 0.0
+    temporary_lethality_ranged: float = 0.0
+    temporary_lethality_duration: float = 0.0
+    energized_max_stacks: int = 0
+    energized_attack_stacks: int = 0
+    chain_targets_min: int = 0
+    chain_targets_max: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -1297,6 +1696,9 @@ class FirstAutoCritEffect:
 
     item_name: str
     reduced_crit_ratio: float
+    heal_base_ad_ratio: float = 0.0
+    heal_missing_health_ratio: float = 0.0
+    temporary_health_duration: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -1396,6 +1798,7 @@ class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
     per_hits: tuple[PerHitEffect, ...] = ()
+    on_hit_heals: tuple[OnHitHealEffect, ...] = ()
     spellblade: SpellbladeEffect | None = None
     burns: tuple[BurnEffect, ...] = ()
     immolates: tuple[DamageSource, ...] = ()
@@ -1456,6 +1859,8 @@ def _damage_source(
     *,
     suffix: str = "on-hit",
     breakdown_key: str | None = None,
+    lifesteal_effectiveness: float = 0.0,
+    event_interval: float | None = None,
 ) -> DamageSource:
     """Build shared source metadata without leaking registry records."""
     return DamageSource(
@@ -1464,6 +1869,8 @@ def _damage_source(
         display_name=f"{item_name} ({suffix})",
         damage_type=damage_type,
         raw_damage=raw_damage,
+        lifesteal_effectiveness=lifesteal_effectiveness,
+        event_interval=event_interval,
     )
 
 
@@ -1535,6 +1942,18 @@ def _compile_on_hit(
         superseded_by_ability_proc=values.get("secondary_behavior")
         == "per_ability_hit",
     )
+
+
+def _compile_on_hit_heal(
+    item_name: str,
+    values: Mapping[str, Any],
+) -> OnHitHealEffect:
+    """Compile one fixed health receipt from an on-hit item passive."""
+    required = _RequiredValues(item_name, values)
+    amount = required.number("health_per_on_hit")
+    if amount <= 0.0:
+        raise ValueError(f"{item_name!r} on-hit heal must be positive")
+    return OnHitHealEffect(item_name=item_name, amount=amount)
 
 
 def _compile_auto_cooldown(
@@ -1628,13 +2047,53 @@ def _compile_spellblade(
         suffix="Spellblade",
         breakdown_key=f"spellblade_{item_name}",
     )
+    # These sibling mechanics are parser-owned for specific spellblades.  A
+    # successful parse that drops one must fail closed rather than silently
+    # compiling a weaker version of the item.
+    required_siblings: dict[str, tuple[str, ...]] = {
+        "Lich Bane": ("bonus_attack_speed_percent",),
+        "Essence Reaver": (
+            "mana_restore_base_ad_ratio",
+            "mana_restore_crit_ratio",
+        ),
+        "Bloodsong": ("expose_weakness_melee", "expose_weakness_ranged"),
+        "Dusk and Dawn": (
+            "self_heal_ap_ratio",
+            "self_heal_bonus_health_ratio",
+        ),
+    }
+    sibling_values = {
+        key: required.number(key) for key in required_siblings.get(item_name, ())
+    }
     return SpellbladeEffect(
         source=source,
         cooldown=required.number("cooldown"),
         weave_delay=required.number("weave_delay"),
         double_on_hit=bool(values.get("double_on_hit", False)),
-        expose_weakness_melee=float(values.get("expose_weakness_melee", 0.0)),
-        expose_weakness_ranged=float(values.get("expose_weakness_ranged", 0.0)),
+        expose_weakness_melee=sibling_values.get(
+            "expose_weakness_melee", float(values.get("expose_weakness_melee", 0.0))
+        ),
+        expose_weakness_ranged=sibling_values.get(
+            "expose_weakness_ranged", float(values.get("expose_weakness_ranged", 0.0))
+        ),
+        bonus_attack_speed_percent=sibling_values.get(
+            "bonus_attack_speed_percent",
+            float(values.get("bonus_attack_speed_percent", 0.0)),
+        ),
+        mana_restore_base_ad_ratio=sibling_values.get(
+            "mana_restore_base_ad_ratio",
+            float(values.get("mana_restore_base_ad_ratio", 0.0)),
+        ),
+        mana_restore_crit_ratio=sibling_values.get(
+            "mana_restore_crit_ratio", float(values.get("mana_restore_crit_ratio", 0.0))
+        ),
+        self_heal_ap_ratio=sibling_values.get(
+            "self_heal_ap_ratio", float(values.get("self_heal_ap_ratio", 0.0))
+        ),
+        self_heal_bonus_health_ratio=sibling_values.get(
+            "self_heal_bonus_health_ratio",
+            float(values.get("self_heal_bonus_health_ratio", 0.0)),
+        ),
     )
 
 
@@ -1705,6 +2164,7 @@ def _compile_immolate(item_name: str, values: Mapping[str, Any]) -> DamageSource
         raw,
         suffix="Immolate",
         breakdown_key=f"immolate_{item_name}",
+        event_interval=required.number("event_interval"),
     )
 
 
@@ -1725,7 +2185,12 @@ def _compile_periodic(item_name: str, values: Mapping[str, Any]) -> PeriodicEffe
         suffix="Anguish",
         breakdown_key=f"periodic_{item_name}",
     )
-    return PeriodicEffect(source, required.number("interval"))
+    self_heal_multiplier = (
+        required.number("self_heal_post_mitigation_multiplier")
+        if item_name == "Unending Despair"
+        else 0.0
+    )
+    return PeriodicEffect(source, required.number("interval"), self_heal_multiplier)
 
 
 def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffect:
@@ -1831,7 +2296,10 @@ def _compile_ultimate_proc(
     return UltimateProcEffect(
         source,
         required.number("duration"),
-        float(values.get("mr_reduction", 0.0)),
+        # Malignance's Hatefog packet and its target MR reduction are one
+        # parser-owned sibling effect.  A missing value must not silently
+        # compile a damage-only version of the item.
+        required.number("mr_reduction"),
     )
 
 
@@ -1864,12 +2332,20 @@ def _compile_active(item_name: str, values: Mapping[str, Any]) -> DamageSource:
 
     else:
         raise ValueError(f"Unsupported active formula {formula!r} for {item_name!r}")
+    raw_lifesteal_effectiveness = values.get("lifesteal_effectiveness", 0.0)
+    lifesteal_effectiveness = (
+        float(raw_lifesteal_effectiveness)
+        if isinstance(raw_lifesteal_effectiveness, (int, float))
+        and not isinstance(raw_lifesteal_effectiveness, bool)
+        else 0.0
+    )
     return _damage_source(
         item_name,
         required.value("damage_type"),
         raw,
         suffix="active",
         breakdown_key=f"active_{item_name}",
+        lifesteal_effectiveness=lifesteal_effectiveness,
     )
 
 
@@ -1934,9 +2410,54 @@ def _compile_first_auto(
     max_procs = 1
     if values.get("uses_empowered_auto_count"):
         max_procs = int(required.number("empowered_auto_count"))
+    temporary_lethality_keys = (
+        "temporary_lethality_melee",
+        "temporary_lethality_ranged",
+        "temporary_lethality_duration",
+    )
+    # Voltaic's first-auto proc is the only registered temporary-lethality
+    # effect.  Its three values are one typed contract; accepting a partial
+    # record would silently turn a parser break into zero lethality/duration.
+    if item_name == "Voltaic Cyclosword" or any(
+        key in values for key in temporary_lethality_keys
+    ):
+        temporary_lethality = {
+            key: required.number(key) for key in temporary_lethality_keys
+        }
+    else:
+        temporary_lethality = {}
     return FirstAutoEffect(
         _explicit_damage_source(item_name, required, raw),
         max_procs=max_procs,
+        temporary_lethality_melee=temporary_lethality.get(
+            "temporary_lethality_melee", 0.0
+        ),
+        temporary_lethality_ranged=temporary_lethality.get(
+            "temporary_lethality_ranged", 0.0
+        ),
+        temporary_lethality_duration=temporary_lethality.get(
+            "temporary_lethality_duration", 0.0
+        ),
+        energized_max_stacks=(
+            int(required.number("energized_max_stacks"))
+            if "energized_max_stacks" in values
+            else 0
+        ),
+        energized_attack_stacks=(
+            int(required.number("energized_attack_stacks"))
+            if "energized_attack_stacks" in values
+            else 0
+        ),
+        chain_targets_min=(
+            int(required.number("chain_targets_min"))
+            if "chain_targets_min" in values
+            else 0
+        ),
+        chain_targets_max=(
+            int(required.number("chain_targets_max"))
+            if "chain_targets_max" in values
+            else 0
+        ),
     )
 
 
@@ -2002,6 +2523,8 @@ def _compile_max_hp_proc(
         raise ValueError(f"Unsupported max-HP proc formula for {item_name!r}")
     melee_ratio = required.number("target_max_hp_ratio_melee")
     ranged_ratio = required.number("target_max_hp_ratio_ranged")
+    stack_required = int(required.number("stack_required"))
+    stack_window = required.number("stack_window")
 
     def raw(inputs: DamageInputs) -> float:
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
@@ -2011,6 +2534,8 @@ def _compile_max_hp_proc(
         source=_explicit_damage_source(item_name, required, raw),
         cooldown=required.number("cooldown"),
         late_phase=True,
+        stack_required=stack_required,
+        stack_window=stack_window,
     )
 
 
@@ -2106,6 +2631,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "max_hp_proc",
         "mr_reduction_stacking",
         "on_hit",
+        "on_hit_heal",
         "on_hit_once",
         "on_hit_stacking",
         "periodic_aoe",
@@ -2113,8 +2639,10 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "shaped_charge",
         "shield_reduction",
         "spellblade",
+        "secondary_target",
         "stat_conversion",
         "target_mitigation",
+        "target_attack_speed_aura",
         "target_threshold_health",
         "target_threshold_shield",
         "thorns",
@@ -2164,6 +2692,7 @@ def _resolve_damage_effects_uncached(
 ) -> BuildDamageEffects:
     """Compile a build's registered damage behaviors from the live registry."""
     per_hits: list[PerHitEffect] = []
+    on_hit_heals: list[OnHitHealEffect] = []
     spellblade: SpellbladeEffect | None = None
     burns: list[BurnEffect] = []
     immolates: list[DamageSource] = []
@@ -2207,6 +2736,8 @@ def _resolve_damage_effects_uncached(
             )
         if effect_type == "on_hit":
             per_hits.append(_compile_on_hit(item_name, values))
+        elif effect_type == "on_hit_heal":
+            on_hit_heals.append(_compile_on_hit_heal(item_name, values))
         elif effect_type == "spellblade" and spellblade is None:
             spellblade = _compile_spellblade(item_name, values)
         elif effect_type == "burn":
@@ -2299,6 +2830,11 @@ def _resolve_damage_effects_uncached(
             if "cd_refund_percent" in values:
                 navori_refund_percent = required.number("cd_refund_percent")
                 cooldown_refund_source = item_name
+        elif effect_type == "secondary_target":
+            # Wind's Fury is priced by the shared roster event ledger.  Keep
+            # the typed effect in the build projection without adding a stale
+            # conditional note that would contradict its targeting receipt.
+            continue
         if "damage_amp_per_second" in values or effect_type == "damage_amp":
             damage_amplifiers.append(_compile_damage_amplifier(item_name, values))
         if effect_type == "magic_damage_amp":
@@ -2336,10 +2872,30 @@ def _resolve_damage_effects_uncached(
             first_auto_crit = FirstAutoCritEffect(
                 item_name,
                 _RequiredValues(item_name, values).number("reduced_crit_ratio"),
+                heal_base_ad_ratio=(
+                    _RequiredValues(item_name, values).number("heal_base_ad_ratio")
+                    if "heal_base_ad_ratio" in values
+                    else 0.0
+                ),
+                heal_missing_health_ratio=(
+                    _RequiredValues(item_name, values).number(
+                        "heal_missing_health_ratio"
+                    )
+                    if "heal_missing_health_ratio" in values
+                    else 0.0
+                ),
+                temporary_health_duration=(
+                    _RequiredValues(item_name, values).number(
+                        "temporary_health_duration"
+                    )
+                    if "temporary_health_duration" in values
+                    else 0.0
+                ),
             )
 
     return BuildDamageEffects(
         per_hits=tuple(per_hits),
+        on_hit_heals=tuple(on_hit_heals),
         spellblade=spellblade,
         burns=tuple(burns),
         immolates=tuple(immolates),
@@ -2383,7 +2939,12 @@ def _resolve_damage_effects_uncached(
 
 
 def _ap_multiplier(items: list[dict[str, Any]]) -> float:
-    """Additive AP multiplier from item passives.
+    """Backward-compatible private alias for :func:`ap_multiplier`."""
+    return ap_multiplier(items)
+
+
+def ap_multiplier(items: list[dict[str, Any]]) -> float:
+    """Return parser-owned additive AP multiplier from item passives.
 
     Rabadon's Deathcap (+30% AP) and Blackfire Torch (+4% AP per burning
     champion, assumed 1 target) stack additively: 30% + 4% = ×1.34.
@@ -2404,7 +2965,12 @@ def _ap_multiplier(items: list[dict[str, Any]]) -> float:
 
 
 def _permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
-    """AP multiplier that counts as a permanent item-owned stat.
+    """Backward-compatible private alias for :func:`permanent_ap_multiplier`."""
+    return permanent_ap_multiplier(items)
+
+
+def permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
+    """Return parser-backed AP multiplier eligible as a permanent stat.
 
     Rabadon's always applies. Blackfire Torch's per-burning-target increase is
     a combat state and therefore cannot unlock Living Weapon.
@@ -2415,7 +2981,12 @@ def _permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
 
 
 def _mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
-    """Awe passives (Archangel's Staff, Seraph's Embrace): bonus mana → AP.
+    """Backward-compatible private alias for :func:`mana_to_ap_bonus`."""
+    return mana_to_ap_bonus(items, bonus_mana)
+
+
+def mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
+    """Return parser-owned Awe bonus-mana-to-AP conversion.
 
     Args:
         items: List of item data dicts.
@@ -2432,11 +3003,31 @@ def _mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
     return total
 
 
+def mana_to_health_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
+    """Return parser-owned Awe bonus-mana-to-health conversion."""
+    names = _item_names(items)
+    total = 0.0
+    for name in ("Fimbulwinter", "Winter's Approach"):
+        if name in names:
+            total += (
+                required_effect_value(name, "bonus_mana_to_health_ratio") * bonus_mana
+            )
+    return total
+
+
 def _dawncore_bonus_ap(
     items: list[dict[str, Any]],
     bonus_mana_regen_percent: float,
 ) -> float:
-    """Dawncore First Light: AP per 100% additional base mana regen.
+    """Backward-compatible private alias for :func:`dawncore_bonus_ap`."""
+    return dawncore_bonus_ap(items, bonus_mana_regen_percent)
+
+
+def dawncore_bonus_ap(
+    items: list[dict[str, Any]],
+    bonus_mana_regen_percent: float,
+) -> float:
+    """Return parser-owned Dawncore AP from additional base mana regen.
 
     Args:
         items: List of item data dicts.
@@ -2453,7 +3044,12 @@ def _dawncore_bonus_ap(
 
 
 def _flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
-    """Staff of Flowing Water Rapids: flat bonus AP (assumed always active).
+    """Backward-compatible private alias for :func:`flowing_water_bonus_ap`."""
+    return flowing_water_bonus_ap(items)
+
+
+def flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
+    """Return parser-owned Staff of Flowing Water Rapids AP.
 
     Args:
         items: List of item data dicts.
@@ -2470,7 +3066,15 @@ def _passive_attack_speed_bonus(
     items: list[dict[str, Any]],
     is_melee: bool,
 ) -> float:
-    """Flat bonus attack speed (percent) from assumed-active item passives.
+    """Backward-compatible private alias for :func:`passive_attack_speed_bonus`."""
+    return passive_attack_speed_bonus(items, is_melee)
+
+
+def passive_attack_speed_bonus(
+    items: list[dict[str, Any]],
+    is_melee: bool,
+) -> float:
+    """Return parser-owned assumed-active item attack-speed bonuses.
 
     Bandlepipes Fanfare (melee/ranged split), Experimental Hexplate
     Overdrive (active from R cast at fight start), and Yun Tal Wildarrows
@@ -2490,14 +3094,382 @@ def _passive_attack_speed_bonus(
         if name in names:
             bonus += required_effect_value(name, split_key)
     if "Yun Tal Wildarrows" in names:
+        # The public stat panel shows the sourced conditional package; the
+        # fight resolver subtracts it from the opening rate and re-applies it
+        # through the authored swing schedule after the first attack.
         bonus += required_effect_value(
             "Yun Tal Wildarrows", "bonus_attack_speed_percent"
         )
     return bonus
 
 
+def guinsoo_attack_speed_percent(
+    items: list[dict[str, Any]], stack_count: int
+) -> float:
+    """Return Seething Strike's temporary attack-speed bonus.
+
+    The ordered fight ledger owns stack admission and expiry; this accessor
+    keeps the patch-sourced values in ``ITEM_EFFECTS`` so that callers cannot
+    smuggle a stale 8%/32% literal into an attack schedule.
+    """
+    if "Guinsoo's Rageblade" not in _item_names(items):
+        return 0.0
+    per_stack = float(
+        required_effect_value("Guinsoo's Rageblade", "seething_attack_speed_per_stack")
+    )
+    max_stacks = int(
+        required_effect_value("Guinsoo's Rageblade", "seething_max_stacks")
+    )
+    return 100.0 * per_stack * min(max(0, int(stack_count)), max_stacks)
+
+
+# The schedule intentionally accepts the authored timing inputs explicitly so
+# callers cannot hide state in an untyped global or stale fallback.
+# pylint: disable=too-many-arguments,too-many-locals
+def guinsoo_swing_schedule(
+    items: list[dict[str, Any]],
+    *,
+    attack_speed: float,
+    attack_speed_ratio: float,
+    duration_seconds: float,
+    uptime: float = 1.0,
+    critical_chance: float = 0.0,
+) -> tuple[float, ...]:
+    """Build the authored auto schedule while Seething stacks rise/expire.
+
+    The first attack lands at ``t=0``. Each completed attack grants one
+    Seething stack for the sourced three-second duration, capped at the
+    sourced stack count. When Yun Tal is present, the first champion attack
+    also starts Flurry; later attacks reduce its cooldown by the sourced
+    base/critical refund while its six-second attack-speed window is active.
+    This helper deliberately has no roster or damage side effects; the fight
+    ledger consumes only the resulting authored timestamps.
+    """
+    if duration_seconds <= 0.0 or uptime <= 0.0 or attack_speed <= 0.0:
+        return ()
+    names = _item_names(items)
+    has_guinsoo = "Guinsoo's Rageblade" in names
+    has_yun_tal = "Yun Tal Wildarrows" in names
+    if not has_guinsoo and not has_yun_tal:
+        interval = 1.0 / (attack_speed * uptime)
+        count = max(0, int(duration_seconds * attack_speed * uptime))
+        return tuple(index * interval for index in range(count))
+
+    stack_duration = (
+        float(required_effect_value("Guinsoo's Rageblade", "seething_duration"))
+        if has_guinsoo
+        else 0.0
+    )
+    times: list[float] = [0.0]
+    stack_times: list[float] = [0.0]
+    current = 0.0
+    yun_active_until = (
+        float(required_effect_value("Yun Tal Wildarrows", "duration"))
+        if has_yun_tal
+        else 0.0
+    )
+    yun_cooldown = (
+        float(required_effect_value("Yun Tal Wildarrows", "cooldown"))
+        if has_yun_tal
+        else 0.0
+    )
+    first_attack = True
+    yun_refund = (
+        float(required_effect_value("Yun Tal Wildarrows", "attack_refund_base"))
+        + max(0.0, min(1.0, float(critical_chance)))
+        * float(required_effect_value("Yun Tal Wildarrows", "attack_refund_crit"))
+        if has_yun_tal
+        else 0.0
+    )
+    while True:
+        if has_guinsoo:
+            stack_times[:] = [t for t in stack_times if current - t < stack_duration]
+        else:
+            stack_times.clear()
+        bonus = (
+            guinsoo_attack_speed_percent(items, len(stack_times))
+            if has_guinsoo
+            else 0.0
+        )
+        effective_rate = (attack_speed + attack_speed_ratio * bonus / 100.0) * uptime
+        if has_yun_tal and not first_attack and current < yun_active_until:
+            effective_rate += (
+                attack_speed_ratio
+                * required_effect_value(
+                    "Yun Tal Wildarrows", "bonus_attack_speed_percent"
+                )
+                / 100.0
+                * uptime
+            )
+        if effective_rate <= 0.0:
+            break
+        next_time = current + 1.0 / effective_rate
+        if next_time >= duration_seconds - 1e-12:
+            break
+        if has_yun_tal:
+            elapsed = next_time - current
+            yun_cooldown = max(0.0, yun_cooldown - elapsed)
+            if not first_attack:
+                yun_cooldown = max(0.0, yun_cooldown - yun_refund)
+            if yun_cooldown <= 0.0 and not first_attack:
+                yun_active_until = next_time + required_effect_value(
+                    "Yun Tal Wildarrows", "duration"
+                )
+                yun_cooldown = required_effect_value("Yun Tal Wildarrows", "cooldown")
+        times.append(next_time)
+        if has_guinsoo:
+            stack_times.append(next_time)
+        current = next_time
+        first_attack = False
+    return tuple(times)
+
+
+# pylint: enable=too-many-arguments,too-many-locals
+
+
+# pylint: disable=too-many-arguments
+def yun_tal_swing_schedule(
+    items: list[dict[str, Any]],
+    *,
+    attack_speed: float,
+    attack_speed_ratio: float,
+    duration_seconds: float,
+    uptime: float = 1.0,
+    critical_chance: float = 0.0,
+) -> tuple[float, ...]:
+    """Return the same composed authored schedule for Yun Tal Flurry.
+
+    The shared implementation also composes Guinsoo when both items are
+    equipped; this named wrapper keeps the item-facing API explicit for
+    focused tests and future consumers.
+    """
+    return guinsoo_swing_schedule(
+        items,
+        attack_speed=attack_speed,
+        attack_speed_ratio=attack_speed_ratio,
+        duration_seconds=duration_seconds,
+        uptime=uptime,
+        critical_chance=critical_chance,
+    )
+
+
+# pylint: enable=too-many-arguments
+
+
+def energized_proc_indices(
+    item_name: str,
+    num_attacks: int,
+    *,
+    initial_stacks: int = 100,
+) -> tuple[int, ...]:
+    """Return attack indices that consume an Energized charge.
+
+    Statikk's attack-generated 15-stack branch is parser-sourced. Other
+    Energized items require movement/other state that this helper cannot
+    infer; they fail closed unless the caller explicitly supplies a full
+    opening charge, rather than silently assuming a recharge cadence.
+    """
+    if num_attacks <= 0:
+        return ()
+    values = ITEM_EFFECTS.get(item_name)
+    if not values or "energized_max_stacks" not in values:
+        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing 'energized_max_stacks'")
+    maximum = int(required_effect_value(item_name, "energized_max_stacks"))
+    stacks = max(0, min(int(initial_stacks), maximum))
+    attack_gain = values.get("energized_attack_stacks")
+    if item_name == "Statikk Shiv" and attack_gain is None:
+        raise KeyError(
+            "ITEM_EFFECTS['Statikk Shiv'] is missing 'energized_attack_stacks' — "
+            "parser/schema bug; check passive_parser"
+        )
+    if attack_gain is None and stacks < maximum:
+        raise ValueError(
+            f"{item_name} Energized recharge requires movement/state input; "
+            "provide a full opening charge or an authored gain schedule"
+        )
+    gain = int(attack_gain or 0)
+    procs: list[int] = []
+    for index in range(num_attacks):
+        if stacks >= maximum:
+            procs.append(index)
+            stacks = 0
+        stacks = min(maximum, stacks + gain)
+    return tuple(procs)
+
+
+def runaan_secondary_target_count(
+    *,
+    roster_target_count: int,
+    item_name: str = "Runaan's Hurricane",
+) -> int:
+    """Return Wind's Fury's bounded secondary-target count.
+
+    The main target is excluded; the ordered roster allocator decides which
+    nearby enemies receive these bolts. This helper only supplies the sourced
+    cardinality and fails closed if parser data is incomplete.
+    """
+    if roster_target_count <= 1:
+        return 0
+    max_targets = int(required_effect_value(item_name, "max_secondary_targets"))
+    return min(max_targets, roster_target_count - 1)
+
+
+def runaan_secondary_target_damage(
+    *, total_attack_damage: float, item_name: str = "Runaan's Hurricane"
+) -> float:
+    """Return one Wind's Fury bolt's AD-scaled physical packet.
+
+    Target allocation and copied on-hit effects remain owned by the shared
+    roster ledger; this accessor only exposes the parser-owned per-bolt value.
+    """
+    ratio = required_effect_value(item_name, "secondary_ad_ratio")
+    return float(total_attack_damage) * ratio
+
+
+def statikk_chain_target_bounds(*, item_name: str = "Statikk Shiv") -> tuple[int, int]:
+    """Return Electrospark's sourced minimum/maximum chain target bounds.
+
+    Energized generation and roster fan-out remain owned by the event ledger;
+    this helper only exposes the parser-backed level-scaled bounds.
+    """
+    minimum = int(required_effect_value(item_name, "chain_targets_min"))
+    maximum = int(required_effect_value(item_name, "chain_targets_max"))
+    if minimum < 1 or maximum < minimum:
+        raise ValueError(f"{item_name} has invalid chain target bounds")
+    return minimum, maximum
+
+
+def statikk_chain_target_count(level: int, *, item_name: str = "Statikk Shiv") -> int:
+    """Return Electrospark's level-scaled chain target count.
+
+    The cached source gives 4 to 8 targets at levels 1/6/10/14/20.  The
+    selected roster may still contain fewer targets; the caller applies that
+    roster bound when allocating one proc across participants.
+    """
+    minimum, maximum = statikk_chain_target_bounds(item_name=item_name)
+    breakpoints = (1, 6, 10, 14, 20)
+    increments = sum(int(level >= threshold) for threshold in breakpoints[1:])
+    return min(maximum, minimum + increments)
+
+
+def hydra_secondary_target_damage(
+    *,
+    max_health: float,
+    is_melee: bool,
+    empowered: bool = False,
+    item_name: str = "Titanic Hydra",
+) -> float:
+    """Return one Hydra Cleave cone packet for a secondary target.
+
+    The fight ledger currently prices only the selected primary target. This
+    typed accessor keeps the parser-owned cone ratio available for the future
+    multi-target ledger without inventing a fallback when a patch omits it.
+    """
+    prefix = "active_secondary_" if empowered else "secondary_"
+    suffix = "max_hp_ratio_melee" if is_melee else "max_hp_ratio_ranged"
+    ratio = required_effect_value(item_name, prefix + suffix)
+    return float(max_health) * ratio
+
+
+def hydra_secondary_item_name(items: Sequence[Mapping[str, Any]]) -> str | None:
+    """Return the selected build item with a max-health Cleave cone."""
+    required = {
+        "secondary_max_hp_ratio_melee",
+        "active_secondary_max_hp_ratio_melee",
+    }
+    for item in items:
+        name = str(item.get("name", ""))
+        if required.issubset(ITEM_EFFECTS.get(name, {})):
+            return name
+    return None
+
+
+def hydra_primary_target_damage(
+    *,
+    max_health: float,
+    is_melee: bool,
+    empowered: bool = False,
+    item_name: str = "Titanic Hydra",
+) -> float:
+    """Return one Hydra Cleave packet for the selected primary target.
+
+    Titanic Crescent's empowered packet replaces the ordinary primary
+    Cleave value.  Keeping both values behind typed accessors lets the fight
+    ledger price only the active delta when the base on-hit row already
+    contains the ordinary packet.
+    """
+    prefix = "active_" if empowered else ""
+    suffix = "max_hp_ratio_melee" if is_melee else "max_hp_ratio_ranged"
+    ratio = required_effect_value(item_name, prefix + suffix)
+    return float(max_health) * ratio
+
+
+def hydra_cleave_secondary_ad_damage(
+    *, total_attack_damage: float, is_melee: bool, item_name: str
+) -> float:
+    """Return one AD-scaled Hydra/Tiamat Cleave secondary packet."""
+    suffix = "secondary_ad_ratio_melee" if is_melee else "secondary_ad_ratio_ranged"
+    ratio = required_effect_value(item_name, suffix)
+    return float(total_attack_damage) * ratio
+
+
+def active_secondary_ad_item_name(
+    items: Sequence[Mapping[str, Any]],
+) -> str | None:
+    """Return the selected active with a sourced secondary AD packet."""
+    required = {
+        "secondary_ad_ratio_melee",
+        "secondary_ad_ratio_ranged",
+        "total_ad_ratio",
+    }
+    for item in items:
+        name = str(item.get("name", ""))
+        values = ITEM_EFFECTS.get(name, {})
+        if values.get("type") == "active" and required.issubset(values):
+            return name
+    return None
+
+
+def cleave_on_hit_item_name(items: Sequence[Mapping[str, Any]]) -> str | None:
+    """Return the selected item whose basic attacks carry Cleave splash."""
+    for item in items:
+        name = str(item.get("name", ""))
+        if ITEM_EFFECTS.get(name, {}).get("cleave_on_hit"):
+            return name
+    return None
+
+
+def navori_cooldown_refund_seconds(
+    *,
+    base_cooldown: float,
+    attack_count: int = 1,
+    item_name: str = "Navori Flickerblade",
+) -> float:
+    """Return basic-ability cooldown seconds refunded by Navori autos.
+
+    The refund fraction is parser-owned and applies once per basic attack;
+    callers supply the authored attack count from the event ledger.
+    """
+    if attack_count <= 0 or base_cooldown <= 0:
+        return 0.0
+    fraction = required_effect_value(item_name, "cd_refund_percent")
+    return float(base_cooldown) * fraction * int(attack_count)
+
+
+def item_bonus_health_multiplier(items: list[dict[str, Any]]) -> float:
+    """Return Warmog's parser-owned multiplier for item-granted health."""
+    if "Warmog's Armor" not in _item_names(items):
+        return 1.0
+    return 1.0 + required_effect_value("Warmog's Armor", "item_bonus_health_ratio")
+
+
 def _muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
-    """Muramana Awe passive: % of maximum mana as bonus AD.
+    """Backward-compatible private alias for :func:`muramana_bonus_ad`."""
+    return muramana_bonus_ad(items, max_mana)
+
+
+def muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
+    """Return Muramana's parser-owned maximum-mana-to-AD conversion.
 
     Args:
         items: List of item data dicts.
@@ -2509,6 +3481,28 @@ def _muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
     if "Muramana" not in _item_names(items):
         return 0.0
     return required_effect_value("Muramana", "max_mana_to_ad_ratio") * max_mana
+
+
+def endless_hunger_ability_haste(
+    items: list[dict[str, Any]],
+    *,
+    bonus_attack_damage: float,
+    is_melee: bool,
+) -> float:
+    """Return Famine's parser-backed bonus-AD ability haste.
+
+    ``bonus_attack_damage`` is the item's flat AD plus permanent item AD
+    conversions already resolved by this stat bundle.  Feast's takedown
+    omnivamp is a separate combat state and is intentionally not included.
+    """
+    if "Endless Hunger" not in _item_names(items):
+        return 0.0
+    base = required_effect_value("Endless Hunger", "famine_base_ability_haste")
+    suffix = "melee" if is_melee else "ranged"
+    ratio = required_effect_value(
+        "Endless Hunger", f"famine_bonus_ad_to_ability_haste_{suffix}"
+    )
+    return float(base) + max(0.0, float(bonus_attack_damage)) * float(ratio)
 
 
 def bloodmail_bonus_ad(
@@ -2532,6 +3526,134 @@ def bloodmail_bonus_ad(
         return 0.0
     ratio = required_effect_value("Overlord's Bloodmail", "bonus_health_to_ad_ratio")
     return ratio * bonus_health
+
+
+def bloodmail_retribution_bonus_ad(
+    *,
+    total_attack_damage: float,
+    missing_health_fraction: float,
+    item_name: str = "Overlord's Bloodmail",
+) -> float:
+    """Return Retribution's missing-health-scaled bonus AD.
+
+    The caller supplies total AD from other sources and the ordered health
+    state; the participant ledger owns applying this temporary value.
+    """
+    if item_name not in ITEM_EFFECTS:
+        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
+    missing = max(0.0, min(1.0, float(missing_health_fraction)))
+    minimum = required_effect_value(item_name, "retribution_missing_health_min")
+    maximum = required_effect_value(item_name, "retribution_missing_health_max")
+    return float(total_attack_damage) * (minimum + (maximum - minimum) * missing)
+
+
+def input_option_retribution_bonus_ad(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+    *,
+    total_attack_damage: float,
+) -> float:
+    """Return Bloodmail Retribution from explicit starting health state."""
+    if "Overlord's Bloodmail" not in _item_names(items) or not item_options:
+        return 0.0
+    options = item_options.get("Overlord's Bloodmail")
+    if not options:
+        return 0.0
+    missing_percent = options.get("missing_health_percent", 0)
+    return bloodmail_retribution_bonus_ad(
+        total_attack_damage=total_attack_damage,
+        missing_health_fraction=float(missing_percent) / 100.0,
+    )
+
+
+def riftmaker_bonus_ap(*, bonus_health: float, item_name: str = "Riftmaker") -> float:
+    """Return Void Infusion's bonus-health-to-AP conversion."""
+    if item_name not in ITEM_EFFECTS:
+        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
+    ratio = required_effect_value(item_name, "bonus_health_to_ap_ratio")
+    return max(0.0, float(bonus_health)) * ratio
+
+
+def riftmaker_max_stack_omnivamp(
+    *, fight_duration_seconds: float, item_name: str = "Riftmaker"
+) -> float:
+    """Return Void Corruption's max-stack omnivamp after its sourced ramp.
+
+    Riftmaker gains one 2% damage stack per second, up to four stacks.  The
+    fight timeline starts in combat, so a continuous fight reaches the
+    max-stack omnivamp branch at four seconds; shorter fights receive none.
+    """
+    if item_name not in ITEM_EFFECTS:
+        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
+    per_second = required_effect_value(item_name, "amp_per_second")
+    max_amp = required_effect_value(item_name, "amp_max")
+    max_omnivamp = required_effect_value(item_name, "max_stack_omnivamp")
+    if per_second <= 0.0 or max_amp <= 0.0:
+        return 0.0
+    max_stack_seconds = max_amp / per_second
+    return (
+        float(max_omnivamp)
+        if fight_duration_seconds + 1e-9 >= max_stack_seconds
+        else 0.0
+    )
+
+
+def hubris_eminence_bonus_ad(
+    *, stacks: int, active: bool = True, item_name: str = "Hubris"
+) -> float:
+    """Return Eminence's sourced temporary bonus AD for explicit kill state."""
+    if item_name not in ITEM_EFFECTS:
+        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
+    if isinstance(stacks, bool) or not isinstance(stacks, int) or stacks < 0:
+        raise ValueError("Hubris Eminence stacks must be a non-negative integer")
+    if not active:
+        return 0.0
+    base = required_effect_value(item_name, "eminence_base_ad")
+    per_stack = required_effect_value(item_name, "eminence_ad_per_stack")
+    return float(base) + float(stacks) * float(per_stack)
+
+
+def axiom_arc_ultimate_refund_fraction(
+    *, lethality: float, item_name: str = "Axiom Arc"
+) -> float:
+    """Return Flux's sourced fraction of ultimate cooldown refunded."""
+    if item_name not in ITEM_EFFECTS:
+        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
+    base = required_effect_value(item_name, "ultimate_refund_base_ratio")
+    per_lethality = required_effect_value(
+        item_name, "ultimate_refund_per_lethality_ratio"
+    )
+    return max(0.0, float(base) + max(0.0, float(lethality)) * float(per_lethality))
+
+
+def essence_reaver_mana_restore_per_proc(
+    *,
+    base_attack_damage: float,
+    critical_strike_chance: float,
+    item_name: str = "Essence Reaver",
+) -> float:
+    """Return Manaflow's sourced mana restoration for one Spellblade proc."""
+    if item_name not in ITEM_EFFECTS:
+        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
+    base_ratio = required_effect_value(item_name, "mana_restore_base_ad_ratio")
+    crit_ratio = required_effect_value(item_name, "mana_restore_crit_ratio")
+    crit_fraction = min(1.0, max(0.0, float(critical_strike_chance) / 100.0))
+    return max(0.0, float(base_attack_damage)) * base_ratio + crit_ratio * crit_fraction
+
+
+def yun_tal_permanent_crit_chance(
+    *, stacks: int, is_melee: bool, item_name: str = "Yun Tal Wildarrows"
+) -> float:
+    """Return Practice Makes Lethal's bounded permanent crit chance."""
+    if item_name not in ITEM_EFFECTS:
+        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
+    if isinstance(stacks, bool) or not isinstance(stacks, int) or stacks < 0:
+        raise ValueError("Yun Tal stacks must be a non-negative integer")
+    suffix = "melee" if is_melee else "ranged"
+    per_stack = required_effect_value(item_name, f"crit_chance_per_stack_{suffix}")
+    maximum = int(required_effect_value(item_name, f"crit_stack_max_{suffix}"))
+    cap = required_effect_value(item_name, "crit_chance_cap")
+    return min(float(cap), min(stacks, maximum) * float(per_stack))
 
 
 def shield_reduction_fraction(items: list[dict[str, Any]], *, is_melee: bool) -> float:
@@ -2567,6 +3689,7 @@ class ThornsEffect:
     damage_type: DamageType
     damage: float
     grievous_duration: float
+    bonus_armor_ratio: float = 0.0
 
 
 def thorns_effects(items: Sequence[Mapping[str, Any]]) -> tuple[ThornsEffect, ...]:
@@ -2590,6 +3713,7 @@ def thorns_effects(items: Sequence[Mapping[str, Any]]) -> tuple[ThornsEffect, ..
                 item_name=item_name,
                 damage_type=required.value("damage_type"),
                 damage=required.number("base"),
+                bonus_armor_ratio=required.number("bonus_armor_ratio"),
                 grievous_duration=required.number("grievous_duration"),
             )
         )
@@ -2597,7 +3721,7 @@ def thorns_effects(items: Sequence[Mapping[str, Any]]) -> tuple[ThornsEffect, ..
 
 
 def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
-    """Sterak's Gage The Claws that Catch: % of base AD as bonus AD.
+    """Return parser-backed Sterak's base-AD conversion.
 
     Args:
         items: List of item data dicts.
@@ -2615,7 +3739,15 @@ def _terminus_max_stack_bonuses(
     items: list[dict[str, Any]],
     level: int,
 ) -> tuple[float, float]:
-    """Terminus Juxtaposition at max stacks: (bonus armor/MR, pen percent).
+    """Backward-compatible private alias for :func:`terminus_max_stack_bonuses`."""
+    return terminus_max_stack_bonuses(items, level)
+
+
+def terminus_max_stack_bonuses(
+    items: list[dict[str, Any]],
+    level: int,
+) -> tuple[float, float]:
+    """Return parser-owned Terminus max-stack resist and pen state.
 
     Light hits grant level-scaled bonus armor + MR per stack; dark hits
     grant % armor and magic penetration per stack.  Both are assumed at
@@ -2647,7 +3779,12 @@ def _terminus_max_stack_bonuses(
 
 
 def _basic_ability_haste(items: list[dict[str, Any]]) -> float:
-    """Spear of Shojin Dragonforce: basic ability haste (Q, W, E only).
+    """Backward-compatible private alias for :func:`basic_ability_haste`."""
+    return basic_ability_haste(items)
+
+
+def basic_ability_haste(items: list[dict[str, Any]]) -> float:
+    """Return parser-backed Spear of Shojin basic ability haste.
 
     Args:
         items: List of item data dicts.
@@ -2674,12 +3811,14 @@ class StatBonuses:
     """
 
     bonus_ap: float  # Awe mana→AP, Dawncore, Staff of Flowing Water
+    bonus_health: float  # Fimbulwinter/Winter's Approach Awe
     ap_multiplier: float  # Rabadon's / Blackfire additive %AP (1.0 = none)
     bonus_ad: float  # Muramana, Overlord's Bloodmail, Sterak's Gage
     attack_speed_percent: float  # Bandlepipes, Hexplate, Yun Tal
     bonus_resists: float  # Terminus light stacks (armor AND MR)
     bonus_pen_percent: float  # Terminus dark stacks (armor AND magic pen)
     basic_ability_haste: float  # Spear of Shojin (Q/W/E only)
+    ability_haste: float  # Endless Hunger Famine's bonus-AD conversion
     bonus_move_speed_percent: float  # Mejai's 10+ Glory
     item_bonus_health_multiplier: float  # Warmog's Vitality (1.0 = none)
     # Permanent item-owned subsets used by Kai'Sa's Living Weapon. These
@@ -2700,6 +3839,7 @@ def resolve_stat_effects(
     is_melee: bool,
     level: int,
     item_options: Mapping[str, Mapping[str, int]] | None = None,
+    bonus_attack_damage: float = 0.0,
 ) -> StatBonuses:
     """Compile the stat-granting passives of *items* into one bundle.
 
@@ -2709,33 +3849,43 @@ def resolve_stat_effects(
     item added here is the ONLY edit item-side; ``stats.py`` never grows
     a new import or call site.
     """
-    terminus_resists, terminus_pen = _terminus_max_stack_bonuses(items, level)
-    input_bonus_ap, input_move_speed = _input_option_stat_bonuses(items, item_options)
-    item_bonus_health_multiplier = 1.0
-    if "Warmog's Armor" in _item_names(items):
-        item_bonus_health_multiplier += required_effect_value(
-            "Warmog's Armor", "item_bonus_health_ratio"
+    terminus_resists, terminus_pen = terminus_max_stack_bonuses(items, level)
+    input_bonus_ap, input_move_speed, _, _ = _input_option_stat_bonuses(
+        items, item_options
+    )
+    health_multiplier = item_bonus_health_multiplier(items)
+    mana_bonus_ap = mana_to_ap_bonus(items, bonus_mana)
+    mana_bonus_health = mana_to_health_bonus(items, bonus_mana)
+    effective_bonus_health = (bonus_health + mana_bonus_health) * health_multiplier
+    dawncore_ap = dawncore_bonus_ap(items, bonus_mana_regen_percent)
+    permanent_bonus_ap = mana_bonus_ap + dawncore_ap + input_bonus_ap
+    if "Riftmaker" in _item_names(items):
+        permanent_bonus_ap += riftmaker_bonus_ap(
+            bonus_health=effective_bonus_health, item_name="Riftmaker"
         )
-    effective_bonus_health = bonus_health * item_bonus_health_multiplier
-    mana_bonus_ap = _mana_to_ap_bonus(items, bonus_mana)
-    dawncore_bonus_ap = _dawncore_bonus_ap(items, bonus_mana_regen_percent)
-    permanent_bonus_ap = mana_bonus_ap + dawncore_bonus_ap + input_bonus_ap
     permanent_bonus_ad = (
-        _muramana_bonus_ad(items, max_mana)
+        muramana_bonus_ad(items, max_mana)
         + bloodmail_bonus_ad(items, effective_bonus_health)
         + steraks_bonus_ad(items, base_attack_damage)
     )
+    famine_ability_haste = endless_hunger_ability_haste(
+        items,
+        bonus_attack_damage=bonus_attack_damage + permanent_bonus_ad,
+        is_melee=is_melee,
+    )
     return StatBonuses(
-        bonus_ap=permanent_bonus_ap + _flowing_water_bonus_ap(items),
-        ap_multiplier=_ap_multiplier(items),
+        bonus_ap=permanent_bonus_ap + flowing_water_bonus_ap(items),
+        bonus_health=mana_bonus_health,
+        ap_multiplier=ap_multiplier(items),
         bonus_ad=permanent_bonus_ad,
-        attack_speed_percent=_passive_attack_speed_bonus(items, is_melee),
+        attack_speed_percent=passive_attack_speed_bonus(items, is_melee),
         bonus_resists=terminus_resists,
         bonus_pen_percent=terminus_pen,
-        basic_ability_haste=_basic_ability_haste(items),
+        basic_ability_haste=basic_ability_haste(items),
+        ability_haste=famine_ability_haste,
         bonus_move_speed_percent=input_move_speed,
-        item_bonus_health_multiplier=item_bonus_health_multiplier,
+        item_bonus_health_multiplier=health_multiplier,
         permanent_bonus_ap=permanent_bonus_ap,
-        permanent_ap_multiplier=_permanent_ap_multiplier(items),
+        permanent_ap_multiplier=permanent_ap_multiplier(items),
         permanent_bonus_ad=permanent_bonus_ad,
     )

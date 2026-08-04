@@ -440,7 +440,10 @@ def sr_availability(item: Mapping[str, Any]) -> Availability:
 
     on_rift = bool(modes.get(SR_MODE_KEY, False))
     restriction = [str(champion) for champion in item.get("championRestriction") or ()]
-    purchasable = bool((item.get("shop") or {}).get("purchasable", False))
+    shop = item.get("shop") or {}
+    purchasable = bool(shop.get("purchasable", False))
+    price = (shop.get("prices") or {}).get("total")
+    ranks = {str(rank).upper() for rank in item.get("rank") or ()}
     acquisition_note = str(item.get("acquisitionNote") or "")
 
     if restriction:
@@ -448,10 +451,25 @@ def sr_availability(item: Mapping[str, Any]) -> Availability:
         acquisition_reason = (
             f"{name} is granted to {', '.join(restriction)} rather than bought."
         )
+    elif ranks & {"TURRET", "TRINKET", "DISTRIBUTED"}:
+        # The cached rank is Riot's map/system classification.  These records
+        # can advertise SR in the mode table while still being granted by the
+        # map, a turret, or an event rather than appearing in a player shop.
+        acquisition = "map_or_system"
+        acquisition_reason = (
+            f"{name} is a {', '.join(sorted(ranks & {'TURRET', 'TRINKET', 'DISTRIBUTED'}))} "
+            "record, not a player shop purchase."
+        )
     elif not purchasable and acquisition_note:
         acquisition = "quest_transform"
         acquisition_reason = (
             f"{name} is not sold; it transforms from another item on a quest."
+        )
+    elif not purchasable and price in (0, 0.0, None):
+        acquisition = "map_or_system"
+        acquisition_reason = (
+            f"{name} has no shop price or purchase flag, so it is withheld "
+            "as a map/system item until ingestion supplies an acquisition."
         )
     else:
         acquisition = "shop"

@@ -189,9 +189,9 @@ def test_colossal_smash_does_not_replace_later_ordinary_swings(galio_data):
     assert result["timeline_coverage"]["complete"] is True
 
 
-def test_target_max_health_change_fails_closed(galio_data):
+def test_target_max_health_change_is_repriced(galio_data):
     params = FightParams(
-        target_health=2000.0,
+        target_health=500.0,
         target_armor=0.0,
         target_magic_resistance=0.0,
         fight_duration_seconds=5.0,
@@ -204,9 +204,13 @@ def test_target_max_health_change_fails_closed(galio_data):
         },
         target_threshold_health_bonus=200.0,
         target_threshold_health_heal=300.0,
-        target_threshold_health_ratio=0.3,
+        target_threshold_health_ratio=0.8,
         target_threshold_health_duration=5.0,
     )
 
-    with pytest.raises(ValueError, match="Protoplasm Harness"):
-        run_fight(galio_data, 11, [], params)
+    result = run_fight(galio_data, 11, [], params)
+
+    assert result["threshold_health_triggered"] is True
+    assert result["target_effective_max_health"] == pytest.approx(700.0)
+    assert result["target_healing_received"] > 0.0
+    assert "target_Protoplasm Harness" in result["timeline_coverage"]["coarse_sources"]

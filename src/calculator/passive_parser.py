@@ -373,10 +373,21 @@ def _parse_current_hp_on_hit(text: str) -> dict[str, Any]:
 def _parse_max_hp_on_hit(text: str) -> dict[str, Any]:
     """Parse on-hit scaling with champion's max health (Titanic Hydra)."""
     result: dict[str, Any] = {"damage_type": "physical"}
-    rd_pcts = _extract_rd_percentages(text)
-    if rd_pcts:
-        result["max_hp_ratio_melee"] = rd_pcts[0]
-        result["max_hp_ratio_ranged"] = rd_pcts[1]
+    all_rds = _extract_all_rd_values(text)
+    if all_rds:
+        primary = all_rds[0]
+        m = _extract_percentage(primary[0])
+        r = _extract_percentage(primary[1])
+        if m is not None and r is not None:
+            result["max_hp_ratio_melee"] = m
+            result["max_hp_ratio_ranged"] = r
+    if len(all_rds) >= 2:
+        secondary = all_rds[1]
+        m = _extract_percentage(secondary[0])
+        r = _extract_percentage(secondary[1])
+        if m is not None and r is not None:
+            result["secondary_max_hp_ratio_melee"] = m
+            result["secondary_max_hp_ratio_ranged"] = r
     return result
 
 
@@ -431,12 +442,28 @@ def _parse_spellblade(text: str) -> dict[str, Any]:
     return result
 
 
+def _parse_lich_bane_spellblade(text: str) -> dict[str, Any]:
+    """Parse Lich Bane's empowered-attack attack-speed sibling."""
+    result = _parse_spellblade(text)
+    match = re.search(
+        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+attack speed",
+        _resolve_simple_templates(text),
+    )
+    if match:
+        result["bonus_attack_speed_percent"] = float(match.group(1))
+    return result
+
+
 def _parse_essence_reaver_spellblade(text: str) -> dict[str, Any]:
     """Parse Essence Reaver's spellblade with crit scaling."""
     result = _parse_spellblade(text)
     crit_match = re.search(r"\{\{pp\|0\s+to\s+(\d+)", text)
     if crit_match:
         result["crit_bonus_max"] = float(crit_match.group(1))
+        # Manaflow restores 50% of the Spellblade amount. The base branch is
+        # 125% base AD, while the crit branch reaches 50% at 100% crit.
+        result["mana_restore_base_ad_ratio"] = 1.25 * 0.5
+        result["mana_restore_crit_ratio"] = (float(crit_match.group(1)) / 100.0) * 0.5
     return result
 
 
@@ -474,6 +501,14 @@ def _parse_dusk_dawn_spellblade(text: str) -> dict[str, Any]:
         "again" in text.lower() or "delay" in text.lower()
     ):
         result["double_on_hit"] = True
+    heal_match = re.search(
+        r"heals?.*?(\d+(?:\.\d+)?)%\s+AP.*?(\d+(?:\.\d+)?)%\s+'''bonus'''\s+health",
+        _resolve_simple_templates(text),
+        re.DOTALL,
+    )
+    if heal_match:
+        result["self_heal_ap_ratio"] = float(heal_match.group(1)) / 100.0
+        result["self_heal_bonus_health_ratio"] = float(heal_match.group(2)) / 100.0
     return result
 
 
@@ -634,6 +669,32 @@ def _parse_statikk_shiv(text: str) -> dict[str, Any]:
         result["chain_targets_min"] = int(chain_match.group(1))
         result["chain_targets_max"] = int(chain_match.group(2))
 
+    # Electroshock's attack branch: 9 bonus Energize stacks, for 15 total
+    # stacks per attack. Keep the sourced total rather than inventing a
+    # cadence for other Energized items whose movement state is unspecified.
+    stack_match = re.search(
+        r"total\s+of\s+(\d+)\s+stacks\s+per\s+attack",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if stack_match:
+        result["energized_attack_stacks"] = int(stack_match.group(1))
+        result["energized_max_stacks"] = 100
+
+    return result
+
+
+def _parse_runaan_winds_fury(text: str) -> dict[str, Any]:
+    """Parse Wind's Fury's copied-on-hit bolt allocation."""
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {}
+    ratio_match = re.search(r"(\d+(?:\.\d+)?)%\s+AD", text_resolved)
+    if ratio_match:
+        result["secondary_ad_ratio"] = float(ratio_match.group(1)) / 100.0
+    target_match = re.search(r"at\s+up\s+to\s+(\d+)\s+enemies", text_resolved)
+    if target_match:
+        result["max_secondary_targets"] = int(target_match.group(1))
+    result["applies_on_hit"] = "on-hit" in text_resolved.lower()
     return result
 
 
@@ -693,6 +754,14 @@ def _parse_thorns(text: str) -> dict[str, Any]:
     base_match = re.search(r"[Dd]eal\s+\{\{as\|(\d+(?:\.\d+)?)", text_resolved)
     if base_match:
         result["base"] = float(base_match.group(1))
+
+    armor_match = re.search(
+        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+armor",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if armor_match:
+        result["bonus_armor_ratio"] = float(armor_match.group(1)) / 100.0
 
     duration_match = re.search(
         r"Grievous\s+Wounds\}?\}?\s+for\s+(\d+(?:\.\d+)?)\s+seconds",
@@ -867,6 +936,14 @@ def _parse_hydra_active(text: str) -> dict[str, Any]:
     if ad_match:
         result["total_ad_ratio"] = float(ad_match.group(1)) / 100.0
 
+    lifesteal_match = re.search(
+        r"life\s*steal.*?(\d+(?:\.\d+)?)%\s*effectiveness",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if lifesteal_match:
+        result["lifesteal_effectiveness"] = float(lifesteal_match.group(1)) / 100.0
+
     return result
 
 
@@ -918,7 +995,68 @@ def _parse_damage_amp_per_second(
     if amp_match:
         result[f"{key_prefix}amp_per_second"] = float(amp_match.group(1)) / 100.0
         result[f"{key_prefix}amp_max"] = float(amp_match.group(3)) / 100.0
+    omnivamp_match = re.search(
+        r"maximum\s+stacks,?\s*gain.*?" r"\{\{rd\|(\d+(?:\.\d+)?)%\|",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    )
+    if omnivamp_match is None:
+        omnivamp_match = re.search(
+            r"maximum\s+stacks,?\s*gain.*?" r"(\d+(?:\.\d+)?)%[^\n%]*omnivamp",
+            text,
+            re.DOTALL | re.IGNORECASE,
+        )
+    if omnivamp_match:
+        result[f"{key_prefix}max_stack_omnivamp"] = float(omnivamp_match.group(1))
     return result
+
+
+def _parse_bonus_health_to_ap(text: str) -> dict[str, Any]:
+    """Parse a percentage of bonus health converted to ability power."""
+    if "ability power" not in text.lower():
+        return {}
+    match = re.search(
+        r"(\d+(?:\.\d+)?)%[^.\n]*bonus[^.\n]*health",
+        text,
+        re.IGNORECASE,
+    )
+    if not match:
+        return {}
+    return {"bonus_health_to_ap_ratio": float(match.group(1)) / 100.0}
+
+
+def _parse_hubris_eminence(text: str) -> dict[str, Any]:
+    """Parse Hubris's temporary base/per-stack AD and duration."""
+    match = re.search(
+        r"grants.*?(\d+(?:\.\d+)?).*?\+\s*(\d+(?:\.\d+)?)\s+per\s+stack"
+        r".*?for\s+(\d+(?:\.\d+)?)\s+seconds",
+        text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if not match:
+        return {}
+    return {
+        "eminence_base_ad": float(match.group(1)),
+        "eminence_ad_per_stack": float(match.group(2)),
+        "eminence_duration": float(match.group(3)),
+    }
+
+
+def _parse_axiom_flux(text: str) -> dict[str, Any]:
+    """Parse Flux's base and lethality-scaled ultimate refund."""
+    match = re.search(
+        r"refunds\s+(\d+(?:\.\d+)?)%.*?([0-9]+(?:\.\d+)?)[^0-9%]*%\s+per\s+1\s+Lethality",
+        text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if not match:
+        return {}
+    window = re.search(r"within\s+(\d+(?:\.\d+)?)\s+seconds", text, re.IGNORECASE)
+    return {
+        "ultimate_refund_base_ratio": float(match.group(1)) / 100.0,
+        "ultimate_refund_per_lethality_ratio": float(match.group(2)) / 100.0,
+        "ultimate_refund_trigger_window": float(window.group(1)) if window else 3.0,
+    }
 
 
 def _parse_blackfire_amp(text: str) -> dict[str, Any]:
@@ -1148,6 +1286,32 @@ def _parse_overlord_tyranny(text: str) -> dict[str, Any]:
     return result
 
 
+def _parse_overlord_retribution(text: str) -> dict[str, Any]:
+    """Parse Retribution's total-AD missing-health range."""
+    text_resolved = _resolve_simple_templates(text)
+    pp_match = re.search(
+        r"\{\{pp\|0\s+to\s+\d+(?:\.\d+)?\s+by.*?\|0\s+to\s+(\d+(?:\.\d+)?)\|key=%.*?missing",
+        text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if pp_match:
+        return {
+            "retribution_missing_health_min": 0.0,
+            "retribution_missing_health_max": float(pp_match.group(1)) / 100.0,
+        }
+    match = re.search(
+        r"(\d+(?:\.\d+)?)\s+to\s+(\d+(?:\.\d+)?).*?missing.*?health",
+        text_resolved,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if not match:
+        return {}
+    return {
+        "retribution_missing_health_min": float(match.group(1)) / 100.0,
+        "retribution_missing_health_max": float(match.group(2)) / 100.0,
+    }
+
+
 def _parse_mana_to_ap_awe(text: str) -> dict[str, Any]:
     """Parse Awe passive: bonus mana to AP conversion.
 
@@ -1163,6 +1327,23 @@ def _parse_mana_to_ap_awe(text: str) -> dict[str, Any]:
     if ratio_match:
         result["bonus_mana_to_ap_ratio"] = float(ratio_match.group(1)) / 100.0
     return result
+
+
+def _parse_mana_to_health_awe(text: str) -> dict[str, Any]:
+    """Parse Awe's bonus-mana-to-health conversion.
+
+    Fimbulwinter and Winter's Approach both grant bonus health equal to 15%
+    of bonus mana.  Manaflow and Everlasting remain separate stateful
+    coverage boundaries; this parser owns only the sourced stat conversion.
+    """
+    text_resolved = _resolve_simple_templates(text)
+    ratio_match = re.search(
+        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+mana",
+        text_resolved,
+    )
+    if ratio_match:
+        return {"bonus_mana_to_health_ratio": float(ratio_match.group(1)) / 100.0}
+    return {}
 
 
 def _parse_rabadons_opus(text: str) -> dict[str, Any]:
@@ -1254,6 +1435,26 @@ def _parse_shojin_dragonforce(text: str) -> dict[str, Any]:
     )
     if haste_match:
         result["basic_ability_haste"] = float(haste_match.group(1))
+    return result
+
+
+def _parse_endless_hunger_famine(text: str) -> dict[str, Any]:
+    """Parse Endless Hunger Famine's bonus-AD ability-haste conversion."""
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {}
+    haste_match = re.search(r"\{\{as\|(\d+(?:\.\d+)?)\|ah\}\}", text, re.IGNORECASE)
+    if not haste_match:
+        haste_match = re.search(
+            r"gain\s+(\d+(?:\.\d+)?)\s+.*?ability\s+haste",
+            text_resolved,
+            re.IGNORECASE,
+        )
+    if haste_match:
+        result["famine_base_ability_haste"] = float(haste_match.group(1))
+    rd_pcts = _extract_rd_percentages(text)
+    if rd_pcts:
+        result["famine_bonus_ad_to_ability_haste_melee"] = rd_pcts[0]
+        result["famine_bonus_ad_to_ability_haste_ranged"] = rd_pcts[1]
     return result
 
 
@@ -1421,6 +1622,30 @@ def _parse_titanic_active(text: str) -> dict[str, Any]:
         if m is not None and r is not None:
             result["active_max_hp_ratio_melee"] = m
             result["active_max_hp_ratio_ranged"] = r
+    if len(all_rds) >= 2:
+        m = _extract_percentage(all_rds[1][0])
+        r = _extract_percentage(all_rds[1][1])
+        if m is not None and r is not None:
+            result["active_secondary_max_hp_ratio_melee"] = m
+            result["active_secondary_max_hp_ratio_ranged"] = r
+    return result
+
+
+def _parse_hydra_cleave(text: str) -> dict[str, Any]:
+    """Parse Hydra Cleave's copied on-hit packet to other enemies."""
+    result: dict[str, Any] = {"damage_type": "physical"}
+    rd_pcts = _extract_rd_percentages(text)
+    if rd_pcts:
+        result["secondary_ad_ratio_melee"] = rd_pcts[0]
+        result["secondary_ad_ratio_ranged"] = rd_pcts[1]
+
+    lifesteal_match = re.search(
+        r"life\s*steal.*?(\d+(?:\.\d+)?)%\s*effectiveness",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if lifesteal_match:
+        result["lifesteal_effectiveness"] = float(lifesteal_match.group(1)) / 100.0
     return result
 
 
@@ -1697,6 +1922,20 @@ def _parse_guinsoo_phantom(text: str) -> dict[str, Any]:
         max_stacks = int(stack_match.group(1))
         result["stacking_autos"] = max_stacks + 1
 
+    as_match = re.search(
+        r"(\d+(?:\.\d+)?)%.*?bonus.*?attack speed.*?for\s+(\d+(?:\.\d+)?)\s+seconds",
+        text_resolved,
+    )
+    if as_match:
+        result["seething_attack_speed_per_stack"] = float(as_match.group(1)) / 100.0
+        result["seething_duration"] = float(as_match.group(2))
+    total_match = re.search(
+        r"stacking\s+up\s+to\s+(\d+)\s+times\s+for\s+a\s+total\s+of.*?(\d+(?:\.\d+)?)%",
+        text_resolved,
+    )
+    if total_match:
+        result["seething_max_stacks"] = int(total_match.group(1))
+
     phantom_match = re.search(
         r"''Phantom''\s+stack.*?up\s+to\s+(\d+)\s+stacks.*?"
         r"At\s+(\d+)\s+''Phantom''",
@@ -1706,6 +1945,19 @@ def _parse_guinsoo_phantom(text: str) -> dict[str, Any]:
     if phantom_match:
         phantom_needed = int(phantom_match.group(2))
         result["phantom_interval"] = phantom_needed + 1
+    phantom_duration = re.search(
+        r"Phantom.*?stacks?\s+for\s+(\d+(?:\.\d+)?)\s+seconds",
+        text_resolved,
+        re.DOTALL,
+    )
+    if phantom_duration:
+        result["phantom_duration"] = float(phantom_duration.group(1))
+    required_match = re.search(
+        r"At\s+(\d+)\s+''Phantom''",
+        text_resolved,
+    )
+    if required_match:
+        result["phantom_stacks_required"] = int(required_match.group(1))
 
     return result
 
@@ -1757,6 +2009,21 @@ def _parse_voltaic_firmament(text: str) -> dict[str, Any]:
             result["current_hp_ratio_melee"] = float(m_match.group(1)) / 100.0
             result["current_hp_ratio_ranged"] = float(r_match.group(1)) / 100.0
             break
+        # The same branch carries a melee/ranged lethality grant without a
+        # percent sign (15/12 in the current patch).
+        m_flat = re.search(r"(\d+(?:\.\d+)?)", melee_txt)
+        r_flat = re.search(r"(\d+(?:\.\d+)?)", ranged_txt)
+        if m_flat and r_flat:
+            result["temporary_lethality_melee"] = float(m_flat.group(1))
+            result["temporary_lethality_ranged"] = float(r_flat.group(1))
+
+    duration_match = re.search(
+        r"grants?.*?lethality.*?for\s+(\d+(?:\.\d+)?)\s+seconds",
+        _resolve_simple_templates(text),
+        re.DOTALL,
+    )
+    if duration_match:
+        result["temporary_lethality_duration"] = float(duration_match.group(1))
 
     cap_match = re.search(r"capped\s+at\s+(\d+(?:\.\d+)?)", text)
     if cap_match:
@@ -1789,6 +2056,19 @@ def _parse_unending_despair(text: str) -> dict[str, Any]:
     )
     if hp_match:
         result["bonus_hp_ratio"] = float(hp_match.group(1)) / 100.0
+
+    # Anguish heals the wearer for a sourced fraction of the post-mitigation
+    # damage dealt by each periodic pulse.
+    heal_match = re.search(
+        r"heal\}\}\s+yourself\s+equal\s+to\s+"
+        r"(\d+(?:\.\d+)?)%\s+of\s+the\s+\{\{tt\|post-mitigation",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if heal_match:
+        result["self_heal_post_mitigation_multiplier"] = (
+            float(heal_match.group(1)) / 100.0
+        )
 
     return result
 
@@ -1832,7 +2112,41 @@ def _parse_yun_tal_flurry(text: str) -> dict[str, Any]:
     if cd_match:
         result["cooldown"] = float(cd_match.group(1))
 
+    refund_match = re.search(
+        r"(?:attacks\s+reduce(?:\s+this\s+cooldown)?\s+by|reduced\s+by)\s+"
+        r"(\d+(?:\.\d+)?)\s+second",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    crit_refund_match = re.search(
+        r"(?:increased\s+to\s+|and\s+)(\d+(?:\.\d+)?)\s+seconds?\s+"
+        r"(?:for\s+Critical\s+Strikes|if\s+the\s+attack\s+.*?critically\s+strikes)",
+        text_resolved,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if refund_match:
+        result["attack_refund_base"] = float(refund_match.group(1))
+    if crit_refund_match:
+        result["attack_refund_crit"] = float(crit_refund_match.group(1))
+
     return result
+
+
+def _parse_yun_tal_crit_stacks(text: str) -> dict[str, Any]:
+    """Parse Practice Makes Lethal's melee/ranged crit stack bounds."""
+    resolved = _resolve_simple_templates(text)
+    ratio = re.search(r"rd\|([0-9.]+)%\|([0-9.]+)%", resolved)
+    stacks = re.search(r"stacking\s+up\s+to.*?rd\|(\d+)\|(\d+)", resolved)
+    cap = re.search(r"capped\s+at.*?(\d+(?:\.\d+)?)%\s+critical", resolved)
+    if not ratio or not stacks or not cap:
+        return {}
+    return {
+        "crit_chance_per_stack_melee": float(ratio.group(1)) / 100.0,
+        "crit_chance_per_stack_ranged": float(ratio.group(2)) / 100.0,
+        "crit_stack_max_melee": int(stacks.group(1)),
+        "crit_stack_max_ranged": int(stacks.group(2)),
+        "crit_chance_cap": float(cap.group(1)) / 100.0,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -1868,6 +2182,22 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
         ("passive", "Cleave", _parse_max_hp_on_hit, {}),
         ("active", "Titanic Crescent", _parse_titanic_active, {}),
     ],
+    "Profane Hydra": [
+        ("passive", "Cleave", _parse_hydra_cleave, {}),
+        ("active", "Heretical Cleave", _parse_hydra_active, {}),
+    ],
+    "Ravenous Hydra": [
+        ("passive", "Cleave", _parse_hydra_cleave, {}),
+        ("active", "Ravenous Crescent", _parse_hydra_active, {}),
+    ],
+    "Tiamat": [
+        ("passive", "Cleave", _parse_hydra_cleave, {}),
+        ("active", "Crescent", _parse_hydra_active, {}),
+    ],
+    "Stridebreaker": [
+        ("passive", "Cleave", _parse_hydra_cleave, {}),
+        ("active", "Breaking Shockwave", _parse_hydra_active, {}),
+    ],
     "Guinsoo's Rageblade": [
         ("passive", "Wrath", _parse_simple_on_hit, {}),
         ("passive", "Seething Strike", _parse_guinsoo_phantom, {}),
@@ -1876,10 +2206,13 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
         ("passive", "Shock", _parse_mana_on_hit, {}),
         ("passive", "Awe", _parse_muramana_awe, {}),
     ],
+    "Endless Hunger": [
+        ("passive", "Famine", _parse_endless_hunger_famine, {}),
+    ],
     # ── Spellblade ──
     "Sheen": [("passive", "Spellblade", _parse_spellblade, {})],
     "Trinity Force": [("passive", "Spellblade", _parse_spellblade, {})],
-    "Lich Bane": [("passive", "Spellblade", _parse_spellblade, {})],
+    "Lich Bane": [("passive", "Spellblade", _parse_lich_bane_spellblade, {})],
     "Essence Reaver": [("passive", "Spellblade", _parse_essence_reaver_spellblade, {})],
     "Iceborn Gauntlet": [("passive", "Spellblade", _parse_spellblade, {})],
     "Bloodsong": [("passive", "Spellblade", _parse_bloodsong_spellblade, {})],
@@ -1904,7 +2237,13 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Bami's Cinder": [("passive", "Immolate", _parse_immolate, {})],
     # ── Proc ──
     "Luden's Echo": [("passive", "Echo", _parse_luden, {"use_cooldown_field": True})],
-    "Statikk Shiv": [("passive", "Electrospark", _parse_statikk_shiv, {})],
+    "Statikk Shiv": [
+        ("passive", "Electroshock", _parse_statikk_shiv, {}),
+        ("passive", "Electrospark", _parse_statikk_shiv, {}),
+    ],
+    "Runaan's Hurricane": [
+        ("passive", "Wind's Fury", _parse_runaan_winds_fury, {}),
+    ],
     "Stormsurge": [
         ("passive", "Squall", _parse_proc_flat_ap, {}),
         ("passive", "Stormraider", _parse_stormsurge_trigger, {}),
@@ -1921,12 +2260,13 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     # ── Active Items ──
     "Hextech Rocketbelt": [("active", "Supersonic", _parse_active_flat_ap, {})],
     "Hextech Gunblade": [("active", "Lightning Bolt", _parse_gunblade_active, {})],
-    "Profane Hydra": [("active", "Heretical Cleave", _parse_hydra_active, {})],
-    "Ravenous Hydra": [("active", "Ravenous Crescent", _parse_hydra_active, {})],
-    "Tiamat": [("active", "Crescent", _parse_hydra_active, {})],
-    "Stridebreaker": [("active", "Breaking Shockwave", _parse_hydra_active, {})],
     # ── Damage Amplification ──
-    "Riftmaker": [("passive", "Void Corruption", _parse_damage_amp_per_second, {})],
+    "Riftmaker": [
+        ("passive", "Void Corruption", _parse_damage_amp_per_second, {}),
+        ("passive", "Void Infusion", _parse_bonus_health_to_ap, {}),
+    ],
+    "Hubris": [("passive", "Eminence", _parse_hubris_eminence, {})],
+    "Axiom Arc": [("passive", "Flux", _parse_axiom_flux, {})],
     "Haunting Guise": [("passive", "Madness", _parse_damage_amp_per_second, {})],
     "Lord Dominik's Regards": [("passive", "Giant Slayer", _parse_lord_dominik, {})],
     "Spear of Shojin": [
@@ -1966,9 +2306,14 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Navori Flickerblade": [("passive", "Transcendence", _parse_navori, {})],
     "Shadowflame": [("passive", "Cinderbloom", _parse_shadowflame, {})],
     # ── Stat Conversion ──
-    "Overlord's Bloodmail": [("passive", "Tyranny", _parse_overlord_tyranny, {})],
+    "Overlord's Bloodmail": [
+        ("passive", "Tyranny", _parse_overlord_tyranny, {}),
+        ("passive", "Retribution", _parse_overlord_retribution, {}),
+    ],
     "Seraph's Embrace": [("passive", "Awe", _parse_mana_to_ap_awe, {})],
     "Archangel's Staff": [("passive", "Awe", _parse_mana_to_ap_awe, {})],
+    "Fimbulwinter": [("passive", "Awe", _parse_mana_to_health_awe, {})],
+    "Winter's Approach": [("passive", "Awe", _parse_mana_to_health_awe, {})],
     "Rabadon's Deathcap": [("passive", "Magical Opus", _parse_rabadons_opus, {})],
     "Dawncore": [("passive", "First Light", _parse_dawncore_first_light, {})],
     "Bandlepipes": [("passive", "Fanfare", _parse_bandlepipes_fanfare, {})],
@@ -1992,9 +2337,13 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     # ── Periodic AoE ──
     "Unending Despair": [("passive", "Anguish", _parse_unending_despair, {})],
     # ── Conditional AS ──
-    "Yun Tal Wildarrows": [("passive", "Flurry", _parse_yun_tal_flurry, {})],
+    "Yun Tal Wildarrows": [
+        ("passive", "Practice Makes Lethal", _parse_yun_tal_crit_stacks, {}),
+        ("passive", "Flurry", _parse_yun_tal_flurry, {}),
+    ],
     # ── Reactive strike-back ──
     "Bramble Vest": [("passive", "Thorns", _parse_thorns, {})],
+    "Thornmail": [("passive", "Thorns", _parse_thorns, {})],
     # ── Single-proc / Special ──
     "Dead Man's Plate": [("passive", "Shipwrecker", _parse_dead_mans_plate, {})],
     "Heartsteel": [("passive", "Colossal Consumption", _parse_heartsteel, {})],

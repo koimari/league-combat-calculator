@@ -96,6 +96,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # Explicit module-owned proof that a dynamic packet is one hit at
         # the cast boundary; this is never inferred from part count alone.
         "event_order_certified",
+        "auto_stack_every",
+        "short_fuse_cooldown",
+        "short_fuse_refund",
         "timeline_event_model",
         "dot_stack_count",
     }

@@ -120,8 +120,16 @@ def _plasma_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
             parts.append(
                 DamagePart(
                     "magic",
-                    hp_scaled_damage=lambda missing_ratio, ratio=rupture_ratio: (
-                        target_health * missing_ratio * ratio
+                    hp_scaled_damage=(
+                        lambda missing_ratio, live_target_max_health=None, ratio=rupture_ratio, baseline_target_health=target_health: (
+                            (
+                                baseline_target_health
+                                if live_target_max_health is None
+                                else live_target_max_health
+                            )
+                            * missing_ratio
+                            * ratio
+                        )
                     ),
                     time_offset=hit_time,
                 )

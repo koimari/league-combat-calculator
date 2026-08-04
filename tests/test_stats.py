@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.stats import (
     apply_movement_speed_soft_caps,
     growth_stat,
@@ -27,6 +27,92 @@ class TestLethality:
         stats = calculate_total_stats(ahri_data, level, [ghostblade])
         assert stats["lethality"] > 0
         assert stats["flat_armor_penetration"] == stats["lethality"]
+
+
+class TestStatefulItemStats:
+    """Explicit item state feeds downstream stat conversions exactly."""
+
+    def test_heartsteel_health_state_increases_max_health(self, ahri_data: dict):
+        item = get_item_by_name("Heartsteel")
+        base = calculate_total_stats(ahri_data, 18, [item])
+        stacked = calculate_total_stats(
+            ahri_data,
+            18,
+            [item],
+            item_options={"Heartsteel": {"bonus_health": 500}},
+        )
+        assert stacked["health"] == base["health"] + 500
+        assert stacked["bonus_health"] == base["bonus_health"] + 500
+
+    def test_rod_of_ages_timeless_state_adds_all_three_stats(self, ahri_data: dict):
+        item = get_item_by_name("Rod of Ages")
+        base = calculate_total_stats(ahri_data, 18, [item])
+        stacked = calculate_total_stats(
+            ahri_data,
+            18,
+            [item],
+            item_options={"Rod of Ages": {"timeless_stacks": 10}},
+        )
+        assert stacked["ability_power"] == base["ability_power"] + 30
+        assert stacked["health"] == base["health"] + 100
+        assert stacked["max_mana"] == base["max_mana"] + 300
+
+    def test_riftmaker_void_infusion_converts_bonus_health_to_ap(self, ahri_data: dict):
+        item = get_item_by_name("Riftmaker")
+        stats = calculate_total_stats(ahri_data, 18, [item])
+        assert stats["ability_power"] == 77
+
+    @pytest.mark.parametrize("item_name", ["Fimbulwinter", "Winter's Approach"])
+    def test_awe_converts_bonus_mana_to_bonus_health(
+        self, ahri_data: dict, item_name: str
+    ) -> None:
+        item = get_item_by_name(item_name)
+        baseline = calculate_total_stats(ahri_data, 18, [item])
+        item_stats = get_item_stats(item)
+        expected = item_stats["health"] + baseline["bonus_mana"] * 0.15
+        assert baseline["bonus_health"] == pytest.approx(expected)
+
+    @pytest.mark.parametrize(
+        ("champion_name", "stacks", "expected_crit"),
+        [
+            ("Ahri", 0, 0.0),
+            ("Ahri", 50, 10.0),
+            ("Ahri", 125, 25.0),
+            ("Aatrox", 50, 20.0),
+            ("Aatrox", 125, 25.0),
+        ],
+    )
+    def test_yun_tal_permanent_crit_state_is_applied_by_melee_split(
+        self, champion_name: str, stacks: int, expected_crit: float
+    ) -> None:
+        champion = get_champion(champion_name)
+        item = get_item_by_name("Yun Tal Wildarrows")
+        stats = calculate_total_stats(
+            champion,
+            18,
+            [item],
+            item_options={"Yun Tal Wildarrows": {"crit_stacks": stacks}},
+        )
+        assert stats["critical_strike_chance"] == pytest.approx(expected_crit)
+
+    def test_yun_tal_crit_state_does_not_duplicate_flurry_attack_speed(
+        self, ahri_data: dict
+    ) -> None:
+        item = get_item_by_name("Yun Tal Wildarrows")
+        zero = calculate_total_stats(
+            ahri_data,
+            18,
+            [item],
+            item_options={"Yun Tal Wildarrows": {"crit_stacks": 0}},
+        )
+        capped = calculate_total_stats(
+            ahri_data,
+            18,
+            [item],
+            item_options={"Yun Tal Wildarrows": {"crit_stacks": 125}},
+        )
+        assert capped["critical_strike_chance"] > zero["critical_strike_chance"]
+        assert capped["attack_speed"] == zero["attack_speed"]
 
 
 class TestGrowthStat:
@@ -463,6 +549,18 @@ class TestNewItemStats:
         parsed = parse_item_effect("Titanic Hydra", items)
         assert parsed["active_max_hp_ratio_melee"] == 0.04
         assert parsed["active_max_hp_ratio_ranged"] == 0.02
+        assert parsed["secondary_max_hp_ratio_melee"] == 0.03
+        assert parsed["secondary_max_hp_ratio_ranged"] == 0.015
+        assert parsed["active_secondary_max_hp_ratio_melee"] == 0.09
+        assert parsed["active_secondary_max_hp_ratio_ranged"] == 0.045
+
+    def test_ravenous_hydra_cleave_secondary_ad_parsed(self) -> None:
+        from src.calculator.passive_parser import parse_item_effect
+        from src.calculator.data_fetcher import fetch_item_data
+
+        parsed = parse_item_effect("Ravenous Hydra", fetch_item_data())
+        assert parsed["secondary_ad_ratio_melee"] == 0.40
+        assert parsed["secondary_ad_ratio_ranged"] == 0.20
 
     # ── Yun Tal Wildarrows ──
 
@@ -473,6 +571,20 @@ class TestNewItemStats:
         stats_with = calculate_total_stats(ahri_data, 18, [yt_item])
         # AS should be higher with Yun Tal Flurry
         assert stats_with["attack_speed"] > base_stats["attack_speed"]
+
+    def test_bloodmail_starting_missing_health_adds_retribution_ad(
+        self, ahri_data: dict
+    ) -> None:
+        item = get_item_by_name("Overlord's Bloodmail")
+        full = calculate_total_stats(ahri_data, 18, [item])
+        hurt = calculate_total_stats(
+            ahri_data,
+            18,
+            [item],
+            item_options={"Overlord's Bloodmail": {"missing_health_percent": 50}},
+        )
+        assert hurt["attack_damage"] > full["attack_damage"]
+        assert hurt["bonus_attack_damage"] > full["bonus_attack_damage"]
 
     def test_yun_tal_reads_from_registry(self, ahri_data: dict, monkeypatch) -> None:
         """Yun Tal AS bonus reads from ITEM_EFFECTS, not hardcoded."""
@@ -540,6 +652,8 @@ class TestNewItemStats:
         assert parsed["bonus_attack_speed_percent"] == 30.0
         assert parsed["duration"] == 6.0
         assert parsed["cooldown"] == 30.0
+        assert parsed["attack_refund_base"] == 1.0
+        assert parsed["attack_refund_crit"] == 2.0
 
 
 class TestHealthComponents:
@@ -659,3 +773,19 @@ class TestMidRoleQuestStats:
             normal["bonus_attack_damage"] * 1.08
         )
         assert quest["base_attack_damage"] == normal["base_attack_damage"]
+
+
+def test_item_sustain_and_economy_stats_are_exposed_from_cached_source() -> None:
+    blade = get_item_by_name("Blade of the Ruined King")
+    item_stats = get_item_stats(blade)
+    assert item_stats["lifesteal_percent"] == pytest.approx(10.0)
+    assert get_item_stats(get_item_by_name("Ardent Censer"))[
+        "heal_and_shield_power_percent"
+    ] == pytest.approx(10.0)
+
+    totals = calculate_total_stats(get_champion("Vayne"), 11, [blade])
+    assert totals["lifesteal_percent"] == pytest.approx(10.0)
+    assert totals["omnivamp_percent"] == pytest.approx(0.0)
+    assert "health_regen_percent" in totals
+    assert "tenacity_percent" in totals
+    assert "gold_per_10" in totals

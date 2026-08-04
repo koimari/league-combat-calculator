@@ -258,6 +258,31 @@ class TestSrAvailability:
         )
         assert sr_availability(item).selectable is True
 
+    @pytest.mark.parametrize("rank", ["TURRET", "TRINKET", "DISTRIBUTED"])
+    def test_map_and_system_rank_is_not_a_player_shop_purchase(self, rank: str) -> None:
+        item = _cached_item(
+            modes={"classic sr 5v5": True},
+            rank=[rank],
+            shop={"purchasable": False, "prices": {"total": 0}},
+        )
+        availability = sr_availability(item)
+
+        assert availability.on_summoners_rift is True
+        assert availability.acquisition == "map_or_system"
+        assert availability.selectable is False
+        assert "not a player shop purchase" in availability.reason
+
+    def test_zero_price_non_purchasable_record_fails_closed(self) -> None:
+        item = _cached_item(
+            modes={"classic sr 5v5": True},
+            rank=["UNKNOWN"],
+            shop={"purchasable": False, "prices": {"total": 0}},
+        )
+        availability = sr_availability(item)
+
+        assert availability.acquisition == "map_or_system"
+        assert availability.selectable is False
+
 
 class TestTrackedCacheAvailability:
     """Leakage regressions against the tracked cache."""
@@ -294,6 +319,15 @@ class TestTrackedCacheAvailability:
             item["name"] for item in fetch_item_data().values() if not item.get("modes")
         ]
         assert missing == []
+
+    def test_every_ordinary_sr_item_has_no_unaccounted_source_warning(self) -> None:
+        """Map-aware selection must not admit an item with dropped source text."""
+        warnings = {
+            item["name"]: list(item.get("sourceWarnings") or ())
+            for item in fetch_item_data().values()
+            if sr_availability(item).selectable and item.get("sourceWarnings")
+        }
+        assert warnings == {}
 
 
 class TestSourceAudit:

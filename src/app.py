@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlsplit
 
 # Ensure the src directory is on the path so calculator imports work
@@ -39,12 +40,18 @@ from calculator.data_fetcher import (
     get_champion,
     get_item_by_name,
 )
-from calculator.item_effects import item_input_options_meta, refresh_item_effects
+from calculator.item_effects import (
+    item_input_options_meta,
+    refresh_item_effects,
+    stat_conversion_metadata,
+)
 from calculator.rune_effects import keystone_catalog, refresh_rune_effects
 from calculator.item_coverage import (
     item_model_coverage,
+    require_calculation_item_coverage,
     require_certified_target_timeline,
     require_target_item_coverage,
+    target_item_model_coverage,
     target_build_coverage,
 )
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
@@ -71,7 +78,7 @@ from calculator.optimizer import (
     optimizer_supported_items,
 )
 from calculator.stats import MAX_LEVEL
-from calculator.stats import calculate_total_stats
+from calculator.stats import calculate_total_stats, get_item_stats
 from calculator.scenario import (
     MAX_ALLIES,
     MAX_ENEMIES,
@@ -83,6 +90,7 @@ from calculator.role_quests import require_level_within_cap, role_quest_meta
 from calculator.timeline_coverage import combine_timeline_coverages
 from calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
+    DEFAULT_AUTO_ATTACK_UPTIME_MODE,
     DEFAULT_FIGHT_DURATION,
     DEFAULT_FIGHT_MODE,
     DEFAULT_TARGET,
@@ -521,17 +529,36 @@ def _public_loadout_summary(loadout) -> dict:
     return summary
 
 
+def _public_event_time(event: Mapping[str, object]) -> float | None:
+    """Return a finite event timestamp, withholding malformed public rows."""
+    if "time" not in event:
+        return None
+    value = event["time"]
+    if isinstance(value, bool):
+        return None
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(parsed):
+        return None
+    return round(parsed, 3)
+
+
 def _serialize_fight_result(result: Mapping[str, object]) -> dict:
     """Translate one engine result into the stable public response shape."""
     breakdown = result.get("breakdown", {})
     api_breakdown = {}
     for key, entry in breakdown.items():
         has_damage = entry.get("total_damage", 0.0) > 0
-        if not (has_damage or "detail" in entry):
+        total_amount = entry.get("total_amount", 0.0)
+        has_amount = isinstance(total_amount, (int, float)) and total_amount > 0
+        if not (has_damage or has_amount or "detail" in entry):
             continue
         row = {
             "name": entry.get("name", key),
             "total_damage": round(entry.get("total_damage", 0.0), 1),
+            "total_amount": round(total_amount, 1) if has_amount else None,
             "casts": entry.get("casts", None),
             "count": entry.get("count", None),
             "unit": entry.get("unit", None),
@@ -551,9 +578,23 @@ def _serialize_fight_result(result: Mapping[str, object]) -> dict:
                 else None
             ),
         }
+        if has_amount:
+            row["amount_per_proc"] = (
+                round(entry["amount_per_proc"], 1)
+                if entry.get("amount_per_proc") is not None
+                else None
+            )
+            row["proc_times"] = list(entry.get("proc_times", []))
+            row["output_type"] = "mana" if entry.get("unit") == "mana" else "health"
         for display_key in ("detail", "damage_display"):
             if display_key in entry:
                 row[display_key] = entry[display_key]
+        temporary_lethality = entry.get("temporary_lethality")
+        if isinstance(temporary_lethality, Mapping):
+            # Preserve the engine's sourced state receipt so the frontend can
+            # explain a temporary penetration window instead of collapsing it
+            # into an unexplained aggregate damage number.
+            row["temporary_lethality"] = dict(temporary_lethality)
         if "targeting" in entry:
             row["targeting"] = dict(entry["targeting"])
         api_breakdown[key] = row
@@ -596,27 +637,29 @@ def _serialize_fight_result(result: Mapping[str, object]) -> dict:
         "resource_spent": round(result.get("resource_spent", 0.0), 1),
         "resource_remaining": round(result.get("resource_remaining", 0.0), 1),
         "timeline_coverage": dict(result.get("timeline_coverage", {})),
+        "auto_attack_policy": dict(result.get("auto_attack_policy", {})),
+        "auto_attack_schedule": dict(result.get("auto_attack_schedule", {})),
         "damage_events": [
             {
-                "time": round(float(event.get("time", 0.0)), 3),
+                "time": _public_event_time(event),
                 "source": str(event.get("source_key", "")),
                 "damage_type": str(event.get("damage_type", "")),
                 "damage": round(float(event.get("damage", 0.0)), 1),
                 "phase": str(event.get("phase", "")),
             }
             for event in result.get("damage_events", [])
-            if isinstance(event, Mapping)
+            if isinstance(event, Mapping) and _public_event_time(event) is not None
         ],
         "self_healing": round(float(result.get("self_healing", 0.0)), 1),
         "self_healing_events": [
             {
-                "time": round(float(event.get("time", 0.0)), 3),
+                "time": _public_event_time(event),
                 "source": str(event.get("source", "")),
                 "kind": str(event.get("kind", "")),
                 "amount": round(float(event.get("amount", 0.0)), 1),
             }
             for event in result.get("self_healing_events", [])
-            if isinstance(event, Mapping)
+            if isinstance(event, Mapping) and _public_event_time(event) is not None
         ],
     }
 
@@ -653,9 +696,17 @@ def _aggregate_public_results(results: list[dict]) -> dict:
                     "num_non_crits": None,
                     "crit_damage_per_hit": None,
                     "non_crit_damage_per_hit": None,
+                    "total_amount": 0.0,
+                    "amount_per_proc": None,
+                    "proc_times": [],
+                    "output_type": entry.get("output_type"),
                 },
             )
             aggregate["total_damage"] += entry["total_damage"]
+            aggregate["total_amount"] += float(entry.get("total_amount") or 0.0)
+            if entry.get("amount_per_proc") is not None:
+                aggregate["amount_per_proc"] = entry["amount_per_proc"]
+            aggregate["proc_times"].extend(entry.get("proc_times") or [])
 
     for entry in breakdown.values():
         entry["total_damage"] = round(entry["total_damage"], 1)
@@ -669,6 +720,34 @@ def _aggregate_public_results(results: list[dict]) -> dict:
         "shield_absorbed": round(
             sum(result["shield_absorbed"] for result in results), 1
         ),
+        "magic_shield_absorbed": round(
+            sum(result.get("magic_shield_absorbed", 0.0) for result in results), 1
+        ),
+        "physical_shield_absorbed": round(
+            sum(result.get("physical_shield_absorbed", 0.0) for result in results), 1
+        ),
+        "general_shield_absorbed": round(
+            sum(result.get("general_shield_absorbed", 0.0) for result in results), 1
+        ),
+        "threshold_shield_absorbed": round(
+            sum(result.get("threshold_shield_absorbed", 0.0) for result in results), 1
+        ),
+        "threshold_health_triggered": any(
+            result.get("threshold_health_triggered", False) for result in results
+        ),
+        "threshold_health_bonus_gained": round(
+            sum(result.get("threshold_health_bonus_gained", 0.0) for result in results),
+            1,
+        ),
+        "target_healing_received": round(
+            sum(result.get("target_healing_received", 0.0) for result in results), 1
+        ),
+        "target_ending_health": round(
+            sum(result.get("target_ending_health", 0.0) for result in results), 1
+        ),
+        "target_effective_max_health": round(
+            sum(result.get("target_effective_max_health", 0.0) for result in results), 1
+        ),
         "ability_damage": round(sum(result["ability_damage"] for result in results), 1),
         "auto_attack_damage": round(
             sum(result["auto_attack_damage"] for result in results), 1
@@ -678,6 +757,18 @@ def _aggregate_public_results(results: list[dict]) -> dict:
             for damage_type, amount in damage_types.items()
         },
         "breakdown": breakdown,
+        # Each target runs the same ordered package independently. Preserve
+        # the resulting recovery receipts when the public response aggregates
+        # those target results, otherwise the frontend would lose standalone
+        # self-healing even though every per-target engine result emitted it.
+        "self_healing": round(
+            sum(float(result.get("self_healing", 0.0)) for result in results), 1
+        ),
+        "self_healing_events": [
+            event
+            for result in results
+            for event in result.get("self_healing_events", [])
+        ],
         # Existing result cards expect scalar effective defenses.  The first
         # selected enemy is the primary target; every target's values are also
         # available in the per-target table.
@@ -688,6 +779,8 @@ def _aggregate_public_results(results: list[dict]) -> dict:
         "resource_remaining": primary.get("resource_remaining", 0.0),
         "notes": list(primary.get("notes", [])),
         "timeline_coverage": timeline_coverage,
+        "auto_attack_policy": dict(primary.get("auto_attack_policy", {})),
+        "auto_attack_schedule": dict(primary.get("auto_attack_schedule", {})),
     }
 
 
@@ -1079,15 +1172,50 @@ def api_champions():
     return jsonify(result)
 
 
+def _item_picker_stat_fields(item: Mapping[str, Any]) -> dict[str, Any]:
+    """Expose the cached sustain/stat families the browser can display."""
+    stats = get_item_stats(item)
+    return {
+        "lifesteal": stats["lifesteal_percent"],
+        "omnivamp": stats["omnivamp_percent"],
+        "healAndShieldPower": stats["heal_and_shield_power_percent"],
+        "healthRegen": stats["health_regen_percent"],
+        "tenacity": stats["tenacity_percent"],
+        "manaRegen": stats["mana_regen_percent"],
+        "goldPer10": stats["gold_per_10"],
+        "critDamage": stats["critical_strike_damage_percent"],
+        "statConversions": stat_conversion_metadata(str(item.get("name", ""))),
+    }
+
+
 @app.route("/api/items")
 def api_items():
     """Return ordinary build items for manual attacker/roster loadouts."""
     result = sorted(
         [
             {
+                "id": item["id"],
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
+                "ap": item.get("ap", 0),
+                "hp": item.get("hp", 0),
+                "mana": item.get("mana", 0),
+                "ad": item.get("ad", 0),
+                "armor": item.get("armor", 0),
+                "mr": item.get("mr", 0),
+                "haste": item.get("haste", 0),
+                "pen": item.get("pen", 0),
+                "percentPen": item.get("percentPen", 0),
+                "lethality": item.get("lethality", 0),
+                "percentArmorPen": item.get("percentArmorPen", 0),
+                "attackSpeed": item.get("attackSpeed", 0),
+                "crit": item.get("crit", 0),
+                **_item_picker_stat_fields(item),
+                "price": item.get("price", 0),
+                "into": item.get("into") or [],
+                "categories": item.get("categories") or [],
                 "model_coverage": item_model_coverage(item),
+                "target_model_coverage": target_item_model_coverage(item),
             }
             for item in get_selectable_items()
         ],
@@ -1102,10 +1230,29 @@ def api_boots():
     result = sorted(
         [
             {
+                "id": item["id"],
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
+                "ap": item.get("ap", 0),
+                "hp": item.get("hp", 0),
+                "mana": item.get("mana", 0),
+                "ad": item.get("ad", 0),
+                "armor": item.get("armor", 0),
+                "mr": item.get("mr", 0),
+                "haste": item.get("haste", 0),
+                "pen": item.get("pen", 0),
+                "percentPen": item.get("percentPen", 0),
+                "lethality": item.get("lethality", 0),
+                "percentArmorPen": item.get("percentArmorPen", 0),
+                "attackSpeed": item.get("attackSpeed", 0),
+                "crit": item.get("crit", 0),
+                **_item_picker_stat_fields(item),
+                "price": item.get("price", 0),
+                "into": item.get("into") or [],
+                "categories": item.get("categories") or [],
                 "tier": item.get("tier"),
                 "model_coverage": item_model_coverage(item),
+                "target_model_coverage": target_item_model_coverage(item),
             }
             for item in get_eligible_boots(tier=None)
         ],
@@ -1145,6 +1292,7 @@ def api_config():
                 "mode": DEFAULT_FIGHT_MODE,
                 "duration_seconds": DEFAULT_FIGHT_DURATION,
                 "auto_attack_uptime": DEFAULT_AUTO_ATTACK_UPTIME,
+                "auto_attack_uptime_mode": DEFAULT_AUTO_ATTACK_UPTIME_MODE,
                 "one_rotation_duration_seconds": ONE_ROTATION_DURATION,
             },
             "input_limits": PUBLIC_INPUT_LIMITS,
@@ -1250,6 +1398,10 @@ def api_calculate():
             role=fight_params.role,
             role_quest_complete=fight_params.role_quest_complete,
         )
+        require_calculation_item_coverage(
+            ([resolved_boots] if resolved_boots else []) + ordinary_items,
+            participant="Attacker",
+        )
     except LookupError as exc:
         return jsonify({"error": str(exc)}), 404
     except ValueError as exc:
@@ -1263,7 +1415,16 @@ def api_calculate():
             fight_params, enemies=enemies, allies=allies
         )
         for enemy in enemies:
+            participant = f"Enemy {enemy.champion_data['name']}"
+            require_calculation_item_coverage(
+                list(enemy.item_data), participant=participant
+            )
             require_target_item_coverage(list(enemy.item_data))
+        for ally in allies:
+            participant = f"Ally {ally.champion_data['name']}"
+            require_calculation_item_coverage(
+                list(ally.item_data), participant=participant
+            )
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
@@ -1480,6 +1641,13 @@ def _bis_main_request(data: Mapping[str, object]) -> ChampionLoadout:
             "item_options": data.get("item_options"),
             "role": data.get("role", ""),
             "role_quest_complete": data.get("role_quest_complete", False),
+            "ally_effects_enabled": data.get("ally_effects_enabled", True),
+            # Focused BIS must use the same authored rank allocation as the
+            # ordinary calculate/optimize paths.  Omitting this field makes
+            # ChampionLoadout silently fall back to level-derived ranks.
+            "ability_ranks": data.get("ability_ranks"),
+            "champion_options": data.get("champion_options"),
+            "cast_order": data.get("cast_order"),
         },
         field="attacker",
     )
@@ -1647,6 +1815,15 @@ def api_bis():
 
     try:
         main_loadout = main_request.resolve()
+        # Validate the focused main request against the same champion-specific
+        # rank and option contracts as /api/calculate and /api/optimize.  The
+        # FightParams parser checks JSON shape/ranges; this second gate checks
+        # level legality and module-declared option keys before any candidate
+        # evaluation starts.
+        fight_params.validate_for_champion(
+            main_loadout.champion_data["name"], main_request.level
+        )
+        _validate_champion_options(main_loadout.champion_data["name"], data)
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
         require_roster_fight_window_support(
@@ -1686,6 +1863,7 @@ def api_bis():
         return rate_limit_response
 
     ranked: list[dict] = []
+    withheld_candidates: list[dict[str, object]] = []
     target_coverage_filtered: list[dict[str, object]] = []
     for candidate in candidates:
         try:
@@ -1710,6 +1888,24 @@ def api_bis():
             )
             if blocked_targets:
                 target_coverage_filtered.extend(blocked_targets)
+                withheld_candidates.append(
+                    {
+                        "name": candidate["name"],
+                        "icon": _https_icon(candidate.get("icon", "")),
+                        "reason": "target_coverage_blocked",
+                        "target_coverage": blocked_targets,
+                        "timeline_coverage": {
+                            "complete": False,
+                            "certification": "target_coverage_blocked",
+                            "exact_sources": [],
+                            "coarse_sources": [],
+                            "note": (
+                                "Candidate was not evaluated because a selected "
+                                "roster item is outside the sourced target model."
+                            ),
+                        },
+                    }
+                )
                 continue
             combat = build_participant_timeline(
                 candidate_main.champion_data,
@@ -1729,6 +1925,7 @@ def api_bis():
                 if row["participant_id"]
                 == ("main" if subject_team == "main" else subject_id)
             )
+            rank_key = None
             if subject_team == "main":
                 # TTD is already truncated at the focus participant's death
                 # in the shared event timeline.  Adding raw eHP here would
@@ -1806,9 +2003,27 @@ def api_bis():
                     **({"_rank_key": rank_key} if subject_team == "enemy" else {}),
                 }
             )
-        except (KeyError, ValueError):
-            # A candidate without a complete legal sourced loadout is omitted,
-            # never assigned a zero or a heuristic replacement score.
+        except (KeyError, ValueError) as exc:
+            # A candidate without a complete legal sourced loadout is withheld,
+            # never assigned a zero or a heuristic replacement score.  Keep a
+            # receipt for it: dropping the row used to make candidate_count look
+            # exhaustive even when a duplicate, state interaction, or missing
+            # source prevented evaluation.
+            withheld_candidates.append(
+                {
+                    "name": candidate["name"],
+                    "icon": _https_icon(candidate.get("icon", "")),
+                    "reason": "candidate_loadout_unavailable",
+                    "detail": str(exc),
+                    "timeline_coverage": {
+                        "complete": False,
+                        "certification": "candidate_not_evaluated",
+                        "exact_sources": [],
+                        "coarse_sources": [],
+                        "note": "Candidate was withheld before timeline evaluation.",
+                    },
+                }
+            )
             continue
 
     if subject_team == "enemy":
@@ -1824,7 +2039,7 @@ def api_bis():
         candidate
         for candidate in ranked
         if not candidate["timeline_coverage"].get("complete", False)
-    ][:12]
+    ]
     certified_ranked = [
         candidate
         for candidate in ranked
@@ -1837,6 +2052,10 @@ def api_bis():
             f"Target-side coverage filtered {len(target_coverage_filtered)} candidate "
             f"receipts; {first['champion']} · {first['name']}: {first['reason']}"
         )
+    candidate_count = len(candidates)
+    coverage_complete = (
+        bool(certified_ranked) and not partial_ranked and not withheld_candidates
+    )
     return jsonify(
         {
             "subject_team": subject_team,
@@ -1848,25 +2067,30 @@ def api_bis():
                 if role and slot_kind != "boots"
                 else "all-supported"
             ),
-            "candidates": certified_ranked[:12],
+            # Return every evaluated receipt, not a top-12 preview.  The
+            # backend acceptance contract requires per-candidate coverage so
+            # omitted coarse builds cannot be mistaken for a complete BIS
+            # search.  The client may still choose how many rows to render.
+            "candidates": certified_ranked,
             "partial_candidates": partial_ranked,
-            "candidate_count": len(ranked),
+            "candidate_count": candidate_count,
             "certified_candidate_count": len(certified_ranked),
+            "partial_candidate_count": len(partial_ranked),
+            "withheld_candidate_count": len(withheld_candidates),
+            "withheld_candidates": withheld_candidates,
             "coverage": {
-                "complete": bool(certified_ranked),
+                "complete": coverage_complete,
                 "certification": (
                     "bis_event_order_certified"
-                    if certified_ranked
+                    if coverage_complete
                     else "bis_withheld_partial_event_order"
                 ),
                 "note": (
-                    "Only candidates with complete sourced event order are shown as BIS."
-                    if certified_ranked
+                    "Every candidate has complete sourced event order."
+                    if coverage_complete
                     else (
-                        "BIS is withheld: a selected roster item is outside the sourced "
-                        "target model."
-                        if target_coverage_filtered
-                        else "BIS is withheld: every candidate still has partial or uncertified event order."
+                        "BIS is withheld: one or more candidates were not fully "
+                        "evaluated or still have partial event order."
                     )
                 )
                 + (f" {target_coverage_note}" if target_coverage_note else ""),
@@ -2057,7 +2281,16 @@ def api_optimize():
             include_boots=include_boots,
         )
     except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+        message = str(exc)
+        payload = {"error": message}
+        if message.startswith("No complete legal event-ordered build fits"):
+            payload.update(
+                {
+                    "error_code": "no_complete_event_order",
+                    "champion": champion_data["name"],
+                }
+            )
+        return jsonify(payload), 400
 
     return jsonify(result)
 

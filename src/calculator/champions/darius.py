@@ -370,8 +370,8 @@ ASSUMPTIONS = [
     "cutoff; the bleed cannot crit",
     "Hemorrhage's 250% damage against monsters is not modeled — the "
     "target is a champion",
-    "No healing is modeled: Q's self-heal (17-51% of missing health by "
-    "targets hit) and R's execute reset restore nothing here",
+    "Q's self-heal (17-51% of missing health by targets hit) is modeled in "
+    "the ordered participant ledger; R's execute reset restores nothing here",
     "W's kill-triggered cooldown reduction and mana refund are not modeled",
     "CC is not modeled: Q's slow, E's pull/rebound/slow, W's 90% slow, and R's fear",
 ]

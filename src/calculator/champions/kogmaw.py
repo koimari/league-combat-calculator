@@ -141,6 +141,7 @@ def _living_artillery(ctx: SlotCtx) -> dict[str, Any] | None:
         entry["parts"] = (
             DamagePart("magic", hp_scaled_damage=_living_artillery_scaled(base)),
         )
+        entry["event_order_certified"] = "single_hit"
     return entry
 
 

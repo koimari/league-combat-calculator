@@ -3,6 +3,8 @@
 import json
 
 from src.calculator.champions import (
+    _CUSTOM_CHAMPION_MODULES,
+    _GENERATED_CHAMPION_MODULES,
     engine_registration_kind,
     parse_champion_abilities,
     registered_champion_names,
@@ -24,7 +26,12 @@ def test_every_cached_champion_has_an_importable_engine_registration():
     assert len(registered) == 173
     assert len(registered_champion_names()) == 173
     assert all(
-        engine_registration_kind(name) == "reviewed_module" for name in registered
+        engine_registration_kind(name) == "reviewed_module"
+        for name in _CUSTOM_CHAMPION_MODULES
+    )
+    assert all(
+        engine_registration_kind(name) == "generated_packet_module"
+        for name in _GENERATED_CHAMPION_MODULES
     )
 
 
@@ -47,7 +54,7 @@ def test_generic_registration_runs_through_the_same_validated_parser():
     }
 
     for champion in champions.values():
-        if engine_registration_kind(champion["name"]) != "wiki_packet_module":
+        if engine_registration_kind(champion["name"]) != "generated_packet_module":
             continue
         result = parse_champion_abilities(
             champion,

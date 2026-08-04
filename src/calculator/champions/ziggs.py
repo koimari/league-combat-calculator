@@ -21,6 +21,7 @@ All numeric values are read from the champion JSON data except the
 Short Fuse AP ratio (see HARDCODED below).
 """
 
+import re
 from typing import Any
 
 from .engine import SlotCtx, build_parser
@@ -40,10 +41,58 @@ from .slotlib import (
 SHORT_FUSE_AP_RATIO = 0.5
 
 
+def _short_fuse_refund_seconds(ability: dict[str, Any], level: int) -> float:
+    """Read the sourced 4/5/6-second cast refund from passive prose."""
+    description = " ".join(
+        str(effect.get("description", "")) for effect in ability.get("effects", [])
+    )
+    match = re.search(
+        r"reduced by\s*(\d+)\s*/\s*(\d+)\s*/\s*(\d+)\s*\(based on level\)",
+        description,
+        flags=re.IGNORECASE,
+    )
+    values = tuple(float(match.group(index)) for index in range(1, 4)) if match else ()
+    if not values:
+        raise ValueError(
+            "Ziggs P: Short Fuse cooldown refund is missing from the cached source"
+        )
+    breakpoint_index = 0 if level < 7 else (1 if level < 13 else 2)
+    return values[breakpoint_index]
+
+
 def _short_fuse_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """One Short Fuse proc: per-level JSON base + hardcoded 50% AP."""
     base = extract_value(ability, "Per-Level Scaling", ctx.level)
     return base + SHORT_FUSE_AP_RATIO * ctx.stats.get("ability_power", 0.0)
+
+
+_short_fuse_packet = proc_damage(
+    per_proc=_short_fuse_damage,
+    dmg_type="magic",
+    count_option="passive_procs",
+    default_count=2,
+)
+
+
+def _short_fuse(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Emit Short Fuse with its sourced timed cooldown/refund contract."""
+    ability = ctx.ability()
+    entry = _short_fuse_packet(ctx)
+    if ability is None or entry is None:
+        return entry
+    cooldown_values = [
+        value
+        for modifier in ability.get("cooldown", {}).get("modifiers", [])
+        for value in modifier.get("values", [])
+    ]
+    if not cooldown_values:
+        raise ValueError(
+            "Ziggs P: Short Fuse cooldown is missing from the cached source"
+        )
+    entry["timeline_event_model"] = "ziggs_short_fuse"
+    entry["short_fuse_cooldown"] = float(cooldown_values[0])
+    entry["short_fuse_refund"] = _short_fuse_refund_seconds(ability, ctx.level)
+    return entry
 
 
 def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -102,7 +151,7 @@ ASSUMPTIONS = [
     "Short Fuse structure bonus (175% damage, 87.5% AP vs turrets) not "
     "modeled — champion-fight calculator",
     "Short Fuse proc count is user-set (default 2); its per-ability-cast "
-    "cooldown refund (4/5/6s) is not simulated tick-by-tick",
+    "cooldown refund (4/5/6s) is applied against the authored cast timeline",
     "Q bounces don't change damage; single explosion assumed to hit",
     "W turret-execute threshold (Demolition) not modeled — turrets only",
     "E slow and W knockback are utility, no damage contribution",
@@ -122,12 +171,7 @@ SLOTS = {
         },
         default=True,
     ),
-    "P": proc_damage(
-        per_proc=_short_fuse_damage,
-        dmg_type="magic",
-        count_option="passive_procs",
-        default_count=2,
-    ),
+    "P": _short_fuse,
 }
 
 parse_abilities = build_parser(SLOTS, "Ziggs")

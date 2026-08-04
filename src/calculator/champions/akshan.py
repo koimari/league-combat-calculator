@@ -244,6 +244,29 @@ def _dirty_fighting_damage(ctx: SlotCtx, passive: dict[str, Any]) -> float:
     return _parse_passive_proc_damage(passive, ctx.level, ctx.stats)
 
 
+_dirty_fighting_packet = proc_damage(
+    _dirty_fighting_damage,
+    "magic",
+    default_count=3,
+    name="Dirty Fighting (3-Stack Proc)",
+)
+
+
+def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Emit the 3-stack proc with its sourced auto-stack cadence.
+
+    Dirty Fighting triggers on every third damaging attack.  The proc count
+    remains the user-controlled packet count, while the event ledger places
+    each proc on the corresponding third auto swing in timed fights.
+    """
+    entry = _dirty_fighting_packet(ctx)
+    if entry is None:
+        return None
+    entry["event_order_certified"] = "auto_stack_proc"
+    entry["auto_stack_every"] = 3
+    return entry
+
+
 OPTIONS = [
     {
         "key": "passive_procs",
@@ -276,12 +299,7 @@ SLOTS = {
     "E": _heroic_swing,
     "R": _comeuppance,
     "passive_double_shot": _double_shot,
-    "P": proc_damage(
-        _dirty_fighting_damage,
-        "magic",
-        default_count=3,
-        name="Dirty Fighting (3-Stack Proc)",
-    ),
+    "P": _dirty_fighting,
 }
 
 parse_abilities = build_parser(SLOTS, "Akshan")

@@ -228,6 +228,52 @@ def test_parse_roster_enforces_team_size():
         parse_roster({"enemies": roster}, "enemies", maximum=5)
 
 
+def test_roster_preserves_authored_ranks_and_champion_options():
+    roster = parse_roster(
+        {
+            "allies": [
+                {
+                    "champion": "Vayne",
+                    "level": 18,
+                    "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+                    "champion_options": {"condemn_wall": False},
+                    "cast_order": ["R", "Q", "W", "E"],
+                }
+            ]
+        },
+        "allies",
+        maximum=4,
+    )
+
+    assert roster[0].ability_ranks == {"Q": 5, "W": 5, "E": 5, "R": 3}
+    assert roster[0].champion_options == {"condemn_wall": False}
+    assert roster[0].cast_order == ["R", "Q", "W", "E"]
+
+
+def test_roster_rejects_unknown_champion_options():
+    with pytest.raises(ValueError, match="unknown option"):
+        ChampionLoadout.from_request(
+            {
+                "champion": "Vayne",
+                "level": 18,
+                "champion_options": {"not_declared": True},
+            },
+            field="allies[0]",
+        )
+
+
+def test_roster_rejects_malformed_cast_order():
+    with pytest.raises(ValueError, match="cast_order must be a permutation"):
+        ChampionLoadout.from_request(
+            {
+                "champion": "Vayne",
+                "level": 18,
+                "cast_order": ["Q", "Q", "E", "R"],
+            },
+            field="allies[0]",
+        )
+
+
 def test_level_20_requires_a_completed_top_quest():
     base = {"champion": "Galio", "level": 20}
     for extra in (

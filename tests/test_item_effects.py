@@ -15,19 +15,53 @@ from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
     _ap_multiplier,
+    ap_multiplier,
+    basic_ability_haste,
     _basic_ability_haste,
     bloodmail_bonus_ad,
+    bloodmail_retribution_bonus_ad,
     _dawncore_bonus_ap,
     _flowing_water_bonus_ap,
     _mana_to_ap_bonus,
+    mana_to_health_bonus,
     _muramana_bonus_ad,
     _passive_attack_speed_bonus,
+    guinsoo_attack_speed_percent,
+    guinsoo_swing_schedule,
+    yun_tal_swing_schedule,
+    energized_proc_indices,
+    hydra_cleave_secondary_ad_damage,
+    hydra_secondary_target_damage,
+    item_bonus_health_multiplier,
+    dawncore_bonus_ap,
+    flowing_water_bonus_ap,
+    mana_to_ap_bonus,
+    muramana_bonus_ad,
+    passive_attack_speed_bonus,
+    permanent_ap_multiplier,
+    navori_cooldown_refund_seconds,
+    runaan_secondary_target_count,
+    runaan_secondary_target_damage,
+    riftmaker_bonus_ap,
+    riftmaker_max_stack_omnivamp,
+    hubris_eminence_bonus_ad,
+    axiom_arc_ultimate_refund_fraction,
+    essence_reaver_mana_restore_per_proc,
+    yun_tal_permanent_crit_chance,
+    statikk_chain_target_bounds,
+    statikk_chain_target_count,
     steraks_bonus_ad,
+    terminus_max_stack_bonuses,
     _terminus_max_stack_bonuses,
     refresh_item_effects,
     resolve_damage_effects,
     resolve_stat_effects,
+    item_input_options_meta,
+    input_option_retribution_bonus_ad,
+    input_option_crit_chance,
+    validate_item_input_options,
     shield_reduction_fraction,
+    required_effect_value,
 )
 
 
@@ -36,11 +70,94 @@ def _build(*names: str) -> list[dict]:
     return [{"name": name} for name in names]
 
 
+def test_frozen_heart_registers_typed_attack_speed_aura() -> None:
+    assert required_effect_value(
+        "Frozen Heart", "attack_speed_reduction"
+    ) == pytest.approx(0.20)
+    # Target-only effects are still valid registry entries when an item is
+    # present in an ordinary attacker build; they simply contribute no damage.
+    assert resolve_damage_effects(_build("Frozen Heart")).per_hits == ()
+
+
 def _patch_effect(monkeypatch: pytest.MonkeyPatch, item_name: str, **overrides) -> None:
     """Override keys on one registry entry for the duration of a test."""
     patched = dict(item_effects.ITEM_EFFECTS.get(item_name, {}))
     patched.update(overrides)
     monkeypatch.setitem(item_effects.ITEM_EFFECTS, item_name, patched)
+
+
+def test_stateful_health_and_time_inputs_are_typed_and_sourced() -> None:
+    parsed = validate_item_input_options(
+        {
+            "Heartsteel": {"bonus_health": 500},
+            "Rod of Ages": {"timeless_stacks": 10},
+        }
+    )
+    assert parsed == {
+        "Heartsteel": {"bonus_health": 500},
+        "Rod of Ages": {"timeless_stacks": 10},
+    }
+    metadata = item_input_options_meta()
+    assert metadata["Heartsteel"]["options"]["bonus_health"]["max"] == 10000
+    assert metadata["Rod of Ages"]["options"]["timeless_stacks"]["max"] == 10
+    assert metadata["Yun Tal Wildarrows"]["options"]["crit_stacks"]["max"] == 125
+
+
+def test_yun_tal_crit_state_is_typed_and_melee_ranged_capped() -> None:
+    assert validate_item_input_options({"Yun Tal Wildarrows": {"crit_stacks": 12}}) == {
+        "Yun Tal Wildarrows": {"crit_stacks": 12}
+    }
+    assert input_option_crit_chance(
+        _build("Yun Tal Wildarrows"),
+        {"Yun Tal Wildarrows": {"crit_stacks": 12}},
+        is_melee=True,
+    ) == pytest.approx(4.8)
+    assert input_option_crit_chance(
+        _build("Yun Tal Wildarrows"),
+        {"Yun Tal Wildarrows": {"crit_stacks": 125}},
+        is_melee=True,
+    ) == pytest.approx(25.0)
+    assert input_option_crit_chance(
+        _build("Yun Tal Wildarrows"),
+        {"Yun Tal Wildarrows": {"crit_stacks": 125}},
+        is_melee=False,
+    ) == pytest.approx(25.0)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        {"Heartsteel": {"bonus_health": -1}},
+        {"Rod of Ages": {"timeless_stacks": 11}},
+        {"Rod of Ages": {"timeless_stacks": True}},
+        {"Yun Tal Wildarrows": {"crit_stacks": -1}},
+        {"Yun Tal Wildarrows": {"crit_stacks": 126}},
+        {"Yun Tal Wildarrows": {"crit_stacks": True}},
+    ],
+)
+def test_stateful_item_inputs_fail_closed(value: dict) -> None:
+    with pytest.raises(ValueError):
+        validate_item_input_options(value)
+
+
+def test_bloodmail_starting_missing_health_is_typed() -> None:
+    assert validate_item_input_options(
+        {"Overlord's Bloodmail": {"missing_health_percent": 35}}
+    ) == {"Overlord's Bloodmail": {"missing_health_percent": 35}}
+    metadata = item_input_options_meta()
+    assert (
+        metadata["Overlord's Bloodmail"]["options"]["missing_health_percent"]["max"]
+        == 70
+    )
+
+
+def test_bloodmail_starting_missing_health_reads_registry_state() -> None:
+    items = _build("Overlord's Bloodmail")
+    assert input_option_retribution_bonus_ad(
+        items,
+        {"Overlord's Bloodmail": {"missing_health_percent": 50}},
+        total_attack_damage=200.0,
+    ) == pytest.approx(70.0)
 
 
 class TestResolveDamageEffects:
@@ -75,6 +192,16 @@ class TestResolveDamageEffects:
         assert "Nashor's Tooth" in message
         assert "base" in message
 
+    def test_missing_ultimate_proc_mr_reduction_names_item_and_key(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Malignance"])
+        broken.pop("mr_reduction")
+        monkeypatch.setitem(ITEM_EFFECTS, "Malignance", broken)
+
+        with pytest.raises(KeyError, match="Malignance.*mr_reduction"):
+            resolve_damage_effects(_build("Malignance"))
+
     def test_unknown_effect_type_names_item_and_type(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -97,6 +224,13 @@ class TestResolveDamageEffects:
         ]
         assert [effect.item_name for effect in effects.per_ability_hits] == ["Muramana"]
 
+    def test_cull_compiles_its_sourced_on_hit_health_receipt(self) -> None:
+        effects = resolve_damage_effects(_build("Cull"))
+
+        assert len(effects.on_hit_heals) == 1
+        assert effects.on_hit_heals[0].item_name == "Cull"
+        assert effects.on_hit_heals[0].amount == pytest.approx(3.0)
+
     def test_spellblade_compiles_formula_and_scheduling(self) -> None:
         effects = resolve_damage_effects(_build("Lich Bane"))
         inputs = DamageInputs(
@@ -111,6 +245,311 @@ class TestResolveDamageEffects:
         assert effects.spellblade.source.raw_damage(inputs) == 165.0
         assert effects.spellblade.cooldown == 1.5
         assert effects.spellblade.weave_delay == 1.5
+        assert effects.spellblade.bonus_attack_speed_percent == 50.0
+
+    def test_spellblade_sibling_values_are_typed(self) -> None:
+        essence = resolve_damage_effects(_build("Essence Reaver")).spellblade
+        dusk = resolve_damage_effects(_build("Dusk and Dawn")).spellblade
+        assert essence is not None and dusk is not None
+        assert essence.mana_restore_base_ad_ratio == pytest.approx(0.625)
+        assert essence.mana_restore_crit_ratio == pytest.approx(0.25)
+        assert dusk.self_heal_ap_ratio == pytest.approx(0.10)
+        assert dusk.self_heal_bonus_health_ratio == pytest.approx(0.03)
+
+    @pytest.mark.parametrize(
+        ("item_name", "key"),
+        [
+            ("Bloodsong", "expose_weakness_melee"),
+            ("Dusk and Dawn", "self_heal_ap_ratio"),
+            ("Lich Bane", "bonus_attack_speed_percent"),
+            ("Essence Reaver", "mana_restore_base_ad_ratio"),
+        ],
+    )
+    def test_missing_spellblade_sibling_names_item_and_key(
+        self, monkeypatch: pytest.MonkeyPatch, item_name: str, key: str
+    ) -> None:
+        broken = dict(ITEM_EFFECTS[item_name])
+        broken.pop(key)
+        monkeypatch.setitem(ITEM_EFFECTS, item_name, broken)
+
+        with pytest.raises(KeyError, match=f"{item_name}.*{key}"):
+            resolve_damage_effects(_build(item_name))
+
+    def test_guinsoo_seething_attack_speed_is_patch_sourced(self) -> None:
+        build = _build("Guinsoo's Rageblade")
+        assert guinsoo_attack_speed_percent(build, 0) == 0.0
+        assert guinsoo_attack_speed_percent(build, 1) == pytest.approx(8.0)
+        assert guinsoo_attack_speed_percent(build, 4) == pytest.approx(32.0)
+        assert guinsoo_attack_speed_percent(build, 99) == pytest.approx(32.0)
+
+    def test_guinsoo_schedule_accelerates_after_stacks(self) -> None:
+        build = _build("Guinsoo's Rageblade")
+        times = guinsoo_swing_schedule(
+            build,
+            attack_speed=1.0,
+            attack_speed_ratio=1.0,
+            duration_seconds=5.0,
+        )
+        assert times[0] == 0.0
+        assert len(times) > 5
+        # First interval has no Seething bonus; later intervals are shorter.
+        assert times[1] < 1.0
+        assert times[2] - times[1] < times[1] - times[0]
+
+    def test_guinsoo_schedule_does_not_accumulate_stale_stacks(self) -> None:
+        build = _build("Guinsoo's Rageblade")
+        times = guinsoo_swing_schedule(
+            build,
+            attack_speed=0.2,
+            attack_speed_ratio=1.0,
+            duration_seconds=12.0,
+        )
+        # At this slow rate each prior stack expires before the next hit, so
+        # the schedule stays at one live stack rather than falsely reaching
+        # the 32% cap from stale state.
+        assert times[-1] - times[-2] == pytest.approx(3.57142857)
+
+    def test_yun_tal_flurry_starts_after_first_attack(self) -> None:
+        build = _build("Yun Tal Wildarrows")
+        times = yun_tal_swing_schedule(
+            build,
+            attack_speed=1.0,
+            attack_speed_ratio=1.0,
+            duration_seconds=3.0,
+        )
+        assert times[0] == 0.0
+        assert times[1] == pytest.approx(1.0)
+        assert times[2] - times[1] < 1.0
+
+    def test_yun_tal_flurry_uses_parser_owned_values(self, monkeypatch) -> None:
+        _patch_effect(
+            monkeypatch,
+            "Yun Tal Wildarrows",
+            bonus_attack_speed_percent=60.0,
+            duration=2.0,
+            cooldown=30.0,
+            attack_refund_base=1.0,
+            attack_refund_crit=2.0,
+        )
+        times = yun_tal_swing_schedule(
+            _build("Yun Tal Wildarrows"),
+            attack_speed=1.0,
+            attack_speed_ratio=1.0,
+            duration_seconds=3.0,
+        )
+        assert times[2] - times[1] == pytest.approx(1.0 / 1.6)
+
+    def test_statikk_energized_attack_schedule_uses_sourced_15_stacks(self) -> None:
+        assert energized_proc_indices("Statikk Shiv", 20, initial_stacks=0) == (
+            7,
+            14,
+        )
+        assert energized_proc_indices("Statikk Shiv", 3, initial_stacks=100) == (0,)
+
+    def test_statikk_missing_attack_gain_fails_closed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Statikk Shiv"])
+        broken.pop("energized_attack_stacks")
+        monkeypatch.setitem(ITEM_EFFECTS, "Statikk Shiv", broken)
+
+        with pytest.raises(KeyError, match="Statikk Shiv.*energized_attack_stacks"):
+            energized_proc_indices("Statikk Shiv", 3, initial_stacks=100)
+
+    def test_statikk_chain_target_bounds_are_parser_owned(self) -> None:
+        assert statikk_chain_target_bounds() == (4, 8)
+
+    def test_statikk_chain_target_count_uses_sourced_level_breakpoints(self) -> None:
+        assert [statikk_chain_target_count(level) for level in (1, 6, 10, 14, 20)] == [
+            4,
+            5,
+            6,
+            7,
+            8,
+        ]
+
+    def test_statikk_chain_target_bounds_fail_closed_when_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Statikk Shiv"])
+        broken.pop("chain_targets_max")
+        monkeypatch.setitem(ITEM_EFFECTS, "Statikk Shiv", broken)
+
+        with pytest.raises(KeyError, match="chain_targets_max"):
+            statikk_chain_target_bounds()
+
+    def test_riftmaker_bonus_health_conversion_uses_sourced_ratio(self) -> None:
+        assert riftmaker_bonus_ap(bonus_health=500) == pytest.approx(10)
+
+    def test_riftmaker_conversion_fails_closed_when_ratio_is_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Riftmaker"])
+        broken.pop("bonus_health_to_ap_ratio")
+        monkeypatch.setitem(ITEM_EFFECTS, "Riftmaker", broken)
+
+        with pytest.raises(KeyError, match="bonus_health_to_ap_ratio"):
+            riftmaker_bonus_ap(bonus_health=500)
+
+    def test_riftmaker_max_stack_omnivamp_uses_four_second_boundary(self) -> None:
+        assert riftmaker_max_stack_omnivamp(fight_duration_seconds=3.99) == 0.0
+        assert riftmaker_max_stack_omnivamp(
+            fight_duration_seconds=4.0
+        ) == pytest.approx(10.0)
+
+    def test_riftmaker_max_stack_omnivamp_fails_closed_when_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Riftmaker"])
+        broken.pop("max_stack_omnivamp")
+        monkeypatch.setitem(ITEM_EFFECTS, "Riftmaker", broken)
+
+        with pytest.raises(KeyError, match="max_stack_omnivamp"):
+            riftmaker_max_stack_omnivamp(fight_duration_seconds=5.0)
+
+    def test_hubris_eminence_uses_sourced_base_and_stack_ad(self) -> None:
+        assert hubris_eminence_bonus_ad(stacks=4) == pytest.approx(24)
+        assert hubris_eminence_bonus_ad(stacks=4, active=False) == 0
+
+    def test_hubris_eminence_fails_closed_when_parser_value_is_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Hubris"])
+        broken.pop("eminence_ad_per_stack")
+        monkeypatch.setitem(ITEM_EFFECTS, "Hubris", broken)
+
+        with pytest.raises(KeyError, match="eminence_ad_per_stack"):
+            hubris_eminence_bonus_ad(stacks=4)
+
+    def test_axiom_arc_refund_uses_base_and_lethality_scaling(self) -> None:
+        assert axiom_arc_ultimate_refund_fraction(lethality=20) == pytest.approx(0.15)
+
+    def test_axiom_arc_refund_fails_closed_when_scaling_is_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Axiom Arc"])
+        broken.pop("ultimate_refund_per_lethality_ratio")
+        monkeypatch.setitem(ITEM_EFFECTS, "Axiom Arc", broken)
+
+        with pytest.raises(KeyError, match="ultimate_refund_per_lethality_ratio"):
+            axiom_arc_ultimate_refund_fraction(lethality=20)
+
+    def test_essence_reaver_mana_restore_uses_both_parser_ratios(self) -> None:
+        assert essence_reaver_mana_restore_per_proc(
+            base_attack_damage=100, critical_strike_chance=50
+        ) == pytest.approx(62.625)
+
+    def test_essence_reaver_mana_restore_clamps_crit_input(self) -> None:
+        assert essence_reaver_mana_restore_per_proc(
+            base_attack_damage=100, critical_strike_chance=150
+        ) == pytest.approx(62.75)
+
+    def test_yun_tal_permanent_crit_chance_uses_melee_and_ranged_caps(self) -> None:
+        assert yun_tal_permanent_crit_chance(stacks=63, is_melee=True) == pytest.approx(
+            0.25
+        )
+        assert yun_tal_permanent_crit_chance(
+            stacks=100, is_melee=False
+        ) == pytest.approx(0.20)
+
+    def test_yun_tal_permanent_crit_fails_closed_when_bound_is_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Yun Tal Wildarrows"])
+        broken.pop("crit_stack_max_ranged")
+        monkeypatch.setitem(ITEM_EFFECTS, "Yun Tal Wildarrows", broken)
+
+        with pytest.raises(KeyError, match="crit_stack_max_ranged"):
+            yun_tal_permanent_crit_chance(stacks=2, is_melee=False)
+
+    @pytest.mark.parametrize(
+        "item_name", ["Rapid Firecannon", "Stormrazor", "Voltaic Cyclosword"]
+    )
+    def test_energized_recharge_fails_closed_without_movement_state(
+        self, item_name: str
+    ) -> None:
+        with pytest.raises(ValueError, match="recharge requires movement/state"):
+            energized_proc_indices(item_name, 10, initial_stacks=0)
+
+    def test_missing_voltaic_temporary_lethality_names_item_and_key(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Voltaic Cyclosword"])
+        broken.pop("temporary_lethality_duration")
+        monkeypatch.setitem(ITEM_EFFECTS, "Voltaic Cyclosword", broken)
+
+        with pytest.raises(
+            KeyError, match="Voltaic Cyclosword.*temporary_lethality_duration"
+        ):
+            resolve_damage_effects(_build("Voltaic Cyclosword"))
+
+    def test_runaan_bolt_cardinality_excludes_main_target(self) -> None:
+        assert runaan_secondary_target_count(roster_target_count=1) == 0
+        assert runaan_secondary_target_count(roster_target_count=2) == 1
+        assert runaan_secondary_target_count(roster_target_count=4) == 2
+
+    def test_runaan_bolt_damage_uses_parser_owned_ad_ratio(self) -> None:
+        assert runaan_secondary_target_damage(total_attack_damage=200) == pytest.approx(
+            110
+        )
+
+    def test_runaan_bolt_damage_fails_closed_when_ratio_is_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(ITEM_EFFECTS["Runaan's Hurricane"])
+        broken.pop("secondary_ad_ratio")
+        monkeypatch.setitem(ITEM_EFFECTS, "Runaan's Hurricane", broken)
+
+        with pytest.raises(KeyError, match="secondary_ad_ratio"):
+            runaan_secondary_target_damage(total_attack_damage=200)
+
+    def test_titanic_secondary_packet_uses_melee_and_empowered_ratios(self) -> None:
+        assert hydra_secondary_target_damage(
+            max_health=3000, is_melee=True
+        ) == pytest.approx(90)
+        assert hydra_secondary_target_damage(
+            max_health=3000, is_melee=False, empowered=True
+        ) == pytest.approx(135)
+
+    def test_hydra_cleave_secondary_packet_uses_ranged_ratio(self) -> None:
+        assert hydra_cleave_secondary_ad_damage(
+            total_attack_damage=250,
+            is_melee=False,
+            item_name="Ravenous Hydra",
+        ) == pytest.approx(50)
+
+    def test_navori_refund_uses_parser_owned_fraction(self) -> None:
+        assert navori_cooldown_refund_seconds(
+            base_cooldown=8.0, attack_count=3
+        ) == pytest.approx(3.6)
+        assert navori_cooldown_refund_seconds(base_cooldown=8.0, attack_count=0) == 0.0
+
+    def test_warmogs_health_multiplier_reads_registry(self) -> None:
+        assert item_bonus_health_multiplier(_build("Warmog's Armor")) == pytest.approx(
+            1.12
+        )
+        assert item_bonus_health_multiplier([]) == 1.0
+
+    def test_muramana_max_mana_conversion_reads_registry(self) -> None:
+        assert muramana_bonus_ad(_build("Muramana"), 2500.0) == pytest.approx(50.0)
+
+    def test_terminus_max_stack_state_reads_registry(self) -> None:
+        resist, pen = terminus_max_stack_bonuses(_build("Terminus"), level=18)
+        assert resist == pytest.approx(24.0)
+        assert pen == pytest.approx(30.0)
+
+    def test_awe_mana_to_ap_conversion_reads_registry(self) -> None:
+        assert mana_to_ap_bonus(
+            _build("Archangel's Staff", "Seraph's Embrace"), 1000.0
+        ) == pytest.approx(30.0)
+
+    def test_dawncore_mana_regen_conversion_reads_registry(self) -> None:
+        assert dawncore_bonus_ap(_build("Dawncore"), 150.0) == pytest.approx(15.0)
+
+    def test_flowing_water_rapids_conversion_reads_registry(self) -> None:
+        assert flowing_water_bonus_ap(
+            _build("Staff of Flowing Water")
+        ) == pytest.approx(40.0)
 
     def test_phase_families_compile_into_typed_buckets(self) -> None:
         effects = resolve_damage_effects(
@@ -128,6 +567,7 @@ class TestResolveDamageEffects:
             "Liandry's Torment"
         ]
         assert [source.item_name for source in effects.immolates] == ["Sunfire Aegis"]
+        assert effects.immolates[0].event_interval == pytest.approx(1.0)
         assert [effect.source.item_name for effect in effects.periodic] == [
             "Unending Despair"
         ]
@@ -140,6 +580,25 @@ class TestResolveDamageEffects:
         assert [source.item_name for source in effects.actives] == [
             "Hextech Rocketbelt"
         ]
+
+    def test_passive_attack_speed_bonus_uses_melee_ranged_registry_values(self) -> None:
+        assert passive_attack_speed_bonus(_build("Bandlepipes"), True) == pytest.approx(
+            30.0
+        )
+        assert passive_attack_speed_bonus(
+            _build("Bandlepipes"), False
+        ) == pytest.approx(20.0)
+
+    def test_ap_multiplier_reads_registered_passive_amplifiers(self) -> None:
+        assert ap_multiplier(
+            _build("Rabadon's Deathcap", "Blackfire Torch")
+        ) == pytest.approx(1.34)
+
+    def test_permanent_ap_multiplier_excludes_combat_only_blackfire(self) -> None:
+        assert permanent_ap_multiplier(_build("Rabadon's Deathcap")) == pytest.approx(
+            1.30
+        )
+        assert permanent_ap_multiplier(_build("Blackfire Torch")) == pytest.approx(1.0)
 
     def test_auto_trigger_families_compile_without_item_dispatch(self) -> None:
         effects = resolve_damage_effects(
@@ -378,6 +837,17 @@ class TestManaToApBonus:
         _patch_effect(monkeypatch, "Archangel's Staff", bonus_mana_to_ap_ratio=0.01)
         assert _mana_to_ap_bonus(_build("Archangel's Staff"), 600) == 6.0
 
+
+class TestManaToHealthBonus:
+    """Fimbulwinter's Awe conversion is sourced and typed."""
+
+    @pytest.mark.parametrize("item_name", ["Fimbulwinter", "Winter's Approach"])
+    def test_bonus_mana_to_health(self, item_name: str) -> None:
+        assert mana_to_health_bonus(_build(item_name), 1000.0) == pytest.approx(150.0)
+
+    def test_absent_returns_zero(self) -> None:
+        assert mana_to_health_bonus(_build("Liandry's Torment"), 1000.0) == 0.0
+
     def test_both_awe_items_sum(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(monkeypatch, "Archangel's Staff", bonus_mana_to_ap_ratio=0.01)
         _patch_effect(monkeypatch, "Seraph's Embrace", bonus_mana_to_ap_ratio=0.02)
@@ -456,9 +926,28 @@ class TestBonusAdConversions:
         )
         assert bloodmail_bonus_ad(_build("Overlord's Bloodmail"), 400) == 10.0
 
+    def test_bloodmail_retribution_scales_from_ordered_missing_health(self) -> None:
+        assert bloodmail_retribution_bonus_ad(
+            total_attack_damage=200.0, missing_health_fraction=0.5
+        ) == pytest.approx(70.0)
+
+    @pytest.mark.parametrize(
+        ("missing_health", "expected"), [(-0.2, 0.0), (1.5, 140.0)]
+    )
+    def test_bloodmail_retribution_clamps_health_state(
+        self, missing_health: float, expected: float
+    ) -> None:
+        assert bloodmail_retribution_bonus_ad(
+            total_attack_damage=200.0,
+            missing_health_fraction=missing_health,
+        ) == pytest.approx(expected)
+
     def test_steraks(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(monkeypatch, "Sterak's Gage", base_ad_to_bonus_ad_ratio=0.45)
         assert steraks_bonus_ad(_build("Sterak's Gage"), 100) == 45.0
+
+    def test_basic_ability_haste_reads_spear_registry(self) -> None:
+        assert basic_ability_haste(_build("Spear of Shojin")) == pytest.approx(25.0)
 
 
 class TestTerminusMaxStackBonuses:
@@ -765,6 +1254,21 @@ class TestThornsEffects:
         assert thorns.damage == 10.0
         assert thorns.damage_type == "magic"
         assert thorns.grievous_duration == 3.0
+
+    def test_thornmail_compiles_bonus_armor_thorns(self) -> None:
+        (thorns,) = item_effects.thorns_effects(_build("Thornmail"))
+        assert thorns.item_name == "Thornmail"
+        assert thorns.damage == 20.0
+        assert thorns.bonus_armor_ratio == pytest.approx(0.10)
+
+    def test_thornmail_missing_bonus_armor_key_fails_closed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(item_effects.ITEM_EFFECTS["Thornmail"])
+        broken.pop("bonus_armor_ratio")
+        monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Thornmail", broken)
+        with pytest.raises(KeyError, match="Thornmail.*bonus_armor_ratio"):
+            item_effects.thorns_effects(_build("Thornmail"))
 
     def test_builds_without_thorns_items_compile_empty(self) -> None:
         assert item_effects.thorns_effects(_build("Wit's End")) == ()

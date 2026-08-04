@@ -242,8 +242,14 @@ def _infected_bonesaw(ctx: SlotCtx) -> dict[str, Any] | None:
     # Q is current-health damage.  The fight evaluator calls this closure
     # once per hit with the running target-health loss, so a repeated Q is
     # priced after the preceding casts instead of six times against full HP.
-    def current_health_damage(missing_ratio: float) -> float:
-        current = max(0.0, target_max * (1.0 - missing_ratio))
+    def current_health_damage(
+        missing_ratio: float,
+        live_target_max_health: float | None = None,
+    ) -> float:
+        live_max = (
+            target_max if live_target_max_health is None else live_target_max_health
+        )
+        current = max(0.0, live_max * (1.0 - missing_ratio))
         return max(percent * current, minimum)
 
     entry = damage_entry(

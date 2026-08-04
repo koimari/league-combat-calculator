@@ -7,6 +7,7 @@ that file unit-tests the ITEM_EFFECTS accessor functions against a patched
 registry; this one asserts fight-engine behavior with live parsed item data.
 """
 
+from copy import deepcopy
 from types import SimpleNamespace
 
 import pytest
@@ -194,6 +195,51 @@ class TestRapidFirecannonSharpshooter:
         assert parsed["base"] == 40.0
         assert parsed["damage_type"] == "magic"
 
+
+class TestSpellbladeSiblingParsing:
+    """Patch passive branches retain non-damage Spellblade effects."""
+
+    def test_parser_extracts_lich_bane_attack_speed(self) -> None:
+        from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        parsed = parse_item_effect("Lich Bane", fetch_item_data())
+        assert parsed["bonus_attack_speed_percent"] == 50.0
+
+    def test_parser_extracts_dusk_heal(self) -> None:
+        from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        parsed = parse_item_effect("Dusk and Dawn", fetch_item_data())
+        assert parsed["self_heal_ap_ratio"] == pytest.approx(0.10)
+        assert parsed["self_heal_bonus_health_ratio"] == pytest.approx(0.03)
+
+    @pytest.mark.parametrize("item_name", ["Fimbulwinter", "Winter's Approach"])
+    def test_parser_extracts_awe_bonus_health_conversion(self, item_name: str) -> None:
+        from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        parsed = parse_item_effect(item_name, fetch_item_data())
+        assert parsed["bonus_mana_to_health_ratio"] == pytest.approx(0.15)
+
+    def test_parser_extracts_guinsoo_stack_values(self) -> None:
+        from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        parsed = parse_item_effect("Guinsoo's Rageblade", fetch_item_data())
+        assert parsed["seething_attack_speed_per_stack"] == pytest.approx(0.08)
+        assert parsed["seething_max_stacks"] == 4
+        assert parsed["seething_duration"] == pytest.approx(3.0)
+
+    def test_parser_extracts_runaan_bolt_scope(self) -> None:
+        from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        parsed = parse_item_effect("Runaan's Hurricane", fetch_item_data())
+        assert parsed["secondary_ad_ratio"] == pytest.approx(0.55)
+        assert parsed["max_secondary_targets"] == 2
+        assert parsed["applies_on_hit"] is True
+
     def test_single_proc_magic_damage(self) -> None:
         """One energized proc: 40 magic damage mitigated by MR."""
         from src.calculator.damage import calculate_fight_damage
@@ -279,6 +325,18 @@ class TestOverlordBloodmailTyranny:
         parsed = parse_item_effect("Overlord's Bloodmail", items)
         assert parsed is not None
         assert abs(parsed["bonus_health_to_ad_ratio"] - 0.025) < 0.001
+        assert parsed["retribution_missing_health_min"] == pytest.approx(0.0)
+        assert parsed["retribution_missing_health_max"] == pytest.approx(0.70)
+
+
+def test_thornmail_parser_extracts_bonus_armor_thorns() -> None:
+    from src.calculator.data_fetcher import fetch_item_data
+    from src.calculator.passive_parser import parse_item_effect
+
+    parsed = parse_item_effect("Thornmail", fetch_item_data())
+    assert parsed["base"] == pytest.approx(20.0)
+    assert parsed["bonus_armor_ratio"] == pytest.approx(0.10)
+    assert parsed["grievous_duration"] == pytest.approx(3.0)
 
 
 class TestBloodlettersCurseVileDecay:
@@ -1502,7 +1560,16 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         }
         abilities = {
             "Q": {
-                "name": "Test",
+                "name": "Test Q",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 200,
+                "parts": (DamagePart("physical", 200),),
+                "total_raw": 200,
+                "damage_type": "physical",
+            },
+            "W": {
+                "name": "Test W",
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 200,
@@ -1621,6 +1688,36 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         doh = fight["breakdown"]["double_on_hit_Dusk and Dawn"]
         assert doh["count"] == 2
         assert doh["total_damage"] > 0
+
+    def test_dusk_spellblade_reports_self_heal_sibling(
+        self,
+        ahri_data: dict,
+        dusk_and_dawn: dict,
+    ) -> None:
+        """The same Spellblade proc exposes Dusk and Dawn's self-heal."""
+        from src.calculator.stats import calculate_total_stats
+
+        items = [dusk_and_dawn]
+        stats = calculate_total_stats(ahri_data, 18, items)
+        abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
+        fight = calculate_fight_damage(
+            stats,
+            abilities,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=4.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
+        )
+        row = fight["breakdown"]["heal_Dusk and Dawn"]
+        assert row["count"] == 2
+        assert len(row["proc_times"]) == row["count"]
+        assert row["proc_times"] == sorted(row["proc_times"])
+        assert row["total_amount"] > 0
 
     def test_no_double_on_hit_without_on_hit_items(
         self,
@@ -1747,7 +1844,16 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         }
         abilities = {
             "Q": {
-                "name": "Test",
+                "name": "Test Q",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 200,
+                "parts": (DamagePart("physical", 200),),
+                "total_raw": 200,
+                "damage_type": "physical",
+            },
+            "W": {
+                "name": "Test W",
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 200,
@@ -1826,6 +1932,120 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
         assert "on_hit_Kraken Slayer" in fight["breakdown"]
 
 
+class TestCullHealing:
+    """Cull's direct Reap receipt is separate from its blocked quest state."""
+
+    def test_cull_reap_emits_one_exact_heal_per_authored_auto(
+        self,
+        ahri_data: dict,
+    ) -> None:
+        from src.calculator.data_fetcher import get_item_by_name
+        from src.calculator.stats import calculate_total_stats
+
+        item = get_item_by_name("Cull")
+        items = [item]
+        stats = calculate_total_stats(ahri_data, 18, items)
+        abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
+        result = calculate_fight_damage(
+            stats,
+            abilities,
+            items,
+            FightConfig(
+                target_health=3000.0,
+                target_armor=0.0,
+                target_magic_resistance=0.0,
+                fight_duration_seconds=4.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
+        )
+
+        row = result["breakdown"]["heal_Cull"]
+        assert row["name"] == "Cull (Reap)"
+        assert row["count"] == len(row["heal_events"])
+        assert row["amount_per_proc"] == pytest.approx(3.0)
+        assert row["total_amount"] == pytest.approx(3.0 * row["count"])
+        assert [event["time"] for event in row["heal_events"]] == sorted(
+            event["time"] for event in row["heal_events"]
+        )
+
+
+class TestEssenceReaverSpellbladeSiblings:
+    """Essence Reaver's Manaflow is tied to each accepted Spellblade proc."""
+
+    def test_essence_reaver_reports_mana_restore(self, ahri_data: dict) -> None:
+        from src.calculator.data_fetcher import get_item_by_name
+        from src.calculator.stats import calculate_total_stats
+
+        items = [get_item_by_name("Essence Reaver")]
+        stats = calculate_total_stats(ahri_data, 18, items)
+        abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
+        fight = calculate_fight_damage(
+            stats,
+            abilities,
+            items,
+            FightConfig(
+                target_health=1000,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=4.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+            ),
+        )
+        row = fight["breakdown"]["mana_Essence Reaver"]
+        assert row["count"] == 2
+        assert len(row["proc_times"]) == row["count"]
+        assert row["proc_times"] == sorted(row["proc_times"])
+        assert row["total_amount"] > 0
+
+    def test_manaflow_restore_reenters_timed_resource_admission(
+        self, ahri_data: dict
+    ) -> None:
+        """A Spellblade restore can pay for a later accepted ability cast."""
+        from src.calculator.data_fetcher import get_item_by_name
+        from src.calculator.stats import calculate_total_stats
+
+        item = get_item_by_name("Essence Reaver")
+        stats = calculate_total_stats(ahri_data, 18, [item])
+        abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
+        # A deliberately expensive, one-second Q fixture makes the ordering
+        # observable: the first cast spends 300 mana, its t=1.5 Spellblade
+        # attack restores 200, and the second cast at t=2.167 is legal.
+        q = deepcopy(abilities["Q"])
+        q.update({"resource_type": "MANA", "resource_cost": 300.0, "cooldown": 1.0})
+        stats.update(
+            {
+                "max_mana": 500.0,
+                "base_attack_damage": 320.0,
+                "attack_damage": 320.0 + stats.get("bonus_attack_damage", 0.0),
+                "attack_speed": 1.0,
+                "attack_speed_ratio": 1.0,
+                "resource_regen_per_second": 0.0,
+                "critical_strike_chance": 0.0,
+            }
+        )
+
+        result = calculate_fight_damage(
+            stats,
+            {"Q": q},
+            [item],
+            FightConfig(
+                target_health=10000.0,
+                target_armor=0.0,
+                target_magic_resistance=0.0,
+                fight_duration_seconds=4.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+                enforce_resource_limits=True,
+                cast_order=["Q"],
+            ),
+        )
+
+        assert result["breakdown"]["Q"]["casts"] == 2
+        assert result["cast_timeline"][1]["resource_before"] == pytest.approx(400.0)
+
+
 class TestEclipseEverRisingMoon:
     """Tests for Eclipse's Ever Rising Moon passive (% max HP physical proc)."""
 
@@ -1891,7 +2111,16 @@ class TestEclipseEverRisingMoon:
         }
         abilities = {
             "Q": {
-                "name": "Test",
+                "name": "Test Q",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 200,
+                "parts": (DamagePart("physical", 200),),
+                "total_raw": 200,
+                "damage_type": "physical",
+            },
+            "W": {
+                "name": "Test W",
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 200,
@@ -1936,7 +2165,16 @@ class TestEclipseEverRisingMoon:
         }
         abilities = {
             "Q": {
-                "name": "Test",
+                "name": "Test Q",
+                "rank": 1,
+                "cooldown": 5.0,
+                "physical_damage": 100,
+                "parts": (DamagePart("physical", 100),),
+                "total_raw": 100,
+                "damage_type": "physical",
+            },
+            "W": {
+                "name": "Test W",
                 "rank": 1,
                 "cooldown": 5.0,
                 "physical_damage": 100,
@@ -2864,7 +3102,7 @@ class TestRagebladeOnHitAllItems:
     }
 
     def test_rageblade_only_hit_count(self) -> None:
-        """Rageblade alone: 7 autos => 7+1=8 on-hit procs for itself."""
+        """Rageblade's accelerated schedule yields 9 autos and 2 phantoms."""
         fight = calculate_fight_damage(
             self.BASE_STATS,
             {},
@@ -2879,10 +3117,10 @@ class TestRagebladeOnHitAllItems:
         )
         rb = fight["breakdown"].get("on_hit_Guinsoo's Rageblade")
         assert rb is not None
-        assert rb["count"] == 8  # 7 normal + 1 phantom
+        assert rb["count"] == 11  # 9 scheduled autos + 2 phantoms
 
     def test_rageblade_plus_nashors_hit_counts(self) -> None:
-        """Both Rageblade and Nashor's should get 8 hits with 7 autos."""
+        """Both Rageblade and Nashor's follow the same accelerated schedule."""
         fight = calculate_fight_damage(
             self.BASE_STATS,
             {},
@@ -2900,11 +3138,11 @@ class TestRagebladeOnHitAllItems:
         )
         rb = fight["breakdown"]["on_hit_Guinsoo's Rageblade"]
         nt = fight["breakdown"]["on_hit_Nashor's Tooth"]
-        assert rb["count"] == 8
-        assert nt["count"] == 8  # Nashor's also gets phantom hit bonus
+        assert rb["count"] == 11
+        assert nt["count"] == 11  # Nashor's also gets phantom hit bonus
 
     def test_rageblade_plus_bork_hit_counts(self) -> None:
-        """BoRK should get phantom hit procs too (8 hits for 7 autos)."""
+        """BoRK receives the two phantom applications on the accelerated schedule."""
         fight = calculate_fight_damage(
             self.BASE_STATS,
             {},
@@ -2924,9 +3162,9 @@ class TestRagebladeOnHitAllItems:
         rb = fight["breakdown"]["on_hit_Guinsoo's Rageblade"]
         bork = fight["breakdown"]["on_hit_Blade of the Ruined King"]
 
-        assert autos["count"] == 7  # Base auto attacks unchanged
-        assert rb["count"] == 8  # Rageblade: 7 + 1 phantom
-        assert bork["count"] == 8  # BoRK: 7 + 1 phantom
+        assert autos["count"] == 9
+        assert rb["count"] == 11
+        assert bork["count"] == 11
 
     def test_bork_phantom_hit_double_procs_at_correct_hp(self) -> None:
         """BoRK phantom hit should proc at current HP after first BoRK hit."""
@@ -2955,7 +3193,7 @@ class TestRagebladeOnHitAllItems:
         assert result > result_no_phantom
 
     def test_no_phantom_under_6_autos_with_bork(self) -> None:
-        """With 5 autos, no phantom hits — BoRK gets exactly 5 procs."""
+        """The fifth scheduled swing reaches the first phantom threshold."""
         fight = calculate_fight_damage(
             self.BASE_STATS,
             {},
@@ -2973,8 +3211,8 @@ class TestRagebladeOnHitAllItems:
         )
         rb = fight["breakdown"]["on_hit_Guinsoo's Rageblade"]
         bork = fight["breakdown"]["on_hit_Blade of the Ruined King"]
-        assert rb["count"] == 5
-        assert bork["count"] == 5
+        assert rb["count"] == 7
+        assert bork["count"] == 7
 
     def test_phantom_hits_in_return_value(self) -> None:
         """Fight result should expose phantom_hit_autos for champion use."""
@@ -2990,8 +3228,8 @@ class TestRagebladeOnHitAllItems:
                 auto_attack_uptime=1.0,
             ),
         )
-        assert fight["phantom_hit_count"] == 2  # 10 autos: phantom at 6,9
-        assert fight["phantom_hit_autos"] == {5, 8}
+        assert fight["phantom_hit_count"] == 3  # 12 scheduled autos: 5, 8, 11
+        assert fight["phantom_hit_autos"] == {5, 8, 11}
 
     def test_ability_on_hit_gets_phantom_procs(self) -> None:
         """Ability on-hit damage should also get phantom hit procs."""
@@ -3021,7 +3259,7 @@ class TestRagebladeOnHitAllItems:
         )
         passive_oh = fight["breakdown"].get("on_hit_ability_passive")
         assert passive_oh is not None
-        assert passive_oh["count"] == 8  # 7 + 1 phantom
+        assert passive_oh["count"] == 11
 
 
 class TestKrakenSlayerPhantomHitStacking:
@@ -3095,7 +3333,7 @@ class TestKrakenSlayerPhantomHitStacking:
         )
         kraken = fight["breakdown"].get("on_hit_Kraken Slayer")
         assert kraken is not None
-        assert kraken["count"] == 4  # 10 autos, phantoms at 6,9
+        assert kraken["count"] == 5
 
     def test_kraken_damage_scales_with_missing_hp(self) -> None:
         """Later Kraken procs should deal more due to higher missing HP."""
@@ -3582,6 +3820,67 @@ class TestHorizonFocusHypershotAmp:
             f"Expected ~10 bonus (return hit only), got "
             f"{amp_entry['total_damage']:.1f}"
         )
+        assert amp_entry.get("damage_events"), (
+            "Mixed first-hit attribution must remain event-authored for the "
+            "frontend timeline"
+        )
+
+    def test_zero_damage_opener_does_not_block_hypershot_receipts(self) -> None:
+        """A utility opener must not become Horizon Focus's trigger cast."""
+        stats = {
+            "attack_damage": 60.0,
+            "base_attack_damage": 60.0,
+            "attack_speed": 0.6,
+            "attack_speed_ratio": 0.625,
+            "critical_strike_chance": 0.0,
+            "magic_penetration_flat": 0.0,
+            "magic_penetration_percent": 0.0,
+            "armor_penetration_percent": 0.0,
+            "lethality": 0.0,
+            "ability_power": 100.0,
+            "is_melee": False,
+            "level": 9,
+        }
+        abilities = {
+            "Q": {
+                "name": "Utility Q",
+                "parts": (),
+                "total_raw": 0.0,
+                "damage_type": "magic",
+                "cooldown": 6.0,
+            },
+            "W": {
+                "name": "Damage W",
+                "parts": (DamagePart("magic", 150.0),),
+                "total_raw": 150.0,
+                "damage_type": "magic",
+                "cooldown": 8.0,
+            },
+            "E": {
+                "name": "Damage E",
+                "parts": (DamagePart("magic", 100.0),),
+                "total_raw": 100.0,
+                "damage_type": "magic",
+                "cooldown": 8.0,
+            },
+        }
+        fight = calculate_fight_damage(
+            stats,
+            abilities,
+            [{"name": "Horizon Focus"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=0,
+                fight_duration_seconds=0.5,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["Q", "W", "E"],
+            ),
+        )
+        amp_entry = fight["breakdown"]["damage_amp_Horizon Focus"]
+        assert amp_entry["damage_events"]
+        assert "damage_amp_Horizon Focus" in fight["timeline_coverage"]["exact_sources"]
 
 
 class TestHullbreakerSkipper:
@@ -4018,11 +4317,10 @@ class TestStormrazor(_FightHarness):
 
 
 class TestStatikkShiv(_FightHarness):
-    """Tests for Statikk Shiv's one-shot Electrospark proc."""
+    """Tests for Statikk Shiv's attack-recharged Electrospark proc."""
 
     def test_statikk_shiv_one_empowered_auto(self) -> None:
-        """Reworked Electrospark: ONE empowered auto deals 60 magic damage
-        (single-target: the chain lightning has nothing to bounce to)."""
+        """Electrospark repeats after its parser-sourced attack recharge."""
         stats = self._make_stats()
         result = self.fight(
             stats,
@@ -4035,7 +4333,7 @@ class TestStatikkShiv(_FightHarness):
         )
         assert "on_hit_once_Statikk Shiv" in result["breakdown"]
         entry = result["breakdown"]["on_hit_once_Statikk Shiv"]
-        assert entry["count"] == 1
+        assert entry["count"] == 2
         assert entry["damage_type"] == "magic"
 
     def test_statikk_shiv_no_autos_no_proc(self) -> None:
@@ -4051,6 +4349,153 @@ class TestStatikkShiv(_FightHarness):
             items=[{"name": "Statikk Shiv"}],
         )
         assert "on_hit_once_Statikk Shiv" not in result["breakdown"]
+
+    def test_statikk_chain_allocates_one_proc_across_selected_roster(self) -> None:
+        """Electrospark reaches each selected chain target once, not N times."""
+        stats = self._make_stats()
+        results = [
+            self.fight(
+                stats,
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.8,
+                roster_target_index=index,
+                roster_target_count=3,
+                items=[{"name": "Statikk Shiv"}],
+            )
+            for index in range(4)
+        ]
+
+        assert [
+            result["breakdown"].get("on_hit_once_Statikk Shiv", {}).get("count", 0)
+            for result in results
+        ] == [1, 1, 1, 0]
+        assert all(
+            result["breakdown"]["on_hit_once_Statikk Shiv"]["targeting"]["kind"]
+            == "chain_lightning"
+            for result in results[:3]
+        )
+        assert "on_hit_once_Statikk Shiv" not in results[3]["breakdown"]
+
+    def test_statikk_chain_replays_fixed_on_hit_packets_on_secondary_targets(
+        self,
+    ) -> None:
+        """Fixed per-hit effects ride Electrospark's secondary packet once."""
+        stats = self._make_stats()
+        primary = self.fight(
+            stats,
+            target_health=2000,
+            target_armor=0,
+            target_magic_resistance=0,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=0.8,
+            roster_target_index=0,
+            roster_target_count=2,
+            items=[{"name": "Statikk Shiv"}, {"name": "Wit's End"}],
+        )
+        secondary = self.fight(
+            stats,
+            target_health=2000,
+            target_armor=0,
+            target_magic_resistance=0,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=0.8,
+            roster_target_index=1,
+            roster_target_count=2,
+            items=[{"name": "Statikk Shiv"}, {"name": "Wit's End"}],
+        )
+
+        assert "on_hit_chain_Statikk Shiv" not in primary["breakdown"]
+        copied = secondary["breakdown"]["on_hit_chain_Statikk Shiv"]
+        assert copied["total_damage"] == pytest.approx(45.0)
+        assert copied["targeting"]["copied_on_hit_scope"] == "fixed_source_packets"
+
+    def test_statikk_parser_includes_attack_energize_branch(self) -> None:
+        from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        parsed = parse_item_effect("Statikk Shiv", fetch_item_data())
+        assert parsed["energized_attack_stacks"] == 15
+        assert parsed["energized_max_stacks"] == 100
+
+
+class TestRunaanHurricane(_FightHarness):
+    """Tests for Wind's Fury roster allocation and copied fixed on-hits."""
+
+    def test_runaan_bolts_allocate_one_per_secondary_roster_target(self) -> None:
+        stats = self._make_stats()
+        results = [
+            self.fight(
+                stats,
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=0,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.8,
+                roster_target_index=index,
+                roster_target_count=4,
+                items=[{"name": "Runaan's Hurricane"}],
+            )
+            for index in range(5)
+        ]
+
+        assert "secondary_Runaan's Hurricane" not in results[0]["breakdown"]
+        assert [
+            result["breakdown"].get("secondary_Runaan's Hurricane", {}).get("count", 0)
+            for result in results
+        ] == [0, 4, 4, 0, 0]
+        assert (
+            results[1]["breakdown"]["secondary_Runaan's Hurricane"]["targeting"]["kind"]
+            == "runaan_bolt"
+        )
+
+    def test_runaan_bolts_replay_fixed_source_on_hits(self) -> None:
+        stats = self._make_stats()
+        secondary = self.fight(
+            stats,
+            target_health=2000,
+            target_armor=0,
+            target_magic_resistance=0,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=0.8,
+            roster_target_index=1,
+            roster_target_count=2,
+            items=[{"name": "Runaan's Hurricane"}, {"name": "Wit's End"}],
+        )
+
+        copied = secondary["breakdown"]["on_hit_secondary_Runaan's Hurricane"]
+        assert copied["total_damage"] > 0.0
+        assert copied["targeting"]["copied_on_hit_scope"] == "fixed_source_packets"
+
+    @pytest.mark.parametrize(
+        "item_name", ["Tiamat", "Profane Hydra", "Ravenous Hydra", "Stridebreaker"]
+    )
+    def test_cleave_on_hit_replays_secondary_roster_packets(
+        self, item_name: str
+    ) -> None:
+        """Cleave's basic-attack splash is timestamped for secondary slots."""
+        secondary = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            roster_target_index=1,
+            roster_target_count=2,
+            items=[{"name": item_name}],
+        )
+
+        row = secondary["breakdown"][f"on_hit_secondary_{item_name}"]
+        assert row["count"] == secondary["breakdown"]["auto_attacks"]["count"]
+        assert len(row["damage_events"]) == row["count"]
+        assert sum(event["damage"] for event in row["damage_events"]) == pytest.approx(
+            row["total_damage"]
+        )
+        assert row["targeting"]["kind"] == "cleave_secondary"
 
 
 class TestTitanicHydra(_FightHarness):
@@ -4073,6 +4518,51 @@ class TestTitanicHydra(_FightHarness):
         assert entry["damage_type"] == "physical"
         # 4% of 3000 HP = 120 raw per proc
         assert entry["total_damage"] > 0
+
+    def test_titanic_cleave_allocates_secondary_roster_packet(self) -> None:
+        """Cleave is replayed once per authored swing on each secondary slot."""
+        result = self.fight(
+            self._make_stats(health=3000.0),
+            one_rotation=False,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            fight_duration_seconds=12.0,
+            auto_attack_uptime=1.0,
+            roster_target_index=1,
+            roster_target_count=3,
+            items=[{"name": "Titanic Hydra"}],
+        )
+
+        row = result["breakdown"]["secondary_Titanic Hydra"]
+        assert row["count"] == result["breakdown"]["auto_attacks"]["count"]
+        assert row["targeting"] == {
+            "kind": "hydra_cleave",
+            "secondary_target_count": 2,
+            "allocated_target_index": 1,
+            "roster_target_count": 3,
+        }
+        assert len(row["damage_events"]) == row["count"]
+        assert sum(event["damage"] for event in row["damage_events"]) == pytest.approx(
+            row["total_damage"]
+        )
+        assert row["damage_events"][0]["damage"] == pytest.approx(270.0)
+        assert row["damage_events"][1]["damage"] == pytest.approx(90.0)
+        assert row["damage_events"][10]["damage"] == pytest.approx(270.0)
+
+        primary = self.fight(
+            self._make_stats(health=3000.0),
+            one_rotation=False,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            fight_duration_seconds=12.0,
+            auto_attack_uptime=1.0,
+            roster_target_index=0,
+            roster_target_count=3,
+            items=[{"name": "Titanic Hydra"}],
+        )
+        assert "secondary_Titanic Hydra" not in primary["breakdown"]
 
 
 class TestSpearOfShojin:
@@ -4193,6 +4683,29 @@ class TestSunderedSky(_FightHarness):
         assert parsed["reduced_crit_ratio"] == 0.80
         assert parsed["cooldown"] == 10.0
 
+    def test_sundered_sky_emits_its_first_attack_heal_receipt(self) -> None:
+        """Lightshield Strike's base-AD heal is timestamped with the first auto."""
+        stats = self._make_stats(critical_strike_chance=0.0)
+        result = calculate_fight_damage(
+            stats,
+            {},
+            [{"name": "Sundered Sky"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=0,
+                target_magic_resistance=50,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=1.0,
+            ),
+        )
+
+        row = result["breakdown"]["heal_Sundered Sky"]
+        assert row["count"] == 1
+        assert row["amount_per_proc"] == pytest.approx(100.0)
+        assert row["heal_events"][0]["time"] == pytest.approx(0.0)
+        assert callable(row["heal_events"][0]["amount_formula"])
+        assert row["heal_events"][0]["temporary_health_duration"] == pytest.approx(8.0)
+
 
 class TestVoltaicCyclosword(_FightHarness):
     """Tests for Voltaic Cyclosword energized first-auto damage."""
@@ -4216,6 +4729,19 @@ class TestVoltaicCyclosword(_FightHarness):
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
         assert entry["damage_type"] == "physical"
         assert entry["total_damage"] > 0
+        assert entry["temporary_lethality"]["amount"] == 15.0
+        assert entry["temporary_lethality"]["duration"] == 4.0
+        assert entry["temporary_lethality"]["applied_to_later_events"] is True
+        assert entry["temporary_lethality"]["applied_event_count"] == 3
+
+        # Firmament applies after its opening packet: the first ordinary
+        # swing shares its timestamp and keeps the original 50 armor, while
+        # later swings through the four-second window use 35 effective armor.
+        auto_events = result["breakdown"]["auto_attacks"]["damage_events"]
+        assert auto_events[0]["damage"] == pytest.approx(100 / 1.5)
+        assert auto_events[1]["damage"] == pytest.approx(100 / 1.35)
+        assert auto_events[3]["damage"] == pytest.approx(100 / 1.35)
+        assert auto_events[4]["damage"] == pytest.approx(100 / 1.5)
 
     def test_voltaic_only_one_proc(self) -> None:
         """Even with many autos, Voltaic Cyclosword only procs once.
@@ -4291,6 +4817,9 @@ class TestVoltaicCyclosword(_FightHarness):
         assert parsed["current_hp_ratio_melee"] == pytest.approx(0.09)
         assert parsed["current_hp_ratio_ranged"] == pytest.approx(0.07)
         assert parsed["damage_cap"] == 200.0
+        assert parsed["temporary_lethality_melee"] == 15.0
+        assert parsed["temporary_lethality_ranged"] == 12.0
+        assert parsed["temporary_lethality_duration"] == 4.0
         assert parsed["damage_type"] == "physical"
 
     def test_voltaic_reads_from_registry(self, monkeypatch) -> None:
@@ -4580,7 +5109,7 @@ class TestOnHitItemSwingEvents(_FightHarness):
     """
 
     def _timed_fight(self, items, *, duration=5.0):
-        """Timed fight at 1.0 AS / full uptime: swings at 0..duration-1."""
+        """Timed fight at full uptime; stateful items may accelerate swings."""
         return self.fight(
             self._make_stats(),
             one_rotation=False,
@@ -4635,13 +5164,17 @@ class TestOnHitItemSwingEvents(_FightHarness):
             duration=10.0,
         )
 
-        assert result["phantom_hit_autos"] == {5, 8}
+        assert result["phantom_hit_autos"] == {5, 8, 11}
         row = result["breakdown"]["on_hit_Wit's End"]
         events = row["damage_events"]
-        assert len(events) == 12  # 10 swings + 2 phantom applications
+        assert len(events) == 15  # 12 swings + 3 phantom applications
         times = [event["time"] for event in events]
-        assert times.count(5.0) == 2
-        assert times.count(8.0) == 2
+        auto_times = [
+            event["time"]
+            for event in result["breakdown"]["auto_attacks"]["damage_events"]
+        ]
+        for index in (5, 8, 11):
+            assert times.count(auto_times[index]) == 2
         assert sum(event["damage"] for event in events) == pytest.approx(
             row["total_damage"]
         )
@@ -4722,6 +5255,34 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
             "on_hit_once_Statikk Shiv" in result["timeline_coverage"]["exact_sources"]
         )
 
+    def test_statikk_shiv_recharges_from_its_authored_attack_gain(self) -> None:
+        """The parser-sourced 15-stack attack branch repeats every seven swings."""
+        result = self._timed_fight([{"name": "Statikk Shiv"}], duration=20.0)
+
+        row = result["breakdown"]["on_hit_once_Statikk Shiv"]
+        events = row["damage_events"]
+        assert [event["time"] for event in events] == [0.0, 7.0, 14.0]
+        assert row["count"] == 3
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"]
+        )
+
+    def test_item_damage_receipts_are_classified_by_timeline_coverage(self) -> None:
+        """Every timestamped item packet has exact or explicitly coarse provenance."""
+        result = self._timed_fight(
+            [
+                {"name": "Statikk Shiv"},
+                {"name": "Titanic Hydra"},
+                {"name": "Sheen"},
+            ],
+            duration=3.0,
+        )
+        coverage = result["timeline_coverage"]
+        classified = set(coverage["exact_sources"]) | set(coverage["coarse_sources"])
+        for source_key, row in result["breakdown"].items():
+            if row.get("damage_events"):
+                assert source_key in classified, source_key
+
     def test_titanic_crescent_stamps_cooldown_gated_swings(self) -> None:
         """Titanic's empowered Cleave rides the first swing off cooldown."""
         result = self._timed_fight([{"name": "Titanic Hydra"}], duration=12.0)
@@ -4765,12 +5326,11 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
     def test_stormsurge_stays_coarse_when_threshold_unreachable(
         self, ahri_data
     ) -> None:
-        """No certified crossing time means the row fails closed as coarse."""
+        """An unreachable threshold means Squall never fires."""
         fight = self._ahri_fight(ahri_data, ["Stormsurge"], target_health=10_000_000.0)
 
-        row = fight["breakdown"]["proc_Stormsurge"]
-        assert "damage_events" not in row
-        assert "proc_Stormsurge" in fight["timeline_coverage"]["coarse_sources"]
+        assert "proc_Stormsurge" not in fight["breakdown"]
+        assert "proc_Stormsurge" not in fight["timeline_coverage"]["coarse_sources"]
 
     def test_malignance_hatefog_stamps_the_ult_cast_time(self, ahri_data) -> None:
         """Hatefog's event starts where the cast timeline puts R1."""
@@ -4807,6 +5367,35 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
             row["total_damage"]
         )
         assert "spellblade_Bloodsong" in fight["timeline_coverage"]["exact_sources"]
+
+    def test_lich_bane_empowered_speed_adjusts_authored_swing_schedule(
+        self, ahri_data
+    ) -> None:
+        """Lich Bane's sourced speed shortens the post-proc swing interval."""
+        without_item = self._ahri_fight(
+            ahri_data,
+            [],
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+        )
+        with_lich_bane = self._ahri_fight(
+            ahri_data,
+            ["Lich Bane"],
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+        )
+
+        baseline = [
+            event["time"]
+            for event in without_item["breakdown"]["auto_attacks"]["damage_events"]
+        ]
+        adjusted = [
+            event["time"]
+            for event in with_lich_bane["breakdown"]["auto_attacks"]["damage_events"]
+        ]
+        assert adjusted[:3] == pytest.approx(baseline[:3])
+        assert adjusted[3] < baseline[3]
+        assert "auto_attacks" in with_lich_bane["timeline_coverage"]["exact_sources"]
 
     def test_spellblade_bonus_true_rider_shares_proc_times(self, corki_data) -> None:
         """Corki's Hextech Munitions rider stamps the same weave times."""
@@ -4855,6 +5444,29 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
             row["total_damage"]
         )
         assert "active_Stridebreaker" in result["timeline_coverage"]["exact_sources"]
+
+    @pytest.mark.parametrize("item_name", ["Profane Hydra", "Ravenous Hydra"])
+    def test_ad_cleave_active_allocates_secondary_roster_packet(
+        self, item_name: str
+    ) -> None:
+        """Hydra Crescent actives replay their typed secondary packet."""
+        result = self._timed_fight(
+            [{"name": item_name}],
+            roster_target_index=1,
+            roster_target_count=2,
+        )
+
+        row = result["breakdown"][f"secondary_{item_name}"]
+        assert row["total_damage"] > 0.0
+        assert row["damage_events"] == [
+            {
+                "time": 0.0,
+                "damage": row["total_damage"],
+                "damage_type": "physical",
+            }
+        ]
+        assert row["targeting"]["kind"] == "active_secondary"
+        assert row["targeting"]["allocated_target_index"] == 1
 
 
 class TestRecurveBowSting(_FightHarness):
@@ -5002,6 +5614,48 @@ class TestHauntingGuiseMadness(_FightHarness):
         assert row["total_damage"] > 0
 
 
+class TestRiftmakerVoidCorruption(_FightHarness):
+    """Riftmaker's max-stack omnivamp follows its four-second ramp."""
+
+    def test_parsed_max_stack_omnivamp(self) -> None:
+        from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
+
+        parsed = parse_item_effect("Riftmaker", fetch_item_data())
+        assert parsed is not None
+        assert parsed["max_stack_omnivamp"] == pytest.approx(10.0)
+
+    def test_max_stack_omnivamp_is_added_to_ordered_attack_healing(self) -> None:
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            items=[{"name": "Riftmaker"}],
+        )
+
+        assert result["breakdown"]["heal_omnivamp"]["total_amount"] == pytest.approx(
+            50.0
+        )
+
+    def test_short_riftmaker_fight_has_no_max_stack_omnivamp(self) -> None:
+        result = self.fight(
+            self._make_stats(),
+            one_rotation=False,
+            fight_duration_seconds=3.0,
+            auto_attack_uptime=1.0,
+            target_health=3000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            items=[{"name": "Riftmaker"}],
+        )
+
+        assert "heal_omnivamp" not in result["breakdown"]
+
+
 class TestBamisCinderImmolate(_FightHarness):
     """Bami's Cinder's Immolate: flat 15 magic damage per second aura."""
 
@@ -5045,6 +5699,17 @@ class TestBamisCinderImmolate(_FightHarness):
         row = result["breakdown"]["immolate_Bami's Cinder"]
         assert row["damage_type"] == "magic"
         assert row["total_damage"] == pytest.approx(37.5)
+        assert [event["time"] for event in row["damage_events"]] == [
+            1.0,
+            2.0,
+            3.0,
+            4.0,
+            5.0,
+        ]
+        assert sum(event["damage"] for event in row["damage_events"]) == pytest.approx(
+            row["total_damage"]
+        )
+        assert "immolate_Bami's Cinder" in result["timeline_coverage"]["exact_sources"]
 
 
 class TestFatedAshesInflame(_FightHarness):

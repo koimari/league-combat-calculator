@@ -179,11 +179,11 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
         ("/api/optimize", {"champion": {}, "level": 18}),
         (
             "/api/calculate",
-            {"champion": "Aatrox", "fight_mode": "timed", "fight_duration": 11},
+            {"champion": "Aatrox", "fight_mode": "timed", "fight_duration": 31},
         ),
         (
             "/api/optimize",
-            {"champion": "Aatrox", "fight_mode": "timed", "fight_duration": 11},
+            {"champion": "Aatrox", "fight_mode": "timed", "fight_duration": 31},
         ),
         ("/api/calculate", {"champion": "Aatrox", "target_health": "nan"}),
         ("/api/optimize", {"champion": "Aatrox", "target_health": "inf"}),
@@ -275,6 +275,49 @@ def test_loadout_stats_returns_champion_derived_full_matrix():
     assert data["stats"]["magic_resistance"] == 92
 
 
+def test_calculate_exposes_immolate_cadence_in_the_shared_frontend_ledger():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Galio",
+            "level": 12,
+            "role": "mid",
+            "items": ["Bami's Cinder"],
+            "enemies": [{"champion": "Ahri", "level": 12, "role": "mid"}],
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["timeline_coverage"]["complete"] is True
+    assert "immolate_Bami's Cinder" in data["timeline_coverage"]["exact_sources"]
+    events = [
+        event
+        for event in data["combat"]["events"]
+        if event["source"] == "immolate_Bami's Cinder"
+    ]
+    assert [event["time"] for event in events] == [1.0, 2.0, 3.0, 4.0, 5.0]
+
+
+def test_calculate_applies_self_granted_annie_molten_shield():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Annie",
+            "level": 12,
+            "enemies": [{"champion": "Ahri", "level": 12}],
+        },
+    )
+
+    assert response.status_code == 200
+    main = next(
+        row
+        for row in response.get_json()["combat"]["participants"]
+        if row["participant_id"] == "main"
+    )
+    assert main["survival"]["support_shield_received"] == 60.0
+
+
 def test_loadout_stats_exposes_target_item_coverage_without_hiding_the_card():
     response = app_module.app.test_client().post(
         "/api/loadout-stats",
@@ -283,11 +326,11 @@ def test_loadout_stats_exposes_target_item_coverage_without_hiding_the_card():
 
     assert response.status_code == 200
     coverage = response.get_json()["target_model_coverage"]
-    assert coverage["complete"] is False
-    assert coverage["blocked"][0]["name"] == "Banshee's Veil"
+    assert coverage["complete"] is True
+    assert coverage["blocked"] == []
 
 
-def test_calculate_withholds_an_unmodeled_enemy_spell_shield():
+def test_calculate_applies_an_opening_enemy_spell_shield():
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -299,9 +342,21 @@ def test_calculate_withholds_an_unmodeled_enemy_spell_shield():
         },
     )
 
-    assert response.status_code == 400
-    assert "Banshee's Veil" in response.get_json()["error"]
-    assert "first-hostile-ability" in response.get_json()["error"]
+    assert response.status_code == 200
+    body = response.get_json()
+    galio = next(
+        row for row in body["combat"]["participants"] if row["champion"] == "Galio"
+    )
+    assert galio["survival"]["spell_shield_used"] is True
+    blocked = [
+        event
+        for event in body["combat"]["events"]
+        if event.get("skipped_reason") == "spell_shield"
+    ]
+    assert blocked
+    assert all(
+        event["spell_shield_source"] == "Banshee's Veil — Annul" for event in blocked
+    )
 
 
 def test_calculate_applies_kaenic_starting_magic_shield():
@@ -879,9 +934,399 @@ def test_damage_breakdown_leads_with_result_and_keeps_event_audit_disclosed():
     assert 'class="breakdown-outcome" role="status"' in source
     assert "function survivalStatus" in source
     assert "alive at window end" in source
+    assert "revived at ${one(reviveTime)}s" in source
     assert "defeated at ${one(deathTime)}s" in source
     assert 'class="breakdown-audit"' in source
     assert 'aria-label="Event order audit"' in source
+
+
+def test_bis_frontend_surfaces_backend_withheld_candidate_receipts():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "result.withheld_candidates" in source
+    assert "result.withheld_candidate_count" in source
+    assert "withheld before timeline" in source
+    assert "result.timeline_withheld_candidates" in source
+    assert "result.timeline_withheld_candidate_count" in source
+    assert 'aria-label="${escapeHtml(entry.name || "Candidate")} withheld"' in source
+    assert "const rows = [...certifiedRows, ...partialRows]" in source
+    assert "entry.timeline_coverage?.complete !== true" in source
+
+
+def test_item_picker_uses_backend_coverage_and_locks_unsupported_items():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "mergeItemCoverage" in source
+    assert 'fetch("/api/items")' in source
+    assert 'fetch("/api/boots")' in source
+    assert "backendAvailable" in source
+    assert "findItemByBackendName" in source
+    assert "entry.targetModelCoverage" in source
+    assert "itemCoverage?.calculation_eligible" in source
+
+
+def test_item_mechanics_label_uses_backend_coverage_status():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "item?.modelCoverage?.status" in source
+    assert '["blocked", "review_pending"].includes(coverageStatus)' in source
+    assert "const backendCalculated = Boolean" in source
+
+
+def test_frontend_round_trips_all_backend_champion_options():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+    template = Path("templates/index.html").read_text(encoding="utf-8")
+
+    assert "function resetChampionOptions()" in source
+    assert "function renderChampionOptions()" in source
+    assert "state.attacker.championOptions" in source
+    assert 'data-champion-option="' in source
+    assert "definition.options.map((option)" in source
+    assert 'id="championOptionsRow"' in template
+    assert (
+        '$("championOptionsRow").innerHTML = champion ? renderChampionOptions() : "";'
+        in source
+    )
+    assert 'data-ability-hits="${ability.slot}"' in source
+    assert 'data-ability-variant="${ability.slot}"' in source
+    assert "function abilityBindsChampionOption(key)" in source
+    assert "!abilityBindsChampionOption(option.key)" in source
+
+
+def test_live_builder_surfaces_backend_item_state_controls_for_all_participants():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "function stackControl(path, id, compact = false)" in source
+    assert "item && stackSpec(id) ? stackControl(path, id)" in source
+    assert "item && stackSpec(id) ? stackControl(path, id, true)" in source
+    assert 'data-stack-path="${path}"' in source
+    assert "function setStackValue(path, value)" in source
+    assert "engineItemOptions(itemIds, itemStacks)" in source
+
+
+def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "const path = isBoots ? `${root}.${index}.boots`" in source
+    assert 'const emptyLabel = isBoots ? "Add boots" : "Add item";' in source
+    assert 'class="roster-slot-label">Boots</span>' in source
+    assert (
+        'boots: target.includeBoots && selectedBoot ? itemName(selectedBoot) : ""'
+        in source
+    )
+    assert "include_boots: Boolean(target.includeBoots)" in source
+    assert "function engineAlly(ally)" in source
+
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 12,
+                    "role": "mid",
+                    "boots": "Sorcerer's Shoes",
+                    "include_boots": True,
+                }
+            ],
+            "allies": [
+                {
+                    "champion": "Nami",
+                    "level": 12,
+                    "role": "support",
+                    "boots": "Ionian Boots of Lucidity",
+                    "include_boots": True,
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    enemy = body["targets"][0]["target"]
+    ally = body["allies"][0]
+    assert enemy["items"] == ["Sorcerer's Shoes"]
+    assert enemy["stats"]["magic_penetration_flat"] == 12
+    assert ally["items"] == ["Ionian Boots of Lucidity"]
+    assert ally["stats"]["ability_haste"] == 10
+
+
+def test_roster_role_quest_control_round_trips_enemy_and_ally_state():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "function rosterOrdinarySlotCount(loadout)" in source
+    assert 'data-roster-quest="${root}.${index}"' in source
+    assert "const roleQuestComplete = Boolean(loadout.roleQuestComplete);" in source
+    assert 'class="roster-quest-toggle' in source
+    assert "role_quest_complete: Boolean(target.roleQuestComplete)" in source
+    assert "loadout.boots = 0;" in source
+
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "enemies": [
+                {
+                    "champion": "Galio",
+                    "level": 12,
+                    "role": "mid",
+                    "role_quest_complete": True,
+                }
+            ],
+            "allies": [
+                {
+                    "champion": "Nami",
+                    "level": 12,
+                    "role": "support",
+                    "role_quest_complete": True,
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["targets"][0]["target"]["role_quest_complete"] is True
+    assert body["allies"][0]["role_quest_complete"] is True
+
+
+def test_resistance_table_surfaces_all_backend_starting_defense_receipts():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "physical_shield" in source
+    assert "general_shield" in source
+    assert "threshold_shield?.amount" in source
+    assert "spell_shield?.ready" in source
+    assert "basic_damage_flat_reduction" in source
+    assert "critical_strike_damage_multiplier" in source
+    assert "<th>Starting defenses</th>" in source
+    assert "magic_shield_absorbed" in source
+    assert "target_healing_received" in source
+    assert "main.survival?.healing_received" in source
+    assert "const hasHealingReceipt" in source
+    assert "main.survival?.support_shield_received" in source
+    assert "support shield received" in source
+    assert "aResult.damage_by_type" in source
+    assert "aResult.self_healing" in source
+    assert "aResult.threshold_health_triggered" in source
+    assert "aResult.target_ending_health" in source
+    assert "aResult.target_effective_max_health" in source
+    assert "threshold_health_bonus_gained" in source
+    assert "function exactSupportOutputs(result)" in source
+    assert "total_amount" in source
+    assert 'result.error_code === "no_complete_event_order"' in source
+
+
+def test_calculate_aggregates_backend_shield_receipts_across_targets():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 12,
+            "enemies": [
+                {"champion": "Kai'Sa", "level": 14, "items": ["Kaenic Rookern"]},
+                {"champion": "Galio", "level": 14, "items": ["Kaenic Rookern"]},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["magic_shield_absorbed"] == pytest.approx(
+        sum(target["result"]["magic_shield_absorbed"] for target in body["targets"])
+    )
+
+
+@pytest.mark.parametrize(
+    ("item", "output_key", "output_type"),
+    [
+        ("Essence Reaver", "mana_Essence Reaver", "mana"),
+        ("Dusk and Dawn", "heal_Dusk and Dawn", "health"),
+        ("Cull", "heal_Cull", "health"),
+        ("Sundered Sky", "heal_Sundered Sky", "health"),
+    ],
+)
+def test_calculate_exposes_spellblade_sibling_receipts(item, output_key, output_type):
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": [item],
+            "fight_mode": "timed",
+            "fight_duration": 4,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        },
+    )
+
+    assert response.status_code == 200
+    row = response.get_json()["breakdown"][output_key]
+    assert row["total_amount"] > 0
+    assert row["output_type"] == output_type
+
+
+def test_optimizer_withholding_names_the_champion_boundary():
+    response = app_module.app.test_client().post(
+        "/api/optimize",
+        json={
+            "champion": "Akshan",
+            "level": 18,
+            "fight_mode": "one_rotation",
+            "include_boots": False,
+            "max_legendary_slots": 1,
+            "locked_items": ["Shadowflame"],
+        },
+    )
+
+    assert response.status_code == 400
+    body = response.get_json()
+    assert body["error_code"] == "no_complete_event_order"
+    assert body["champion"] == "Akshan"
+    assert "Akshan" in body["error"]
+
+
+def test_stat_matrix_surfaces_backend_resource_and_critical_stat_fields():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert '["Mana regen"' in source
+    assert '["Gold per 10"' in source
+    assert '["Critical damage"' in source
+    assert "item.manaRegen" in source
+    assert "item.goldPer10" in source
+    assert "item.critDamage" in source
+
+
+def test_frontend_applies_backend_stat_conversion_metadata():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "item.statConversions?.bonus_mana_to_health_ratio" in source
+    assert "total.hp += total.mana * manaToHealthRatio" in source
+    assert "item.statConversions?.bonus_mana_to_ap_ratio" in source
+    assert "total.ap += total.mana * manaToApRatio" in source
+    assert "item.statConversions?.bonus_health_to_ap_ratio" in source
+    assert "total.ap += total.hp * healthToApRatio" in source
+    assert "item.statConversions?.item_bonus_health_ratio" in source
+    assert "getItem(id)?.statConversions?.base_ad_to_bonus_ad_ratio" in source
+    assert "getItem(id)?.statConversions?.bonus_health_to_ad_ratio" in source
+    assert "item.statConversions?.rapids_bonus_ap" in source
+    assert "item.statConversions?.ap_per_mana_regen_unit" in source
+    assert "bonus_attack_speed_melee" in source
+    assert "bonus_attack_speed_percent" in source
+    assert "max_mana_to_ad_ratio" in source
+
+
+def test_primary_participant_ledger_surfaces_backend_support_events():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "supportEvents = Array.isArray(aResult?.combat?.support_events)" in source
+    assert 'supportRows.join("")' in source
+    assert "event.target_policy || event.target_scope" in source
+    assert "support shield received" in source
+
+
+def test_frontend_consumes_backend_calculation_defaults():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "config.default_target" in source
+    assert "engine.defaultTarget.health" in source
+    assert "config.fight_defaults" in source
+    assert "config.exclusivity_groups" in source
+    assert "one_rotation_duration_seconds" in source
+    assert "state.fight.duration = oneRotationDuration" in source
+    assert "function optimizerExclusiveGroups()" in source
+    assert "Object.values(engine.exclusivityGroups || {})" in source
+
+
+def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+    options = app_module.app.test_client().get("/api/config").get_json()["item_options"]
+
+    assert {
+        "Dark Seal",
+        "Mejai's Soulstealer",
+        "Heartsteel",
+        "Rod of Ages",
+        "Yun Tal Wildarrows",
+        "Overlord's Bloodmail",
+    } <= set(options)
+    assert (
+        options["Heartsteel"]["stat_effects"]["bonus_health"]["bonus_health_per_unit"]
+        == 1.0
+    )
+    assert (
+        options["Rod of Ages"]["stat_effects"]["timeless_stacks"]["bonus_mana_per_unit"]
+        == 30.0
+    )
+    assert options["Yun Tal Wildarrows"]["derived"]["crit_chance_cap"] == 0.25
+    assert (
+        options["Overlord's Bloodmail"]["options"]["missing_health_percent"]["max"]
+        == 70
+    )
+    assert "function itemOptionSpec(id)" in source
+    assert "definition.stat_effects?.[key]" in source
+    assert "options[item.backendName || item.name] = { [spec.key]" in source
+    assert "crit_chance_per_stack_${suffix}" in source
+
+
+def test_frontend_consumes_backend_sustain_stat_families():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert '"lifesteal", "omnivamp", "healAndShieldPower"' in source
+    assert '"healthRegen", "tenacity", "manaRegen"' in source
+    assert '"Life steal"' in source
+    assert '"Heal/shield power"' in source
+    assert "stats.lifesteal_percent" in source
+    assert "stats.heal_and_shield_power_percent" in source
+
+
+def test_frontend_consumes_ordered_item_targeting_receipts():
+    """Stateful item scope from the backend remains visible to the UI."""
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "entry.temporary_lethality" in source
+    assert 'targeting?.kind === "chain_lightning"' in source
+    assert "targeting.chain_target_count" in source
+    assert "targeting.allocated_target_index" in source
+    assert 'targeting?.kind === "runaan_bolt"' in source
+    assert 'targeting?.kind === "runaan_bolt_copied_on_hit"' in source
+    assert 'targeting?.kind === "hydra_cleave"' in source
+    assert 'targeting?.kind === "active_secondary"' in source
+    assert 'targeting?.kind === "cleave_secondary"' in source
+
+
+def test_frontend_consumes_standalone_self_healing_receipts():
+    """Top-level standalone healing is rendered when no combat ledger exists."""
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "function healingEventsForResult(result)" in source
+    assert "result.self_healing_events" in source
+    assert "if (combatEvents.length) return combatEvents;" in source
+    assert "const healingEvents = healingEventsForResult(aResult);" in source
+
+
+def test_config_exclusivity_groups_cover_frontend_optimizer_families():
+    groups = (
+        app_module.app.test_client().get("/api/config").get_json()["exclusivity_groups"]
+    )
+
+    assert {"Spellblade", "Hydra", "Fatality", "Glory"} <= set(groups)
+    assert "Lich Bane" in groups["Spellblade"]
+    assert "Ravenous Hydra" in groups["Hydra"]
+
+
+def test_frontend_does_not_promote_generated_packets_to_reviewed():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert 'entry.engine_registration === "reviewed_module"' in source
+    assert (
+        "if (entry.availability?.ready) engine.reviewed.add(entry.name);" not in source
+    )
+    assert "champion.engineRegistration = entry.engine_registration || null" in source
+    assert "generated packet · not reviewed" in source
 
 
 @pytest.mark.parametrize(
@@ -920,6 +1365,7 @@ def test_config_exposes_all_request_defaults():
         "mode": "one_rotation",
         "duration_seconds": 8.0,
         "auto_attack_uptime": 0.8,
+        "auto_attack_uptime_mode": "calculated",
         "one_rotation_duration_seconds": 5.0,
     }
     assert data["champion_options"]["Soraka"]["sources"][1] == {
@@ -929,7 +1375,7 @@ def test_config_exposes_all_request_defaults():
         "revision_timestamp": "2025-06-06T18:23:34Z",
     }
     assert data["input_limits"] == {
-        "fight_duration": [1.0, 10.0],
+        "fight_duration": [1.0, 30.0],
         "auto_attack_uptime": [0.0, 1.0],
         "target_health": [1.0, 10_000.0],
         "target_bonus_health": [0.0, 10_000.0],
@@ -941,6 +1387,74 @@ def test_config_exposes_all_request_defaults():
         data["item_options"]["Mejai's Soulstealer"]["options"]["glory_stacks"]["max"]
         == 25
     )
+
+
+def test_calculated_auto_uptime_is_sourced_and_used_for_jinx_one_rotation():
+    client = app_module.app.test_client()
+    response = client.post(
+        "/api/calculate",
+        json={
+            "champion": "Jinx",
+            "level": 12,
+            "items": ["Doran's Blade"],
+            "fight_mode": "one_rotation",
+            "auto_attack_uptime_mode": "calculated",
+            "ability_ranks": {"Q": 4, "W": 3, "E": 3, "R": 2},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    policy = data["auto_attack_policy"]
+    assert policy["status"] == "calculated"
+    assert policy["uptime"] == pytest.approx(0.76)
+    assert {entry["slot"] for entry in policy["components"]} == {"Q", "W", "E", "R"}
+    assert data["auto_attack_damage"] > 0
+
+
+def test_calculated_auto_uptime_repeats_for_timed_rotation_windows():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Jinx",
+            "level": 12,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "rotations": 2,
+            "include_auto_attacks": True,
+            "auto_attack_uptime_mode": "calculated",
+            "ability_ranks": {"Q": 4, "W": 3, "E": 3, "R": 2},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["auto_attack_policy"]["status"] == "calculated"
+    assert data["auto_attack_policy"]["uptime"] == pytest.approx(0.76)
+    assert data["auto_attack_policy"]["rotation_mode"] == "time_based"
+    assert data["auto_attack_damage"] > 0
+    assert data["auto_attack_schedule"] == {
+        "status": "known",
+        "rotation_count": 2,
+        "expected_autos_per_rotation": 5.0,
+        "expected_autos_total": 10,
+        "window_seconds": 10.0,
+        "semantics": "sequential timed window; cooldowns, resources, cast lockouts, and item events follow the engine ledger",
+    }
+
+
+def test_frontend_exposes_calculated_uptime_mode_and_policy_receipt():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+    template = Path("templates/index.html").read_text(encoding="utf-8")
+
+    assert 'aaUptimeMode: "calculated"' in source
+    assert "payload.auto_attack_uptime_mode = state.fight.aaUptimeMode" in source
+    assert "rotations: state.fight.rotations" in source
+    assert "auto_attack_schedule" in source
+    assert "aResult?.auto_attack_policy" in source
+    assert 'id="uptimeModeToggle"' in template
+    assert 'id="uptimeOutput">CALCULATED' in template
 
 
 class TestIconUrlsAreHttps:
@@ -965,14 +1479,87 @@ class TestIconUrlsAreHttps:
 
         assert {"Ruby Crystal", "Dark Seal", "Doran's Ring"} <= names
 
+    def test_item_apis_expose_authoritative_ids_and_picker_stats(self):
+        client = app_module.app.test_client()
+        items = client.get("/api/items").get_json()
+        boots = client.get("/api/boots").get_json()
+
+        assert all(
+            item["id"] and "price" in item and "categories" in item
+            for item in items + boots
+        )
+        assert {item["id"] for item in items} & {2530, 3040, 3042, 3121, 3866}
+        assert any(item["name"] == "Blade of the Ruined King" for item in items)
+        bloodthirster = next(item for item in items if item["name"] == "Bloodthirster")
+        doran_blade = next(item for item in items if item["name"] == "Doran's Blade")
+        assert bloodthirster["lifesteal"] == 15.0
+        assert doran_blade["omnivamp"] == 2.5
+        assert all(
+            key in bloodthirster
+            for key in (
+                "lifesteal",
+                "omnivamp",
+                "healAndShieldPower",
+                "healthRegen",
+                "tenacity",
+                "manaRegen",
+                "goldPer10",
+                "critDamage",
+            )
+        )
+        fimbulwinter = next(item for item in items if item["name"] == "Fimbulwinter")
+        assert fimbulwinter["statConversions"]["bonus_mana_to_health_ratio"] == 0.15
+        muramana = next(item for item in items if item["name"] == "Muramana")
+        assert muramana["statConversions"]["max_mana_to_ad_ratio"] == 0.02
+        archangel = next(item for item in items if item["name"] == "Archangel's Staff")
+        assert archangel["statConversions"]["bonus_mana_to_ap_ratio"] == 0.01
+        riftmaker = next(item for item in items if item["name"] == "Riftmaker")
+        assert riftmaker["statConversions"]["bonus_health_to_ap_ratio"] == 0.02
+        bloodmail = next(
+            item for item in items if item["name"] == "Overlord's Bloodmail"
+        )
+        assert bloodmail["statConversions"]["bonus_health_to_ad_ratio"] == 0.025
+        steraks = next(item for item in items if item["name"] == "Sterak's Gage")
+        assert steraks["statConversions"]["base_ad_to_bonus_ad_ratio"] == 0.45
+        warmogs = next(item for item in items if item["name"] == "Warmog's Armor")
+        assert warmogs["statConversions"]["item_bonus_health_ratio"] == 0.12
+        dawncore = next(item for item in items if item["name"] == "Dawncore")
+        assert dawncore["statConversions"]["ap_per_mana_regen_unit"] == 10.0
+        hunger = next(item for item in items if item["name"] == "Endless Hunger")
+        assert hunger["statConversions"]["famine_base_ability_haste"] == 5.0
+        bandlepipes = next(item for item in items if item["name"] == "Bandlepipes")
+        assert bandlepipes["statConversions"]["bonus_attack_speed_ranged"] == 20.0
+
     def test_item_apis_expose_optimizer_coverage(self):
         client = app_module.app.test_client()
         items = {item["name"]: item for item in client.get("/api/items").get_json()}
         boots = {item["name"]: item for item in client.get("/api/boots").get_json()}
 
-        assert items["Runaan's Hurricane"]["model_coverage"]["status"] == "blocked"
+        assert (
+            items["Runaan's Hurricane"]["model_coverage"]["status"] == "modeled_effect"
+        )
+        assert (
+            "copied_on_hit"
+            in items["Runaan's Hurricane"]["model_coverage"]["outcome_dimensions"]
+        )
         assert items["Void Staff"]["model_coverage"]["status"] == "stats_only"
+        assert items["Essence Reaver"]["model_coverage"]["status"] == "modeled_effect"
+        assert items["Essence Reaver"]["model_coverage"]["optimizer_eligible"] is True
+        assert items["Heartsteel"]["model_coverage"]["status"] == "modeled_state"
+        assert items["Rod of Ages"]["model_coverage"]["status"] == "modeled_state"
+        assert items["Heartsteel"]["model_coverage"]["optimizer_eligible"] is True
+        assert items["Rod of Ages"]["model_coverage"]["optimizer_eligible"] is True
         assert boots["Immortal Path"]["model_coverage"]["status"] == "blocked"
+        assert items["Guardian Angel"]["model_coverage"]["outcome_dimensions"] == [
+            "revive"
+        ]
+        assert "Rebirth" in items["Guardian Angel"]["model_coverage"]["reason"]
+        assert items["Zhonya's Hourglass"]["model_coverage"]["outcome_dimensions"] == [
+            "stasis"
+        ]
+        assert "Time Stop" in items["Zhonya's Hourglass"]["model_coverage"]["reason"]
+        assert items["Runaan's Hurricane"]["target_model_coverage"]["status"]
+        assert "calculation_eligible" in boots["Immortal Path"]["target_model_coverage"]
 
     def test_boot_api_marks_role_quest_tiers(self):
         boots = app_module.app.test_client().get("/api/boots").get_json()
@@ -996,6 +1583,9 @@ class TestIconUrlsAreHttps:
             for champion in champions
         )
         assert all(champion["verified"] for champion in champions)
+        by_name = {champion["name"]: champion for champion in champions}
+        assert by_name["Aatrox"]["engine_registration"] == "reviewed_module"
+        assert by_name["Teemo"]["engine_registration"] == "generated_packet_module"
 
 
 class TestChampionVerifiedFlags:
@@ -1233,7 +1823,7 @@ def test_optimize_rejects_more_locked_items_than_slots(monkeypatch):
     assert "locked" in response.get_json()["error"].lower()
 
 
-def test_optimize_rejects_locked_item_with_unmodeled_damage_effect():
+def test_optimize_accepts_locked_item_with_roster_bolt_model():
     response = app_module.app.test_client().post(
         "/api/optimize",
         json={
@@ -1244,10 +1834,8 @@ def test_optimize_rejects_locked_item_with_unmodeled_damage_effect():
         },
     )
 
-    assert response.status_code == 400
-    assert response.get_json()["error"].startswith(
-        "Runaan's Hurricane cannot be locked into BIS search yet"
-    )
+    assert response.status_code == 200
+    assert "Runaan's Hurricane" in response.get_json()["items"]
 
 
 @pytest.mark.parametrize(
@@ -1265,6 +1853,31 @@ def test_calculate_rejects_backend_illegal_item_groups(items):
 
     assert response.status_code == 400
     assert "cannot be equipped together" in response.get_json()["error"]
+
+
+def test_calculate_accepts_manual_attacker_runaan_item():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={"champion": "Ahri", "level": 18, "items": ["Runaan's Hurricane"]},
+    )
+
+    assert response.status_code == 200
+
+
+def test_calculate_rejects_incomplete_roster_participant_item():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "allies": [{"champion": "Lulu", "level": 18, "items": ["Ardent Censer"]}],
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"].startswith(
+        "Ally Lulu item Ardent Censer cannot be used in a calculation yet"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1301,6 +1914,45 @@ def test_calculate_and_optimize_reject_level_impossible_ranks():
     assert calculate.status_code == 400
     assert optimize.status_code == 400
     assert "R rank 1 requires champion level 6" in calculate.get_json()["error"]
+
+
+def test_bis_main_request_preserves_authored_ability_ranks():
+    request = app_module._bis_main_request(
+        {
+            "champion": "Ahri",
+            "level": 6,
+            "ability_ranks": {"Q": 3, "W": 1, "E": 1, "R": 1},
+            "cast_order": ["R", "Q", "W", "E"],
+            "ally_effects_enabled": False,
+        }
+    )
+
+    assert request.ability_ranks == {"Q": 3, "W": 1, "E": 1, "R": 1}
+    assert request.cast_order == ["R", "Q", "W", "E"]
+    assert request.ally_effects_enabled is False
+
+
+def test_bis_rejects_level_impossible_ranks_and_unknown_champion_options():
+    client = app_module.app.test_client()
+    impossible_rank = client.post(
+        "/api/bis",
+        json={
+            "champion": "Ahri",
+            "level": 5,
+            "ability_ranks": {"Q": 3, "W": 1, "E": 0, "R": 1},
+        },
+    )
+    assert impossible_rank.status_code == 400
+    assert "R rank 1 requires champion level 6" in impossible_rank.get_json()["error"]
+
+    unknown_option = client.post(
+        "/api/bis",
+        json={"champion": "Vayne", "level": 18, "champion_options": {"unknown": True}},
+    )
+    assert unknown_option.status_code == 400
+    assert (
+        "champion_options contains unknown option" in unknown_option.get_json()["error"]
+    )
 
 
 class TestBreakdownProcRowShape:
@@ -1350,9 +2002,8 @@ class TestBreakdownProcRowShape:
         assert row["unit"] == "procs"
         assert row["damage_per_hit"] is not None and row["damage_per_hit"] > 0
 
-    def test_no_row_uses_the_old_proc_spelling(self):
-        """The procs/damage_per_proc spelling is retired from breakdown
-        rows engine-wide (Guinsoo build exercises phantom + counter)."""
+    def test_guinsoo_seething_schedule_is_used_by_timed_calculation(self):
+        """A timed build uses Seething's sourced swing schedule, not a flat AS count."""
         payload = {
             "champion": "Belveth",
             "level": 14,
@@ -1363,9 +2014,135 @@ class TestBreakdownProcRowShape:
         }
         response = app_module.app.test_client().post("/api/calculate", json=payload)
         assert response.status_code == 200
-        for key, row in response.get_json()["breakdown"].items():
-            assert "procs" not in row, key
-            assert "damage_per_proc" not in row, key
+        breakdown = response.get_json()["breakdown"]
+        assert breakdown["auto_attacks"]["count"] > 0
+        assert breakdown["on_hit_Guinsoo's Rageblade"]["count"] > 0
+
+    def test_temporary_lethality_receipt_reaches_frontend_breakdown(self):
+        """Stateful penetration metadata is not dropped by API serialization."""
+        result = app_module._serialize_fight_result(
+            {
+                "champion_stats": {},
+                "total_damage": 120.0,
+                "health_damage": 120.0,
+                "ability_damage": 0.0,
+                "auto_attack_damage": 120.0,
+                "damage_by_type": {"physical": 120.0},
+                "breakdown": {
+                    "on_hit_once_Voltaic Cyclosword": {
+                        "name": "Voltaic Cyclosword (Firmament)",
+                        "total_damage": 120.0,
+                        "count": 1,
+                        "unit": "procs",
+                        "damage_per_hit": 120.0,
+                        "temporary_lethality": {
+                            "amount": 15.0,
+                            "duration": 4.0,
+                            "applies_after_event": True,
+                            "applied_to_later_events": True,
+                            "applied_event_count": 3,
+                        },
+                    }
+                },
+            }
+        )
+
+        assert result["breakdown"]["on_hit_once_Voltaic Cyclosword"][
+            "temporary_lethality"
+        ] == {
+            "amount": 15.0,
+            "duration": 4.0,
+            "applies_after_event": True,
+            "applied_to_later_events": True,
+            "applied_event_count": 3,
+        }
+
+    def test_chain_targeting_receipt_reaches_frontend_breakdown(self):
+        """Roster allocation metadata survives the public serializer."""
+        result = app_module._serialize_fight_result(
+            {
+                "champion_stats": {},
+                "total_damage": 60.0,
+                "health_damage": 60.0,
+                "ability_damage": 0.0,
+                "auto_attack_damage": 60.0,
+                "damage_by_type": {"magic": 60.0},
+                "breakdown": {
+                    "on_hit_once_Statikk Shiv": {
+                        "name": "Statikk Shiv (Electrospark)",
+                        "total_damage": 60.0,
+                        "count": 1,
+                        "unit": "procs",
+                        "damage_per_hit": 60.0,
+                        "targeting": {
+                            "kind": "chain_lightning",
+                            "chain_target_count": 7,
+                            "allocated_target_index": 2,
+                            "roster_target_count": 3,
+                            "copied_on_hit_effects": False,
+                        },
+                    }
+                },
+            }
+        )
+
+        assert result["breakdown"]["on_hit_once_Statikk Shiv"]["targeting"] == {
+            "kind": "chain_lightning",
+            "chain_target_count": 7,
+            "allocated_target_index": 2,
+            "roster_target_count": 3,
+            "copied_on_hit_effects": False,
+        }
+
+    def test_riftmaker_conditional_omnivamp_reaches_public_calculation(self):
+        response = app_module.app.test_client().post(
+            "/api/calculate",
+            json={
+                "champion": "Ahri",
+                "level": 18,
+                "items": ["Riftmaker"],
+                "fight_mode": "timed",
+                "fight_duration": 5,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            },
+        )
+
+        assert response.status_code == 200
+        result = response.get_json()
+        assert result["champion_stats"]["omnivamp_percent"] == pytest.approx(10.0)
+        assert result["self_healing"] > 0.0
+        assert result["self_healing_events"]
+        assert all(
+            event["source"] == "Omnivamp (explicit single-target attacks and on-hit)"
+            for event in result["self_healing_events"]
+        )
+
+    def test_aggregated_targets_preserve_self_healing_receipts(self):
+        response = app_module.app.test_client().post(
+            "/api/calculate",
+            json={
+                "champion": "Ahri",
+                "level": 18,
+                "items": ["Riftmaker"],
+                "enemies": [
+                    {"champion": "Lux", "level": 18},
+                    {"champion": "Sona", "level": 18},
+                ],
+                "fight_mode": "timed",
+                "fight_duration": 5,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            },
+        )
+
+        assert response.status_code == 200
+        result = response.get_json()
+        assert result["self_healing"] > 0.0
+        assert len(result["self_healing_events"]) >= 2
+        assert result["self_healing"] == pytest.approx(
+            sum(event["result"]["self_healing"] for event in result["targets"])
+        )
 
 
 def test_attacker_above_level_18_requires_completed_top_quest(monkeypatch):
