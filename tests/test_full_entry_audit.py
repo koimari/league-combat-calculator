@@ -81,3 +81,14 @@ def test_item_scope_excludes_removed_or_non_purchasable_items(monkeypatch):
         },
     )
     assert audit.ordinary_sr_item_names() == ["One"]
+
+
+def test_champion_module_receipts_cover_every_cached_champion():
+    """The full-entry gate cannot pass while a registered module is missing."""
+    names = audit.champion_names()
+    assert len(names) == 173
+    receipts = [audit._champion_module_receipt(name) for name in names]
+    assert all(receipt["status"] == "ready" for receipt in receipts)
+    assert all(
+        set(receipt["slots"]) == {"P", "Q", "W", "E", "R"} for receipt in receipts
+    )

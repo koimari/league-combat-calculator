@@ -17,6 +17,7 @@ Examples::
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import re
 import subprocess
@@ -25,12 +26,18 @@ from pathlib import Path
 from typing import Any, Iterable
 
 ROOT = Path(__file__).resolve().parent.parent
+# The audit is invoked both as ``python scripts/...`` and as an imported
+# module.  Put the project root on the import path before any champion module
+# checks so the source-receipt audit cannot depend on the caller's cwd.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 WIKI_QUERY = Path(
     "/Users/river/.codex/skills/league-wiki-query/scripts/query_league_wiki.py"
 )
 CHAMPIONS_PATH = ROOT / "data" / "champions.json"
 ITEMS_PATH = ROOT / "data" / "items.json"
 REQUIRED_CHAMPION_SLOTS = ("P", "Q", "W", "E", "R")
+PACKET_MANIFEST_PATH = ROOT / "static" / "reviewed-packets.json"
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -39,6 +46,76 @@ def _load(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"expected object in {path}")
     return value
+
+
+def _champion_module_receipt(name: str) -> dict[str, Any]:
+    """Verify the runtime module and its five-slot source manifest exist.
+
+    The Wiki page is the source receipt; this companion check proves that the
+    checked-in runtime has a named module and an explicit entry for every
+    passive/Q/W/E/R slot.  A slot may be ``no_damage`` only when its manifest
+    names a source and a user-visible reason.
+    """
+    manifest = _load(PACKET_MANIFEST_PATH)
+    champion = (manifest.get("champions") or {}).get(name)
+    if not isinstance(champion, dict):
+        return {
+            "name": name,
+            "status": "review_pending",
+            "error": "champion missing from reviewed-packets.json",
+        }
+    try:
+        if str(ROOT) not in sys.path:
+            sys.path.insert(0, str(ROOT))
+        from src.calculator.champions import _CHAMPION_MODULES
+
+        module_name = _CHAMPION_MODULES.get(name)
+        if not module_name:
+            raise ImportError("no registered module")
+        module = importlib.import_module(f"src.calculator.champions.{module_name}")
+        review_status = getattr(module, "REVIEW_STATUS", None)
+        if not callable(getattr(module, "parse_abilities", None)):
+            raise ImportError("registered module has no parse_abilities callable")
+    except (ImportError, KeyError, TypeError, ValueError) as exc:
+        return {"name": name, "status": "review_pending", "error": str(exc)}
+
+    slots = champion.get("slots")
+    missing: list[str] = []
+    invalid: list[str] = []
+    if not isinstance(slots, dict):
+        missing = list(REQUIRED_CHAMPION_SLOTS)
+    else:
+        for slot in REQUIRED_CHAMPION_SLOTS:
+            spec = slots.get(slot)
+            if not isinstance(spec, dict):
+                missing.append(slot)
+                continue
+            kind = spec.get("kind")
+            if kind not in {"packet", "wiki_attribute", "variants", "no_damage"}:
+                invalid.append(slot)
+            if kind == "variants" and not isinstance(spec.get("variants"), list):
+                invalid.append(slot)
+            if kind == "no_damage" and not str(spec.get("reason") or "").strip():
+                invalid.append(slot)
+    sources = champion.get("sources")
+    ready = (
+        champion.get("review_status") == "reviewed_packet"
+        and isinstance(sources, list)
+        and bool(sources)
+        and not missing
+        and not invalid
+    )
+    return {
+        "name": name,
+        "module": module_name,
+        "review_status": review_status,
+        "manifest_review_status": champion.get("review_status"),
+        "slots": list(slots) if isinstance(slots, dict) else [],
+        "missing_slots": sorted(set(missing)),
+        "invalid_slots": sorted(set(invalid)),
+        "source_receipts": len(sources) if isinstance(sources, list) else 0,
+        "status": "ready" if ready else "review_pending",
+    }
 
 
 def champion_names() -> list[str]:
@@ -219,20 +296,37 @@ def audit(
         entries.append(receipt)
         if receipt.get("status") != "ready":
             failures.append(receipt)
+    module_entries: list[dict[str, Any]] = []
+    module_failures: list[dict[str, Any]] = []
+    for name in champion_list:
+        module_receipt = _champion_module_receipt(name)
+        module_entries.append(module_receipt)
+        if module_receipt.get("status") != "ready":
+            module_failures.append(module_receipt)
     counts = {
         "champions_expected": len(champion_list),
         "items_expected": len(item_list),
         "entries_audited": len(entries),
         "ready": sum(row.get("status") == "ready" for row in entries),
         "review_pending": len(failures),
+        "champion_modules_expected": len(champion_list),
+        "champion_modules_ready": len(module_entries) - len(module_failures),
+        "champion_modules_review_pending": len(module_failures),
     }
     return {
         "audit": "league_wiki_full_parent_entry",
         "required_champion_slots": list(REQUIRED_CHAMPION_SLOTS),
         "counts": counts,
-        "passed": not failures and len(entries) == len(targets),
+        "passed": (
+            not failures
+            and not module_failures
+            and len(entries) == len(targets)
+            and len(module_entries) == len(champion_list)
+        ),
         "entries": entries,
         "failures": failures,
+        "champion_modules": module_entries,
+        "champion_module_failures": module_failures,
     }
 
 

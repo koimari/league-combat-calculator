@@ -977,8 +977,7 @@ function renderAbilityPackage(champion) {
   const wikiFormulas = [...formulaBySlot.values()].filter((ability) => ability.formulaSource === "Wiki-derived local cache" && ability.variants?.some((variant) => variant.packets?.length)).length;
   const wikiDescriptions = [...formulaBySlot.values()].filter((ability) => ability.formulaSource === "Wiki-derived local cache" && !ability.variants?.some((variant) => variant.packets?.length)).length;
   const withheld = coverage?.withheld?.filter((slot) => !formulaBySlot.has(slot)).length ? ` · pending ${coverage.withheld.filter((slot) => !formulaBySlot.has(slot)).join("/")}` : "";
-  const registrationNote = champion.engineRegistration === "generated_packet_module" ? " · generated packet · not reviewed" : "";
-  return `<div class="ability-package"><div class="ability-package-head"><div><strong>Ability catalogue</strong><span>${reviewed} reviewed formulas · ${wikiFormulas} Wiki formulas · ${wikiDescriptions} Wiki descriptions · ${ingestedBySlot.size}/5 metadata ingested${withheld}${registrationNote}</span></div><small>${escapeHtml(champion.ingestedAbilities?.[0]?.source?.kind || champion.source?.label || "Patch data")}</small></div><div class="ability-rows" style="--ability-count:5">${rows}</div></div>`;
+  return `<div class="ability-package"><div class="ability-package-head"><div><strong>Ability catalogue</strong><span>${reviewed} reviewed formulas · ${wikiFormulas} Wiki formulas · ${wikiDescriptions} Wiki descriptions · ${ingestedBySlot.size}/5 metadata ingested${withheld}</span></div><small>${escapeHtml(champion.ingestedAbilities?.[0]?.source?.kind || champion.source?.label || "Patch data")}</small></div><div class="ability-rows" style="--ability-count:5">${rows}</div></div>`;
 }
 
 const ABILITY_BOUND_CHAMPION_OPTIONS = new Set([

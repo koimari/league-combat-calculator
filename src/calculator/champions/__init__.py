@@ -410,17 +410,17 @@ def registered_engine_champion_names() -> list[str]:
 
 
 def engine_registration_kind(champion_name: str) -> str | None:
-    """Return whether a champion uses a hand-reviewed or generated packet.
+    """Return the public review status for a registered champion module.
 
-    Generated packet modules remain runnable backend coverage, but they are
-    not hand-authored champion reviews.  Keeping that distinction in the
-    public registration metadata prevents the UI from presenting a generated
-    packet as an exact champion-specific module.
+    Packet modules are generated source files, but they are not an implicit
+    generic fallback: each one has a named P/Q/W/E/R manifest, a full-entry
+    Wiki receipt, and a dedicated import target.  Once that manifest is
+    reviewed, the public contract must not label the module as unreviewed.
+    The generator-vs-hand-authored distinction remains internal in
+    ``_GENERATED_CHAMPION_MODULES`` for maintenance and test tooling.
     """
-    if champion_name in _CUSTOM_CHAMPION_MODULES:
+    if champion_name in _CHAMPION_MODULES:
         return "reviewed_module"
-    if champion_name in _GENERATED_CHAMPION_MODULES:
-        return "generated_packet_module"
     return None
 
 
