@@ -1083,6 +1083,9 @@ def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats
     )
     assert "include_boots: Boolean(target.includeBoots)" in source
     assert "function engineAlly(ally)" in source
+    assert "function normalizeRosterRoleState(loadout)" in source
+    assert "normalizeRosterRoleState(state[root]?.[Number(indexText)])" in source
+    assert "normalizeAttackerSupportItemsForRole();" in source
 
     response = app_module.app.test_client().post(
         "/api/calculate",
