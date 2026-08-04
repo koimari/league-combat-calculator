@@ -69,6 +69,7 @@ from calculator.champions import (
     registered_champion_names,
 )
 from calculator.champion_coverage import attacker_availability
+from calculator.capabilities import public_capability_contract
 from calculator.optimizer import (
     exclusivity_groups,
     get_eligible_boots,
@@ -101,6 +102,7 @@ from calculator.pipeline import (
     DEFAULT_FIGHT_MODE,
     DEFAULT_TARGET,
     ONE_ROTATION_DURATION,
+    MAX_ROTATIONS,
     PUBLIC_INPUT_LIMITS,
     FightParams,
     run_fight,
@@ -1320,6 +1322,12 @@ def api_config():
                 "support_item": support_quest_item_contract(),
                 "boot_upgrades": boot_upgrade_contract(),
             },
+            "capabilities": public_capability_contract(
+                input_limits=PUBLIC_INPUT_LIMITS,
+                max_rotations=MAX_ROTATIONS,
+                champion_option_count=len(champion_options_meta_map()),
+                item_option_count=len(item_input_options_meta()),
+            ),
             "champion_engine": {
                 "registered_count": len(_ENGINE_CHAMPIONS),
                 "reviewed_count": len(_VERIFIED_CHAMPIONS),
