@@ -3,7 +3,7 @@
 from scripts.champion_optimizer_matrix import run_matrix
 
 
-def test_partial_and_expected_withholding_are_not_reported_as_certified():
+def test_partial_and_expected_withholding_fail_the_matrix_and_are_not_certified():
     def post(_path, payload):
         if payload["champion"] == "partial":
             return 200, {
@@ -21,7 +21,7 @@ def test_partial_and_expected_withholding_are_not_reported_as_certified():
         }
 
     report = run_matrix(post, ["partial", "withheld"])
-    assert report["passed"] is True
+    assert report["passed"] is False
     assert report["outcome_counts"] == {
         "expected_withholding": 1,
         "partial_or_unexhaustive": 1,

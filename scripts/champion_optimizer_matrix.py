@@ -1,11 +1,11 @@
 """Run a bounded 173-champion optimizer smoke matrix for issue #38.
 
-This is deliberately a smoke matrix, not a claim that every build is
-certified.  Each registered champion is sent through the real local Flask
+Each registered champion is sent through the real local Flask
 ``/api/optimize`` path with one locked item so the sweep stays bounded.  The
 report records elapsed time, status/error text, and candidate coverage.  A
 partial HTTP 200 or a known fail-closed HTTP 400 is classified explicitly;
-neither is promoted to a successful recommendation.
+partial results fail the matrix and neither outcome is promoted to a
+successful recommendation.
 
 Usage::
 
@@ -112,7 +112,14 @@ def run_matrix(
         "exercised_count": len(observed_names),
         "all_registered_exercised": integrity_ok,
         "outcome_counts": dict(sorted(counts.items())),
-        "passed": integrity_ok and counts.get("unexpected_failure", 0) == 0,
+        # A matrix that contains a partial result has not certified that
+        # champion.  Treating it as a pass was the source of a misleading
+        # 173/173 result with 164 partial champions.
+        "passed": (
+            integrity_ok
+            and counts.get("unexpected_failure", 0) == 0
+            and counts.get("partial_or_unexhaustive", 0) == 0
+        ),
         "results": results,
     }
 
