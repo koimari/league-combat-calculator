@@ -1,0 +1,133 @@
+"""Wukong's Stone Skin, empowered attack, and Cyclone timeline."""
+
+from typing import Any
+
+from ..ability_spec import DamagePart
+from .engine import BUFF, SlotCtx, build_parser
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    find_named_leveling,
+    simple_damage,
+    sum_modifiers,
+)
+
+
+def _stone_skin(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+    base = find_named_leveling(ability, "Per-Level Scaling", 0)
+    per_stack = find_named_leveling(ability, "Per-Level Scaling", 1)
+    if base is None or per_stack is None:
+        return None
+    stacks = min(max(int(ctx.options.get("stone_skin_stacks", 0)), 0), 5)
+    armor = sum_modifiers(base, ctx.level) + stacks * sum_modifiers(
+        per_stack, ctx.level
+    )
+    ctx.stats["armor"] = ctx.stats.get("armor", 0.0) + armor
+    entry = damage_entry("Stone Skin", ctx.level, 0.0, 0.0, "physical")
+    entry["stat_buff"] = {"armor": armor}
+    entry["detail"] = f"{stacks} Strength of Stone stack(s); +{armor:.2f} bonus armor"
+    return entry
+
+
+_stone_skin.phase = BUFF
+
+
+def _crushing_blow(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability("Q")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("Q")
+    if rank < 1:
+        return None
+    bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability.get("name", "Crushing Blow"),
+        rank,
+        extract_cooldown(ability, rank),
+        bonus,
+        "physical",
+    )
+    entry["parts"] = (DamagePart("physical", bonus, time_offset=0.0),)
+    entry["empowers_next_auto"] = True
+    entry["detail"] = "bonus damage is attached to the empowered basic attack"
+    return entry
+
+
+def _cyclone(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability("R")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("R")
+    if rank < 1:
+        return None
+    per_tick = extract_named(
+        ability, "Physical Damage Per Tick", rank, ctx.stats, ctx.target
+    )
+    casts = min(max(int(ctx.options.get("r_casts", 1)), 1), 2)
+    ticks = 8 * casts
+    total = per_tick * ticks
+    entry = damage_entry(
+        ability.get("name", "Cyclone"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+    entry["parts"] = (
+        DamagePart(
+            "physical", per_tick, count=ticks, time_offset=0.0, hit_interval=0.25
+        ),
+    )
+    entry["detail"] = f"{casts} Cyclone cast(s), eight sourced 0.25-second ticks each"
+    return entry
+
+
+SLOTS = {
+    "P": _stone_skin,
+    "Q": _crushing_blow,
+    # The W clone's attacks are a separate pet timeline; it is not a direct
+    # cast packet and therefore is intentionally omitted here.
+    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": _cyclone,
+}
+
+parse_abilities = build_parser(SLOTS, "Wukong")
+
+OPTIONS = [
+    {
+        "key": "stone_skin_stacks",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": "Strength of Stone stacks",
+    },
+    {
+        "key": "r_casts",
+        "type": "int",
+        "default": 1,
+        "min": 1,
+        "max": 2,
+        "label": "Cyclone casts",
+    },
+]
+
+ASSUMPTIONS = [
+    "Stone Skin armor uses explicit Strength of Stone stacks; regeneration is a separate survival effect.",
+    "Crushing Blow exposes its bonus packet and attaches the next basic attack through the shared empowered-auto path.",
+    "Warrior Trickster clone attacks are a separate pet timeline and are not invented as direct W spell damage.",
+    "Cyclone uses eight sourced 0.25-second ticks per cast; the second cast is explicit.",
+]
+
+SOURCES = [
+    {
+        "label": "Wukong — full champion entry",
+        "url": "https://wiki.leagueoflegends.com/en-us/Wukong",
+        "revision_id": 4021883,
+        "revision_timestamp": "2026-05-21T19:27:04Z",
+    }
+]

@@ -145,7 +145,16 @@ def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "physical",
         "total_raw": per_dash * casts,
         "parts": (
-            DamagePart("physical", per_dash, count=casts, crit_effectiveness=1.0),
+            # Directional dashes are an explicitly ordered sequence inside
+            # the cast.  The current cache does not publish a sub-dash delay,
+            # so they share the cast boundary while retaining deterministic
+            # application order for R's carried on-hit state.
+            DamagePart(
+                "physical",
+                per_dash,
+                count=casts,
+                crit_effectiveness=1.0,
+            ),
         ),
         # Each dash is its own cast (per-cast item procs, e.g. Muramana).
         "cast_instances": casts,
@@ -191,7 +200,15 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "physical",
         "total_raw": per_slash * slashes,
         "parts": (
-            DamagePart("physical", per_slash, count=slashes, crit_effectiveness=1.0),
+            # Royal Maelstrom's slash sequence is ordered but the cached
+            # entry has no independent travel-time field.  Keep each slash
+            # on the authored cast boundary rather than inventing spacing.
+            DamagePart(
+                "physical",
+                per_slash,
+                count=slashes,
+                crit_effectiveness=1.0,
+            ),
         ),
         # Each slash applies item on-hits at 12-24%, interpolated by the
         # same missing-health fraction as the slash damage. Slashes are

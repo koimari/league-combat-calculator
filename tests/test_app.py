@@ -606,8 +606,8 @@ def test_calculate_can_sum_one_damage_package_across_enemy_roster():
         sum(row["result"]["damage_by_type"]["magic"] for row in data["targets"]),
         1,
     )
-    assert data["timeline_coverage"]["complete"] is False
-    assert "passive" in data["timeline_coverage"]["coarse_sources"]
+    assert data["timeline_coverage"]["complete"] is True
+    assert "passive" in data["timeline_coverage"]["exact_sources"]
     assert "proc_Luden's Echo" in data["timeline_coverage"]["exact_sources"]
     assert all("timeline_coverage" in row["result"] for row in data["targets"])
 
@@ -1239,7 +1239,7 @@ def test_calculate_exposes_spellblade_sibling_receipts(item, output_key, output_
     assert row["output_type"] == output_type
 
 
-def test_optimizer_withholding_names_the_champion_boundary():
+def test_optimizer_certifies_the_reviewed_champion_boundary():
     response = app_module.app.test_client().post(
         "/api/optimize",
         json={
@@ -1252,11 +1252,11 @@ def test_optimizer_withholding_names_the_champion_boundary():
         },
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 200
     body = response.get_json()
-    assert body["error_code"] == "no_complete_event_order"
-    assert body["champion"] == "Akshan"
-    assert "Akshan" in body["error"]
+    assert body["timeline_coverage"]["complete"] is True
+    assert body["timeline_coverage"]["coarse_sources"] == []
+    assert body["ranked_builds"]
 
 
 def test_stat_matrix_surfaces_backend_resource_and_critical_stat_fields():

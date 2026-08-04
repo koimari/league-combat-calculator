@@ -71,6 +71,7 @@ _short_fuse_packet = proc_damage(
     dmg_type="magic",
     count_option="passive_procs",
     default_count=2,
+    phase_order_events=True,
 )
 
 

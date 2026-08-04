@@ -98,45 +98,41 @@ def test_soraka_equinox_emits_the_delayed_eruption_hit():
     assert {event["event_precision"] for event in eruption} == {"exact"}
 
 
-@pytest.mark.parametrize("champion,source", (("Shen", "Q"), ("Tahm Kench", "E")))
+@pytest.mark.parametrize("champion,source", (("Shen", "Q"),))
 def test_unsupported_empowered_or_state_packets_remain_withheld(champion, source):
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())
     assert result["timeline_coverage"]["complete"] is False
     assert source in result["timeline_coverage"]["coarse_sources"]
 
 
-def test_belveth_ability_carried_ramping_on_hit_stays_coarse_without_carrier_times():
+def test_belveth_ability_carried_ramping_on_hit_has_authored_carrier_times():
     result = run_fight(_load_public_champion("Bel'Veth"), 18, [], _timed_params())
-    assert result["timeline_coverage"]["complete"] is False
-    assert "on_hit_ability_R_onhit" in result["timeline_coverage"]["coarse_sources"]
+    assert result["timeline_coverage"]["complete"] is True
+    assert "on_hit_ability_R_onhit" in result["timeline_coverage"]["exact_sources"]
+    events = result["breakdown"]["on_hit_ability_R_onhit"]["damage_events"]
+    assert events
+    assert all("time" in event for event in events)
 
 
 @pytest.mark.parametrize("champion,source", (("Wukong", "R"), ("Qiyana", "R")))
-def test_multi_stage_ultimates_remain_withheld_without_authored_subhit_cadence(
-    champion, source
-):
+def test_multi_stage_ultimates_use_authored_subhit_cadence(champion, source):
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())
-    assert result["timeline_coverage"]["complete"] is False
-    assert source in result["timeline_coverage"]["coarse_sources"]
+    assert result["timeline_coverage"]["complete"] is True
+    assert source in result["timeline_coverage"]["exact_sources"]
 
 
 @pytest.mark.parametrize("champion,source", (("Ornn", "W"), ("Kalista", "W")))
-def test_multi_hit_or_ally_mark_packets_stay_fail_closed(champion, source):
+def test_multi_hit_or_ally_mark_packets_are_certified_or_explicitly_non_damage(
+    champion, source
+):
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())
-    assert result["timeline_coverage"]["complete"] is False
-    assert source in result["timeline_coverage"]["coarse_sources"]
+    assert result["timeline_coverage"]["complete"] is True
+    assert source not in result["timeline_coverage"]["coarse_sources"]
 
 
 @pytest.mark.parametrize(
     "champion,source",
-    (
-        ("Shen", "Q"),
-        ("Tahm Kench", "E"),
-        ("Kalista", "W"),
-        ("Qiyana", "R"),
-        ("Wukong", "R"),
-        ("Ornn", "W"),
-    ),
+    (("Shen", "Q"),),
 )
 def test_calculate_api_surfaces_partial_timeline_without_claiming_exact_order(
     champion, source
@@ -314,8 +310,8 @@ def test_optimize_api_matches_calculate_withholding_for_kaisa():
     assert "Time-based Kai'Sa calculations are withheld" in response.get_json()["error"]
 
 
-def test_optimize_api_withholds_tahm_kench_when_no_complete_timeline_candidate_exists():
-    """The optimizer must not publish a best build from Tahm's coarse E packet."""
+def test_optimize_api_certifies_tahm_kench_event_order():
+    """Tahm's reviewed packet can participate in an event-ordered search."""
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
@@ -327,15 +323,15 @@ def test_optimize_api_withholds_tahm_kench_when_no_complete_timeline_candidate_e
                 "max_legendary_slots": 1,
             },
         )
-    assert response.status_code == 400
+    assert response.status_code == 200
     body = response.get_json()
-    assert body["error_code"] == "no_complete_event_order"
-    assert "No complete legal event-ordered build fits" in body["error"]
-    assert "Tahm Kench" in body["error"]
+    assert body["timeline_coverage"]["complete"] is True
+    assert body["timeline_coverage"]["coarse_sources"] == []
+    assert body["ranked_builds"]
 
 
-def test_optimize_api_withholds_qiyana_without_certified_multistage_ultimate():
-    """Qiyana's multi-stage R cannot be promoted to a best-build receipt yet."""
+def test_optimize_api_certifies_qiyana_multistage_ultimate():
+    """Qiyana's reviewed multi-stage R can participate in a build search."""
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
@@ -347,15 +343,15 @@ def test_optimize_api_withholds_qiyana_without_certified_multistage_ultimate():
                 "max_legendary_slots": 1,
             },
         )
-    assert response.status_code == 400
+    assert response.status_code == 200
     body = response.get_json()
-    assert body["error_code"] == "no_complete_event_order"
-    assert "No complete legal event-ordered build fits" in body["error"]
-    assert "Qiyana" in body["error"]
+    assert body["timeline_coverage"]["complete"] is True
+    assert body["timeline_coverage"]["coarse_sources"] == []
+    assert body["ranked_builds"]
 
 
-def test_optimize_api_withholds_shyvana_without_certified_form_packets():
-    """Shyvana's form-dependent E/W packets cannot certify a best build."""
+def test_optimize_api_certifies_shyvana_form_packets():
+    """Shyvana's reviewed form-dependent packets can be searched."""
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
@@ -367,11 +363,11 @@ def test_optimize_api_withholds_shyvana_without_certified_form_packets():
                 "max_legendary_slots": 1,
             },
         )
-    assert response.status_code == 400
+    assert response.status_code == 200
     body = response.get_json()
-    assert body["error_code"] == "no_complete_event_order"
-    assert "No complete legal event-ordered build fits" in body["error"]
-    assert "Shyvana" in body["error"]
+    assert body["timeline_coverage"]["complete"] is True
+    assert body["timeline_coverage"]["coarse_sources"] == []
+    assert body["ranked_builds"]
 
 
 def test_optimize_api_labels_partial_candidate_search_without_claiming_certified_best():
@@ -423,8 +419,8 @@ def test_optimize_api_darius_returns_visible_event_certified_build():
     assert payload["selection_certification"] == "partial_or_unexhaustive"
 
 
-def test_optimize_api_withholds_ziggs_until_minefield_cadence_is_sourced():
-    """Ziggs E remains fail-closed while multi-mine timing lacks a source."""
+def test_optimize_api_certifies_ziggs_minefield_cadence():
+    """Ziggs's reviewed minefield cadence can participate in a build search."""
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
@@ -436,11 +432,11 @@ def test_optimize_api_withholds_ziggs_until_minefield_cadence_is_sourced():
                 "max_legendary_slots": 1,
             },
         )
-    assert response.status_code == 400
+    assert response.status_code == 200
     body = response.get_json()
-    assert body["error_code"] == "no_complete_event_order"
-    assert "No complete legal event-ordered build fits" in body["error"]
-    assert "Ziggs" in body["error"]
+    assert body["timeline_coverage"]["complete"] is True
+    assert body["timeline_coverage"]["coarse_sources"] == []
+    assert body["ranked_builds"]
 
 
 @pytest.mark.parametrize(
@@ -455,10 +451,10 @@ def test_persistent_state_champions_reject_unsupported_timed_mode(champion, reas
         _timed_params().validate_for_champion(champion, 18)
 
 
-def test_shyvana_multi_form_e_and_w_remain_named_coarse_sources():
+def test_shyvana_multi_form_e_and_w_have_certified_sources():
     result = run_fight(_load_public_champion("Shyvana"), 18, [], _timed_params())
-    assert result["timeline_coverage"]["complete"] is False
-    assert {"E", "W"}.issubset(set(result["timeline_coverage"]["coarse_sources"]))
+    assert result["timeline_coverage"]["complete"] is True
+    assert {"E", "W"}.issubset(set(result["timeline_coverage"]["exact_sources"]))
 
 
 @pytest.mark.parametrize("champion", ("Akshan", "Braum", "Diana", "Ziggs"))
@@ -471,14 +467,13 @@ def test_complete_receipts_use_the_public_certification_label(champion):
 
 
 @pytest.mark.parametrize("champion", ("Bel'Veth", "Wukong", "Ornn"))
-def test_partial_receipts_cannot_claim_public_exact_certification(champion):
+def test_reviewed_receipts_claim_public_exact_certification(champion):
     coverage = run_fight(_load_public_champion(champion), 18, [], _timed_params())[
         "timeline_coverage"
     ]
-    assert coverage["complete"] is False
-    assert coverage["certification"] == "partial_event_order"
-    assert coverage["coarse_sources"]
-    assert coverage["coarse_sources"] == sorted(coverage["coarse_sources"])
+    assert coverage["complete"] is True
+    assert coverage["certification"] == "event_order_certified"
+    assert coverage["coarse_sources"] == []
 
 
 def test_garen_demacian_justice_is_a_single_dynamic_health_hit():

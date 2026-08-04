@@ -249,6 +249,7 @@ _dirty_fighting_packet = proc_damage(
     "magic",
     default_count=3,
     name="Dirty Fighting (3-Stack Proc)",
+    phase_order_events=True,
 )
 
 

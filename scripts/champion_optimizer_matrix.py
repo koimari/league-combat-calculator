@@ -131,14 +131,15 @@ def run_matrix(
         "exercised_count": len(observed_names),
         "all_registered_exercised": integrity_ok,
         "outcome_counts": dict(sorted(counts.items())),
-        # A matrix that contains a partial event timeline has not certified
-        # that champion.  Item-scope gaps are reported separately because
-        # they are the issue #40 track, not evidence that the champion module
-        # itself is partial.
+        # A matrix that contains a partial event timeline OR an expected
+        # withholding has not certified that champion.  Item-scope gaps are
+        # reported separately because they are the issue #40 track, not
+        # evidence that the champion module itself is partial.
         "passed": (
             integrity_ok
             and counts.get("unexpected_failure", 0) == 0
             and counts.get("partial_or_unexhaustive", 0) == 0
+            and counts.get("expected_withholding", 0) == 0
         ),
         "results": results,
     }

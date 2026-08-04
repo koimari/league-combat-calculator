@@ -2308,6 +2308,10 @@ class AbilityItemApplication:
     target_hp: float  # modeled target HP when the hit landed
     on_hit: bool
     on_attack: bool
+    # Authored hit boundary for the ability carrier.  ``None`` is retained
+    # for legacy modules that do not publish an intra-cast ledger; stateful
+    # on-hit effects must fail closed when any required carrier is untimed.
+    time: float | None = None
 
 
 @dataclass
@@ -3852,14 +3856,40 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             is_on_hit = "on_hit" in triggers
             applied_total = 0.0
             applied_by_type: dict[str, float] = {}
-            for _ in range(applications):
+            application_times = [
+                float(event.get("time", 0.0))
+                for event in ability_events
+                if isinstance(event, dict)
+            ]
+            if len(application_times) < applications:
+                # A carrier may have several ordered hits inside a cast while
+                # the ability itself has no sourced sub-hit delay.  Preserve
+                # the cast's authored boundary for each application instead
+                # of leaving the shared on-hit counter untimestamped.  The
+                # order remains the module's part order; no fractional
+                # average or target-health guess is introduced.
+                cast_times = [float(time) for time in plan.times.get(ability_key, ())]
+                hits_per_cast = max(1, int(on_hit_spec.get("hits", 1)))
+                fallback_times = [
+                    cast_time for cast_time in cast_times for _ in range(hits_per_cast)
+                ]
+                if len(fallback_times) >= applications:
+                    application_times = fallback_times[:applications]
+            for application_index in range(applications):
                 hp_now = max(0.0, target_health - mitigated_damage_dealt)
+                authored_time = (
+                    application_times[application_index]
+                    if application_index < len(application_times)
+                    and len(application_times) >= applications
+                    else None
+                )
                 result.ability_item_applications.append(
                     AbilityItemApplication(
                         effectiveness=effectiveness,
                         target_hp=hp_now,
                         on_hit=is_on_hit,
                         on_attack="on_attack" in triggers,
+                        time=authored_time,
                     )
                 )
                 applied = (
@@ -5573,26 +5603,51 @@ def _layer_on_hit_effects(
         # applications immediately after their carrier; Akshan-style double
         # shots likewise add one application per ambient attack.
         carrier_effectiveness: list[float] | None = None
+        carrier_times: list[float] | None = None
         leading_carrier_hits = 0
         if carries_on_ability_on_hits:
             carrier_effectiveness = []
+            carrier_times = []
             on_hit_position = 0
             for app in apps:
                 if not app.on_hit:
                     continue
                 carrier_effectiveness.append(app.effectiveness)
+                if app.time is not None:
+                    carrier_times.append(float(app.time))
+                else:
+                    carrier_times = None
                 if on_hit_position in result.phantom_ability_stack_positions:
                     carrier_effectiveness.append(app.effectiveness)
+                    if carrier_times is not None:
+                        carrier_times.append(float(app.time))
                 on_hit_position += 1
             # Ability-carried applications have no authored timestamps
-            # yet — while any lead the counter, this row stays coarse.
+            # unless the carrier module supplied them.  While any lead
+            # carrier is untimed, this row stays coarse rather than inventing
+            # an average boundary.
             leading_carrier_hits = len(carrier_effectiveness)
             for auto_index in range(num_auto_attacks):
                 carrier_effectiveness.append(on_hit_effectiveness)
+                if carrier_times is not None:
+                    if auto_index < len(application_times):
+                        carrier_times.append(float(application_times[auto_index]))
+                    else:
+                        carrier_times = None
                 if auto_index in result.phantom_hit_autos:
                     carrier_effectiveness.append(on_hit_effectiveness)
+                    if carrier_times is not None:
+                        if auto_index < len(application_times):
+                            carrier_times.append(float(application_times[auto_index]))
+                        else:
+                            carrier_times = None
                 if autos.double_shot_info:
                     carrier_effectiveness.append(on_hit_effectiveness)
+                    if carrier_times is not None:
+                        if auto_index < len(application_times):
+                            carrier_times.append(float(application_times[auto_index]))
+                        else:
+                            carrier_times = None
             hits = len(carrier_effectiveness)
 
         # Availability-limited on-hits (Bard meeps: stock + recharge)
@@ -5615,6 +5670,13 @@ def _layer_on_hit_effects(
             and not (counts_ability_hits and rotation.total_ability_hits > 0)
             and hits <= len(application_times)
         )
+        carrier_stampable = (
+            carrier_effectiveness is not None
+            and carrier_times is not None
+            and len(carrier_times) >= hits
+        )
+        if carrier_stampable:
+            stampable = True
         ability_counter_stampable = (
             counts_ability_hits
             and rotation.total_ability_hits > 0
@@ -5663,7 +5725,11 @@ def _layer_on_hit_effects(
                 if stampable:
                     # No leading carriers: the carrier order IS the
                     # auto-segment application order.
-                    event_times = application_times[:hits]
+                    event_times = (
+                        carrier_times[:hits]
+                        if carrier_stampable
+                        else application_times[:hits]
+                    )
                     event_damages = carrier_damages
             else:
                 ability_on_hit_damage = per_hit * procs * (procs + 1) / 2.0
