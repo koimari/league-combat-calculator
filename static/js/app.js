@@ -18,6 +18,7 @@ const engine = {
   fightDefaults: {},
   exclusivityGroups: {},
   roleQuest: {},
+  capabilities: { participants: {}, scenario: { fields: {} } },
   itemCatalogReady: false,
   fightLimits: { fight_duration: [1, 10] },
   pendingTimer: null,
@@ -226,6 +227,99 @@ function getKeystone(name) {
   return name ? engine.keystones.find((entry) => entry.name === name) || null : null;
 }
 
+function participantKindForPath(path) {
+  const root = String(path || "").split(".")[0];
+  if (root === "targets") return "enemy";
+  if (root === "allies") return "ally";
+  return "main";
+}
+
+function capabilityFor(kind, field) {
+  return engine.capabilities?.participants?.[kind]?.fields?.[field]
+    || { supported: false, reason: "This control is not declared by the backend capability contract." };
+}
+
+function scenarioCapabilityFor(field) {
+  return engine.capabilities?.scenario?.fields?.[field]
+    || { supported: false, reason: "This scenario control is not declared by the backend capability contract." };
+}
+
+function capabilityReason(descriptor, fallback = "This input is unavailable in the current backend model.") {
+  return descriptor?.reason || fallback;
+}
+
+function capabilityDescriptorAttributes(field, descriptor, extra = {}) {
+  const supported = descriptor.supported !== false;
+  const reason = capabilityReason(descriptor);
+  const attrs = [`data-capability-field="${escapeHtml(field)}"`];
+  if (!supported) {
+    attrs.push("disabled", `title="${escapeHtml(reason)}"`, `aria-disabled="true"`);
+  }
+  if (extra.className) attrs.push(`class="${escapeHtml(extra.className)}"`);
+  return attrs.join(" ");
+}
+
+function capabilityAttributes(kind, field, extra = {}) {
+  return capabilityDescriptorAttributes(field, capabilityFor(kind, field), extra);
+}
+
+function scenarioCapabilityAttributes(field) {
+  const descriptor = scenarioCapabilityFor(field);
+  const supported = descriptor.supported !== false;
+  const reason = capabilityReason(descriptor);
+  const attrs = [`data-capability-field="${escapeHtml(field)}"`];
+  if (!supported) attrs.push("disabled", `title="${escapeHtml(reason)}"`, `aria-disabled="true"`);
+  return attrs.join(" ");
+}
+
+function championOptionCapability(kind, championName) {
+  const base = capabilityFor(kind, "champion_options");
+  if (base.supported === false) return base;
+  if (!championName) return { ...base, supported: false, reason: "Choose a champion before setting champion-specific options." };
+  const availability = engine.availability.get(championName);
+  if (availability && availability.ready === false) {
+    const reason = availability.blockers?.[0]?.label || "This champion has no certified public option contract.";
+    return { ...base, supported: false, reason };
+  }
+  return base;
+}
+
+function abilityOptionBinding(slot, field, championName = state.attacker.champion) {
+  const bindings = {
+    "P:ability_casts": "passive_procs",
+    "E:ability_hits": "mines_hit",
+    "R:ability_variants": "r_sweet_spot",
+  };
+  const key = bindings[`${slot}:${field}`];
+  if (!key) return null;
+  const options = engine.championOptions[championName]?.options || [];
+  return options.some((option) => option.key === key) ? key : null;
+}
+
+function abilityCapability(slot, field, championName = state.attacker.champion) {
+  const base = capabilityFor("main", field);
+  if (base.supported === false) return base;
+  if (field === "ability_ranks") return base;
+  const binding = abilityOptionBinding(slot, field, championName);
+  if (!binding) {
+    return {
+      ...base,
+      supported: false,
+      reason: "This ability control is unavailable because the selected champion declares no matching backend option.",
+    };
+  }
+  return { ...base, supported: true, payload_field: "champion_options", binding };
+}
+
+function abilityCapabilityAttributes(slot, field, championName = state.attacker.champion) {
+  const descriptor = abilityCapability(slot, field, championName);
+  const attrs = [`data-capability-field="${escapeHtml(field)}"`];
+  if (descriptor.supported === false) {
+    attrs.push("disabled", `title="${escapeHtml(capabilityReason(descriptor))}"`, "aria-disabled=\"true\"");
+  }
+  return attrs.join(" ");
+}
+
 function activeAbilityKit() {
   return getChampion(state.attacker.champion)?.abilities || [];
 }
@@ -246,6 +340,13 @@ function resetAbilityInputs() {
 function resetChampionOptions() {
   const definitions = engine.championOptions[state.attacker.champion]?.options || [];
   state.attacker.championOptions = Object.fromEntries(
+    definitions.map((option) => [option.key, option.default]),
+  );
+}
+
+function resetRosterChampionOptions(loadout) {
+  const definitions = engine.championOptions[loadout?.champion]?.options || [];
+  loadout.championOptions = Object.fromEntries(
     definitions.map((option) => [option.key, option.default]),
   );
 }
@@ -691,8 +792,11 @@ function bisReadyForPath(path) {
 function itemSlot(path, id, compact = false, allowBis = false) {
   const item = getItem(id);
   const bisReady = bisReadyForPath(path);
+  const kind = participantKindForPath(path);
+  const field = path.endsWith(".boots") || path.includes("questBoot") ? "boots" : "items";
+  const controlAttrs = capabilityAttributes(kind, field);
   return `<div class="slot-wrap ${compact ? "compact" : ""}">
-    <button class="item-slot" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}">
+    <button class="item-slot" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"} ${item ? "" : escapeHtml(capabilityReason(capabilityFor(kind, field)))}">
       <span class="item-icon ${item ? "" : "empty"}">${item ? `<img src="${itemImage(id)}" alt="" />` : `<span aria-hidden="true">+</span>`}</span>
       ${compact ? "" : `<small>${escapeHtml(item?.name || "Add item")}</small>`}
     </button>
@@ -710,7 +814,7 @@ function rosterAbilityRankControls(loadout, index, root) {
     if (!forms.length) return "";
     const maxRank = Math.max(...forms.map((ability) => ability.maxRank || (slot === "R" ? 3 : 5)));
     const rank = bisRankFor(loadout, slot, maxRank);
-    return `<span class="roster-rank"><b>${slot}</b><button type="button" data-roster-rank="${root}.${index}.${slot}" data-delta="-1" aria-label="Decrease ${slot} rank">−</button><output>${rank}</output><button type="button" data-roster-rank="${root}.${index}.${slot}" data-delta="1" aria-label="Increase ${slot} rank">+</button></span>`;
+    return `<span class="roster-rank"><b>${slot}</b><button type="button" ${capabilityAttributes(root === "allies" ? "ally" : "enemy", "ability_ranks")} data-roster-rank="${root}.${index}.${slot}" data-delta="-1" aria-label="Decrease ${slot} rank">−</button><output>${rank}</output><button type="button" ${capabilityAttributes(root === "allies" ? "ally" : "enemy", "ability_ranks")} data-roster-rank="${root}.${index}.${slot}" data-delta="1" aria-label="Increase ${slot} rank">+</button></span>`;
   }).join("");
   return `<div class="roster-ranks"><small>Wiki ability ranks</small>${rows}</div>`;
 }
@@ -719,9 +823,10 @@ function rosterRoleControls(loadout, path) {
   const roles = [["", "Role"], ["top", "Top"], ["jungle", "Jungle"], ["mid", "Mid"], ["bottom", "Bottom"], ["support", "Support"]];
   const role = loadout.role || "";
   const quest = Boolean(loadout.roleQuestComplete);
+  const kind = participantKindForPath(path);
   return `<div class="roster-context-controls">
-    <label><span>Role</span><select data-roster-role="${path}.role" aria-label="${escapeHtml(path)} role">${roles.map(([value, label]) => `<option value="${value}" ${role === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
-    <button class="quest-toggle compact ${quest ? "active" : ""}" type="button" data-roster-quest="${path}" aria-pressed="${quest}" ${role ? "" : "disabled"}><i></i><span>${quest ? "Quest complete" : "Role quest"}</span></button>
+    <label><span>Role</span><select ${capabilityAttributes(kind, "role")} data-roster-role="${path}.role" aria-label="${escapeHtml(path)} role">${roles.map(([value, label]) => `<option value="${value}" ${role === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
+    <button class="quest-toggle compact ${quest ? "active" : ""}" type="button" ${capabilityAttributes(kind, "role_quest_complete")} data-roster-quest="${path}" aria-pressed="${quest}" ${role ? "" : "disabled"}><i></i><span>${quest ? "Quest complete" : "Role quest"}</span></button>
   </div>`;
 }
 
@@ -729,10 +834,11 @@ function stackControl(path, id, compact = false) {
   const spec = stackSpec(id);
   const value = Math.min(Math.max(stackValue(path), spec.min), spec.max);
   const label = `${itemName(id)} ${spec.label || "state"}`;
+  const kind = participantKindForPath(path);
   return `<div class="stack-control ${compact ? "compact" : ""}" aria-label="${escapeHtml(label)}">
-    <button type="button" data-stack-path="${path}" data-delta="-${spec.step}" aria-label="Decrease ${escapeHtml(spec.label || "value")}">−</button>
+    <button type="button" ${capabilityAttributes(kind, "item_options")} data-stack-path="${path}" data-delta="-${spec.step}" aria-label="Decrease ${escapeHtml(spec.label || "value")}">−</button>
     <output>${value}/${spec.max}</output>
-    <button type="button" data-stack-path="${path}" data-delta="${spec.step}" aria-label="Increase ${escapeHtml(spec.label || "value")}">+</button>
+    <button type="button" ${capabilityAttributes(kind, "item_options")} data-stack-path="${path}" data-delta="${spec.step}" aria-label="Increase ${escapeHtml(spec.label || "value")}">+</button>
   </div>`;
 }
 
@@ -745,12 +851,13 @@ function rosterCard(loadout, index, kind) {
   const stats = rosterChampionStats({ ...loadout, items: statItemIds });
   const champion = getChampion(loadout.champion);
   const effectToggle = isAlly
-    ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
+    ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" ${capabilityAttributes("ally", "ally_effects_enabled")} data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
     : "";
   const path = `${root}.${index}`;
   const rosterReady = Boolean(loadout.champion && bisReadyForPath(path));
   const rosterError = state.optimizer.rosterErrors?.[path] || "";
   const itemSlotCount = loadout.includeBoots ? 5 : 6;
+  const championOptions = renderRosterChampionOptions(loadout, path, kind);
   return `<article class="target-card ${isAlly ? "ally-card" : ""}">
     <header>
       <button class="target-pick ${champion ? "" : "empty-pick"}" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(loadout.champion)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(loadout.champion)}" alt="" />` : "+"}</button>
@@ -759,11 +866,12 @@ function rosterCard(loadout, index, kind) {
       <button class="remove-target" type="button" ${isAlly ? `data-remove-ally="${index}"` : `data-remove-target="${index}"`} aria-label="Remove ${escapeHtml(loadout.champion || `${label} slot`)}">×</button>
     </header>
     <div class="target-build">${loadout.items.slice(0, itemSlotCount).map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true, true)).join("")}${loadout.includeBoots ? itemSlot(`${root}.${index}.boots`, loadout.boots, true, true) : ""}</div>
-    <button class="boots-toggle ${loadout.includeBoots ? "active" : ""}" type="button" data-include-roster-boots="${root}.${index}" aria-pressed="${Boolean(loadout.includeBoots)}">${loadout.includeBoots ? "Boots included" : "No boots"}</button>
+    <button class="boots-toggle ${loadout.includeBoots ? "active" : ""}" type="button" ${capabilityAttributes(isAlly ? "ally" : "enemy", "include_boots")} data-include-roster-boots="${root}.${index}" aria-pressed="${Boolean(loadout.includeBoots)}">${loadout.includeBoots ? "Boots included" : "No boots"}</button>
     ${rosterRoleControls(loadout, path)}
     <div class="roster-build-actions"><button class="optimize-build roster-optimize" type="button" data-optimize-roster="${path}" ${rosterReady && !state.optimizer.running ? "" : "disabled"}>Optimize build</button></div>
     ${rosterError ? `<p class="optimizer-card-error" role="status">${escapeHtml(rosterError)}</p>` : ""}
     ${rosterAbilityRankControls(loadout, index, root)}
+    ${championOptions}
     ${effectToggle}
     ${champion ? statMatrix(stats, null, true) : `<div class="matrix-placeholder">Choose a champion to show the full stat matrix.</div>`}
   </article>`;
@@ -805,18 +913,20 @@ function renderAbilityPackage(champion) {
     const rankLabel = ability.slot === "P" ? "Level scales" : "Rank";
     const rankControl = ability.slot === "P"
       ? `<div class="ability-step fixed"><span>${rankLabel}</span><strong>Lv ${state.attacker.level}</strong></div>`
-      : stepper(rankLabel, input.rank, `data-ability-rank="${ability.slot}"`, input.rank <= 0, input.rank >= ability.maxRank);
+      : stepper(rankLabel, input.rank, `${abilityCapabilityAttributes(ability.slot, "ability_ranks")} data-ability-rank="${ability.slot}"`, input.rank <= 0, input.rank >= ability.maxRank);
+    const castCapability = abilityCapability(ability.slot, "ability_casts", state.attacker.champion);
+    const castAttributes = `${abilityCapabilityAttributes(ability.slot, "ability_casts", state.attacker.champion)} data-ability-casts="${ability.slot}"`;
     const hitControl = ability.maxHits
-      ? stepper("Mines hit", input.hits, `data-ability-hits="${ability.slot}"`, input.hits <= 1, input.hits >= ability.maxHits)
+      ? stepper("Mines hit", input.hits, `${abilityCapabilityAttributes(ability.slot, "ability_hits", state.attacker.champion)} data-ability-hits="${ability.slot}"`, input.hits <= 1, input.hits >= ability.maxHits)
       : "";
-    const variants = ability.variants.length > 1 ? `<div class="ability-variants">${ability.variants.map((variant, index) => `<button type="button" data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</div>` : `<small>${escapeHtml(ability.variants[0].name)}</small>`;
+    const variants = ability.variants.length > 1 ? `<div class="ability-variants">${ability.variants.map((variant, index) => `<button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_variants", state.attacker.champion)} data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</div>` : `<small>${escapeHtml(ability.variants[0].name)}</small>`;
     const sourceLabel = ability.formulaSource === "Wiki-derived local cache" ? "Wiki-derived formula" : "Reviewed formula";
     return `<article class="ability-row">
       <div class="ability-name"><img src="${abilityImage(ability)}" alt="" /><b>${ability.slot}</b><span><strong>${escapeHtml(ability.name)}</strong>${variants}</span></div>
       ${rankControl}
-      ${stepper(ability.slot === "P" ? "Procs" : "Casts", input.casts, `data-ability-casts="${ability.slot}"`, input.casts <= 0, input.casts >= 10)}
+      ${stepper(ability.slot === "P" ? "Procs" : "Casts", input.casts, castAttributes, input.casts <= 0, input.casts >= 10)}
       ${hitControl}
-      <small class="ability-source">${sourceLabel}</small>
+      <small class="ability-source">${sourceLabel}${castCapability.supported === false ? ` · ${escapeHtml(capabilityReason(castCapability))}` : ""}</small>
     </article>`;
   }).join("");
   const reviewed = [...formulaBySlot.values()].filter((ability) => ability.formulaSource !== "Wiki-derived local cache").length;
@@ -842,6 +952,8 @@ function abilityBindsChampionOption(key) {
 }
 
 function renderChampionOptions() {
+  const capability = championOptionCapability("main", state.attacker.champion);
+  const optionAttributes = capabilityDescriptorAttributes("champion_options", capability);
   const definitions = (engine.championOptions[state.attacker.champion]?.options || [])
     .filter((option) => !ABILITY_BOUND_CHAMPION_OPTIONS.has(option.key) || !abilityBindsChampionOption(option.key));
   if (!definitions.length) return "";
@@ -849,18 +961,43 @@ function renderChampionOptions() {
     const value = state.attacker.championOptions[option.key] ?? option.default;
     const label = escapeHtml(option.label || option.key);
     if (option.type === "bool") {
-      return `<label class="champion-option-toggle"><input type="checkbox" data-champion-option="${escapeHtml(option.key)}" ${value ? "checked" : ""} /><span>${label}</span></label>`;
+      return `<label class="champion-option-toggle"><input type="checkbox" ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" ${value ? "checked" : ""} /><span>${label}</span></label>`;
     }
     if (option.type === "select") {
       const choices = (option.choices || []).map((choice) => `<option value="${escapeHtml(choice.value)}" ${String(value) === String(choice.value) ? "selected" : ""}>${escapeHtml(choice.label || choice.value)}</option>`).join("");
-      return `<label class="champion-option-field"><span>${label}</span><select data-champion-option="${escapeHtml(option.key)}" data-option-type="select">${choices}</select></label>`;
+      return `<label class="champion-option-field"><span>${label}</span><select ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" data-option-type="select">${choices}</select></label>`;
     }
     const step = option.step ?? (option.type === "int" ? 1 : "any");
     const min = option.min == null ? "" : ` min="${option.min}"`;
     const max = option.max == null ? "" : ` max="${option.max}"`;
-    return `<label class="champion-option-field"><span>${label}</span><input type="number" data-champion-option="${escapeHtml(option.key)}" data-option-type="${escapeHtml(option.type)}" value="${escapeHtml(value)}" step="${step}"${min}${max} /></label>`;
+    return `<label class="champion-option-field"><span>${label}</span><input type="number" ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" data-option-type="${escapeHtml(option.type)}" value="${escapeHtml(value)}" step="${step}"${min}${max} /></label>`;
   }).join("");
   return `<div class="champion-options"><div class="champion-options-head"><strong>Scenario options</strong><span>These inputs are shared with the reviewed engine.</span></div><div class="champion-options-grid">${controls}</div></div>`;
+}
+
+function renderRosterChampionOptions(loadout, path, kind) {
+  const definitions = engine.championOptions[loadout?.champion]?.options || [];
+  if (!definitions.length) return "";
+  const capability = championOptionCapability(kind, loadout.champion);
+  const values = loadout.championOptions || {};
+  const controls = definitions.map((option) => {
+    const value = values[option.key] ?? option.default;
+    const key = escapeHtml(option.key);
+    const label = escapeHtml(option.label || option.key);
+    const common = `${capabilityDescriptorAttributes("champion_options", capability)} data-roster-champion-option="${escapeHtml(path)}" data-option-key="${key}"`;
+    if (option.type === "bool") {
+      return `<label class="champion-option-toggle"><input type="checkbox" ${common} ${value ? "checked" : ""} /><span>${label}</span></label>`;
+    }
+    if (option.type === "select") {
+      const choices = (option.choices || []).map((choice) => `<option value="${escapeHtml(choice.value)}" ${String(value) === String(choice.value) ? "selected" : ""}>${escapeHtml(choice.label || choice.value)}</option>`).join("");
+      return `<label class="champion-option-field"><span>${label}</span><select ${common} data-option-type="select">${choices}</select></label>`;
+    }
+    const step = option.step ?? (option.type === "int" ? 1 : "any");
+    const min = option.min == null ? "" : ` min="${option.min}"`;
+    const max = option.max == null ? "" : ` max="${option.max}"`;
+    return `<label class="champion-option-field"><span>${label}</span><input type="number" ${common} data-option-type="${escapeHtml(option.type)}" value="${escapeHtml(value)}" step="${step}"${min}${max} /></label>`;
+  }).join("");
+  return `<div class="champion-options roster-champion-options"><div class="champion-options-head"><strong>Participant options</strong><span>Backend-declared ${escapeHtml(kind)} champion inputs.</span></div><div class="champion-options-grid">${controls}</div></div>`;
 }
 
 function roleQuestNote() {
@@ -879,8 +1016,8 @@ function roleQuestNote() {
 function renderRoleControls() {
   const roles = [["top", "Top"], ["jungle", "Jungle"], ["mid", "Mid"], ["bottom", "Bottom"], ["support", "Support"]];
   return `<div class="role-rules">
-    <div class="role-picker"><span>Role</span><div>${roles.map(([value, label]) => `<button type="button" data-role="${value}" class="${state.attacker.role === value ? "active" : ""}">${label}</button>`).join("")}</div></div>
-    <button class="quest-toggle ${state.attacker.roleQuestComplete ? "active" : ""}" type="button" data-role-quest aria-pressed="${state.attacker.roleQuestComplete}" ${state.attacker.role ? "" : "disabled"}><i></i><span>Role quest complete</span></button>
+    <div class="role-picker"><span>Role</span><div>${roles.map(([value, label]) => `<button type="button" ${capabilityAttributes("main", "role")} data-role="${value}" class="${state.attacker.role === value ? "active" : ""}">${label}</button>`).join("")}</div></div>
+    <button class="quest-toggle ${state.attacker.roleQuestComplete ? "active" : ""}" type="button" ${capabilityAttributes("main", "role_quest_complete")} data-role-quest aria-pressed="${state.attacker.roleQuestComplete}" ${state.attacker.role ? "" : "disabled"}><i></i><span>Role quest complete</span></button>
     <p>${escapeHtml(roleQuestNote())}</p>
   </div>`;
 }
@@ -901,7 +1038,7 @@ function keystoneSlot(side) {
   const name = state.attacker[`keystone${side}`];
   const keystone = getKeystone(name);
   return `<div class="quest-item keystone-item"><span>Keystone</span><div class="slot-wrap">
-    <button class="item-slot keystone-slot" type="button" data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add keystone"}">
+    <button class="item-slot keystone-slot" type="button" ${capabilityAttributes("main", "keystone")} data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add keystone"}">
       <span class="item-icon keystone-icon ${keystone ? "" : "empty"}">${keystone ? `<img src="${keystone.icon}" alt="" />` : `<span aria-hidden="true">+</span>`}</span>
       <small>${escapeHtml(keystone?.name || "Add keystone")}</small>
     </button>
@@ -1372,6 +1509,9 @@ function engineTarget(target) {
     item_options: engineItemOptions(itemIds, target.itemStacks),
     role: target.role || "",
     role_quest_complete: Boolean(target.roleQuestComplete),
+    champion_options: Object.fromEntries(
+      Object.entries(target.championOptions || {}).map(([key, value]) => [key, value]),
+    ),
     // Let the backend apply the champion's sourced level order for
     // transformation/stance kits; their generic rank controls are not a
     // legal manual allocation.
@@ -1967,7 +2107,13 @@ function renderScenarioRail() {
   const role = $("scenarioRole");
   if (role) role.textContent = model.role;
   const roleSelect = $("roleSelect");
-  if (roleSelect) roleSelect.value = state.attacker.role || "";
+  if (roleSelect) {
+    roleSelect.value = state.attacker.role || "";
+    const roleCapability = capabilityFor("main", "role");
+    roleSelect.disabled = roleCapability.supported === false;
+    roleSelect.title = capabilityReason(roleCapability);
+    roleSelect.dataset.capabilityField = "role";
+  }
   const stateReadout = $("stateReadout");
   if (stateReadout) stateReadout.textContent = `${model.gameState} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
   document.querySelectorAll("[data-objective]").forEach((button) => {
@@ -2059,16 +2205,20 @@ function prototypeAbilityCards(champion) {
   return (champion?.abilities || []).map((ability) => {
     const input = abilityInput(ability.slot);
     const rank = ability.slot === "P" ? 1 : input.rank;
-    const rankControl = ability.slot === "P" ? `<span class="ability-rank"><small>Level scales</small><output>Lv ${state.attacker.level}</output></span>` : `<span class="ability-rank"><small>Rank</small><button type="button" data-ability-rank="${ability.slot}" data-delta="-1">−</button><output>${rank}</output><button type="button" data-ability-rank="${ability.slot}" data-delta="1">+</button></span>`;
-    const hitControl = ability.maxHits ? `<span class="ability-casts ability-hits"><small>Hits</small><button type="button" data-ability-hits="${ability.slot}" data-delta="-1" ${input.hits <= 1 ? "disabled" : ""}>−</button><output>${input.hits}</output><button type="button" data-ability-hits="${ability.slot}" data-delta="1" ${input.hits >= ability.maxHits ? "disabled" : ""}>+</button></span>` : "";
-    const variantControl = ability.variants?.length > 1 ? `<span class="ability-variants"><small>Variant</small>${ability.variants.map((variant, index) => `<button type="button" data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</span>` : "";
-    return `<article class="ability-card"><img class="ability-icon-image" src="${abilityImage(ability)}" alt="" /><div><strong>${escapeHtml(ability.name)}</strong><small>${escapeHtml(ability.formulaSource === "Wiki-derived local cache" ? "Wiki formula" : "Reviewed formula")}</small></div>${rankControl}<span class="ability-casts"><small>${ability.slot === "P" ? "Procs" : "Casts"}</small><button type="button" data-ability-casts="${ability.slot}" data-delta="-1">−</button><output>${input.casts}</output><button type="button" data-ability-casts="${ability.slot}" data-delta="1">+</button></span>${hitControl}${variantControl}</article>`;
+    const rankControl = ability.slot === "P" ? `<span class="ability-rank"><small>Level scales</small><output>Lv ${state.attacker.level}</output></span>` : `<span class="ability-rank"><small>Rank</small><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_ranks")} data-ability-rank="${ability.slot}" data-delta="-1">−</button><output>${rank}</output><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_ranks")} data-ability-rank="${ability.slot}" data-delta="1">+</button></span>`;
+    const hitControl = ability.maxHits ? `<span class="ability-casts ability-hits"><small>Hits</small><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_hits")} data-ability-hits="${ability.slot}" data-delta="-1" ${input.hits <= 1 ? "disabled" : ""}>−</button><output>${input.hits}</output><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_hits")} data-ability-hits="${ability.slot}" data-delta="1" ${input.hits >= ability.maxHits ? "disabled" : ""}>+</button></span>` : "";
+    const variantControl = ability.variants?.length > 1 ? `<span class="ability-variants"><small>Variant</small>${ability.variants.map((variant, index) => `<button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_variants")} data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</span>` : "";
+    const castAttributes = `${abilityCapabilityAttributes(ability.slot, "ability_casts")} data-ability-casts="${ability.slot}"`;
+    return `<article class="ability-card"><img class="ability-icon-image" src="${abilityImage(ability)}" alt="" /><div><strong>${escapeHtml(ability.name)}</strong><small>${escapeHtml(ability.formulaSource === "Wiki-derived local cache" ? "Wiki formula" : "Reviewed formula")}</small></div>${rankControl}<span class="ability-casts"><small>${ability.slot === "P" ? "Procs" : "Casts"}</small><button type="button" ${castAttributes} data-delta="-1">−</button><output>${input.casts}</output><button type="button" ${castAttributes} data-delta="1">+</button></span>${hitControl}${variantControl}</article>`;
   }).join("");
 }
 
 function prototypeItemSlot(id, path, side) {
   const item = getItem(id);
-  return `<div class="slot-wrap"><button class="slot ${item ? "" : "empty-slot"}" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}" title="${item ? escapeHtml(itemStatsLine(item)) : "Add item"}">${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>${item && stackSpec(id) ? stackControl(path, id) : ""}</div>`;
+  const field = path.includes("questBoot") ? "boots" : "items";
+  const kind = participantKindForPath(path);
+  const controlAttrs = capabilityAttributes(kind, field);
+  return `<div class="slot-wrap"><button class="slot ${item ? "" : "empty-slot"}" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}" title="${item ? escapeHtml(itemStatsLine(item)) : escapeHtml(capabilityReason(capabilityFor(kind, field)))}">${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>${item && stackSpec(id) ? stackControl(path, id) : ""}</div>`;
 }
 
 function prototypeRosterItemSlot(root, index, loadout, slot) {
@@ -2078,7 +2228,9 @@ function prototypeRosterItemSlot(root, index, loadout, slot) {
   const item = getItem(id);
   const emptyLabel = isBoots ? "Add boots" : "Add item";
   const slotLabel = isBoots ? `<span class="roster-slot-label">Boots</span>` : "";
-  return `<div class="roster-slot-wrap ${isBoots ? "roster-boots-wrap" : ""}">${slotLabel}<button class="roster-item-slot ${item ? "" : "is-empty"}" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : emptyLabel}" title="${item ? escapeHtml(itemStatsLine(item)) : emptyLabel}">${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" />` : "+"}</button>${item && stackSpec(id) ? stackControl(path, id, true) : ""}</div>`;
+  const kind = root === "allies" ? "ally" : "enemy";
+  const field = isBoots ? "boots" : "items";
+  return `<div class="roster-slot-wrap ${isBoots ? "roster-boots-wrap" : ""}">${slotLabel}<button class="roster-item-slot ${item ? "" : "is-empty"}" type="button" ${capabilityAttributes(kind, field)} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : emptyLabel}" title="${item ? escapeHtml(itemStatsLine(item)) : emptyLabel}">${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" />` : "+"}</button>${item && stackSpec(id) ? stackControl(path, id, true) : ""}</div>`;
 }
 
 function prototypeBuildSlots(side) {
@@ -2095,7 +2247,7 @@ function prototypeBuildSlots(side) {
     else if (includeBootsForSide(sideUpper) && index === count) slots.push(prototypeItemSlot(state.attacker[`questBoot${sideUpper}`], questBootPath(sideUpper), sideUpper));
     else slots.push(`<span class="slot empty-slot slot-locked" aria-hidden="true"><span>·</span></span>`);
   }
-  return slots.join("");
+  return `${slots.join("")}${keystoneSlot(sideUpper)}`;
 }
 
 function prototypeBuildScore(side) {
@@ -2124,14 +2276,38 @@ function renderPrototypeChampion() {
   }
   document.querySelector(".champion-identity")?.classList.toggle("is-empty", !champion);
   const roleSelect = $("roleSelect");
-  if (roleSelect) roleSelect.value = state.attacker.role || "";
-  $("levelInput").value = state.attacker.level;
-  $("levelInput").max = attackerLevelCap();
+  const roleCapability = capabilityFor("main", "role");
+  if (roleSelect) {
+    roleSelect.value = state.attacker.role || "";
+    roleSelect.disabled = roleCapability.supported === false;
+    roleSelect.title = capabilityReason(roleCapability);
+    roleSelect.dataset.capabilityField = "role";
+  }
+  const levelCapability = capabilityFor("main", "level");
+  const levelInput = $("levelInput");
+  levelInput.value = state.attacker.level;
+  levelInput.max = attackerLevelCap();
+  levelInput.disabled = levelCapability.supported === false;
+  levelInput.title = capabilityReason(levelCapability);
+  levelInput.dataset.capabilityField = "level";
+  document.querySelectorAll("[data-level-delta]").forEach((button) => {
+    button.disabled = levelCapability.supported === false;
+    button.title = capabilityReason(levelCapability);
+    button.dataset.capabilityField = "level";
+  });
   $("levelOutput").textContent = state.attacker.level;
+  const questCapability = capabilityFor("main", "role_quest_complete");
   $("questToggle").textContent = state.attacker.roleQuestComplete ? "Quest on" : "Quest off";
   $("questToggle").setAttribute("aria-pressed", String(state.attacker.roleQuestComplete));
+  $("questToggle").disabled = questCapability.supported === false || !state.attacker.role;
+  $("questToggle").title = capabilityReason(questCapability);
+  $("questToggle").dataset.capabilityField = "role_quest_complete";
+  const bootsCapability = capabilityFor("main", "include_boots");
   $("bootsToggle").textContent = includeBootsForSide("A") ? "Boots on" : "Boots off";
   $("bootsToggle").setAttribute("aria-pressed", String(includeBootsForSide("A")));
+  $("bootsToggle").disabled = bootsCapability.supported === false;
+  $("bootsToggle").title = capabilityReason(bootsCapability);
+  $("bootsToggle").dataset.capabilityField = "include_boots";
   $("stateReadout").textContent = `${state.ui.gameState === "live" ? "Snapshot lens" : "Theory state"} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
   $("statsGrid").innerHTML = stats ? prototypeStats(stats) : `<div class="matrix-placeholder">Select a champion to resolve patch-pinned stats.</div>`;
 }
@@ -2147,11 +2323,21 @@ function renderPrototypeRoster(kind) {
     const itemSlots = Array.from({ length: rosterOrdinarySlotCount(loadout) }, (_, slot) => prototypeRosterItemSlot(root, index, loadout, slot)).join("");
     const bootsSlot = loadout.includeBoots !== false ? prototypeRosterItemSlot(root, index, loadout, "boots") : "";
     const abilityRanks = rosterAbilityRankControls(loadout, index, root);
+    const championOptions = renderRosterChampionOptions(loadout, `${root}.${index}`, kind === "targets" ? "enemy" : "ally");
+    const participantKind = kind === "targets" ? "enemy" : "ally";
+    const roleCapability = capabilityAttributes(participantKind, "role");
+    const levelCapability = capabilityAttributes(participantKind, "level");
+    const questCapability = capabilityAttributes(participantKind, "role_quest_complete");
+    const bootsCapability = capabilityAttributes(participantKind, "include_boots");
+    const effectsCapability = capabilityAttributes("ally", "ally_effects_enabled");
     const bootsEnabled = loadout.includeBoots !== false;
     const roleQuestComplete = Boolean(loadout.roleQuestComplete);
     const roleQuestLabel = roleQuestComplete ? "Quest complete" : "Quest incomplete";
-    const roleQuestButton = `<button class="roster-quest-toggle ${roleQuestComplete ? "active" : ""}" type="button" data-roster-quest="${root}.${index}" aria-pressed="${roleQuestComplete}" aria-label="${roleQuestComplete ? "Mark" : "Mark"} ${label} role quest ${roleQuestComplete ? "incomplete" : "complete"}" ${loadout.role ? "" : "disabled"}>${roleQuestLabel}</button>`;
-    return `<article class="roster-card"><button class="roster-pick" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" data-level="${root}.${index}.level" data-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" data-level="${root}.${index}.level" data-delta="1" aria-label="Increase ${label} level">+</button></div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}</div></article>`;
+    const roleQuestButton = `<button class="roster-quest-toggle ${roleQuestComplete ? "active" : ""}" type="button" ${questCapability} data-roster-quest="${root}.${index}" aria-pressed="${roleQuestComplete}" aria-label="${roleQuestComplete ? "Mark" : "Mark"} ${label} role quest ${roleQuestComplete ? "incomplete" : "complete"}" ${loadout.role ? "" : "disabled"}>${roleQuestLabel}</button>`;
+    const effectToggle = kind === "allies"
+      ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" ${effectsCapability} data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
+      : "";
+    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level="${root}.${index}.level" data-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level="${root}.${index}.level" data-delta="1" aria-label="Increase ${label} level">+</button></div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
   }).join("") || `<p class="roster-empty">Add ${kind === "targets" ? "a target" : "an ally"} to the coupled timeline.</p>`;
   $(kind === "targets" ? "enemyCount" : "allyCount").textContent = entries.length;
 }
@@ -2175,6 +2361,23 @@ function renderPrototypeBuilder() {
   renderPrototypeRoster("allies");
   $("rotationOutput").textContent = state.fight.rotations;
   $("rotationRange").value = state.fight.rotations;
+  const rotationCapability = scenarioCapabilityFor("rotations");
+  $("rotationRange").disabled = rotationCapability.supported === false;
+  $("rotationRange").title = capabilityReason(rotationCapability);
+  $("rotationRange").dataset.capabilityField = "rotations";
+  const durationRange = $("durationRange");
+  const durationOutput = $("durationOutput");
+  const durationCapability = scenarioCapabilityFor("window");
+  if (durationRange) {
+    const [durationMin, durationMax] = engine.fightLimits.fight_duration || [1, 30];
+    durationRange.min = durationMin;
+    durationRange.max = durationMax;
+    durationRange.value = state.fight.duration;
+    durationRange.disabled = durationCapability.supported === false;
+    durationRange.title = capabilityReason(durationCapability);
+    durationRange.dataset.capabilityField = "window";
+  }
+  if (durationOutput) durationOutput.textContent = `${one(state.fight.duration)}s`;
   const policy = engine.responses?.a?.auto_attack_policy;
   const schedule = engine.responses?.a?.auto_attack_schedule;
   const calculated = state.fight.aaUptimeMode === "calculated";
@@ -2184,11 +2387,18 @@ function renderPrototypeBuilder() {
       : "CALCULATED")
     : `${Math.round(state.fight.aaUptime * 100)}% explicit`;
   $("uptimeRange").value = Math.round(state.fight.aaUptime * 100);
-  $("uptimeRange").disabled = calculated;
+  const uptimeCapability = scenarioCapabilityFor("auto_attack_uptime");
+  $("uptimeRange").disabled = calculated || uptimeCapability.supported === false;
+  $("uptimeRange").title = calculated ? "Calculated uptime is owned by the backend auto-attack policy." : capabilityReason(uptimeCapability);
+  $("uptimeRange").dataset.capabilityField = "auto_attack_uptime";
   const modeButton = $("uptimeModeToggle");
   if (modeButton) {
     modeButton.textContent = calculated ? "Use explicit" : "Use calculated";
     modeButton.setAttribute("aria-pressed", String(calculated));
+    const modeCapability = scenarioCapabilityFor("auto_attack_uptime_mode");
+    modeButton.disabled = modeCapability.supported === false;
+    modeButton.title = capabilityReason(modeCapability);
+    modeButton.dataset.capabilityField = "auto_attack_uptime_mode";
   }
 }
 
@@ -3463,14 +3673,14 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("#addEnemy")) {
     if (state.targets.length >= 5) return;
     const index = state.targets.length;
-    state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {} });
+    state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {} });
     render();
     return openPicker("champion", `targets.${index}.champion`);
   }
   if (event.target.closest("#addAlly")) {
     if (state.allies.length >= 4) return;
     const index = state.allies.length;
-    state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {}, allyEffectsEnabled: false });
+    state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, allyEffectsEnabled: false });
     render();
     return openPicker("champion", `allies.${index}.champion`);
   }
@@ -3641,7 +3851,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.targets.length < 5) {
       const index = state.targets.length;
-      state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {} });
+      state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {} });
       render();
       return openPicker("champion", `targets.${index}.champion`);
     }
@@ -3657,7 +3867,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.allies.length < 4) {
       const index = state.allies.length;
-      state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {}, allyEffectsEnabled: false });
+      state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, allyEffectsEnabled: false });
       render();
       return openPicker("champion", `allies.${index}.champion`);
     }
@@ -3683,6 +3893,7 @@ document.addEventListener("click", (event) => {
       const [root, indexText] = selectedPath.split(".");
       const loadout = state[root][Number(indexText)];
       loadout.abilityRanks = defaultAbilityRanks(loadout);
+      resetRosterChampionOptions(loadout);
     }
     closePicker();
     return render();
@@ -3742,6 +3953,32 @@ document.addEventListener("change", (event) => {
       const minimum = definition?.min == null ? bounded : Math.max(Number(definition.min), bounded);
       const maximum = definition?.max == null ? minimum : Math.min(Number(definition.max), minimum);
       state.attacker.championOptions[key] = type === "int" ? Math.round(maximum) : maximum;
+    }
+    invalidateOptimization();
+    return render();
+  }
+  const rosterChampionOption = event.target.closest("[data-roster-champion-option]");
+  if (rosterChampionOption) {
+    const loadout = pathValue(rosterChampionOption.dataset.rosterChampionOption);
+    if (!loadout) return;
+    const key = rosterChampionOption.dataset.optionKey;
+    const type = rosterChampionOption.dataset.optionType || "bool";
+    const definition = (engine.championOptions[loadout.champion]?.options || [])
+      .find((option) => option.key === key);
+    if (!loadout.championOptions) loadout.championOptions = {};
+    if (type === "bool") {
+      loadout.championOptions[key] = Boolean(rosterChampionOption.checked);
+    } else if (type === "select") {
+      loadout.championOptions[key] = rosterChampionOption.value;
+    } else {
+      const parsed = type === "int"
+        ? Number.parseInt(rosterChampionOption.value, 10)
+        : Number(rosterChampionOption.value);
+      const fallback = Number(definition?.default ?? 0);
+      const bounded = Number.isFinite(parsed) ? parsed : fallback;
+      const minimum = definition?.min == null ? bounded : Math.max(Number(definition.min), bounded);
+      const maximum = definition?.max == null ? minimum : Math.min(Number(definition.max), minimum);
+      loadout.championOptions[key] = type === "int" ? Math.round(maximum) : maximum;
     }
     invalidateOptimization();
     return render();
@@ -3810,6 +4047,7 @@ Promise.all([
     });
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};
+    engine.capabilities = config.capabilities || { participants: {}, scenario: { fields: {} } };
     engine.keystones = config.keystones || [];
     engine.defaultTarget = config.default_target || engine.defaultTarget;
     engine.fightDefaults = config.fight_defaults || {};

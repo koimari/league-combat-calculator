@@ -1007,6 +1007,59 @@ def test_frontend_round_trips_all_backend_champion_options():
     assert "!abilityBindsChampionOption(option.key)" in source
 
 
+def test_config_exposes_one_authoritative_capability_contract_for_every_participant():
+    response = app_module.app.test_client().get("/api/config")
+
+    assert response.status_code == 200
+    contract = response.get_json()["capabilities"]
+    assert contract["schema_version"] == 1
+    assert set(contract["participants"]) == {"main", "enemy", "ally"}
+    assert (
+        contract["participants"]["enemy"]["fields"]["champion"]["state_path"]
+        == "targets.*.champion"
+    )
+    assert (
+        contract["participants"]["ally"]["fields"]["ally_effects_enabled"]["supported"]
+        is True
+    )
+    assert (
+        contract["participants"]["main"]["fields"]["ally_effects_enabled"]["supported"]
+        is False
+    )
+    assert contract["participants"]["main"]["fields"]["ally_effects_enabled"]["reason"]
+    assert contract["scenario"]["fields"]["window"]["payload_field"] == "fight_duration"
+    assert (
+        contract["scenario"]["fields"]["auto_attack_uptime_mode"]["payload_field"]
+        == "auto_attack_uptime_mode"
+    )
+
+
+def test_capability_contract_has_a_frontend_control_and_serialization_for_every_supported_field():
+    config = app_module.app.test_client().get("/api/config").get_json()
+    contract = config["capabilities"]
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+    template = Path("templates/index.html").read_text(encoding="utf-8")
+    frontend = f"{source}\n{template}"
+
+    for participant in contract["participants"].values():
+        for field, descriptor in participant["fields"].items():
+            if not descriptor["supported"]:
+                assert descriptor["reason"]
+                continue
+            assert descriptor["frontend_token"] in frontend, field
+            assert descriptor["payload_field"] in source, field
+    for field, descriptor in contract["scenario"]["fields"].items():
+        assert descriptor["supported"] is True
+        assert descriptor["frontend_token"] in frontend, field
+        assert descriptor["payload_field"] in source, field
+
+    assert "capabilityAttributes" in source
+    assert 'attrs.push("disabled"' in source
+    assert 'aria-disabled="true"' in source
+    assert "engine.capabilities = config.capabilities" in source
+    assert "champion_options: Object.fromEntries" in source
+
+
 def test_live_builder_surfaces_backend_item_state_controls_for_all_participants():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 

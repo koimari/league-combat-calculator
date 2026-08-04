@@ -1,0 +1,295 @@
+"""Authoritative public control capabilities for the calculator.
+
+The API already owns the validation and serialization contracts for loadouts,
+champion options, item options, and fight windows.  This module publishes the
+same contract to the browser so a control can be rendered only when the
+backend can consume the value, or disabled with an honest reason when it
+cannot.  The strings in ``frontend_token`` are intentionally stable: contract
+tests use them to ensure a supported field has a mounted browser control.
+"""
+
+from __future__ import annotations
+
+from copy import deepcopy
+from typing import Any, Mapping
+
+CAPABILITY_SCHEMA_VERSION = 1
+
+
+# The descriptor is deliberately explicit: each public capability has a
+# payload key, browser state path, control token, and availability metadata.
+def _field(  # pylint: disable=too-many-arguments
+    *,
+    payload_field: str,
+    state_path: str,
+    frontend_token: str,
+    supported: bool = True,
+    reason: str | None = None,
+    conditional: bool = False,
+    availability: str = "static",
+) -> dict[str, Any]:
+    """Build one immutable-in-practice public field descriptor."""
+    if not supported and not reason:
+        raise ValueError(f"Unavailable capability {payload_field} needs a reason")
+    return {
+        "supported": supported,
+        "reason": reason,
+        "payload_field": payload_field,
+        "state_path": state_path,
+        "frontend_token": frontend_token,
+        "conditional": conditional,
+        "availability": availability,
+    }
+
+
+def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
+    """Return the public loadout fields for one participant kind."""
+    is_main = kind == "main"
+    is_ally = kind == "ally"
+    state_root = "attacker" if is_main else ("allies" if is_ally else "targets")
+
+    def loadout_path(field: str) -> str:
+        """Return a state path that names the actual browser collection."""
+        return f"{state_root}.*.{field}"
+
+    fields = {
+        "champion": _field(
+            payload_field="champion",
+            state_path=("attacker.champion" if is_main else loadout_path("champion")),
+            frontend_token='data-picker="champion"',
+        ),
+        "level": _field(
+            payload_field="level",
+            state_path=("attacker.level" if is_main else loadout_path("level")),
+            frontend_token="data-level",
+        ),
+        "role": _field(
+            payload_field="role",
+            state_path=("attacker.role" if is_main else loadout_path("role")),
+            frontend_token=("#roleSelect" if is_main else "data-roster-role"),
+        ),
+        "role_quest_complete": _field(
+            payload_field="role_quest_complete",
+            state_path=(
+                "attacker.roleQuestComplete"
+                if is_main
+                else loadout_path("roleQuestComplete")
+            ),
+            frontend_token=("#questToggle" if is_main else "data-roster-quest"),
+        ),
+        "boots": _field(
+            payload_field="boots",
+            state_path=(
+                "attacker.questBoot{side}" if is_main else loadout_path("boots")
+            ),
+            frontend_token='data-picker="item"',
+        ),
+        "include_boots": _field(
+            payload_field="include_boots",
+            state_path=(
+                "attacker.includeBoots{side}"
+                if is_main
+                else loadout_path("includeBoots")
+            ),
+            frontend_token=(
+                "data-include-boots" if is_main else "data-include-roster-boots"
+            ),
+        ),
+        "items": _field(
+            payload_field="items",
+            state_path=("attacker.build{side}" if is_main else loadout_path("items")),
+            frontend_token='data-picker="item"',
+        ),
+        "item_options": _field(
+            payload_field="item_options",
+            state_path=(
+                "attacker.build{side}Stacks" if is_main else loadout_path("itemStacks")
+            ),
+            frontend_token="data-stack-path",
+        ),
+        "ability_ranks": _field(
+            payload_field="ability_ranks",
+            state_path=(
+                "attacker.abilityInputs.*.rank"
+                if is_main
+                else loadout_path("abilityRanks")
+            ),
+            frontend_token=('data-ability-rank="' if is_main else "data-roster-rank"),
+        ),
+        "champion_options": _field(
+            payload_field="champion_options",
+            state_path=(
+                "attacker.championOptions"
+                if is_main
+                else loadout_path("championOptions")
+            ),
+            frontend_token=(
+                "data-champion-option" if is_main else "data-roster-champion-option"
+            ),
+            conditional=True,
+            availability="champion_declared",
+        ),
+        "cast_order": _field(
+            payload_field="cast_order",
+            state_path=("attacker.castOrder" if is_main else loadout_path("castOrder")),
+            frontend_token="data-cast-order",
+            supported=False,
+            reason=(
+                "The backend derives the authored cast order; explicit order "
+                "overrides are not exposed by the public control surface."
+            ),
+        ),
+    }
+
+    if is_main:
+        fields.update(
+            {
+                "ability_casts": _field(
+                    payload_field="champion_options",
+                    state_path="attacker.abilityInputs.*.casts",
+                    frontend_token='data-ability-casts="',
+                    conditional=True,
+                    availability="champion_option_binding",
+                ),
+                "ability_hits": _field(
+                    payload_field="champion_options",
+                    state_path="attacker.abilityInputs.*.hits",
+                    frontend_token='data-ability-hits="',
+                    conditional=True,
+                    availability="champion_option_binding",
+                ),
+                "ability_variants": _field(
+                    payload_field="champion_options",
+                    state_path="attacker.abilityInputs.*.variant",
+                    frontend_token='data-ability-variant="',
+                    conditional=True,
+                    availability="champion_option_binding",
+                ),
+                "keystone": _field(
+                    payload_field="keystone",
+                    state_path="attacker.keystone{side}",
+                    frontend_token='data-picker="keystone"',
+                ),
+                "ally_effects_enabled": _field(
+                    payload_field="ally_effects_enabled",
+                    state_path="attacker.allyEffectsEnabled",
+                    frontend_token="data-ally-effects",
+                    supported=False,
+                    reason="Only ally participants can opt into modeled ally effects.",
+                ),
+            }
+        )
+    elif is_ally:
+        fields["ally_effects_enabled"] = _field(
+            payload_field="ally_effects_enabled",
+            state_path="allies.*.allyEffectsEnabled",
+            frontend_token="data-ally-effects",
+        )
+        for key, label in (
+            ("ability_casts", "cast counts"),
+            ("ability_hits", "hit counts"),
+            ("ability_variants", "ability variants"),
+        ):
+            fields[key] = _field(
+                payload_field=key,
+                state_path=f"allies.*.{key}",
+                frontend_token=f"data-{key}",
+                supported=False,
+                reason=(
+                    f"Roster payloads accept ranks and declared champion options, "
+                    f"not free-form ally {label}."
+                ),
+            )
+    else:
+        for key, label in (
+            ("ability_casts", "cast counts"),
+            ("ability_hits", "hit counts"),
+            ("ability_variants", "ability variants"),
+        ):
+            fields[key] = _field(
+                payload_field=key,
+                state_path=f"targets.*.{key}",
+                frontend_token=f"data-{key}",
+                supported=False,
+                reason=(
+                    f"Roster payloads accept ranks and declared champion options, "
+                    f"not free-form enemy {label}."
+                ),
+            )
+
+    return fields
+
+
+def public_capability_contract(
+    *,
+    input_limits: Mapping[str, tuple[float, float]],
+    max_rotations: int,
+    champion_option_count: int,
+    item_option_count: int,
+) -> dict[str, Any]:
+    """Build the API contract consumed by the main and roster frontends."""
+    participants = {
+        kind: {
+            "supported": True,
+            "fields": _participant_fields(kind),
+        }
+        for kind in ("main", "enemy", "ally")
+    }
+    scenario_fields = {
+        "rotations": _field(
+            payload_field="rotations",
+            state_path="fight.rotations",
+            frontend_token='data-proto-range="rotations"',
+        ),
+        "window": _field(
+            payload_field="fight_duration",
+            state_path="fight.duration",
+            frontend_token='data-proto-range="duration"',
+        ),
+        "auto_attack_uptime": _field(
+            payload_field="auto_attack_uptime",
+            state_path="fight.aaUptime",
+            frontend_token='data-proto-range="aaUptime"',
+        ),
+        "auto_attack_uptime_mode": _field(
+            payload_field="auto_attack_uptime_mode",
+            state_path="fight.aaUptimeMode",
+            frontend_token="uptimeModeToggle",
+        ),
+    }
+    return {
+        "schema_version": CAPABILITY_SCHEMA_VERSION,
+        "scope": "public_calculator_controls",
+        "participants": participants,
+        "scenario": {
+            "supported": True,
+            "fields": scenario_fields,
+            "limits": {key: list(value) for key, value in input_limits.items()},
+            "rotations": {"min": 1, "max": max_rotations},
+        },
+        "catalogs": {
+            "champion_options": {
+                "supported": champion_option_count > 0,
+                "count": champion_option_count,
+                "reason": (
+                    None
+                    if champion_option_count > 0
+                    else "No declared champion options are available in the pinned modules."
+                ),
+            },
+            "item_options": {
+                "supported": item_option_count > 0,
+                "count": item_option_count,
+                "reason": (
+                    None
+                    if item_option_count > 0
+                    else "No stateful item options are available in the pinned item catalog."
+                ),
+            },
+        },
+    }
+
+
+def copy_capability_contract(contract: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a safe response copy for callers that may mutate JSON values."""
+    return deepcopy(dict(contract))
