@@ -184,6 +184,7 @@ def test_temporary_lethality_state_cannot_be_scored_without_ordered_penetration(
         ("Statikk Shiv", "blocked"),
         ("Titanic Hydra", "modeled_effect"),
         ("The Collector", "modeled_effect"),
+        ("Death's Dance", "modeled_effect"),
     ],
 )
 def test_representative_item_classifications(item_name, expected_status):

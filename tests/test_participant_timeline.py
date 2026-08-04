@@ -1395,17 +1395,21 @@ def test_bis_objectives_have_an_explicit_direction_and_metric(
     assert scores == sorted(scores, reverse=direction == "higher")
 
 
-def test_bis_withholds_unmodelled_eclipse_and_deaths_dance_defenses():
+def test_bis_certifies_eclipse_and_deaths_dance_defenses():
     payload = _bis_request("main")
     payload["objective"] = "survival"
     body = app.test_client().post("/api/bis", json=payload).get_json()
-    withheld = {row["name"]: row for row in body["withheld_candidates"]}
-    assert "Eclipse" not in {row["name"] for row in body["candidates"]}
-    assert "Death's Dance" not in {row["name"] for row in body["candidates"]}
+    candidates = {row["name"]: row for row in body["candidates"]}
     for name in ("Eclipse", "Death's Dance"):
-        assert withheld[name]["reason"] == "objective_effect_unavailable"
-        assert withheld[name]["timeline_coverage"]["complete"] is False
-        assert name in withheld[name]["detail"]
+        assert name in candidates
+        assert candidates[name]["timeline_coverage"]["complete"] is True
+        assert candidates[name]["defensive_effect_receipt"]["status"] == "certified"
+        assert name in candidates[name]["defensive_effect_receipt"]["sources"]
+    assert not {
+        row["name"]
+        for row in body["withheld_candidates"]
+        if row["name"] in {"Eclipse", "Death's Dance"}
+    }
 
 
 def test_bis_receipts_certified_sundered_sky_ehp_inputs():
@@ -1480,6 +1484,62 @@ def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch)
     assert withheld[0]["name"] == "Luden's Echo"
     assert withheld[0]["reason"] == "candidate_loadout_unavailable"
     assert withheld[0]["timeline_coverage"]["complete"] is False
+
+
+def test_bis_excludes_audited_item_timing_before_ranking(monkeypatch):
+    """Known item timing gaps stay visible without becoming partial BIS rows."""
+
+    candidates = [
+        get_item_by_name("Bastionbreaker"),
+        get_item_by_name("Warmog's Armor"),
+    ]
+    monkeypatch.setattr(
+        "src.app._bis_candidate_pool",
+        lambda *_args, **_kwargs: candidates,
+    )
+
+    def fake_timeline(*args, **_kwargs):
+        items = args[2]
+        excluded = any(item["name"] == "Bastionbreaker" for item in items)
+        return {
+            "objective": {"focus_damage_before_death": 100.0},
+            "participants": [
+                {
+                    "participant_id": "main",
+                    "survival": {
+                        "effective_health": 1_000.0,
+                        "healing_received": 0.0,
+                        "support_shield_received": 0.0,
+                    },
+                }
+            ],
+            "timeline_coverage": {
+                "complete": not excluded,
+                "certification": (
+                    "partial_event_order" if excluded else "event_order_certified"
+                ),
+                "exact_sources": [],
+                "coarse_sources": ["shaped_charge_Bastionbreaker"] if excluded else [],
+            },
+        }
+
+    monkeypatch.setattr("src.app.build_participant_timeline", fake_timeline)
+    response = app.test_client().post("/api/bis", json=_bis_request("main"))
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["partial_candidates"] == []
+    assert body["candidates"]
+    assert body["coverage"]["complete"] is True
+    assert body["coverage"]["certification"] == (
+        "bis_event_order_certified_with_exclusions"
+    )
+    row = next(
+        row for row in body["withheld_candidates"] if row["name"] == "Bastionbreaker"
+    )
+    assert row["reason"] == "candidate_excluded_unresolved_timing"
+    assert row["exclusion_type"] == "applicability"
+    assert row["excluded_sources"] == ["shaped_charge_Bastionbreaker"]
 
 
 def test_bis_endpoint_keeps_ally_and_enemy_in_the_same_timeline():
@@ -2232,6 +2292,171 @@ def test_survival_walk_applies_explicit_deferred_damage_in_equal_ticks():
     assert result["target"]["damage_taken"] == 50.0
     assert result["target"]["ending_health"] == 50.0
     assert result["target"]["death_time"] is None
+
+
+def test_deaths_dance_defers_damage_and_defy_clears_remaining_ticks():
+    from src.calculator.defensive_effects import resolve_starting_defenses
+
+    stats = {"health": 100.0, "bonus_attack_damage": 100.0, "is_melee": True}
+    holder = Combatant(
+        participant_id="main",
+        team="main",
+        champion_data={"name": "Aatrox"},
+        level=18,
+        items=(get_item_by_name("Death's Dance"),),
+        stats=stats,
+        defenses=resolve_starting_defenses(
+            "Aatrox", 18, stats, [{"name": "Death's Dance"}]
+        ),
+    )
+    enemy = _dummy_combatant("enemy", "enemy", health=100.0)
+    incoming = {
+        "main": [
+            {
+                "time": 0.0,
+                "damage": 50.0,
+                "damage_type": "physical",
+                "attacker": "enemy",
+                "target": "main",
+                "sequence": 0,
+                "_event_id": "incoming",
+            }
+        ],
+        "enemy": [
+            {
+                "time": 1.0,
+                "damage": 100.0,
+                "damage_type": "true",
+                "attacker": "main",
+                "target": "enemy",
+                "sequence": 0,
+                "_event_id": "takedown",
+            }
+        ],
+    }
+    healing = {}
+    result = _simulate_survival([holder, enemy], incoming, healing, {}, 5.0)
+
+    assert result["main"]["damage_deferral_fraction"] == pytest.approx(0.30)
+    assert result["main"]["damage_deferral_cleared"] == pytest.approx(15.0)
+    assert result["main"]["damage_deferral_pending"] == pytest.approx(0.0)
+    assert result["main"]["defy_triggered"] is True
+    assert result["main"]["defy_trigger_time"] == pytest.approx(1.0)
+    assert result["main"]["defy_heal_received"] == pytest.approx(35.0)
+    assert sum(event["amount"] for event in healing["main"]) == pytest.approx(75.0)
+
+
+def test_deaths_dance_defy_starts_heal_at_delayed_takedown_once():
+    from src.calculator.defensive_effects import resolve_starting_defenses
+
+    stats = {"health": 100.0, "bonus_attack_damage": 100.0, "is_melee": True}
+    holder = Combatant(
+        participant_id="main",
+        team="main",
+        champion_data={"name": "Aatrox"},
+        level=18,
+        items=(get_item_by_name("Death's Dance"),),
+        stats=stats,
+        defenses=resolve_starting_defenses(
+            "Aatrox", 18, stats, [{"name": "Death's Dance"}]
+        ),
+    )
+    enemy = _dummy_combatant("enemy", "enemy", health=100.0)
+    incoming = {
+        "main": [
+            {
+                "time": 0.0,
+                "damage": 50.0,
+                "damage_type": "physical",
+                "attacker": "enemy",
+                "target": "main",
+                "sequence": 0,
+                "_event_id": "incoming",
+            }
+        ],
+        "enemy": [
+            {
+                "time": 0.0,
+                "damage": 10.0,
+                "damage_type": "true",
+                "attacker": "main",
+                "target": "enemy",
+                "sequence": 0,
+                "_event_id": "poke",
+            },
+            {
+                "time": 2.5,
+                "damage": 90.0,
+                "damage_type": "true",
+                "attacker": "main",
+                "target": "enemy",
+                "sequence": 1,
+                "_event_id": "takedown",
+            },
+        ],
+    }
+    healing = {}
+    result = _simulate_survival([holder, enemy], incoming, healing, {}, 5.0)
+
+    defy_heals = [
+        event for event in healing["main"] if event["source"] == "Death's Dance (Defy)"
+    ]
+    assert [event["time"] for event in defy_heals] == [3.5, 4.5]
+    assert sum(event["amount"] for event in defy_heals) == pytest.approx(75.0)
+    assert result["main"]["defy_trigger_time"] == pytest.approx(2.5)
+    assert result["main"]["defy_heal_received"] == pytest.approx(45.0)
+    assert result["main"]["damage_deferral_cleared"] == pytest.approx(5.0)
+
+
+def test_eclipse_self_shield_is_triggered_and_expires_in_order():
+    source = _dummy_combatant("source", "main")
+    target = _dummy_combatant("target", "enemy")
+    support = {
+        "source": [
+            {
+                "time": 1.0,
+                "kind": "shield",
+                "amount": 80.0,
+                "duration": 2.0,
+                "attacker": "source",
+                "target": "source",
+                "source": "Eclipse (Ever Rising Moon)",
+                "_event_id": "proc:shield",
+                "_trigger_event_id": "proc",
+                "_priority": 0.5,
+            }
+        ]
+    }
+    incoming = {
+        "target": [
+            {
+                "time": 1.0,
+                "damage": 1.0,
+                "damage_type": "true",
+                "attacker": "source",
+                "target": "target",
+                "sequence": 0,
+                "_event_id": "proc",
+            }
+        ],
+        "source": [
+            {
+                "time": 3.5,
+                "damage": 80.0,
+                "damage_type": "true",
+                "attacker": "target",
+                "target": "source",
+                "sequence": 0,
+                "_event_id": "late-hit",
+            }
+        ],
+    }
+    result = _simulate_survival([source, target], incoming, {}, support, 4.0)
+
+    assert result["source"]["support_shield_received"] == pytest.approx(80.0)
+    assert result["source"]["support_shield_expired"] == pytest.approx(80.0)
+    assert result["source"]["shield_absorbed"] == pytest.approx(0.0)
+    assert result["source"]["health_damage"] == pytest.approx(80.0)
 
 
 def test_deferred_ticks_are_mirrored_into_the_public_outgoing_receipt():

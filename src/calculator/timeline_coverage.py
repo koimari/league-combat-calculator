@@ -3,6 +3,38 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
+# These packets have a complete aggregate calculation, but a generic cast
+# boundary is not a safe landing timestamp for the item proc.  The optimizer
+# may therefore exclude a candidate carrying only these sources before it is
+# ranked, with the source receipt kept visible to the caller.  This is
+# deliberately narrow: every other coarse source remains a hard certification
+# failure until its event ledger is authored.
+EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES = frozenset(
+    {
+        "muramana_ability",
+        "proc_Eclipse",
+        "shaped_charge_Bastionbreaker",
+    }
+)
+
+
+def applicability_exclusion_sources(
+    coverage: Mapping[str, Any],
+) -> list[str]:
+    """Return coarse sources safe to exclude before optimizer ranking.
+
+    A non-empty result is returned only when every coarse source belongs to
+    the explicitly audited item-timing family.  Mixing one of those sources
+    with an unrelated coarse mechanic keeps the whole candidate partial; a
+    partial candidate must never be rescued by a narrower receipt.
+    """
+    coarse = {
+        str(source) for source in coverage.get("coarse_sources", []) if str(source)
+    }
+    if coarse and coarse.issubset(EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES):
+        return sorted(coarse)
+    return []
+
 
 def combine_timeline_coverages(
     coverages: Iterable[Mapping[str, Any]],

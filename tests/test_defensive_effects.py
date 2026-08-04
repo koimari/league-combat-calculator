@@ -194,6 +194,24 @@ def test_guardian_angel_resolves_sourced_base_health_rebirth():
     }
 
 
+@pytest.mark.parametrize(("is_melee", "fraction"), [(True, 0.30), (False, 0.10)])
+def test_deaths_dance_resolves_ordered_ignore_pain_and_defy(is_melee, fraction):
+    defenses = resolve_starting_defenses(
+        "Aatrox",
+        18,
+        _stats(is_melee=is_melee, bonus_attack_damage=200.0),
+        [{"name": "Death's Dance"}],
+    )
+
+    assert defenses.damage_deferral_fraction == pytest.approx(fraction)
+    assert defenses.damage_deferral_duration == pytest.approx(3.0)
+    assert defenses.damage_deferral_ticks == 3
+    assert defenses.defy_window == pytest.approx(3.0)
+    assert defenses.defy_heal_bonus_ad_ratio == pytest.approx(0.75)
+    assert defenses.defy_heal_duration == pytest.approx(2.0)
+    assert defenses.defy_heal_ticks == 2
+
+
 def test_level_scaled_defenses_cap_at_level_eighteen():
     defenses = resolve_starting_defenses(
         "Shen",

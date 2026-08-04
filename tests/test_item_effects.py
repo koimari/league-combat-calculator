@@ -62,6 +62,9 @@ from src.calculator.item_effects import (
     validate_item_input_options,
     shield_reduction_fraction,
     required_effect_value,
+    death_dance_deferral_fraction,
+    death_dance_defy_heal_amount,
+    eclipse_shield_amount,
 )
 
 
@@ -77,6 +80,24 @@ def test_frozen_heart_registers_typed_attack_speed_aura() -> None:
     # Target-only effects are still valid registry entries when an item is
     # present in an ordinary attacker build; they simply contribute no damage.
     assert resolve_damage_effects(_build("Frozen Heart")).per_hits == ()
+
+
+def test_ordered_defense_accessors_use_typed_item_values() -> None:
+    assert death_dance_deferral_fraction(
+        _build("Death's Dance"), is_melee=True
+    ) == pytest.approx(0.30)
+    assert death_dance_deferral_fraction(
+        _build("Death's Dance"), is_melee=False
+    ) == pytest.approx(0.10)
+    assert death_dance_defy_heal_amount(
+        _build("Death's Dance"), bonus_attack_damage=200.0
+    ) == pytest.approx(150.0)
+    assert eclipse_shield_amount(
+        _build("Eclipse"), bonus_attack_damage=200.0, is_melee=True
+    ) == pytest.approx(240.0)
+    assert eclipse_shield_amount(
+        _build("Eclipse"), bonus_attack_damage=200.0, is_melee=False
+    ) == pytest.approx(120.0)
 
 
 def _patch_effect(monkeypatch: pytest.MonkeyPatch, item_name: str, **overrides) -> None:

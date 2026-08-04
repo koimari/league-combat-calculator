@@ -336,9 +336,7 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
         "Blessing of the Mountain's opening damage reduction is not modelled."
     ),
     "Chainlaced Crushers": "Noxian Persistence's magic shield is not modelled.",
-    "Death's Dance": "Ignore Pain's damage deferral is not modelled.",
     "Doran's Shield": "Endure's combat health regeneration is not modelled.",
-    "Eclipse": "Ever Rising Moon's target-side shield trigger is not modelled.",
     "Fimbulwinter": "Awe bonus health and Everlasting shields are not modelled.",
     "Force of Nature": (
         "Steadfast's target-side stack timing is not modelled: champion magic "
@@ -414,7 +412,14 @@ def _has_described_effect(item: dict[str, Any]) -> bool:
 def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     """Return the optimiser coverage classification for one resolved item."""
     name = str(item.get("name", ""))
-    if ITEM_EFFECTS.get(name, {}).get("type") in {
+    effect_type = ITEM_EFFECTS.get(name, {}).get("type")
+    if name == "Death's Dance" and effect_type == "defensive_start":
+        status: ItemCoverageStatus = "modeled_effect"
+        reason = (
+            "Ignore Pain's post-mitigation deferral ticks and Defy's takedown "
+            "clear/heal are represented in the ordered participant timeline."
+        )
+    elif effect_type in {
         "defensive_start",
         "target_mitigation",
         "target_threshold_health",

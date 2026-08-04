@@ -80,6 +80,7 @@ from calculator.optimizer import (
 )
 from calculator.stats import MAX_LEVEL
 from calculator.stats import calculate_total_stats, get_item_stats
+from calculator.timeline_coverage import applicability_exclusion_sources
 from calculator.scenario import (
     MAX_ALLIES,
     MAX_ENEMIES,
@@ -1840,30 +1841,27 @@ _BIS_OBJECTIVES: dict[str, dict[str, str]] = {
     },
 }
 
-# These two items have defensive effects that materially change a survival-
-# coupled score, but their trigger/timing ledgers are not yet implemented.
-# They must remain visible as audit receipts and out of the ranked set rather
-# than being ranked as if their tooltip effects were zero.
-_BIS_UNMODELED_DEFENSIVE_EFFECTS: dict[str, str] = {
+_BIS_CERTIFIED_DEFENSIVE_EFFECTS: dict[str, str] = {
     "Eclipse": (
-        "Eclipse shield trigger, amount, and two-second expiry are not yet "
-        "event-modelled; the candidate is withheld instead of ranking on "
-        "damage-only behavior."
+        "Ever Rising Moon's two-hit trigger creates a timestamped self shield "
+        "with its sourced melee/ranged amount and two-second expiry."
     ),
     "Death's Dance": (
-        "Death's Dance Ignore Pain damage deferral and Defy reset are not yet "
-        "event-modelled; the candidate is withheld instead of ranking on "
-        "armor-only behavior."
+        "Ignore Pain splits post-mitigation physical/magic damage into sourced "
+        "true-damage ticks; Defy clears the remaining store and heals on a "
+        "qualifying takedown."
     ),
-}
-
-_BIS_CERTIFIED_DEFENSIVE_EFFECTS: dict[str, str] = {
     "Sundered Sky": (
         "Lightshield Strike's first-hit heal is timestamped and included in "
         "the participant survival/eHP ledger; any sourced temporary-health "
         "overheal is applied through the same ordered heal event."
     ),
 }
+
+# Retained as an explicit API field for clients that display the audit
+# contract.  A non-empty entry means the candidate is withheld; CP6 now
+# certifies Eclipse and Death's Dance through the ordered event walk.
+_BIS_UNMODELED_DEFENSIVE_EFFECTS: dict[str, str] = {}
 
 
 def _bis_defensive_effect_receipt(
@@ -2220,6 +2218,26 @@ def api_bis():
                 allies=candidate_allies,
                 focus_participant_id=("main" if subject_team == "main" else subject_id),
             )
+            candidate_coverage = combat.get("timeline_coverage", {})
+            timing_exclusions = applicability_exclusion_sources(candidate_coverage)
+            if timing_exclusions:
+                names = ", ".join(timing_exclusions)
+                withheld_candidates.append(
+                    {
+                        "name": candidate["name"],
+                        "icon": _https_icon(candidate.get("icon", "")),
+                        "reason": "candidate_excluded_unresolved_timing",
+                        "exclusion_type": "applicability",
+                        "excluded_sources": timing_exclusions,
+                        "detail": (
+                            "Candidate was excluded before BIS ranking because "
+                            f"{names} has no sourced hit boundary for this "
+                            "rotation."
+                        ),
+                        "timeline_coverage": candidate_coverage,
+                    }
+                )
+                continue
             objective = combat["objective"]
             focus = next(
                 row
@@ -2308,8 +2326,18 @@ def api_bis():
             f"receipts; {first['champion']} · {first['name']}: {first['reason']}"
         )
     candidate_count = len(candidates)
+    timing_excluded = [
+        row
+        for row in withheld_candidates
+        if row.get("reason") == "candidate_excluded_unresolved_timing"
+    ]
+    blocking_withheld = [
+        row
+        for row in withheld_candidates
+        if row.get("reason") != "candidate_excluded_unresolved_timing"
+    ]
     coverage_complete = (
-        bool(certified_ranked) and not partial_ranked and not withheld_candidates
+        bool(certified_ranked) and not partial_ranked and not blocking_withheld
     )
     return jsonify(
         {
@@ -2341,12 +2369,16 @@ def api_bis():
             "coverage": {
                 "complete": coverage_complete,
                 "certification": (
-                    "bis_event_order_certified"
-                    if coverage_complete
+                    "bis_event_order_certified_with_exclusions"
+                    if coverage_complete and timing_excluded
                     else (
-                        "bis_certified_subset_not_exhaustive"
-                        if certified_ranked
-                        else "bis_no_certified_candidates"
+                        "bis_event_order_certified"
+                        if coverage_complete
+                        else (
+                            "bis_certified_subset_not_exhaustive"
+                            if certified_ranked
+                            else "bis_no_certified_candidates"
+                        )
                     )
                 ),
                 "note": (
@@ -2366,10 +2398,17 @@ def api_bis():
                         )
                     )
                 )
+                + (
+                    f" {len(timing_excluded)} candidate timing receipt(s) were "
+                    "excluded before ranking."
+                    if timing_excluded
+                    else ""
+                )
                 + (f" {target_coverage_note}" if target_coverage_note else ""),
             },
             "target_coverage_filtered": len(target_coverage_filtered),
             "target_coverage_note": target_coverage_note,
+            "timing_excluded_candidate_count": len(timing_excluded),
         }
     )
 

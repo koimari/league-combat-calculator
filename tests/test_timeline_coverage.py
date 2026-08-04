@@ -1,6 +1,33 @@
 """Contracts for combining fight-order precision receipts."""
 
-from src.calculator.timeline_coverage import combine_timeline_coverages
+import pytest
+
+from src.calculator.timeline_coverage import (
+    applicability_exclusion_sources,
+    combine_timeline_coverages,
+)
+
+
+@pytest.mark.parametrize(
+    "source",
+    ["muramana_ability", "proc_Eclipse", "shaped_charge_Bastionbreaker"],
+)
+def test_audited_item_timing_can_be_excluded_before_ranking(source):
+    assert applicability_exclusion_sources(
+        {"complete": False, "coarse_sources": [source]}
+    ) == [source]
+
+
+def test_unknown_coarse_source_cannot_hide_inside_item_exclusion():
+    assert (
+        applicability_exclusion_sources(
+            {
+                "complete": False,
+                "coarse_sources": ["proc_Eclipse", "periodic_unknown"],
+            }
+        )
+        == []
+    )
 
 
 def test_combined_receipt_stays_exact_when_every_target_is_exact():
