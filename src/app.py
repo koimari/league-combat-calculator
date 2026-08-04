@@ -1332,6 +1332,9 @@ def api_config():
             "champion_engine": {
                 "registered_count": len(_ENGINE_CHAMPIONS),
                 "reviewed_count": len(_VERIFIED_CHAMPIONS),
+                "generated_count": 0,
+                "unreviewed_count": 0,
+                "module_contract": "full_entry_wiki_receipt",
                 "generic_enabled": _generic_engine_enabled(),
             },
             "keystones": keystone_catalog(),

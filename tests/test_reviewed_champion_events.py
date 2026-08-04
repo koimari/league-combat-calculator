@@ -22,12 +22,7 @@ def _stats(name: str, level: int = 6):
 
 def test_all_173_modules_parse_without_a_generic_runtime_fallback():
     for name in registered_champion_names():
-        expected_kind = (
-            "reviewed_module"
-            if name in _CUSTOM_CHAMPION_MODULES
-            else "generated_packet_module"
-        )
-        assert engine_registration_kind(name) == expected_kind, name
+        assert engine_registration_kind(name) == "reviewed_module", name
         champion, stats = _stats(name)
         result = parse_champion_abilities(
             champion,

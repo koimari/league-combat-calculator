@@ -30,7 +30,7 @@ def test_every_cached_champion_has_an_importable_engine_registration():
         for name in _CUSTOM_CHAMPION_MODULES
     )
     assert all(
-        engine_registration_kind(name) == "generated_packet_module"
+        engine_registration_kind(name) == "reviewed_module"
         for name in _GENERATED_CHAMPION_MODULES
     )
 
@@ -54,7 +54,7 @@ def test_generic_registration_runs_through_the_same_validated_parser():
     }
 
     for champion in champions.values():
-        if engine_registration_kind(champion["name"]) != "generated_packet_module":
+        if champion["name"] not in _GENERATED_CHAMPION_MODULES:
             continue
         result = parse_champion_abilities(
             champion,

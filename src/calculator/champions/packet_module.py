@@ -1,8 +1,8 @@
-"""Shared runtime for generated, explicit Wiki/Axword champion packets.
+"""Shared runtime for explicit, source-receipted Wiki/Axword champion packets.
 
-The generated champion modules each select their own packet specification at
-build time.  This helper only evaluates those already-selected formulas; it
-does not inspect attributes or choose an archetype at runtime.
+Each champion module selects its own packet specification at build time.
+This helper only evaluates those already-selected formulas; it does not
+inspect attributes or choose an archetype at runtime.
 """
 
 from __future__ import annotations

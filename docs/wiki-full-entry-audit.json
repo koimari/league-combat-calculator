@@ -1,6 +1,2953 @@
 {
   "audit": "league_wiki_full_parent_entry",
+  "champion_module_failures": [],
+  "champion_modules": [
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "aatrox",
+      "name": "Aatrox",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "ahri",
+      "name": "Ahri",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "akali",
+      "name": "Akali",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "akshan",
+      "name": "Akshan",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "alistar",
+      "name": "Alistar",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "ambessa",
+      "name": "Ambessa",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "amumu",
+      "name": "Amumu",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "anivia",
+      "name": "Anivia",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "annie",
+      "name": "Annie",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "aphelios",
+      "name": "Aphelios",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "ashe",
+      "name": "Ashe",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "aurelion_sol",
+      "name": "Aurelion Sol",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "aurora",
+      "name": "Aurora",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "azir",
+      "name": "Azir",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "bard",
+      "name": "Bard",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "belveth",
+      "name": "Bel'Veth",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "blitzcrank",
+      "name": "Blitzcrank",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "brand",
+      "name": "Brand",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "braum",
+      "name": "Braum",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "briar",
+      "name": "Briar",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "caitlyn",
+      "name": "Caitlyn",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "camille",
+      "name": "Camille",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "cassiopeia",
+      "name": "Cassiopeia",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "chogath",
+      "name": "Cho'Gath",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "corki",
+      "name": "Corki",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "darius",
+      "name": "Darius",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "diana",
+      "name": "Diana",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "dr_mundo",
+      "name": "Dr. Mundo",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.draven",
+      "name": "Draven",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.ekko",
+      "name": "Ekko",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.elise",
+      "name": "Elise",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.evelynn",
+      "name": "Evelynn",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "ezreal",
+      "name": "Ezreal",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.fiddlesticks",
+      "name": "Fiddlesticks",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.fiora",
+      "name": "Fiora",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.fizz",
+      "name": "Fizz",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "galio",
+      "name": "Galio",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.gangplank",
+      "name": "Gangplank",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.garen",
+      "name": "Garen",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "gnar",
+      "name": "Gnar",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.gragas",
+      "name": "Gragas",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.graves",
+      "name": "Graves",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.gwen",
+      "name": "Gwen",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.hecarim",
+      "name": "Hecarim",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.heimerdinger",
+      "name": "Heimerdinger",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.hwei",
+      "name": "Hwei",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.illaoi",
+      "name": "Illaoi",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.irelia",
+      "name": "Irelia",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.ivern",
+      "name": "Ivern",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.janna",
+      "name": "Janna",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "jarvan_iv",
+      "name": "Jarvan IV",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.jax",
+      "name": "Jax",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "jayce",
+      "name": "Jayce",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.jhin",
+      "name": "Jhin",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "jinx",
+      "name": "Jinx",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.k_sante",
+      "name": "K'Sante",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "kaisa",
+      "name": "Kai'Sa",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "kalista",
+      "name": "Kalista",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.karma",
+      "name": "Karma",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "karthus",
+      "name": "Karthus",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.kassadin",
+      "name": "Kassadin",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.katarina",
+      "name": "Katarina",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.kayle",
+      "name": "Kayle",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.kayn",
+      "name": "Kayn",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.kennen",
+      "name": "Kennen",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.kha_zix",
+      "name": "Kha'Zix",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.kindred",
+      "name": "Kindred",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.kled",
+      "name": "Kled",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "kogmaw",
+      "name": "Kog'Maw",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.leblanc",
+      "name": "LeBlanc",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.lee_sin",
+      "name": "Lee Sin",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.leona",
+      "name": "Leona",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.lillia",
+      "name": "Lillia",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "lissandra",
+      "name": "Lissandra",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.locke",
+      "name": "Locke",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.lucian",
+      "name": "Lucian",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.lulu",
+      "name": "Lulu",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.lux",
+      "name": "Lux",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.malphite",
+      "name": "Malphite",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.malzahar",
+      "name": "Malzahar",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.maokai",
+      "name": "Maokai",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.master_yi",
+      "name": "Master Yi",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.mel",
+      "name": "Mel",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.milio",
+      "name": "Milio",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.miss_fortune",
+      "name": "Miss Fortune",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.mordekaiser",
+      "name": "Mordekaiser",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.morgana",
+      "name": "Morgana",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.naafiri",
+      "name": "Naafiri",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.nami",
+      "name": "Nami",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.nasus",
+      "name": "Nasus",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.nautilus",
+      "name": "Nautilus",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.neeko",
+      "name": "Neeko",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.nidalee",
+      "name": "Nidalee",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.nilah",
+      "name": "Nilah",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.nocturne",
+      "name": "Nocturne",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.nunu_willump",
+      "name": "Nunu & Willump",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.olaf",
+      "name": "Olaf",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "orianna",
+      "name": "Orianna",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "ornn",
+      "name": "Ornn",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.pantheon",
+      "name": "Pantheon",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.poppy",
+      "name": "Poppy",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.pyke",
+      "name": "Pyke",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "qiyana",
+      "name": "Qiyana",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.quinn",
+      "name": "Quinn",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "rakan",
+      "name": "Rakan",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.rammus",
+      "name": "Rammus",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.rek_sai",
+      "name": "Rek'Sai",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.rell",
+      "name": "Rell",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.renata_glasc",
+      "name": "Renata Glasc",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.renekton",
+      "name": "Renekton",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.rengar",
+      "name": "Rengar",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.riven",
+      "name": "Riven",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.rumble",
+      "name": "Rumble",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.ryze",
+      "name": "Ryze",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.samira",
+      "name": "Samira",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.sejuani",
+      "name": "Sejuani",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.senna",
+      "name": "Senna",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.seraphine",
+      "name": "Seraphine",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.sett",
+      "name": "Sett",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.shaco",
+      "name": "Shaco",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "shen",
+      "name": "Shen",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "shyvana",
+      "name": "Shyvana",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.singed",
+      "name": "Singed",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.sion",
+      "name": "Sion",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.sivir",
+      "name": "Sivir",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.skarner",
+      "name": "Skarner",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.smolder",
+      "name": "Smolder",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.sona",
+      "name": "Sona",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "soraka",
+      "name": "Soraka",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.swain",
+      "name": "Swain",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.sylas",
+      "name": "Sylas",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "syndra",
+      "name": "Syndra",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "tahm_kench",
+      "name": "Tahm Kench",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "taliyah",
+      "name": "Taliyah",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.talon",
+      "name": "Talon",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.taric",
+      "name": "Taric",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.teemo",
+      "name": "Teemo",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.thresh",
+      "name": "Thresh",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.tristana",
+      "name": "Tristana",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.trundle",
+      "name": "Trundle",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.tryndamere",
+      "name": "Tryndamere",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.twisted_fate",
+      "name": "Twisted Fate",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.twitch",
+      "name": "Twitch",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.udyr",
+      "name": "Udyr",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.urgot",
+      "name": "Urgot",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.varus",
+      "name": "Varus",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "vayne",
+      "name": "Vayne",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.veigar",
+      "name": "Veigar",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.vel_koz",
+      "name": "Vel'Koz",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.vex",
+      "name": "Vex",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "vi",
+      "name": "Vi",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.viego",
+      "name": "Viego",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.viktor",
+      "name": "Viktor",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.vladimir",
+      "name": "Vladimir",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.volibear",
+      "name": "Volibear",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.warwick",
+      "name": "Warwick",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "wukong",
+      "name": "Wukong",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.xayah",
+      "name": "Xayah",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.xerath",
+      "name": "Xerath",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.xin_zhao",
+      "name": "Xin Zhao",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.yasuo",
+      "name": "Yasuo",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.yone",
+      "name": "Yone",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.yorick",
+      "name": "Yorick",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.yunara",
+      "name": "Yunara",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.yuumi",
+      "name": "Yuumi",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.zaahen",
+      "name": "Zaahen",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.zac",
+      "name": "Zac",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.zed",
+      "name": "Zed",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.zeri",
+      "name": "Zeri",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "ziggs",
+      "name": "Ziggs",
+      "review_status": null,
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.zilean",
+      "name": "Zilean",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.zoe",
+      "name": "Zoe",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    },
+    {
+      "invalid_slots": [],
+      "manifest_review_status": "reviewed_packet",
+      "missing_slots": [],
+      "module": "generated.zyra",
+      "name": "Zyra",
+      "review_status": "reviewed_packet",
+      "slots": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "source_receipts": 1,
+      "status": "ready"
+    }
+  ],
   "counts": {
+    "champion_modules_expected": 173,
+    "champion_modules_ready": 173,
+    "champion_modules_review_pending": 0,
     "champions_expected": 173,
     "entries_audited": 382,
     "items_expected": 209,

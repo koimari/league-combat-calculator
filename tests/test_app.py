@@ -1388,7 +1388,7 @@ def test_config_exclusivity_groups_cover_frontend_optimizer_families():
     assert "Ravenous Hydra" in groups["Hydra"]
 
 
-def test_frontend_does_not_promote_generated_packets_to_reviewed():
+def test_frontend_exposes_the_full_reviewed_module_contract():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
     assert 'entry.engine_registration === "reviewed_module"' in source
@@ -1396,7 +1396,7 @@ def test_frontend_does_not_promote_generated_packets_to_reviewed():
         "if (entry.availability?.ready) engine.reviewed.add(entry.name);" not in source
     )
     assert "champion.engineRegistration = entry.engine_registration || null" in source
-    assert "generated packet · not reviewed" in source
+    assert "generated packet · not reviewed" not in source
 
 
 @pytest.mark.parametrize(
@@ -1719,7 +1719,7 @@ class TestIconUrlsAreHttps:
         assert all(champion["verified"] for champion in champions)
         by_name = {champion["name"]: champion for champion in champions}
         assert by_name["Aatrox"]["engine_registration"] == "reviewed_module"
-        assert by_name["Teemo"]["engine_registration"] == "generated_packet_module"
+        assert by_name["Teemo"]["engine_registration"] == "reviewed_module"
 
 
 class TestChampionVerifiedFlags:
