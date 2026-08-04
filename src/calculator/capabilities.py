@@ -15,6 +15,32 @@ from typing import Any, Mapping
 
 CAPABILITY_SCHEMA_VERSION = 1
 
+# This is an API receipt, not a UI hint.  It names the one ordered ledger that
+# resolves every participant's state transition.  Keeping the phase names in
+# the public contract lets the frontend explain why a result is unavailable
+# instead of reconstructing event order from individual controls.
+PARTICIPANT_LEDGER_CONTRACT: dict[str, Any] = {
+    "name": "ordered_participant_ledger",
+    "certification": "event_order_certified",
+    "phases": [
+        "state_transition",
+        "shield_or_temporary_health",
+        "damage_and_mitigation",
+        "reactive_effect",
+        "healing_and_regeneration",
+        "death_or_terminal_cutoff",
+    ],
+    "target_policy": {
+        "self": "self",
+        "all_teammates": "all_selected_teammates",
+        "self_and_all_teammates": "self_and_all_selected_teammates",
+        "self_and_one_teammate": "self_and_first_selected_teammate",
+        "one_teammate": "first_selected_teammate",
+        "none_selected": "no_selected_teammate",
+    },
+    "fail_closed": True,
+}
+
 
 # The descriptor is deliberately explicit: each public capability has a
 # payload key, browser state path, control token, and availability metadata.
@@ -260,6 +286,7 @@ def public_capability_contract(
     return {
         "schema_version": CAPABILITY_SCHEMA_VERSION,
         "scope": "public_calculator_controls",
+        "participant_ledger": deepcopy(PARTICIPANT_LEDGER_CONTRACT),
         "participants": participants,
         "scenario": {
             "supported": True,
