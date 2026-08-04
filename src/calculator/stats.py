@@ -313,8 +313,8 @@ def calculate_total_stats(
     # Stateful item inputs are explicit scenario state, not guessed proc
     # counts. Apply their sourced health/mana before conversions (Awe,
     # Muramana, Seraph's) read those totals.
-    _, _, input_bonus_health, input_bonus_mana = input_option_stat_bonuses(
-        items, item_options
+    _, input_move_speed_percent, input_bonus_health, input_bonus_mana = (
+        input_option_stat_bonuses(items, item_options)
     )
     total_item_stats["health"] += input_bonus_health
     total_item_stats["mana"] += input_bonus_mana
@@ -358,6 +358,15 @@ def calculate_total_stats(
         is_melee=is_melee,
         level=level,
         item_options=item_options,
+        total_move_speed=(
+            base_stats["move_speed"] + total_item_stats["move_speed_flat"]
+        )
+        * (
+            1.0
+            + (total_item_stats["move_speed_percent"] + input_move_speed_percent)
+            / 100.0
+        ),
+        adaptive_type=str(champion_data.get("adaptiveType", "")),
     )
 
     # Ability power: base + items + converted AP, then the additive %AP
@@ -498,10 +507,12 @@ def calculate_total_stats(
         "bonus_mana": round(total_item_stats["mana"]),
         "resource_regen_per_second": resource_regen_per_second,
         "lifesteal_percent": total_item_stats["lifesteal_percent"],
-        "omnivamp_percent": total_item_stats["omnivamp_percent"],
+        "omnivamp_percent": total_item_stats["omnivamp_percent"]
+        + bonuses.bonus_omnivamp,
         "heal_and_shield_power_percent": total_item_stats[
             "heal_and_shield_power_percent"
-        ],
+        ]
+        + bonuses.bonus_heal_shield_power * 100.0,
         "health_regen_percent": total_item_stats["health_regen_percent"],
         "tenacity_percent": total_item_stats["tenacity_percent"],
         "gold_per_10": total_item_stats["gold_per_10"],
@@ -510,6 +521,7 @@ def calculate_total_stats(
         ],
         "ability_haste": total_item_stats["ability_haste"] + bonuses.ability_haste,
         "basic_ability_haste": bonuses.basic_ability_haste,
+        "ultimate_haste": bonuses.ultimate_haste,
         "level": level,
         "is_melee": is_melee,
         "move_speed": final_move_speed,

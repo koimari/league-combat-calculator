@@ -17,6 +17,7 @@ Examples::
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib
 import json
 import re
@@ -205,6 +206,128 @@ def _runtime_entry_receipt(kind: str, name: str) -> dict[str, Any]:
     }
 
 
+def _compact_text(value: Any, limit: int = 280) -> str:
+    """Keep source-derived expectations readable without copying full pages."""
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def _expected_effects(kind: str, record: dict[str, Any] | None) -> dict[str, Any]:
+    """Summarise what the cached source says the runtime must account for.
+
+    The full Wiki page receipt proves which document was read; this compact
+    expectation ledger makes the reasoning actionable by naming every cached
+    passive/active (or champion ability slot), its descriptions, and the
+    runtime gap that still blocks it.  It intentionally does not claim that a
+    description is a formula or that a module is certified merely because a
+    name is present.
+    """
+    if not isinstance(record, dict):
+        return {
+            "source_record": "missing",
+            "effects": [],
+            "runtime_gaps": ["no cached runtime record"],
+        }
+    if kind == "item":
+        effects: list[dict[str, Any]] = []
+        branches = []
+        for branch in ("passives", "active", "actives"):
+            values = record.get(branch) or []
+            if isinstance(values, dict):
+                values = [values]
+            if not isinstance(values, list):
+                continue
+            for entry in values:
+                if not isinstance(entry, dict):
+                    continue
+                descriptions = []
+                for key in (
+                    "description",
+                    "shortDescription",
+                    "longDescription",
+                    "effects",
+                ):
+                    value = entry.get(key)
+                    if isinstance(value, list):
+                        descriptions.extend(_compact_text(row) for row in value)
+                    elif value:
+                        descriptions.append(_compact_text(value))
+
+                def _nonzero_stat(value: Any) -> bool:
+                    if not isinstance(value, dict):
+                        return False
+                    for field in (
+                        "flat",
+                        "percent",
+                        "perLevel",
+                        "percentPerLevel",
+                        "percentBase",
+                        "percentBonus",
+                    ):
+                        try:
+                            if float(value.get(field, 0) or 0) != 0:
+                                return True
+                        except (TypeError, ValueError):
+                            continue
+                    return False
+
+                stat_keys = sorted(
+                    str(key)
+                    for key, value in (entry.get("stats") or {}).items()
+                    if isinstance(value, dict) and _nonzero_stat(value)
+                )
+                effects.append(
+                    {
+                        "branch": branch,
+                        "name": _compact_text(entry.get("name") or branch),
+                        "descriptions": descriptions,
+                        "stat_fields": stat_keys,
+                        "has_cooldown": entry.get("cooldown") is not None,
+                        "has_range": entry.get("range") is not None,
+                    }
+                )
+            branches.append(branch)
+        return {
+            "source_record": "cached_item_entry",
+            "branches_present": branches,
+            "effects": effects,
+            "effect_count": len(effects),
+        }
+    abilities = record.get("abilities") or {}
+    effects = []
+    for slot in REQUIRED_CHAMPION_SLOTS:
+        variants = abilities.get(slot) or []
+        if not isinstance(variants, list):
+            variants = [variants]
+        rows = []
+        for variant in variants:
+            if not isinstance(variant, dict):
+                continue
+            descriptions = []
+            for effect in variant.get("effects") or []:
+                if isinstance(effect, dict):
+                    descriptions.append(_compact_text(effect.get("description")))
+                elif effect:
+                    descriptions.append(_compact_text(effect))
+            rows.append(
+                {
+                    "name": _compact_text(variant.get("name") or slot),
+                    "description_count": len(
+                        [value for value in descriptions if value]
+                    ),
+                    "descriptions": [value for value in descriptions if value],
+                    "effect_count": len(variant.get("effects") or []),
+                }
+            )
+        effects.append({"slot": slot, "variants": rows, "variant_count": len(rows)})
+    return {
+        "source_record": "cached_champion_entry",
+        "required_slots": list(REQUIRED_CHAMPION_SLOTS),
+        "effects": effects,
+        "effect_count": sum(row["variant_count"] for row in effects),
+    }
+
+
 def _query(args: list[str]) -> Any:
     command = [sys.executable, str(WIKI_QUERY), *args]
     completed = subprocess.run(
@@ -294,11 +417,30 @@ def audit_entry(kind: str, name: str) -> dict[str, Any]:
         "sections": _section_receipt(int(page["page_id"])),
     }
     runtime = _runtime_entry_receipt(kind, name)
+    expected = _expected_effects(kind, _cached_record(kind, name))
+    if kind == "item":
+        status = str(runtime.get("status") or "")
+        expected["runtime_gaps"] = (
+            [str(runtime.get("reason"))]
+            if status in {"blocked", "review_pending"} and runtime.get("reason")
+            else []
+        )
+    else:
+        expected["runtime_gaps"] = (
+            []
+            if runtime.get("ready")
+            else [str(runtime.get("reason") or "champion module receipt is incomplete")]
+        )
+    expected_json = json.dumps(expected, ensure_ascii=False, sort_keys=True)
     receipt["full_entry_review"] = {
         "required": True,
         "parent_entry_read": receipt["has_text"],
         "runtime_reasoned": runtime.get("ready", False),
         "runtime": runtime,
+        "expected_effects": expected,
+        "expected_effects_sha256": hashlib.sha256(
+            expected_json.encode("utf-8")
+        ).hexdigest(),
     }
     if kind == "champion":
         refs = _champion_template_refs(wikitext)

@@ -62,6 +62,38 @@ class TestStatefulItemStats:
         stats = calculate_total_stats(ahri_data, 18, [item])
         assert stats["ability_power"] == 77
 
+    def test_cp13_tiered_mana_state_and_ultimate_haste_flow_into_stats(
+        self, ahri_data: dict
+    ):
+        manamune = get_item_by_name("Manamune")
+        stats = calculate_total_stats(
+            ahri_data,
+            18,
+            [manamune],
+            item_options={"Manamune": {"manaflow_bonus_mana": 360}},
+        )
+        assert stats["bonus_mana"] == get_item_stats(manamune)["mana"] + 360
+        assert stats["attack_damage"] > get_item_stats(manamune)["attack_damage"]
+
+        hexplate = get_item_by_name("Experimental Hexplate")
+        assert calculate_total_stats(ahri_data, 18, [hexplate])["ultimate_haste"] == 30
+
+        swiftmarch = get_item_by_name("Swiftmarch")
+        swift_stats = calculate_total_stats(ahri_data, 18, [swiftmarch])
+        assert swift_stats["ability_power"] > 0
+
+    def test_cp13_feast_state_adds_only_when_explicitly_active(self, ahri_data: dict):
+        item = get_item_by_name("Endless Hunger")
+        inactive = calculate_total_stats(ahri_data, 18, [item])
+        active = calculate_total_stats(
+            ahri_data,
+            18,
+            [item],
+            item_options={"Endless Hunger": {"feast_active_seconds": 8}},
+        )
+        assert inactive["omnivamp_percent"] < active["omnivamp_percent"]
+        assert active["omnivamp_percent"] == inactive["omnivamp_percent"] + 15
+
     @pytest.mark.parametrize("item_name", ["Fimbulwinter", "Winter's Approach"])
     def test_awe_converts_bonus_mana_to_bonus_health(
         self, ahri_data: dict, item_name: str

@@ -35,7 +35,6 @@ _BLOCKED_REASONS: dict[str, str] = {
     "Manamune": "Awe's mana scaling and Manaflow stack state are not modelled.",
     "Redemption": "Intervention's target-max-health true damage is not modelled.",
     "Rod of Ages": "Timeless minute stacks and level gain are not modelled.",
-    "Swiftmarch": "Noxian Fervor's movement-speed-scaled adaptive force is not modelled.",
     "Umbral Glaive": "Nightstalker's first-attack true damage is not modelled.",
     "Whispering Circlet": "Manaflow stacks and the Diadem transformation state are not modelled.",
     "Winter's Approach": "Awe's mana scaling and Manaflow transformation state are not modelled.",

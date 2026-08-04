@@ -102,6 +102,116 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         "source_url": "https://wiki.leagueoflegends.com/en-us/Rod_of_Ages",
         "source_revision_id": 3984371,
     },
+    "Actualizer": {
+        "options": {
+            "mana_made_real_active": {
+                "type": "int",
+                "label": "Mana Made Real active",
+                "default": 0,
+                "min": 0,
+                "max": 1,
+                "step": 1,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Actualizer",
+        "source_revision_id": 3991377,
+    },
+    "Hubris": {
+        "options": {
+            "eminence_stacks": {
+                "type": "int",
+                "label": "Eminence stacks",
+                "default": 0,
+                "min": 0,
+                "max": 1000,
+                "step": 1,
+            },
+            "eminence_active_seconds": {
+                "type": "int",
+                "label": "Eminence seconds remaining",
+                "default": 0,
+                "min": 0,
+                "max": 90,
+                "step": 5,
+            },
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Hubris",
+        "source_revision_id": 4013949,
+    },
+    "Endless Hunger": {
+        "options": {
+            "feast_active_seconds": {
+                "type": "int",
+                "label": "Feast seconds remaining",
+                "default": 0,
+                "min": 0,
+                "max": 8,
+                "step": 1,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Endless_Hunger",
+        "source_revision_id": 4019625,
+    },
+    "Archangel's Staff": {
+        "options": {
+            "manaflow_bonus_mana": {
+                "type": "int",
+                "label": "Manaflow bonus mana",
+                "default": 0,
+                "min": 0,
+                "max": 360,
+                "step": 6,
+                "bonus_mana_per_unit": 1.0,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Archangel%27s_Staff",
+        "source_revision_id": 3989100,
+    },
+    "Manamune": {
+        "options": {
+            "manaflow_bonus_mana": {
+                "type": "int",
+                "label": "Manaflow bonus mana",
+                "default": 0,
+                "min": 0,
+                "max": 360,
+                "step": 6,
+                "bonus_mana_per_unit": 1.0,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Manamune",
+        "source_revision_id": 3982212,
+    },
+    "Whispering Circlet": {
+        "options": {
+            "manaflow_bonus_mana": {
+                "type": "int",
+                "label": "Manaflow bonus mana",
+                "default": 0,
+                "min": 0,
+                "max": 360,
+                "step": 8,
+                "bonus_mana_per_unit": 1.0,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Whispering_Circlet",
+        "source_revision_id": 4015267,
+    },
+    "Winter's Approach": {
+        "options": {
+            "manaflow_bonus_mana": {
+                "type": "int",
+                "label": "Manaflow bonus mana",
+                "default": 0,
+                "min": 0,
+                "max": 360,
+                "step": 6,
+                "bonus_mana_per_unit": 1.0,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Winter%27s_Approach",
+        "source_revision_id": 3984418,
+    },
     "Yun Tal Wildarrows": {
         "options": {
             "crit_stacks": {
@@ -206,6 +316,22 @@ def stat_conversion_metadata(item_name: str) -> dict[str, float]:
         "ap_per_mana_regen_unit",
         "mana_regen_threshold_percent",
         "rapids_bonus_ap",
+        "ultimate_haste",
+        "adaptive_force_per_total_move_speed",
+        "bonus_mana_to_heal_shield_power_ratio",
+        "manaflow_charge_interval",
+        "manaflow_max_charges",
+        "manaflow_bonus_mana_per_trigger",
+        "manaflow_bonus_mana_per_champion",
+        "manaflow_bonus_mana_max",
+        "manaflow_transform_bonus_mana",
+        "timeless_bonus_health_per_stack",
+        "timeless_bonus_mana_per_stack",
+        "timeless_bonus_ap_per_stack",
+        "timeless_max_stacks",
+        "feast_omnivamp_percent",
+        "feast_duration",
+        "feast_trigger_window",
     )
     if item_name in {"Bandlepipes", "Experimental Hexplate"}:
         keys += ("bonus_attack_speed_melee", "bonus_attack_speed_ranged")
@@ -325,6 +451,75 @@ def input_option_crit_chance(
     )
 
 
+def input_option_value(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+    item_name: str,
+    option_name: str,
+) -> int:
+    """Return one validated bounded state value for an equipped item."""
+    if not item_options or item_name not in _item_names(items):
+        return 0
+    options = item_options.get(item_name) or {}
+    return int(options.get(option_name, 0) or 0)
+
+
+def hubris_input_bonus_ad(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+) -> float:
+    """Return Hubris Eminence AD while its explicit window is active."""
+    if "Hubris" not in _item_names(items):
+        return 0.0
+    stacks = input_option_value(items, item_options, "Hubris", "eminence_stacks")
+    active_seconds = input_option_value(
+        items, item_options, "Hubris", "eminence_active_seconds"
+    )
+    return hubris_eminence_bonus_ad(
+        stacks=stacks,
+        active=active_seconds > 0,
+        item_name="Hubris",
+    )
+
+
+def endless_hunger_input_omnivamp(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+) -> float:
+    """Return Feast's explicit remaining-window omnivamp percentage."""
+    if "Endless Hunger" not in _item_names(items):
+        return 0.0
+    remaining = input_option_value(
+        items, item_options, "Endless Hunger", "feast_active_seconds"
+    )
+    if remaining <= 0:
+        return 0.0
+    return required_effect_value("Endless Hunger", "feast_omnivamp_percent")
+
+
+def swiftmarch_adaptive_force(
+    items: list[dict[str, Any]],
+    *,
+    total_move_speed: float,
+    item_name: str = "Swiftmarch",
+) -> float:
+    """Return Noxian Fervor's adaptive force from total movement speed."""
+    if item_name not in _item_names(items):
+        return 0.0
+    ratio = required_effect_value(item_name, "adaptive_force_per_total_move_speed")
+    return max(0.0, float(total_move_speed)) * float(ratio)
+
+
+def item_option_active(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+    item_name: str,
+    option_name: str,
+) -> bool:
+    """Return whether a boolean-like integer item state is active."""
+    return input_option_value(items, item_options, item_name, option_name) > 0
+
+
 # ---------------------------------------------------------------------------
 # Complete offline item effect snapshot
 # ---------------------------------------------------------------------------
@@ -436,6 +631,9 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "famine_base_ability_haste": 5.0,
         "famine_bonus_ad_to_ability_haste_melee": 0.13,
         "famine_bonus_ad_to_ability_haste_ranged": 0.10,
+        "feast_omnivamp_percent": 15.0,
+        "feast_duration": 8.0,
+        "feast_trigger_window": 3.0,
     },
     # ── Spellblade (after ability, next auto, mutually exclusive) ─────────
     "Sheen": {
@@ -653,6 +851,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Ultimate Proc ─────────────────────────────────────────────────────
     "Malignance": {
         "type": "ult_proc",
+        "ultimate_haste": 20.0,
         "formula": "flat_ap",
         "damage_type": "magic",
         # Hatefog: (60 + 5% AP) per second for 3s = 180 + 15% AP per
@@ -808,10 +1007,15 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # increased ability damage
         "base_amp": 0.15,
         "amp_per_100_bonus_mana": 0.005,
+        "mana_made_real_duration": 8.0,
+        "mana_cost_multiplier": 2.0,
+        "basic_cooldown_progress_multiplier": 1.30,
+        "mana_made_real_cooldown": 60.0,
     },
     # ── Ultimate-Triggered Attack Speed Buffs ──────────────────────────────
     "Experimental Hexplate": {
         "type": "ult_attack_speed_buff",
+        "ultimate_haste": 30.0,
         # Overdrive: melee 50% / ranged 35% bonus AS (+ MS) for 8s on R cast,
         # 30s CD.
         "bonus_attack_speed_melee": 50.0,
@@ -821,6 +1025,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Fiendhunter Bolts": {
         "type": "ult_empowered_autos",
+        "ultimate_haste": 30.0,
         # After R, next 3 autos within 8s gain 50% bonus AS and
         # guaranteed crit at 80% crit damage. If would have naturally
         # crit, deals normal crit + 15% of AD as true damage.
@@ -958,6 +1163,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "base": 70.0,
         "max_hp_ratio": 0.06,
         "cooldown": 30.0,
+        "permanent_bonus_health_ratio": 0.10,
         # Wiki Damage tags: this item proc is tagged BasicAttack.
         "basic_damage": True,
     },
@@ -1006,6 +1212,22 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Archangel's Staff": {
         "type": "stat_conversion",
         "bonus_mana_to_ap_ratio": 0.01,
+        "manaflow_charge_interval": 8.0,
+        "manaflow_max_charges": 5,
+        "manaflow_bonus_mana_per_trigger": 5.0,
+        "manaflow_bonus_mana_per_champion": 10.0,
+        "manaflow_bonus_mana_max": 360.0,
+        "manaflow_transform_bonus_mana": 360.0,
+    },
+    "Manamune": {
+        "type": "stat_conversion",
+        "max_mana_to_ad_ratio": 0.02,
+        "manaflow_charge_interval": 8.0,
+        "manaflow_max_charges": 4,
+        "manaflow_bonus_mana_per_trigger": 3.0,
+        "manaflow_bonus_mana_per_champion": 6.0,
+        "manaflow_bonus_mana_max": 360.0,
+        "manaflow_transform_bonus_mana": 360.0,
     },
     "Fimbulwinter": {
         "type": "stat_conversion",
@@ -1014,6 +1236,45 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Winter's Approach": {
         "type": "stat_conversion",
         "bonus_mana_to_health_ratio": 0.15,
+        "manaflow_charge_interval": 8.0,
+        "manaflow_max_charges": 4,
+        "manaflow_bonus_mana_per_trigger": 3.0,
+        "manaflow_bonus_mana_per_champion": 6.0,
+        "manaflow_bonus_mana_max": 360.0,
+        "manaflow_transform_bonus_mana": 360.0,
+    },
+    "Whispering Circlet": {
+        "type": "stat_conversion",
+        "bonus_mana_to_heal_shield_power_ratio": 0.005,
+        "manaflow_charge_interval": 8.0,
+        "manaflow_max_charges": 5,
+        "manaflow_bonus_mana_per_trigger": 4.0,
+        "manaflow_bonus_mana_per_champion": 8.0,
+        "manaflow_bonus_mana_max": 360.0,
+        "manaflow_transform_bonus_mana": 360.0,
+    },
+    "Rod of Ages": {
+        "type": "stat_conversion",
+        "timeless_bonus_health_per_stack": 10.0,
+        "timeless_bonus_mana_per_stack": 30.0,
+        "timeless_bonus_ap_per_stack": 3.0,
+        "timeless_max_stacks": 10,
+        "timeless_level_gain_at_max": True,
+    },
+    "Swiftmarch": {
+        "type": "stat_conversion",
+        "adaptive_force_per_total_move_speed": 0.05,
+    },
+    "Zeke's Convergence": {
+        "type": "ult_proc",
+        "ultimate_haste": 15.0,
+        "formula": "flat",
+        "damage_type": "magic",
+        "base": 150.0,
+        "tick_interval": 0.25,
+        "duration": 5.0,
+        "cooldown": 45.0,
+        "slow_percent": 30.0,
     },
     "Dawncore": {
         "type": "stat_conversion",
@@ -1388,6 +1649,9 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "temporary_health_duration",
         }
     ),
+    # The cached item packet does not carry Actualizer's active cooldown;
+    # the full Wiki entry is the source receipt for this code-owned value.
+    "Actualizer": frozenset({"mana_made_real_cooldown"}),
 }
 
 
@@ -2384,10 +2648,11 @@ def _compile_ultimate_proc(
 ) -> UltimateProcEffect:
     """Compile one ultimate-triggered duration formula."""
     required = _RequiredValues(item_name, values)
-    if required.value("formula") != "flat_ap":
+    formula = required.value("formula")
+    if formula not in {"flat_ap", "flat"}:
         raise ValueError(f"Unsupported ultimate proc formula for {item_name!r}")
     base = required.number("base")
-    ap_ratio = required.number("ap_ratio")
+    ap_ratio = required.number("ap_ratio") if formula == "flat_ap" else 0.0
 
     def raw(inputs: DamageInputs) -> float:
         return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
@@ -2403,9 +2668,13 @@ def _compile_ultimate_proc(
         source,
         required.number("duration"),
         # Malignance's Hatefog packet and its target MR reduction are one
-        # parser-owned sibling effect.  A missing value must not silently
-        # compile a damage-only version of the item.
-        required.number("mr_reduction"),
+        # parser-owned sibling effect. Other ultimate procs have no MR
+        # reduction and therefore carry an explicit zero.
+        (
+            required.number("mr_reduction")
+            if item_name == "Malignance"
+            else (required.number("mr_reduction") if "mr_reduction" in values else 0.0)
+        ),
     )
 
 
@@ -3984,6 +4253,9 @@ class StatBonuses:
     bonus_pen_percent: float  # Terminus dark stacks (armor AND magic pen)
     basic_ability_haste: float  # Spear of Shojin (Q/W/E only)
     ability_haste: float  # Endless Hunger Famine's bonus-AD conversion
+    ultimate_haste: float  # Scorn/Hexcharged/Night Vigil/Cryocombustion
+    bonus_omnivamp: float  # Endless Hunger Feast's explicit takedown window
+    bonus_heal_shield_power: float  # Harmony's bonus-mana conversion
     bonus_move_speed_percent: float  # Mejai's 10+ Glory
     item_bonus_health_multiplier: float  # Warmog's Vitality (1.0 = none)
     # Permanent item-owned subsets used by Kai'Sa's Living Weapon. These
@@ -4005,6 +4277,8 @@ def resolve_stat_effects(
     level: int,
     item_options: Mapping[str, Mapping[str, int]] | None = None,
     bonus_attack_damage: float = 0.0,
+    total_move_speed: float = 0.0,
+    adaptive_type: str = "",
 ) -> StatBonuses:
     """Compile the stat-granting passives of *items* into one bundle.
 
@@ -4033,21 +4307,55 @@ def resolve_stat_effects(
         + bloodmail_bonus_ad(items, effective_bonus_health)
         + steraks_bonus_ad(items, base_attack_damage)
     )
+    hubris_ad = hubris_input_bonus_ad(items, item_options)
+    feast_omnivamp = endless_hunger_input_omnivamp(items, item_options)
     famine_ability_haste = endless_hunger_ability_haste(
         items,
-        bonus_attack_damage=bonus_attack_damage + permanent_bonus_ad,
+        bonus_attack_damage=bonus_attack_damage + permanent_bonus_ad + hubris_ad,
         is_melee=is_melee,
     )
+    ultimate_haste = sum(
+        float(ITEM_EFFECTS[name].get("ultimate_haste", 0.0))
+        for name in _item_names(items)
+        if name in ITEM_EFFECTS
+    )
+    harmony_ratio = (
+        required_effect_value(
+            "Whispering Circlet", "bonus_mana_to_heal_shield_power_ratio"
+        )
+        if "Whispering Circlet" in _item_names(items)
+        else 0.0
+    )
+    harmony_power = (
+        harmony_ratio * bonus_mana
+        if "Whispering Circlet" in _item_names(items)
+        else 0.0
+    )
+    adaptive_force = swiftmarch_adaptive_force(items, total_move_speed=total_move_speed)
+    normalized_adaptive_type = str(adaptive_type or "").upper()
+    adaptive_ap = (
+        adaptive_force
+        if normalized_adaptive_type in {"AP", "ABILITY_POWER", "MAGIC_DAMAGE"}
+        else 0.0
+    )
+    adaptive_ad = (
+        adaptive_force
+        if normalized_adaptive_type in {"AD", "ATTACK_DAMAGE", "PHYSICAL_DAMAGE"}
+        else 0.0
+    )
     return StatBonuses(
-        bonus_ap=permanent_bonus_ap + flowing_water_bonus_ap(items),
+        bonus_ap=permanent_bonus_ap + flowing_water_bonus_ap(items) + adaptive_ap,
         bonus_health=mana_bonus_health,
         ap_multiplier=ap_multiplier(items),
-        bonus_ad=permanent_bonus_ad,
+        bonus_ad=permanent_bonus_ad + hubris_ad + adaptive_ad,
         attack_speed_percent=passive_attack_speed_bonus(items, is_melee),
         bonus_resists=terminus_resists,
         bonus_pen_percent=terminus_pen,
         basic_ability_haste=basic_ability_haste(items),
         ability_haste=famine_ability_haste,
+        ultimate_haste=ultimate_haste,
+        bonus_omnivamp=feast_omnivamp,
+        bonus_heal_shield_power=harmony_power,
         bonus_move_speed_percent=input_move_speed,
         item_bonus_health_multiplier=health_multiplier,
         permanent_bonus_ap=permanent_bonus_ap,
