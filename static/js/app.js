@@ -3732,6 +3732,7 @@ document.addEventListener("change", (event) => {
   const roleSelect = event.target.closest("#roleSelect");
   if (roleSelect) {
     state.attacker.role = roleSelect.value || null;
+    normalizeAttackerBootsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     invalidateOptimization();
     return render();
