@@ -1537,7 +1537,11 @@ def api_calculate():
                 fight_params,
                 main_stats=main_stats,
                 main_defenses=resolve_starting_defenses(
-                    champion_data["name"], level, main_stats, items
+                    champion_data["name"],
+                    level,
+                    main_stats,
+                    items,
+                    item_options=fight_params.item_options,
                 ),
                 enemies=[],
                 allies=allies,
@@ -1645,7 +1649,11 @@ def api_calculate():
             external_stat_bonuses=fight_params.ally_stat_bonuses,
         )
         main_defenses = resolve_starting_defenses(
-            champion_data["name"], level, main_stats, items
+            champion_data["name"],
+            level,
+            main_stats,
+            items,
+            item_options=fight_params.item_options,
         )
         response["combat"] = build_participant_timeline(
             champion_data,

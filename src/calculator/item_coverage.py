@@ -210,6 +210,23 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
 # package.  Any equipped mechanic that changes their incoming damage, health,
 # shields, or combat healing must either be represented here or stop the run.
 _TARGET_MODELED_REASONS: dict[str, str] = {
+    "Armored Advance": (
+        "Noxian Endurance grants a typed five-second physical shield after an "
+        "authored champion physical-damage event; Plating reduces basic damage."
+    ),
+    "Chainlaced Crushers": (
+        "Noxian Persistence grants a typed five-second magic shield after an "
+        "authored champion magic-damage event."
+    ),
+    "Celestial Opposition": (
+        "Blessing of the Mountain applies the sourced 35% champion-damage "
+        "reduction and its two-second linger in the ordered ledger."
+    ),
+    "Bloodthirster": (
+        "Ichorshield converts certified lifesteal excess into a persistent "
+        "general shield capped by the sourced level maximum; an explicit "
+        "starting state is accepted when supplied."
+    ),
     "Banshee's Veil": (
         "Annul is ready at the opening and consumes every packet belonging to "
         "the first source-backed Q/W/E/R cast; auto attacks and later casts land."
@@ -317,16 +334,6 @@ _TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
 }
 
 _TARGET_BLOCKED_REASONS: dict[str, str] = {
-    "Armored Advance": (
-        "Noxian Endurance's physical-damage shield trigger is not modelled; "
-        "the item's separately sourced Plating reduction is not enough to "
-        "price the complete target loadout."
-    ),
-    "Bloodthirster": "Ichorshield's accumulated starting shield is not modelled.",
-    "Celestial Opposition": (
-        "Blessing of the Mountain's opening damage reduction is not modelled."
-    ),
-    "Chainlaced Crushers": "Noxian Persistence's magic shield is not modelled.",
     "Fimbulwinter": "Awe bonus health and Everlasting shields are not modelled.",
     "Force of Nature": (
         "Steadfast's target-side stack timing is not modelled: champion magic "

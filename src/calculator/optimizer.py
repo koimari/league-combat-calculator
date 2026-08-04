@@ -233,7 +233,13 @@ def _evaluate_build_uncached(
             role_quest_complete=base_params.role_quest_complete,
             external_stat_bonuses=base_params.ally_stat_bonuses,
         )
-        defenses = resolve_starting_defenses(champion_data["name"], level, stats, items)
+        defenses = resolve_starting_defenses(
+            champion_data["name"],
+            level,
+            stats,
+            items,
+            item_options=base_params.item_options,
+        )
         try:
             combat = build_participant_timeline(
                 champion_data,

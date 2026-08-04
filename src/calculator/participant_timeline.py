@@ -330,21 +330,36 @@ def _has_stateful_defense(defenses: Any) -> bool:
     erase a state change. The caller falls back to the authoritative event
     walk when any such field is armed.
     """
-    return any(
-        float(getattr(defenses, field, 0.0) or 0.0) > 0.0
-        for field in (
-            "threshold_shield_amount",
-            "threshold_health_bonus",
-            "threshold_health_heal",
-            "revive_health_amount",
+    return (
+        any(
+            float(getattr(defenses, field, 0.0) or 0.0) > 0.0
+            for field in (
+                "threshold_shield_amount",
+                "threshold_health_bonus",
+                "threshold_health_heal",
+                "revive_health_amount",
+                "reactive_shield_amount",
+            )
         )
-    ) or bool(getattr(defenses, "spell_shield_ready", False))
+        or bool(getattr(defenses, "spell_shield_ready", False))
+        or float(getattr(defenses, "incoming_damage_multiplier", 1.0) or 1.0) < 1.0
+    )
 
 
 def _has_ordered_item_defense(items: Iterable[Mapping[str, Any]]) -> bool:
     """Return whether a loadout needs the full ordered item event walk."""
     return any(
-        str(item.get("name", "")) in {"Eclipse", "Death's Dance"} for item in items
+        str(item.get("name", ""))
+        in {
+            "Eclipse",
+            "Death's Dance",
+            "Armored Advance",
+            "Chainlaced Crushers",
+            "Celestial Opposition",
+            "Bloodthirster",
+            "Fimbulwinter",
+        }
+        for item in items
     )
 
 
@@ -916,6 +931,49 @@ def _simulate_survival(
             ),
             "spell_shield_used": False,
             "spell_shield_blocked_cast": None,
+            "ichorshield_cap": max(
+                0.0,
+                float(getattr(defenses, "bloodthirster_shield_cap", 0.0) or 0.0),
+            ),
+            "ichorshield_current": max(
+                0.0,
+                float(getattr(defenses, "bloodthirster_starting_shield", 0.0) or 0.0),
+            ),
+            "reactive_shield_amount": max(
+                0.0, float(getattr(defenses, "reactive_shield_amount", 0.0) or 0.0)
+            ),
+            "reactive_shield_damage_type": str(
+                getattr(defenses, "reactive_shield_damage_type", "") or ""
+            ),
+            "reactive_shield_duration": max(
+                0.0, float(getattr(defenses, "reactive_shield_duration", 0.0) or 0.0)
+            ),
+            "reactive_shield_cooldown": max(
+                0.0, float(getattr(defenses, "reactive_shield_cooldown", 0.0) or 0.0)
+            ),
+            "reactive_shield_source": str(
+                getattr(defenses, "reactive_shield_source", "") or ""
+            ),
+            "reactive_shield_cooldown_until": 0.0,
+            "incoming_damage_multiplier": max(
+                0.0, float(getattr(defenses, "incoming_damage_multiplier", 1.0) or 1.0)
+            ),
+            "incoming_damage_linger": max(
+                0.0, float(getattr(defenses, "incoming_damage_linger", 0.0) or 0.0)
+            ),
+            "incoming_damage_cooldown": max(
+                0.0, float(getattr(defenses, "incoming_damage_cooldown", 0.0) or 0.0)
+            ),
+            "incoming_damage_source": str(
+                getattr(defenses, "incoming_damage_source", "") or ""
+            ),
+            "incoming_damage_until": (
+                float("inf")
+                if float(getattr(defenses, "incoming_damage_multiplier", 1.0) or 1.0)
+                < 1.0
+                else 0.0
+            ),
+            "incoming_damage_cooldown_until": 0.0,
             "healing_received_multiplier": max(
                 1.0,
                 float(getattr(defenses, "healing_received_multiplier", 1.0) or 1.0),
@@ -1252,8 +1310,11 @@ def _simulate_survival(
             amount = max(0.0, float(shield.get("amount", 0.0) or 0.0))
             if expires_at <= event_time + 1e-9:
                 if amount > 0.0:
-                    state["shields"]["general_shield"] = max(
-                        0.0, state["shields"]["general_shield"] - amount
+                    shield_key = str(shield.get("shield_key", "general_shield"))
+                    if shield_key not in state["shields"]:
+                        shield_key = "general_shield"
+                    state["shields"][shield_key] = max(
+                        0.0, state["shields"][shield_key] - amount
                     )
                     state["support_shield_expired"] += amount
                 continue
@@ -1268,6 +1329,8 @@ def _simulate_survival(
             state["timed_shields"],
             key=lambda entry: float(entry.get("expires_at", float("inf"))),
         ):
+            if str(shield.get("shield_key", "general_shield")) != "general_shield":
+                continue
             available = max(0.0, float(shield.get("amount", 0.0) or 0.0))
             used = min(available, remaining)
             if used <= 0.0:
@@ -1283,6 +1346,39 @@ def _simulate_survival(
         if remaining > 0.0:
             used = min(state["shields"]["general_shield"], remaining)
             state["shields"]["general_shield"] -= used
+            absorbed += used
+        state["timed_shields"] = [
+            shield
+            for shield in state["timed_shields"]
+            if float(shield.get("amount", 0.0) or 0.0) > 1e-9
+        ]
+        return absorbed
+
+    def _consume_typed_shield(
+        state: dict[str, Any], shield_key: str, amount: float
+    ) -> float:
+        """Consume a typed timed shield before the untimed typed pool."""
+        remaining = max(0.0, float(amount))
+        absorbed = 0.0
+        for shield in sorted(
+            state["timed_shields"],
+            key=lambda entry: float(entry.get("expires_at", float("inf"))),
+        ):
+            if str(shield.get("shield_key", "general_shield")) != shield_key:
+                continue
+            available = max(0.0, float(shield.get("amount", 0.0) or 0.0))
+            used = min(available, remaining)
+            if used <= 0.0:
+                continue
+            shield["amount"] = available - used
+            remaining -= used
+            absorbed += used
+            state["shields"][shield_key] = max(0.0, state["shields"][shield_key] - used)
+            if remaining <= 1e-9:
+                break
+        if remaining > 0.0:
+            used = min(state["shields"][shield_key], remaining)
+            state["shields"][shield_key] -= used
             absorbed += used
         state["timed_shields"] = [
             shield
@@ -1489,6 +1585,23 @@ def _simulate_survival(
         if str(event.get("healing_category", "")) == "vamp":
             return 1.0
         return float(state["healing_received_multiplier"])
+
+    def _apply_ichorshield(
+        state: dict[str, Any], event: MutableMapping[str, Any], excess: float
+    ) -> float:
+        """Convert explicit lifesteal excess into Bloodthirster's shield."""
+        if str(event.get("healing_category", "")) != "vamp":
+            return 0.0
+        capacity = max(0.0, state["ichorshield_cap"] - state["ichorshield_current"])
+        converted = min(max(0.0, float(excess)), capacity)
+        if converted <= 0.0:
+            return 0.0
+        state["ichorshield_current"] += converted
+        state["shields"]["general_shield"] += converted
+        state["support_shield_received"] += converted
+        event["ichorshield_generated"] = round(converted, 6)
+        event["ichorshield_total"] = round(state["ichorshield_current"], 6)
+        return converted
 
     for participant_id, events in support_effects.items():
         for support_index, event in enumerate(events):
@@ -1810,6 +1923,40 @@ def _simulate_survival(
             event["applied_amount"] = 0.0
             event["skipped_reason"] = "attacker_dead"
             continue
+        # Celestial Opposition's Blessed reduction is a target-state modifier,
+        # not a basic-attack modifier.  Apply it to authored champion damage
+        # after the pair engine's resistance math and refresh the exact
+        # lingering window from the hit timestamp.  Reactive item packets are
+        # excluded so a shield or thorns return cannot manufacture a new
+        # champion-hit window.
+        incoming_damage_type = str(event.get("damage_type", ""))
+        if (
+            phase >= 0
+            and source_id in states
+            and source_id != participant_id
+            and not event.get("_reactive")
+            and incoming_damage_type in {"physical", "magic", "true"}
+            and state["incoming_damage_multiplier"] < 1.0
+            and event_time < state["incoming_damage_until"]
+        ):
+            reduction = state["incoming_damage_multiplier"]
+            original_incoming = max(0.0, float(event.get("damage", 0.0) or 0.0))
+            event["damage"] = original_incoming * reduction
+            if annotate:
+                event["incoming_damage_multiplier"] = round(reduction, 6)
+                event["incoming_damage_source"] = state["incoming_damage_source"]
+                event["incoming_damage_reduction"] = round(
+                    original_incoming - event["damage"], 6
+                )
+            if state["incoming_damage_linger"] > 0.0:
+                state["incoming_damage_until"] = (
+                    event_time + state["incoming_damage_linger"]
+                )
+            if state["incoming_damage_cooldown"] > 0.0:
+                state["incoming_damage_cooldown_until"] = max(
+                    state["incoming_damage_cooldown_until"],
+                    event_time + state["incoming_damage_cooldown"],
+                )
         if phase == -1:
             kind = str(event.get("kind", ""))
             amount = max(0.0, float(event.get("amount", 0.0)))
@@ -1866,7 +2013,10 @@ def _simulate_survival(
                     and excess > 0.0
                     else 0.0
                 )
-                state["overhealing"] += excess - temporary_health
+                ichor_converted = _apply_ichorshield(
+                    state, event, excess - temporary_health
+                )
+                state["overhealing"] += excess - temporary_health - ichor_converted
                 state["health"] += received
                 state["healing_received"] += received
                 if temporary_health > 0.0:
@@ -1889,7 +2039,9 @@ def _simulate_survival(
                     event["raw_amount"] = round(amount, 6)
                     event["reduced_amount"] = round(reduced_amount, 6)
                     event["healing_reduction_factor"] = round(reduction_factor, 6)
-                    event["overheal"] = round(excess - temporary_health, 6)
+                    event["overheal"] = round(
+                        excess - temporary_health - ichor_converted, 6
+                    )
                 event["applied_amount"] = round(received, 6)
                 if event.get("_defy_trigger_id") is not None:
                     state["defy_heal_received"] += received
@@ -1929,7 +2081,10 @@ def _simulate_survival(
                 and excess > 0.0
                 else 0.0
             )
-            state["overhealing"] += excess - temporary_health
+            ichor_converted = _apply_ichorshield(
+                state, event, excess - temporary_health
+            )
+            state["overhealing"] += excess - temporary_health - ichor_converted
             state["health"] += received
             state["healing_received"] += received
             if temporary_health > 0.0:
@@ -1951,7 +2106,9 @@ def _simulate_survival(
                 event["raw_amount"] = round(amount, 6)
                 event["reduced_amount"] = round(reduced_amount, 6)
                 event["healing_reduction_factor"] = round(reduction_factor, 6)
-                event["overheal"] = round(excess - temporary_health, 6)
+                event["overheal"] = round(
+                    excess - temporary_health - ichor_converted, 6
+                )
             event["applied_amount"] = round(received, 6)
             if event.get("_defy_trigger_id") is not None:
                 state["defy_heal_received"] += received
@@ -1999,8 +2156,7 @@ def _simulate_survival(
         event_absorbed = 0.0
         if damage_type in {"magic", "physical"}:
             key = f"{damage_type}_shield"
-            absorbed = min(state["shields"][key], amount)
-            state["shields"][key] -= absorbed
+            absorbed = _consume_typed_shield(state, key, amount)
             amount -= absorbed
             state["shield_absorbed"] += absorbed
             event_absorbed += absorbed
@@ -2064,6 +2220,49 @@ def _simulate_survival(
         if event["damage"] > 0.0:
             state["last_damage_time"] = float(event_time)
             _schedule_doran_shield_recovery(participant_id, event, float(event_time))
+        # Noxian Endurance/Persistence grant their typed shield *after* the
+        # triggering champion hit.  Keep the shield in the timed pool so it
+        # expires and is consumed in the same order as every other sourced
+        # barrier; the cooldown is explicit and never inferred from a second
+        # packet in the same cast.
+        reactive_type = state["reactive_shield_damage_type"]
+        if (
+            event["damage"] > 0.0
+            and source_id in states
+            and source_id != participant_id
+            and not event.get("_reactive")
+            and reactive_type in {"physical", "magic"}
+            and damage_type == reactive_type
+            and event_time >= state["reactive_shield_cooldown_until"]
+            and state["reactive_shield_amount"] > 0.0
+            and state["reactive_shield_duration"] > 0.0
+        ):
+            # ``resolve_starting_defenses`` applies Spirit Visage once when it
+            # resolves this item-owned amount. Do not multiply it again at
+            # trigger time.
+            shield_amount = state["reactive_shield_amount"]
+            state["shields"][f"{reactive_type}_shield"] += shield_amount
+            expires_at = event_time + state["reactive_shield_duration"]
+            state["timed_shields"].append(
+                {
+                    "amount": shield_amount,
+                    "expires_at": expires_at,
+                    "shield_key": f"{reactive_type}_shield",
+                    "source": state["reactive_shield_source"],
+                }
+            )
+            state["support_shield_received"] += shield_amount
+            state["reactive_shield_cooldown_until"] = (
+                event_time + state["reactive_shield_cooldown"]
+            )
+            if annotate:
+                event["reactive_shield_triggered"] = {
+                    "amount": round(shield_amount, 6),
+                    "damage_type": reactive_type,
+                    "source": state["reactive_shield_source"],
+                    "expires_at": round(expires_at, 3),
+                    "cooldown_until": round(state["reactive_shield_cooldown_until"], 3),
+                }
         if (
             source_id in states
             and source_id != participant_id

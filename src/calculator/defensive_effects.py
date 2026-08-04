@@ -24,9 +24,24 @@ class StartingDefenses:
     magic_shield: float = 0.0
     physical_shield: float = 0.0
     general_shield: float = 0.0
+    # A reactive shield is granted after an explicitly typed incoming
+    # champion-damage event (for example Noxian Endurance/Persistence).  It
+    # is kept separate from opening shields so the trigger packet cannot
+    # accidentally absorb the hit that armed it.
+    reactive_shield_amount: float = 0.0
+    reactive_shield_damage_type: str = ""
+    reactive_shield_duration: float = 0.0
+    reactive_shield_cooldown: float = 0.0
+    reactive_shield_source: str = ""
+    bloodthirster_shield_cap: float = 0.0
+    bloodthirster_starting_shield: float = 0.0
     spell_shield_ready: bool = False
     spell_shield_source: str = ""
     basic_damage_multiplier: float = 1.0
+    incoming_damage_multiplier: float = 1.0
+    incoming_damage_linger: float = 0.0
+    incoming_damage_cooldown: float = 0.0
+    incoming_damage_source: str = ""
     basic_damage_flat_reduction: float = 0.0
     basic_damage_flat_reduction_cap: float = 0.0
     critical_strike_damage_multiplier: float = 1.0
@@ -58,26 +73,52 @@ class StartingDefenses:
 
     def public_summary(self) -> dict[str, object]:
         """Return a JSON-safe explanation of the resolved state."""
+        incoming_damage = {
+            "basic_damage_multiplier": round(self.basic_damage_multiplier, 3),
+            "basic_damage_flat_reduction": round(self.basic_damage_flat_reduction, 1),
+            "basic_damage_flat_reduction_cap": round(
+                self.basic_damage_flat_reduction_cap, 3
+            ),
+            "critical_strike_damage_multiplier": round(
+                self.critical_strike_damage_multiplier, 3
+            ),
+        }
+        if (
+            self.incoming_damage_multiplier != 1.0
+            or self.incoming_damage_linger > 0.0
+            or self.incoming_damage_cooldown > 0.0
+            or self.incoming_damage_source
+        ):
+            incoming_damage.update(
+                {
+                    "incoming_damage_multiplier": round(
+                        self.incoming_damage_multiplier, 3
+                    ),
+                    "incoming_damage_linger": round(self.incoming_damage_linger, 1),
+                    "incoming_damage_cooldown": round(self.incoming_damage_cooldown, 1),
+                    "source": self.incoming_damage_source,
+                }
+            )
         return {
             "magic_shield": round(self.magic_shield, 1),
             "physical_shield": round(self.physical_shield, 1),
             "general_shield": round(self.general_shield, 1),
+            "reactive_shield": {
+                "amount": round(self.reactive_shield_amount, 1),
+                "damage_type": self.reactive_shield_damage_type,
+                "duration": round(self.reactive_shield_duration, 1),
+                "cooldown": round(self.reactive_shield_cooldown, 1),
+                "source": self.reactive_shield_source,
+            },
+            "ichorshield": {
+                "cap": round(self.bloodthirster_shield_cap, 1),
+                "starting": round(self.bloodthirster_starting_shield, 1),
+            },
             "spell_shield": {
                 "ready": bool(self.spell_shield_ready),
                 "source": self.spell_shield_source,
             },
-            "incoming_damage": {
-                "basic_damage_multiplier": round(self.basic_damage_multiplier, 3),
-                "basic_damage_flat_reduction": round(
-                    self.basic_damage_flat_reduction, 1
-                ),
-                "basic_damage_flat_reduction_cap": round(
-                    self.basic_damage_flat_reduction_cap, 3
-                ),
-                "critical_strike_damage_multiplier": round(
-                    self.critical_strike_damage_multiplier, 3
-                ),
-            },
+            "incoming_damage": incoming_damage,
             "healing_received_multiplier": round(self.healing_received_multiplier, 3),
             "threshold_shield": {
                 "amount": round(self.threshold_shield_amount, 1),
@@ -253,6 +294,39 @@ _ANNUL_SOURCES = {
     ),
 }
 
+_OPENING_DEFENSE_SOURCES = {
+    "Armored Advance": DefenseSource(
+        label="Armored Advance — Noxian Endurance / Plating",
+        source_url="https://wiki.leagueoflegends.com/en-us/Armored_Advance",
+        revision_id=4013702,
+        revision_timestamp="2026-04-29T23:40:53Z",
+    ),
+    "Chainlaced Crushers": DefenseSource(
+        label="Chainlaced Crushers — Noxian Persistence",
+        source_url="https://wiki.leagueoflegends.com/en-us/Chainlaced_Crushers",
+        revision_id=4013705,
+        revision_timestamp="2026-04-29T23:41:11Z",
+    ),
+    "Celestial Opposition": DefenseSource(
+        label="Celestial Opposition — Blessing of the Mountain",
+        source_url="https://wiki.leagueoflegends.com/en-us/Celestial_Opposition",
+        revision_id=4028004,
+        revision_timestamp="2026-06-13T11:27:01Z",
+    ),
+    "Bloodthirster": DefenseSource(
+        label="Bloodthirster — Ichorshield",
+        source_url="https://wiki.leagueoflegends.com/en-us/Bloodthirster",
+        revision_id=4025103,
+        revision_timestamp="2026-06-04T21:03:44Z",
+    ),
+    "Fimbulwinter": DefenseSource(
+        label="Fimbulwinter — Everlasting",
+        source_url="https://wiki.leagueoflegends.com/en-us/Fimbulwinter",
+        revision_id=3984419,
+        revision_timestamp="2026-01-14T22:19:05Z",
+    ),
+}
+
 
 def _shieldbow_shield_amount(level: int) -> float:
     effect = ITEM_EFFECTS["Immortal Shieldbow"]
@@ -270,6 +344,20 @@ def _linear_level_value(minimum: float, maximum: float, level: int) -> float:
     """Interpolate a Wiki ``X to Y based on level`` value across levels 1–18."""
     scaling_level = min(18, max(1, level))
     return minimum + (maximum - minimum) * (scaling_level - 1) / 17.0
+
+
+def _late_level_value(minimum: float, maximum: float, level: int, start: int) -> float:
+    """Resolve a value that stays at its base until a later level.
+
+    Armored Advance, Chainlaced Crushers, and Bloodthirster currently use
+    ``base, then +15/+10 per level from level 9``.  Keeping this interpolation
+    here makes the level boundary explicit and testable rather than hiding a
+    literal in a call site.
+    """
+    if level < start:
+        return minimum
+    steps = max(1, 18 - start + 1)
+    return min(maximum, minimum + (maximum - minimum) * (level - start + 1) / steps)
 
 
 def _lifeline_defense(
@@ -342,6 +430,7 @@ def resolve_starting_defenses(
     level: int,
     stats: dict[str, float],
     items: Sequence[Mapping[str, Any]] = (),
+    item_options: Mapping[str, Mapping[str, int]] | None = None,
 ) -> StartingDefenses:
     """Resolve sourced champion and item defenses ready at fight start."""
     champion_defenses = StartingDefenses()
@@ -352,9 +441,20 @@ def resolve_starting_defenses(
     magic_shield = champion_defenses.magic_shield
     physical_shield = champion_defenses.physical_shield
     general_shield = champion_defenses.general_shield
+    reactive_shield_amount = champion_defenses.reactive_shield_amount
+    reactive_shield_damage_type = champion_defenses.reactive_shield_damage_type
+    reactive_shield_duration = champion_defenses.reactive_shield_duration
+    reactive_shield_cooldown = champion_defenses.reactive_shield_cooldown
+    reactive_shield_source = champion_defenses.reactive_shield_source
+    bloodthirster_shield_cap = champion_defenses.bloodthirster_shield_cap
+    bloodthirster_starting_shield = champion_defenses.bloodthirster_starting_shield
     spell_shield_ready = bool(champion_defenses.spell_shield_ready)
     spell_shield_source = champion_defenses.spell_shield_source
     basic_damage_multiplier = champion_defenses.basic_damage_multiplier
+    incoming_damage_multiplier = champion_defenses.incoming_damage_multiplier
+    incoming_damage_linger = champion_defenses.incoming_damage_linger
+    incoming_damage_cooldown = champion_defenses.incoming_damage_cooldown
+    incoming_damage_source = champion_defenses.incoming_damage_source
     basic_damage_flat_reduction = champion_defenses.basic_damage_flat_reduction
     basic_damage_flat_reduction_cap = champion_defenses.basic_damage_flat_reduction_cap
     critical_strike_damage_multiplier = (
@@ -381,6 +481,83 @@ def resolve_starting_defenses(
     defy_heal_ticks = champion_defenses.defy_heal_ticks
     assumptions = list(champion_defenses.assumptions)
     sources = list(champion_defenses.sources)
+
+    for defensive_name in (
+        "Armored Advance",
+        "Chainlaced Crushers",
+        "Celestial Opposition",
+    ):
+        if defensive_name not in names:
+            continue
+        effect = ITEM_EFFECTS[defensive_name]
+        source = _OPENING_DEFENSE_SOURCES[defensive_name]
+        sources.append(source)
+        if defensive_name == "Armored Advance":
+            basic_damage_multiplier *= float(
+                required_effect_value(defensive_name, "basic_damage_multiplier")
+            )
+        if "reactive_shield_base" in effect:
+            reactive_shield_amount = _late_level_value(
+                float(effect["reactive_shield_base"]),
+                float(effect["reactive_shield_max"]),
+                level,
+                int(effect["reactive_shield_scale_start_level"]),
+            ) + float(effect["reactive_shield_bonus_health_ratio"]) * float(
+                stats.get("bonus_health", 0.0)
+            )
+            reactive_shield_damage_type = str(effect["reactive_shield_damage_type"])
+            reactive_shield_duration = float(effect["reactive_shield_duration"])
+            reactive_shield_cooldown = float(effect["reactive_shield_cooldown"])
+            reactive_shield_source = f"{defensive_name} — Noxian"
+            assumptions.append(
+                f"{defensive_name}'s typed reactive shield is ready and is granted "
+                f"after champion {reactive_shield_damage_type} damage."
+            )
+        if defensive_name == "Celestial Opposition":
+            incoming_damage_multiplier = float(effect["incoming_damage_multiplier"])
+            incoming_damage_linger = float(effect["incoming_damage_linger"])
+            incoming_damage_cooldown = float(effect["incoming_damage_cooldown"])
+            incoming_damage_source = "Celestial Opposition — Blessed"
+            assumptions.append(
+                "Blessing of the Mountain starts Blessed, reduces incoming champion "
+                "damage by 35%, and lingers for two seconds after the last hit."
+            )
+
+    if "Bloodthirster" in names:
+        source = _OPENING_DEFENSE_SOURCES["Bloodthirster"]
+        sources.append(source)
+        effect = ITEM_EFFECTS["Bloodthirster"]
+        bloodthirster_shield_cap = _late_level_value(
+            float(effect["ichorshield_min"]),
+            float(effect["ichorshield_max"]),
+            level,
+            int(effect["ichorshield_scale_start_level"]),
+        )
+        supplied = 0
+        if item_options:
+            supplied = int(
+                (item_options.get("Bloodthirster") or {}).get("starting_ichorshield", 0)
+            )
+        if supplied > 0:
+            bloodthirster_starting_shield = min(
+                float(supplied), bloodthirster_shield_cap
+            )
+            general_shield += bloodthirster_starting_shield
+            assumptions.append(
+                "Bloodthirster's Ichorshield starting state is explicitly supplied "
+                "by the scenario and capped at the sourced level maximum."
+            )
+        else:
+            assumptions.append(
+                "Bloodthirster's Ichorshield starts empty unless an explicit starting "
+                "shield input is supplied; excess lifesteal healing is not guessed."
+            )
+    if "Fimbulwinter" in names:
+        sources.append(_OPENING_DEFENSE_SOURCES["Fimbulwinter"])
+        assumptions.append(
+            "Fimbulwinter Awe is applied through the typed stat conversion; "
+            "Everlasting requires authored crowd-control metadata and is not inferred."
+        )
 
     annul_name = next(
         (
@@ -510,6 +687,7 @@ def resolve_starting_defenses(
         magic_shield > 0
         or physical_shield > 0
         or general_shield > 0
+        or reactive_shield_amount > 0
         or threshold_shield_amount > 0
     )
     if "Spirit Visage" in names and has_shield:
@@ -518,6 +696,7 @@ def resolve_starting_defenses(
         magic_shield *= multiplier
         physical_shield *= multiplier
         general_shield *= multiplier
+        reactive_shield_amount *= multiplier
         threshold_shield_amount *= multiplier
         assumptions.append("Boundless Vitality increases every modeled shield by 25%.")
         sources.append(_SPIRIT_VISAGE_SOURCE)
@@ -585,9 +764,20 @@ def resolve_starting_defenses(
         magic_shield=magic_shield,
         physical_shield=physical_shield,
         general_shield=general_shield,
+        reactive_shield_amount=reactive_shield_amount,
+        reactive_shield_damage_type=reactive_shield_damage_type,
+        reactive_shield_duration=reactive_shield_duration,
+        reactive_shield_cooldown=reactive_shield_cooldown,
+        reactive_shield_source=reactive_shield_source,
+        bloodthirster_shield_cap=bloodthirster_shield_cap,
+        bloodthirster_starting_shield=bloodthirster_starting_shield,
         spell_shield_ready=spell_shield_ready,
         spell_shield_source=spell_shield_source,
         basic_damage_multiplier=basic_damage_multiplier,
+        incoming_damage_multiplier=incoming_damage_multiplier,
+        incoming_damage_linger=incoming_damage_linger,
+        incoming_damage_cooldown=incoming_damage_cooldown,
+        incoming_damage_source=incoming_damage_source,
         basic_damage_flat_reduction=basic_damage_flat_reduction,
         basic_damage_flat_reduction_cap=basic_damage_flat_reduction_cap,
         critical_strike_damage_multiplier=critical_strike_damage_multiplier,
