@@ -212,6 +212,20 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         "source_url": "https://wiki.leagueoflegends.com/en-us/Winter%27s_Approach",
         "source_revision_id": 3984418,
     },
+    "Bloodthirster": {
+        "options": {
+            "starting_ichorshield": {
+                "type": "int",
+                "label": "Starting Ichorshield",
+                "default": 0,
+                "min": 0,
+                "max": 315,
+                "step": 15,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Bloodthirster",
+        "source_revision_id": 4025103,
+    },
     "Yun Tal Wildarrows": {
         "options": {
             "crit_stacks": {
@@ -1262,6 +1276,15 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Fimbulwinter": {
         "type": "stat_conversion",
         "bonus_mana_to_health_ratio": 0.15,
+        # Everlasting is event-driven.  The participant timeline only arms
+        # this branch when a champion module supplies explicit crowd-control
+        # metadata; it never infers a slow or immobilize from an ability name.
+        "everlasting_base_shield": 100.0,
+        "everlasting_current_mana_ratio": 0.045,
+        "everlasting_multi_target_multiplier": 1.80,
+        "everlasting_duration": 3.0,
+        "everlasting_cooldown": 8.0,
+        "everlasting_trigger_kind": "crowd_control",
     },
     "Winter's Approach": {
         "type": "stat_conversion",
@@ -1348,6 +1371,42 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "heart_nonchampion_damage_cooldown": 3.0,
     },
     # ── Starting defenses (consumed by defensive_effects.py) ─────────────
+    "Armored Advance": {
+        "type": "defensive_start",
+        "basic_damage_multiplier": 0.90,
+        "reactive_shield_damage_type": "physical",
+        "reactive_shield_base": 100.0,
+        "reactive_shield_max": 200.0,
+        "reactive_shield_scale_start_level": 9,
+        "reactive_shield_scale_end_level": 18,
+        "reactive_shield_bonus_health_ratio": 0.08,
+        "reactive_shield_duration": 5.0,
+        "reactive_shield_cooldown": 15.0,
+    },
+    "Chainlaced Crushers": {
+        "type": "defensive_start",
+        "reactive_shield_damage_type": "magic",
+        "reactive_shield_base": 100.0,
+        "reactive_shield_max": 200.0,
+        "reactive_shield_scale_start_level": 9,
+        "reactive_shield_scale_end_level": 18,
+        "reactive_shield_bonus_health_ratio": 0.08,
+        "reactive_shield_duration": 5.0,
+        "reactive_shield_cooldown": 15.0,
+    },
+    "Celestial Opposition": {
+        "type": "defensive_start",
+        "incoming_damage_multiplier": 0.65,
+        "incoming_damage_linger": 2.0,
+        "incoming_damage_cooldown": 20.0,
+    },
+    "Bloodthirster": {
+        "type": "defensive_start",
+        "ichorshield_min": 165.0,
+        "ichorshield_max": 315.0,
+        "ichorshield_scale_start_level": 9,
+        "ichorshield_scale_end_level": 18,
+    },
     "Kaenic Rookern": {
         "type": "defensive_start",
         "magic_shield_max_health_ratio": 0.15,
@@ -1587,6 +1646,46 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
 )
 
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
+    "Armored Advance": frozenset(
+        {
+            "basic_damage_multiplier",
+            "reactive_shield_damage_type",
+            "reactive_shield_base",
+            "reactive_shield_max",
+            "reactive_shield_scale_start_level",
+            "reactive_shield_scale_end_level",
+            "reactive_shield_bonus_health_ratio",
+            "reactive_shield_duration",
+            "reactive_shield_cooldown",
+        }
+    ),
+    "Chainlaced Crushers": frozenset(
+        {
+            "reactive_shield_damage_type",
+            "reactive_shield_base",
+            "reactive_shield_max",
+            "reactive_shield_scale_start_level",
+            "reactive_shield_scale_end_level",
+            "reactive_shield_bonus_health_ratio",
+            "reactive_shield_duration",
+            "reactive_shield_cooldown",
+        }
+    ),
+    "Celestial Opposition": frozenset(
+        {
+            "incoming_damage_multiplier",
+            "incoming_damage_linger",
+            "incoming_damage_cooldown",
+        }
+    ),
+    "Bloodthirster": frozenset(
+        {
+            "ichorshield_min",
+            "ichorshield_max",
+            "ichorshield_scale_start_level",
+            "ichorshield_scale_end_level",
+        }
+    ),
     "Doran's Blade": frozenset(
         {
             "direct_heal_post_mitigation_ratio",
@@ -1619,6 +1718,17 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "heart_tick_interval",
             "heart_champion_damage_cooldown",
             "heart_nonchampion_damage_cooldown",
+        }
+    ),
+    "Fimbulwinter": frozenset(
+        {
+            "bonus_mana_to_health_ratio",
+            "everlasting_base_shield",
+            "everlasting_current_mana_ratio",
+            "everlasting_multi_target_multiplier",
+            "everlasting_duration",
+            "everlasting_cooldown",
+            "everlasting_trigger_kind",
         }
     ),
     "Cull": frozenset({"health_per_on_hit"}),

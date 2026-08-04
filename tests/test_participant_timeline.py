@@ -1770,8 +1770,8 @@ def test_roster_bis_filters_items_with_unsupported_target_mechanics():
     assert "target-side coverage filtered" in body["target_coverage_note"].lower()
 
 
-def test_roster_bis_reports_actionable_target_coverage_for_blocked_mid_loadout():
-    """A blocked enemy card must explain why no replacement build was applied."""
+def test_roster_bis_keeps_supported_mid_boot_target_in_the_candidate_pool():
+    """A modeled mid-lane boot must not blank the entire target BIS panel."""
     app.config["TESTING"] = True
     payload = _bis_request("enemy")
     payload["enemies"][0]["role"] = "mid"
@@ -1786,14 +1786,11 @@ def test_roster_bis_reports_actionable_target_coverage_for_blocked_mid_loadout()
 
     assert response.status_code == 200
     body = response.get_json()
-    assert body["candidates"] == []
+    assert body["candidates"]
     assert body["coverage"]["complete"] is False
     assert body["target_coverage_filtered"] > 0
     assert "target-side coverage filtered" in body["coverage"]["note"].lower()
-    assert any(
-        name in body["target_coverage_note"]
-        for name in ("Heartsteel", "Banshee's Veil", "Armored Advance")
-    )
+    assert "Armored Advance" not in body["target_coverage_note"]
 
 
 def test_bis_never_labels_partial_event_order_as_certified():
@@ -3468,6 +3465,149 @@ def test_search_context_score_walk_matches_legacy_score_receipts():
         legacy = timeline(items, include_receipt=False)
         assert fast == legacy
     assert len(context.panels) == 2, "expected one shared and one new signature"
+
+
+def test_noxian_reactive_shield_is_granted_after_matching_damage_only():
+    source = _dummy_combatant("source", "enemy", health=1000.0)
+    target = Combatant(
+        participant_id="target",
+        team="main",
+        champion_data={"name": "target"},
+        level=18,
+        items=(),
+        stats={"health": 1000.0},
+        defenses=SimpleNamespace(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=0.0,
+            healing_received_multiplier=1.0,
+            reactive_shield_amount=200.0,
+            reactive_shield_damage_type="physical",
+            reactive_shield_duration=5.0,
+            reactive_shield_cooldown=15.0,
+            reactive_shield_source="Armored Advance — Noxian",
+        ),
+    )
+    physical = {
+        "time": 0.0,
+        "damage": 100.0,
+        "damage_type": "physical",
+        "attacker": "source",
+        "target": "target",
+        "_event_id": "physical-hit",
+    }
+    magic = {
+        "time": 0.1,
+        "damage": 100.0,
+        "damage_type": "magic",
+        "attacker": "source",
+        "target": "target",
+        "_event_id": "magic-hit",
+    }
+    result = _simulate_survival(
+        [source, target],
+        {
+            "target": [
+                physical,
+                {**physical, "time": 0.1, "_event_id": "physical-second"},
+                magic,
+            ]
+        },
+        {},
+        {},
+        10.0,
+    )
+
+    assert physical["reactive_shield_triggered"]["amount"] == pytest.approx(200.0)
+    assert "reactive_shield_triggered" not in magic
+    assert result["target"]["shield_absorbed"] == pytest.approx(100.0)
+    assert result["target"]["ending_health"] == pytest.approx(800.0)
+
+
+def test_celestial_opposition_reduction_lingers_two_seconds():
+    source = _dummy_combatant("source", "enemy", health=1000.0)
+    target = Combatant(
+        participant_id="target",
+        team="main",
+        champion_data={"name": "target"},
+        level=1,
+        items=(),
+        stats={"health": 1000.0},
+        defenses=SimpleNamespace(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=0.0,
+            healing_received_multiplier=1.0,
+            incoming_damage_multiplier=0.65,
+            incoming_damage_linger=2.0,
+            incoming_damage_cooldown=20.0,
+            incoming_damage_source="Celestial Opposition — Blessed",
+        ),
+    )
+    first = {
+        "time": 0.0,
+        "damage": 100.0,
+        "damage_type": "magic",
+        "attacker": "source",
+        "target": "target",
+        "_event_id": "first",
+    }
+    second = {**first, "time": 1.0, "_event_id": "second"}
+    third = {**first, "time": 3.1, "_event_id": "third"}
+    _simulate_survival(
+        [source, target],
+        {"target": [first, second, third]},
+        {},
+        {},
+        10.0,
+    )
+
+    assert first["damage"] == pytest.approx(65.0)
+    assert second["damage"] == pytest.approx(65.0)
+    assert third["damage"] == pytest.approx(100.0)
+
+
+def test_bloodthirster_converts_explicit_lifesteal_excess_to_uncapped_duration_shield():
+    source = _dummy_combatant("source", "enemy", health=1000.0)
+    target = Combatant(
+        participant_id="target",
+        team="main",
+        champion_data={"name": "target"},
+        level=18,
+        items=(),
+        stats={"health": 100.0},
+        defenses=SimpleNamespace(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=0.0,
+            healing_received_multiplier=1.0,
+            bloodthirster_shield_cap=315.0,
+            bloodthirster_starting_shield=0.0,
+        ),
+    )
+    damage = {
+        "time": 0.0,
+        "damage": 20.0,
+        "damage_type": "physical",
+        "attacker": "source",
+        "target": "target",
+        "_event_id": "opening-hit",
+    }
+    heal = {
+        "time": 1.0,
+        "amount": 100.0,
+        "kind": "heal",
+        "healing_category": "vamp",
+        "source": "Life steal",
+        "attacker": "target",
+        "target": "target",
+    }
+    result = _simulate_survival(
+        [source, target], {"target": [damage]}, {"target": [heal]}, {}, 10.0
+    )
+
+    assert result["target"]["remaining_shield"] == pytest.approx(80.0)
+    assert result["target"]["support_shield_received"] == pytest.approx(80.0)
 
 
 def test_search_context_keeps_item_heals_and_ignores_post_window_packets():

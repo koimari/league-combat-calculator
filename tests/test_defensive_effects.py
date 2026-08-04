@@ -151,6 +151,49 @@ def test_protoplasm_resolves_level_health_and_bonus_resist_healing():
     assert summary["sources"][0]["revision_id"] == 4046863
 
 
+@pytest.mark.parametrize(
+    ("item", "damage_type"),
+    [("Armored Advance", "physical"), ("Chainlaced Crushers", "magic")],
+)
+def test_noxian_boots_resolve_sourced_reactive_shield(item, damage_type):
+    defenses = resolve_starting_defenses(
+        "Ahri", 18, _stats(bonus_health=500.0), [{"name": item}]
+    )
+
+    assert defenses.reactive_shield_amount == pytest.approx(240.0)
+    assert defenses.reactive_shield_damage_type == damage_type
+    assert defenses.reactive_shield_duration == 5.0
+    assert defenses.reactive_shield_cooldown == 15.0
+    assert defenses.sources[0].revision_id in {4013702, 4013705}
+
+
+def test_celestial_opposition_resolves_blessed_reduction():
+    defenses = resolve_starting_defenses(
+        "Ahri", 18, _stats(), [{"name": "Celestial Opposition"}]
+    )
+
+    assert defenses.incoming_damage_multiplier == pytest.approx(0.65)
+    assert defenses.incoming_damage_linger == 2.0
+    assert defenses.incoming_damage_cooldown == 20.0
+    assert defenses.public_summary()["incoming_damage"]["source"] == (
+        "Celestial Opposition — Blessed"
+    )
+
+
+def test_bloodthirster_starting_shield_requires_explicit_bounded_state():
+    empty = resolve_starting_defenses("Ahri", 18, _stats(), [{"name": "Bloodthirster"}])
+    supplied = resolve_starting_defenses(
+        "Ahri",
+        18,
+        _stats(),
+        [{"name": "Bloodthirster"}],
+        item_options={"Bloodthirster": {"starting_ichorshield": 315}},
+    )
+
+    assert empty.general_shield == 0.0
+    assert supplied.general_shield == 315.0
+
+
 def test_spirit_visage_increases_protoplasm_healing_not_temporary_health():
     defenses = resolve_starting_defenses(
         "Shen",

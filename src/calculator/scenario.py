@@ -243,7 +243,11 @@ class ChampionLoadout:
             item_data=item_data,
             stats=stats,
             defenses=resolve_starting_defenses(
-                champion_data["name"], self.level, stats, item_data
+                champion_data["name"],
+                self.level,
+                stats,
+                item_data,
+                item_options=self.item_options,
             ),
         )
 
