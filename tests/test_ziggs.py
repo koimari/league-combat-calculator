@@ -192,3 +192,29 @@ class TestZiggsFightIntegration:
         # Raw 410 per proc; 100 MR halves it.
         assert passive["total_damage"] == pytest.approx(410.0)
         assert result["total_damage"] > 0
+
+    def test_one_rotation_authors_short_fuse_on_the_auto_stream(
+        self, ziggs_data, parse_at, attacker_stats, fight
+    ):
+        """A fixed proc count is timestamped when the rotation has enough autos."""
+        _, abilities = parse_at(
+            ziggs_data,
+            18,
+            ap=500.0,
+            target_stats={"target_max_health": 1000.0},
+            champion_options={"passive_procs": 1},
+        )
+        stats = attacker_stats(ability_power=500.0, is_melee=False)
+        result = fight(stats, abilities, auto_attack_uptime=1.0)
+
+        assert result["timeline_coverage"]["complete"] is True
+        passive = result["breakdown"]["passive"]
+        assert passive["event_phase"] == "auto"
+        assert passive["damage_events"] == [
+            {
+                "time": 0.0,
+                "damage_type": "magic",
+                "damage": pytest.approx(205.0),
+                "event_precision": "exact",
+            }
+        ]

@@ -181,6 +181,30 @@ def test_loadout_rejects_tier_three_boots_without_mid_quest():
         ).resolve()
 
 
+def test_loadout_allows_tier_three_boots_after_mid_quest_completion():
+    loadout = ChampionLoadout(
+        champion="Ziggs",
+        level=12,
+        boots="Spellslinger's Shoes",
+        role="mid",
+        role_quest_complete=True,
+    ).resolve()
+
+    assert loadout.item_data[0]["name"] == "Spellslinger's Shoes"
+    assert loadout.stats["magic_penetration_flat"] == 18.0
+
+
+def test_loadout_rejects_tier_two_boots_after_mid_quest_completion():
+    with pytest.raises(ValueError, match="requires tier-3 boots"):
+        ChampionLoadout(
+            champion="Ziggs",
+            level=12,
+            boots="Sorcerer's Shoes",
+            role="mid",
+            role_quest_complete=True,
+        ).resolve()
+
+
 def test_bottom_role_quest_allows_seven_combat_slots():
     loadout = ChampionLoadout(
         champion="Ziggs",
@@ -199,6 +223,65 @@ def test_bottom_role_quest_allows_seven_combat_slots():
     ).resolve()
 
     assert len(loadout.item_data) == 7
+
+
+@pytest.mark.parametrize(
+    "item_name",
+    [
+        "Celestial Opposition",
+        "Dream Maker",
+        "Zaz'Zak's Realmspike",
+        "Solstice Sleigh",
+        "Bloodsong",
+    ],
+)
+def test_completed_support_quest_allows_one_upgraded_support_item(item_name):
+    loadout = ChampionLoadout(
+        champion="Nami",
+        level=12,
+        items=(item_name,),
+        boots="Ionian Boots of Lucidity",
+        role="support",
+        role_quest_complete=True,
+    ).resolve()
+
+    assert item_name in [item["name"] for item in loadout.item_data]
+
+
+def test_support_quest_blocks_upgraded_item_until_completion():
+    with pytest.raises(ValueError, match="complete the support quest"):
+        ChampionLoadout(
+            champion="Nami",
+            level=12,
+            items=("Dream Maker",),
+            boots="Ionian Boots of Lucidity",
+            role="support",
+            role_quest_complete=False,
+        ).resolve()
+
+
+def test_support_quest_rejects_support_item_for_non_support_role():
+    with pytest.raises(ValueError, match="require the support role"):
+        ChampionLoadout(
+            champion="Nami",
+            level=12,
+            items=("Dream Maker",),
+            boots="Ionian Boots of Lucidity",
+            role="mid",
+            role_quest_complete=False,
+        ).resolve()
+
+
+def test_support_quest_allows_only_one_support_item():
+    with pytest.raises(ValueError, match="at most one support quest item"):
+        ChampionLoadout(
+            champion="Nami",
+            level=12,
+            items=("Dream Maker", "Bloodsong"),
+            boots="Ionian Boots of Lucidity",
+            role="support",
+            role_quest_complete=True,
+        ).resolve()
 
 
 @pytest.mark.parametrize(
@@ -226,6 +309,52 @@ def test_parse_roster_enforces_team_size():
 
     with pytest.raises(ValueError, match="at most 5 champions"):
         parse_roster({"enemies": roster}, "enemies", maximum=5)
+
+
+def test_roster_preserves_authored_ranks_and_champion_options():
+    roster = parse_roster(
+        {
+            "allies": [
+                {
+                    "champion": "Vayne",
+                    "level": 18,
+                    "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+                    "champion_options": {"condemn_wall": False},
+                    "cast_order": ["R", "Q", "W", "E"],
+                }
+            ]
+        },
+        "allies",
+        maximum=4,
+    )
+
+    assert roster[0].ability_ranks == {"Q": 5, "W": 5, "E": 5, "R": 3}
+    assert roster[0].champion_options == {"condemn_wall": False}
+    assert roster[0].cast_order == ["R", "Q", "W", "E"]
+
+
+def test_roster_rejects_unknown_champion_options():
+    with pytest.raises(ValueError, match="unknown option"):
+        ChampionLoadout.from_request(
+            {
+                "champion": "Vayne",
+                "level": 18,
+                "champion_options": {"not_declared": True},
+            },
+            field="allies[0]",
+        )
+
+
+def test_roster_rejects_malformed_cast_order():
+    with pytest.raises(ValueError, match="cast_order must be a permutation"):
+        ChampionLoadout.from_request(
+            {
+                "champion": "Vayne",
+                "level": 18,
+                "cast_order": ["Q", "Q", "E", "R"],
+            },
+            field="allies[0]",
+        )
 
 
 def test_level_20_requires_a_completed_top_quest():

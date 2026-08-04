@@ -24,8 +24,16 @@ from .damage import (
     split_auto_vs_ability,
     split_by_damage_type,
 )
+from . import item_effects
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
+from .auto_attack_policy import (
+    AUTO_ATTACK_UPTIME_MODE_CALCULATED,
+    AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
+    AUTO_ATTACK_UPTIME_MODE_LEGACY,
+    AUTO_ATTACK_UPTIME_MODES,
+    resolve_auto_attack_policy,
+)
 from .role_quests import max_champion_level, validate_role
 from .rune_effects import validate_keystone_request
 from .stats import calculate_total_stats
@@ -38,10 +46,14 @@ DEFAULT_TARGET: dict[str, float] = {
 }
 DEFAULT_FIGHT_DURATION = 8.0
 DEFAULT_AUTO_ATTACK_UPTIME = 0.8
+DEFAULT_AUTO_ATTACK_UPTIME_MODE = AUTO_ATTACK_UPTIME_MODE_CALCULATED
 DEFAULT_FIGHT_MODE = "one_rotation"
 ONE_ROTATION_DURATION = 5.0
+MAX_ROTATIONS = 6
 PUBLIC_INPUT_LIMITS: dict[str, tuple[float, float]] = {
-    "fight_duration": (1.0, 10.0),
+    # The prototype exposes up to six five-second rotations, so a timed
+    # request must be able to represent the complete sequential window.
+    "fight_duration": (1.0, 30.0),
     "auto_attack_uptime": (0.0, 1.0),
     "target_health": (1.0, 10_000.0),
     "target_bonus_health": (0.0, 10_000.0),
@@ -50,6 +62,205 @@ PUBLIC_INPUT_LIMITS: dict[str, tuple[float, float]] = {
 }
 _PUBLIC_FIGHT_MODES = frozenset({"one_rotation", "time_based", "timed", "auto_only"})
 _NONSTANDARD_RANK_CHAMPIONS = frozenset({"Elise", "Jayce", "Karma", "Nidalee", "Udyr"})
+
+
+def _item_self_healing_events(result: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Materialize only timestamp-certified item self-heal packets.
+
+    Spellblade item rows carry their accepted proc times alongside the
+    amount-per-proc.  Rows without that complete receipt remain summary-only
+    and are deliberately omitted here rather than being assigned a guessed
+    timestamp; the participant ledger can therefore apply only exact item
+    healing while the damage breakdown still records the source row.
+    """
+    events: list[dict[str, Any]] = []
+    breakdown = result.get("breakdown", {})
+    if not isinstance(breakdown, Mapping):
+        return events
+    for source_key, row in breakdown.items():
+        if not isinstance(source_key, str) or not isinstance(row, Mapping):
+            continue
+        # Periodic item packets may carry a sourced self-heal multiplier on
+        # each exact post-mitigation damage event (Unending Despair/Anguish).
+        # Malformed event rows are withheld rather than assigned a timestamp.
+        if source_key.startswith("periodic_"):
+            raw_multiplier = row.get("self_heal_post_mitigation_multiplier")
+            damage_events = row.get("damage_events")
+            if raw_multiplier is None or not isinstance(damage_events, list):
+                continue
+            try:
+                multiplier = float(raw_multiplier)
+            except (TypeError, ValueError):
+                continue
+            if not math.isfinite(multiplier) or multiplier <= 0.0:
+                continue
+            source = str(row.get("name", source_key))
+            for sequence, damage_event in enumerate(damage_events):
+                if not isinstance(damage_event, Mapping):
+                    continue
+                try:
+                    event_time = float(damage_event["time"])
+                    damage = float(damage_event["damage"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if not math.isfinite(event_time) or not math.isfinite(damage):
+                    continue
+                amount = damage * multiplier
+                if amount <= 0.0:
+                    continue
+                events.append(
+                    {
+                        "time": event_time,
+                        "amount": amount,
+                        "source": f"{source} (self-heal)",
+                        "kind": "item_proc",
+                        "_trigger_source": source_key,
+                        "_trigger_time": event_time,
+                        "_trigger_sequence": sequence,
+                    }
+                )
+            continue
+        if not source_key.startswith("heal_"):
+            continue
+        if row.get("unit") != "health":
+            continue
+        raw_heal_events = row.get("heal_events")
+        if isinstance(raw_heal_events, list):
+            source = str(row.get("name", source_key))
+            for sequence, raw_event in enumerate(raw_heal_events):
+                if not isinstance(raw_event, Mapping):
+                    continue
+                try:
+                    event_time = float(raw_event["time"])
+                    amount = float(raw_event["amount"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if (
+                    not math.isfinite(event_time)
+                    or not math.isfinite(amount)
+                    or amount <= 0.0
+                ):
+                    continue
+                materialized = {
+                    "time": event_time,
+                    "amount": amount,
+                    "source": source,
+                    "kind": "item_proc",
+                    "_trigger_source": str(raw_event.get("trigger_source", source_key)),
+                    "_trigger_time": event_time,
+                    "_trigger_sequence": sequence,
+                }
+                amount_formula = raw_event.get("amount_formula")
+                if callable(amount_formula):
+                    materialized["amount_formula"] = amount_formula
+                if raw_event.get("overheal_to_temporary_health"):
+                    materialized["overheal_to_temporary_health"] = True
+                    materialized["temporary_health_duration"] = max(
+                        0.0,
+                        float(raw_event.get("temporary_health_duration", 0.0) or 0.0),
+                    )
+                events.append(materialized)
+            continue
+        proc_times = row.get("proc_times")
+        if not isinstance(proc_times, list):
+            continue
+        try:
+            count = int(row["count"])
+            amount = float(row["amount_per_proc"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if count <= 0 or len(proc_times) != count or amount <= 0.0:
+            continue
+        parsed_times: list[float] = []
+        for raw_time in proc_times:
+            try:
+                event_time = float(raw_time)
+            except (TypeError, ValueError):
+                parsed_times = []
+                break
+            if not math.isfinite(event_time):
+                parsed_times = []
+                break
+            parsed_times.append(event_time)
+        if len(parsed_times) != count:
+            continue
+        source = str(row.get("name", source_key))
+        for sequence, event_time in enumerate(parsed_times):
+            events.append(
+                {
+                    "time": event_time,
+                    "amount": amount,
+                    "source": source,
+                    "kind": "item_proc",
+                    "_trigger_source": source_key,
+                    "_trigger_time": event_time,
+                    "_trigger_sequence": sequence,
+                }
+            )
+    events.sort(
+        key=lambda event: (event["time"], event["source"], event["_trigger_sequence"])
+    )
+    return events
+
+
+def _has_item_self_healing(effects: Any) -> bool:
+    """Whether an item build can emit timestamped self-heal packets.
+
+    The score-only tuple ledger is safe only when both the champion and the
+    item build are heal-free.  In particular, Dusk and Dawn's Spellblade heal
+    and Unending Despair's periodic Anguish heal are item-owned packets that
+    must remain in the full result even when the champion has no healing rule.
+    """
+    spellblade = effects.spellblade
+    if spellblade is not None and (
+        spellblade.self_heal_ap_ratio > 0.0
+        or spellblade.self_heal_bonus_health_ratio > 0.0
+    ):
+        return True
+    return (
+        any(
+            periodic.self_heal_post_mitigation_multiplier > 0.0
+            for periodic in effects.periodic
+        )
+        or bool(effects.on_hit_heals)
+        or (
+            effects.first_auto_crit is not None
+            and (
+                effects.first_auto_crit.heal_base_ad_ratio > 0.0
+                or effects.first_auto_crit.heal_missing_health_ratio > 0.0
+            )
+        )
+    )
+
+
+def _has_lifesteal_stat(stats: Mapping[str, Any]) -> bool:
+    """Return whether the fight needs the full ledger for life-steal events."""
+    value = stats.get("lifesteal_percent", 0.0)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return math.isfinite(float(value)) and float(value) > 0.0
+
+
+def _has_omnivamp_stat(stats: Mapping[str, Any]) -> bool:
+    """Return whether the fight needs explicit omnivamp event receipts."""
+    value = stats.get("omnivamp_percent", 0.0)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return math.isfinite(float(value)) and float(value) > 0.0
+
+
+def _has_riftmaker_max_stack_omnivamp(
+    items: list[dict[str, Any]], fight_duration_seconds: float
+) -> bool:
+    """Return whether the fight reaches Riftmaker's conditional heal state."""
+    if not any(item.get("name") == "Riftmaker" for item in items):
+        return False
+    return (
+        item_effects.riftmaker_max_stack_omnivamp(
+            fight_duration_seconds=fight_duration_seconds
+        )
+        > 0.0
+    )
 
 
 def _bounded_request_float(data: Mapping[str, Any], key: str, default: float) -> float:
@@ -75,6 +286,18 @@ def _request_bool(data: Mapping[str, Any], key: str, default: bool) -> bool:
     value = data.get(key, default)
     if not isinstance(value, bool):
         raise ValueError(f"{key} must be true or false")
+    return value
+
+
+def _request_int(
+    data: Mapping[str, Any], key: str, default: int, minimum: int, maximum: int
+) -> int:
+    """Parse a bounded public integer without accepting booleans."""
+    value = data.get(key, default)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{key} must be an integer")
+    if not minimum <= value <= maximum:
+        raise ValueError(f"{key} must be between {minimum} and {maximum}")
     return value
 
 
@@ -114,14 +337,37 @@ class FightParams(FightConfig):
         requested_uptime = _bounded_request_float(
             data, "auto_attack_uptime", DEFAULT_AUTO_ATTACK_UPTIME
         )
+        rotation_count = _request_int(data, "rotations", 1, 1, MAX_ROTATIONS)
+        uptime_mode = data.get(
+            "auto_attack_uptime_mode", AUTO_ATTACK_UPTIME_MODE_LEGACY
+        )
+        if (
+            not isinstance(uptime_mode, str)
+            or uptime_mode not in AUTO_ATTACK_UPTIME_MODES
+        ):
+            raise ValueError(
+                "auto_attack_uptime_mode must be legacy, explicit, or calculated"
+            )
 
         if one_rotation:
             duration = ONE_ROTATION_DURATION
-            uptime = 0.0
+            uptime = (
+                requested_uptime
+                if uptime_mode == AUTO_ATTACK_UPTIME_MODE_EXPLICIT
+                else 0.0
+            )
         else:
             duration = requested_duration
             include_autos = _request_bool(data, "include_auto_attacks", False)
-            uptime = requested_uptime if include_autos or auto_attacks_only else 0.0
+            uptime = (
+                requested_uptime
+                if (
+                    include_autos
+                    or auto_attacks_only
+                    or uptime_mode == AUTO_ATTACK_UPTIME_MODE_CALCULATED
+                )
+                else 0.0
+            )
 
         ability_ranks = data.get("ability_ranks")
         if ability_ranks is not None and not isinstance(ability_ranks, Mapping):
@@ -151,6 +397,8 @@ class FightParams(FightConfig):
             ),
             fight_duration_seconds=duration,
             auto_attack_uptime=uptime,
+            auto_attack_uptime_mode=uptime_mode,
+            rotation_count=rotation_count,
             one_rotation=one_rotation,
             include_actives=_request_bool(data, "include_actives", True),
             cast_order=data.get("cast_order"),
@@ -342,7 +590,8 @@ def run_fight(
     # surface it to the parse context only, keeping the reported
     # champion_stats panel item-stats-only.
     parse_stats = dict(champion_stats)
-    parse_stats["crit_damage_bonus"] = resolve_damage_effects(items).crit_damage_bonus
+    item_damage_effects = resolve_damage_effects(items)
+    parse_stats["crit_damage_bonus"] = item_damage_effects.crit_damage_bonus
 
     ability_damages = parse_champion_abilities(
         champion_data,
@@ -353,16 +602,6 @@ def run_fight(
         target_stats=params.target_stats(),
         champion_options=champion_options,
     )
-    if params.target_threshold_health_bonus > 0 and any(
-        ability.get("target_max_health_sensitive", False)
-        for ability in ability_damages.values()
-    ):
-        raise ValueError(
-            "This damage package scales from target maximum health and cannot "
-            "yet be certified against Protoplasm Harness's temporary maximum-"
-            "health change. Remove Protoplasm or choose another attacker."
-        )
-
     # The fight engine applies ability stat buffs (Mega Gnar's form
     # stats, Vayne/Aatrox R, ...) to this copy in place — report THESE
     # as the champion's stats so the UI panel shows the fight-effective
@@ -374,10 +613,49 @@ def run_fight(
         declared = get_champion_cast_order(champion_data.get("name", ""))
         if declared is not None:
             params = replace(params, cast_order=declared)
+    resolved_uptime, auto_attack_policy = resolve_auto_attack_policy(
+        champion_data,
+        ability_damages,
+        cast_order=params.cast_order,
+        duration_seconds=params.fight_duration_seconds,
+        requested_uptime=params.auto_attack_uptime,
+        mode=params.auto_attack_uptime_mode,
+        one_rotation=params.one_rotation,
+    )
+    if params.auto_attack_uptime_mode == AUTO_ATTACK_UPTIME_MODE_CALCULATED:
+        params = replace(params, auto_attack_uptime=resolved_uptime)
+        if not params.one_rotation:
+            # Timed champion mechanics (channels and passive cycles) consume
+            # the same resolved policy; do not let their parse context retain
+            # the pre-resolution placeholder zero.
+            champion_options["fight_duration_seconds"] = params.fight_duration_seconds
+            champion_options["auto_attack_uptime"] = resolved_uptime
+            ability_damages = parse_champion_abilities(
+                champion_data,
+                level,
+                champion_stats["ability_power"],
+                ability_ranks=params.ability_ranks,
+                champion_stats=parse_stats,
+                target_stats=params.target_stats(),
+                champion_options=champion_options,
+            )
     tuple_ledger = (
         score_only
         and params.target_threshold_health_heal <= 0
         and champion_data.get("name", "") not in HEALING_RULE_CHAMPIONS
+        and not _has_item_self_healing(item_damage_effects)
+        and not _has_lifesteal_stat(fight_stats)
+        and not _has_omnivamp_stat(fight_stats)
+        and not _has_riftmaker_max_stack_omnivamp(items, params.fight_duration_seconds)
+        # Forced/empowered basic attacks are authored on ability rows. Keep
+        # the dict ledger so reactive defenders (Bramble/Thornmail) retain
+        # the basic-attack marker instead of losing it in the light tuple
+        # schema.
+        and not any(
+            ability.get("empowers_next_auto")
+            for ability in ability_damages.values()
+            if isinstance(ability, dict)
+        )
     )
     result = calculate_fight_damage(
         fight_stats,
@@ -392,19 +670,55 @@ def run_fight(
         tuple_ledger=tuple_ledger,
     )
     result["champion_stats"] = fight_stats
+    result["auto_attack_policy"] = auto_attack_policy
+    auto_row = result.get("breakdown", {}).get("auto_attacks", {})
+    auto_total = (
+        int(auto_row.get("count", 0) or 0) if isinstance(auto_row, Mapping) else 0
+    )
+    rotation_count = max(1, int(params.rotation_count))
+    result["auto_attack_schedule"] = {
+        "status": (
+            "known" if auto_attack_policy.get("status") != "unknown" else "unknown"
+        ),
+        "rotation_count": rotation_count,
+        "expected_autos_per_rotation": round(auto_total / rotation_count, 6),
+        "expected_autos_total": auto_total,
+        "window_seconds": round(params.fight_duration_seconds, 3),
+        "semantics": "sequential timed window; cooldowns, resources, cast lockouts, and item events follow the engine ledger",
+    }
+    if auto_attack_policy.get("status") == "unknown":
+        result.setdefault("notes", []).append(
+            "Auto attacks withheld: calculated uptime is unavailable for one or more cast-time sources."
+        )
+    if _has_riftmaker_max_stack_omnivamp(items, params.fight_duration_seconds):
+        result["champion_stats"] = dict(fight_stats)
+        result["champion_stats"]["omnivamp_percent"] = result["champion_stats"].get(
+            "omnivamp_percent", 0.0
+        ) + item_effects.riftmaker_max_stack_omnivamp(
+            fight_duration_seconds=params.fight_duration_seconds
+        )
     if tuple_ledger:
         # The predicate above IS derive_self_healing's dispatch gate, so
         # the empty list is the exact value the call would return.
         result["damage_events_tuple"] = True
         result["self_healing_events"] = []
         return result
-    result["self_healing_events"] = derive_self_healing(
+    champion_healing = derive_self_healing(
         champion_data,
         fight_stats,
         ability_damages,
         list(result.get("damage_events", [])),
         list(result.get("cast_timeline", [])),
         params.fight_duration_seconds,
+    )
+    result["self_healing_events"] = sorted(
+        champion_healing + _item_self_healing_events(result),
+        key=lambda event: (
+            float(event.get("time", 0.0)),
+            str(event.get("kind", "")),
+            str(event.get("source", "")),
+            int(event.get("_trigger_sequence", 0)),
+        ),
     )
     if score_only:
         return result

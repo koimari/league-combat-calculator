@@ -2,7 +2,12 @@
 
 import pytest
 
-from src.calculator.champions import parse_champion_abilities, registered_champion_names
+from src.calculator.champions import (
+    _CUSTOM_CHAMPION_MODULES,
+    engine_registration_kind,
+    parse_champion_abilities,
+    registered_champion_names,
+)
 from src.calculator.data_fetcher import get_champion
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
@@ -17,6 +22,12 @@ def _stats(name: str, level: int = 6):
 
 def test_all_173_modules_parse_without_a_generic_runtime_fallback():
     for name in registered_champion_names():
+        expected_kind = (
+            "reviewed_module"
+            if name in _CUSTOM_CHAMPION_MODULES
+            else "generated_packet_module"
+        )
+        assert engine_registration_kind(name) == expected_kind, name
         champion, stats = _stats(name)
         result = parse_champion_abilities(
             champion,

@@ -141,10 +141,19 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_autos = 0
     immune_until = 0.0
     last_application: float | None = None
+    damage_events: list[dict[str, Any]] = []
     for time, kind in _hit_timeline(ctx, float(duration)):
         if time < immune_until:
             if kind == _AUTO:
                 bonus_autos += 1
+                damage_events.append(
+                    {
+                        "time": time,
+                        "damage_type": "magic",
+                        "damage": bonus_per_auto,
+                        "event_precision": "exact",
+                    }
+                )
             continue
         if last_application is not None and time - last_application > _STACK_DURATION:
             stacks = 0
@@ -155,6 +164,14 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
             stacks = 0
             last_application = None
             immune_until = time + window
+            damage_events.append(
+                {
+                    "time": time,
+                    "damage_type": "magic",
+                    "damage": trigger,
+                    "event_precision": "exact",
+                }
+            )
 
     if procs == 0:
         return None
@@ -169,6 +186,9 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
             DamagePart("magic", bonus_per_auto, count=bonus_autos),
         ),
         "proc_count": 1,
+        "timeline_event_model": "braum_concussive",
+        "damage_events": damage_events,
+        "event_phase": "effect",
         "detail": (
             f"{procs} proc(s) + {bonus_autos} empowered auto(s) "
             f"over {float(duration):g}s"

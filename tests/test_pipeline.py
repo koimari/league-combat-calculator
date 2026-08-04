@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import pytest
 
-from src.calculator.data_fetcher import get_champion
+from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 
 
@@ -169,6 +169,157 @@ def test_run_fight_includes_damage_by_type_split(ahri_data):
     assert split["magic"] > 0.0
     assert split["true"] > 0.0
     assert sum(split.values()) == pytest.approx(result["total_damage"])
+
+
+def test_run_fight_exposes_riftmaker_max_stack_omnivamp_in_effective_stats(ahri_data):
+    params = FightParams.from_request(
+        {
+            "fight_mode": "timed",
+            "fight_duration": 5,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+
+    result = run_fight(
+        ahri_data,
+        18,
+        [get_item_by_name("Riftmaker")],
+        params,
+    )
+
+    # Void Corruption adds the sourced 10% branch once the four-second
+    # in-combat ramp is complete; the cached item stat itself is zero.
+    assert result["champion_stats"]["omnivamp_percent"] == pytest.approx(10.0)
+    assert result["breakdown"]["heal_omnivamp"]["total_amount"] > 0.0
+
+
+def test_run_fight_materializes_timestamped_item_self_healing(ahri_data):
+    """Accepted Dusk and Dawn procs enter the shared healing ledger once."""
+    params = FightParams.from_request(
+        {
+            "fight_mode": "timed",
+            "fight_duration": 4,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+
+    result = run_fight(
+        ahri_data,
+        18,
+        [get_item_by_name("Dusk and Dawn")],
+        params,
+    )
+
+    item_events = [
+        event
+        for event in result["self_healing_events"]
+        if event["source"] == "Dusk and Dawn (self-heal)"
+    ]
+    assert [event["time"] for event in item_events] == pytest.approx([1.5, 4.5])
+
+    periodic = run_fight(
+        ahri_data,
+        18,
+        [get_item_by_name("Unending Despair")],
+        params,
+        score_only=True,
+    )
+    assert [event["time"] for event in periodic["self_healing_events"]] == [4.0]
+    assert sum(event["amount"] for event in item_events) == pytest.approx(30.0)
+    assert result["self_healing"] == pytest.approx(30.0)
+
+
+def test_score_only_keeps_item_self_healing_for_timeline_compilers(ahri_data):
+    """Score-only runs must retain item heals even for heal-free champions."""
+    params = FightParams.from_request(
+        {
+            "fight_mode": "timed",
+            "fight_duration": 4,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+
+    result = run_fight(
+        ahri_data,
+        18,
+        [get_item_by_name("Dusk and Dawn")],
+        params,
+        score_only=True,
+    )
+
+    item_events = [
+        event
+        for event in result["self_healing_events"]
+        if event["source"] == "Dusk and Dawn (self-heal)"
+    ]
+    assert [event["time"] for event in item_events] == pytest.approx([1.5, 4.5])
+
+
+def test_cull_on_hit_healing_survives_score_only_and_coupled_ledger(ahri_data):
+    """Cull's exact Reap packets are retained in the score-only path."""
+    params = FightParams.from_request(
+        {
+            "fight_mode": "timed",
+            "fight_duration": 4,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+
+    result = run_fight(
+        ahri_data,
+        18,
+        [get_item_by_name("Cull")],
+        params,
+        score_only=True,
+    )
+
+    item_events = [
+        event
+        for event in result["self_healing_events"]
+        if event["source"] == "Cull (Reap)"
+    ]
+    row = result["breakdown"]["heal_Cull"]
+    assert len(item_events) == row["count"]
+    assert sum(event["amount"] for event in item_events) == pytest.approx(
+        row["total_amount"]
+    )
+
+
+def test_sundered_sky_first_attack_heal_is_materialized(ahri_data):
+    """Sundered Sky's fixed base-AD receipt reaches the public ledger."""
+    params = FightParams.from_request(
+        {
+            "fight_mode": "timed",
+            "fight_duration": 4,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+
+    result = run_fight(
+        ahri_data,
+        18,
+        [get_item_by_name("Sundered Sky")],
+        params,
+    )
+
+    item_events = [
+        event
+        for event in result["self_healing_events"]
+        if event["source"] == "Sundered Sky (Lightshield Strike)"
+    ]
+    assert len(item_events) == 1
+    assert item_events[0]["time"] == pytest.approx(0.0)
+    assert item_events[0]["amount"] == pytest.approx(104.0)
 
 
 def test_starting_magic_shield_splits_tdd_from_health_damage(ahri_data):

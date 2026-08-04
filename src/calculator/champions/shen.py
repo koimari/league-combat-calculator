@@ -13,6 +13,7 @@ Shadow Dash is authored at the selected travel distance. Its cooldown begins
 after the dash, so travel time is added to the data's post-effect cooldown.
 """
 
+from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -86,6 +87,31 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
     enhanced = bool(ctx.options.get("q_spirit_blade_hit", True))
     attribute = "Increased Bonus Damage" if enhanced else "Bonus Magic Damage"
     per_hit = _named_level_rank_damage(ctx, ability, attribute, rank)
+    baseline_target_health = float(ctx.target.get("target_max_health", 0.0))
+    if baseline_target_health > 0.0:
+        flat_ctx = replace(
+            ctx,
+            target={**ctx.target, "target_max_health": 0.0},
+        )
+        flat_component = _named_level_rank_damage(flat_ctx, ability, attribute, rank)
+        target_health_ratio = max(
+            0.0, (per_hit - flat_component) / baseline_target_health
+        )
+    else:
+        flat_component = per_hit
+        target_health_ratio = 0.0
+
+    def target_health_damage(
+        _missing_ratio: float,
+        live_target_max_health: float | None = None,
+    ) -> float:
+        live_max = (
+            baseline_target_health
+            if live_target_max_health is None
+            else live_target_max_health
+        )
+        return flat_component + live_max * target_health_ratio
+
     cooldown = extract_cooldown(ability, rank)
     entry = damage_entry(
         ability.get("name", "Twilight Assault"),
@@ -94,7 +120,18 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
         per_hit * hits,
         "magic",
     )
-    entry["parts"] = (DamagePart("magic", per_hit, count=hits),) if hits else ()
+    entry["parts"] = (
+        (
+            DamagePart(
+                "magic",
+                per_hit,
+                count=hits,
+                hp_scaled_damage=target_health_damage,
+            ),
+        )
+        if hits
+        else ()
+    )
     entry["target_max_health_sensitive"] = True
     entry["resource_restore"] = _energy_restore(ctx.level) * hits
     entry["detail"] = (

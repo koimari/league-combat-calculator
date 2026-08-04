@@ -19,14 +19,42 @@ from .slotlib import damage_entry, simple_damage
 _ROOT = Path(__file__).resolve().parents[3]
 _PACKET_PATH = _ROOT / "static" / "reviewed-packets.json"
 
+# Packet JSON stays generator-owned.  These narrowly scoped state boundaries
+# are runtime metadata for generated modules whose cached numeric packet is
+# valid but whose sibling mechanic needs an explicit scenario state.
+_PACKET_ASSUMPTION_OVERRIDES: dict[str, tuple[str, ...]] = {
+    "Viego": (
+        "Viego Q's mark-consuming second strike requires a prior damaging "
+        "ability and the next marked basic attack; that stateful rider is not "
+        "modeled by the single-target packet.",
+    ),
+    "Warwick": (
+        "Warwick Q's sourced 0.264-second bite delay is applied to the hit "
+        "event without inventing a channel lockout.",
+    ),
+    "Poppy": (
+        "Poppy Q's sourced Hammer Shock field ruptures 1 second after impact; "
+        "the packet emits both physical hits.",
+    ),
+}
+
 # These packets are authored as one target hit, including their dynamic
 # target-health term.  Keep the certification list explicit: a generic
 # packet must not become exact merely because it happens to have one part.
 _SINGLE_HIT_EVENT_PACKETS = {
     ("Hwei", "Q"),
-    ("Poppy", "Q"),
     ("Viego", "Q"),
     ("Warwick", "Q"),
+    ("Garen", "R"),
+    ("Gragas", "W"),
+    ("Jax", "E"),
+    ("Jinx", "R"),
+    ("Singed", "E"),
+    ("Sion", "W"),
+    ("Volibear", "E"),
+    ("Xin Zhao", "R"),
+    ("Yone", "W"),
+    ("Rek'Sai", "R"),
 }
 
 
@@ -111,6 +139,54 @@ def _packet_parser(spec: dict[str, Any], slot: str, champion_name: str):
         )
         entry["parts"] = parts
         entry["total_raw"] = total_raw
+        # Hammer Shock hits on impact and again when its one-second field
+        # ruptures.  The cached source exposes both the single-hit damage
+        # and the doubled total, so keep the two authored events explicit
+        # instead of certifying the packet as a single cast-boundary hit.
+        if champion_name == "Poppy" and slot == "Q":
+            entry["parts"] = tuple(
+                DamagePart(
+                    part.damage_type,
+                    amount=part.amount,
+                    count=2,
+                    hp_scaled_damage=part.hp_scaled_damage,
+                    time_offset=0.0,
+                    hit_interval=1.0,
+                )
+                for part in parts
+            )
+            entry["total_raw"] = total_raw * 2
+        # Warwick's bite lands 0.264 seconds after the cast starts.  The
+        # cached ability notes source this fixed bite delay even though the
+        # cast-time field is ``none``; keep the packet's damage event on the
+        # bite boundary without inventing a channel lockout.
+        if champion_name == "Warwick" and slot == "Q":
+            entry["parts"] = tuple(
+                DamagePart(
+                    part.damage_type,
+                    amount=part.amount,
+                    count=part.count,
+                    hp_scaled_damage=part.hp_scaled_damage,
+                    time_offset=0.264,
+                    hit_interval=part.hit_interval,
+                )
+                for part in entry["parts"]
+            )
+        # Hwei's Devastating Fire has a sourced 0.25-second cast time; the
+        # packet's single hit lands at that boundary rather than at cast
+        # start.
+        if champion_name == "Hwei" and slot == "Q":
+            entry["parts"] = tuple(
+                DamagePart(
+                    part.damage_type,
+                    amount=part.amount,
+                    count=part.count,
+                    hp_scaled_damage=part.hp_scaled_damage,
+                    time_offset=0.25,
+                    hit_interval=part.hit_interval,
+                )
+                for part in entry["parts"]
+            )
         # A packet can certify a dynamic-health cast when the authored
         # packet is exactly one hit.  The damage engine still evaluates the
         # current target health at the cast boundary; there is no hidden
@@ -261,5 +337,6 @@ def build_packet_module(champion_name: str):
         return result
 
     assumptions = list(champion.get("assumptions", []))
+    assumptions.extend(_PACKET_ASSUMPTION_OVERRIDES.get(champion_name, ()))
     sources = list(champion.get("sources", []))
     return parse_abilities, slots, assumptions, sources, options

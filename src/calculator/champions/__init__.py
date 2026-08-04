@@ -11,6 +11,7 @@ import json
 import importlib
 import os
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -120,6 +121,64 @@ _CHAMPION_MODULES: dict[str, str] = _ENGINE_CHAMPION_MODULES
 # caches modules, but the coupled optimizer dispatches thousands of parses
 # per request, so skip even the ``import_module`` lookup after the first.
 _MODULE_PARSERS: dict[str, Any] = {}
+
+
+@lru_cache(maxsize=1)
+def _reviewed_packet_sources() -> dict[str, tuple[dict[str, Any], ...]]:
+    """Load revision receipts from the tracked reviewed-packet manifest.
+
+    Hand-authored modules may carry their own ``SOURCES`` rows.  The checked-in
+    packet manifest is the authoritative fallback for modules that do not: it
+    is local, patch-pinned data and must never trigger a network request.  A
+    malformed or unavailable manifest fails closed to an empty mapping.
+    """
+    path = Path(__file__).resolve().parents[3] / "static" / "reviewed-packets.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return {}
+    champions = payload.get("champions") if isinstance(payload, dict) else None
+    if not isinstance(champions, dict):
+        return {}
+
+    result: dict[str, tuple[dict[str, Any], ...]] = {}
+    for name, entry in champions.items():
+        if not isinstance(name, str) or not isinstance(entry, dict):
+            continue
+        rows = entry.get("sources")
+        if not isinstance(rows, list):
+            continue
+        valid: list[dict[str, Any]] = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            label = row.get("label")
+            url = row.get("url")
+            revision_id = row.get("revision_id")
+            revision_timestamp = row.get("revision_timestamp")
+            if (
+                not isinstance(label, str)
+                or not label
+                or not isinstance(url, str)
+                or not url
+                or isinstance(revision_id, bool)
+                or not isinstance(revision_id, int)
+                or revision_id <= 0
+                or not isinstance(revision_timestamp, str)
+                or not revision_timestamp
+            ):
+                continue
+            valid.append(
+                {
+                    "label": label,
+                    "url": url,
+                    "revision_id": revision_id,
+                    "revision_timestamp": revision_timestamp,
+                }
+            )
+        if valid:
+            result[name] = tuple(valid)
+    return result
 
 
 # Option keys owned by the pipeline — never user input, never a module
@@ -262,10 +321,13 @@ def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
     if module_name is None:
         return {"options": [], "assumptions": [], "sources": []}
     module = importlib.import_module(f".{module_name}", package=__name__)
+    module_sources = list(getattr(module, "SOURCES", []))
+    if not module_sources:
+        module_sources = list(_reviewed_packet_sources().get(champion_name, ()))
     result: dict[str, Any] = {
         "options": list(module.OPTIONS),
         "assumptions": list(module.ASSUMPTIONS),
-        "sources": list(getattr(module, "SOURCES", [])),
+        "sources": module_sources,
     }
     supported_modes = getattr(module, "SUPPORTED_FIGHT_MODES", None)
     if supported_modes is not None:
@@ -342,11 +404,17 @@ def registered_engine_champion_names() -> list[str]:
 
 
 def engine_registration_kind(champion_name: str) -> str | None:
-    """Return the exact reviewed or generated packet module kind."""
+    """Return whether a champion uses a hand-reviewed or generated packet.
+
+    Generated packet modules remain runnable backend coverage, but they are
+    not hand-authored champion reviews.  Keeping that distinction in the
+    public registration metadata prevents the UI from presenting a generated
+    packet as an exact champion-specific module.
+    """
     if champion_name in _CUSTOM_CHAMPION_MODULES:
         return "reviewed_module"
     if champion_name in _GENERATED_CHAMPION_MODULES:
-        return "reviewed_module"
+        return "generated_packet_module"
     return None
 
 

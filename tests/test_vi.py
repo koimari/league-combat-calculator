@@ -181,11 +181,11 @@ def test_rotation_is_event_order_certified_and_resource_legal(vi_data):
     ]
 
 
-def test_w_max_health_scaling_fails_closed_for_protoplasm(vi_data):
+def test_w_max_health_scaling_is_repriced_for_protoplasm(vi_data):
     params = FightParams(
-        target_health=2500.0,
-        target_armor=100.0,
-        target_magic_resistance=100.0,
+        target_health=500.0,
+        target_armor=0.0,
+        target_magic_resistance=0.0,
         fight_duration_seconds=5.0,
         one_rotation=True,
         ability_ranks={"Q": 5, "W": 1, "E": 3, "R": 1},
@@ -196,8 +196,12 @@ def test_w_max_health_scaling_fails_closed_for_protoplasm(vi_data):
         target_threshold_health_duration=5.0,
     )
 
-    with pytest.raises(ValueError, match="Protoplasm Harness"):
-        run_fight(vi_data, 10, [], params)
+    result = run_fight(vi_data, 10, [], params)
+
+    assert result["threshold_health_triggered"] is True
+    assert result["target_effective_max_health"] == pytest.approx(700.0)
+    assert result["target_healing_received"] > 0.0
+    assert "target_Protoplasm Harness" in result["timeline_coverage"]["coarse_sources"]
 
 
 def test_timed_and_custom_order_requests_fail_closed():

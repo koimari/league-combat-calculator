@@ -5,6 +5,7 @@ module composes that trusted path across a roster without weakening its
 champion-specific rules or replacing item mechanics with generic estimates.
 """
 
+import math
 from dataclasses import dataclass, field as dataclass_field
 from typing import Any, Mapping
 
@@ -15,6 +16,7 @@ from .item_coverage import target_build_coverage
 from .loadout_rules import validate_resolved_loadout
 from .role_quests import require_level_within_cap, validate_role
 from .stats import MAX_LEVEL, calculate_total_stats
+from .champions import get_champion_options_meta
 from .champions.skill_orders import get_ability_rank
 
 MAX_ENEMIES = 5
@@ -33,6 +35,67 @@ def _short_string(value: object, field: str, *, required: bool = False) -> str:
     return parsed
 
 
+def _validate_champion_options(
+    value: object, champion: str, *, field: str
+) -> dict[str, Any]:
+    """Validate one roster champion's module-declared option controls.
+
+    Roster requests use the same option metadata as the main request.  A
+    missing declaration is therefore an empty contract: accepting arbitrary
+    keys would make a typo look like an authored control while silently
+    dropping it from the participant timeline.
+    """
+    if value is None:
+        return {}
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{field} must be an object")
+    declared = {
+        option["key"]: option
+        for option in get_champion_options_meta(champion).get("options", [])
+    }
+    unknown = set(value) - set(declared)
+    if unknown:
+        raise ValueError(f"{field} contains unknown option {sorted(unknown)[0]}")
+    parsed: dict[str, Any] = {}
+    for key, option_value in value.items():
+        option = declared[key]
+        option_type = option["type"]
+        if option_type == "bool":
+            if not isinstance(option_value, bool):
+                raise ValueError(f"{field}.{key} must be true or false")
+        elif option_type == "select":
+            if isinstance(option_value, bool) and option.get("legacy_bool"):
+                pass
+            elif not isinstance(option_value, str):
+                raise ValueError(f"{field}.{key} must be a string")
+            elif option_value not in {
+                choice["value"] for choice in option.get("choices", [])
+            }:
+                raise ValueError(
+                    f"{field}.{key} must be one of "
+                    f"{sorted(choice['value'] for choice in option.get('choices', []))}"
+                )
+        else:
+            if isinstance(option_value, bool) or not isinstance(
+                option_value, (int, float)
+            ):
+                raise ValueError(f"{field}.{key} must be a number")
+            if option_type == "int" and not isinstance(option_value, int):
+                raise ValueError(f"{field}.{key} must be an integer")
+            if not math.isfinite(option_value):
+                raise ValueError(f"{field}.{key} must be finite")
+            if "min" in option and option_value < option["min"]:
+                raise ValueError(
+                    f"{field}.{key} must be between {option['min']} and {option['max']}"
+                )
+            if "max" in option and option_value > option["max"]:
+                raise ValueError(
+                    f"{field}.{key} must be between {option['min']} and {option['max']}"
+                )
+        parsed[key] = option_value
+    return parsed
+
+
 @dataclass(frozen=True, slots=True)
 class ChampionLoadout:
     """One champion, their level, and the items that contribute stats."""
@@ -46,6 +109,8 @@ class ChampionLoadout:
     role_quest_complete: bool = False
     ally_effects_enabled: bool = False
     ability_ranks: dict[str, int] = dataclass_field(default_factory=dict)
+    champion_options: dict[str, Any] = dataclass_field(default_factory=dict)
+    cast_order: list[str] | None = None
 
     @classmethod
     def from_request(cls, value: object, *, field: str) -> "ChampionLoadout":
@@ -112,6 +177,22 @@ class ChampionLoadout:
                     )
                 ability_ranks[slot] = rank
 
+        champion_options = _validate_champion_options(
+            value.get("champion_options"), champion, field=f"{field}.champion_options"
+        )
+        cast_order = value.get("cast_order")
+        if cast_order is not None:
+            if not isinstance(cast_order, list) or any(
+                not isinstance(slot, str) for slot in cast_order
+            ):
+                raise ValueError(
+                    f"{field}.cast_order must be a permutation of Q, W, E, R"
+                )
+            if sorted(cast_order) != ["E", "Q", "R", "W"]:
+                raise ValueError(
+                    f"{field}.cast_order must be a permutation of Q, W, E, R"
+                )
+
         equipped_names = (*items, *((boots,) if boots else ()))
         if len(set(equipped_names)) != len(equipped_names):
             raise ValueError(f"{field} must not contain duplicate items")
@@ -126,6 +207,8 @@ class ChampionLoadout:
             role_quest_complete=role_quest_complete,
             ally_effects_enabled=ally_effects_enabled,
             ability_ranks=ability_ranks,
+            champion_options=champion_options,
+            cast_order=list(cast_order) if cast_order is not None else None,
         )
 
     def resolve(self) -> "ResolvedLoadout":
@@ -188,6 +271,12 @@ class ResolvedLoadout:
             "role_quest_complete": self.request.role_quest_complete,
             "ally_effects_enabled": self.request.ally_effects_enabled,
             "ability_ranks": dict(self.request.ability_ranks),
+            "champion_options": dict(self.request.champion_options),
+            "cast_order": (
+                list(self.request.cast_order)
+                if self.request.cast_order is not None
+                else None
+            ),
             "stats": dict(self.stats),
             "starting_defenses": self.defenses.public_summary(),
             "target_model_coverage": target_build_coverage(list(self.item_data)),

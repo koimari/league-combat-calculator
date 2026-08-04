@@ -29,7 +29,15 @@ def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
         "name": ability.get("name", "Equinox"),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
-        "parts": (DamagePart("magic", per_hit, count=count),),
+        "parts": (
+            DamagePart(
+                "magic",
+                per_hit,
+                count=count,
+                time_offset=0.0,
+                hit_interval=1.5 if second_hit else None,
+            ),
+        ),
         "total_raw": per_hit * count,
         "damage_type": "magic",
         "detail": "Initial hit + eruption" if second_hit else "Initial hit only",

@@ -318,6 +318,16 @@ def test_coupled_candidate_with_fail_closed_protoplasm_is_skipped(monkeypatch):
     assert result["items"]
     assert "Protoplasm Harness" not in result["items"]
     assert result["timeline_withheld_evaluations"] > 0
+    assert result["timeline_withheld_candidate_count"] > 0
+    assert any(
+        "Protoplasm Harness" in row["items"]
+        for row in result["timeline_withheld_candidates"]
+    )
+    assert all(
+        row["reason"] == "candidate_rejected_target_state"
+        for row in result["timeline_withheld_candidates"]
+        if "Protoplasm Harness" in row["items"]
+    )
 
 
 def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch):
@@ -353,6 +363,69 @@ def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch
     assert result["is_certified_best"] is True
     assert result["selection_certification"] == "event_ordered_local_search"
     assert "Unending Despair" not in result["items"]
+    withheld = result["timeline_withheld_candidates"]
+    assert any("Unending Despair" in row["items"] for row in withheld)
+    assert all(
+        row["timeline_coverage"]["complete"] is False
+        for row in withheld
+        if "Unending Despair" in row["items"]
+    )
+    assert all(
+        row["reason"] == "partial_event_order"
+        for row in withheld
+        if "Unending Despair" in row["items"]
+    )
+
+
+def test_coupled_ranked_build_uses_its_participant_timeline_receipt(monkeypatch):
+    """Ranked coupled rows must not fall back to raw pair-fight coverage."""
+
+    def coupled_timeline(*_args, **_kwargs):
+        return {
+            "breakdown": [{"participant_id": "main", "total_damage": 900.0}],
+            "participants": [
+                {"participant_id": "main", "survival": {"effective_health": 1.0}}
+            ],
+            "events": [],
+            "timeline_coverage": {
+                "complete": True,
+                "certification": "event_order_certified",
+                "exact_sources": ["coupled_receipt"],
+                "coarse_sources": [],
+            },
+        }
+
+    monkeypatch.setattr(
+        "src.calculator.optimizer.build_participant_timeline", coupled_timeline
+    )
+    monkeypatch.setattr(
+        "src.calculator.optimizer.run_fight",
+        lambda *_args, **_kwargs: {
+            "timeline_coverage": {
+                "complete": False,
+                "certification": "partial_event_order",
+                "exact_sources": [],
+                "coarse_sources": ["raw_pair_fallback"],
+            }
+        },
+    )
+
+    result = _optimize_build(
+        get_champion("Aatrox"),
+        level=6,
+        max_legendary_slots=1,
+        include_boots=False,
+        enemy_loadouts=[object()],
+        require_complete_timeline=True,
+    )
+
+    assert result["ranked_builds"]
+    assert result["ranked_builds"][0]["timeline_coverage"] == {
+        "complete": True,
+        "certification": "event_order_certified",
+        "exact_sources": ["coupled_receipt"],
+        "coarse_sources": [],
+    }
 
 
 def test_coupled_evaluate_withholds_partial_timeline(monkeypatch):

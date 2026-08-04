@@ -252,17 +252,38 @@ def _evaluate_build_uncached(
             if "Protoplasm Harness" not in str(exc):
                 raise
             if timeline_audit is not None:
+                coverage = {
+                    "complete": False,
+                    "certification": "partial_candidate_event_order",
+                    "exact_sources": [],
+                    "coarse_sources": ["target_Protoplasm Harness"],
+                    "note": "Candidate rejected by a target-state interaction.",
+                }
                 timeline_audit["evaluations"] += 1
                 timeline_audit["partial_evaluations"] += 1
                 timeline_audit["coarse_sources"].add("target_Protoplasm Harness")
+                timeline_audit.setdefault("withheld_builds", {})[
+                    _build_receipt_key(items)
+                ] = _public_build_receipt(
+                    items, coverage, "candidate_rejected_target_state"
+                )
             return float("-inf")
         coverage = combat.get("timeline_coverage", {})
         if timeline_audit is not None:
             timeline_audit["evaluations"] += 1
             timeline_audit["exact_sources"].update(coverage.get("exact_sources", []))
             timeline_audit["coarse_sources"].update(coverage.get("coarse_sources", []))
+            # Coupled searches score through this full participant timeline.
+            # Keep its receipt attached to the exact build so the public
+            # ranked row cannot later substitute a raw pair-fight receipt.
+            timeline_audit.setdefault("build_coverages", {})[
+                _build_receipt_key(items)
+            ] = dict(coverage)
             if not coverage.get("complete", False):
                 timeline_audit["partial_evaluations"] += 1
+                timeline_audit.setdefault("withheld_builds", {})[
+                    _build_receipt_key(items)
+                ] = _public_build_receipt(items, coverage, "partial_event_order")
         if require_complete_timeline and not coverage.get("complete", False):
             # A coupled optimizer must never rank a candidate whose own
             # timeline is only phase-ordered.  Exclude it from the search and
@@ -356,6 +377,9 @@ def _evaluate_build_uncached(
         timeline_audit["coarse_sources"].update(coverage["coarse_sources"])
         if not coverage["complete"]:
             timeline_audit["partial_evaluations"] += 1
+            timeline_audit.setdefault("withheld_builds", {})[
+                _build_receipt_key(items)
+            ] = _public_build_receipt(items, coverage, "partial_event_order")
     if require_complete_timeline and not coverage["complete"]:
         return float("-inf")
 
@@ -403,6 +427,43 @@ def _combined_build_timeline_coverage(
         (result.get("timeline_coverage", {}) for result in results),
         target_count=len(results),
     )
+
+
+def _build_receipt_key(items: list[dict[str, Any]]) -> tuple[str, ...]:
+    """Identify one evaluated build in the search receipt cache.
+
+    The optimizer's score memo uses the ordered item list (boots first when
+    present), so the coverage receipt must use that same identity.  Keeping
+    this key local to the optimizer avoids exposing internal candidate state
+    in the public response.
+    """
+    return tuple(str(item.get("name", "")) for item in items)
+
+
+def _public_build_receipt(
+    items: list[dict[str, Any]],
+    coverage: dict[str, Any],
+    reason: str,
+) -> dict[str, Any]:
+    """Serialize one candidate withheld before ranking as an audit row."""
+    boots = next(
+        (
+            str(item.get("name", ""))
+            for item in items
+            if "BOOTS" in item.get("rank", [])
+        ),
+        None,
+    )
+    return {
+        "items": [
+            str(item.get("name", ""))
+            for item in items
+            if "BOOTS" not in item.get("rank", [])
+        ],
+        "boots": boots,
+        "timeline_coverage": dict(coverage),
+        "reason": str(reason),
+    }
 
 
 def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
@@ -697,6 +758,8 @@ def optimize_build(
         "partial_evaluations": 0,
         "exact_sources": set(),
         "coarse_sources": set(),
+        "build_coverages": {},
+        "withheld_builds": {},
     }
     eval_kwargs = {
         "fight_params": fight_params,
@@ -965,7 +1028,9 @@ def optimize_build(
         qualifier = " event-ordered" if require_complete_timeline else ""
         raise ValueError(
             f"No complete legal{qualifier} build fits the selected "
-            f"constraints{constraint}"
+            f"constraints{constraint} for "
+            f"{champion_data.get('name', 'the selected champion')}; this champion's current "
+            "event package has no complete candidate timeline"
         )
     duration = (
         fight_params[0].fight_duration_seconds
@@ -975,6 +1040,13 @@ def optimize_build(
     public_ranked = []
     for rank, (legendaries, boots, score) in enumerate(ranked[:2], start=1):
         build_items = ([boots] if boots else []) + legendaries
+        coupled_receipt = (
+            timeline_audit.get("build_coverages", {}).get(
+                _build_receipt_key(build_items)
+            )
+            if coupled_objective
+            else None
+        )
         public_ranked.append(
             {
                 "rank": rank,
@@ -984,7 +1056,8 @@ def optimize_build(
                 "team_fight_value": round(score, 1) if coupled_objective else None,
                 "dps": round(score / duration, 1),
                 "gold": _build_gold(build_items),
-                "timeline_coverage": _build_timeline_coverage(
+                "timeline_coverage": coupled_receipt
+                or _build_timeline_coverage(
                     champion_data,
                     level,
                     build_items,
@@ -1000,6 +1073,10 @@ def optimize_build(
         coverage_candidates.extend(legal_boots)
     candidate_coverage = optimizer_candidate_coverage(coverage_candidates)
     search_timeline_coverage = _public_search_timeline_coverage(timeline_audit)
+    timeline_withheld_candidates = sorted(
+        timeline_audit.get("withheld_builds", {}).values(),
+        key=lambda row: (tuple(row.get("items", [])), row.get("boots") or ""),
+    )
     certified_best = (
         exact_mode
         and candidate_coverage["complete"]
@@ -1046,12 +1123,18 @@ def optimize_build(
             else (
                 "exhaustive_event_ordered"
                 if certified_best
-                else "partial_or_unexhaustive"
+                else (
+                    "event_ordered_item_scope_gap"
+                    if search_timeline_coverage["complete"]
+                    else "partial_or_unexhaustive"
+                )
             )
         ),
         "candidate_coverage": candidate_coverage,
         "timeline_withheld_evaluations": (
             timeline_audit["partial_evaluations"] if require_complete_timeline else 0
         ),
+        "timeline_withheld_candidate_count": len(timeline_withheld_candidates),
+        "timeline_withheld_candidates": timeline_withheld_candidates,
         "gold_budget": gold_budget,
     }

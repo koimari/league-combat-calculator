@@ -99,10 +99,27 @@ def _w_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
     max_health = float(ctx.target.get("target_max_health", 0.0))
     percent = base_percent + per_100_bonus_ad * bonus_ad / 100.0
     raw = max_health * percent / 100.0
+
+    def max_health_damage(
+        _missing_ratio: float,
+        live_target_max_health: float | None = None,
+    ) -> float:
+        live_max = (
+            max_health if live_target_max_health is None else live_target_max_health
+        )
+        return live_max * percent / 100.0
+
     return {
         "name": ability.get("name", "Denting Blows"),
         "breakdown_key": "passive_proc_W",
-        "parts": (DamagePart("physical", raw, time_offset=hit_time),),
+        "parts": (
+            DamagePart(
+                "physical",
+                raw,
+                hp_scaled_damage=max_health_damage,
+                time_offset=hit_time,
+            ),
+        ),
         "target_debuff": {
             "armor_reduction_percent": _W_ARMOR_REDUCTION_PERCENT,
             "duration": _W_DEBUFF_DURATION,

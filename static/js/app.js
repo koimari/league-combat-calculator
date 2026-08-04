@@ -14,6 +14,11 @@ const engine = {
   itemOptions: {},
   championOptions: {},
   keystones: [],
+  defaultTarget: { health: 1000, bonus_health: 0, armor: 100, mr: 100 },
+  fightDefaults: {},
+  exclusivityGroups: {},
+  roleQuest: {},
+  itemCatalogReady: false,
   fightLimits: { fight_duration: [1, 10] },
   pendingTimer: null,
   requestId: 0,
@@ -47,10 +52,11 @@ const state = {
     physicalDamage: 0,
     adRatio: 0,
     abilityInputs: {},
+    championOptions: {},
   },
   targets: [],
   allies: [],
-  fight: { rotations: 1, duration: 10, aaUptime: 0 },
+  fight: { rotations: 1, duration: 10, aaUptime: 0, aaUptimeMode: "calculated" },
   optimizer: { running: false, summary: null, scope: null, rosterErrors: {} },
 };
 
@@ -107,6 +113,44 @@ function mergeAbilityCatalog(catalog) {
       formulaSource: ability.formulaSource || "Patch client formula graph",
     }));
   });
+}
+
+function mergeItemCoverage(catalog) {
+  if (!Array.isArray(catalog) || !catalog.length || !Array.isArray(DATA?.items)) return;
+  const byId = new Map(catalog.map((entry) => [Number(entry.id), entry]).filter(([id]) => id));
+  const existingIds = new Set(DATA.items.map((item) => Number(item.id)));
+  DATA.items = DATA.items.map((item) => {
+    const metadata = byId.get(Number(item.id));
+    if (!metadata) return { ...item, backendAvailable: false };
+    return {
+      ...item,
+      ...metadata,
+      backendName: metadata.name,
+      backendAvailable: true,
+      modelCoverage: metadata.model_coverage || null,
+      targetModelCoverage: metadata.target_model_coverage || null,
+      supportQuestStage: metadata.support_quest_stage || metadata.supportQuestStage || null,
+      upgradeFrom: metadata.upgrade_from || metadata.upgradeFrom || null,
+      upgradeTo: metadata.upgrade_to || metadata.upgradeTo || null,
+    };
+  });
+  catalog.forEach((entry) => {
+    const id = Number(entry.id);
+    if (!id || existingIds.has(id)) return;
+    DATA.items.push({
+      ...entry,
+      backendName: entry.name,
+      backendAvailable: true,
+      modelCoverage: entry.model_coverage || null,
+      targetModelCoverage: entry.target_model_coverage || null,
+      into: entry.into || [],
+      categories: entry.categories || [],
+      supportQuestStage: entry.support_quest_stage || entry.supportQuestStage || null,
+      upgradeFrom: entry.upgrade_from || entry.upgradeFrom || null,
+      upgradeTo: entry.upgrade_to || entry.upgradeTo || null,
+    });
+  });
+  engine.itemCatalogReady = true;
 }
 
 function wikiDamageType(type) {
@@ -199,6 +243,13 @@ function resetAbilityInputs() {
   }]));
 }
 
+function resetChampionOptions() {
+  const definitions = engine.championOptions[state.attacker.champion]?.options || [];
+  state.attacker.championOptions = Object.fromEntries(
+    definitions.map((option) => [option.key, option.default]),
+  );
+}
+
 function syncAbilityInputsToLevel() {
   if (!state.attacker.champion) return;
   const defaultRanks = defaultAbilityRanks(state.attacker);
@@ -229,7 +280,88 @@ function abilityImage(ability) {
 }
 
 function itemName(id, fallback = "Empty slot") {
-  return getItem(id)?.name || fallback;
+  const item = getItem(id);
+  return item?.backendName || item?.name || fallback;
+}
+
+function backendItemReady(item) {
+  return !engine.itemCatalogReady || item?.backendAvailable !== false;
+}
+
+function roleQuestStateForPath(path) {
+  const parts = String(path || "").split(".");
+  if (parts[0] === "attacker") {
+    return {
+      role: state.attacker.role || "",
+      complete: Boolean(state.attacker.roleQuestComplete),
+    };
+  }
+  if ((parts[0] === "targets" || parts[0] === "allies") && parts.length > 1) {
+    const loadout = state[parts[0]]?.[Number(parts[1])];
+    return {
+      role: loadout?.role || "",
+      complete: Boolean(loadout?.roleQuestComplete),
+    };
+  }
+  return { role: "", complete: false };
+}
+
+function supportQuestItemBlockReason(item, path) {
+  const stage = item?.supportQuestStage;
+  if (!stage) return "";
+  const { role, complete } = roleQuestStateForPath(path);
+  if (role !== "support") return "Support quest items require the support role.";
+  if (complete && stage !== "upgraded") {
+    return "A completed support quest requires an upgraded support item.";
+  }
+  if (!complete && stage === "upgraded") {
+    return "Complete the support role quest before equipping an upgraded support item.";
+  }
+  return "";
+}
+
+function roleQuestBootUpgradeName(item, complete) {
+  const role = state.attacker.role;
+  if (!item || role !== "mid") {
+    return Number(item?.tier) >= 3
+      ? (item?.upgradeFrom || null)
+      : item?.name;
+  }
+  if (complete && Number(item.tier) < 3) return item.upgradeTo || null;
+  if (!complete && Number(item.tier) >= 3) return item.upgradeFrom || null;
+  return item.name;
+}
+
+function normalizeAttackerBootForRole(bootId) {
+  const item = getItem(bootId);
+  if (!item) return 0;
+  const targetName = roleQuestBootUpgradeName(item, Boolean(state.attacker.roleQuestComplete));
+  if (!targetName || targetName === item.name) return Number(bootId);
+  return findItemByBackendName(targetName)?.id || Number(bootId);
+}
+
+function normalizeAttackerBootsForRole() {
+  ["A", "B"].forEach((side) => {
+    const key = "questBoot" + side;
+    if (!state.attacker[key]) return;
+    state.attacker[key] = normalizeAttackerBootForRole(state.attacker[key]);
+  });
+}
+
+function normalizeRosterBootForRole(loadout) {
+  const item = getItem(loadout?.boots);
+  if (!item) return;
+  const midUpgrade = loadout.role === "mid" && Boolean(loadout.roleQuestComplete);
+  const targetName = midUpgrade
+    ? (Number(item.tier) < 3 ? item.upgradeTo : item.name)
+    : (Number(item.tier) >= 3 ? item.upgradeFrom : item.name);
+  if (targetName && targetName !== item.name) {
+    loadout.boots = findItemByBackendName(targetName)?.id || loadout.boots;
+  }
+}
+
+function findItemByBackendName(name) {
+  return DATA.items.find((item) => item.backendName === name || item.name === name) || null;
 }
 
 function pathValue(path) {
@@ -269,9 +401,29 @@ function setPath(path, nextValue) {
   invalidateOptimization();
 }
 
+function itemOptionSpec(id) {
+  const item = getItem(id);
+  const definition = item && engine.itemOptions[item.backendName || item.name];
+  const entries = Object.entries(definition?.options || {});
+  if (entries.length !== 1) return null;
+  const [key, schema] = entries[0];
+  return {
+    key,
+    label: schema.label || key,
+    min: Number(schema.min ?? 0),
+    max: Number(schema.max ?? 0),
+    step: Number(schema.step ?? 1),
+    statEffects: definition.stat_effects?.[key] || {},
+    derived: definition.derived || {},
+  };
+}
+
 function stackSpec(id) {
-  if (Number(id) === 1082) return { max: 10, ap: 4, moveSpeedPercentAt: null };
-  if (Number(id) === 3041) return { max: 25, ap: 5, moveSpeedPercentAt: 10 };
+  const configured = itemOptionSpec(id);
+  if (configured) return configured;
+  // Keep the picker usable during the brief pre-catalogue loading window.
+  if (Number(id) === 1082) return { key: "glory_stacks", label: "Glory stacks", min: 0, max: 10, step: 1, statEffects: { bonus_ap_per_unit: 4 } };
+  if (Number(id) === 3041) return { key: "glory_stacks", label: "Glory stacks", min: 0, max: 25, step: 1, statEffects: { bonus_ap_per_unit: 5, move_speed_threshold: 10, move_speed_percent: 10 } };
   return null;
 }
 
@@ -297,16 +449,33 @@ function buildStats(itemIds, stackCounts = []) {
   const entries = itemIds.map((id, index) => ({ item: getItem(id), stacks: Number(stackCounts[index] || 0) })).filter((entry) => entry.item);
   const total = entries.reduce((sum, entry) => {
     const { item, stacks } = entry;
-    for (const key of ["ap", "hp", "mana", "ad", "armor", "mr", "haste", "pen", "percentPen", "lethality", "percentArmorPen", "attackSpeed", "moveSpeed", "moveSpeedPercent", "crit"]) {
+    for (const key of ["ap", "hp", "mana", "ad", "armor", "mr", "haste", "pen", "percentPen", "lethality", "percentArmorPen", "attackSpeed", "moveSpeed", "moveSpeedPercent", "crit", "lifesteal", "omnivamp", "healAndShieldPower", "healthRegen", "tenacity", "manaRegen", "goldPer10", "critDamage"]) {
       sum[key] += Number(item[key] || 0);
     }
     const spec = stackSpec(item.id);
     if (spec) {
-      sum.ap += Math.min(stacks, spec.max) * spec.ap;
-      if (spec.moveSpeedPercentAt && stacks >= spec.moveSpeedPercentAt) sum.moveSpeedPercent += 10;
+      const bounded = Math.min(Math.max(stacks, spec.min), spec.max);
+      const effects = spec.statEffects || {};
+      sum.ap += bounded * Number(effects.bonus_ap_per_unit || 0);
+      sum.hp += bounded * Number(effects.bonus_health_per_unit || 0);
+      sum.mana += bounded * Number(effects.bonus_mana_per_unit || 0);
+      if (effects.move_speed_threshold != null && bounded >= Number(effects.move_speed_threshold)) {
+        sum.moveSpeedPercent += Number(effects.move_speed_percent || 0);
+      }
     }
     return sum;
-  }, { ap: 0, hp: 0, mana: 0, ad: 0, armor: 0, mr: 0, haste: 0, pen: 0, percentPen: 0, lethality: 0, percentArmorPen: 0, attackSpeed: 0, moveSpeed: 0, moveSpeedPercent: 0, crit: 0 });
+  }, { ap: 0, hp: 0, mana: 0, ad: 0, armor: 0, mr: 0, haste: 0, pen: 0, percentPen: 0, lethality: 0, percentArmorPen: 0, attackSpeed: 0, moveSpeed: 0, moveSpeedPercent: 0, crit: 0, lifesteal: 0, omnivamp: 0, healAndShieldPower: 0, healthRegen: 0, tenacity: 0, manaRegen: 0, goldPer10: 0, critDamage: 0 });
+  const manaToApRatio = entries.reduce((ratio, { item }) => ratio + Number(item.statConversions?.bonus_mana_to_ap_ratio || 0), 0);
+  const manaToHealthRatio = entries.reduce((ratio, { item }) => ratio + Number(item.statConversions?.bonus_mana_to_health_ratio || 0), 0);
+  const healthToApRatio = entries.reduce((ratio, { item }) => ratio + Number(item.statConversions?.bonus_health_to_ap_ratio || 0), 0);
+  const warmogHealthRatio = entries.reduce((ratio, { item }) => ratio + Number(item.statConversions?.item_bonus_health_ratio || 0), 0);
+  const dawncoreAp = entries.reduce((ap, { item }) => ap + (total.manaRegen * Number(item.statConversions?.ap_per_mana_regen_unit || 0)) / Math.max(1, Number(item.statConversions?.mana_regen_threshold_percent || 0)), 0);
+  const flowingWaterAp = entries.reduce((ap, { item }) => ap + Number(item.statConversions?.rapids_bonus_ap || 0), 0);
+  total.ap += total.mana * manaToApRatio;
+  total.hp += total.mana * manaToHealthRatio;
+  total.hp *= 1 + warmogHealthRatio;
+  total.ap += total.hp * healthToApRatio;
+  total.ap += dawncoreAp + flowingWaterAp;
   total.apBeforeMultiplier = total.ap;
   total.apMultiplier = entries.some(({ item }) => item.id === 3089) ? 1.3 : 1;
   total.ap *= total.apMultiplier;
@@ -324,6 +493,46 @@ function championStats(name, level, itemIds = [], stackCounts = []) {
   const scale = (boundedLevel - 1) * (0.7025 + 0.0175 * (boundedLevel - 1));
   const build = buildStats(itemIds, stackCounts);
   const baseHp = (champion?.hp || 0) + (champion?.hpPerLevel || 0) * scale;
+  const baseAd = (champion?.ad || 0) + (champion?.adPerLevel || 0) * scale;
+  const maxMana = (champion?.mana || 0) + (champion?.manaPerLevel || 0) * scale + build.mana;
+  const maxManaToAdRatio = itemIds.reduce((ratio, id) => ratio + Number(getItem(id)?.statConversions?.max_mana_to_ad_ratio || 0), 0);
+  build.ad += maxMana * maxManaToAdRatio;
+  const isMelee = Number(champion?.range || 0) <= 175;
+  const attackSpeedPassive = itemIds.reduce((percent, id) => {
+    const conversion = getItem(id)?.statConversions || {};
+    const key = isMelee ? "bonus_attack_speed_melee" : "bonus_attack_speed_ranged";
+    return percent + Number(conversion[key] || conversion.bonus_attack_speed_percent || 0);
+  }, 0);
+  const steraksRatio = itemIds.reduce((ratio, id) => ratio + Number(getItem(id)?.statConversions?.base_ad_to_bonus_ad_ratio || 0), 0);
+  const bloodmailRatio = itemIds.reduce((ratio, id) => ratio + Number(getItem(id)?.statConversions?.bonus_health_to_ad_ratio || 0), 0);
+  build.ad += baseAd * steraksRatio + build.hp * bloodmailRatio;
+  const bloodmailMissingHealth = itemIds.reduce((fraction, id, index) => {
+    const conversion = getItem(id)?.statConversions || {};
+    if (getItem(id)?.backendName !== "Overlord's Bloodmail") return fraction;
+    const cap = Number(conversion.retribution_missing_health_max || 0) * 100;
+    return Math.max(fraction, Math.min(cap, Number(stackCounts[index] || 0)) / 100);
+  }, 0);
+  const bloodmailRetributionRatio = itemIds.reduce((ratio, id) => ratio + Number(getItem(id)?.statConversions?.retribution_missing_health_max || 0), 0);
+  if (bloodmailMissingHealth > 0) build.ad += (baseAd + build.ad) * bloodmailRetributionRatio * bloodmailMissingHealth;
+  const famineSuffix = isMelee ? "melee" : "ranged";
+  const famineAbilityHaste = itemIds.reduce((haste, id) => {
+    const conversion = getItem(id)?.statConversions || {};
+    const base = Number(conversion.famine_base_ability_haste || 0);
+    const ratio = Number(conversion[`famine_bonus_ad_to_ability_haste_${famineSuffix}`] || 0);
+    return haste + base + build.ad * ratio;
+  }, 0);
+  build.haste += famineAbilityHaste;
+  const yunTal = itemIds.find((id) => itemOptionSpec(id)?.key === "crit_stacks" && getItem(id)?.backendName === "Yun Tal Wildarrows");
+  if (yunTal) {
+    const spec = itemOptionSpec(yunTal);
+    const stacks = Math.max(0, Number(stackCounts[itemIds.indexOf(yunTal)] || 0));
+    const derived = spec?.derived || {};
+    const suffix = isMelee ? "melee" : "ranged";
+    const perStack = Number(derived[`crit_chance_per_stack_${suffix}`] || 0);
+    const cap = Number(derived.crit_chance_cap || 0);
+    const maxStacks = Number(derived[`crit_stack_max_${suffix}`] || stacks);
+    build.crit += Math.min(cap, Math.min(stacks, maxStacks) * perStack);
+  }
   return {
     baseHp,
     bonusHp: build.hp,
@@ -338,8 +547,16 @@ function championStats(name, level, itemIds = [], stackCounts = []) {
     percentPen: build.percentPen,
     lethality: build.lethality,
     percentArmorPen: build.percentArmorPen,
-    attackSpeed: (champion?.attackSpeed || 0) + (champion?.attackSpeedRatio || champion?.attackSpeed || 0) * ((((champion?.attackSpeedPerLevel || 0) * scale) + build.attackSpeed) / 100),
+    attackSpeed: (champion?.attackSpeed || 0) + (champion?.attackSpeedRatio || champion?.attackSpeed || 0) * ((((champion?.attackSpeedPerLevel || 0) * scale) + build.attackSpeed + attackSpeedPassive) / 100),
     crit: Math.min(100, build.crit),
+    lifesteal: build.lifesteal,
+    omnivamp: build.omnivamp,
+    healAndShieldPower: build.healAndShieldPower,
+    healthRegen: build.healthRegen,
+    tenacity: build.tenacity,
+    manaRegen: build.manaRegen,
+    goldPer10: build.goldPer10,
+    critDamage: build.critDamage,
     moveSpeed: ((champion?.moveSpeed || 0) + build.moveSpeed) * (1 + build.moveSpeedPercent / 100),
     range: champion?.range || 0,
   };
@@ -367,6 +584,11 @@ function rosterChampionStats(loadout) {
   return stats;
 }
 
+function rosterOrdinarySlotCount(loadout) {
+  if (loadout.role === "bottom" && loadout.roleQuestComplete) return 6;
+  return loadout.includeBoots !== false ? 5 : 6;
+}
+
 function usesQuestBootSlot() {
   return state.attacker.roleQuestComplete && ["mid", "bottom"].includes(state.attacker.role);
 }
@@ -385,7 +607,9 @@ function includeBootsForSide(side) {
 }
 
 function questBootIds() {
-  return state.attacker.role === "mid" ? TIER_THREE_BOOTS : TIER_TWO_BOOTS;
+  return state.attacker.role === "mid" && state.attacker.roleQuestComplete
+    ? TIER_THREE_BOOTS
+    : TIER_TWO_BOOTS;
 }
 
 function magicPenLabel(stats) {
@@ -414,6 +638,14 @@ function statMatrix(stats, compareStats = null, compact = false) {
     ["Move speed", one(stats.moveSpeed), compareStats && one(compareStats.moveSpeed)],
     ["Ability haste", one(stats.haste), compareStats && one(compareStats.haste)],
     ["Critical chance", `${one(stats.crit)}%`, compareStats && `${one(compareStats.crit)}%`],
+    ["Life steal", `${one(stats.lifesteal)}%`, compareStats && `${one(compareStats.lifesteal)}%`],
+    ["Omnivamp", `${one(stats.omnivamp)}%`, compareStats && `${one(compareStats.omnivamp)}%`],
+    ["Heal/shield power", `${one(stats.healAndShieldPower)}%`, compareStats && `${one(compareStats.healAndShieldPower)}%`],
+    ["Health regen", `${one(stats.healthRegen)}%`, compareStats && `${one(compareStats.healthRegen)}%`],
+    ["Mana regen", `${one(stats.manaRegen)}%`, compareStats && `${one(compareStats.manaRegen)}%`],
+    ["Gold per 10", one(stats.goldPer10), compareStats && one(compareStats.goldPer10)],
+    ["Critical damage", `${one(stats.critDamage)}%`, compareStats && `${one(compareStats.critDamage)}%`],
+    ["Tenacity", `${one(stats.tenacity)}%`, compareStats && `${one(compareStats.tenacity)}%`],
     ["Armor pen", armorPenLabel(stats), compareStats && armorPenLabel(compareStats)],
     ["Magic pen", magicPenLabel(stats), compareStats && magicPenLabel(compareStats)],
   ];
@@ -434,6 +666,14 @@ function itemStatsLine(item) {
   if (item.percentPen) stats.push(`${item.percentPen}% pen`);
   if (item.attackSpeed) stats.push(`${item.attackSpeed}% AS`);
   if (item.crit) stats.push(`${item.crit}% crit`);
+  if (item.lifesteal) stats.push(`${item.lifesteal}% life steal`);
+  if (item.omnivamp) stats.push(`${item.omnivamp}% omnivamp`);
+  if (item.healAndShieldPower) stats.push(`${item.healAndShieldPower}% heal/shield power`);
+  if (item.healthRegen) stats.push(`${item.healthRegen}% health regen`);
+  if (item.manaRegen) stats.push(`${item.manaRegen}% mana regen`);
+  if (item.goldPer10) stats.push(`${item.goldPer10} gold/10`);
+  if (item.critDamage) stats.push(`${item.critDamage}% crit damage`);
+  if (item.tenacity) stats.push(`${item.tenacity}% tenacity`);
   if (item.lethality) stats.push(`${item.lethality} lethality`);
   if (item.percentArmorPen) stats.push(`${item.percentArmorPen}% armor pen`);
   return stats.join(" · ") || "Item effect";
@@ -487,11 +727,12 @@ function rosterRoleControls(loadout, path) {
 
 function stackControl(path, id, compact = false) {
   const spec = stackSpec(id);
-  const value = Math.min(stackValue(path), spec.max);
-  return `<div class="stack-control ${compact ? "compact" : ""}" aria-label="${escapeHtml(itemName(id))} stacks">
-    <button type="button" data-stack-path="${path}" data-delta="-1" aria-label="Decrease stacks">−</button>
+  const value = Math.min(Math.max(stackValue(path), spec.min), spec.max);
+  const label = `${itemName(id)} ${spec.label || "state"}`;
+  return `<div class="stack-control ${compact ? "compact" : ""}" aria-label="${escapeHtml(label)}">
+    <button type="button" data-stack-path="${path}" data-delta="-${spec.step}" aria-label="Decrease ${escapeHtml(spec.label || "value")}">−</button>
     <output>${value}/${spec.max}</output>
-    <button type="button" data-stack-path="${path}" data-delta="1" aria-label="Increase stacks">+</button>
+    <button type="button" data-stack-path="${path}" data-delta="${spec.step}" aria-label="Increase ${escapeHtml(spec.label || "value")}">+</button>
   </div>`;
 }
 
@@ -582,7 +823,44 @@ function renderAbilityPackage(champion) {
   const wikiFormulas = [...formulaBySlot.values()].filter((ability) => ability.formulaSource === "Wiki-derived local cache" && ability.variants?.some((variant) => variant.packets?.length)).length;
   const wikiDescriptions = [...formulaBySlot.values()].filter((ability) => ability.formulaSource === "Wiki-derived local cache" && !ability.variants?.some((variant) => variant.packets?.length)).length;
   const withheld = coverage?.withheld?.filter((slot) => !formulaBySlot.has(slot)).length ? ` · pending ${coverage.withheld.filter((slot) => !formulaBySlot.has(slot)).join("/")}` : "";
-  return `<div class="ability-package"><div class="ability-package-head"><div><strong>Ability catalogue</strong><span>${reviewed} reviewed formulas · ${wikiFormulas} Wiki formulas · ${wikiDescriptions} Wiki descriptions · ${ingestedBySlot.size}/5 metadata ingested${withheld}</span></div><small>${escapeHtml(champion.ingestedAbilities?.[0]?.source?.kind || champion.source?.label || "Patch data")}</small></div><div class="ability-rows" style="--ability-count:5">${rows}</div></div>`;
+  const registrationNote = champion.engineRegistration === "generated_packet_module" ? " · generated packet · not reviewed" : "";
+  return `<div class="ability-package"><div class="ability-package-head"><div><strong>Ability catalogue</strong><span>${reviewed} reviewed formulas · ${wikiFormulas} Wiki formulas · ${wikiDescriptions} Wiki descriptions · ${ingestedBySlot.size}/5 metadata ingested${withheld}${registrationNote}</span></div><small>${escapeHtml(champion.ingestedAbilities?.[0]?.source?.kind || champion.source?.label || "Patch data")}</small></div><div class="ability-rows" style="--ability-count:5">${rows}</div></div>`;
+}
+
+const ABILITY_BOUND_CHAMPION_OPTIONS = new Set([
+  "passive_procs",
+  "mines_hit",
+  "r_sweet_spot",
+]);
+
+function abilityBindsChampionOption(key) {
+  const abilities = activeAbilityKit();
+  if (key === "passive_procs") return abilities.some((ability) => ability.slot === "P");
+  if (key === "mines_hit") return abilities.some((ability) => ability.slot === "E" && Number(ability.maxHits) > 1);
+  if (key === "r_sweet_spot") return abilities.some((ability) => ability.slot === "R" && ability.variants?.length > 1);
+  return false;
+}
+
+function renderChampionOptions() {
+  const definitions = (engine.championOptions[state.attacker.champion]?.options || [])
+    .filter((option) => !ABILITY_BOUND_CHAMPION_OPTIONS.has(option.key) || !abilityBindsChampionOption(option.key));
+  if (!definitions.length) return "";
+  const controls = definitions.map((option) => {
+    const value = state.attacker.championOptions[option.key] ?? option.default;
+    const label = escapeHtml(option.label || option.key);
+    if (option.type === "bool") {
+      return `<label class="champion-option-toggle"><input type="checkbox" data-champion-option="${escapeHtml(option.key)}" ${value ? "checked" : ""} /><span>${label}</span></label>`;
+    }
+    if (option.type === "select") {
+      const choices = (option.choices || []).map((choice) => `<option value="${escapeHtml(choice.value)}" ${String(value) === String(choice.value) ? "selected" : ""}>${escapeHtml(choice.label || choice.value)}</option>`).join("");
+      return `<label class="champion-option-field"><span>${label}</span><select data-champion-option="${escapeHtml(option.key)}" data-option-type="select">${choices}</select></label>`;
+    }
+    const step = option.step ?? (option.type === "int" ? 1 : "any");
+    const min = option.min == null ? "" : ` min="${option.min}"`;
+    const max = option.max == null ? "" : ` max="${option.max}"`;
+    return `<label class="champion-option-field"><span>${label}</span><input type="number" data-champion-option="${escapeHtml(option.key)}" data-option-type="${escapeHtml(option.type)}" value="${escapeHtml(value)}" step="${step}"${min}${max} /></label>`;
+  }).join("");
+  return `<div class="champion-options"><div class="champion-options-head"><strong>Scenario options</strong><span>These inputs are shared with the reviewed engine.</span></div><div class="champion-options-grid">${controls}</div></div>`;
 }
 
 function roleQuestNote() {
@@ -591,7 +869,9 @@ function roleQuestNote() {
   if (state.attacker.role === "mid") return "+8% bonus AD and AP · Tier 3 boots use one of six slots.";
   if (state.attacker.role === "bottom") return "Six item slots · boots move into the dedicated quest slot.";
   if (state.attacker.role === "top") return "+600 XP · +12.5% future XP · level cap 20 · no item-slot change.";
-  if (state.attacker.role === "support") return "Reserved ward / support quest slot · excluded from damage scoring.";
+  if (state.attacker.role === "support") return state.attacker.roleQuestComplete
+    ? "Completed quest: choose one upgraded support item in a build slot; its sourced stats/effects remain in the calculation."
+    : "Support quest incomplete: upgraded support items stay locked until the quest is complete.";
   if (state.attacker.role === "top") return "Level cap raised to 20 · no item-slot change.";
   return "No item-slot change for this role.";
 }
@@ -634,8 +914,8 @@ function renderBuildStrip(side) {
   const boot = includeBootsForSide(side)
     ? `<div class="quest-item"><span>${state.attacker.role === "mid" && usesQuestBootSlot() ? "Tier 3 boots" : "Boots"}</span>${itemSlot(questBootPath(side), state.attacker[`questBoot${side}`], false, true)}</div>`
     : "";
-  const support = state.attacker.role === "support" && state.attacker.roleQuestComplete
-    ? `<div class="utility-slot" title="This slot is not included in damage scoring"><span>Quest / wards</span><b>◆</b><small>Utility</small></div>`
+  const support = state.attacker.role === "support"
+    ? `<div class="utility-slot" title="Support quest state controls which support item stage is legal"><span>Support quest</span><b>${state.attacker.roleQuestComplete ? "UPGRADED" : "IN PROGRESS"}</b><small>${state.attacker.roleQuestComplete ? "Choose an upgraded support item in a build slot" : "Upgrade locked until quest complete"}</small></div>`
     : "";
   return `<div class="complete-build build-${side.toLowerCase()}">
     <div class="complete-build-head"><strong>Build ${side}</strong><span>${ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0)} combat ${plural(ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0), "slot")} + keystone${support ? " + utility" : ""}</span><button class="boots-toggle ${includeBootsForSide(side) ? "active" : ""}" type="button" data-include-boots="${side}" aria-pressed="${includeBootsForSide(side)}">${includeBootsForSide(side) ? "Boots included" : "No boots"}</button></div>
@@ -664,6 +944,7 @@ function renderBuilder() {
         <div class="hero-matrix"><div class="matrix-head"><strong>Complete champion stats</strong><span>${attacker.comparisonEnabled ? "Build A / Build B" : "Build A"}</span></div>${champion ? statMatrix(statsA, attacker.comparisonEnabled ? statsB : null) : `<div class="matrix-placeholder hero-placeholder">Select the champion whose build you want to compare or optimize.</div>`}</div>
       </div>
       ${champion ? renderAbilityPackage(champion) : ""}
+      ${champion ? renderChampionOptions() : ""}
       <div class="hero-build">
         ${renderRoleControls()}
         <div class="build-label"><div><strong>Complete builds</strong><span>${optimizePackageReady ? "Every occupied slot is scored into the full enemy roster" : "Add a sourced skill rotation or manual damage package to optimize"}</span></div><button class="optimize-build" type="button" data-optimize-build title="${optimizePackageReady ? "Search the strongest complete Build A" : "No sourced damage package for this champion yet"}" ${optimizeReady && !state.optimizer.running ? "" : "disabled"}>${state.optimizer.running ? "Optimizing…" : "Optimize Build A"}</button></div>
@@ -927,6 +1208,12 @@ function resultReason(winnerName, winnerIds, winner, loser) {
 }
 
 function survivalStatus(survival = {}) {
+  if (survival?.revived && survival?.terminal_phase === "revived") {
+    const reviveTime = Number(survival.revive_time);
+    return Number.isFinite(reviveTime)
+      ? `revived at ${one(reviveTime)}s · alive at window end`
+      : "revived · alive at window end";
+  }
   if (survival?.survived_window || survival?.death_time == null) return "alive at window end";
   const deathTime = Number(survival.death_time);
   return Number.isFinite(deathTime) ? `defeated at ${one(deathTime)}s` : "alive at window end";
@@ -997,9 +1284,9 @@ function engineItemOptions(ids, stacks = []) {
   const options = {};
   ids.forEach((id, index) => {
     const item = getItem(id);
-    const definition = item && engine.itemOptions[item.name];
-    if (!item || !definition?.options?.glory_stacks) return;
-    options[item.name] = { glory_stacks: Number(stacks[index] || 0) };
+    const spec = item && itemOptionSpec(id);
+    if (!item || !spec) return;
+    options[item.backendName || item.name] = { [spec.key]: Number(stacks[index] || 0) };
   });
   return options;
 }
@@ -1028,13 +1315,18 @@ function engineChampionOptions() {
   const champion = state.attacker.champion;
   const definition = engine.championOptions[champion];
   if (!definition?.options) return {};
-  const options = {};
+  const options = Object.fromEntries(
+    definition.options.map((option) => [
+      option.key,
+      state.attacker.championOptions[option.key] ?? option.default,
+    ]),
+  );
   definition.options.forEach((option) => {
-    if (option.key === "passive_procs" && activeAbilityKit().some((ability) => ability.slot === "P")) {
+    if (option.key === "passive_procs" && abilityBindsChampionOption(option.key)) {
       options[option.key] = abilityInput("P").casts;
-    } else if (option.key === "mines_hit" && activeAbilityKit().some((ability) => ability.slot === "E")) {
+    } else if (option.key === "mines_hit" && abilityBindsChampionOption(option.key)) {
       options[option.key] = abilityInput("E").hits;
-    } else if (option.key === "r_sweet_spot" && activeAbilityKit().some((ability) => ability.slot === "R")) {
+    } else if (option.key === "r_sweet_spot" && abilityBindsChampionOption(option.key)) {
       options[option.key] = abilityInput("R").variant === 0;
     }
   });
@@ -1068,7 +1360,7 @@ function engineAbilityRanks() {
 function engineTarget(target) {
   const selectedBoot = Number(target.boots || 0);
   const itemIds = target.items
-    .slice(0, target.includeBoots ? 5 : 6)
+    .slice(0, rosterOrdinarySlotCount(target))
     .filter(Boolean)
     .filter((id) => !ALL_ROLE_BOOTS.has(Number(id)));
   return {
@@ -1102,10 +1394,10 @@ function engineFightPayload(side) {
     champion: state.attacker.champion,
     level: state.attacker.level,
     ...build,
-    target_health: 1000,
-    target_bonus_health: 0,
-    target_armor: 100,
-    target_mr: 100,
+    target_health: Number(engine.defaultTarget.health || 1000),
+    target_bonus_health: Number(engine.defaultTarget.bonus_health || 0),
+    target_armor: Number(engine.defaultTarget.armor || 100),
+    target_mr: Number(engine.defaultTarget.mr || 100),
     enemies: state.targets.filter((target) => target.champion).map(engineTarget),
     allies: state.allies.filter((ally) => ally.champion).map(engineAlly),
     role: state.attacker.role || "",
@@ -1114,10 +1406,19 @@ function engineFightPayload(side) {
     include_crossover: state.attacker.comparisonEnabled || state.fight.rotations > 1,
     champion_options: engineChampionOptions(),
     ability_ranks: engineAbilityRanks(),
+    rotations: state.fight.rotations,
   };
-  if (state.fight.aaUptime > 0) {
+  const maxWindow = Number(engine.fightLimits.fight_duration?.[1] || 30);
+  const requestedWindow = Math.max(1, state.fight.duration * state.fight.rotations);
+  payload.auto_attack_uptime_mode = state.fight.aaUptimeMode || "calculated";
+  if (state.fight.aaUptimeMode === "calculated") {
+    payload.fight_mode = state.fight.rotations > 1 ? "time_based" : "one_rotation";
+    payload.fight_duration = Math.min(maxWindow, requestedWindow);
+    payload.include_auto_attacks = true;
+    payload.auto_attack_uptime = 0;
+  } else if (state.fight.aaUptime > 0) {
     payload.fight_mode = "time_based";
-    payload.fight_duration = Math.max(1, state.fight.duration * state.fight.rotations);
+    payload.fight_duration = Math.min(maxWindow, requestedWindow);
     payload.include_auto_attacks = true;
     payload.auto_attack_uptime = state.fight.aaUptime;
   } else {
@@ -1148,6 +1449,14 @@ function exactStatMatrix(result) {
     percentArmorPen: Number(stats.armor_penetration_percent || 0),
     attackSpeed: Number(stats.attack_speed || 0),
     crit: Number(stats.critical_strike_chance || 0),
+    lifesteal: Number(stats.lifesteal_percent || 0),
+    omnivamp: Number(stats.omnivamp_percent || 0),
+    healAndShieldPower: Number(stats.heal_and_shield_power_percent || 0),
+    healthRegen: Number(stats.health_regen_percent || 0),
+    tenacity: Number(stats.tenacity_percent || 0),
+    manaRegen: Number(stats.mana_regen_percent || 0),
+    goldPer10: Number(stats.gold_per_10 || 0),
+    critDamage: Number(stats.critical_strike_damage_percent || 0),
     moveSpeed: Number(stats.move_speed || 0),
   };
 }
@@ -1173,10 +1482,58 @@ function exactPoint(result) {
 }
 
 function exactBreakdown(result) {
-  return Object.values(result?.breakdown || {}).map((entry) => ({
+  return Object.values(result?.breakdown || {}).filter((entry) => Number(entry.total_damage || 0) > 0).map((entry) => ({
     source: entry.name || entry.slot || "Damage source",
-    detail: entry.casts ? `${entry.casts} cast${entry.casts === 1 ? "" : "s"}` : entry.count ? `${entry.count} hit${entry.count === 1 ? "" : "s"}` : "Event-ordered output",
+    detail: (() => {
+      const base = entry.casts ? `${entry.casts} cast${entry.casts === 1 ? "" : "s"}` : entry.count ? `${entry.count} hit${entry.count === 1 ? "" : "s"}` : "Event-ordered output";
+      const window = entry.temporary_lethality;
+      const targeting = entry.targeting;
+      const targetDetail = targeting?.kind === "chain_lightning"
+        ? ` · chain ${Number(targeting.chain_target_count || 0)} targets · roster slot ${Number(targeting.allocated_target_index || 0) + 1}`
+        : targeting?.kind === "chain_lightning_copied_on_hit"
+          ? ` · copied on-hit · roster slot ${Number(targeting.allocated_target_index || 0) + 1}`
+          : targeting?.kind === "runaan_bolt"
+            ? ` · Runaan bolt · roster slot ${Number(targeting.allocated_target_index || 0) + 1}`
+            : targeting?.kind === "runaan_bolt_copied_on_hit"
+              ? ` · Runaan copied on-hit · roster slot ${Number(targeting.allocated_target_index || 0) + 1}`
+              : targeting?.kind === "hydra_cleave"
+                ? ` · Titanic Cleave · roster slot ${Number(targeting.allocated_target_index || 0) + 1}`
+                : targeting?.kind === "active_secondary"
+                  ? ` · active secondary packet · roster slot ${Number(targeting.allocated_target_index || 0) + 1}`
+                  : targeting?.kind === "cleave_secondary"
+                    ? ` · Cleave on-hit · roster slot ${Number(targeting.allocated_target_index || 0) + 1}`
+          : "";
+      if (!window || Number(window.amount) <= 0 || Number(window.duration) <= 0) return `${base}${targetDetail}`;
+      const applied = Number(window.applied_event_count || 0);
+      const state = applied ? `${applied} later event${applied === 1 ? "" : "s"} applied` : "no later events applied";
+      return `${base}${targetDetail} · +${one(window.amount)} lethality for ${one(window.duration)}s · ${state}`;
+    })(),
     damage: Number(entry.total_damage || 0),
+  }));
+}
+
+function exactSupportOutputs(result) {
+  return Object.values(result?.breakdown || {}).filter((entry) => Number(entry.total_amount || 0) > 0).map((entry) => {
+    const label = entry.output_type === "mana" ? "mana restored" : "self-healing";
+    return `${fmt(entry.total_amount)} ${label} · ${escapeHtml(entry.name || "Item effect")}`;
+  });
+}
+
+// Standalone calculations expose self-healing at the top level, while
+// coupled combat responses place the same receipts under combat. Keep one
+// UI path for both response shapes and prefer the ordered combat ledger when
+// it is present so events are never rendered twice.
+function healingEventsForResult(result) {
+  const combatEvents = Array.isArray(result?.combat?.healing_events)
+    ? result.combat.healing_events
+    : [];
+  if (combatEvents.length) return combatEvents;
+  return (Array.isArray(result?.self_healing_events) ? result.self_healing_events : []).map((event) => ({
+    ...event,
+    attacker: event.attacker || "main",
+    amount: Number(event.amount || 0),
+    raw_amount: Number(event.raw_amount ?? event.amount ?? 0),
+    applied_amount: Number(event.applied_amount ?? event.amount ?? 0),
   }));
 }
 
@@ -1189,16 +1546,37 @@ function renderExactStatMatrix(aResult, bResult) {
 }
 
 function renderExactResistance(aResult, bResult) {
+  const startingDefenseSummary = (defenses = {}) => {
+    const rows = [];
+    const magicShield = Number(defenses.magic_shield || 0);
+    const physicalShield = Number(defenses.physical_shield || 0);
+    const generalShield = Number(defenses.general_shield || 0);
+    const thresholdShield = Number(defenses.threshold_shield?.amount || 0);
+    if (magicShield > 0) rows.push(`${fmt(magicShield)} magic shield`);
+    if (physicalShield > 0) rows.push(`${fmt(physicalShield)} physical shield`);
+    if (generalShield > 0) rows.push(`${fmt(generalShield)} shield`);
+    if (thresholdShield > 0) rows.push(`${fmt(thresholdShield)} threshold shield`);
+    if (defenses.spell_shield?.ready) rows.push("opening spell shield");
+    const incoming = defenses.incoming_damage || {};
+    const basicMultiplier = Number(incoming.basic_damage_multiplier || 1);
+    const basicReduction = Math.max(0, (1 - basicMultiplier) * 100);
+    if (basicReduction > 0.01) rows.push(`${one(basicReduction)}% basic damage reduction`);
+    const flatReduction = Number(incoming.basic_damage_flat_reduction || 0);
+    if (flatReduction > 0) rows.push(`${fmt(flatReduction)} flat basic reduction`);
+    const critMultiplier = Number(incoming.critical_strike_damage_multiplier || 1);
+    if (critMultiplier < 0.999) rows.push(`${one((1 - critMultiplier) * 100)}% critical damage reduction`);
+    return rows.length ? rows.join(" · ") : "—";
+  };
   const rows = (aResult?.targets || []).map((entry, index) => {
     const target = entry.target || {};
     const result = entry.result || {};
     const other = bResult?.targets?.[index]?.result;
     const armor = `${one(result.effective_armor)}${other ? ` / ${one(other.effective_armor)}` : ""}`;
     const mr = `${one(result.effective_mr)}${other ? ` / ${one(other.effective_mr)}` : ""}`;
-    const shield = Number(target.starting_defenses?.magic_shield || 0);
-    return `<tr><td>${escapeHtml(target.champion || "Target")}</td><td>${armor}</td><td>${mr}${shield ? ` · ${fmt(shield)} shield` : ""}</td></tr>`;
+    const defenses = startingDefenseSummary(target.starting_defenses);
+    return `<tr><td>${escapeHtml(target.champion || "Target")}</td><td>${armor}</td><td>${mr}</td><td>${escapeHtml(defenses)}</td></tr>`;
   }).join("");
-  $("resistanceOutput").innerHTML = rows ? `<div class="resistance-head"><span>Effective defenses</span><b>After build penetration</b></div><div class="resistance-table-wrap"><table><thead><tr><th>Enemy</th><th>Armor${bResult ? " · A / B" : ""}</th><th>MR${bResult ? " · A / B" : ""}</th></tr></thead><tbody>${rows}</tbody></table></div>` : "";
+  $("resistanceOutput").innerHTML = rows ? `<div class="resistance-head"><span>Effective defenses</span><b>After build penetration</b></div><div class="resistance-table-wrap"><table><thead><tr><th>Enemy</th><th>Armor${bResult ? " · A / B" : ""}</th><th>MR${bResult ? " · A / B" : ""}</th><th>Starting defenses</th></tr></thead><tbody>${rows}</tbody></table></div>` : "";
 }
 
 function renderExactBreakdown(aResult, bResult) {
@@ -1246,17 +1624,24 @@ function renderExactBreakdown(aResult, bResult) {
     const participantLabel = `${entry.champion || participant.champion || participant.participant_id || "Participant"}${entry.team || participant.team ? ` · ${entry.team || participant.team}` : ""}`;
     const appliedIncoming = Number(survival.health_damage || 0) + Number(survival.shield_absorbed || 0);
     const reduced = Number(survival.healing_reduced || 0);
-    return `<tr><td><strong>${escapeHtml(participantLabel)}</strong><small>${escapeHtml(status)} · ${fmt(survival.effective_health || 0)} eHP · ${fmt(survival.healing_received || 0)} healing${reduced ? ` · ${fmt(reduced)} anti-heal prevented` : ""}</small></td><td>${fmt(entry.total_damage || 0)}</td><td>${fmt(appliedIncoming)}</td>${bResult ? `<td>—</td><td>—</td>` : ""}</tr>`;
+    const supportShield = Number(survival.support_shield_received || 0);
+    const temporaryHealth = Number(survival.temporary_health_received || 0);
+    return `<tr><td><strong>${escapeHtml(participantLabel)}</strong><small>${escapeHtml(status)} · ${fmt(survival.effective_health || 0)} eHP · ${fmt(survival.healing_received || 0)} healing${temporaryHealth ? ` · ${fmt(temporaryHealth)} temporary health` : ""}${supportShield ? ` · ${fmt(supportShield)} support shield received` : ""}${reduced ? ` · ${fmt(reduced)} anti-heal prevented` : ""}</small></td><td>${fmt(entry.total_damage || 0)}</td><td>${fmt(appliedIncoming)}</td>${bResult ? `<td>—</td><td>—</td>` : ""}</tr>`;
   }).join("");
   const combatSection = combatRows ? `<section class="combat-participant-ledger"><header><div><p class="eyebrow">Team-fight ledger</p><h2>Participant survival</h2></div><span>Output · incoming · endpoint</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Participant</th><th><i class="legend-a"></i>Output before defeat</th><th>Applied incoming damage</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${combatRows}</tbody></table></div></section>` : "";
   const labels = new Map((aResult?.combat?.participants || []).map((participant) => [participant.participant_id, `${participant.champion} · ${participant.team}`]));
   const eventRows = (aResult?.combat?.events || []).filter((event) => Number(event.damage || 0) > 0 || event.skipped_reason).map((event) => `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(labels.get(event.target) || event.target || "Target")} · ${escapeHtml(event.source || "event")} · ${escapeHtml(event.event_precision || "exact")}${event.skipped_reason ? ` · ${escapeHtml(event.skipped_reason)}` : ""}</small></td><td>${fmt(event.damage || 0)}</td></tr>`).join("");
-  const healingRows = (aResult?.combat?.healing_events || []).filter((event) => Number(event.raw_amount || event.amount || 0) > 0).map((event) => {
+  const healingRows = healingEventsForResult(aResult).filter((event) => Number(event.raw_amount || event.amount || 0) > 0).map((event) => {
     const factor = Number(event.healing_reduction_factor || 1);
     const wound = factor < 1 ? ` · Grievous Wounds ${Math.round((1 - factor) * 100)}%` : "";
     return `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(event.source || "healing")} · ${escapeHtml(event.kind || "heal")}${wound}</small></td><td>${fmt(event.applied_amount || 0)}<small>${fmt(event.raw_amount || event.amount || 0)} sourced</small></td></tr>`;
   }).join("");
-  const eventSection = eventRows || healingRows ? `<details class="breakdown-audit"><summary>Audit trail <span>Event order · timestamps</span></summary><section class="combat-event-ledger" aria-label="Event order audit"><header><div><p class="eyebrow">Event order</p><h2>Timestamped events</h2></div><span>Outgoing · incoming · recovery</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Event</th><th>Applied value</th></tr></thead><tbody>${eventRows}${healingRows}</tbody></table></div></section></details>` : "";
+  const supportRows = (aResult?.combat?.support_events || []).filter((event) => Number(event.applied_amount || event.amount || 0) > 0).map((event) => {
+    const target = labels.get(event.target || event.recipient) || event.target || event.recipient || "selected teammate";
+    const policy = event.target_policy || event.target_scope || "explicit recipient";
+    return `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(event.source || "support")} · ${escapeHtml(event.kind || "support")} · to ${escapeHtml(target)}</small></td><td>${fmt(event.applied_amount || event.amount || 0)}<small>${escapeHtml(policy)}</small></td></tr>`;
+  }).join("");
+  const eventSection = eventRows || healingRows || supportRows ? `<details class="breakdown-audit"><summary>Audit trail <span>Event order · timestamps</span></summary><section class="combat-event-ledger" aria-label="Event order audit"><header><div><p class="eyebrow">Event order</p><h2>Timestamped events</h2></div><span>Outgoing · incoming · recovery · support</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Event</th><th>Applied value</th></tr></thead><tbody>${eventRows}${healingRows}${supportRows}</tbody></table></div></section></details>` : "";
   const outcome = `<p class="breakdown-outcome" role="status">${escapeHtml(breakdownOutcome(aMainTotal, bResult ? bMainTotal : null))}</p>`;
   $("damageBreakdown").innerHTML = `${outcome}${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output · ${escapeHtml(survivalStatus((aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main")?.survival))}</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
 }
@@ -1323,11 +1708,35 @@ function renderExactResults(aResult, bResult) {
   renderExactResistance(aResult, bResult);
   const certification = aResult.timeline_coverage?.certification || "event ordered";
   const shield = Number(aResult.shield_absorbed || 0);
+  const shieldParts = [
+    ["magic", aResult.magic_shield_absorbed],
+    ["physical", aResult.physical_shield_absorbed],
+    ["general", aResult.general_shield_absorbed],
+    ["threshold", aResult.threshold_shield_absorbed],
+  ].filter(([, amount]) => Number(amount || 0) > 0).map(([label, amount]) => `${fmt(amount)} ${label}`);
+  const targetHealing = Number(aResult.target_healing_received || 0);
+  const selfHealing = Number(aResult.self_healing || 0);
+  const thresholdBonus = Number(aResult.threshold_health_bonus_gained || 0);
+  const supportOutputs = exactSupportOutputs(aResult);
+  const damageTypeOutputs = Object.entries(aResult.damage_by_type || {})
+    .filter(([, amount]) => Number(amount || 0) > 0)
+    .map(([type, amount]) => `${fmt(amount)} ${type}`);
+  const abilityOutput = Number(aResult.ability_damage || 0);
+  const autoOutput = Number(aResult.auto_attack_damage || 0);
+  const thresholdTriggered = Boolean(aResult.threshold_health_triggered);
+  const targetEndpoint = state.targets.length === 1
+    && Number.isFinite(Number(aResult.target_ending_health))
+    && Number.isFinite(Number(aResult.target_effective_max_health))
+    ? ` · target endpoint ${fmt(aResult.target_ending_health)} / ${fmt(aResult.target_effective_max_health)} health`
+    : "";
   const resource = Number(aResult.resource_remaining || 0);
   const mainParticipant = (aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main");
   const mainSurvival = mainParticipant?.survival;
-  const combatNote = mainSurvival ? ` · ${fmt(mainSurvival.effective_health || 0)} eHP · ${mainSurvival.survived_window ? "alive through the window" : `defeated at ${one(mainSurvival.death_time)}s`}` : "";
-  $("why").innerHTML = `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed · ${fmt(resource)} resource remaining${combatNote}.`;
+  const combatNote = mainSurvival ? ` · ${fmt(mainSurvival.effective_health || 0)} eHP${Number(mainSurvival.support_shield_received || 0) > 0 ? ` · ${fmt(mainSurvival.support_shield_received)} support shield received` : ""} · ${mainSurvival.revived && mainSurvival.terminal_phase === "revived" ? `revived at ${one(mainSurvival.revive_time)}s · alive through the window` : mainSurvival.survived_window ? "alive through the window" : `defeated at ${one(mainSurvival.death_time)}s`}` : "";
+  const outputMix = abilityOutput > 0 || autoOutput > 0
+    ? ` · ${fmt(abilityOutput)} abilities + ${fmt(autoOutput)} autos`
+    : "";
+  $("why").innerHTML = `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed${shieldParts.length ? ` (${escapeHtml(shieldParts.join(" · "))})` : ""}${damageTypeOutputs.length ? ` · ${escapeHtml(damageTypeOutputs.join(" · "))} output` : ""}${outputMix}${selfHealing > 0 ? ` · ${fmt(selfHealing)} self-healing` : ""}${targetHealing > 0 ? ` · ${fmt(targetHealing)} target healing received` : ""}${thresholdTriggered ? " · threshold-health transition triggered" : ""}${thresholdBonus > 0 ? ` · ${fmt(thresholdBonus)} threshold-health bonus` : ""}${supportOutputs.length ? ` · ${supportOutputs.join(" · ")}` : ""}${targetEndpoint} · ${fmt(resource)} resource remaining${combatNote}.`;
   $("threshold").innerHTML = `<span>${escapeHtml(OBJECTIVES[state.ui.objective].label)}</span><strong>${bResult ? (tied ? "No meaningful difference at this window" : `${escapeHtml(winner)} leads at the selected window`) : `${objectiveFormat(aObjective)} event-ordered output`}</strong>`;
   const aCurve = aResult.comparison_curve || [{ rotation: state.fight.rotations, total_damage: aTotal }];
   const bCurve = bResult?.comparison_curve || [];
@@ -1508,7 +1917,12 @@ function renderMechanicsOutput(aTotal, bTotal) {
   $("mechanicsOutput").innerHTML = ids.length ? `<div class="mechanics-head"><span>Item-specific output</span><b>${ids.length} selected</b></div>${ids.map((id) => {
     const item = getItem(id);
     const occurrence = itemOccurrence(id);
-    return `<article class="mechanic-row"><img src="${itemImage(id)}" alt="" /><div><strong>${escapeHtml(item.name)}</strong><p>${escapeHtml(mechanicDetail(id, occurrence, aTotal, bTotal))}</p></div><span class="${modeled.has(id) ? "modelled" : "text-only"}">${modeled.has(id) ? "Calculated" : "Patch text"}</span></article>`;
+    const coverageStatus = item?.modelCoverage?.status;
+    const calculationEligible = item?.modelCoverage?.calculation_eligible
+      ?? (coverageStatus && !["blocked", "review_pending"].includes(coverageStatus));
+    const backendCalculated = Boolean(item?.backendAvailable && calculationEligible);
+    const calculated = modeled.has(id) || backendCalculated;
+    return `<article class="mechanic-row"><img src="${itemImage(id)}" alt="" /><div><strong>${escapeHtml(item.name)}</strong><p>${escapeHtml(mechanicDetail(id, occurrence, aTotal, bTotal))}</p></div><span class="${calculated ? "modelled" : "text-only"}">${calculated ? "Calculated" : "Patch text"}</span></article>`;
   }).join("")}` : "";
 }
 
@@ -1581,16 +1995,32 @@ function exactObjectiveMetric(result, fallbackDamage = 0) {
   const rows = participantRows(result);
   const main = rows.find((row) => row.participant_id === "main") || {};
   const enemies = rows.filter((row) => String(row.participant_id || "").startsWith("enemy:"));
-  const teamDamage = rows.reduce((sum, row) => sum + Number(row.total_damage || 0), 0);
-  const firstDeath = enemies.map((row) => Number(row.survival?.death_time)).filter(Number.isFinite).sort((a, b) => a - b)[0];
+  // Damage is the selected team's output.  Enemy retaliation belongs in the
+  // survival ledger, never in the main team's damage objective.
+  const alliedRows = rows.filter((row) => row.team === "main" || row.participant_id === "main" || String(row.participant_id || "").startsWith("ally:"));
+  const teamDamage = alliedRows.reduce((sum, row) => sum + Number(row.total_damage || 0), 0);
+  // Main-participant healing is serialized under the survival ledger.  Keep
+  // the legacy top-level field as a compatibility fallback for older payloads.
+  const healingReceived = result?.healing_received ?? main.survival?.healing_received;
+  const hasHealingReceipt = healingReceived !== null && healingReceived !== undefined;
+  const supportShield = result?.support_shield_received ?? main.survival?.support_shield_received;
+  const hasSupportShieldReceipt = supportShield !== null && supportShield !== undefined;
+  // `Number(null)` is 0, which used to turn an alive enemy into an instant
+  // kill.  Only explicit finite death timestamps qualify for Kill pressure.
+  const firstDeath = enemies
+    .flatMap((row) => [row.survival?.first_death_time, row.survival?.death_time])
+    .filter((value) => value !== null && value !== undefined && value !== "")
+    .map((value) => Number(value))
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b)[0];
   return {
     overall: Number(main.total_damage ?? fallbackDamage),
-    damage: teamDamage || Number(main.total_damage ?? fallbackDamage),
+    damage: alliedRows.length ? teamDamage : Number(main.total_damage ?? fallbackDamage),
     kill: firstDeath == null ? null : firstDeath,
     survival: Number(main.survival?.effective_health),
-    utility: result?.shield_absorbed == null && result?.healing_received == null
+    utility: result?.shield_absorbed == null && !hasHealingReceipt && !hasSupportShieldReceipt
       ? null
-      : Number(result?.shield_absorbed || 0) + Number(result?.healing_received || 0),
+      : Number(result?.shield_absorbed || 0) + Number(healingReceived || 0) + Number(supportShield || 0),
   };
 }
 
@@ -1630,13 +2060,15 @@ function prototypeAbilityCards(champion) {
     const input = abilityInput(ability.slot);
     const rank = ability.slot === "P" ? 1 : input.rank;
     const rankControl = ability.slot === "P" ? `<span class="ability-rank"><small>Level scales</small><output>Lv ${state.attacker.level}</output></span>` : `<span class="ability-rank"><small>Rank</small><button type="button" data-ability-rank="${ability.slot}" data-delta="-1">−</button><output>${rank}</output><button type="button" data-ability-rank="${ability.slot}" data-delta="1">+</button></span>`;
-    return `<article class="ability-card"><img class="ability-icon-image" src="${abilityImage(ability)}" alt="" /><div><strong>${escapeHtml(ability.name)}</strong><small>${escapeHtml(ability.formulaSource === "Wiki-derived local cache" ? "Wiki formula" : "Reviewed formula")}</small></div>${rankControl}<span class="ability-casts"><small>${ability.slot === "P" ? "Procs" : "Casts"}</small><button type="button" data-ability-casts="${ability.slot}" data-delta="-1">−</button><output>${input.casts}</output><button type="button" data-ability-casts="${ability.slot}" data-delta="1">+</button></span></article>`;
+    const hitControl = ability.maxHits ? `<span class="ability-casts ability-hits"><small>Hits</small><button type="button" data-ability-hits="${ability.slot}" data-delta="-1" ${input.hits <= 1 ? "disabled" : ""}>−</button><output>${input.hits}</output><button type="button" data-ability-hits="${ability.slot}" data-delta="1" ${input.hits >= ability.maxHits ? "disabled" : ""}>+</button></span>` : "";
+    const variantControl = ability.variants?.length > 1 ? `<span class="ability-variants"><small>Variant</small>${ability.variants.map((variant, index) => `<button type="button" data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</span>` : "";
+    return `<article class="ability-card"><img class="ability-icon-image" src="${abilityImage(ability)}" alt="" /><div><strong>${escapeHtml(ability.name)}</strong><small>${escapeHtml(ability.formulaSource === "Wiki-derived local cache" ? "Wiki formula" : "Reviewed formula")}</small></div>${rankControl}<span class="ability-casts"><small>${ability.slot === "P" ? "Procs" : "Casts"}</small><button type="button" data-ability-casts="${ability.slot}" data-delta="-1">−</button><output>${input.casts}</output><button type="button" data-ability-casts="${ability.slot}" data-delta="1">+</button></span>${hitControl}${variantControl}</article>`;
   }).join("");
 }
 
 function prototypeItemSlot(id, path, side) {
   const item = getItem(id);
-  return `<button class="slot ${item ? "" : "empty-slot"}" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}" title="${item ? escapeHtml(itemStatsLine(item)) : "Add item"}">${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>`;
+  return `<div class="slot-wrap"><button class="slot ${item ? "" : "empty-slot"}" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}" title="${item ? escapeHtml(itemStatsLine(item)) : "Add item"}">${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>${item && stackSpec(id) ? stackControl(path, id) : ""}</div>`;
 }
 
 function prototypeRosterItemSlot(root, index, loadout, slot) {
@@ -1644,7 +2076,9 @@ function prototypeRosterItemSlot(root, index, loadout, slot) {
   const id = isBoots ? loadout.boots : loadout.items[slot];
   const path = isBoots ? `${root}.${index}.boots` : `${root}.${index}.items.${slot}`;
   const item = getItem(id);
-  return `<button class="roster-item-slot ${item ? "" : "is-empty"}" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}" title="${item ? escapeHtml(itemStatsLine(item)) : "Add item"}">${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" />` : "+"}</button>`;
+  const emptyLabel = isBoots ? "Add boots" : "Add item";
+  const slotLabel = isBoots ? `<span class="roster-slot-label">Boots</span>` : "";
+  return `<div class="roster-slot-wrap ${isBoots ? "roster-boots-wrap" : ""}">${slotLabel}<button class="roster-item-slot ${item ? "" : "is-empty"}" type="button" data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : emptyLabel}" title="${item ? escapeHtml(itemStatsLine(item)) : emptyLabel}">${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" />` : "+"}</button>${item && stackSpec(id) ? stackControl(path, id, true) : ""}</div>`;
 }
 
 function prototypeBuildSlots(side) {
@@ -1652,7 +2086,11 @@ function prototypeBuildSlots(side) {
   const ids = buildArray(sideUpper);
   const count = ordinarySlotCount(sideUpper);
   const slots = [];
-  for (let index = 0; index < 6; index += 1) {
+  // Bottom quest builds have six ordinary items plus a dedicated boots slot.
+  // Keep the familiar six-column grid, but do not silently hide that seventh
+  // slot from the user.
+  const visibleCount = Math.max(6, count + (includeBootsForSide(sideUpper) ? 1 : 0));
+  for (let index = 0; index < visibleCount; index += 1) {
     if (index < count) slots.push(prototypeItemSlot(ids[index], `attacker.build${sideUpper}.${index}`, sideUpper));
     else if (includeBootsForSide(sideUpper) && index === count) slots.push(prototypeItemSlot(state.attacker[`questBoot${sideUpper}`], questBootPath(sideUpper), sideUpper));
     else slots.push(`<span class="slot empty-slot slot-locked" aria-hidden="true"><span>·</span></span>`);
@@ -1706,11 +2144,14 @@ function renderPrototypeRoster(kind) {
     const champion = getChampion(loadout.champion);
     const label = kind === "targets" ? "enemy" : "ally";
     const roleOptions = [["", "Choose role"], ["top", "Top"], ["jungle", "Jungle"], ["mid", "Mid"], ["bottom", "Bottom"], ["support", "Support"]];
-    const itemSlots = Array.from({ length: 5 }, (_, slot) => prototypeRosterItemSlot(root, index, loadout, slot)).join("");
+    const itemSlots = Array.from({ length: rosterOrdinarySlotCount(loadout) }, (_, slot) => prototypeRosterItemSlot(root, index, loadout, slot)).join("");
     const bootsSlot = loadout.includeBoots !== false ? prototypeRosterItemSlot(root, index, loadout, "boots") : "";
     const abilityRanks = rosterAbilityRankControls(loadout, index, root);
     const bootsEnabled = loadout.includeBoots !== false;
-    return `<article class="roster-card"><button class="roster-pick" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" data-level="${root}.${index}.level" data-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" data-level="${root}.${index}.level" data-delta="1" aria-label="Increase ${label} level">+</button></div><button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}</div></article>`;
+    const roleQuestComplete = Boolean(loadout.roleQuestComplete);
+    const roleQuestLabel = roleQuestComplete ? "Quest complete" : "Quest incomplete";
+    const roleQuestButton = `<button class="roster-quest-toggle ${roleQuestComplete ? "active" : ""}" type="button" data-roster-quest="${root}.${index}" aria-pressed="${roleQuestComplete}" aria-label="${roleQuestComplete ? "Mark" : "Mark"} ${label} role quest ${roleQuestComplete ? "incomplete" : "complete"}" ${loadout.role ? "" : "disabled"}>${roleQuestLabel}</button>`;
+    return `<article class="roster-card"><button class="roster-pick" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" data-level="${root}.${index}.level" data-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" data-level="${root}.${index}.level" data-delta="1" aria-label="Increase ${label} level">+</button></div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}</div></article>`;
   }).join("") || `<p class="roster-empty">Add ${kind === "targets" ? "a target" : "an ally"} to the coupled timeline.</p>`;
   $(kind === "targets" ? "enemyCount" : "allyCount").textContent = entries.length;
 }
@@ -1719,6 +2160,7 @@ function renderPrototypeBuilder() {
   const champion = getChampion(state.attacker.champion);
   renderPrototypeChampion();
   $("abilityRow").innerHTML = champion ? prototypeAbilityCards(champion) : `<p class="roster-empty">Choose a champion to load its sourced ability package.</p>`;
+  $("championOptionsRow").innerHTML = champion ? renderChampionOptions() : "";
   $("slotsA").innerHTML = prototypeBuildSlots("a");
   $("slotsB").innerHTML = prototypeBuildSlots("b");
   $("buildAScore").textContent = prototypeBuildScore("a");
@@ -1733,8 +2175,21 @@ function renderPrototypeBuilder() {
   renderPrototypeRoster("allies");
   $("rotationOutput").textContent = state.fight.rotations;
   $("rotationRange").value = state.fight.rotations;
-  $("uptimeOutput").textContent = `${Math.round(state.fight.aaUptime * 100)}%`;
+  const policy = engine.responses?.a?.auto_attack_policy;
+  const schedule = engine.responses?.a?.auto_attack_schedule;
+  const calculated = state.fight.aaUptimeMode === "calculated";
+  $("uptimeOutput").textContent = calculated
+    ? (policy?.status === "calculated"
+      ? `${Math.round(Number(policy.uptime || 0) * 100)}% calculated${schedule?.expected_autos_per_rotation != null ? ` · ${one(Number(schedule.expected_autos_per_rotation))} autos/rotation` : ""}`
+      : "CALCULATED")
+    : `${Math.round(state.fight.aaUptime * 100)}% explicit`;
   $("uptimeRange").value = Math.round(state.fight.aaUptime * 100);
+  $("uptimeRange").disabled = calculated;
+  const modeButton = $("uptimeModeToggle");
+  if (modeButton) {
+    modeButton.textContent = calculated ? "Use explicit" : "Use calculated";
+    modeButton.setAttribute("aria-pressed", String(calculated));
+  }
 }
 
 function prototypeMetricRow(label, a, b, lower = false, unit = "value") {
@@ -1754,14 +2209,35 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   const bValues = bResult ? exactObjectiveMetric(bResult, bTotal) : { overall: bTotal, damage: bTotal, kill: null, survival: null, utility: null };
   const aValue = aValues[state.ui.objective];
   const bValue = bValues[state.ui.objective];
-  const outcome = objectiveWinner(aValue, bValue);
+  const comparing = Boolean(bResult);
+  const selectedAvailable = aResult && aValue != null;
+  const outcome = comparing
+    ? objectiveWinner(aValue, bValue)
+    : selectedAvailable
+      ? { winner: "A", delta: null }
+      : { winner: null, delta: null };
   const objective = OBJECTIVES[state.ui.objective];
-  $("resultStatus").textContent = aResult ? "reviewed" : "waiting";
+  const autoPolicy = aResult?.auto_attack_policy || {};
+  if (state.fight.aaUptimeMode === "calculated" && autoPolicy.status === "calculated") {
+    state.fight.aaUptime = Number(autoPolicy.uptime || 0);
+  }
+  const coverage = aResult?.timeline_coverage || {};
+  $("resultStatus").textContent = !aResult
+    ? "waiting"
+    : coverage.complete === false || autoPolicy.status === "unknown" ? "qualified" : "reviewed";
   $("resultObjective").textContent = objective.label;
-  $("winnerLetter").textContent = outcome.winner === "A" ? "A" : outcome.winner === "B" ? "B" : outcome.winner === "tie" ? "—" : "?";
-  $("winnerLabel").textContent = outcome.winner === "tie" ? "tie" : outcome.winner ? "wins" : "waiting";
+  $("winnerLetter").textContent = outcome.winner === "A" ? "A" : outcome.winner === "B" ? "B" : "—";
+  $("winnerLabel").textContent = outcome.winner === "tie" ? "tie" : comparing && outcome.winner ? "wins" : selectedAvailable ? "selected" : aResult ? "unavailable" : "waiting";
   $("resultDelta").textContent = outcome.delta == null ? "—" : state.ui.objective === "kill" ? `+${one(outcome.delta)}s` : `+${fmt(outcome.delta)}`;
-  $("resultSummary").textContent = outcome.winner ? `${outcome.winner === "A" ? "Build A" : outcome.winner === "B" ? "Build B" : "Neither build"} carries the strongest ${objective.label.toLowerCase()} package against this roster.` : "Choose a complete scenario to receive a reviewed comparison.";
+  $("resultSummary").textContent = !aResult
+    ? "Choose a complete scenario to receive a reviewed comparison."
+    : !comparing
+      ? selectedAvailable
+        ? "Build A is the selected build for this scenario. Enable Build B to compare a second build."
+        : `${objective.label} is unavailable until the reviewed event ledger supplies that outcome.`
+      : outcome.winner
+        ? `${outcome.winner === "A" ? "Build A" : outcome.winner === "B" ? "Build B" : "Neither build"} carries the strongest ${objective.label.toLowerCase()} package against this roster.`
+        : "The selected objective is unavailable for this comparison.";
   $("scoreA").textContent = objectiveFormat(aValue);
   $("scoreB").textContent = objectiveFormat(bValue);
   $("metricList").innerHTML = [
@@ -1782,9 +2258,47 @@ function renderPrototypeResult(aResult = null, bResult = null) {
     const status = survival.survived_window === false ? "defeated" : max > 0 ? `${Math.round(pct)}%` : incoming > 0 ? `-${fmt(incoming)} dmg` : "alive";
     return `<div class="health-row"><div class="health-person"><img src="${championImage(person.champion)}" alt="" /><span><strong>${escapeHtml(person.champion || person.participant_id || "Participant")}</strong><small>${escapeHtml(person.team || "participant")}</small></span></div><div class="health-track"><span style="width:${pct}%"></span></div><b>${status}</b></div>`;
   }).join("") || `<p class="roster-empty">Participant health appears after the reviewed engine returns.</p>`;
-  const events = (aResult?.cast_timeline || []).map((event) => `<span style="left:${Math.min(100, Number(event.time || 0) / Math.max(1, state.fight.duration) * 100)}%">${escapeHtml(event.slot || "·")}</span>`).join("");
-  $("timeline").innerHTML = events ? `<div class="timeline-axis"><span>0:00</span><span>${one(state.fight.duration / 2)}s</span><span>${one(state.fight.duration)}s</span></div><div class="timeline-row"><span class="timeline-label">${escapeHtml(state.attacker.champion || "Main")}</span><div class="timeline-line">${events}</div></div>` : `<p class="roster-empty">No cast timeline returned.</p>`;
-  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${aResult?.timeline_coverage?.certification || "pending"}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : fmt(aTotal)}</strong></div>`;
+  const participantLabels = new Map((aResult?.combat?.participants || []).map((person) => [person.participant_id, person.champion || person.participant_id]));
+  const combatEvents = Array.isArray(aResult?.combat?.events) ? aResult.combat.events : [];
+  const healingEvents = healingEventsForResult(aResult);
+  const supportEvents = Array.isArray(aResult?.combat?.support_events) ? aResult.combat.support_events : [];
+  const duration = Math.max(1, Number(aResult?.combat?.duration || state.fight.duration));
+  const eventLabel = (participantId) => participantLabels.get(participantId) || participantId || "Participant";
+  const markerEvents = combatEvents.filter((event) => Number.isFinite(Number(event.time))).slice(0, 40);
+  const markers = markerEvents.map((event) => {
+    const position = Math.min(100, Math.max(0, Number(event.time) / duration * 100));
+    const title = `${one(Number(event.time))}s · ${eventLabel(event.attacker)} → ${eventLabel(event.target)} · ${event.source || "event"}`;
+    return `<i style="left:${position}%" title="${escapeHtml(title)}">${escapeHtml(String(event.source || "·").slice(0, 3))}</i>`;
+  }).join("");
+  $("timeline").innerHTML = markerEvents.length
+    ? `<div class="timeline-axis"><span>0:00</span><span>${one(duration / 2)}s</span><span>${one(duration)}s</span></div><div class="timeline-row"><span class="timeline-label">${escapeHtml(state.attacker.champion || "Main")}</span><div class="timeline-line">${markers}</div></div><small class="timeline-note">${markerEvents.length === combatEvents.length ? `${combatEvents.length} ordered events` : `First 40 of ${combatEvents.length} ordered events`}</small>`
+    : `<p class="roster-empty">No participant event ledger returned.</p>`;
+  const eventRows = combatEvents.slice(0, 24).map((event) => {
+    const time = Number(event.time);
+    const timeLabel = Number.isFinite(time) ? `${one(time)}s` : "time withheld";
+    const value = Number(event.damage || 0);
+    const precision = event.event_precision && event.event_precision !== "exact" ? ` · ${event.event_precision}` : "";
+    const source = `${eventLabel(event.attacker)} → ${eventLabel(event.target)} · ${event.source || "event"}${precision}`;
+    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(source)}</span><strong>${value > 0 ? `${fmt(value)} damage` : escapeHtml(event.skipped_reason || "No damage")}</strong></div>`;
+  });
+  const healingRows = healingEvents.slice(0, 12).map((event) => {
+    const time = Number(event.time);
+    const timeLabel = Number.isFinite(time) ? `${one(time)}s` : "time withheld";
+    const temporaryHealth = Number(event.temporary_health || 0);
+    const value = `${fmt(Number(event.applied_amount ?? event.amount ?? 0))} healing${temporaryHealth ? ` + ${fmt(temporaryHealth)} temporary health` : ""}`;
+    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} · ${escapeHtml(event.source || "healing")}</span><strong>${value}</strong></div>`;
+  });
+  const supportRows = supportEvents.slice(0, 12).map((event) => {
+    const time = Number(event.time);
+    const timeLabel = Number.isFinite(time) ? `${one(time)}s` : "time withheld";
+    const recipient = eventLabel(event.target || event.recipient);
+    const policy = event.target_policy || event.target_scope || "explicit recipient";
+    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} → ${escapeHtml(recipient)} · ${escapeHtml(event.source || "support")}</span><strong>${fmt(Number(event.applied_amount ?? event.amount ?? 0))} ${escapeHtml(event.kind || "support")} · ${escapeHtml(policy)}</strong></div>`;
+  });
+  const overflow = combatEvents.length > 24 || healingEvents.length > 12 || supportEvents.length > 12
+    ? `<div class="ledger-line"><span>Additional receipts</span><strong>${combatEvents.length > 24 ? combatEvents.length - 24 : 0} damage · ${healingEvents.length > 12 ? healingEvents.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
+    : "";
+  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD`}</strong></div>${eventRows.join("")}${healingRows.join("")}${supportRows.join("")}${overflow}`;
 }
 
 function render() {
@@ -1834,19 +2348,33 @@ function createPickerContent(entries, selected, query, includeEmpty) {
     const isKeystone = pickerContext.type === "keystone";
     const value = pickerContext.type === "item" ? entry.id : entry.name;
     const imageUrl = pickerContext.type === "champion" ? championImage(entry.name) : isKeystone ? entry.icon : itemImage(entry.id);
+    const targetItem = pickerContext.type === "item" && pickerContext.path.startsWith("targets.");
+    const itemCoverage = pickerContext.type === "item"
+      ? (targetItem ? entry.targetModelCoverage : entry.modelCoverage)
+      : null;
+    const calculationEligible = itemCoverage?.calculation_eligible
+      ?? (itemCoverage?.optimizer_eligible ?? false);
+    const roleQuestReason = pickerContext.type === "item"
+      ? supportQuestItemBlockReason(entry, pickerContext.path)
+      : "";
+    const itemBlocked = Boolean(
+      (itemCoverage && calculationEligible === false) || roleQuestReason
+    );
     const detail = pickerContext.type === "champion"
       ? `${entry.tags.join(" · ")} · ${entry.resource}`
       : isKeystone
         ? `${entry.path} keystone${entry.implemented ? "" : " · not modeled yet"}`
-        : itemStatsLine(entry);
+        : `${itemStatsLine(entry)}${itemCoverage?.status ? ` · ${itemCoverage.status.replaceAll("_", " ")}` : ""}${roleQuestReason ? ` · ${roleQuestReason}` : ""}`;
     const button = document.createElement("button");
     const image = document.createElement("img");
     button.type = "button";
-    button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""} ${isKeystone && !entry.implemented ? "locked" : ""}`;
+    button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""} ${(isKeystone && !entry.implemented) || itemBlocked ? "locked" : ""}`;
     button.dataset.pickerValue = String(value);
-    if (isKeystone && !entry.implemented) {
+    if ((isKeystone && !entry.implemented) || itemBlocked) {
       button.disabled = true;
-      button.title = "This keystone is not modeled yet; its numbers would be estimates.";
+      button.title = itemBlocked
+        ? (roleQuestReason || itemCoverage?.reason || "This item is withheld until its selected model is supported.")
+        : "This keystone is not modeled yet; its numbers would be estimates.";
     }
     image.src = imageUrl;
     image.alt = "";
@@ -1872,12 +2400,15 @@ function renderPicker(query) {
   const entries = source.filter((entry) => {
     if (!entry.name.toLowerCase().includes(normalized)) return false;
     if (pickerContext.type !== "item") return true;
+    if (!backendItemReady(entry)) return false;
     const dedicatedBoot = ALL_ROLE_BOOTS.has(Number(entry.id));
-    if (pickerContext.path.endsWith(".boots") || pickerContext.path.includes("questBoot")) {
+    if (pickerContext.path.includes("questBoot")) {
+      return questBootIds().includes(Number(entry.id));
+    }
+    if (pickerContext.path.endsWith(".boots")) {
       return dedicatedBoot;
     }
     if (pickerContext.path.includes(".items.")) return !dedicatedBoot;
-    if (pickerContext.path.includes("questBoot")) return questBootIds().includes(entry.id);
     if (pickerContext.path.match(/^attacker\.build[AB]\./)) return !dedicatedBoot;
     return true;
   });
@@ -2271,6 +2802,7 @@ function rosterBisCandidates(path, profile) {
   const currentIds = rosterBisIds(path, 0).filter(Boolean);
   const role = bisRole(profile);
   return DATA.items.filter((item) => {
+    if (!backendItemReady(item)) return false;
     const completed = item.price >= 2200 && item.into.length === 0;
     return completed && bisItemMatchesRole(item, role, path) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
   });
@@ -2294,9 +2826,10 @@ function bisItemMatchesRole(item, role, path = "") {
   return Boolean(offensive || defensive);
 }
 
-function bisBackendPayload(path) {
+function bisBackendPayload(path, objective = state.ui.objective) {
   const parts = String(path).split(".");
   const payload = { ...engineFightPayload("A") };
+  payload.objective = OBJECTIVES[objective] ? objective : "overall";
   if (parts[0] === "attacker") {
     const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
     Object.assign(payload, engineFightPayload(side));
@@ -2331,7 +2864,10 @@ function bisComponentLine(components) {
 
 async function openBackendBis(path) {
   if (!bisReadyForPath(path)) return;
-  const payload = bisBackendPayload(path);
+  const selectedObjective = bisContext?.path === path && OBJECTIVES[bisContext.objective]
+    ? bisContext.objective
+    : (OBJECTIVES[state.ui.objective] ? state.ui.objective : "overall");
+  const payload = bisBackendPayload(path, selectedObjective);
   if (!payload) return;
   const isMain = payload.subject_team === "main";
   const subject = isMain
@@ -2343,7 +2879,11 @@ async function openBackendBis(path) {
   $("bisTitle").textContent = `Best ${payload.slot_kind === "boots" ? "boots" : "item"} for ${subjectLabel}${subject.champion} · ${slotLabel}`;
   $("bisSummary").textContent = "Scoring the simultaneous event timeline · loading sourced candidates…";
   $("bisList").innerHTML = `<p class="picker-empty">Scoring every legal candidate against the selected team-fight…</p>`;
-  bisContext = { path };
+  bisContext = { path, objective: selectedObjective };
+  const filter = $("bisObjectiveFilter");
+  if (filter) {
+    filter.innerHTML = Object.entries(OBJECTIVES).map(([key, definition]) => `<button type="button" data-bis-objective="${key}" class="${key === selectedObjective ? "active" : ""}" aria-pressed="${key === selectedObjective}">${escapeHtml(definition.label)}</button>`).join("");
+  }
   $("bis").showModal();
   try {
     const response = await fetch("/api/bis", {
@@ -2355,24 +2895,58 @@ async function openBackendBis(path) {
     if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
     const certifiedRows = result.candidates || [];
     const partialRows = result.partial_candidates || [];
-    const rows = certifiedRows.length ? certifiedRows : partialRows;
-    const showingPartialPreview = certifiedRows.length === 0 && partialRows.length > 0;
+    // Partial event order is an audit receipt, never a ranked preview.  The
+    // backend remains the authority for ordering complete candidates.
+    const rows = certifiedRows;
+    const displayRows = rows.slice(0, 24);
+    const displayPartialRows = partialRows.slice(0, 24);
     const coverage = result.coverage?.complete
       ? "complete sourced coverage"
-      : showingPartialPreview
-        ? "BIS withheld · partial event-order preview"
-        : "BIS withheld until event order is complete";
+      : certifiedRows.length
+        ? "certified subset · search not exhaustive"
+        : "no certified candidate · search not exhaustive";
     const candidateScope = result.candidate_scope?.startsWith("role-tagged:")
       ? `${result.candidate_scope.slice("role-tagged:".length)} role-compatible`
       : "all supported";
-    $("bisSummary").textContent = `${subject.champion} · ${certifiedRows.length} certified of ${result.candidate_count || rows.length} ${candidateScope} candidates · ${coverage}`;
-    $("bisList").innerHTML = rows.map((entry, index) => {
-      const item = DATA.items.find((candidate) => candidate.name === entry.name);
-      const detail = `${item ? itemStatsLine(item) : "Sourced item stats"} · ${bisComponentLine(entry.components)}`;
-      const partialClass = showingPartialPreview ? " partial" : "";
-      const partialLabel = showingPartialPreview ? " · partial event order" : "";
-      return `<article class="bis-row${partialClass}"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(detail)}${escapeHtml(partialLabel)}</small></div><p><strong>${fmt(entry.score)}</strong><span>${escapeHtml(bisMetricLabel(entry.metric))}</span></p><button type="button" data-bis-value="${item ? item.id : ""}" ${item && !showingPartialPreview ? "" : "disabled"}>${showingPartialPreview ? "Preview" : "Use"}</button></article>`;
-    }).join("") || `<p class="picker-empty">${escapeHtml(result.coverage?.note || "No legal candidate has complete sourced mechanics for this timeline.")}</p>`;
+    const displayNote = rows.length > displayRows.length ? ` · showing top ${displayRows.length}` : "";
+    const partialDisplayNote = partialRows.length > displayPartialRows.length
+      ? ` · showing ${displayPartialRows.length} partial receipts`
+      : "";
+    const withheldRows = Array.isArray(result.withheld_candidates) ? result.withheld_candidates : [];
+    const withheldCount = Number(result.withheld_candidate_count || withheldRows.length || 0);
+    const withheldNames = withheldRows.slice(0, 3).map((entry) => entry.name).filter(Boolean).join(", ");
+    const withheldNote = withheldCount
+      ? ` · ${withheldCount} withheld before timeline${withheldNames ? ` (${withheldNames}${withheldCount > 3 ? ", …" : ""})` : ""}`
+      : "";
+    const responseObjective = result.objective || {};
+    const objectiveLabel = responseObjective.label || OBJECTIVES[selectedObjective].label;
+    const partialNote = partialRows.length
+      ? ` · ${partialRows.length} partial receipts withheld${partialDisplayNote}`
+      : "";
+    $("bisSummary").textContent = `${subject.champion} · ${objectiveLabel} · ${certifiedRows.length} certified of ${result.candidate_count || rows.length} ${candidateScope} candidates · ${coverage}${displayNote}${withheldNote}${partialNote}`;
+    const evaluatedCards = displayRows.map((entry, index) => {
+      const item = findItemByBackendName(entry.name);
+      const defensiveNote = entry.defensive_effect_receipt?.status === "certified"
+        ? ` · ${entry.defensive_effect_receipt.note || "certified defensive receipt"}`
+        : "";
+      const detail = `${item ? itemStatsLine(item) : "Sourced item stats"} · ${bisComponentLine(entry.components)}${defensiveNote}`;
+      return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.score)}</strong><span>${escapeHtml(bisMetricLabel(entry.metric))}</span></p><button type="button" data-bis-value="${item ? item.id : ""}" ${item ? "" : "disabled"}>Use</button></article>`;
+    }).join("");
+    const partialCards = displayPartialRows.map((entry) => {
+      const item = findItemByBackendName(entry.name);
+      const timeline = entry.timeline_coverage || {};
+      const coarseSources = Array.isArray(timeline.coarse_sources) && timeline.coarse_sources.length
+        ? ` · coarse: ${timeline.coarse_sources.join(", ")}`
+        : "";
+      const detail = timeline.note || "The candidate has incomplete event-order coverage.";
+      return `<article class="bis-row partial"><span class="bis-rank">—</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name || "Candidate")}</strong><small>Withheld · partial event order · ${escapeHtml(detail)}${escapeHtml(coarseSources)}</small></div><p><strong>—</strong><span>Not rankable</span></p><button type="button" disabled aria-label="${escapeHtml(entry.name || "Candidate")} partial event order">Withheld</button></article>`;
+    }).join("");
+    const withheldCards = withheldRows.slice(0, 24).map((entry) => {
+      const item = findItemByBackendName(entry.name);
+      const reason = String(entry.reason || "candidate not evaluated").replaceAll("_", " ");
+      return `<article class="bis-row partial withheld"><span class="bis-rank">—</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name || "Candidate")}</strong><small>Withheld · ${escapeHtml(reason)}${entry.detail ? ` · ${escapeHtml(entry.detail)}` : ""}</small></div><p><strong>—</strong><span>No score</span></p><button type="button" disabled aria-label="${escapeHtml(entry.name || "Candidate")} withheld">Withheld</button></article>`;
+    }).join("");
+    $("bisList").innerHTML = evaluatedCards + partialCards + withheldCards || `<p class="picker-empty">${escapeHtml(result.coverage?.note || "No legal candidate has complete sourced mechanics for this timeline.")}${withheldCount ? ` ${escapeHtml(withheldCount === 1 ? "One candidate was withheld before timeline evaluation." : `${withheldCount} candidates were withheld before timeline evaluation.`)}` : ""}</p>`;
   } catch (error) {
     $("bisSummary").textContent = "BIS unavailable";
     $("bisList").innerHTML = `<p class="picker-empty">${escapeHtml(error.message)}</p>`;
@@ -2403,25 +2977,31 @@ function bisCandidates(path, profile) {
   const physical = profile.physicalDamage > 0 || profile.adRatio > 0 || selectedTypes.includes("physical");
   const magical = profile.baseDamage > 0 || profile.apRatio > 0 || selectedTypes.includes("magical");
   const currentIds = idsForBis(path, 0).filter(Boolean);
-  if (path.includes("questBoot")) return DATA.items.filter((item) => questBootIds().includes(item.id) && !currentIds.includes(item.id));
+  if (path.includes("questBoot")) return DATA.items.filter((item) => backendItemReady(item) && questBootIds().includes(item.id) && !currentIds.includes(item.id));
   if (wikiMode && state.attacker.champion) {
-    return DATA.items.filter((item) => item.price >= 2200 && item.into.length === 0 && bisItemMatchesRole(item, bisRole(bisChampionProfile(state.attacker))) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id));
+    return DATA.items.filter((item) => backendItemReady(item) && item.price >= 2200 && item.into.length === 0 && bisItemMatchesRole(item, bisRole(bisChampionProfile(state.attacker))) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id));
   }
   return DATA.items.filter((item) => {
+    if (!backendItemReady(item)) return false;
     const completed = item.price >= 2200 && item.into.length === 0;
     const relevant = (magical && (item.ap || item.pen || item.percentPen || [6653, 6655].includes(item.id))) || (physical && (item.ad || item.lethality || item.percentArmorPen));
     return completed && relevant && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
   });
 }
 
-const optimizerExclusiveGroups = [
-  new Set([3135, 3137]), // Void Staff / Cryptbloom
-  new Set([3033, 3036, 6694]), // Last Whisper upgrades
-];
+function optimizerExclusiveGroups() {
+  return Object.values(engine.exclusivityGroups || {})
+    .map((names) => new Set(
+      (Array.isArray(names) ? names : [])
+        .map((name) => findItemByBackendName(name)?.id)
+        .filter(Boolean),
+    ))
+    .filter((group) => group.size > 1);
+}
 
 function legalOptimizerBuild(ids) {
   if (new Set(ids).size !== ids.length) return false;
-  return optimizerExclusiveGroups.every((group) => ids.filter((id) => group.has(id)).length <= 1);
+  return optimizerExclusiveGroups().every((group) => ids.filter((id) => group.has(id)).length <= 1);
 }
 
 function optimizerCandidatePool(profile, targetStats) {
@@ -2431,6 +3011,7 @@ function optimizerCandidatePool(profile, targetStats) {
   const physical = hasPhysicalAbilities;
   const magical = hasMagicalAbilities;
   const relevant = DATA.items.filter((item) => {
+    if (!backendItemReady(item)) return false;
     const completed = item.price >= 2200 && item.into.length === 0;
     const damageStat = (magical && (item.ap || item.pen || item.percentPen || [6653, 6655].includes(item.id)))
       || (physical && (item.ad || item.lethality || item.percentArmorPen || item.attackSpeed || item.crit));
@@ -2466,6 +3047,7 @@ function optimizerCandidatePool(profile, targetStats) {
 
 function roleAwareOptimizerCandidatePool(role, path = "attacker") {
   const candidates = DATA.items.filter((item) => {
+    if (!backendItemReady(item)) return false;
     const completed = item.price >= 2200 && item.into.length === 0;
     const candidatePath = role === "enchanter" || role === "support" ? "allies.0" : path;
     return completed && !ALL_ROLE_BOOTS.has(item.id) && bisItemMatchesRole(item, role, candidatePath);
@@ -2569,6 +3151,7 @@ function rosterOptimizerCandidatePool(path) {
   const role = bisRole(profile);
   const current = context.combatant.items.filter((id) => id && !ALL_ROLE_BOOTS.has(Number(id))).map(Number);
   const candidates = DATA.items.filter((item) => {
+    if (!backendItemReady(item)) return false;
     const completed = item.price >= 2200 && item.into.length === 0;
     return completed && !ALL_ROLE_BOOTS.has(item.id) && bisItemMatchesRole(item, role, path);
   });
@@ -2670,7 +3253,7 @@ async function optimizeRosterPathFromTimeline(path) {
     const bootResult = await requestBis(`${path}.boots`);
     if (!bootResult.coverage?.complete) throw new Error(bootResult.coverage?.note || "BIS withheld until event order is complete");
     tested += Number(bootResult.candidate_count || 0);
-    const boot = bootResult.candidates?.[0] && DATA.items.find((entry) => entry.name === bootResult.candidates[0].name);
+    const boot = bootResult.candidates?.[0] && findItemByBackendName(bootResult.candidates[0].name);
     if (boot) loadout.boots = boot.id;
   }
   // Greedy slot passes keep every candidate on the same complete team
@@ -2681,7 +3264,7 @@ async function optimizeRosterPathFromTimeline(path) {
     if (!result.coverage?.complete) throw new Error(result.coverage?.note || "BIS withheld until event order is complete");
     tested += Number(result.candidate_count || 0);
     const candidate = result.candidates?.[0];
-    const item = candidate && DATA.items.find((entry) => entry.name === candidate.name);
+    const item = candidate && findItemByBackendName(candidate.name);
     if (!item) continue;
     setPath(`${path}.items.${slot}`, item.id);
     state[root][Number(indexText)].itemStacks[slot] = 0;
@@ -2743,23 +3326,34 @@ async function optimizeMainBuildFromBackend() {
       body: JSON.stringify(payload),
     });
     const result = await response.json();
-    if (!response.ok || result.error) throw new Error(result.error || "Optimizer unavailable");
+    if (!response.ok || result.error) {
+      const message = result.error_code === "no_complete_event_order"
+        ? `${result.champion || state.attacker.champion}: exact event-order coverage unavailable. ${result.error || "Optimizer withheld."}`
+        : (result.error || "Optimizer unavailable");
+      throw new Error(message);
+    }
     if (!result.is_certified_best) {
       // A partial candidate timeline is a receipt, not a build recommendation.
       // Keep the user's current build intact until every active source in the
       // search is event-order certified.
+      const withheldRows = Array.isArray(result.timeline_withheld_candidates) ? result.timeline_withheld_candidates : [];
+      const withheldCount = Number(result.timeline_withheld_candidate_count || withheldRows.length || 0);
+      const firstWithheld = withheldRows[0];
+      const withheldDetail = withheldCount
+        ? ` ${withheldCount} candidate${withheldCount === 1 ? "" : "s"} withheld${firstWithheld?.reason ? ` (${firstWithheld.reason.replaceAll("_", " ")})` : ""}.`
+        : "";
       state.optimizer.summary = {
         tested: Number(result.evaluations || 0),
         elapsedMs: Number(result.optimization_time_ms || 0),
         withheld: true,
-        label: `BIS withheld — no build applied. ${result.search_timeline_coverage?.note || "Event-order coverage is incomplete."}`,
+        label: `BIS withheld — no build applied. ${result.search_timeline_coverage?.note || "Event-order coverage is incomplete."}${withheldDetail}`,
       };
       return result;
     }
-    const ids = (result.items || []).map((name) => DATA.items.find((item) => item.name === name)?.id || 0);
+    const ids = (result.items || []).map((name) => findItemByBackendName(name)?.id || 0);
     state.attacker.buildA = [...ids, ...Array(Math.max(0, 6 - ids.length)).fill(0)].slice(0, 6);
     state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
-    state.attacker.questBootA = DATA.items.find((item) => item.name === result.boots)?.id || 0;
+    state.attacker.questBootA = findItemByBackendName(result.boots)?.id || 0;
     state.optimizer.summary = {
       tested: Number(result.evaluations || 0),
       elapsedMs: Number(result.optimization_time_ms || 0),
@@ -2804,12 +3398,30 @@ function updateDamagePackage() {
 }
 
 document.addEventListener("click", (event) => {
+  if (event.target.closest("#uptimeModeToggle")) {
+    invalidateOptimization();
+    if (state.fight.aaUptimeMode === "calculated") {
+      state.fight.aaUptimeMode = "explicit";
+      state.fight.aaUptime = Number(engine.responses?.a?.auto_attack_policy?.uptime ?? state.fight.aaUptime ?? 0);
+    } else {
+      state.fight.aaUptimeMode = "calculated";
+    }
+    return render();
+  }
   const levelButton = event.target.closest("[data-level-delta]");
   if (levelButton) {
     state.attacker.level = Math.max(1, Math.min(attackerLevelCap(), state.attacker.level + Number(levelButton.dataset.levelDelta)));
     syncAbilityInputsToLevel();
     invalidateOptimization();
     return render();
+  }
+  const bisObjectiveButton = event.target.closest("[data-bis-objective]");
+  if (bisObjectiveButton) {
+    const objective = bisObjectiveButton.dataset.bisObjective;
+    if (!OBJECTIVES[objective] || !bisContext?.path) return;
+    state.ui.objective = objective;
+    bisContext.objective = objective;
+    return openBackendBis(bisContext.path);
   }
   const objectiveButton = event.target.closest("[data-objective]");
   if (objectiveButton) {
@@ -2837,6 +3449,7 @@ document.addEventListener("click", (event) => {
   }
   if (event.target.closest("#questToggle")) {
     state.attacker.roleQuestComplete = !state.attacker.roleQuestComplete;
+    normalizeAttackerBootsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     invalidateOptimization();
     return render();
@@ -2870,8 +3483,7 @@ document.addEventListener("click", (event) => {
   const roleButton = event.target.closest("[data-role]");
   if (roleButton) {
     state.attacker.role = roleButton.dataset.role;
-    state.attacker.questBootA = 0;
-    state.attacker.questBootB = 0;
+    normalizeAttackerBootsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     syncAbilityInputsToLevel();
     invalidateOptimization();
@@ -2879,8 +3491,7 @@ document.addEventListener("click", (event) => {
   }
   if (event.target.closest("[data-role-quest]")) {
     state.attacker.roleQuestComplete = !state.attacker.roleQuestComplete;
-    state.attacker.questBootA = 0;
-    state.attacker.questBootB = 0;
+    normalizeAttackerBootsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     syncAbilityInputsToLevel();
     invalidateOptimization();
@@ -2928,6 +3539,10 @@ document.addEventListener("click", (event) => {
     const loadout = pathValue(path);
     if (!loadout?.role) return;
     loadout.roleQuestComplete = !loadout.roleQuestComplete;
+    // Keep the explicit boots selection in browser state.  A rerender or
+    // quest toggle must not erase the user's item; the backend remains the
+    // authority for whether its tier is legal for the new role state.
+    normalizeRosterBootForRole(loadout);
     if (loadout.role !== "top" && loadout.level > 18) loadout.level = 18;
     invalidateOptimization();
     return render();
@@ -3060,7 +3675,10 @@ document.addEventListener("click", (event) => {
     const selectedPath = pickerContext.path;
     if (pickerContext.type === "item") setStackValue(pickerContext.path, 0);
     setPath(pickerContext.path, pickerContext.type === "item" ? Number(option.dataset.pickerValue) : option.dataset.pickerValue);
-    if (pickerContext.type === "champion" && selectedPath === "attacker.champion") resetAbilityInputs();
+    if (pickerContext.type === "champion" && selectedPath === "attacker.champion") {
+      resetAbilityInputs();
+      resetChampionOptions();
+    }
     if (pickerContext.type === "champion" && /^(targets|allies)\.\d+\.champion$/.test(selectedPath)) {
       const [root, indexText] = selectedPath.split(".");
       const loadout = state[root][Number(indexText)];
@@ -3083,6 +3701,7 @@ document.addEventListener("input", (event) => {
   if (protoRange) {
     invalidateOptimization();
     const key = protoRange.dataset.protoRange;
+    if (key === "aaUptime") state.fight.aaUptimeMode = "explicit";
     state.fight[key] = key === "aaUptime" ? Number(protoRange.value) / 100 : Number(protoRange.value);
     return render();
   }
@@ -3090,6 +3709,7 @@ document.addEventListener("input", (event) => {
   if (!range) return;
   invalidateOptimization();
   const key = range.dataset.fightRange;
+  if (key === "aaUptime") state.fight.aaUptimeMode = "explicit";
   state.fight[key] = key === "aaUptime" ? Number(range.value) / 100 : Number(range.value);
   const output = range.parentElement.querySelector("output");
   if (output) output.textContent = key === "aaUptime" ? `${Math.round(state.fight.aaUptime * 100)}%` : `${one(state.fight.duration)}s`;
@@ -3103,9 +3723,33 @@ document.addEventListener("input", (event) => {
 });
 
 document.addEventListener("change", (event) => {
+  const championOption = event.target.closest("[data-champion-option]");
+  if (championOption) {
+    const key = championOption.dataset.championOption;
+    const type = championOption.dataset.optionType || "bool";
+    const definition = (engine.championOptions[state.attacker.champion]?.options || [])
+      .find((option) => option.key === key);
+    if (type === "bool") {
+      state.attacker.championOptions[key] = Boolean(championOption.checked);
+    } else if (type === "select") {
+      state.attacker.championOptions[key] = championOption.value;
+    } else {
+      const parsed = type === "int"
+        ? Number.parseInt(championOption.value, 10)
+        : Number(championOption.value);
+      const fallback = Number(definition?.default ?? 0);
+      const bounded = Number.isFinite(parsed) ? parsed : fallback;
+      const minimum = definition?.min == null ? bounded : Math.max(Number(definition.min), bounded);
+      const maximum = definition?.max == null ? minimum : Math.min(Number(definition.max), minimum);
+      state.attacker.championOptions[key] = type === "int" ? Math.round(maximum) : maximum;
+    }
+    invalidateOptimization();
+    return render();
+  }
   const roleSelect = event.target.closest("#roleSelect");
   if (roleSelect) {
     state.attacker.role = roleSelect.value || null;
+    normalizeAttackerBootsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     invalidateOptimization();
     return render();
@@ -3123,6 +3767,8 @@ document.addEventListener("change", (event) => {
   if (!loadout) return;
   loadout.role = rosterRoleSelect.value;
   if (!loadout.role) loadout.roleQuestComplete = false;
+  // Role changes rerender the card but do not erase the selected boots.
+  normalizeRosterBootForRole(loadout);
   if (loadout.role !== "top" && loadout.level > 18) loadout.level = 18;
   invalidateOptimization();
   render();
@@ -3143,23 +3789,47 @@ Promise.all([
   fetch("/static/data.json").then((response) => { if (!response.ok) throw new Error("Patch snapshot failed to load"); return response.json(); }),
   fetch("/api/champions").then((response) => { if (!response.ok) throw new Error("Champion availability failed to load"); return response.json(); }),
   fetch("/api/config").then((response) => response.ok ? response.json() : { item_options: {}, champion_options: {}, keystones: [], input_limits: {} }),
+  fetch("/api/items").then((response) => response.ok ? response.json() : []),
+  fetch("/api/boots").then((response) => response.ok ? response.json() : []),
   fetch("/static/ability-catalog.json").then((response) => { if (!response.ok) throw new Error("Ability catalogue failed to load"); return response.json(); }),
   fetch("/static/bis-profiles.json").then((response) => { if (!response.ok) throw new Error("Wiki BIS profile failed to load"); return response.json(); }),
   fetch("/static/effect-catalog.json").then((response) => { if (!response.ok) throw new Error("Wiki effect catalogue failed to load"); return response.json(); }),
 ])
-  .then(([data, championAvailability, config, abilityCatalog, bisProfiles, effectCatalog]) => {
+  .then(([data, championAvailability, config, itemCoverage, bootCatalog, abilityCatalog, bisProfiles, effectCatalog]) => {
     DATA = data;
+    mergeItemCoverage([...(itemCoverage || []), ...(bootCatalog || [])]);
     mergeAbilityCatalog(abilityCatalog);
     mergeBisProfiles(bisProfiles);
     mergeEffectCatalog(effectCatalog);
     championAvailability.forEach((entry) => {
+      const champion = DATA.champions.find((candidate) => candidate.name === entry.name);
+      if (champion) champion.engineRegistration = entry.engine_registration || null;
       engine.availability.set(entry.name, entry.availability || {});
-      if (entry.availability?.ready) engine.reviewed.add(entry.name);
+      if (entry.availability?.ready && entry.engine_registration === "reviewed_module") engine.reviewed.add(entry.name);
       if (entry.engine_backend_enabled) engine.backend.add(entry.name);
     });
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};
     engine.keystones = config.keystones || [];
+    engine.defaultTarget = config.default_target || engine.defaultTarget;
+    engine.fightDefaults = config.fight_defaults || {};
+    engine.exclusivityGroups = config.exclusivity_groups || {};
+    engine.roleQuest = config.role_quest || {};
+    normalizeAttackerBootsForRole();
+    const fightDefaults = engine.fightDefaults;
+    state.fight.aaUptimeMode = fightDefaults.auto_attack_uptime_mode || "calculated";
+    if (fightDefaults.mode === "one_rotation") {
+      const oneRotationDuration = Number(fightDefaults.one_rotation_duration_seconds);
+      if (Number.isFinite(oneRotationDuration) && oneRotationDuration > 0) {
+        state.fight.duration = oneRotationDuration;
+      }
+      state.fight.aaUptime = state.fight.aaUptimeMode === "calculated" ? 0 : state.fight.aaUptime;
+    } else {
+      const defaultDuration = Number(fightDefaults.duration_seconds);
+      const defaultUptime = Number(fightDefaults.auto_attack_uptime);
+      if (Number.isFinite(defaultDuration) && defaultDuration > 0) state.fight.duration = defaultDuration;
+      if (Number.isFinite(defaultUptime) && defaultUptime >= 0) state.fight.aaUptime = defaultUptime;
+    }
     engine.fightLimits = { ...engine.fightLimits, ...(config.input_limits || {}) };
     engine.ready = true;
     render();

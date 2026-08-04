@@ -1,8 +1,15 @@
 """Module for calculating champion stats at any level with items applied."""
 
-from typing import Any, Mapping
+import math
+from collections.abc import Mapping
+from typing import Any
 
-from .item_effects import resolve_stat_effects
+from .item_effects import (
+    input_option_retribution_bonus_ad,
+    input_option_crit_chance,
+    input_option_stat_bonuses,
+    resolve_stat_effects,
+)
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
 
 # Level cap — 20 is top-lane-only as of this season, so this is
@@ -128,6 +135,64 @@ def get_champion_base_stats(
 # re-verified on every hit, so a data refresh that rebuilds the item cache
 # can never serve stale stats through a recycled ``id()``.
 _ITEM_STATS_MEMO: dict[int, tuple[dict[str, Any], dict[str, float]]] = {}
+# Cached item records are immutable for the lifetime of one calculation/data
+# snapshot. Keep the validated item and its nested stats map alive so coupled
+# optimizer searches do not walk the same schema thousands of times. A data
+# refresh creates new item/stat dictionaries and therefore cannot reuse this
+# entry; synthetic sparse fixtures continue to bypass the cache below.
+_ITEM_STATS_VALIDATION_MEMO: dict[int, tuple[dict[str, Any], Mapping[str, Any]]] = {}
+
+
+def _validate_cached_item_stats(item_data: dict[str, Any]) -> None:
+    """Reject malformed source stat maps while keeping synthetic fixtures sparse.
+
+    Cached item records carry an ``id`` and a complete nested stat map.  Small
+    unit-test fixtures intentionally omit those source markers and continue to
+    receive zero for absent stats.  A malformed cached map must not silently
+    turn a broken value into zero, however, because that changes every
+    downstream stat and sustain calculation.
+    """
+    if item_data.get("id") is None and not item_data.get("icon"):
+        return
+    item_name = str(item_data.get("name") or "unknown item")
+    raw_stats = item_data.get("stats")
+    memo = _ITEM_STATS_VALIDATION_MEMO.get(id(item_data))
+    if memo is not None and memo[0] is item_data and memo[1] is raw_stats:
+        return
+    if not isinstance(raw_stats, Mapping):
+        raise ValueError(f"Cached item {item_name} has an invalid stats map")
+    required_components = {
+        "flat",
+        "percent",
+        "perLevel",
+        "percentPerLevel",
+        "percentBase",
+        "percentBonus",
+    }
+    for stat_name, raw_stat in raw_stats.items():
+        if not isinstance(raw_stat, Mapping):
+            raise ValueError(
+                f"Cached item {item_name} stat {stat_name} must be an object"
+            )
+        missing = required_components - set(raw_stat)
+        if missing:
+            missing_names = ", ".join(sorted(missing))
+            raise ValueError(
+                f"Cached item {item_name} stat {stat_name} is missing "
+                f"{missing_names}"
+            )
+        for component, value in raw_stat.items():
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise ValueError(
+                    f"Cached item {item_name} stat {stat_name}.{component} "
+                    "must be numeric"
+                )
+            if not math.isfinite(float(value)):
+                raise ValueError(
+                    f"Cached item {item_name} stat {stat_name}.{component} "
+                    "must be finite"
+                )
+    _ITEM_STATS_VALIDATION_MEMO[id(item_data)] = (item_data, raw_stats)
 
 
 def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
@@ -141,6 +206,7 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         read-only: the same dict is returned for repeated lookups of the
         same cached item.
     """
+    _validate_cached_item_stats(item_data)
     memo = _ITEM_STATS_MEMO.get(id(item_data))
     if memo is not None and memo[0] is item_data:
         return memo[1]
@@ -176,6 +242,15 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "mana": get_flat("mana"),
         "ability_haste": get_flat("abilityHaste"),
         "mana_regen_percent": get_percent("manaRegen"),
+        "lifesteal_percent": get_percent("lifesteal"),
+        "omnivamp_percent": get_percent("omnivamp"),
+        "heal_and_shield_power_percent": (
+            get_flat("healAndShieldPower") + get_percent("healAndShieldPower")
+        ),
+        "health_regen_percent": get_percent("healthRegen"),
+        "tenacity_percent": get_percent("tenacity"),
+        "gold_per_10": get_flat("goldPer10"),
+        "critical_strike_damage_percent": get_percent("criticalStrikeDamage"),
         "move_speed_flat": get_flat("movespeed"),
         "move_speed_percent": get_percent("movespeed"),
     }
@@ -219,6 +294,13 @@ def calculate_total_stats(
         "mana": 0.0,
         "ability_haste": 0.0,
         "mana_regen_percent": 0.0,
+        "lifesteal_percent": 0.0,
+        "omnivamp_percent": 0.0,
+        "heal_and_shield_power_percent": 0.0,
+        "health_regen_percent": 0.0,
+        "tenacity_percent": 0.0,
+        "gold_per_10": 0.0,
+        "critical_strike_damage_percent": 0.0,
         "move_speed_flat": 0.0,
         "move_speed_percent": 0.0,
     }
@@ -227,6 +309,19 @@ def calculate_total_stats(
         item_stats = get_item_stats(item)
         for key in total_item_stats:
             total_item_stats[key] += item_stats.get(key, 0.0)
+
+    # Stateful item inputs are explicit scenario state, not guessed proc
+    # counts. Apply their sourced health/mana before conversions (Awe,
+    # Muramana, Seraph's) read those totals.
+    _, _, input_bonus_health, input_bonus_mana = input_option_stat_bonuses(
+        items, item_options
+    )
+    total_item_stats["health"] += input_bonus_health
+    total_item_stats["mana"] += input_bonus_mana
+    is_melee = champion_data.get("attackType", "MELEE") == "MELEE"
+    total_item_stats["critical_strike_chance"] += input_option_crit_chance(
+        items, item_options, is_melee=is_melee
+    )
 
     external = external_stat_bonuses or {}
     total_item_stats["ability_power"] += float(external.get("ability_power", 0.0))
@@ -250,8 +345,6 @@ def calculate_total_stats(
         * (1.0 + total_item_stats["mana_regen_percent"] / 100.0)
         / 5.0
     )
-    is_melee = champion_data.get("attackType", "MELEE") == "MELEE"
-
     # Every stat-granting item passive, compiled once. item_effects owns
     # the per-item knowledge; this function owns the application order.
     bonuses = resolve_stat_effects(
@@ -260,6 +353,7 @@ def calculate_total_stats(
         max_mana=total_mana,
         bonus_health=total_item_stats["health"],
         base_attack_damage=base_stats["attack_damage"],
+        bonus_attack_damage=total_item_stats["attack_damage"],
         bonus_mana_regen_percent=total_item_stats["mana_regen_percent"],
         is_melee=is_melee,
         level=level,
@@ -306,6 +400,13 @@ def calculate_total_stats(
     )
     final_bonus_ad = raw_bonus_ad * quest_bonus_ad_multiplier
     total_ad = base_stats["attack_damage"] + final_bonus_ad
+    retribution_bonus_ad = input_option_retribution_bonus_ad(
+        items,
+        item_options,
+        total_attack_damage=total_ad,
+    )
+    final_bonus_ad += retribution_bonus_ad
+    total_ad += retribution_bonus_ad
     # Living Weapon counts permanent stats from items plus stat growth, but
     # excludes level-1 stats, adaptive force, role quests, ally buffs, and
     # temporary combat passives. Keep the three owned totals first-class so
@@ -327,8 +428,8 @@ def calculate_total_stats(
         level_as_bonus + total_item_stats["attack_speed_percent"]
     )
     effective_bonus_health = (
-        total_item_stats["health"] * bonuses.item_bonus_health_multiplier
-    )
+        total_item_stats["health"] + bonuses.bonus_health
+    ) * bonuses.item_bonus_health_multiplier
     total_health = base_stats["health"] + effective_bonus_health
 
     # Terminus max-stack display assumption: bonus resists to both armor
@@ -396,7 +497,18 @@ def calculate_total_stats(
         "max_mana": round(total_mana),
         "bonus_mana": round(total_item_stats["mana"]),
         "resource_regen_per_second": resource_regen_per_second,
-        "ability_haste": total_item_stats["ability_haste"],
+        "lifesteal_percent": total_item_stats["lifesteal_percent"],
+        "omnivamp_percent": total_item_stats["omnivamp_percent"],
+        "heal_and_shield_power_percent": total_item_stats[
+            "heal_and_shield_power_percent"
+        ],
+        "health_regen_percent": total_item_stats["health_regen_percent"],
+        "tenacity_percent": total_item_stats["tenacity_percent"],
+        "gold_per_10": total_item_stats["gold_per_10"],
+        "critical_strike_damage_percent": total_item_stats[
+            "critical_strike_damage_percent"
+        ],
+        "ability_haste": total_item_stats["ability_haste"] + bonuses.ability_haste,
         "basic_ability_haste": bonuses.basic_ability_haste,
         "level": level,
         "is_melee": is_melee,

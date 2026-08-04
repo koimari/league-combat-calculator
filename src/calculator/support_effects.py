@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from .champions.slotlib import extract_named
@@ -54,6 +55,22 @@ def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
 _SUPPORT_PROFILE_MEMO: dict[int, tuple[dict, tuple]] = {}
 
 
+def _sourced_cast_time(cast: dict[str, Any], *, slot: str) -> float:
+    """Return one finite authored cast time; never default a missing timestamp."""
+    if "time" not in cast:
+        raise ValueError(f"Support cast {slot} is missing its sourced time")
+    value = cast["time"]
+    if isinstance(value, bool):
+        raise ValueError(f"Support cast {slot} time must be numeric")
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Support cast {slot} time must be numeric") from exc
+    if not math.isfinite(parsed):
+        raise ValueError(f"Support cast {slot} time must be finite")
+    return parsed
+
+
 def _support_profile(
     ability: dict[str, Any],
 ) -> tuple[str | None, str | None, bool, str]:
@@ -72,9 +89,27 @@ def _support_profile(
             "shields himself",
             "shields themselves",
             "shield themselves",
+            "grants herself",
+            "grants himself",
+            "grants themselves",
+            "or herself",
+            "or himself",
+            "or themselves",
+            "herself or",
+            "himself or",
+            "themselves or",
+            "around herself",
+            "around himself",
+            "around themselves",
             "heals herself",
             "heals himself",
             "heals themselves",
+            "healing herself",
+            "healing himself",
+            "healing themselves",
+            "healing and cleansing herself",
+            "healing and cleansing himself",
+            "healing and cleansing themselves",
             "to herself",
             "to himself",
             "to themselves",
@@ -91,9 +126,32 @@ def _support_profile(
             "all allies",
         )
     )
-    target_scope = (
-        "self" if target_self else "all_teammates" if all_teammates else "one_teammate"
-    )
+    # Several reviewed support casts affect the caster and another selected
+    # ally (Sona W), or the caster plus every nearby ally (Soraka R, Janna R,
+    # Seraphine W, Milio R).  Keep those scopes explicit so the roster
+    # resolver does not silently drop the self packet or treat a self-only
+    # cast as an area effect.
+    if target_self and all_teammates:
+        target_scope = "self_and_all_teammates"
+    elif target_self and any(
+        f"{pronoun} and" in description
+        for pronoun in ("herself", "himself", "themselves")
+    ):
+        target_scope = "self_and_one_teammate"
+    elif target_self and any(
+        f"{pronoun} or" in description or f"or {pronoun}" in description
+        for pronoun in ("herself", "himself", "themselves")
+    ):
+        # Self-or-target casts (Karma E, Orianna E) use the deterministic
+        # selected-teammate branch when a roster target exists, while the
+        # ledger falls back to self when no teammate is selected.
+        target_scope = "one_teammate"
+    elif target_self:
+        target_scope = "self"
+    elif all_teammates:
+        target_scope = "all_teammates"
+    else:
+        target_scope = "one_teammate"
     profile = (shield_attr, heal_attr, target_self, target_scope)
     _SUPPORT_PROFILE_MEMO[id(ability)] = (ability, profile)
     return profile
@@ -134,12 +192,16 @@ def derive_ally_effects(
             continue
         casts = [event for event in cast_timeline if event.get("slot") == slot]
         for cast in casts:
+            # Validate every authored support cast, even when its resolved
+            # packet is zero or intentionally omitted (for example, a
+            # per-tick heal without a complete cadence).
+            _sourced_cast_time(cast, slot=slot)
             if shield_attr is not None:
                 amount = extract_named(ability, shield_attr, rank, stats, {})
                 if amount > 0:
                     effects.append(
                         {
-                            "time": float(cast.get("time", 0.0)),
+                            "time": _sourced_cast_time(cast, slot=slot),
                             "kind": "shield",
                             "amount": float(amount),
                             "source": f"{ability.get('name', slot)} · {shield_attr}",
@@ -159,7 +221,7 @@ def derive_ally_effects(
                 if amount > 0:
                     effects.append(
                         {
-                            "time": float(cast.get("time", 0.0)),
+                            "time": _sourced_cast_time(cast, slot=slot),
                             "kind": "heal",
                             "amount": float(amount),
                             "source": f"{ability.get('name', slot)} · {heal_attr}",

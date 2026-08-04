@@ -24,10 +24,13 @@ class StartingDefenses:
     magic_shield: float = 0.0
     physical_shield: float = 0.0
     general_shield: float = 0.0
+    spell_shield_ready: bool = False
+    spell_shield_source: str = ""
     basic_damage_multiplier: float = 1.0
     basic_damage_flat_reduction: float = 0.0
     basic_damage_flat_reduction_cap: float = 0.0
     critical_strike_damage_multiplier: float = 1.0
+    healing_received_multiplier: float = 1.0
     threshold_shield_amount: float = 0.0
     threshold_shield_health_ratio: float = 0.0
     threshold_shield_duration: float = 0.0
@@ -36,6 +39,9 @@ class StartingDefenses:
     threshold_health_heal: float = 0.0
     threshold_health_ratio: float = 0.0
     threshold_health_duration: float = 0.0
+    revive_health_amount: float = 0.0
+    revive_delay: float = 0.0
+    revive_cooldown: float = 0.0
     assumptions: tuple[str, ...] = ()
     sources: tuple[DefenseSource, ...] = ()
     coverage: str = "base_and_items_only"
@@ -46,6 +52,10 @@ class StartingDefenses:
             "magic_shield": round(self.magic_shield, 1),
             "physical_shield": round(self.physical_shield, 1),
             "general_shield": round(self.general_shield, 1),
+            "spell_shield": {
+                "ready": bool(self.spell_shield_ready),
+                "source": self.spell_shield_source,
+            },
             "incoming_damage": {
                 "basic_damage_multiplier": round(self.basic_damage_multiplier, 3),
                 "basic_damage_flat_reduction": round(
@@ -58,6 +68,7 @@ class StartingDefenses:
                     self.critical_strike_damage_multiplier, 3
                 ),
             },
+            "healing_received_multiplier": round(self.healing_received_multiplier, 3),
             "threshold_shield": {
                 "amount": round(self.threshold_shield_amount, 1),
                 "health_ratio": round(self.threshold_shield_health_ratio, 3),
@@ -69,6 +80,11 @@ class StartingDefenses:
                 "healing": round(self.threshold_health_heal, 1),
                 "health_ratio": round(self.threshold_health_ratio, 3),
                 "duration": round(self.threshold_health_duration, 1),
+            },
+            "revive": {
+                "health_amount": round(self.revive_health_amount, 1),
+                "delay": round(self.revive_delay, 1),
+                "cooldown": round(self.revive_cooldown, 1),
             },
             "assumptions": list(self.assumptions),
             "sources": [
@@ -128,6 +144,13 @@ _RANDUINS_OMEN_SOURCE = DefenseSource(
     revision_timestamp="2026-05-21T14:21:13Z",
 )
 
+_GUARDIAN_ANGEL_SOURCE = DefenseSource(
+    label="Guardian Angel — Rebirth",
+    source_url="https://wiki.leagueoflegends.com/en-us/Guardian_Angel",
+    revision_id=4046863,
+    revision_timestamp="2026-07-28T22:43:08Z",
+)
+
 _IMMORTAL_SHIELDBOW_SOURCE = DefenseSource(
     label="Immortal Shieldbow — Lifeline",
     source_url="https://wiki.leagueoflegends.com/en-us/Immortal_Shieldbow",
@@ -179,6 +202,27 @@ _PROTOPLASM_SOURCE = DefenseSource(
     revision_id=4046863,
     revision_timestamp="2026-07-28T22:43:08Z",
 )
+
+_ANNUL_SOURCES = {
+    "Banshee's Veil": DefenseSource(
+        label="Banshee's Veil — Annul",
+        source_url="https://wiki.leagueoflegends.com/en-us/Banshee%27s_Veil",
+        revision_id=3957919,
+        revision_timestamp="2025-10-05T20:03:50Z",
+    ),
+    "Edge of Night": DefenseSource(
+        label="Edge of Night — Annul",
+        source_url="https://wiki.leagueoflegends.com/en-us/Edge_of_Night",
+        revision_id=4013389,
+        revision_timestamp="2026-04-29T06:32:04Z",
+    ),
+    "Verdant Barrier": DefenseSource(
+        label="Verdant Barrier — Annul",
+        source_url="https://wiki.leagueoflegends.com/en-us/Verdant_Barrier",
+        revision_id=3957920,
+        revision_timestamp="2025-10-05T20:04:20Z",
+    ),
+}
 
 
 def _shieldbow_shield_amount(level: int) -> float:
@@ -279,12 +323,15 @@ def resolve_starting_defenses(
     magic_shield = champion_defenses.magic_shield
     physical_shield = champion_defenses.physical_shield
     general_shield = champion_defenses.general_shield
+    spell_shield_ready = bool(champion_defenses.spell_shield_ready)
+    spell_shield_source = champion_defenses.spell_shield_source
     basic_damage_multiplier = champion_defenses.basic_damage_multiplier
     basic_damage_flat_reduction = champion_defenses.basic_damage_flat_reduction
     basic_damage_flat_reduction_cap = champion_defenses.basic_damage_flat_reduction_cap
     critical_strike_damage_multiplier = (
         champion_defenses.critical_strike_damage_multiplier
     )
+    healing_received_multiplier = champion_defenses.healing_received_multiplier
     threshold_shield_amount = champion_defenses.threshold_shield_amount
     threshold_shield_health_ratio = champion_defenses.threshold_shield_health_ratio
     threshold_shield_duration = champion_defenses.threshold_shield_duration
@@ -293,8 +340,30 @@ def resolve_starting_defenses(
     threshold_health_heal = champion_defenses.threshold_health_heal
     threshold_health_ratio = champion_defenses.threshold_health_ratio
     threshold_health_duration = champion_defenses.threshold_health_duration
+    revive_health_amount = champion_defenses.revive_health_amount
+    revive_delay = champion_defenses.revive_delay
+    revive_cooldown = champion_defenses.revive_cooldown
     assumptions = list(champion_defenses.assumptions)
     sources = list(champion_defenses.sources)
+
+    annul_name = next(
+        (
+            name
+            for name in ("Banshee's Veil", "Edge of Night", "Verdant Barrier")
+            if name in names
+            and bool(ITEM_EFFECTS.get(name, {}).get("spell_shield_ready", False))
+        ),
+        None,
+    )
+    if annul_name:
+        spell_shield_ready = True
+        spell_shield_source = f"{annul_name} — Annul"
+        sources.append(_ANNUL_SOURCES[annul_name])
+        assumptions.append(
+            f"{annul_name}'s Annul spell shield is ready at the opening and "
+            "consumes the first authored hostile ability; cooldown rearm is "
+            "outside the modeled exchange."
+        )
 
     if "Kaenic Rookern" in names:
         ratio = float(ITEM_EFFECTS["Kaenic Rookern"]["magic_shield_max_health_ratio"])
@@ -358,6 +427,20 @@ def resolve_starting_defenses(
         )
         sources.append(_PROTOPLASM_SOURCE)
 
+    if "Guardian Angel" in names:
+        revive_health_amount = float(stats.get("base_health", 0.0)) * float(
+            required_effect_value("Guardian Angel", "revive_health_ratio")
+        )
+        revive_delay = float(required_effect_value("Guardian Angel", "revive_delay"))
+        revive_cooldown = float(
+            required_effect_value("Guardian Angel", "revive_cooldown")
+        )
+        assumptions.append(
+            "Guardian Angel's Rebirth is ready and restores 50% base health "
+            "after four seconds of sourced resurrection stasis."
+        )
+        sources.append(_GUARDIAN_ANGEL_SOURCE)
+
     has_shield = (
         magic_shield > 0
         or physical_shield > 0
@@ -366,6 +449,7 @@ def resolve_starting_defenses(
     )
     if "Spirit Visage" in names and has_shield:
         multiplier = float(ITEM_EFFECTS["Spirit Visage"]["shield_received_multiplier"])
+        healing_received_multiplier = multiplier
         magic_shield *= multiplier
         physical_shield *= multiplier
         general_shield *= multiplier
@@ -374,6 +458,9 @@ def resolve_starting_defenses(
         sources.append(_SPIRIT_VISAGE_SOURCE)
 
     if "Spirit Visage" in names and threshold_health_heal > 0:
+        healing_received_multiplier = float(
+            ITEM_EFFECTS["Spirit Visage"]["shield_received_multiplier"]
+        )
         threshold_health_heal *= float(
             ITEM_EFFECTS["Spirit Visage"]["shield_received_multiplier"]
         )
@@ -383,6 +470,22 @@ def resolve_starting_defenses(
         )
         if _SPIRIT_VISAGE_SOURCE not in sources:
             sources.append(_SPIRIT_VISAGE_SOURCE)
+
+    if "Spirit Visage" in names:
+        # Boundless Vitality applies to every heal received, including
+        # timestamped item/champion heals handled by the participant ledger.
+        # Starting shields and Protoplasm's threshold heal above are already
+        # pre-resolved with this same multiplier and are not multiplied again
+        # by the survival walk.
+        healing_received_multiplier = float(
+            ITEM_EFFECTS["Spirit Visage"]["shield_received_multiplier"]
+        )
+        if _SPIRIT_VISAGE_SOURCE not in sources:
+            sources.append(_SPIRIT_VISAGE_SOURCE)
+        if not any("all modeled heals" in note for note in assumptions):
+            assumptions.append(
+                "Boundless Vitality increases all modeled healing received by 25%."
+            )
 
     if "Plated Steelcaps" in names:
         basic_damage_multiplier *= float(
@@ -417,10 +520,13 @@ def resolve_starting_defenses(
         magic_shield=magic_shield,
         physical_shield=physical_shield,
         general_shield=general_shield,
+        spell_shield_ready=spell_shield_ready,
+        spell_shield_source=spell_shield_source,
         basic_damage_multiplier=basic_damage_multiplier,
         basic_damage_flat_reduction=basic_damage_flat_reduction,
         basic_damage_flat_reduction_cap=basic_damage_flat_reduction_cap,
         critical_strike_damage_multiplier=critical_strike_damage_multiplier,
+        healing_received_multiplier=healing_received_multiplier,
         threshold_shield_amount=threshold_shield_amount,
         threshold_shield_health_ratio=threshold_shield_health_ratio,
         threshold_shield_duration=threshold_shield_duration,
@@ -429,6 +535,9 @@ def resolve_starting_defenses(
         threshold_health_heal=threshold_health_heal,
         threshold_health_ratio=threshold_health_ratio,
         threshold_health_duration=threshold_health_duration,
+        revive_health_amount=revive_health_amount,
+        revive_delay=revive_delay,
+        revive_cooldown=revive_cooldown,
         assumptions=tuple(assumptions),
         sources=tuple(sources),
         coverage="modeled_starting_defenses",

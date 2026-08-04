@@ -34,6 +34,29 @@ jobs:
       - name: Verify numeric golden snapshot
         run: python scripts/golden_snapshot.py compare scripts/golden_baseline.json
 
+      - name: Run backend acceptance matrices
+        run: |
+          set +e
+          mkdir -p artifacts/backend
+          python scripts/acceptance_matrix.py --json > artifacts/backend/acceptance_matrix.json
+          acceptance_status=$?
+          python scripts/champion_optimizer_matrix.py --json > artifacts/backend/champion_optimizer_matrix.json
+          champion_status=$?
+          printf '{"acceptance_matrix":%s,"champion_optimizer_matrix":%s}\n' \
+            "$acceptance_status" "$champion_status" \
+            > artifacts/backend/status.json
+          if [ "$acceptance_status" -ne 0 ] || [ "$champion_status" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Upload backend acceptance evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: backend-acceptance-evidence
+          path: artifacts/backend/
+          if-no-files-found: warn
+
       - name: Check formatting
         run: black --check src/ tests/ scripts/
 

@@ -11,8 +11,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, replace
+import math
 from operator import itemgetter
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, MutableMapping
 
 from .pipeline import FightParams, require_fight_mode_support, run_fight
 from .scenario import ResolvedLoadout
@@ -23,7 +24,7 @@ from .healing_reduction import (
     healing_reduction_profiles,
     matching_healing_reduction,
 )
-from .item_effects import ThornsEffect, thorns_effects
+from .item_effects import ThornsEffect, required_effect_value, thorns_effects
 from .resistance import apply_magic_penetration, apply_resistance
 
 
@@ -72,6 +73,92 @@ def _event_sequence(event: Mapping[str, Any]) -> int:
         return int(value or 0)
     except (TypeError, ValueError):
         return 0
+
+
+def _evaluate_live_raw_formula(
+    raw_formula: Any,
+    missing_ratio: float,
+    target_max_health: float,
+) -> float:
+    """Evaluate a dynamic packet against the live target maximum health.
+
+    Existing champion callbacks accept only the live missing-health ratio.
+    New target-maximum-health packets may also accept the temporary maximum
+    health as a second argument; the one-argument fallback keeps older
+    reviewed callbacks bit-for-bit compatible.
+    """
+    try:
+        return max(0.0, float(raw_formula(missing_ratio, target_max_health)))
+    except TypeError:
+        return max(0.0, float(raw_formula(missing_ratio)))
+
+
+def _coalesce_darius_q_heals(
+    healing: MutableMapping[str, list[dict[str, Any]]],
+) -> None:
+    """Combine Darius Q pair receipts into one live heal per cast."""
+    for events in healing.values():
+        groups: dict[tuple[float, int], tuple[dict[str, Any], int]] = {}
+        kept: list[dict[str, Any]] = []
+        for event in events:
+            marker = event.get("_darius_q_group")
+            if not isinstance(marker, tuple) or len(marker) != 2:
+                kept.append(event)
+                continue
+            key = (float(marker[0]), int(marker[1]))
+            first = groups.get(key)
+            if first is None:
+                groups[key] = (event, 1)
+                kept.append(event)
+            else:
+                groups[key] = (first[0], first[1] + 1)
+        for event, count in groups.values():
+            event["amount_formula"] = (
+                lambda current_health, maximum_health, count=count: (
+                    max(0.0, maximum_health - current_health) * min(0.51, 0.17 * count)
+                )
+            )
+        events[:] = kept
+
+
+def _coalesce_compiled_darius_q_heals(
+    actions: Iterable[tuple[Any, ...]],
+) -> list[tuple[Any, ...]]:
+    """Coalesce compiled Decimate heals across pair packets."""
+    groups: dict[tuple[int, float, int, str], tuple[int, int]] = {}
+    kept: list[tuple[Any, ...]] = []
+    for action in actions:
+        if action[_A_KIND] != _KIND_HEAL or action[0][-1] != "Decimate":
+            kept.append(action)
+            continue
+        key = (
+            int(action[_A_ATTACKER]),
+            float(action[_A_TIME]),
+            int(action[0][2]),
+            str(action[0][-1]),
+        )
+        first = groups.get(key)
+        if first is None:
+            groups[key] = (len(kept), 1)
+            kept.append(action)
+            continue
+        first_index, count = first
+        groups[key] = (first_index, count + 1)
+    for first_index, count in groups.values():
+        action = kept[first_index]
+        formula = action[_A_RAW_FORMULA]
+        if not callable(formula):
+            continue
+
+        def coalesced(current_health, maximum_health, formula=formula, count=count):
+            return max(0.0, float(formula(current_health, maximum_health))) * min(
+                3, count
+            )
+
+        kept[first_index] = (
+            action[:_A_RAW_FORMULA] + (coalesced,) + action[_A_RAW_FORMULA + 1 :]
+        )
+    return kept
 
 
 def _participant_order(participant_id: Any) -> tuple[int, str]:
@@ -160,6 +247,8 @@ def _main_combatant(
                 "role_quest_complete": params.role_quest_complete,
                 "ability_ranks": params.ability_ranks,
                 "champion_options": params.champion_options,
+                "cast_order": params.cast_order,
+                "item_options": params.item_options,
             },
         )(),
     )
@@ -175,6 +264,11 @@ def _target_overrides(defender: Combatant) -> dict[str, float | str]:
     reads.
     """
     defenses = defender.defenses
+    attack_speed_multiplier = 1.0
+    if any(item.get("name") == "Frozen Heart" for item in defender.items):
+        attack_speed_multiplier = 1.0 - float(
+            required_effect_value("Frozen Heart", "attack_speed_reduction")
+        )
     return {
         "target_health": float(defender.stats.get("health", 0.0)),
         "target_bonus_health": float(defender.stats.get("bonus_health", 0.0)),
@@ -193,6 +287,7 @@ def _target_overrides(defender: Combatant) -> dict[str, float | str]:
         "target_critical_strike_damage_multiplier": float(
             defenses.critical_strike_damage_multiplier
         ),
+        "attacker_attack_speed_multiplier": attack_speed_multiplier,
         "target_threshold_shield_amount": float(defenses.threshold_shield_amount),
         "target_threshold_shield_health_ratio": float(
             defenses.threshold_shield_health_ratio
@@ -205,6 +300,9 @@ def _target_overrides(defender: Combatant) -> dict[str, float | str]:
         "target_threshold_health_heal": float(defenses.threshold_health_heal),
         "target_threshold_health_ratio": float(defenses.threshold_health_ratio),
         "target_threshold_health_duration": float(defenses.threshold_health_duration),
+        "target_revive_health_amount": float(defenses.revive_health_amount),
+        "target_revive_delay": float(defenses.revive_delay),
+        "target_revive_cooldown": float(defenses.revive_cooldown),
     }
 
 
@@ -215,6 +313,67 @@ def _target_params(base: FightParams, defender: Combatant) -> FightParams:
 def _defensive_signature(defender: Combatant) -> tuple[Any, ...]:
     """A hashable key equal exactly when ``_target_params`` would be equal."""
     return tuple(_target_overrides(defender).values())
+
+
+def _has_stateful_defense(defenses: Any) -> bool:
+    """Whether a defense requires the event walk rather than compiled score.
+
+    The optimized panel intentionally contains only static shields and damage
+    mitigation. Threshold lifelines and temporary-health transitions depend on
+    the live health boundary, so routing them through the panel would silently
+    erase a state change. The caller falls back to the authoritative event
+    walk when any such field is armed.
+    """
+    return any(
+        float(getattr(defenses, field, 0.0) or 0.0) > 0.0
+        for field in (
+            "threshold_shield_amount",
+            "threshold_health_bonus",
+            "threshold_health_heal",
+            "revive_health_amount",
+        )
+    ) or bool(getattr(defenses, "spell_shield_ready", False))
+
+
+def _is_authored_ability_event(event: Mapping[str, Any]) -> bool:
+    """Identify a champion cast without treating passive/proc rows as casts.
+
+    Champion modules use the canonical Q/W/E/R source keys for cast packets.
+    A packet may override this marker when a future source-backed mechanic
+    supplies a more precise cast classification; absent that receipt, item
+    procs and passive rows remain eligible to land normally.
+    """
+    if "is_ability" in event:
+        return bool(event["is_ability"])
+    return str(event.get("source_key", "")) in {"Q", "W", "E", "R"}
+
+
+def _ability_instance_for_event(
+    event: Mapping[str, Any], cast_timeline: Iterable[Mapping[str, Any]]
+) -> str | None:
+    """Attach a cast ordinal so multi-packet abilities share one shield use."""
+    if not _is_authored_ability_event(event):
+        return None
+    slot = str(event.get("source_key", ""))
+    try:
+        event_time = float(event.get("time", 0.0))
+    except (TypeError, ValueError):
+        return None
+    candidates = [
+        cast
+        for cast in cast_timeline
+        if str(cast.get("slot", "")) == slot
+        and float(cast.get("time", 0.0)) <= event_time
+    ]
+    if not candidates:
+        return f"{slot}:{round(event_time, 9)}"
+    cast = max(candidates, key=lambda row: float(row.get("time", 0.0)))
+    ordinal = cast.get("ordinal")
+    return (
+        f"{slot}:{ordinal}"
+        if ordinal is not None
+        else f"{slot}:{round(float(cast.get('time', 0.0)), 9)}"
+    )
 
 
 def _pair_packet(
@@ -232,7 +391,11 @@ def _pair_packet(
     mutates its copy's top-level fields.
     """
     events: list[dict[str, Any]] = []
+    cast_timeline = result.get("cast_timeline", [])
+    if not isinstance(cast_timeline, list):
+        cast_timeline = []
     event_ids_by_key: dict[tuple[str, float, int], str] = {}
+    event_ids_by_source_time: dict[tuple[str, float], list[str]] = defaultdict(list)
     for index, event in enumerate(result.get("damage_events", [])):
         if "sequence" not in event:
             # See _action_key: pair-local event ids stay order-irrelevant
@@ -247,6 +410,8 @@ def _pair_packet(
             "attacker": attacker_id,
             "target": defender_id,
             "_event_id": f"{attacker_id}:{defender_id}:{index}",
+            "is_ability": _is_authored_ability_event(event),
+            "ability_instance": _ability_instance_for_event(event, cast_timeline),
         }
         enriched["_sk"] = _action_key(
             float(event.get("time", 0.0)), 0.0, defender_id, enriched
@@ -259,9 +424,22 @@ def _pair_packet(
                 int(event.get("sequence", 0) or 0),
             )
         ] = enriched["_event_id"]
+        event_ids_by_source_time[
+            (str(event.get("source_key", "")), round(float(event.get("time", 0.0)), 9))
+        ].append(enriched["_event_id"])
     heals: list[dict[str, Any]] = []
-    for event in result.get("self_healing_events", []):
-        enriched_heal = {**event, "attacker": attacker_id}
+    for heal_index, event in enumerate(result.get("self_healing_events", [])):
+        original_event_id = event.get("_event_id")
+        if original_event_id is None:
+            original_event_id = f"{attacker_id}:heal:{heal_index}"
+        # Engine self-heal ids are local to one pair fight.  Include the
+        # defender in the coupled id so a multi-target defender packet cannot
+        # publish duplicate receipts for the same attacker/timestamp.
+        enriched_heal = {
+            **event,
+            "attacker": attacker_id,
+            "_event_id": f"{original_event_id}:{defender_id}",
+        }
         trigger_id = event_ids_by_key.get(
             (
                 str(event.get("_trigger_source", "")),
@@ -271,6 +449,24 @@ def _pair_packet(
         )
         if trigger_id is not None:
             enriched_heal["_trigger_event_id"] = trigger_id
+        else:
+            trigger_candidates = event_ids_by_source_time.get(
+                (
+                    str(event.get("_trigger_source", "")),
+                    round(float(event.get("_trigger_time", 0.0)), 9),
+                ),
+                [],
+            )
+            if len(trigger_candidates) == 1:
+                enriched_heal["_trigger_event_id"] = trigger_candidates[0]
+        # Triggered self-heals are authored by this attacker/defender pair.
+        # Keep the damage target explicit in the public receipt: the heal's
+        # ``attacker`` is its recipient, while ``trigger_target`` identifies
+        # which roster target generated the life-steal/on-hit packet.  Do not
+        # add this to actor-wide regeneration, whose copies are intentionally
+        # deduplicated across pair fights.
+        if "_trigger_source" in event:
+            enriched_heal["trigger_target"] = defender_id
         enriched_heal["_sk"] = _action_key(
             float(event.get("time", 0.0)), 1.0, attacker_id, enriched_heal
         )
@@ -296,11 +492,14 @@ def _actor_params(base: FightParams, actor: Combatant) -> FightParams:
         base,
         role=getattr(request, "role", "") or "",
         role_quest_complete=bool(getattr(request, "role_quest_complete", False)),
-        # Roster rank/option controls are not yet part of the loadout schema;
-        # omitted values intentionally stay None so each champion module uses
-        # its sourced legal level-derived defaults.
+        # Roster controls are explicit scenario inputs.  An omitted cast order
+        # must remain None so the actor's champion module supplies its own
+        # declared order; only the synthetic main request carries the
+        # top-level order.
         ability_ranks=getattr(request, "ability_ranks", None) or None,
         champion_options=getattr(request, "champion_options", None),
+        cast_order=getattr(request, "cast_order", None),
+        item_options=getattr(request, "item_options", None),
         ally_stat_bonuses=None,
     )
 
@@ -326,7 +525,8 @@ def _support_target_ids(
     the model reproducible without pretending that an unspecified cursor
     choice was observed.
     """
-    if effect.get("target_self") or effect.get("target_scope") == "self":
+    target_scope = effect.get("target_scope")
+    if target_scope == "self":
         return [attacker.participant_id], "self"
     # ``main`` and ``ally`` are separate UI buckets but they are one allied
     # side in the fight.  Comparing the raw labels would make a main Lulu
@@ -339,8 +539,22 @@ def _support_target_ids(
         and actor.participant_id != attacker.participant_id
     ]
     if not teammates:
+        if target_scope in {"self_and_all_teammates", "self_and_one_teammate"}:
+            return [attacker.participant_id], "self_only_no_selected_teammate"
+        if effect.get("target_self"):
+            return [attacker.participant_id], "self"
         return [], "no_selected_teammate"
-    if effect.get("target_scope") == "all_teammates":
+    if target_scope == "self_and_all_teammates":
+        return [
+            attacker.participant_id,
+            *(actor.participant_id for actor in teammates),
+        ], "self_and_all_selected_teammates"
+    if target_scope == "self_and_one_teammate":
+        return [
+            attacker.participant_id,
+            teammates[0].participant_id,
+        ], "self_and_first_selected_teammate"
+    if target_scope == "all_teammates":
         return [actor.participant_id for actor in teammates], "all_selected_teammates"
     return [teammates[0].participant_id], "first_selected_teammate"
 
@@ -370,15 +584,21 @@ def _support_effect_templates(
         ability_ranks=getattr(request, "ability_ranks", None),
     )
     templates = []
-    for effect in effects:
+    for effect_index, effect in enumerate(effects):
         target_ids, target_policy = _support_target_ids(attacker, effect, all_actors)
-        for target_id in target_ids:
+        for target_index, target_id in enumerate(target_ids):
             templates.append(
                 {
                     **effect,
                     "attacker": attacker.participant_id,
                     "target": target_id,
                     "target_policy": target_policy,
+                    "_event_id": str(
+                        effect.get(
+                            "_event_id",
+                            f"{attacker.participant_id}:support:{effect_index}:{target_index}",
+                        )
+                    ),
                 }
             )
     return templates
@@ -410,12 +630,21 @@ def _thorns_return_damage(
             f"{profile.item_name} thorns damage type "
             f"{profile.damage_type!r} is not supported"
         )
+    # Bramble's fixed packet keeps a zero ratio.  Thornmail supplies an
+    # authored bonus-armor ratio through ``ThornsEffect``; read it through a
+    # compatibility default so cached Bramble packets remain unchanged while
+    # the item layer rolls out the typed field.
+    bonus_armor_ratio = max(
+        0.0, float(getattr(profile, "bonus_armor_ratio", 0.0) or 0.0)
+    )
+    bonus_armor = max(0.0, float(wearer.stats.get("bonus_armor", 0.0) or 0.0))
+    raw_damage = float(profile.damage) + bonus_armor_ratio * bonus_armor
     resistance = apply_magic_penetration(
         float(striker.stats.get("magic_resistance", 0.0)),
         float(wearer.stats.get("magic_penetration_flat", 0.0)),
         float(wearer.stats.get("magic_penetration_percent", 0.0)) / 100.0,
     )
-    return apply_resistance(profile.damage, resistance)
+    return apply_resistance(raw_damage, resistance)
 
 
 def _schedule_thorns_events(
@@ -440,6 +669,7 @@ def _schedule_thorns_events(
             event
             for event in incoming.get(wearer.participant_id, [])
             if event.get("source_key") == "auto_attacks"
+            or bool(event.get("basic_attack"))
         ]
         for index, strike in enumerate(strikes):
             striker = combatant_by_id.get(str(strike.get("attacker")))
@@ -464,9 +694,75 @@ def _schedule_thorns_events(
                     "_reactive": True,
                     "grievous_duration": profile.grievous_duration,
                     "_wound_source": f"{profile.item_name} · Thorns",
+                    "_wound_until": float(strike.get("time", 0.0))
+                    + float(profile.grievous_duration),
                 }
                 incoming.setdefault(striker.participant_id, []).append(event)
                 outgoing.setdefault(wearer.participant_id, []).append(event)
+
+
+def _schedule_authored_reactive_events(
+    incoming: dict[str, list[dict[str, Any]]],
+    outgoing: dict[str, list[dict[str, Any]]],
+) -> None:
+    """Schedule explicitly authored reactive packets on ledger events.
+
+    A packet is accepted only when the trigger event names its eligible
+    ``reactive_trigger`` (for example ``basic_attack``).  The resolver never
+    infers an item's trigger, amount, target, or timing from a name.  This
+    keeps Thornmail/redirect/defender packets source-owned while allowing the
+    shared survival walk to apply their damage and Grievous window in order.
+    """
+    known_ids = {str(participant_id) for participant_id in incoming}
+    for entries in incoming.values():
+        known_ids.update(
+            str(event.get("attacker", "")) for event in entries if event.get("attacker")
+        )
+        known_ids.update(
+            str(event.get("target", "")) for event in entries if event.get("target")
+        )
+    for target_id, events in list(incoming.items()):
+        for trigger in list(events):
+            packets = trigger.get("reactive_packets")
+            if not isinstance(packets, list):
+                continue
+            trigger_kind = str(trigger.get("trigger_kind", ""))
+            trigger_id = trigger.get("_event_id")
+            for index, packet in enumerate(packets):
+                if not isinstance(packet, Mapping):
+                    continue
+                eligible = packet.get("reactive_trigger")
+                if not isinstance(eligible, str) or eligible != trigger_kind:
+                    continue
+                target = str(packet.get("target", trigger.get("attacker", "")))
+                if not target or target not in known_ids:
+                    continue
+                try:
+                    amount = max(0.0, float(packet["damage"]))
+                except (KeyError, TypeError, ValueError):
+                    continue
+                event = {
+                    "time": float(packet.get("time", trigger.get("time", 0.0))),
+                    "damage": amount,
+                    "damage_type": str(packet.get("damage_type", "")),
+                    "source_key": str(packet.get("source_key", "")),
+                    "source": str(packet.get("source", packet.get("source_key", ""))),
+                    "attacker": str(packet.get("attacker", target_id)),
+                    "target": target,
+                    "sequence": int(trigger.get("sequence", 0) or 0),
+                    "event_precision": packet.get("event_precision", "exact"),
+                    "_event_id": f"{trigger_id}:reactive:{index}",
+                    "_trigger_event_id": trigger_id,
+                    "_reactive": True,
+                }
+                if packet.get("grievous_duration") is not None:
+                    event["grievous_duration"] = float(packet["grievous_duration"])
+                    event["_wound_source"] = str(
+                        packet.get("wound_source", event["source"])
+                    )
+                    event["_wound_until"] = event["time"] + event["grievous_duration"]
+                incoming.setdefault(target, []).append(event)
+                outgoing.setdefault(event["attacker"], []).append(event)
 
 
 def _simulate_survival(
@@ -476,6 +772,7 @@ def _simulate_survival(
     support_effects: Mapping[str, list[dict[str, Any]]],
     duration: float,
     annotate: bool = True,
+    receipt_events: MutableMapping[str, list[dict[str, Any]]] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Resolve damage, shields, healing, and death for every participant.
 
@@ -483,6 +780,9 @@ def _simulate_survival(
     serialized public receipt reads (pair/live damage, overkill, healing
     receipts); every survival number and every field the breakdown sums —
     including each event's applied ``damage`` — is written either way.
+    ``receipt_events`` is an optional outgoing ledger used only by receipt
+    callers; when supplied, stateful redirect/deferred clones are mirrored
+    beside their source packet without changing score-only inputs.
     """
     combatant_list = list(combatants)
     combatant_by_id = {
@@ -494,6 +794,7 @@ def _simulate_survival(
     }
     states: dict[str, dict[str, Any]] = {}
     for combatant in combatant_list:
+        defenses = combatant.defenses
         states[combatant.participant_id] = {
             "health": max(0.0, float(combatant.stats.get("health", 0.0))),
             "max_health": max(0.0, float(combatant.stats.get("health", 0.0))),
@@ -504,23 +805,263 @@ def _simulate_survival(
             "health_damage": 0.0,
             "shield_absorbed": 0.0,
             "healing_received": 0.0,
+            "overhealing": 0.0,
             "healing_reduced": 0.0,
             "support_shield_received": 0.0,
+            "temporary_health_received": 0.0,
+            "temporary_health_amount": 0.0,
+            "temporary_health_until": 0.0,
+            "temporary_health_expired_at": None,
+            "temporary_health_source": "",
             "healing_reduction_until": 0.0,
             "healing_reduction_factor": 1.0,
             "healing_reduction_sources": set(),
+            "healing_reduction_events": [],
             "death_time": None,
+            "execute_time": None,
+            "execute_source": "",
+            # Combat-state mechanics are event-driven.  These fields are
+            # deliberately inert unless an authored event supplies the
+            # corresponding duration/transition; the simulator never
+            # guesses an item's trigger or timing from a name alone.
+            "stasis_until": 0.0,
+            "stasis_started_at": None,
+            "stasis_source": "",
+            "invulnerable_until": 0.0,
+            "untargetable_until": 0.0,
+            "spell_shield_until": (
+                float("inf")
+                if bool(getattr(defenses, "spell_shield_ready", False))
+                else 0.0
+            ),
+            "spell_shield_source": str(
+                getattr(defenses, "spell_shield_source", "") or ""
+            ),
+            "spell_shield_used": False,
+            "spell_shield_blocked_cast": None,
+            "healing_received_multiplier": max(
+                1.0,
+                float(getattr(defenses, "healing_received_multiplier", 1.0) or 1.0),
+            ),
+            "threshold_shield": max(
+                0.0, float(getattr(defenses, "threshold_shield_amount", 0.0) or 0.0)
+            ),
+            "threshold_shield_threshold": max(
+                0.0,
+                float(getattr(defenses, "threshold_shield_health_ratio", 0.0) or 0.0),
+            )
+            * max(0.0, float(combatant.stats.get("health", 0.0))),
+            "threshold_shield_duration": max(
+                0.0,
+                float(getattr(defenses, "threshold_shield_duration", 0.0) or 0.0),
+            ),
+            "threshold_shield_damage_type": str(
+                getattr(defenses, "threshold_shield_damage_type", "all") or "all"
+            ),
+            "threshold_shield_triggered": False,
+            "threshold_shield_expired_at": None,
+            "threshold_health_bonus": max(
+                0.0, float(getattr(defenses, "threshold_health_bonus", 0.0) or 0.0)
+            ),
+            "threshold_health_heal": max(
+                0.0, float(getattr(defenses, "threshold_health_heal", 0.0) or 0.0)
+            ),
+            "threshold_health_ratio": max(
+                0.0, float(getattr(defenses, "threshold_health_ratio", 0.0) or 0.0)
+            ),
+            "threshold_health_duration": max(
+                0.0, float(getattr(defenses, "threshold_health_duration", 0.0) or 0.0)
+            ),
+            "threshold_health_triggered": False,
+            "first_death_time": None,
+            "revive_time": None,
+            "revive_source": "",
+            "revive_health_restored": 0.0,
+            "revived": False,
+            "revive_used": False,
+            "terminal_phase": "alive",
         }
+
+    # Normalize stateful packets before sorting.  Pair engines remain the
+    # source of ordinary damage values; these transforms only consume
+    # explicitly authored metadata on a packet and therefore fail closed
+    # when a mechanic has no trigger/timing contract.
+    expanded_incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
+
+    def _insert_receipt_clone(
+        source_event: dict[str, Any], clone: dict[str, Any]
+    ) -> None:
+        """Insert a stateful clone beside its source in the outgoing receipt.
+
+        ``incoming`` and ``outgoing`` share the same pair event objects in
+        receipt mode.  The survival walk expands redirects/deferred ticks on
+        the incoming side, so explicitly mirror those clones into the
+        outgoing list for a complete public timeline.  Score-only callers do
+        not pass ``receipt_events`` and retain the optimized event shape.
+        """
+        if receipt_events is None:
+            return
+        attacker = source_event.get("attacker")
+        if attacker is None:
+            return
+        bucket = receipt_events.setdefault(str(attacker), [])
+        try:
+            index = bucket.index(source_event)
+        except ValueError:
+            bucket.append(clone)
+            return
+        # Keep multiple ticks in authored order, immediately following the
+        # source packet, rather than appending them after unrelated attacks.
+        while index + 1 < len(bucket):
+            following = bucket[index + 1]
+            source_id = str(source_event.get("_event_id", ""))
+            following_id = str(following.get("_event_id", ""))
+            if not source_id or not following_id.startswith(f"{source_id}:"):
+                break
+            index += 1
+        bucket.insert(index + 1, clone)
+
+    for participant_id, events in incoming.items():
+        for original in events:
+            event = original
+            target_id = str(event.get("target", participant_id))
+            try:
+                redirect_fraction = float(event.get("redirect_fraction", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                redirect_fraction = 0.0
+            redirect_fraction = max(0.0, min(1.0, redirect_fraction))
+            redirect_target = str(event.get("redirect_target", ""))
+            if redirect_fraction > 0.0 and redirect_target in states:
+                original_amount = max(0.0, float(event.get("damage", 0.0)))
+                direct_amount = original_amount * (1.0 - redirect_fraction)
+                redirected = {
+                    **event,
+                    "target": redirect_target,
+                    "damage": original_amount * redirect_fraction,
+                    "_redirected": True,
+                    "_redirected_from": target_id,
+                    "_redirect_fraction": redirect_fraction,
+                    "_event_id": f"{event.get('_event_id', '')}:redirect",
+                }
+                expanded_incoming[redirect_target].append(redirected)
+                _insert_receipt_clone(event, redirected)
+                # The source packet's outgoing receipt represents the direct
+                # share; the redirected clone carries the other share.  This
+                # keeps public event damage additive without double counting.
+                original["damage"] = direct_amount
+                original["_redirected_amount"] = original_amount * redirect_fraction
+                original["_redirect_fraction"] = redirect_fraction
+                event = {
+                    **event,
+                    "target": target_id,
+                    "damage": direct_amount,
+                    "_redirected_amount": original_amount * redirect_fraction,
+                    "_redirect_fraction": redirect_fraction,
+                }
+
+            # Deferred damage (for example a damage-deferral passive) is
+            # represented only when the packet provides all timing fields.
+            # It is split into deterministic equal true-damage ticks; no
+            # hidden item-specific duration is introduced here.
+            try:
+                deferred_fraction = float(event.get("deferred_fraction", 0.0) or 0.0)
+                deferred_duration = float(event.get("deferred_duration", 0.0) or 0.0)
+                deferred_ticks = int(event.get("deferred_ticks", 0) or 0)
+            except (TypeError, ValueError):
+                deferred_fraction, deferred_duration, deferred_ticks = 0.0, 0.0, 0
+            if (
+                deferred_fraction > 0.0
+                and deferred_duration > 0.0
+                and deferred_ticks > 0
+                and float(event.get("damage", 0.0)) > 0.0
+            ):
+                deferred_fraction = min(1.0, deferred_fraction)
+                full_amount = float(event["damage"])
+                immediate_amount = full_amount * (1.0 - deferred_fraction)
+                if receipt_events is not None:
+                    # Split the outgoing source event too; the deferred clones
+                    # below then reconcile exactly to its original amount.
+                    original["damage"] = immediate_amount
+                    original["_deferred_total"] = full_amount * deferred_fraction
+                event = {
+                    **event,
+                    "damage": immediate_amount,
+                    "_deferred_total": full_amount * deferred_fraction,
+                }
+                tick_amount = full_amount * deferred_fraction / deferred_ticks
+                for tick in range(1, deferred_ticks + 1):
+                    deferred = {
+                        **event,
+                        "time": float(event.get("time", 0.0))
+                        + deferred_duration * tick / deferred_ticks,
+                        "damage": tick_amount,
+                        "damage_type": "true",
+                        "source_key": f"deferred_{event.get('source_key', 'damage')}",
+                        "source": f"{event.get('source', event.get('source_key', ''))} (deferred)",
+                        "_event_id": f"{event.get('_event_id', '')}:deferred:{tick}",
+                        "_deferred": True,
+                        "_deferred_from": event.get("_event_id"),
+                    }
+                    expanded_incoming[target_id].append(deferred)
+                    _insert_receipt_clone(original, deferred)
+            expanded_incoming[target_id].append(event)
+
+    # Guardian Angel's Rebirth is triggered by the first lethal packet, but
+    # that trigger is only knowable during the live survival walk.  Author a
+    # candidate revive after every incoming damage event; the walk applies the
+    # earliest one only when the participant is actually dead, and ignores
+    # the rest.  This preserves exact packet ordering without guessing which
+    # packet becomes lethal before shields, overkill, or prior healing resolve.
+    for participant_id, events in list(expanded_incoming.items()):
+        defenses = combatant_by_id[participant_id].defenses
+        revive_amount = max(
+            0.0, float(getattr(defenses, "revive_health_amount", 0.0) or 0.0)
+        )
+        revive_delay = max(0.0, float(getattr(defenses, "revive_delay", 0.0) or 0.0))
+        if revive_amount <= 0.0 or revive_delay <= 0.0:
+            continue
+        candidates: list[dict[str, Any]] = []
+        for index, event in enumerate(events):
+            if str(event.get("kind", "")) in {
+                "heal",
+                "regen",
+                "shield",
+                "temporary_health",
+                "revive",
+            }:
+                continue
+            damage = max(0.0, float(event.get("damage", 0.0) or 0.0))
+            if damage <= 0.0:
+                continue
+            event_time = float(event.get("time", 0.0))
+            candidates.append(
+                {
+                    "time": event_time + revive_delay,
+                    "kind": "revive",
+                    "amount": revive_amount,
+                    "source": "Guardian Angel (Rebirth)",
+                    "source_key": "revive_Guardian Angel",
+                    "sequence": int(event.get("sequence", index) or index),
+                    "_revive_candidate": True,
+                }
+            )
+        expanded_incoming[participant_id].extend(candidates)
+    incoming = expanded_incoming
 
     actions: list[tuple[tuple[Any, ...], str, dict[str, Any]]] = []
     damage_event_status: dict[str, str] = {}
     for participant_id, events in support_effects.items():
-        for event in events:
+        for support_index, event in enumerate(events):
+            event.setdefault("_event_id", f"{participant_id}:support:{support_index}")
             # A sourced ally shield is a pre-damage barrier.  A sourced heal
             # is a post-damage recovery event.  They must not share one
             # priority merely because both are support effects.
             kind = str(event.get("kind", ""))
-            priority = -1.0 if kind == "shield" else 1.0
+            priority = (
+                -2.0
+                if kind in {"stasis", "invulnerability", "untargetable", "spell_shield"}
+                else (-1.0 if kind in {"shield", "temporary_health"} else 1.0)
+            )
             actions.append(
                 (
                     _action_key(
@@ -569,6 +1110,107 @@ def _simulate_survival(
         event_time, phase = action_key[0], action_key[1]
         state = states[participant_id]
         trigger_id = event.get("_trigger_event_id")
+
+        if event_time > duration:
+            # The shared ledger is bounded by the authored fight window.  A
+            # post-window revive, heal, or damage tick must remain visible in
+            # the receipt but cannot alter terminal state or totals.
+            if phase >= 0:
+                if annotate:
+                    event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                    event["live_damage"] = 0.0
+                    event["overkill"] = 0.0
+                event["damage"] = 0.0
+            event["applied_amount"] = 0.0
+            event["skipped_reason"] = "outside_window"
+            continue
+
+        if (
+            state["healing_reduction_until"] > 0.0
+            and event_time >= state["healing_reduction_until"]
+        ):
+            # A new wound after expiry starts a fresh composition window; do
+            # not carry the prior factor or source labels into its receipt.
+            state["healing_reduction_factor"] = 1.0
+            state["healing_reduction_sources"].clear()
+
+        if (
+            not state["threshold_shield_triggered"]
+            and state["threshold_shield"] > 0.0
+            and state["threshold_shield_duration"] > 0.0
+            and event_time > state["threshold_shield_duration"]
+            and state["threshold_shield_expired_at"] is None
+        ):
+            state["threshold_shield_expired_at"] = round(
+                state["threshold_shield_duration"], 3
+            )
+
+        if (
+            state["temporary_health_amount"] > 0.0
+            and state["temporary_health_until"] > 0.0
+            and event_time >= state["temporary_health_until"]
+        ):
+            expired = state["temporary_health_amount"]
+            state["max_health"] = max(0.0, state["max_health"] - expired)
+            state["health"] = min(state["health"], state["max_health"])
+            state["temporary_health_amount"] = 0.0
+            state["temporary_health_expired_at"] = round(
+                state["temporary_health_until"], 3
+            )
+            state["temporary_health_until"] = 0.0
+
+        kind = str(event.get("kind", ""))
+        # Revive is a state transition rather than healing: it is allowed to
+        # run after a lethal packet and restores a sourced resource amount.
+        if kind == "revive":
+            if state["death_time"] is None or state["revive_used"]:
+                event["applied_amount"] = 0.0
+                event["skipped_reason"] = "revive_not_available"
+                continue
+            ratio = max(0.0, min(1.0, float(event.get("health_ratio", 0.0) or 0.0)))
+            amount = max(0.0, float(event.get("amount", 0.0) or 0.0))
+            restore = amount if amount > 0.0 else state["max_health"] * ratio
+            state["health"] = min(state["max_health"], restore)
+            state["death_time"] = None
+            state["revive_time"] = float(event_time)
+            state["revive_source"] = str(
+                event.get("source", event.get("source_key", "Revive"))
+            )
+            state["revive_health_restored"] = float(state["health"])
+            state["revived"] = True
+            state["revive_used"] = True
+            state["terminal_phase"] = "revived"
+            event["applied_amount"] = round(state["health"], 6)
+            continue
+        if kind in {"stasis", "invulnerability", "untargetable"}:
+            duration_value = max(0.0, float(event.get("duration", 0.0) or 0.0))
+            until_key = {
+                "stasis": "stasis_until",
+                "invulnerability": "invulnerable_until",
+                "untargetable": "untargetable_until",
+            }[kind]
+            state[until_key] = max(state[until_key], float(event_time) + duration_value)
+            if kind == "stasis":
+                state["stasis_started_at"] = float(event_time)
+                state["stasis_source"] = str(
+                    event.get("source", event.get("source_key", "Stasis"))
+                )
+            event["applied_amount"] = round(duration_value, 6)
+            continue
+        if kind == "spell_shield":
+            duration_value = max(0.0, float(event.get("duration", 0.0) or 0.0))
+            if duration_value <= 0.0 or state["spell_shield_used"]:
+                event["applied_amount"] = 0.0
+                event["skipped_reason"] = "spell_shield_not_available"
+            else:
+                state["spell_shield_until"] = max(
+                    state["spell_shield_until"], event_time + duration_value
+                )
+                state["spell_shield_source"] = str(
+                    event.get("source", event.get("source_key", "Spell Shield"))
+                )
+                event["applied_amount"] = round(duration_value, 6)
+            continue
         if trigger_id is not None and (
             damage_event_status.get(str(trigger_id)) != "applied"
         ):
@@ -596,11 +1238,74 @@ def _simulate_survival(
             event["applied_amount"] = 0.0
             event["skipped_reason"] = "target_dead"
             continue
+        if phase >= 0 and (
+            state["stasis_until"] > event_time
+            or state["invulnerable_until"] > event_time
+            or state["untargetable_until"] > event_time
+        ):
+            if annotate:
+                event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                event["live_damage"] = 0.0
+                event["overkill"] = 0.0
+            event["damage"] = 0.0
+            event["applied_amount"] = 0.0
+            event["skipped_reason"] = "target_state_blocked"
+            continue
+        cast_identity = event.get("ability_instance")
+        if not cast_identity:
+            cast_identity = (
+                f"{event.get('source_key', '')}:" f"{round(float(event_time), 9)}"
+            )
+        cast_key = (str(cast_identity),)
+        same_blocked_cast = state["spell_shield_blocked_cast"] == cast_key
+        if (
+            phase >= 0
+            and event.get("is_ability")
+            and state["spell_shield_until"] > event_time
+            and (not state["spell_shield_used"] or same_blocked_cast)
+        ):
+            if not state["spell_shield_used"]:
+                state["spell_shield_used"] = True
+                state["spell_shield_blocked_cast"] = cast_key
+            event_id = event.get("_event_id")
+            if event_id is not None:
+                damage_event_status[str(event_id)] = "blocked"
+            if annotate:
+                event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                event["live_damage"] = 0.0
+                event["overkill"] = 0.0
+                event["spell_shield_source"] = state["spell_shield_source"]
+            event["damage"] = 0.0
+            event["applied_amount"] = 0.0
+            event["skipped_reason"] = "spell_shield"
+            continue
         source_id = event.get("attacker")
+        if (
+            phase >= 0
+            and source_id in states
+            and not event.get("_reactive")
+            and (
+                states[source_id]["stasis_until"] > event_time
+                or states[source_id]["invulnerable_until"] > event_time
+                or states[source_id]["untargetable_until"] > event_time
+            )
+        ):
+            event_id = event.get("_event_id")
+            if event_id is not None:
+                damage_event_status[str(event_id)] = "blocked"
+            if annotate:
+                event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                event["live_damage"] = 0.0
+                event["overkill"] = 0.0
+            event["damage"] = 0.0
+            event["applied_amount"] = 0.0
+            event["skipped_reason"] = "attacker_state_blocked"
+            continue
         if (
             source_id in states
             and states[source_id]["death_time"] is not None
             and not event.get("_reactive")
+            and not event.get("_deferred")
         ):
             # A dead actor cannot continue an already-scheduled rotation or
             # emit a support effect later in the shared window. Reactive
@@ -619,10 +1324,36 @@ def _simulate_survival(
             kind = str(event.get("kind", ""))
             amount = max(0.0, float(event.get("amount", 0.0)))
             if kind == "shield":
+                amount *= state["healing_received_multiplier"]
                 state["shields"]["general_shield"] += amount
                 state["support_shield_received"] += amount
                 event["applied_amount"] = round(amount, 6)
-            elif kind == "heal":
+            elif kind == "temporary_health":
+                duration_value = max(0.0, float(event.get("duration", 0.0) or 0.0))
+                if amount <= 0.0 or duration_value <= 0.0:
+                    event["applied_amount"] = 0.0
+                    event["skipped_reason"] = "temporary_health_not_available"
+                    continue
+                state["max_health"] += amount
+                state["health"] += amount
+                state["temporary_health_received"] += amount
+                state["temporary_health_amount"] += amount
+                state["temporary_health_until"] = max(
+                    state["temporary_health_until"], event_time + duration_value
+                )
+                state["temporary_health_source"] = str(
+                    event.get("source", event.get("source_key", "Temporary Health"))
+                )
+                event["expires_at"] = round(event_time + duration_value, 3)
+                event["applied_amount"] = round(amount, 6)
+            elif kind in {"heal", "regen"}:
+                amount_formula = event.get("amount_formula")
+                if callable(amount_formula):
+                    amount = max(
+                        0.0,
+                        float(amount_formula(state["health"], state["max_health"])),
+                    )
+                amount *= state["healing_received_multiplier"]
                 reduction_factor = (
                     1.0
                     if event_time >= state["healing_reduction_until"]
@@ -634,16 +1365,53 @@ def _simulate_survival(
                     reduced_amount,
                     max(0.0, state["max_health"] - state["health"]),
                 )
+                excess = max(0.0, reduced_amount - received)
+                temporary_duration = max(
+                    0.0,
+                    float(event.get("temporary_health_duration", 0.0) or 0.0),
+                )
+                temporary_health = (
+                    excess
+                    if event.get("overheal_to_temporary_health")
+                    and temporary_duration > 0.0
+                    and excess > 0.0
+                    else 0.0
+                )
+                state["overhealing"] += excess - temporary_health
                 state["health"] += received
                 state["healing_received"] += received
+                if temporary_health > 0.0:
+                    state["max_health"] += temporary_health
+                    state["health"] += temporary_health
+                    state["temporary_health_received"] += temporary_health
+                    state["temporary_health_amount"] += temporary_health
+                    state["temporary_health_until"] = max(
+                        state["temporary_health_until"],
+                        event_time + temporary_duration,
+                    )
+                    state["temporary_health_source"] = str(
+                        event.get("source", event.get("source_key", "Temporary Health"))
+                    )
+                    event["temporary_health"] = round(temporary_health, 6)
+                    event["temporary_health_expires_at"] = round(
+                        event_time + temporary_duration, 3
+                    )
                 if annotate:
                     event["raw_amount"] = round(amount, 6)
                     event["reduced_amount"] = round(reduced_amount, 6)
                     event["healing_reduction_factor"] = round(reduction_factor, 6)
+                    event["overheal"] = round(excess - temporary_health, 6)
                 event["applied_amount"] = round(received, 6)
             continue
         if phase == 1:
             amount = max(0.0, float(event.get("amount", 0.0)))
+            amount_formula = event.get("amount_formula")
+            if callable(amount_formula):
+                amount = max(
+                    0.0,
+                    float(amount_formula(state["health"], state["max_health"])),
+                )
+            amount *= state["healing_received_multiplier"]
             reduction_factor = (
                 1.0
                 if event_time >= state["healing_reduction_until"]
@@ -655,12 +1423,40 @@ def _simulate_survival(
                 reduced_amount,
                 max(0.0, state["max_health"] - state["health"]),
             )
+            excess = max(0.0, reduced_amount - received)
+            temporary_duration = max(
+                0.0, float(event.get("temporary_health_duration", 0.0) or 0.0)
+            )
+            temporary_health = (
+                excess
+                if event.get("overheal_to_temporary_health")
+                and temporary_duration > 0.0
+                and excess > 0.0
+                else 0.0
+            )
+            state["overhealing"] += excess - temporary_health
             state["health"] += received
             state["healing_received"] += received
+            if temporary_health > 0.0:
+                state["max_health"] += temporary_health
+                state["health"] += temporary_health
+                state["temporary_health_received"] += temporary_health
+                state["temporary_health_amount"] += temporary_health
+                state["temporary_health_until"] = max(
+                    state["temporary_health_until"], event_time + temporary_duration
+                )
+                state["temporary_health_source"] = str(
+                    event.get("source", event.get("source_key", "Temporary Health"))
+                )
+                event["temporary_health"] = round(temporary_health, 6)
+                event["temporary_health_expires_at"] = round(
+                    event_time + temporary_duration, 3
+                )
             if annotate:
                 event["raw_amount"] = round(amount, 6)
                 event["reduced_amount"] = round(reduced_amount, 6)
                 event["healing_reduction_factor"] = round(reduction_factor, 6)
+                event["overheal"] = round(excess - temporary_health, 6)
             event["applied_amount"] = round(received, 6)
             continue
 
@@ -681,7 +1477,9 @@ def _simulate_survival(
                 min(1.0, 1.0 - state["health"] / state["max_health"]),
             )
             try:
-                live_raw = max(0.0, float(raw_formula(missing_ratio)))
+                live_raw = _evaluate_live_raw_formula(
+                    raw_formula, missing_ratio, state["max_health"]
+                )
             except (TypeError, ValueError):
                 live_raw = raw_damage
             amount *= live_raw / raw_damage
@@ -698,6 +1496,44 @@ def _simulate_survival(
             amount -= absorbed
             state["shield_absorbed"] += absorbed
             event_absorbed += absorbed
+        # Lifeline-style threshold shields and temporary health are armed by
+        # the post-starting-shield damage that would cross the authored
+        # health threshold.  They expire on their sourced duration and never
+        # trigger a second time in the same fight.
+        threshold_due = (
+            not state["threshold_shield_triggered"]
+            and state["threshold_shield"] > 0.0
+            and state["threshold_shield_threshold"] > 0.0
+            and event_time <= state["threshold_shield_duration"]
+            and state["health"] - amount <= state["threshold_shield_threshold"]
+            and state["threshold_shield_damage_type"] in {"all", damage_type}
+        )
+        health_due = (
+            not state["threshold_health_triggered"]
+            and state["threshold_health_bonus"] > 0.0
+            and state["threshold_health_ratio"] > 0.0
+            and state["threshold_health_duration"] > 0.0
+            and state["health"] - amount
+            <= state["max_health"] * state["threshold_health_ratio"]
+        )
+        if threshold_due or health_due:
+            if threshold_due:
+                state["threshold_shield_triggered"] = True
+                state["shields"]["general_shield"] += state["threshold_shield"]
+                state["threshold_shield"] = 0.0
+                event["threshold_shield_triggered"] = True
+            if health_due:
+                bonus = state["threshold_health_bonus"]
+                state["max_health"] += bonus
+                state["health"] += bonus
+                heal = min(
+                    state["threshold_health_heal"],
+                    max(0.0, state["max_health"] - state["health"]),
+                )
+                state["health"] += heal
+                state["healing_received"] += heal
+                state["threshold_health_triggered"] = True
+                event["threshold_health_triggered"] = True
         general_absorbed = min(state["shields"]["general_shield"], amount)
         state["shields"]["general_shield"] -= general_absorbed
         amount -= general_absorbed
@@ -718,6 +1554,28 @@ def _simulate_survival(
         # and ``live_damage`` above for diagnostics without letting overkill
         # inflate team-fight TTD or BIS scores.
         event["damage"] = round(event_absorbed + applied_to_health, 6)
+        # The Collector is an authored terminal transition.  Its threshold
+        # is carried by the attacker's event from the cached item effect; it
+        # never contributes extra damage or fires from an aggregate row.
+        try:
+            execute_ratio = float(event.get("execute_threshold_ratio", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            execute_ratio = 0.0
+        if (
+            execute_ratio > 0.0
+            and applied_to_health > 0.0
+            and state["health"] > 0.0
+            and state["health"] <= state["max_health"] * execute_ratio
+        ):
+            state["health"] = 0.0
+            state["execute_time"] = float(event_time)
+            state["execute_source"] = str(event.get("execute_source", "The Collector"))
+            state["death_time"] = min(float(duration), float(event_time))
+            state["terminal_phase"] = "dead"
+            event["execute_triggered"] = True
+            event["execute_threshold"] = round(state["max_health"] * execute_ratio, 6)
+            if state["first_death_time"] is None:
+                state["first_death_time"] = float(event_time)
         attacker_profiles = reduction_profiles.get(str(source_id), ())
         matching_profiles = (
             matching_healing_reduction(attacker_profiles, damage_type)
@@ -749,6 +1607,14 @@ def _simulate_survival(
                     "until": round(state["healing_reduction_until"], 6),
                     "sources": sorted(state["healing_reduction_sources"]),
                 }
+            state["healing_reduction_events"].append(
+                {
+                    "time": round(event_time, 3),
+                    "until": round(state["healing_reduction_until"], 3),
+                    "factor": round(state["healing_reduction_factor"], 6),
+                    "sources": sorted(state["healing_reduction_sources"]),
+                }
+            )
         wound_duration = float(event.get("grievous_duration", 0.0) or 0.0)
         if wound_duration > 0:
             # A reactive wound (Thorns) rides its strike-back event and
@@ -771,8 +1637,37 @@ def _simulate_survival(
                     "until": round(state["healing_reduction_until"], 6),
                     "sources": sorted(state["healing_reduction_sources"]),
                 }
+            state["healing_reduction_events"].append(
+                {
+                    "time": round(event_time, 3),
+                    "until": round(state["healing_reduction_until"], 3),
+                    "factor": round(state["healing_reduction_factor"], 6),
+                    "sources": sorted(state["healing_reduction_sources"]),
+                }
+            )
         if state["health"] <= 0.0 and state["death_time"] is None:
+            if state["first_death_time"] is None:
+                state["first_death_time"] = float(event_time)
             state["death_time"] = min(float(duration), event_time)
+            state["terminal_phase"] = "dead"
+            # A revive packet is intentionally scheduled by the caller.  A
+            # dead participant remains terminal until that explicit event;
+            # no item is inferred from the loadout here.
+
+    for state in states.values():
+        if (
+            state["temporary_health_amount"] > 0.0
+            and state["temporary_health_until"] > 0.0
+            and duration >= state["temporary_health_until"]
+        ):
+            expired = state["temporary_health_amount"]
+            state["max_health"] = max(0.0, state["max_health"] - expired)
+            state["health"] = min(state["health"], state["max_health"])
+            state["temporary_health_amount"] = 0.0
+            state["temporary_health_expired_at"] = round(
+                state["temporary_health_until"], 3
+            )
+            state["temporary_health_until"] = 0.0
 
     result = {}
     for participant_id, state in states.items():
@@ -780,13 +1675,26 @@ def _simulate_survival(
         result[participant_id] = {
             "max_health": round(state["max_health"], 1),
             "ending_health": round(state["health"], 1),
+            "ending_health_ratio": round(
+                (
+                    state["health"] / state["max_health"]
+                    if state["max_health"] > 0.0
+                    else 0.0
+                ),
+                6,
+            ),
             "damage_taken": round(state["damage_taken"], 1),
             "overkill": round(state["overkill"], 1),
             "health_damage": round(state["health_damage"], 1),
             "shield_absorbed": round(state["shield_absorbed"], 1),
             "healing_received": round(state["healing_received"], 1),
+            "overhealing": round(state["overhealing"], 1),
             "healing_reduced": round(state["healing_reduced"], 1),
             "support_shield_received": round(state["support_shield_received"], 1),
+            "temporary_health_received": round(state["temporary_health_received"], 1),
+            "temporary_health_until": round(state["temporary_health_until"], 3),
+            "temporary_health_expired_at": state["temporary_health_expired_at"],
+            "temporary_health_source": state["temporary_health_source"],
             "effective_health": round(
                 state["max_health"]
                 + state["starting_shield"]
@@ -798,12 +1706,51 @@ def _simulate_survival(
             "starting_shield": round(state["starting_shield"], 1),
             "healing_reduction_until": round(state["healing_reduction_until"], 3),
             "healing_reduction_sources": sorted(state["healing_reduction_sources"]),
+            "healing_reduction_events": [
+                {"recipient": participant_id, **event}
+                for event in state["healing_reduction_events"]
+            ],
             "survived_window": state["death_time"] is None,
             "death_time": (
                 round(state["death_time"], 3)
                 if state["death_time"] is not None
                 else None
             ),
+            "first_death_time": (
+                round(state["first_death_time"], 3)
+                if state["first_death_time"] is not None
+                else None
+            ),
+            "revived": bool(state["revived"]),
+            "revive_time": (
+                round(state["revive_time"], 3)
+                if state["revive_time"] is not None
+                else None
+            ),
+            "revive_health_restored": round(state["revive_health_restored"], 1),
+            "revive_source": state["revive_source"],
+            "terminal_phase": state["terminal_phase"],
+            "execute_time": (
+                round(state["execute_time"], 3)
+                if state["execute_time"] is not None
+                else None
+            ),
+            "execute_source": state["execute_source"],
+            "stasis_until": round(state["stasis_until"], 3),
+            "stasis_started_at": state["stasis_started_at"],
+            "stasis_source": state["stasis_source"],
+            "invulnerable_until": round(state["invulnerable_until"], 3),
+            "untargetable_until": round(state["untargetable_until"], 3),
+            "spell_shield_used": bool(state["spell_shield_used"]),
+            "spell_shield_source": state["spell_shield_source"],
+            "spell_shield_until": (
+                None
+                if math.isinf(state["spell_shield_until"])
+                else round(state["spell_shield_until"], 3)
+            ),
+            "threshold_shield_triggered": bool(state["threshold_shield_triggered"]),
+            "threshold_shield_expired_at": state["threshold_shield_expired_at"],
+            "threshold_health_triggered": bool(state["threshold_health_triggered"]),
         }
     return result
 
@@ -931,6 +1878,7 @@ class _WalkCompiler:
         strikes_append = self.auto_strikes_into[defender_i].append
         heals = packet["heals"]
         aidx_by_key: dict[tuple[str, float, int], int] | None = {} if heals else None
+        aidx_by_source_time: dict[tuple[str, float], list[int]] = defaultdict(list)
         aidx = self.next_aidx
         for event in packet["events"]:
             # Packet events are enriched engine-ledger rows: these fields
@@ -972,12 +1920,25 @@ class _WalkCompiler:
                 aidx_by_key[
                     (event["source_key"], round(time_value, 9), event["sequence"])
                 ] = aidx
-            if event["source_key"] == "auto_attacks":
+                aidx_by_source_time[(event["source_key"], round(time_value, 9))].append(
+                    aidx
+                )
+            if event["source_key"] == "auto_attacks" or event.get("basic_attack"):
                 strikes_append((aidx, time_value, event["sequence"], attacker_i))
             aidx += 1
         self.next_aidx = aidx
         for event in heals:
             trigger = aidx_by_key.get(_heal_trigger_key(event), -1)
+            if trigger < 0:
+                candidates = aidx_by_source_time.get(
+                    (
+                        str(event.get("_trigger_source", "")),
+                        round(float(event.get("_trigger_time", 0.0)), 9),
+                    ),
+                    [],
+                )
+                if len(candidates) == 1:
+                    trigger = candidates[0]
             if event.get("actor_wide"):
                 if "_trigger_source" in event:
                     # Cross-pair dedup below keeps the copy that compiled
@@ -1015,10 +1976,17 @@ class _WalkCompiler:
                     aidx,
                     max(0.0, float(event.get("amount", 0.0))),
                     2,
-                    None,
+                    event.get("amount_formula"),
                     0.0,
                     None,
-                    None,
+                    (
+                        max(
+                            0.0,
+                            float(event.get("temporary_health_duration", 0.0) or 0.0),
+                        )
+                        if event.get("overheal_to_temporary_health")
+                        else None
+                    ),
                     False,
                     float(event.get("time", 0.0)),
                 )
@@ -1107,6 +2075,8 @@ class _WalkCompiler:
                 )
                 if time_value <= duration:
                     order_append((aidx, time_value))
+                # Light tuple ledgers intentionally omit per-event metadata;
+                # only their explicit auto stream can trigger Thorns.
                 if source_key == "auto_attacks":
                     strikes_append((aidx, time_value, key[3], attacker_i))
                 aidx += 1
@@ -1117,6 +2087,7 @@ class _WalkCompiler:
         # The trigger-linkage index costs a key tuple per damage event, so
         # a fight with no self-heals (most candidates) never builds it.
         aidx_by_key: dict[tuple[str, float, int], int] | None = {} if heals else None
+        aidx_by_source_time: dict[tuple[str, float], list[int]] = defaultdict(list)
         for index, event in enumerate(result.get("damage_events", [])):
             if "sequence" not in event:
                 # See _action_key: pair-local event ids stay order-irrelevant
@@ -1180,12 +2151,23 @@ class _WalkCompiler:
                 order_append((aidx, time_value))
             if aidx_by_key is not None:
                 aidx_by_key[(source_key, round(time_value, 9), sequence)] = aidx
-            if source_key == "auto_attacks":
+                aidx_by_source_time[(source_key, round(time_value, 9))].append(aidx)
+            if source_key == "auto_attacks" or event.get("basic_attack"):
                 strikes_append((aidx, time_value, sequence, attacker_i))
             aidx += 1
         self.next_aidx = aidx
-        for event in heals:
+        for heal_index, event in enumerate(heals):
             trigger = aidx_by_key.get(_heal_trigger_key(event), -1)
+            if trigger < 0:
+                candidates = aidx_by_source_time.get(
+                    (
+                        str(event.get("_trigger_source", "")),
+                        round(float(event.get("_trigger_time", 0.0)), 9),
+                    ),
+                    [],
+                )
+                if len(candidates) == 1:
+                    trigger = candidates[0]
             if event.get("actor_wide"):
                 if "_trigger_source" in event:
                     # Same invariant as add_packet's dedup above.
@@ -1218,7 +2200,7 @@ class _WalkCompiler:
                         _event_sequence(event),
                         *source_order,
                         attacker_id,
-                        "",
+                        f"{attacker_id}:{defender_id}:heal:{heal_index}",
                         str(event.get("source", event.get("source_key", ""))),
                     ),
                     _KIND_HEAL,
@@ -1228,10 +2210,17 @@ class _WalkCompiler:
                     aidx,
                     max(0.0, float(event.get("amount", 0.0))),
                     2,
-                    None,
+                    event.get("amount_formula"),
                     0.0,
                     None,
-                    None,
+                    (
+                        max(
+                            0.0,
+                            float(event.get("temporary_health_duration", 0.0) or 0.0),
+                        )
+                        if event.get("overheal_to_temporary_health")
+                        else None
+                    ),
                     False,
                     time_value,
                 )
@@ -1441,6 +2430,7 @@ def _compiled_survival_walk(
     max_healths: list[float],
     shield_triples: list[tuple[float, float, float]],
     duration: float,
+    healing_received_multipliers: list[float],
 ) -> tuple[list[dict[str, Any]], list[float]]:
     """Run the flat-action survival walk.
 
@@ -1449,6 +2439,7 @@ def _compiled_survival_walk(
     and one write-once ``applied`` array instead of mutated event dicts.
     """
     count = len(max_healths)
+    max_healths = list(max_healths)
     health = list(max_healths)
     sh_physical = [triple[0] for triple in shield_triples]
     sh_magic = [triple[1] for triple in shield_triples]
@@ -1458,11 +2449,18 @@ def _compiled_survival_walk(
     health_damage = [0.0] * count
     shield_absorbed = [0.0] * count
     healing_received = [0.0] * count
+    overhealing = [0.0] * count
     healing_reduced = [0.0] * count
     support_shield_received = [0.0] * count
+    temporary_health_received = [0.0] * count
+    temporary_health_amount = [0.0] * count
+    temporary_health_until = [0.0] * count
+    temporary_health_expired_at: list[float | None] = [None] * count
+    temporary_health_source = [""] * count
     hr_until = [0.0] * count
     hr_factor = [1.0] * count
     hr_sources: list[set[str]] = [set() for _ in range(count)]
+    hr_events: list[list[dict[str, Any]]] = [[] for _ in range(count)]
     death: list[float | None] = [None] * count
 
     applied = [0.0] * n_actions
@@ -1474,9 +2472,32 @@ def _compiled_survival_walk(
     # of the stream and takes the first branch without reading any of the
     # four fields it cannot carry.
     for action in actions:
+        subject_i = action[_A_SUBJECT]
+        time_value = action[_A_TIME]
+        # The authoritative event walk keeps post-window packets visible in
+        # receipts but never applies them.  The compiled score walk has no
+        # receipt annotation, so skip them before any state mutation while
+        # leaving their applied slot at zero.
+        if time_value > duration:
+            continue
+        if time_value >= hr_until[subject_i] and hr_until[subject_i] > 0.0:
+            hr_factor[subject_i] = 1.0
+            hr_sources[subject_i].clear()
+        if (
+            temporary_health_amount[subject_i] > 0.0
+            and temporary_health_until[subject_i] > 0.0
+            and time_value >= temporary_health_until[subject_i]
+        ):
+            expired = temporary_health_amount[subject_i]
+            max_healths[subject_i] = max(0.0, max_healths[subject_i] - expired)
+            health[subject_i] = min(health[subject_i], max_healths[subject_i])
+            temporary_health_amount[subject_i] = 0.0
+            temporary_health_expired_at[subject_i] = round(
+                temporary_health_until[subject_i], 3
+            )
+            temporary_health_until[subject_i] = 0.0
         kind = action[_A_KIND]
         if kind == _KIND_PLAIN_DAMAGE:
-            subject_i = action[_A_SUBJECT]
             if death[subject_i] is not None:
                 continue
             attacker_i = action[_A_ATTACKER]
@@ -1528,20 +2549,44 @@ def _compiled_survival_walk(
             continue
         amount = action[_A_AMOUNT]
         if kind == _KIND_SHIELD:
+            amount *= healing_received_multipliers[subject_i]
             sh_general[subject_i] += amount
             support_shield_received[subject_i] += amount
             applied[action[_A_AIDX]] = round(amount, 6)
             continue
         if kind == _KIND_HEAL:
             time_value = action[_A_TIME]
+            amount_formula = action[_A_RAW_FORMULA]
+            if callable(amount_formula):
+                amount = max(
+                    0.0,
+                    float(amount_formula(health[subject_i], max_healths[subject_i])),
+                )
+            amount *= healing_received_multipliers[subject_i]
             factor = 1.0 if time_value >= hr_until[subject_i] else hr_factor[subject_i]
             reduced = amount * factor
             healing_reduced[subject_i] += max(0.0, amount - reduced)
             received = min(
                 reduced, max(0.0, max_healths[subject_i] - health[subject_i])
             )
+            excess = max(0.0, reduced - received)
+            temporary_duration = max(0.0, float(action[_A_WOUND] or 0.0))
+            temporary_health = (
+                excess if temporary_duration > 0.0 and excess > 0.0 else 0.0
+            )
+            overhealing[subject_i] += excess - temporary_health
             health[subject_i] += received
             healing_received[subject_i] += received
+            if temporary_health > 0.0:
+                max_healths[subject_i] += temporary_health
+                health[subject_i] += temporary_health
+                temporary_health_received[subject_i] += temporary_health
+                temporary_health_amount[subject_i] += temporary_health
+                temporary_health_until[subject_i] = max(
+                    temporary_health_until[subject_i],
+                    time_value + temporary_duration,
+                )
+                temporary_health_source[subject_i] = str(action[0][-1])
             applied[action[_A_AIDX]] = round(received, 6)
             continue
 
@@ -1557,7 +2602,9 @@ def _compiled_survival_walk(
                 )
                 raw_damage = action[_A_RAW_DAMAGE]
                 try:
-                    live_raw = max(0.0, float(raw_formula(missing_ratio)))
+                    live_raw = _evaluate_live_raw_formula(
+                        raw_formula, missing_ratio, subject_max
+                    )
                 except (TypeError, ValueError):
                     live_raw = raw_damage
                 amount *= live_raw / raw_damage
@@ -1596,17 +2643,44 @@ def _compiled_survival_walk(
             )
             hr_factor[subject_i] = min(hr_factor[subject_i], strongest_factor)
             hr_sources[subject_i].update(labels)
+            hr_events[subject_i].append(
+                {
+                    "time": round(time_value, 3),
+                    "until": round(hr_until[subject_i], 3),
+                    "factor": round(hr_factor[subject_i], 6),
+                    "sources": sorted(hr_sources[subject_i]),
+                }
+            )
         wound = action[_A_WOUND]
         if wound is not None:
             wound_duration, wound_label = wound
             hr_until[subject_i] = max(hr_until[subject_i], time_value + wound_duration)
             hr_factor[subject_i] = min(hr_factor[subject_i], GRIEVOUS_WOUNDS_FACTOR)
             hr_sources[subject_i].add(wound_label)
+            hr_events[subject_i].append(
+                {
+                    "time": round(time_value, 3),
+                    "until": round(hr_until[subject_i], 3),
+                    "factor": round(hr_factor[subject_i], 6),
+                    "sources": sorted(hr_sources[subject_i]),
+                }
+            )
         if health[subject_i] <= 0.0 and death[subject_i] is None:
             death[subject_i] = min(float(duration), time_value)
 
     survival_rows = []
     for index in range(count):
+        if (
+            temporary_health_amount[index] > 0.0
+            and temporary_health_until[index] > 0.0
+            and duration >= temporary_health_until[index]
+        ):
+            expired = temporary_health_amount[index]
+            max_healths[index] = max(0.0, max_healths[index] - expired)
+            health[index] = min(health[index], max_healths[index])
+            temporary_health_amount[index] = 0.0
+            temporary_health_expired_at[index] = round(temporary_health_until[index], 3)
+            temporary_health_until[index] = 0.0
         triple = shield_triples[index]
         starting_shield = triple[0] + triple[1] + triple[2]
         remaining_shields = sh_physical[index] + sh_magic[index] + sh_general[index]
@@ -1614,11 +2688,20 @@ def _compiled_survival_walk(
             {
                 "max_health": round(max_healths[index], 1),
                 "ending_health": round(health[index], 1),
+                "ending_health_ratio": round(
+                    (
+                        health[index] / max_healths[index]
+                        if max_healths[index] > 0.0
+                        else 0.0
+                    ),
+                    6,
+                ),
                 "damage_taken": round(damage_taken[index], 1),
                 "overkill": round(overkill[index], 1),
                 "health_damage": round(health_damage[index], 1),
                 "shield_absorbed": round(shield_absorbed[index], 1),
                 "healing_received": round(healing_received[index], 1),
+                "overhealing": round(overhealing[index], 1),
                 "healing_reduced": round(healing_reduced[index], 1),
                 "support_shield_received": round(support_shield_received[index], 1),
                 "effective_health": round(
@@ -1636,6 +2719,37 @@ def _compiled_survival_walk(
                 "death_time": (
                     round(death[index], 3) if death[index] is not None else None
                 ),
+                # The compiled score walk currently has no state-transition
+                # packets in its invariant panel.  Keep its public shape
+                # aligned with the event walk; once a state packet enters a
+                # search context the context is intentionally bypassed by the
+                # caller rather than silently dropping the transition.
+                "first_death_time": (
+                    round(death[index], 3) if death[index] is not None else None
+                ),
+                "revived": False,
+                "revive_time": None,
+                "revive_health_restored": 0.0,
+                "revive_source": "",
+                "terminal_phase": "dead" if death[index] is not None else "alive",
+                "execute_time": None,
+                "execute_source": "",
+                "stasis_until": 0.0,
+                "stasis_started_at": None,
+                "stasis_source": "",
+                "invulnerable_until": 0.0,
+                "untargetable_until": 0.0,
+                "spell_shield_used": False,
+                "spell_shield_source": "",
+                "spell_shield_until": 0.0,
+                "temporary_health_received": round(temporary_health_received[index], 1),
+                "temporary_health_until": round(temporary_health_until[index], 3),
+                "temporary_health_expired_at": temporary_health_expired_at[index],
+                "temporary_health_source": temporary_health_source[index],
+                "threshold_shield_triggered": False,
+                "threshold_shield_expired_at": None,
+                "threshold_health_triggered": False,
+                "healing_reduction_events": list(hr_events[index]),
             }
         )
     return survival_rows, applied
@@ -1686,6 +2800,8 @@ def _context_setup(
             "role_quest_complete": params.role_quest_complete,
             "ability_ranks": params.ability_ranks,
             "champion_options": params.champion_options,
+            "cast_order": params.cast_order,
+            "item_options": params.item_options,
         },
     )()
     main_params = _actor_params(
@@ -2009,11 +3125,13 @@ def _score_with_search_context(
             )
 
     actions = panel.sorted_actions + sorted(fresh.actions, key=itemgetter(0))
+    actions = _coalesce_compiled_darius_q_heals(actions)
     actions.sort(key=itemgetter(0))
     max_healths = [
         max(0.0, float(actor.stats.get("health", 0.0))) for actor in all_actors
     ]
     shield_triples = []
+    healing_received_multipliers = []
     for actor in all_actors:
         defenses = _participant_defenses(actor.defenses)
         shield_triples.append(
@@ -2023,9 +3141,27 @@ def _score_with_search_context(
                 defenses["general_shield"],
             )
         )
+        healing_received_multipliers.append(
+            max(
+                1.0,
+                float(
+                    getattr(actor.defenses, "healing_received_multiplier", 1.0) or 1.0
+                ),
+            )
+        )
     survival_rows, applied = _compiled_survival_walk(
-        actions, fresh.next_aidx, max_healths, shield_triples, duration
+        actions,
+        fresh.next_aidx,
+        max_healths,
+        shield_triples,
+        duration,
+        healing_received_multipliers,
     )
+    for index, actor in enumerate(all_actors):
+        survival_rows[index]["healing_reduction_events"] = [
+            {"recipient": actor.participant_id, **event}
+            for event in survival_rows[index].get("healing_reduction_events", [])
+        ]
 
     count = len(all_actors)
     base = context.base_compiler
@@ -2176,6 +3312,17 @@ def build_participant_timeline(
         and not include_receipt
         and pair_result_cache is not None
         and enemies
+        and not _has_stateful_defense(main_defenses)
+        and not any(_has_stateful_defense(loadout.defenses) for loadout in enemies)
+        and not any(_has_stateful_defense(loadout.defenses) for loadout in allies)
+        and not healing_reduction_profiles(items)
+        and not any(
+            healing_reduction_profiles(loadout.item_data) for loadout in enemies
+        )
+        and not any(healing_reduction_profiles(loadout.item_data) for loadout in allies)
+        # Collector is a terminal target-state transition, not a score-only
+        # damage effect; keep it on the authoritative event walk.
+        and not any(item.get("name") == "The Collector" for item in items)
     ):
         return _score_with_search_context(
             champion_data,
@@ -2350,7 +3497,9 @@ def build_participant_timeline(
         _attach_support_effects(attacker, fallback, all_actors, support_effects)
         support_attached.add(attacker.participant_id)
 
+    _coalesce_darius_q_heals(healing)
     _schedule_thorns_events(all_actors, incoming, outgoing)
+    _schedule_authored_reactive_events(incoming, outgoing)
 
     survival = _simulate_survival(
         all_actors,
@@ -2359,6 +3508,7 @@ def build_participant_timeline(
         support_effects,
         params.fight_duration_seconds,
         annotate=include_receipt,
+        receipt_events=outgoing if include_receipt else None,
     )
     # An actor's damage after their death is not part of team-fight value.
     for actor in all_actors:
@@ -2480,6 +3630,36 @@ def build_participant_timeline(
         float(event.get("applied_amount", 0.0))
         for event in healing.get(focus_participant_id, [])
     )
+    public_events = sorted(
+        (event for events in outgoing.values() for event in events),
+        key=lambda event: event.get("_sk")
+        or _action_key(
+            float(event.get("time", 0.0)),
+            0.5 if event.get("_reactive") else 0.0,
+            str(event.get("target", "")),
+            event,
+        ),
+    )
+    public_healing_events = sorted(
+        (event for events in healing.values() for event in events),
+        key=lambda event: event.get("_sk")
+        or _action_key(
+            float(event.get("time", 0.0)),
+            1.0,
+            str(event.get("attacker", "")),
+            event,
+        ),
+    )
+    public_support_events = sorted(
+        (event for events in support_effects.values() for event in events),
+        key=lambda event: (
+            float(event.get("time", 0.0)),
+            -1.0 if event.get("kind") in {"shield", "temporary_health"} else 1.0,
+            str(event.get("target", "")),
+            str(event.get("attacker", "")),
+            str(event.get("_event_id", "")),
+        ),
+    )
     return {
         "duration": float(params.fight_duration_seconds),
         "participants": [
@@ -2509,6 +3689,84 @@ def build_participant_timeline(
                 "overkill": round(float(event.get("overkill", 0.0)), 1),
                 "event_precision": event.get("event_precision", "exact"),
                 **(
+                    {"event_id": str(event["_event_id"])}
+                    if event.get("_event_id") is not None
+                    else {}
+                ),
+                **(
+                    {"sequence": int(event["sequence"])}
+                    if event.get("sequence") is not None
+                    else {}
+                ),
+                **({"reactive": True} if event.get("_reactive") else {}),
+                **(
+                    {"trigger_event_id": str(event["_trigger_event_id"])}
+                    if event.get("_trigger_event_id") is not None
+                    else {}
+                ),
+                **(
+                    {"spell_shield_source": str(event["spell_shield_source"])}
+                    if event.get("spell_shield_source")
+                    else {}
+                ),
+                **(
+                    {"threshold_shield_triggered": True}
+                    if event.get("threshold_shield_triggered")
+                    else {}
+                ),
+                **(
+                    {"threshold_health_triggered": True}
+                    if event.get("threshold_health_triggered")
+                    else {}
+                ),
+                **(
+                    {"execute_triggered": True}
+                    if event.get("execute_triggered")
+                    else {}
+                ),
+                **(
+                    {"redirected_amount": round(float(event["_redirected_amount"]), 1)}
+                    if event.get("_redirected_amount") is not None
+                    else {}
+                ),
+                **(
+                    {"redirected_from": str(event["_redirected_from"])}
+                    if event.get("_redirected_from")
+                    else {}
+                ),
+                **(
+                    {"redirect_fraction": round(float(event["_redirect_fraction"]), 6)}
+                    if event.get("_redirect_fraction") is not None
+                    else {}
+                ),
+                **(
+                    {"deferred_from": str(event["_deferred_from"])}
+                    if event.get("_deferred_from")
+                    else {}
+                ),
+                **(
+                    {"wound_source": str(event["_wound_source"])}
+                    if event.get("_wound_source")
+                    else {}
+                ),
+                **(
+                    {
+                        "wound_duration": round(float(event["grievous_duration"]), 3),
+                        "wound_until": round(
+                            float(
+                                event.get(
+                                    "_wound_until",
+                                    float(event.get("time", 0.0))
+                                    + float(event["grievous_duration"]),
+                                )
+                            ),
+                            3,
+                        ),
+                    }
+                    if event.get("grievous_duration") is not None
+                    else {}
+                ),
+                **(
                     {"healing_reduction": dict(event["healing_reduction"])}
                     if event.get("healing_reduction")
                     else {}
@@ -2519,20 +3777,65 @@ def build_participant_timeline(
                     else {}
                 ),
             }
-            for events in outgoing.values()
-            for event in events
+            for event in public_events
         ],
         "healing_events": [
             {
                 "time": round(float(event.get("time", 0.0)), 3),
                 "attacker": event.get("attacker"),
                 "source": event.get("source", ""),
+                **(
+                    {"event_id": str(event["_event_id"])}
+                    if event.get("_event_id") is not None
+                    else {}
+                ),
+                **(
+                    {"trigger_event_id": str(event["_trigger_event_id"])}
+                    if event.get("_trigger_event_id") is not None
+                    else {}
+                ),
+                **(
+                    {"trigger_target": str(event["trigger_target"])}
+                    if event.get("trigger_target") is not None
+                    else {}
+                ),
                 "amount": round(float(event.get("amount", 0.0)), 1),
                 "raw_amount": round(
                     float(event.get("raw_amount", event.get("amount", 0.0))), 1
                 ),
                 "applied_amount": round(
                     float(event.get("applied_amount", event.get("amount", 0.0))), 1
+                ),
+                "overheal": round(
+                    float(
+                        event.get(
+                            "overheal",
+                            max(
+                                0.0,
+                                float(
+                                    event.get(
+                                        "reduced_amount", event.get("amount", 0.0)
+                                    )
+                                )
+                                - float(
+                                    event.get(
+                                        "applied_amount", event.get("amount", 0.0)
+                                    )
+                                ),
+                            ),
+                        )
+                    ),
+                    1,
+                ),
+                "temporary_health": round(float(event.get("temporary_health", 0.0)), 1),
+                **(
+                    {
+                        "temporary_health_expires_at": round(
+                            float(event["temporary_health_expires_at"]), 3
+                        )
+                    }
+                    if event.get("temporary_health_expires_at") is not None
+                    else {}
                 ),
                 "reduced_amount": round(
                     float(event.get("reduced_amount", event.get("amount", 0.0))), 1
@@ -2546,29 +3849,44 @@ def build_participant_timeline(
                     else {}
                 ),
             }
-            for events in healing.values()
-            for event in events
+            for event in public_healing_events
         ],
         "support_events": [
             {
                 "time": round(float(event.get("time", 0.0)), 3),
                 "attacker": event.get("attacker"),
                 "target": event.get("target"),
+                "recipient": event.get("target"),
+                **(
+                    {"event_id": str(event["_event_id"])}
+                    if event.get("_event_id") is not None
+                    else {}
+                ),
                 "source": event.get("source", ""),
                 "kind": event.get("kind", ""),
                 "amount": round(float(event.get("amount", 0.0)), 1),
                 "applied_amount": round(
                     float(event.get("applied_amount", event.get("amount", 0.0))), 1
                 ),
+                "target_scope": event.get("target_scope", ""),
                 "target_policy": event.get("target_policy", ""),
+                **(
+                    {"duration": round(float(event["duration"]), 3)}
+                    if event.get("duration") is not None
+                    else {}
+                ),
+                **(
+                    {"expires_at": round(float(event["expires_at"]), 3)}
+                    if event.get("expires_at") is not None
+                    else {}
+                ),
                 **(
                     {"skipped_reason": str(event["skipped_reason"])}
                     if event.get("skipped_reason")
                     else {}
                 ),
             }
-            for events in support_effects.values()
-            for event in events
+            for event in public_support_events
         ],
         "objective": {
             "main_team_damage_before_death": round(

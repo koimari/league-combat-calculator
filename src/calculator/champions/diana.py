@@ -138,12 +138,26 @@ def _moonsilver_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
     per_cleave = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )
+    autos_per_second = ctx.stats.get("attack_speed", 0.0) * uptime
     return {
         "name": "Moonsilver Blade (cleave)",
         "damage_type": "magic",
         "total_raw": per_cleave * cleaves,
         "parts": (DamagePart("magic", per_cleave),),
         "proc_count": cleaves,
+        "damage_events": [
+            {
+                "time": (
+                    index * _CLEAVE_EVERY_N_ATTACKS + (_CLEAVE_EVERY_N_ATTACKS - 1)
+                )
+                / autos_per_second,
+                "damage_type": "magic",
+                "damage": per_cleave,
+                "event_precision": "exact",
+            }
+            for index in range(cleaves)
+        ],
+        "event_phase": "auto",
         "unit": "cleaves",
         "detail": (
             f"every 3rd basic attack: {cleaves} cleave(s) from "

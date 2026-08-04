@@ -1,9 +1,12 @@
 """Opt-in outgoing ally effects with explicit sourced formulas."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+import math
 import re
 from typing import Any
 
+from .item_effects import flowing_water_bonus_ap
 from .item_source import effect_text
 
 
@@ -18,25 +21,69 @@ class AllyStatEffect:
     assumption: str = ""
 
 
+def _required_flat_stat(
+    passive: Mapping[str, Any], *, item_name: str, stat_name: str
+) -> float:
+    """Read one cached passive stat without silently converting omissions to zero."""
+    stats = passive.get("stats")
+    if not isinstance(stats, Mapping):
+        raise ValueError(f"{item_name} Rapids is missing its cached stats mapping")
+    stat = stats.get(stat_name)
+    if not isinstance(stat, Mapping) or "flat" not in stat:
+        raise ValueError(f"{item_name} Rapids is missing numeric {stat_name}.flat")
+    value = stat["flat"]
+    if isinstance(value, bool):
+        raise ValueError(f"{item_name} Rapids {stat_name}.flat must be numeric")
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"{item_name} Rapids {stat_name}.flat must be numeric"
+        ) from exc
+    if not math.isfinite(parsed):
+        raise ValueError(f"{item_name} Rapids {stat_name}.flat must be finite")
+    return parsed
+
+
 def _staff_of_flowing_water(item: dict[str, Any]) -> AllyStatEffect | None:
+    item_name = "Staff of Flowing Water"
+    found = False
     for passive in item.get("passives", []):
+        if not isinstance(passive, Mapping):
+            raise ValueError(f"{item_name} Rapids passive must be a mapping")
         if passive.get("name") != "Rapids":
             continue
-        stats = passive.get("stats", {})
+        found = True
+        # AP is owned by the item-effects registry; the cached packet is still
+        # validated so a partial source record cannot silently lose the ally
+        # buff before the typed accessor is consulted.
+        _required_flat_stat(passive, item_name=item_name, stat_name="abilityPower")
+        ability_power = flowing_water_bonus_ap([item])
+        ability_haste = _required_flat_stat(
+            passive, item_name=item_name, stat_name="abilityHaste"
+        )
         duration_match = re.search(
             r"for\s+(\d+(?:\.\d+)?)\s+seconds?",
             effect_text(passive),
             flags=re.IGNORECASE,
         )
         if duration_match is None:
-            return None
+            raise ValueError(f"{item_name} Rapids is missing numeric duration")
+        try:
+            duration = float(duration_match.group(1))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{item_name} Rapids duration must be numeric") from exc
+        if not math.isfinite(duration):
+            raise ValueError(f"{item_name} Rapids duration must be finite")
         return AllyStatEffect(
             source="Staff of Flowing Water — Rapids",
-            ability_power=float(stats.get("abilityPower", {}).get("flat", 0.0)),
-            ability_haste=float(stats.get("abilityHaste", {}).get("flat", 0.0)),
-            duration=float(duration_match.group(1)),
+            ability_power=ability_power,
+            ability_haste=ability_haste,
+            duration=duration,
             assumption="The ally healed or shielded the attacker immediately before combat.",
         )
+    if not found:
+        raise ValueError(f"{item_name} is missing its Rapids passive")
     return None
 
 

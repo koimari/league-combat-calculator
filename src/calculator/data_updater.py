@@ -93,7 +93,6 @@ if sys.platform == "win32":
 from lolstaticdata.champions.pull_champions_wiki import LolWikiDataHandler
 from lolstaticdata.champions.pull_champions_dragons import get_ability_url
 from lolstaticdata.champions.__main__ import get_ability_filenames
-from lolstaticdata.items.__main__ import main as run_items_generator
 
 from .data_fetcher import DEFAULT_DATA_DIR, _read_cache, _write_cache
 from .item_source import merge_item_sources
@@ -361,6 +360,11 @@ def _process_items() -> dict[str, Any] | None:
 
     Returns the source-merged items dict, or None if generation failed.
     """
+    # Import the generator only on the explicit refresh path.  Its module
+    # class initialization probes Data Dragon for the latest patch, so an
+    # ordinary cached-data import must never perform network I/O.
+    from lolstaticdata.items.__main__ import main as run_items_generator
+
     run_items_generator()
 
     items_path = _LOLSTATICDATA_ROOT / "items.json"

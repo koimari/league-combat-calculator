@@ -14,6 +14,7 @@ from src.calculator.champions import (
     RESERVED_OPTION_KEYS,
     champion_options_meta_map,
     get_champion_options_meta,
+    registered_champion_names,
 )
 
 _OPTION_TYPES = {
@@ -63,13 +64,19 @@ class TestGetChampionOptionsMeta:
             "sources": [],
         }
 
-    def test_registered_champion_without_options(self) -> None:
-        """Ahri has neither options nor assumptions declared."""
-        assert get_champion_options_meta("Ahri") == {
-            "options": [],
-            "assumptions": [],
-            "sources": [],
-        }
+    def test_manifest_receipt_fills_module_without_inline_sources(self) -> None:
+        """Ahri falls back to the tracked reviewed-packet receipt."""
+        meta = get_champion_options_meta("Ahri")
+        assert meta["options"] == []
+        assert meta["assumptions"] == []
+        assert meta["sources"] == [
+            {
+                "label": "Local League Wiki cache",
+                "url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+                "revision_id": 4047800,
+                "revision_timestamp": "2026-07-31T01:16:52Z",
+            }
+        ]
 
     def test_revision_backed_champion_exposes_sources(self) -> None:
         meta = get_champion_options_meta("Soraka")
@@ -108,7 +115,8 @@ class TestChampionOptionsMetaMap:
 
     def test_excludes_champions_with_empty_meta(self) -> None:
         meta_map = champion_options_meta_map()
-        assert "Ahri" not in meta_map
+        assert "Ahri" in meta_map
+        assert meta_map["Ahri"]["sources"]
         assert "Synthetic Fixture" not in meta_map
 
 
@@ -144,6 +152,12 @@ class TestOptionsDeclarationValidity:
                     source,
                 )
                 assert isinstance(source["revision_id"], int), (name, source)
+
+    def test_all_registered_modules_expose_manifest_or_inline_receipts(self) -> None:
+        """The 173-module registry has no provenance-empty champion metadata."""
+        names = registered_champion_names()
+        assert len(names) == 173
+        assert all(get_champion_options_meta(name)["sources"] for name in names)
 
     def test_no_option_key_collides_with_a_reserved_key(self) -> None:
         """Reserved keys are pipeline-owned (``RESERVED_OPTION_KEYS``).

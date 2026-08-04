@@ -67,6 +67,18 @@ def _winds_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.target.get("target_max_health", ctx.target.get("health", 0.0))
     )
     per_tick = target_max_health * (0.02 + ap * 0.0001)
+
+    def max_health_tick(
+        _missing_ratio: float,
+        live_target_max_health: float | None = None,
+    ) -> float:
+        live_max = (
+            target_max_health
+            if live_target_max_health is None
+            else live_target_max_health
+        )
+        return live_max * (0.02 + ap * 0.0001)
+
     total = gust + per_tick * _Q_TORNADO_TICKS
     entry = damage_entry(
         ability.get("name", "Winds of War"),
@@ -80,6 +92,7 @@ def _winds_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
         DamagePart(
             "magic",
             per_tick,
+            hp_scaled_damage=max_health_tick,
             count=_Q_TORNADO_TICKS,
             time_offset=_Q_TORNADO_FIRST_TICK,
             hit_interval=_Q_TORNADO_TICK_INTERVAL,

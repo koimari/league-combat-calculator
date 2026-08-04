@@ -9,6 +9,36 @@ from typing import Final
 
 ROLES: Final[frozenset[str]] = frozenset({"top", "jungle", "mid", "bottom", "support"})
 
+# Support quest progression is represented as an explicit inventory contract.
+# The cache has no reliable source-item links for these seasonal items, so
+# keep the sourced names and progression stages together here rather than
+# letting a frontend picker infer an upgrade from an item id.
+SUPPORT_QUEST_ITEM_STAGES: Final[dict[str, str]] = {
+    "World Atlas": "starter",
+    "Runic Compass": "intermediate",
+    "Celestial Opposition": "upgraded",
+    "Dream Maker": "upgraded",
+    "Zaz'Zak's Realmspike": "upgraded",
+    "Solstice Sleigh": "upgraded",
+    "Bloodsong": "upgraded",
+}
+SUPPORT_QUEST_STARTER_STAGES: Final[frozenset[str]] = frozenset(
+    {"starter", "intermediate"}
+)
+SUPPORT_QUEST_UPGRADED_STAGE: Final[str] = "upgraded"
+
+# Names are the stable public values used by the cached item source.  Item
+# ids are deliberately absent so patch data can refresh without a second,
+# frontend-only numeric mapping.
+BOOT_UPGRADES: Final[dict[str, str]] = {
+    "Berserker's Greaves": "Gunmetal Greaves",
+    "Boots of Swiftness": "Swiftmarch",
+    "Gluttonous Greaves": "Immortal Path",
+    "Ionian Boots of Lucidity": "Crimson Lucidity",
+    "Mercury's Treads": "Chainlaced Crushers",
+    "Plated Steelcaps": "Armored Advance",
+    "Sorcerer's Shoes": "Spellslinger's Shoes",
+}
 # Mid quest: "Gain 8% bonus AD and 8% AP" (V26.11).
 MID_QUEST_BONUS_AD_PERCENT: Final[float] = 8.0
 MID_QUEST_AP_PERCENT: Final[float] = 8.0
@@ -66,7 +96,10 @@ def role_quest_meta(role: str, complete: bool) -> dict[str, object]:
         "jungle": "Movement reward is positional and not used for damage scoring",
         "mid": "8% bonus AD, 8% AP, and tier-3 boots",
         "bottom": "Boots move to the quest slot, allowing six ordinary items",
-        "support": "Ward and support-item rewards do not add an ordinary damage slot",
+        "support": (
+            "Support quest complete: one upgraded support item is legal; "
+            "the item remains part of the six combat inventory slots"
+        ),
     }
     return {"role": role, "complete": True, "effect": effects[role]}
 
@@ -80,3 +113,49 @@ def max_champion_level(role: str, complete: bool) -> int:
     if not role:
         return TOP_LEVEL_CAP
     return level_cap(role, complete)
+
+
+def support_quest_item_stage(item_name: object) -> str | None:
+    """Return the authored support-quest stage for one cached item name."""
+    if not isinstance(item_name, str):
+        return None
+    return SUPPORT_QUEST_ITEM_STAGES.get(item_name)
+
+
+def support_quest_item_contract() -> dict[str, object]:
+    """Expose the support quest item gate to API clients and the picker."""
+    return {
+        "role": "support",
+        "complete_field": "role_quest_complete",
+        "stages": {
+            "starter": sorted(
+                name
+                for name, stage in SUPPORT_QUEST_ITEM_STAGES.items()
+                if stage == "starter"
+            ),
+            "intermediate": sorted(
+                name
+                for name, stage in SUPPORT_QUEST_ITEM_STAGES.items()
+                if stage == "intermediate"
+            ),
+            "upgraded": sorted(
+                name
+                for name, stage in SUPPORT_QUEST_ITEM_STAGES.items()
+                if stage == SUPPORT_QUEST_UPGRADED_STAGE
+            ),
+        },
+        "incomplete_allowed_stages": sorted(SUPPORT_QUEST_STARTER_STAGES),
+        "complete_allowed_stages": [SUPPORT_QUEST_UPGRADED_STAGE],
+        "note": (
+            "A completed support role quest is required before an upgraded "
+            "support item can be equipped."
+        ),
+    }
+
+
+def boot_upgrade_contract() -> dict[str, dict[str, str]]:
+    """Return the sourced base/quest boot relationship for API clients."""
+    return {
+        base: {"base": base, "upgraded": upgraded}
+        for base, upgraded in BOOT_UPGRADES.items()
+    }

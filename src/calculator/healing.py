@@ -110,6 +110,7 @@ HEALING_RULE_CHAMPIONS = frozenset(
     {
         "Aatrox",
         "Ambessa",
+        "Darius",
         "Warwick",
         "Dr. Mundo",
         "Irelia",
@@ -219,6 +220,36 @@ def derive_self_healing(
                             **_trigger_fields(event),
                         }
                     )
+
+    elif name == "Darius":
+        # Decimate's outer blade heals for 17% of missing health per enemy
+        # champion hit, capped at 51% for three or more champions. Pair
+        # packets mark the cast so the coupled timeline coalesces those
+        # per-target receipts before applying one live heal.
+        for event in damage_events:
+            if _event_source(event) != "Q":
+                continue
+            trigger_time = float(event.get("time", 0.0))
+            trigger_sequence = int(event.get("sequence", 0) or 0)
+
+            def missing_health_heal(
+                current_health: float,
+                maximum_health: float,
+                ratio: float = 0.17,
+            ) -> float:
+                return max(0.0, maximum_health - current_health) * ratio
+
+            healing.append(
+                {
+                    "time": trigger_time,
+                    "amount": 0.0,
+                    "amount_formula": missing_health_heal,
+                    "source": "Decimate",
+                    "kind": "champion_ability",
+                    "_darius_q_group": (trigger_time, trigger_sequence),
+                    **_trigger_fields(event),
+                }
+            )
 
     # The following packets are deliberately formula-only.  They do not use
     # a class/archetype multiplier and are emitted only when the triggering
