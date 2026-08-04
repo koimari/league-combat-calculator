@@ -24,8 +24,14 @@ from .healing_reduction import (
     healing_reduction_profiles,
     matching_healing_reduction,
 )
-from .item_effects import ThornsEffect, required_effect_value, thorns_effects
+from .item_effects import (
+    ThornsEffect,
+    required_effect_value,
+    sustain_effect_value,
+    thorns_effects,
+)
 from .resistance import apply_magic_penetration, apply_resistance
+from .stats import get_item_stats
 
 
 def require_roster_fight_window_support(
@@ -340,6 +346,64 @@ def _has_ordered_item_defense(items: Iterable[Mapping[str, Any]]) -> bool:
     return any(
         str(item.get("name", "")) in {"Eclipse", "Death's Dance"} for item in items
     )
+
+
+def _has_ordered_item_sustain(
+    items: Iterable[Mapping[str, Any]], *, include_warmog: bool = True
+) -> bool:
+    """Return whether item healing/regen needs the authoritative event walk.
+
+    The compiled optimizer walk intentionally stores only numeric heal
+    amounts.  It cannot carry the source category needed for Spirit Visage
+    (lifesteal/omnivamp are stat conversions, while direct heals and regen
+    are received-healing packets), nor can it author Warmog/Doran trigger
+    state.  Route those builds through the same ordered path as the visible
+    participant receipt.
+    """
+    stateful_names = {
+        "Doran's Blade",
+        "Doran's Ring",
+        "Doran's Shield",
+    }
+    for item in items:
+        name = str(item.get("name", ""))
+        if name == "Warmog's Armor" and not include_warmog:
+            continue
+        if include_warmog and name == "Warmog's Armor":
+            return True
+        if name in stateful_names:
+            return True
+        try:
+            stats = get_item_stats(dict(item))
+        except (TypeError, ValueError, KeyError):
+            # A malformed cached item must not be made more permissive by
+            # the optimizer shortcut; the normal path will surface its
+            # source/schema error.
+            return True
+        if any(
+            float(stats[key]) > 0.0
+            for key in (
+                "lifesteal_percent",
+                "omnivamp_percent",
+            )
+        ):
+            return True
+    return False
+
+
+def _has_active_warmog(loadout: ResolvedLoadout) -> bool:
+    """Whether a roster loadout can arm Warmog's combat regen gate."""
+    if not any(
+        str(item.get("name", "")) == "Warmog's Armor" for item in loadout.item_data
+    ):
+        return False
+    try:
+        threshold = sustain_effect_value(
+            "Warmog's Armor", "heart_bonus_health_threshold"
+        )
+    except (KeyError, TypeError, ValueError):
+        return True
+    return float(loadout.stats.get("bonus_health", 0.0)) >= threshold
 
 
 def _is_authored_ability_event(event: Mapping[str, Any]) -> bool:
@@ -811,6 +875,10 @@ def _simulate_survival(
             "overkill": 0.0,
             "health_damage": 0.0,
             "shield_absorbed": 0.0,
+            # Combat regeneration is gated against the last sourced damage
+            # timestamp.  The fight starts in combat, so a Warmog packet at
+            # t=0 cannot immediately claim an unknown pre-fight idle window.
+            "last_damage_time": 0.0,
             "healing_received": 0.0,
             "overhealing": 0.0,
             "healing_reduced": 0.0,
@@ -1123,6 +1191,59 @@ def _simulate_survival(
         expanded_incoming[participant_id].extend(candidates)
     incoming = expanded_incoming
 
+    def _append_ordered_heal(participant_id: str, event: dict[str, Any]) -> None:
+        """Add a sourced recovery event to the live healing mapping."""
+        expanded_healing[participant_id].append(event)
+        if isinstance(healing, MutableMapping):
+            healing[participant_id] = expanded_healing[participant_id]
+
+    # Warmog's Heart is a live combat-state gate.  Its amount is based on the
+    # current maximum health at the moment each tick lands, while the
+    # no-damage window is checked inside the ordered simulator against the
+    # last applied incoming packet.  The 2,000 bonus-health threshold is
+    # sourced from the item's full Wiki entry and is intentionally not
+    # guessed for an unqualified loadout.
+    for combatant in combatant_list:
+        if not any(
+            str(item.get("name", "")) == "Warmog's Armor" for item in combatant.items
+        ):
+            continue
+        threshold = sustain_effect_value(
+            "Warmog's Armor", "heart_bonus_health_threshold"
+        )
+        if float(combatant.stats.get("bonus_health", 0.0)) < threshold:
+            continue
+        ratio = sustain_effect_value(
+            "Warmog's Armor", "heart_max_health_ratio_per_tick"
+        )
+        tick = sustain_effect_value("Warmog's Armor", "heart_tick_interval")
+        gate = sustain_effect_value("Warmog's Armor", "heart_champion_damage_cooldown")
+        if ratio <= 0.0 or tick <= 0.0:
+            continue
+        time_value = tick
+        sequence = 0
+        while time_value <= duration + 1e-9:
+            _append_ordered_heal(
+                combatant.participant_id,
+                {
+                    "time": round(time_value, 6),
+                    "amount": 0.0,
+                    "amount_formula": (
+                        lambda _current_health, maximum_health, ratio=ratio: (
+                            maximum_health * ratio
+                        )
+                    ),
+                    "source": "Warmog's Armor (Warmog's Heart)",
+                    "kind": "regen",
+                    "actor_wide": True,
+                    "requires_damage_free_seconds": gate,
+                    "_event_id": f"{combatant.participant_id}:warmog:{sequence}",
+                    "sequence": sequence,
+                },
+            )
+            sequence += 1
+            time_value += tick
+
     def _expire_timed_shields(state: dict[str, Any], event_time: float) -> None:
         """Remove unused timed shields before an event at their expiry."""
         remaining: list[dict[str, Any]] = []
@@ -1262,6 +1383,113 @@ def _simulate_survival(
 
     actions: list[tuple[tuple[Any, ...], str, dict[str, Any]]] = []
     damage_event_status: dict[str, str] = {}
+
+    def _insert_live_heal(event: dict[str, Any], recipient_id: str) -> None:
+        """Insert a recovery packet authored by a just-applied trigger."""
+        event["_sk"] = _action_key(
+            float(event.get("time", 0.0)),
+            1.0,
+            recipient_id,
+            event,
+        )
+        action = (event["_sk"], recipient_id, event)
+        insertion = max(current_action_index + 1, 0)
+        while insertion < len(actions) and actions[insertion][0] <= action[0]:
+            insertion += 1
+        actions.insert(insertion, action)
+
+    def _schedule_doran_shield_recovery(
+        participant_id: str, event: Mapping[str, Any], event_time: float
+    ) -> None:
+        """Schedule Enduring Focus only after a certified incoming hit."""
+        combatant = combatant_by_id.get(participant_id)
+        if combatant is None or not any(
+            str(item.get("name", "")) == "Doran's Shield" for item in combatant.items
+        ):
+            return
+        if float(event.get("damage", 0.0) or 0.0) <= 0.0:
+            return
+        total_melee = sustain_effect_value(
+            "Doran's Shield", "enduring_focus_total_melee"
+        )
+        total_reduced = sustain_effect_value(
+            "Doran's Shield", "enduring_focus_total_reduced"
+        )
+        missing_cap = sustain_effect_value(
+            "Doran's Shield", "enduring_focus_missing_health_cap"
+        )
+        duration_value = sustain_effect_value(
+            "Doran's Shield", "enduring_focus_duration"
+        )
+        tick = sustain_effect_value("Doran's Shield", "health_regen_tick_interval")
+        if missing_cap <= 0.0 or duration_value <= 0.0 or tick <= 0.0:
+            return
+        current_state = states[participant_id]
+        missing_ratio = (
+            max(0.0, 1.0 - current_state["health"] / current_state["max_health"])
+            if current_state["max_health"] > 0.0
+            else 0.0
+        )
+        if missing_ratio <= 0.0:
+            return
+        source_key = str(event.get("source_key", ""))
+        is_basic_or_on_hit = (
+            bool(event.get("basic_attack"))
+            or source_key
+            in {
+                "auto_attacks",
+            }
+            or source_key.startswith(("on_hit_", "on_hit_once_"))
+        )
+        ranged = (
+            str(combatant.champion_data.get("attackType", "MELEE")).upper() != "MELEE"
+        )
+        total_cap = total_reduced if ranged or not is_basic_or_on_hit else total_melee
+        total = total_cap * min(1.0, missing_ratio / missing_cap)
+        if total <= 0.0:
+            return
+        trigger_id = str(event.get("_event_id", ""))
+        ticks = max(1, int(round(duration_value / tick)))
+        for tick_index in range(1, ticks + 1):
+            heal_event = {
+                "time": round(event_time + tick * tick_index, 6),
+                "amount": total / ticks,
+                "source": "Doran's Shield (Enduring Focus)",
+                "kind": "regen",
+                "attacker": participant_id,
+                "target": participant_id,
+                "_event_id": f"{trigger_id}:doran-shield:{tick_index}",
+                "_trigger_event_id": trigger_id,
+                "sequence": tick_index - 1,
+            }
+            expanded_healing[participant_id].append(heal_event)
+            _insert_live_heal(heal_event, participant_id)
+
+    def _recovery_is_gated(
+        state: Mapping[str, Any], event: Mapping[str, Any], event_time: float
+    ) -> bool:
+        """Return whether a combat-gated recovery must wait for idle time."""
+        try:
+            gate = max(
+                0.0, float(event.get("requires_damage_free_seconds", 0.0) or 0.0)
+            )
+        except (TypeError, ValueError):
+            gate = 0.0
+        if gate <= 0.0:
+            return False
+        last_damage = state.get("last_damage_time")
+        if last_damage is None:
+            return False
+        return event_time - float(last_damage) < gate - 1e-9
+
+    def _recovery_multiplier(
+        state: Mapping[str, Any], event: Mapping[str, Any]
+    ) -> float:
+        """Apply received-healing modifiers except to vamp stat packets."""
+        if str(event.get("healing_category", "")) == "vamp":
+            return 1.0
+        return float(state["healing_received_multiplier"])
+
     for participant_id, events in support_effects.items():
         for support_index, event in enumerate(events):
             event.setdefault("_event_id", f"{participant_id}:support:{support_index}")
@@ -1604,13 +1832,17 @@ def _simulate_survival(
                 event["expires_at"] = round(event_time + duration_value, 3)
                 event["applied_amount"] = round(amount, 6)
             elif kind in {"heal", "regen"}:
+                if _recovery_is_gated(state, event, event_time):
+                    event["applied_amount"] = 0.0
+                    event["skipped_reason"] = "damage_free_window_not_ready"
+                    continue
                 amount_formula = event.get("amount_formula")
                 if callable(amount_formula):
                     amount = max(
                         0.0,
                         float(amount_formula(state["health"], state["max_health"])),
                     )
-                amount *= state["healing_received_multiplier"]
+                amount *= _recovery_multiplier(state, event)
                 reduction_factor = (
                     1.0
                     if event_time >= state["healing_reduction_until"]
@@ -1663,6 +1895,10 @@ def _simulate_survival(
                     state["defy_heal_received"] += received
             continue
         if phase == 1:
+            if _recovery_is_gated(state, event, event_time):
+                event["applied_amount"] = 0.0
+                event["skipped_reason"] = "damage_free_window_not_ready"
+                continue
             amount = max(0.0, float(event.get("amount", 0.0)))
             amount_formula = event.get("amount_formula")
             if callable(amount_formula):
@@ -1670,7 +1906,7 @@ def _simulate_survival(
                     0.0,
                     float(amount_formula(state["health"], state["max_health"])),
                 )
-            amount *= state["healing_received_multiplier"]
+            amount *= _recovery_multiplier(state, event)
             reduction_factor = (
                 1.0
                 if event_time >= state["healing_reduction_until"]
@@ -1825,6 +2061,9 @@ def _simulate_survival(
         # and ``live_damage`` above for diagnostics without letting overkill
         # inflate team-fight TTD or BIS scores.
         event["damage"] = round(event_absorbed + applied_to_health, 6)
+        if event["damage"] > 0.0:
+            state["last_damage_time"] = float(event_time)
+            _schedule_doran_shield_recovery(participant_id, event, float(event_time))
         if (
             source_id in states
             and source_id != participant_id
@@ -3641,8 +3880,16 @@ def build_participant_timeline(
         # Eclipse and Death's Dance carry ordered self-state that the compact
         # panel cannot represent (timed shields, deferral, and Defy).
         and not _has_ordered_item_defense(items)
+        # Vamp, stat regeneration, and trigger-gated sustain packets carry
+        # source categories/live state that the flat panel does not retain.
+        and not _has_ordered_item_sustain(items)
         and not any(
             _has_ordered_item_defense(loadout.item_data)
+            for loadout in (*enemies, *allies)
+        )
+        and not any(
+            _has_ordered_item_sustain(loadout.item_data, include_warmog=False)
+            or _has_active_warmog(loadout)
             for loadout in (*enemies, *allies)
         )
         # Collector is a terminal target-state transition, not a score-only

@@ -51,14 +51,6 @@ _BLOCKED_REASONS: dict[str, str] = {
         "Helping Hand's 5 bonus physical damage is restricted to minions; the "
         "item's combat regeneration state is not modelled."
     ),
-    "Doran's Ring": (
-        "Helping Hand's 5 bonus physical damage is restricted to minions; Drain's "
-        "combat resource/heal state is not modelled."
-    ),
-    "Doran's Shield": (
-        "Helping Hand's 5 bonus physical damage is restricted to minions; "
-        "Enduring Focus's missing-health regeneration state is not modelled."
-    ),
     "Phage": "Rage's conditional movement-speed state is not modelled.",
     "Tear of the Goddess": "Manaflow stack progression is not modelled.",
     "Catalyst of Aeons": (
@@ -143,6 +135,14 @@ _PARTIAL_BLOCKED_REASONS: dict[str, str] = {
 # event model; the item's ordinary stats still flow through stats.py.
 _REVIEWED_STATS_ONLY: dict[str, str] = {
     "Banshee's Veil": "Annul is defensive spell protection.",
+    "Doran's Ring": (
+        "Drain restores mana first and converts to a sourced health packet only "
+        "when the actor cannot gain mana; Helping Hand is minion-only."
+    ),
+    "Doran's Shield": (
+        "Enduring Focus's sourced missing-health regeneration is replayed after "
+        "incoming champion damage; Helping Hand is minion-only."
+    ),
     "Scorchclaw Pup": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
     "Gustwalker Hatchling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
     "Mosstomper Seedling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
@@ -239,6 +239,10 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
         "Warmog's Vitality modifies item health; combat regeneration stays "
         "inactive while the target is taking damage."
     ),
+    "Doran's Shield": (
+        "Enduring Focus's sourced missing-health regeneration is replayed after "
+        "incoming champion damage."
+    ),
     "Unending Despair": (
         "Anguish's every-four-second magic pulse and 250% post-mitigation "
         "self-heal are scheduled on the certified participant ledger."
@@ -323,7 +327,6 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
         "Blessing of the Mountain's opening damage reduction is not modelled."
     ),
     "Chainlaced Crushers": "Noxian Persistence's magic shield is not modelled.",
-    "Doran's Shield": "Endure's combat health regeneration is not modelled.",
     "Fimbulwinter": "Awe bonus health and Everlasting shields are not modelled.",
     "Force of Nature": (
         "Steadfast's target-side stack timing is not modelled: champion magic "

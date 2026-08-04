@@ -32,8 +32,8 @@ def test_omnivamp_follows_explicit_primary_attack_packets(attacker_stats, fight)
     )
 
 
-def test_omnivamp_is_materialized_as_ordered_self_healing():
-    """The public pipeline carries the same heal rows into the timeline."""
+def test_dorans_blade_life_draining_is_materialized_as_ordered_self_healing():
+    """The current full Wiki entry replaces Doran's old omnivamp stat."""
     params = FightParams.from_request(
         {
             "fight_mode": "timed",
@@ -52,7 +52,8 @@ def test_omnivamp_is_materialized_as_ordered_self_healing():
     events = [
         event
         for event in result["self_healing_events"]
-        if event["source"] == "Omnivamp (explicit single-target attacks and on-hit)"
+        if event["source"] == "Doran's Blade (Life Draining)"
     ]
     assert events
+    assert result["champion_stats"]["omnivamp_percent"] == 0.0
     assert result["self_healing"] >= sum(event["amount"] for event in events)
