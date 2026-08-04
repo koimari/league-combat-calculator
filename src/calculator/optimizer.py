@@ -1123,7 +1123,11 @@ def optimize_build(
             else (
                 "exhaustive_event_ordered"
                 if certified_best
-                else "partial_or_unexhaustive"
+                else (
+                    "event_ordered_item_scope_gap"
+                    if search_timeline_coverage["complete"]
+                    else "partial_or_unexhaustive"
+                )
             )
         ),
         "candidate_coverage": candidate_coverage,

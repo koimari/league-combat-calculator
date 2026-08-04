@@ -39,7 +39,7 @@ def test_item_scope_gap_does_not_withhold_a_complete_champion_package():
             "items": ["Shadowflame"],
             "boots": None,
             "is_certified_best": False,
-            "selection_certification": "partial_or_unexhaustive",
+            "selection_certification": "event_ordered_item_scope_gap",
             "search_timeline_coverage": {
                 "complete": True,
                 "certification": "candidate_event_order_certified",
@@ -56,6 +56,7 @@ def test_item_scope_gap_does_not_withhold_a_complete_champion_package():
     assert report["passed"] is True
     assert report["outcome_counts"] == {"certified_with_item_scope_gap": 1}
     assert report["results"][0]["candidate_coverage"]["excluded_count"] == 21
+    assert report["results"][0]["selection_certification"] != "partial_or_unexhaustive"
 
 
 def test_matrix_requires_every_registered_name_and_elapsed_receipt():

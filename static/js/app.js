@@ -2738,9 +2738,10 @@ function bisItemMatchesRole(item, role, path = "") {
   return Boolean(offensive || defensive);
 }
 
-function bisBackendPayload(path) {
+function bisBackendPayload(path, objective = state.ui.objective) {
   const parts = String(path).split(".");
   const payload = { ...engineFightPayload("A") };
+  payload.objective = OBJECTIVES[objective] ? objective : "overall";
   if (parts[0] === "attacker") {
     const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
     Object.assign(payload, engineFightPayload(side));
@@ -2775,7 +2776,10 @@ function bisComponentLine(components) {
 
 async function openBackendBis(path) {
   if (!bisReadyForPath(path)) return;
-  const payload = bisBackendPayload(path);
+  const selectedObjective = bisContext?.path === path && OBJECTIVES[bisContext.objective]
+    ? bisContext.objective
+    : (OBJECTIVES[state.ui.objective] ? state.ui.objective : "overall");
+  const payload = bisBackendPayload(path, selectedObjective);
   if (!payload) return;
   const isMain = payload.subject_team === "main";
   const subject = isMain
@@ -2787,7 +2791,11 @@ async function openBackendBis(path) {
   $("bisTitle").textContent = `Best ${payload.slot_kind === "boots" ? "boots" : "item"} for ${subjectLabel}${subject.champion} · ${slotLabel}`;
   $("bisSummary").textContent = "Scoring the simultaneous event timeline · loading sourced candidates…";
   $("bisList").innerHTML = `<p class="picker-empty">Scoring every legal candidate against the selected team-fight…</p>`;
-  bisContext = { path };
+  bisContext = { path, objective: selectedObjective };
+  const filter = $("bisObjectiveFilter");
+  if (filter) {
+    filter.innerHTML = Object.entries(OBJECTIVES).map(([key, definition]) => `<button type="button" data-bis-objective="${key}" class="${key === selectedObjective ? "active" : ""}" aria-pressed="${key === selectedObjective}">${escapeHtml(definition.label)}</button>`).join("");
+  }
   $("bis").showModal();
   try {
     const response = await fetch("/api/bis", {
@@ -2799,14 +2807,13 @@ async function openBackendBis(path) {
     if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
     const certifiedRows = result.candidates || [];
     const partialRows = result.partial_candidates || [];
-    const rows = [...certifiedRows, ...partialRows];
+    // Partial event order is an audit receipt, never a ranked preview.  The
+    // backend remains the authority for ordering complete candidates.
+    const rows = certifiedRows;
     const displayRows = rows.slice(0, 24);
-    const showingPartialPreview = certifiedRows.length === 0 && partialRows.length > 0;
     const coverage = result.coverage?.complete
       ? "complete sourced coverage"
-      : showingPartialPreview
-        ? "BIS withheld · partial event-order preview"
-        : "BIS withheld until event order is complete";
+      : "BIS withheld until every candidate is certified";
     const candidateScope = result.candidate_scope?.startsWith("role-tagged:")
       ? `${result.candidate_scope.slice("role-tagged:".length)} role-compatible`
       : "all supported";
@@ -2817,20 +2824,23 @@ async function openBackendBis(path) {
     const withheldNote = withheldCount
       ? ` · ${withheldCount} withheld before timeline${withheldNames ? ` (${withheldNames}${withheldCount > 3 ? ", …" : ""})` : ""}`
       : "";
-    $("bisSummary").textContent = `${subject.champion} · ${certifiedRows.length} certified of ${result.candidate_count || rows.length} ${candidateScope} candidates · ${coverage}${displayNote}${withheldNote}`;
+    const responseObjective = result.objective || {};
+    const objectiveLabel = responseObjective.label || OBJECTIVES[selectedObjective].label;
+    const partialNote = partialRows.length ? ` · ${partialRows.length} partial receipts withheld` : "";
+    $("bisSummary").textContent = `${subject.champion} · ${objectiveLabel} · ${certifiedRows.length} certified of ${result.candidate_count || rows.length} ${candidateScope} candidates · ${coverage}${displayNote}${withheldNote}${partialNote}`;
     const evaluatedCards = displayRows.map((entry, index) => {
       const item = findItemByBackendName(entry.name);
-      const detail = `${item ? itemStatsLine(item) : "Sourced item stats"} · ${bisComponentLine(entry.components)}`;
-      const partial = entry.timeline_coverage?.complete !== true;
-      const partialClass = partial ? " partial" : "";
-      const partialLabel = partial ? " · partial event order" : "";
-      return `<article class="bis-row${partialClass}"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(detail)}${escapeHtml(partialLabel)}</small></div><p><strong>${fmt(entry.score)}</strong><span>${escapeHtml(bisMetricLabel(entry.metric))}</span></p><button type="button" data-bis-value="${item ? item.id : ""}" ${item && !partial ? "" : "disabled"}>${partial ? "Preview" : "Use"}</button></article>`;
+      const defensiveNote = entry.defensive_effect_receipt?.status === "certified"
+        ? ` · ${entry.defensive_effect_receipt.note || "certified defensive receipt"}`
+        : "";
+      const detail = `${item ? itemStatsLine(item) : "Sourced item stats"} · ${bisComponentLine(entry.components)}${defensiveNote}`;
+      return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.score)}</strong><span>${escapeHtml(bisMetricLabel(entry.metric))}</span></p><button type="button" data-bis-value="${item ? item.id : ""}" ${item ? "" : "disabled"}>Use</button></article>`;
     }).join("");
-    const withheldCards = !certifiedRows.length ? withheldRows.slice(0, 24).map((entry) => {
+    const withheldCards = withheldRows.slice(0, 24).map((entry) => {
       const item = findItemByBackendName(entry.name);
       const reason = String(entry.reason || "candidate not evaluated").replaceAll("_", " ");
       return `<article class="bis-row partial withheld"><span class="bis-rank">—</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name || "Candidate")}</strong><small>Withheld · ${escapeHtml(reason)}${entry.detail ? ` · ${escapeHtml(entry.detail)}` : ""}</small></div><p><strong>—</strong><span>No score</span></p><button type="button" disabled aria-label="${escapeHtml(entry.name || "Candidate")} withheld">Withheld</button></article>`;
-    }).join("") : "";
+    }).join("");
     $("bisList").innerHTML = evaluatedCards + withheldCards || `<p class="picker-empty">${escapeHtml(result.coverage?.note || "No legal candidate has complete sourced mechanics for this timeline.")}${withheldCount ? ` ${escapeHtml(withheldCount === 1 ? "One candidate was withheld before timeline evaluation." : `${withheldCount} candidates were withheld before timeline evaluation.`)}` : ""}</p>`;
   } catch (error) {
     $("bisSummary").textContent = "BIS unavailable";
@@ -3300,6 +3310,14 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     return render();
   }
+  const bisObjectiveButton = event.target.closest("[data-bis-objective]");
+  if (bisObjectiveButton) {
+    const objective = bisObjectiveButton.dataset.bisObjective;
+    if (!OBJECTIVES[objective] || !bisContext?.path) return;
+    state.ui.objective = objective;
+    bisContext.objective = objective;
+    return openBackendBis(bisContext.path);
+  }
   const objectiveButton = event.target.closest("[data-objective]");
   if (objectiveButton) {
     state.ui.objective = OBJECTIVES[objectiveButton.dataset.objective] ? objectiveButton.dataset.objective : "overall";
@@ -3417,10 +3435,9 @@ document.addEventListener("click", (event) => {
     const loadout = pathValue(path);
     if (!loadout?.role) return;
     loadout.roleQuestComplete = !loadout.roleQuestComplete;
-    // Mid quests require tier-3 boots while every other role state requires
-    // tier-2 boots.  Clear the explicit boot so the next request cannot carry
-    // a now-illegal tier across the quest transition.
-    loadout.boots = 0;
+    // Keep the explicit boots selection in browser state.  A rerender or
+    // quest toggle must not erase the user's item; the backend remains the
+    // authority for whether its tier is legal for the new role state.
     if (loadout.role !== "top" && loadout.level > 18) loadout.level = 18;
     invalidateOptimization();
     return render();
@@ -3644,7 +3661,7 @@ document.addEventListener("change", (event) => {
   if (!loadout) return;
   loadout.role = rosterRoleSelect.value;
   if (!loadout.role) loadout.roleQuestComplete = false;
-  loadout.boots = 0;
+  // Role changes rerender the card but do not erase the selected boots.
   if (loadout.role !== "top" && loadout.level > 18) loadout.level = 18;
   invalidateOptimization();
   render();

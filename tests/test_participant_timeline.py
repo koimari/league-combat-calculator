@@ -1365,6 +1365,74 @@ def test_bis_endpoint_scores_main_from_damage_and_effective_health():
     assert top["components"]["effective_health"] > 0
 
 
+@pytest.mark.parametrize(
+    ("objective", "direction", "metric"),
+    [
+        ("overall", "higher", "main TTD (survival-coupled)"),
+        ("kill", "lower", "time to first target defeat"),
+        ("survival", "higher", "effective health (event-applied)"),
+        ("damage", "higher", "damage before focus defeat"),
+        ("utility", "higher", "healing, shields, and support value"),
+    ],
+)
+def test_bis_objectives_have_an_explicit_direction_and_metric(
+    objective, direction, metric
+):
+    payload = _bis_request("main")
+    payload["objective"] = objective
+    response = app.test_client().post("/api/bis", json=payload)
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["objective"] == {
+        "key": objective,
+        "label": body["objective"]["label"],
+        "direction": direction,
+        "metric": body["objective"]["metric"],
+    }
+    assert body["candidates"]
+    assert body["candidates"][0]["metric"] == metric
+    scores = [row["objective_value"] for row in body["candidates"]]
+    assert scores == sorted(scores, reverse=direction == "higher")
+
+
+def test_bis_withholds_unmodelled_eclipse_and_deaths_dance_defenses():
+    payload = _bis_request("main")
+    payload["objective"] = "survival"
+    body = app.test_client().post("/api/bis", json=payload).get_json()
+    withheld = {row["name"]: row for row in body["withheld_candidates"]}
+    assert "Eclipse" not in {row["name"] for row in body["candidates"]}
+    assert "Death's Dance" not in {row["name"] for row in body["candidates"]}
+    for name in ("Eclipse", "Death's Dance"):
+        assert withheld[name]["reason"] == "objective_effect_unavailable"
+        assert withheld[name]["timeline_coverage"]["complete"] is False
+        assert name in withheld[name]["detail"]
+
+
+def test_bis_receipts_certified_sundered_sky_ehp_inputs():
+    payload = _bis_request("main")
+    payload["objective"] = "survival"
+    body = app.test_client().post("/api/bis", json=payload).get_json()
+    row = next(
+        candidate
+        for candidate in body["candidates"]
+        if candidate["name"] == "Sundered Sky"
+    )
+    receipt = row["defensive_effect_receipt"]
+    assert receipt["status"] == "certified"
+    assert "healing_received" in receipt["evidence"]
+    assert (
+        receipt["evidence"]["effective_health"] == row["survival"]["effective_health"]
+    )
+
+
+def test_bis_rejects_an_unknown_objective():
+    payload = _bis_request("main")
+    payload["objective"] = "critical_strike_luck"
+    response = app.test_client().post("/api/bis", json=payload)
+    assert response.status_code == 400
+    assert "objective must be one of" in response.get_json()["error"]
+
+
 def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch):
     """A failed candidate remains visible in the per-candidate audit receipt."""
 
@@ -1701,7 +1769,9 @@ def test_bis_never_labels_partial_event_order_as_certified():
     assert body["partial_candidate_count"] == len(body["partial_candidates"])
     assert body["certified_candidate_count"] == len(body["candidates"])
     assert (
-        body["partial_candidate_count"] + body["certified_candidate_count"]
+        body["partial_candidate_count"]
+        + body["certified_candidate_count"]
+        + body["withheld_candidate_count"]
         == body["candidate_count"]
     )
 

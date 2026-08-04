@@ -324,6 +324,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .picker-empty { grid-column: 1 / -1; padding: 45px; color: #23443a; text-align: center; font: 500 12px/1.4 var(--font); }
 .bis-dialog .bis-intro { padding: 14px 20px; color: #3c6558; font-size: 11px; }
 .bis-dialog .bis-intro strong { display: block; color: #10201b; }
+.bis-objective-filter { display: flex; align-items: center; gap: 10px; padding: 10px 20px 0; color: var(--muted); font: 10px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+.bis-objective-filter > div { display: flex; flex-wrap: wrap; gap: 5px; }
+.bis-objective-filter button { padding: 5px 8px; border: 1px solid var(--line); background: transparent; color: var(--ink-soft); font: 10px var(--mono); text-transform: none; letter-spacing: 0; }
+.bis-objective-filter button.active { border-color: var(--ink); background: var(--ink); color: var(--white); }
 
 /* Final geometry guardrails: keep flex children and compact picker copy from
    stretching or collapsing at the viewport edges. */

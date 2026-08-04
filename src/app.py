@@ -1779,6 +1779,254 @@ def _enemy_bis_rank_key(
     )
 
 
+# Best-in-slot is an objective selector, not a second stat-only optimizer.
+# Keep the definitions in one place so the API receipt and the browser filter
+# cannot silently disagree about direction or units.
+_BIS_OBJECTIVES: dict[str, dict[str, str]] = {
+    "overall": {
+        "label": "Overall",
+        "direction": "higher",
+        "metric": "event-ordered team-fight value",
+    },
+    "kill": {
+        "label": "Kill pressure",
+        "direction": "lower",
+        "metric": "time to first target defeat",
+    },
+    "survival": {
+        "label": "Survival",
+        "direction": "higher",
+        "metric": "effective health (event-applied)",
+    },
+    "damage": {
+        "label": "Damage",
+        "direction": "higher",
+        "metric": "damage before focus defeat",
+    },
+    "utility": {
+        "label": "Utility",
+        "direction": "higher",
+        "metric": "healing, shields, and support value",
+    },
+}
+
+# These two items have defensive effects that materially change a survival-
+# coupled score, but their trigger/timing ledgers are not yet implemented.
+# They must remain visible as audit receipts and out of the ranked set rather
+# than being ranked as if their tooltip effects were zero.
+_BIS_UNMODELED_DEFENSIVE_EFFECTS: dict[str, str] = {
+    "Eclipse": (
+        "Eclipse shield trigger, amount, and two-second expiry are not yet "
+        "event-modelled; the candidate is withheld instead of ranking on "
+        "damage-only behavior."
+    ),
+    "Death's Dance": (
+        "Death's Dance Ignore Pain damage deferral and Defy reset are not yet "
+        "event-modelled; the candidate is withheld instead of ranking on "
+        "armor-only behavior."
+    ),
+}
+
+_BIS_CERTIFIED_DEFENSIVE_EFFECTS: dict[str, str] = {
+    "Sundered Sky": (
+        "Lightshield Strike's first-hit heal is timestamped and included in "
+        "the participant survival/eHP ledger; any sourced temporary-health "
+        "overheal is applied through the same ordered heal event."
+    ),
+}
+
+
+def _bis_defensive_effect_receipt(
+    item_name: str, survival: Mapping[str, object]
+) -> dict[str, object]:
+    """Describe why a defensive item did or did not affect candidate eHP."""
+    certified_note = _BIS_CERTIFIED_DEFENSIVE_EFFECTS.get(item_name)
+    if certified_note is None:
+        return {"status": "no_special_defensive_effect", "sources": []}
+    return {
+        "status": "certified",
+        "sources": [item_name],
+        "note": certified_note,
+        "evidence": {
+            "healing_received": round(
+                float(survival.get("healing_received", 0.0) or 0.0), 1
+            ),
+            "temporary_health_received": round(
+                float(survival.get("temporary_health_received", 0.0) or 0.0), 1
+            ),
+            "effective_health": round(
+                float(survival.get("effective_health", 0.0) or 0.0), 1
+            ),
+        },
+    }
+
+
+def _bis_objective_meta(key: str) -> dict[str, str]:
+    """Return a defensive copy of the API's objective contract."""
+    meta = _BIS_OBJECTIVES.get(key)
+    if meta is None:
+        raise ValueError(
+            "objective must be one of: overall, kill, survival, damage, utility"
+        )
+    return {"key": key, **meta}
+
+
+def _bis_time_to_target_defeat(
+    combat: Mapping[str, object],
+    *,
+    subject_team: str,
+    focus_id: str,
+    duration: float,
+) -> float:
+    """Return an explicit event-derived kill-time objective in seconds.
+
+    For a main/ally item, kill pressure means the first enemy defeat.  For an
+    enemy item, it means how quickly the selected enemy is defeated.  An
+    undefeated participant is assigned the requested window, never zero or a
+    guessed extrapolation.
+    """
+    participants = combat.get("participants", [])
+    if not isinstance(participants, list):
+        participants = []
+    if subject_team == "enemy":
+        participant_ids = {focus_id}
+    else:
+        participant_ids = {
+            str(row.get("participant_id", ""))
+            for row in participants
+            if isinstance(row, Mapping) and row.get("team") == "enemy"
+        }
+    times: list[float] = []
+    for row in participants:
+        if (
+            not isinstance(row, Mapping)
+            or str(row.get("participant_id", "")) not in participant_ids
+        ):
+            continue
+        survival = row.get("survival", {})
+        if not isinstance(survival, Mapping):
+            continue
+        death_time = survival.get("death_time")
+        if death_time is None:
+            continue
+        try:
+            parsed = float(death_time)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(parsed):
+            times.append(max(0.0, min(duration, parsed)))
+    return min(times, default=duration)
+
+
+def _bis_objective_score(
+    objective_key: str,
+    *,
+    subject_team: str,
+    focus_id: str,
+    combat: Mapping[str, object],
+    objective: Mapping[str, object],
+    focus: Mapping[str, object],
+) -> tuple[float, str, dict[str, float], tuple[float, ...] | None]:
+    """Derive one candidate's selected objective from the shared timeline."""
+    focus_survival = focus.get("survival", {})
+    if not isinstance(focus_survival, Mapping):
+        focus_survival = {}
+    duration = float(combat.get("duration", 0.0) or 0.0)
+    if duration <= 0.0:
+        duration = DEFAULT_FIGHT_DURATION
+    focus_damage = float(objective.get("focus_damage_before_death", 0.0) or 0.0)
+    effective_health = float(focus_survival.get("effective_health", 0.0) or 0.0)
+    healing = float(focus_survival.get("healing_received", 0.0) or 0.0)
+    support_shield = float(focus_survival.get("support_shield_received", 0.0) or 0.0)
+    support_value = float(objective.get("focus_support_value", 0.0) or 0.0)
+    if objective_key == "overall":
+        if subject_team == "main":
+            score = focus_damage
+            metric = "main TTD (survival-coupled)"
+            components = {
+                "damage_before_death": focus_damage,
+                "effective_health": effective_health,
+                "healing": healing,
+                "support_shield_received": support_shield,
+            }
+            return score, metric, components, None
+        if subject_team == "ally":
+            team_damage = float(
+                objective.get("main_team_damage_before_death", 0.0) or 0.0
+            )
+            score = team_damage + support_value + effective_health
+            metric = "team damage + ally utility + effective health"
+            components = {
+                "main_team_damage_before_death": team_damage,
+                "outgoing_support": support_value,
+                "healing": float(objective.get("focus_healing", 0.0) or 0.0),
+                "effective_health": effective_health,
+            }
+            return score, metric, components, None
+        survival_time = _bis_time_to_target_defeat(
+            combat,
+            subject_team=subject_team,
+            focus_id=focus_id,
+            duration=duration,
+        )
+        rank_key = _enemy_bis_rank_key(objective, focus_survival, duration=duration)
+        score = focus_damage
+        metric = "enemy survival gate · threat before defeat"
+        components = {
+            "survival_time": survival_time,
+            "effective_health": effective_health,
+            "threat_before_defeat": focus_damage,
+            "healing": healing,
+            "shield_absorbed": float(focus_survival.get("shield_absorbed", 0.0) or 0.0),
+        }
+        return score, metric, components, rank_key
+
+    if objective_key == "kill":
+        score = _bis_time_to_target_defeat(
+            combat,
+            subject_team=subject_team,
+            focus_id=focus_id,
+            duration=duration,
+        )
+        metric = _BIS_OBJECTIVES[objective_key]["metric"]
+        components = {
+            "time_to_target_defeat": score,
+            "damage_before_death": focus_damage,
+        }
+        return score, metric, components, None
+    if objective_key == "survival":
+        score = effective_health
+        metric = _BIS_OBJECTIVES[objective_key]["metric"]
+        components = {
+            "effective_health": effective_health,
+            "healing": healing,
+            "support_shield_received": support_shield,
+        }
+        return score, metric, components, None
+    if objective_key == "damage":
+        if subject_team == "ally":
+            score = float(objective.get("main_team_damage_before_death", 0.0) or 0.0)
+        else:
+            score = focus_damage
+        metric = _BIS_OBJECTIVES[objective_key]["metric"]
+        components = {
+            "damage_before_death": score,
+            "effective_health": effective_health,
+        }
+        return score, metric, components, None
+    # Utility is intentionally an additive receipt of values that the event
+    # walk actually applied.  It does not infer movement, range, or a value
+    # for an unmodelled item tooltip.
+    score = support_value + healing + support_shield
+    metric = _BIS_OBJECTIVES[objective_key]["metric"]
+    components = {
+        "support_value": support_value,
+        "healing": healing,
+        "support_shield_received": support_shield,
+    }
+    return score, metric, components, None
+
+
 @app.route("/api/bis", methods=["POST"])
 def api_bis():
     """Rank one slot from the same coupled participant event model.
@@ -1798,6 +2046,8 @@ def api_bis():
         if slot_kind not in {"item", "boots"}:
             raise ValueError("slot_kind must be item or boots")
         subject_index = _request_int(data, "subject_index", 0, 0, 4)
+        objective_key = _request_string(data, "objective", "overall")
+        objective_meta = _bis_objective_meta(objective_key)
         fight_params = FightParams.from_request(data, deterministic=True)
         main_request = _bis_main_request(data)
         enemy_requests = parse_roster(data, "enemies", maximum=MAX_ENEMIES)
@@ -1874,6 +2124,28 @@ def api_bis():
                 candidate_name=candidate["name"],
             )
             resolved_subject = candidate_request.resolve()
+            if (
+                subject_team != "enemy"
+                and candidate["name"] in _BIS_UNMODELED_DEFENSIVE_EFFECTS
+            ):
+                reason = _BIS_UNMODELED_DEFENSIVE_EFFECTS[candidate["name"]]
+                withheld_candidates.append(
+                    {
+                        "name": candidate["name"],
+                        "icon": _https_icon(candidate.get("icon", "")),
+                        "reason": "objective_effect_unavailable",
+                        "objective": objective_meta,
+                        "detail": reason,
+                        "timeline_coverage": {
+                            "complete": False,
+                            "certification": "objective_effect_unavailable",
+                            "exact_sources": [],
+                            "coarse_sources": [candidate["name"]],
+                            "note": reason,
+                        },
+                    }
+                )
+                continue
             candidate_main = (
                 resolved_subject if subject_team == "main" else main_loadout
             )
@@ -1925,82 +2197,31 @@ def api_bis():
                 if row["participant_id"]
                 == ("main" if subject_team == "main" else subject_id)
             )
-            rank_key = None
-            if subject_team == "main":
-                # TTD is already truncated at the focus participant's death
-                # in the shared event timeline.  Adding raw eHP here would
-                # count the same survival twice and makes an assassin's BIS
-                # drift toward pure-health items.
-                score = float(objective["focus_damage_before_death"])
-                metric = "main TTD (survival-coupled)"
-                components = {
-                    "damage_before_death": objective["focus_damage_before_death"],
-                    "effective_health": focus["survival"]["effective_health"],
-                    "healing": focus["survival"]["healing_received"],
-                    "support_shield_received": focus["survival"][
-                        "support_shield_received"
-                    ],
-                }
-            elif subject_team == "ally":
-                score = (
-                    float(objective["main_team_damage_before_death"])
-                    + float(objective["focus_support_value"])
-                    + float(focus["survival"]["effective_health"])
-                )
-                metric = "team damage + ally utility + effective health"
-                components = {
-                    "main_team_damage_before_death": objective[
-                        "main_team_damage_before_death"
-                    ],
-                    "outgoing_support": objective["focus_support_value"],
-                    "healing": objective["focus_healing"],
-                    "effective_health": focus["survival"]["effective_health"],
-                }
-            else:
-                # An enemy roster build is the opponent the selected main
-                # champion must actually fight.  A survival gate plus survival
-                # time prevents an early-death glass cannon from winning on a
-                # large scheduled rotation, while threat leads among builds
-                # that survive equally long.  Every component comes from the
-                # simultaneous event timeline; no champion role/archetype is
-                # inferred here.
-                survival = focus["survival"]
-                duration = float(
-                    combat.get("duration", fight_params.fight_duration_seconds)
-                )
-                death_time = survival.get("death_time")
-                survival_time = duration if death_time is None else float(death_time)
-                threat = float(objective["focus_damage_before_death"])
-                effective_health = float(survival["effective_health"])
-                score = threat
-                metric = "enemy survival gate · threat before defeat"
-                components = {
-                    "survival_time": round(survival_time, 3),
-                    "effective_health": round(effective_health, 1),
-                    "threat_before_defeat": round(threat, 1),
-                    "healing": survival["healing_received"],
-                    "shield_absorbed": survival["shield_absorbed"],
-                }
-                # Retain the exact survival-gated multi-objective ordering
-                # separately from the displayed threat score.  This avoids
-                # arbitrary magic weights while allowing a valid damage item
-                # to beat pure health when both builds survive the window.
-                rank_key = _enemy_bis_rank_key(
-                    objective,
-                    survival,
-                    duration=duration,
-                )
+            focus_id = "main" if subject_team == "main" else subject_id
+            score, metric, components, rank_key = _bis_objective_score(
+                objective_key,
+                subject_team=subject_team,
+                focus_id=focus_id,
+                combat=combat,
+                objective=objective,
+                focus=focus,
+            )
             ranked.append(
                 {
                     "name": candidate["name"],
                     "icon": _https_icon(candidate.get("icon", "")),
                     "score": round(score, 1),
+                    "objective_value": round(score, 3),
                     "metric": metric,
                     "components": components,
                     "stats": candidate.get("stats", {}),
                     "survival": focus["survival"],
+                    "defensive_effect_receipt": _bis_defensive_effect_receipt(
+                        candidate["name"], focus["survival"]
+                    ),
                     "timeline_coverage": combat["timeline_coverage"],
-                    **({"_rank_key": rank_key} if subject_team == "enemy" else {}),
+                    "_sort_score": score,
+                    **({"_rank_key": rank_key} if rank_key is not None else {}),
                 }
             )
         except (KeyError, ValueError) as exc:
@@ -2026,12 +2247,16 @@ def api_bis():
             )
             continue
 
-    if subject_team == "enemy":
+    if objective_key == "overall" and subject_team == "enemy":
         ranked.sort(key=lambda row: row["_rank_key"], reverse=True)
-        for row in ranked:
-            row.pop("_rank_key", None)
     else:
-        ranked.sort(key=lambda row: row["score"], reverse=True)
+        ranked.sort(
+            key=lambda row: row["_sort_score"],
+            reverse=objective_meta["direction"] == "higher",
+        )
+    for row in ranked:
+        row.pop("_rank_key", None)
+        row.pop("_sort_score", None)
     # A row with coarse or missing event order is useful as an audit receipt,
     # but it is not a defensible BIS recommendation.  Keep those rows separate
     # so the browser cannot silently apply an uncertified build.
@@ -2058,6 +2283,11 @@ def api_bis():
     )
     return jsonify(
         {
+            "objective": objective_meta,
+            "defensive_effects": {
+                "certified": _BIS_CERTIFIED_DEFENSIVE_EFFECTS,
+                "withheld": _BIS_UNMODELED_DEFENSIVE_EFFECTS,
+            },
             "subject_team": subject_team,
             "subject_index": subject_index,
             "slot_index": slot_index,

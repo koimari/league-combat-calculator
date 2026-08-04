@@ -949,8 +949,19 @@ def test_bis_frontend_surfaces_backend_withheld_candidate_receipts():
     assert "result.timeline_withheld_candidates" in source
     assert "result.timeline_withheld_candidate_count" in source
     assert 'aria-label="${escapeHtml(entry.name || "Candidate")} withheld"' in source
-    assert "const rows = [...certifiedRows, ...partialRows]" in source
-    assert "entry.timeline_coverage?.complete !== true" in source
+    assert "const rows = certifiedRows" in source
+    assert "Partial event order is an audit receipt, never a ranked preview" in source
+
+
+def test_bis_frontend_sends_and_filters_by_the_selected_objective():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert (
+        'payload.objective = OBJECTIVES[objective] ? objective : "overall";' in source
+    )
+    assert "data-bis-objective" in source
+    assert "result.objective || {}" in source
+    assert "bisContext.objective = objective" in source
 
 
 def test_item_picker_uses_backend_coverage_and_locks_unsupported_items():
