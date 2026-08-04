@@ -126,27 +126,15 @@ _PARTIAL_BLOCKED_REASONS: dict[str, str] = {
         "Flux's takedown trigger, three-second damage window, and ultimate "
         "cooldown refund are not scheduled in the participant ledger."
     ),
-    "Rapid Firecannon": (
-        "Energized generation and recharge timing are not modeled; only the "
-        "opening proc packet is priced."
-    ),
-    "Statikk Shiv": (
-        "Energized recharge and level-scaled chain target allocation are modeled, "
-        "and fixed-source copied on-hit packets are replayed; current-health and "
-        "stack-gated copied effects remain unavailable."
-    ),
-    "Stormrazor": (
-        "Energized generation/recharge and Bolt movement-speed state are not "
-        "modeled; only the opening proc packet is priced."
-    ),
     "Stridebreaker": (
         "Breaking Shockwave's movement-speed/slow sibling is not modeled; its "
         "active secondary damage packet is represented."
     ),
     "Voltaic Cyclosword": (
-        "Energized generation/recharge remains unavailable beyond the authored "
-        "opening proc; the sourced temporary lethality window is applied to "
-        "later timestamped physical events."
+        "Firmament's attack-only Energized schedule and pre-trigger lethality are "
+        "modeled, but Galvanize's ability trigger is withheld until the selected "
+        "champion supplies an exact damaging ability event rather than a cast "
+        "boundary."
     ),
 }
 

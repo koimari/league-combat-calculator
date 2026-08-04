@@ -4391,10 +4391,10 @@ class TestStatikkShiv(_FightHarness):
         )
         assert "on_hit_once_Statikk Shiv" not in results[3]["breakdown"]
 
-    def test_statikk_chain_replays_fixed_on_hit_packets_on_secondary_targets(
+    def test_statikk_chain_replays_per_hit_packets_on_secondary_targets(
         self,
     ) -> None:
-        """Fixed per-hit effects ride Electrospark's secondary packet once."""
+        """Per-hit effects ride Electrospark's secondary packet once."""
         stats = self._make_stats()
         primary = self.fight(
             stats,
@@ -4422,7 +4422,29 @@ class TestStatikkShiv(_FightHarness):
         assert "on_hit_chain_Statikk Shiv" not in primary["breakdown"]
         copied = secondary["breakdown"]["on_hit_chain_Statikk Shiv"]
         assert copied["total_damage"] == pytest.approx(45.0)
-        assert copied["targeting"]["copied_on_hit_scope"] == "fixed_source_packets"
+        assert copied["targeting"]["copied_on_hit_scope"] == "per_hit_source_packets"
+
+    def test_statikk_chain_replays_stack_gated_on_hits(self) -> None:
+        """Copied Electrospark hits advance Kraken's secondary ledger."""
+        stats = self._make_stats()
+        secondary = self.fight(
+            stats,
+            target_health=2000,
+            target_armor=0,
+            target_magic_resistance=0,
+            fight_duration_seconds=20.0,
+            auto_attack_uptime=0.8,
+            roster_target_index=1,
+            roster_target_count=2,
+            items=[{"name": "Statikk Shiv"}, {"name": "Kraken Slayer"}],
+        )
+
+        copied = secondary["breakdown"]["on_hit_chain_Statikk Shiv"]
+        assert copied["targeting"]["copied_stacking_on_hits"] is True
+        # Three Electrospark chain hits land at 0, 8.75, and 17.5 s;
+        # the third copied on-hit completes Kraken's three-hit counter.
+        assert copied["total_damage"] > 0.0
+        assert copied["damage_events"][-1]["time"] == pytest.approx(17.5)
 
     def test_statikk_parser_includes_attack_energize_branch(self) -> None:
         from src.calculator.data_fetcher import fetch_item_data
@@ -4463,7 +4485,7 @@ class TestRunaanHurricane(_FightHarness):
             == "runaan_bolt"
         )
 
-    def test_runaan_bolts_replay_fixed_source_on_hits(self) -> None:
+    def test_runaan_bolts_replay_per_hit_source_on_hits(self) -> None:
         stats = self._make_stats()
         secondary = self.fight(
             stats,
@@ -4479,7 +4501,7 @@ class TestRunaanHurricane(_FightHarness):
 
         copied = secondary["breakdown"]["on_hit_secondary_Runaan's Hurricane"]
         assert copied["total_damage"] > 0.0
-        assert copied["targeting"]["copied_on_hit_scope"] == "fixed_source_packets"
+        assert copied["targeting"]["copied_on_hit_scope"] == "per_hit_source_packets"
 
     @pytest.mark.parametrize(
         "item_name", ["Tiamat", "Profane Hydra", "Ravenous Hydra", "Stridebreaker"]
@@ -4743,23 +4765,25 @@ class TestVoltaicCyclosword(_FightHarness):
         assert entry["total_damage"] > 0
         assert entry["temporary_lethality"]["amount"] == 15.0
         assert entry["temporary_lethality"]["duration"] == 4.0
+        assert entry["temporary_lethality"]["applied_to_triggering_event"] is True
         assert entry["temporary_lethality"]["applied_to_later_events"] is True
-        assert entry["temporary_lethality"]["applied_event_count"] == 3
+        assert entry["temporary_lethality"]["applied_event_count"] == 5
 
-        # Firmament applies after its opening packet: the first ordinary
-        # swing shares its timestamp and keeps the original 50 armor, while
-        # later swings through the four-second window use 35 effective armor.
+        # Firmament applies before its opening packet and the triggering
+        # attack, while later swings through the four-second window use 35
+        # effective armor.
         auto_events = result["breakdown"]["auto_attacks"]["damage_events"]
-        assert auto_events[0]["damage"] == pytest.approx(100 / 1.5)
+        assert auto_events[0]["damage"] == pytest.approx(100 / 1.35)
         assert auto_events[1]["damage"] == pytest.approx(100 / 1.35)
         assert auto_events[3]["damage"] == pytest.approx(100 / 1.35)
         assert auto_events[4]["damage"] == pytest.approx(100 / 1.5)
 
-    def test_voltaic_only_one_proc(self) -> None:
-        """Even with many autos, Voltaic Cyclosword only procs once.
+    def test_voltaic_recharges_and_reads_current_health(self) -> None:
+        """Attack recharge and current-health scaling are both replayed.
 
-        Melee vs 5000 HP: 9% current HP = 450. The wiki's 200 cap applies
-        to non-champions only; the calculator targets champions, so no cap.
+        Melee vs 5000 HP: the first proc is ready immediately and the second
+        attack-only proc arrives after the sourced six-stack recharge. The
+        second packet is smaller because the target has already taken damage.
         """
         stats = self._make_stats()
         result = calculate_fight_damage(
@@ -4775,11 +4799,8 @@ class TestVoltaicCyclosword(_FightHarness):
             ),
         )
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
-        # Damage should be a single uncapped proc, not multiplied by autos
-        from src.calculator.resistance import apply_resistance
-
-        expected = apply_resistance(450.0, result["effective_armor"])
-        assert abs(entry["total_damage"] - expected) < 1.0
+        assert entry["count"] == 2
+        assert entry["damage_events"][0]["damage"] > entry["damage_events"][1]["damage"]
 
     def test_voltaic_current_hp_below_cap(self) -> None:
         """Melee vs 2000 HP: 9% current HP = 180, under the 200 cap."""
@@ -4816,6 +4837,40 @@ class TestVoltaicCyclosword(_FightHarness):
         )
         entry = result["breakdown"]["on_hit_once_Voltaic Cyclosword"]
         assert entry["total_damage"] == pytest.approx(140.0)
+
+    def test_voltaic_galvanize_triggers_before_damaging_ability(self) -> None:
+        """V26.09 Galvanize consumes the ready charge before an ability."""
+        stats = self._make_stats()
+        abilities = {
+            "Q": {
+                "name": "Test ability",
+                "rank": 1,
+                "cooldown": 5.0,
+                "parts": (DamagePart("magic", 100.0),),
+                "total_raw": 100.0,
+                "damage_type": "magic",
+            }
+        }
+        result = calculate_fight_damage(
+            stats,
+            abilities,
+            [{"name": "Voltaic Cyclosword"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
+        )
+        row = result["breakdown"]["on_hit_once_Voltaic Cyclosword_ability"]
+        assert row["count"] == 1
+        assert row["damage_events"][0]["time"] == pytest.approx(0.0)
+        assert row["temporary_lethality"]["applied_to_triggering_event"] is True
+        ledger = result["damage_events"]
+        assert ledger[0]["source_key"] == "on_hit_once_Voltaic Cyclosword_ability"
+        assert ledger[0]["order"] < ledger[1]["order"]
 
     def test_voltaic_parsed_values(self) -> None:
         """Parser extracts the reworked Firmament: current-HP physical damage

@@ -37541,9 +37541,9 @@
           "R",
           "W",
           "auto_attacks",
-          "on_hit_once_Voltaic Cyclosword"
+          "on_hit_once_Voltaic Cyclosword_ability"
         ],
-        "total_damage": 1064.38
+        "total_damage": 1082.72
       },
       "vayne": {
         "breakdown_keys": [
@@ -37553,9 +37553,9 @@
           "W",
           "auto_attacks",
           "on_hit_ability_W",
-          "on_hit_once_Voltaic Cyclosword"
+          "on_hit_once_Voltaic Cyclosword_ability"
         ],
-        "total_damage": 1205.49
+        "total_damage": 1227.32
       }
     },
     "Warden's Eye": {
@@ -37981,7 +37981,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "d1754816ea79342c746f482512466b6ee00e634d",
+    "git_head": "4f1c5bb7aa17cda58dacc2206ea9e23d86db9192",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785725170.32038,

@@ -7466,6 +7466,304 @@ def _muramana_proc_events(
     return events
 
 
+def _first_damaging_ability_event(
+    state: FightState, rotation: RotationResult
+) -> tuple[float, str] | None:
+    """Return the first authored damaging ability event, if one exists.
+
+    Voltaic's current Galvanize branch can consume a ready Energized effect
+    from an ability.  Prefer a module-authored packet timestamp; a cast
+    boundary is retained only as an explicit fallback when the ability has
+    damage but no sub-event ledger.
+    """
+    for cast_event in rotation.cast_events:
+        if not isinstance(cast_event, Mapping):
+            continue
+        slot = cast_event.get("slot")
+        if not isinstance(slot, str):
+            continue
+        cast_time = _finite_numeric_receipt(cast_event.get("time"))
+        if cast_time is None:
+            continue
+        row = state.breakdown.get(slot)
+        if isinstance(row, Mapping):
+            events = row.get("damage_events")
+            if isinstance(events, list):
+                positive = [
+                    event
+                    for event in events
+                    if isinstance(event, Mapping)
+                    and _finite_numeric_receipt(event.get("damage")) not in (None, 0.0)
+                ]
+                if positive:
+                    first = min(
+                        positive,
+                        key=lambda event: float(event.get("time", 0.0)),
+                    )
+                    event_time = _finite_numeric_receipt(first.get("time"))
+                    if event_time is not None:
+                        return event_time, "exact"
+            if float(row.get("total_damage", 0.0) or 0.0) > 0.0:
+                return cast_time, "cast_boundary"
+    return None
+
+
+def _author_energized_ability_proc(
+    state: FightState,
+    rotation: RotationResult,
+    effect: item_effects.FirstAutoEffect,
+    effectiveness: float,
+) -> bool:
+    """Author one Galvanize packet before its triggering ability.
+
+    The return value tells the auto scheduler that the opening charge was
+    consumed.  A missing authored damaging ability is not an error: the item
+    remains ready for the ordinary explicit auto schedule.
+    """
+    if not effect.energized_ability_trigger or effect.energized_max_stacks <= 0:
+        return False
+    ability_event = _first_damaging_ability_event(state, rotation)
+    if ability_event is None:
+        return False
+    ability_proc_time, ability_proc_precision = ability_event
+    source = effect.source
+    ability_raw = source.raw_damage(_damage_inputs(state)) * effectiveness
+    ability_mitigated = _mitigate(
+        ability_raw, source.damage_type, state.resists, state.magic_amp
+    )
+    if ability_mitigated <= 0.0:
+        return False
+    ability_key = f"{source.breakdown_key}_ability"
+    ability_row: dict[str, Any] = {
+        "name": f"{source.display_name} (Galvanize)",
+        "count": 1,
+        "damage_per_hit": ability_mitigated,
+        "unit": "procs",
+        "total_damage": ability_mitigated,
+        "damage_type": source.damage_type,
+        "event_phase": "ability",
+        "damage_events": [
+            {
+                "time": ability_proc_time,
+                "damage": ability_mitigated,
+                "damage_type": source.damage_type,
+                # Firmament is an ordered pre-packet effect, so it sorts
+                # before the triggering ability packet at the same time.
+                "timeline_order": -1.0,
+                "event_precision": ability_proc_precision,
+            }
+        ],
+    }
+    ability_row["energized_schedule"] = item_effects.energized_schedule_receipt(
+        source.item_name
+    )
+    temporary_lethality = (
+        effect.temporary_lethality_melee
+        if state.is_melee
+        else effect.temporary_lethality_ranged
+    )
+    if temporary_lethality > 0 and effect.temporary_lethality_duration > 0:
+        ability_row["temporary_lethality"] = {
+            "amount": temporary_lethality,
+            "duration": effect.temporary_lethality_duration,
+            "applies_before_event": True,
+            "applied_to_triggering_event": True,
+            "applied_to_later_events": False,
+            "note": (
+                "Galvanize Firmament is applied before the triggering ability, "
+                "per the sourced Wiki entry."
+            ),
+        }
+    state.breakdown[ability_key] = ability_row
+    state.total_damage += ability_mitigated
+    return True
+
+
+def _target_health_before_timestamp(state: FightState, timestamp: float) -> float:
+    """Return target HP before authored packets at ``timestamp``.
+
+    Current-health item formulas read the shared event ledger rather than the
+    fight aggregate.  Untimed rows are deliberately ignored: they cannot
+    justify a fabricated HP transition and remain an explicit coverage gap.
+    """
+    dealt = 0.0
+    for row in state.breakdown.values():
+        if not isinstance(row, Mapping):
+            continue
+        events = row.get("damage_events")
+        if not isinstance(events, list):
+            continue
+        for event in events:
+            if not isinstance(event, Mapping):
+                continue
+            event_time = _finite_numeric_receipt(event.get("time"))
+            damage = _finite_numeric_receipt(event.get("damage"))
+            if (
+                event_time is not None
+                and damage is not None
+                and event_time < timestamp - 1e-9
+            ):
+                dealt += max(0.0, damage)
+    return max(0.0, float(state.target_health) - dealt)
+
+
+def _copied_on_hit_packet(
+    state: FightState,
+    on_hits: OnHitResult,
+    effectiveness: float,
+    target_current_health: float,
+) -> dict[str, float]:
+    """Resolve one copied on-hit packet, including current-health effects."""
+    packets = {
+        damage_type: float(amount)
+        for damage_type, amount in on_hits.static_on_hit_by_type.items()
+        if amount > 0.0
+    }
+    for effect in state.damage_effects.per_hits:
+        if not effect.tracks_current_health:
+            continue
+        raw = (
+            effect.source.raw_damage(
+                _damage_inputs(state, target_current_health=target_current_health)
+            )
+            * effectiveness
+        )
+        if raw <= 0.0:
+            continue
+        mitigated = _mitigate(
+            raw,
+            effect.source.damage_type,
+            state.resists,
+            state.magic_amp,
+        )
+        packets[effect.source.damage_type] = (
+            packets.get(effect.source.damage_type, 0.0) + mitigated
+        )
+    return packets
+
+
+def _add_copied_stacking_on_hit_packets(
+    state: FightState,
+    rotation: RotationResult,
+    on_hits: OnHitResult,
+    spellblade: SpellbladeResult,
+    copied_events: list[dict[str, Any]],
+    proc_indices: Sequence[int],
+    swing_times: Sequence[float],
+    effectiveness: float,
+) -> bool:
+    """Replay stack-gated on-hit effects carried by a copied chain hit.
+
+    Electrospark's full Wiki entry explicitly says that its secondary
+    packets apply on-hit effects.  A secondary chain packet is an additional
+    on-hit application on the same ordered target ledger; it therefore must
+    advance Kraken/Hullbreaker's counters, but must not advance canonical
+    on-attack effects such as Energized or Phantom Hit.  The normal attack,
+    ability, phantom, and Spellblade applications are walked first in their
+    existing order, then the copied packet is inserted after the triggering
+    swing.  Only the damage attributable to the copied packet is appended to
+    ``copied_events``.
+
+    Returns ``True`` when every copied stack packet was timestamped and
+    replayed.  A malformed or coarse schedule leaves the caller's existing
+    fail-closed coverage intact.
+    """
+    if (
+        not copied_events
+        or not proc_indices
+        or not state.damage_effects.stacking_on_hits
+    ):
+        return True
+    if len(swing_times) != state.num_auto_attacks:
+        return False
+
+    copied_by_auto: dict[int, list[dict[str, Any]]] = {}
+    for event, index in zip(copied_events, proc_indices):
+        copied_by_auto.setdefault(int(index), []).append(event)
+    apps = rotation.ability_item_applications
+
+    for effect in state.damage_effects.stacking_on_hits:
+        if item_effects.counter_trigger(effect.source.item_name) == "on_attack":
+            # Statikk's chain carries on-hit effects, not on-attack effects.
+            continue
+
+        stacks = 0
+        # Ability-carried on-hit applications lead the shared counter.  A
+        # phantom hit on an ability application contributes one additional
+        # on-hit stack at that same authored position.
+        on_hit_sequence_index = 0
+        for app in apps:
+            if not app.on_hit:
+                continue
+            stacks += 1
+            if stacks >= effect.hits_required:
+                stacks = 0
+            if on_hit_sequence_index in on_hits.phantom_ability_stack_positions:
+                stacks += 1
+                if stacks >= effect.hits_required:
+                    stacks = 0
+            on_hit_sequence_index += 1
+
+        for index, swing_time in enumerate(swing_times):
+            applications = 1
+            if index in on_hits.phantom_hit_autos:
+                applications += 1
+            if index < spellblade.double_on_hit_procs:
+                applications += 1
+            for _application in range(applications):
+                stacks += 1
+                if stacks >= effect.hits_required:
+                    stacks = 0
+
+            copied_at_swing = copied_by_auto.get(index, [])
+            if not copied_at_swing:
+                continue
+            for event in copied_at_swing:
+                stacks += 1
+                if stacks < effect.hits_required:
+                    continue
+                stacks = 0
+                prior_copied_damage = sum(
+                    sum(
+                        float(amount)
+                        for amount in candidate.get("packets", {}).values()
+                        if isinstance(amount, (int, float))
+                    )
+                    for candidate in copied_events
+                    if candidate is not event
+                    and float(candidate.get("time", 0.0)) <= swing_time + 1e-9
+                )
+                target_current_health = max(
+                    0.0,
+                    _target_health_before_timestamp(state, swing_time)
+                    - prior_copied_damage,
+                )
+                raw = (
+                    effect.source.raw_damage(
+                        _damage_inputs(
+                            state, target_current_health=target_current_health
+                        )
+                    )
+                    * effectiveness
+                )
+                mitigated = _mitigate(
+                    raw,
+                    effect.source.damage_type,
+                    state.resists,
+                    state.magic_amp,
+                )
+                if effect.source.basic_damage and effect.source.damage_type != "true":
+                    mitigated *= state.target_basic_damage_multiplier
+                packets = event.setdefault("packets", {})
+                packets[effect.source.damage_type] = (
+                    packets.get(effect.source.damage_type, 0.0) + mitigated
+                )
+                event.setdefault("stacked_copied_sources", []).append(
+                    effect.source.item_name
+                )
+    return True
+
+
 def _add_single_proc_on_hits(
     state: FightState,
     rotation: RotationResult,
@@ -7496,6 +7794,15 @@ def _add_single_proc_on_hits(
     breakdown = state.breakdown
     num_auto_attacks = state.num_auto_attacks
     effectiveness = _on_hit_effectiveness(state)
+
+    # Galvanize is an ability-capable Energized trigger.  It is authored once
+    # before the auto pass so zero-auto rotations (for example a spell-only
+    # one-rotation scenario) still consume and price the ready charge.
+    ability_consumed_items = {
+        effect.source.item_name
+        for effect in state.damage_effects.first_autos
+        if _author_energized_ability_proc(state, rotation, effect, effectiveness)
+    }
 
     # The auto stream's authored per-swing schedule.  Swing-riding procs
     # stamp their events at these times; an empty list (no stream, or a
@@ -7557,18 +7864,35 @@ def _add_single_proc_on_hits(
                     breakdown[bolt_key] = bolt_row
                     state.total_damage += bolt_total
 
-                    copied_by_type = {
-                        damage_type: amount
-                        for damage_type, amount in on_hits.static_on_hit_by_type.items()
-                        if amount > 0.0
-                    }
-                    copied_total = sum(copied_by_type.values()) * num_auto_attacks
+                    copied_events: list[dict[str, Any]] = []
+                    for index in range(num_auto_attacks):
+                        event_time = (
+                            swing_times[index] if index < len(swing_times) else 0.0
+                        )
+                        copied_events.append(
+                            {
+                                "time": event_time,
+                                "packets": _copied_on_hit_packet(
+                                    state,
+                                    on_hits,
+                                    effectiveness,
+                                    _target_health_before_timestamp(state, event_time),
+                                ),
+                            }
+                        )
+                    copied_by_type: dict[str, float] = {}
+                    for copied_event in copied_events:
+                        for damage_type, amount in copied_event["packets"].items():
+                            copied_by_type[damage_type] = (
+                                copied_by_type.get(damage_type, 0.0) + amount
+                            )
+                    copied_total = sum(copied_by_type.values())
                     if copied_total > 0.0:
                         copied_key = "on_hit_secondary_Runaan's Hurricane"
                         copied_row: dict[str, Any] = {
                             "name": "Runaan's Hurricane copied on-hit (secondary)",
                             "count": num_auto_attacks,
-                            "damage_per_hit": sum(copied_by_type.values()),
+                            "damage_per_hit": copied_total / num_auto_attacks,
                             "unit": "bolts",
                             "total_damage": copied_total,
                             **_damage_type_fields(copied_by_type),
@@ -7577,19 +7901,21 @@ def _add_single_proc_on_hits(
                                 "secondary_target_count": secondary_target_count,
                                 "allocated_target_index": state.roster_target_index,
                                 "roster_target_count": state.roster_target_count,
-                                "copied_on_hit_scope": "fixed_source_packets",
+                                "copied_on_hit_scope": "per_hit_source_packets",
                             },
                         }
                         if swing_times and len(swing_times) == num_auto_attacks:
                             copied_row["event_phase"] = "auto"
                             copied_row["damage_events"] = [
                                 {
-                                    "time": swing_times[index],
+                                    "time": copied_event["time"],
                                     "damage": amount,
                                     "damage_type": damage_type,
                                 }
-                                for index in range(num_auto_attacks)
-                                for damage_type, amount in copied_by_type.items()
+                                for copied_event in copied_events
+                                for damage_type, amount in copied_event[
+                                    "packets"
+                                ].items()
                             ]
                         breakdown[copied_key] = copied_row
                         state.total_damage += copied_total
@@ -7669,7 +7995,11 @@ def _add_single_proc_on_hits(
                 proc_indices = item_effects.energized_proc_indices(
                     source.item_name,
                     num_auto_attacks,
-                    initial_stacks=effect.energized_max_stacks,
+                    initial_stacks=(
+                        0.0
+                        if source.item_name in ability_consumed_items
+                        else float(effect.energized_max_stacks)
+                    ),
                 )
                 procs = len(proc_indices)
             else:
@@ -7677,12 +8007,34 @@ def _add_single_proc_on_hits(
                 procs = len(proc_indices)
             if procs <= 0:
                 continue
-            raw_damage = source.raw_damage(inputs) * procs * effectiveness
-            mitigated = _mitigate(
-                raw_damage, source.damage_type, resists, state.magic_amp
-            )
-            if source.basic_damage and source.damage_type != "true":
-                mitigated *= state.target_basic_damage_multiplier
+            proc_times = [
+                swing_times[index] for index in proc_indices if index < len(swing_times)
+            ]
+            proc_damages: list[float] = []
+            for proc_time in proc_times:
+                proc_inputs = _damage_inputs(
+                    state,
+                    target_current_health=_target_health_before_timestamp(
+                        state, proc_time
+                    ),
+                )
+                raw_proc = source.raw_damage(proc_inputs) * effectiveness
+                mitigated_proc = _mitigate(
+                    raw_proc, source.damage_type, resists, state.magic_amp
+                )
+                if source.basic_damage and source.damage_type != "true":
+                    mitigated_proc *= state.target_basic_damage_multiplier
+                proc_damages.append(mitigated_proc)
+            if not proc_damages:
+                raw_damage = source.raw_damage(inputs) * procs * effectiveness
+                mitigated = _mitigate(
+                    raw_damage, source.damage_type, resists, state.magic_amp
+                )
+                if source.basic_damage and source.damage_type != "true":
+                    mitigated *= state.target_basic_damage_multiplier
+                proc_damages = [mitigated / procs] * procs
+            else:
+                mitigated = sum(proc_damages)
             breakdown[source.breakdown_key] = {
                 "name": source.display_name,
                 "count": procs,
@@ -7691,13 +8043,17 @@ def _add_single_proc_on_hits(
                 "total_damage": mitigated,
                 "damage_type": source.damage_type,
             }
+            if effect.energized_max_stacks > 0:
+                breakdown[source.breakdown_key]["energized_schedule"] = (
+                    item_effects.energized_schedule_receipt(source.item_name)
+                )
             if chain_target_count:
                 breakdown[source.breakdown_key]["targeting"] = {
                     "kind": "chain_lightning",
                     "chain_target_count": chain_target_count,
                     "allocated_target_index": state.roster_target_index,
                     "roster_target_count": state.roster_target_count,
-                    "copied_on_hit_effects": False,
+                    "copied_on_hit_effects": True,
                 }
             temporary_lethality = (
                 effect.temporary_lethality_melee
@@ -7708,11 +8064,12 @@ def _add_single_proc_on_hits(
                 breakdown[source.breakdown_key]["temporary_lethality"] = {
                     "amount": temporary_lethality,
                     "duration": effect.temporary_lethality_duration,
-                    "applies_after_event": True,
+                    "applies_before_event": True,
+                    "applied_to_triggering_event": True,
                     "applied_to_later_events": False,
                     "note": (
-                        "Temporary lethality is resolved after the complete ordered "
-                        "event ledger is authored."
+                        "Firmament's additional lethality is applied before its "
+                        "own packet and the triggering attack, per the sourced Wiki."
                     ),
                 }
             # First-hit procs ride the opening swings of the stream.
@@ -7723,25 +8080,51 @@ def _add_single_proc_on_hits(
                 breakdown[source.breakdown_key]["damage_events"] = [
                     {
                         "time": swing_times[proc_index],
-                        "damage": mitigated / procs,
+                        "damage": proc_damages[position],
                         "damage_type": source.damage_type,
                     }
-                    for proc_index in proc_indices
+                    for position, proc_index in enumerate(proc_indices)
                 ]
-            if (
-                chain_target_count
-                and state.roster_target_index > 0
-                and on_hits.static_on_hit_by_type
-            ):
+            if chain_target_count and state.roster_target_index > 0:
                 # Electrospark applies on-hit effects to secondary targets.
-                # Fixed-source packets are safe to replay at the proc's
-                # authored timestamp; current-health and stack-gated effects
-                # remain in the explicit coverage boundary below.
-                copied_by_type = {
-                    damage_type: amount * procs
-                    for damage_type, amount in on_hits.static_on_hit_by_type.items()
-                    if amount > 0.0
-                }
+                # Every per-hit packet, including current-health formulas, is
+                # replayed at the proc timestamp. Stack-counter effects are
+                # replayed after the ordinary attack/ability applications on
+                # the same target ledger, preserving their copied-hit order.
+                copied_events = []
+                for proc_index in proc_indices:
+                    proc_time = (
+                        swing_times[proc_index]
+                        if proc_index < len(swing_times)
+                        else 0.0
+                    )
+                    copied_events.append(
+                        {
+                            "time": proc_time,
+                            "packets": _copied_on_hit_packet(
+                                state,
+                                on_hits,
+                                effectiveness,
+                                _target_health_before_timestamp(state, proc_time),
+                            ),
+                        }
+                    )
+                copied_stacking_certified = _add_copied_stacking_on_hit_packets(
+                    state,
+                    rotation,
+                    on_hits,
+                    spellblade,
+                    copied_events,
+                    proc_indices,
+                    swing_times,
+                    effectiveness,
+                )
+                copied_by_type: dict[str, float] = {}
+                for copied_event in copied_events:
+                    for damage_type, amount in copied_event["packets"].items():
+                        copied_by_type[damage_type] = (
+                            copied_by_type.get(damage_type, 0.0) + amount
+                        )
                 copied_total = sum(copied_by_type.values())
                 if copied_total > 0.0:
                     copied_key = f"on_hit_chain_{source.item_name}"
@@ -7757,7 +8140,8 @@ def _add_single_proc_on_hits(
                             "source": source.item_name,
                             "allocated_target_index": state.roster_target_index,
                             "roster_target_count": state.roster_target_count,
-                            "copied_on_hit_scope": "fixed_source_packets",
+                            "copied_on_hit_scope": "per_hit_source_packets",
+                            "copied_stacking_on_hits": copied_stacking_certified,
                         },
                     }
                     if swing_times and all(
@@ -7766,12 +8150,12 @@ def _add_single_proc_on_hits(
                         copied_row["event_phase"] = "auto"
                         copied_row["damage_events"] = [
                             {
-                                "time": swing_times[proc_index],
-                                "damage": amount / procs,
+                                "time": copied_event["time"],
+                                "damage": amount,
                                 "damage_type": damage_type,
                             }
-                            for proc_index in proc_indices
-                            for damage_type, amount in copied_by_type.items()
+                            for copied_event in copied_events
+                            for damage_type, amount in copied_event["packets"].items()
                         ]
                     breakdown[copied_key] = copied_row
                     state.total_damage += copied_total
@@ -8547,6 +8931,10 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
                 "trigger_time": min(trigger_times),
                 "end_time": min(trigger_times) + duration,
                 "amount": amount,
+                "applies_to_triggering_event": bool(
+                    temporary.get("applied_to_triggering_event", False)
+                    or temporary.get("applies_before_event", False)
+                ),
                 "applied_count": 0,
             }
         )
@@ -8571,14 +8959,25 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
             extra_lethality = 0.0
             active_windows: list[dict[str, Any]] = []
             for window in windows:
-                # "After the event" is an ordered-ledger boundary.  The
-                # proc's own packet (and any earlier packet sharing its
-                # timestamp) must not receive its newly granted lethality.
-                if (
-                    str(source_key) != window["source_key"]
-                    and event_time > window["trigger_time"]
+                # Firmament is an ordered pre-packet effect: its extra
+                # lethality applies to its own damage and to the triggering
+                # attack/ability.  Later events use the ordinary strict
+                # after-trigger boundary.  Ability events at the same
+                # timestamp are excluded unless they are the named Galvanize
+                # row; the sourced trigger is still the packet before them.
+                same_time_trigger = (
+                    window["applies_to_triggering_event"]
+                    and abs(event_time - window["trigger_time"]) <= 1e-9
+                    and (
+                        str(source_key) == window["source_key"]
+                        or str(row.get("event_phase", "")) != "ability"
+                    )
+                )
+                later_event = (
+                    event_time > window["trigger_time"]
                     and event_time <= window["end_time"] + 1e-9
-                ):
+                )
+                if same_time_trigger or later_event:
                     extra_lethality += float(window["amount"])
                     active_windows.append(window)
             if extra_lethality <= 0.0:
@@ -8618,13 +9017,16 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
         if not isinstance(temporary, dict):
             continue
         applied = int(window["applied_count"])
+        temporary["applied_to_triggering_event"] = bool(
+            temporary.get("applied_to_triggering_event", False) and applied > 0
+        )
         temporary["applied_to_later_events"] = applied > 0
         temporary["applied_event_count"] = applied
         temporary["note"] = (
-            "Applied to later timestamped physical events within the sourced "
-            "temporary lethality window."
+            "Applied before the triggering Firmament packet and to later "
+            "timestamped physical events within the sourced window."
             if applied > 0
-            else "No later timestamped physical events fell within the window."
+            else "No timestamped physical events fell within the window."
         )
 
 

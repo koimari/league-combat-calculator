@@ -19,6 +19,20 @@ from typing import Any, Callable, Literal, Mapping, Sequence
 logger = logging.getLogger(__name__)
 
 
+# Shared named-effect source.  Energized is not an item-specific passive: the
+# Wiki defines one charge model that every Energized item consumes, then each
+# item supplies its own trigger/proc packet.  Keep the source receipt beside
+# the typed accessors so a parser refresh cannot silently invent a recharge
+# cadence at a call site.
+ENERGIZED_SOURCE_RECEIPT: dict[str, Any] = {
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Tip_data/Energized",
+    "source_revision_id": 4013385,
+    "max_stacks": 100,
+    "attack_stacks": 6,
+    "distance_units_per_stack": 24.0,
+}
+
+
 # Public controls for stateful item stats.  Both validation metadata and the
 # sourced numeric mechanics live here so routes/UI never carry item constants.
 ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
@@ -583,6 +597,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "chain_targets_max": 8,
         "energized_max_stacks": 100,
         "energized_attack_stacks": 15,
+        "energized_distance_units_per_stack": 24.0,
     },
     "Stormsurge": {
         "type": "proc",
@@ -918,6 +933,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Sharpshooter: 40 bonus magic damage on first energized auto
         "base": 40.0,
         "energized_max_stacks": 100,
+        "energized_attack_stacks": 6,
+        "energized_distance_units_per_stack": 24.0,
     },
     # ── Other single-proc items ───────────────────────────────────────────
     "Dead Man's Plate": {
@@ -1178,6 +1195,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_type": "magic",
         "base": 100.0,
         "energized_max_stacks": 100,
+        "energized_attack_stacks": 6,
+        "energized_distance_units_per_stack": 24.0,
     },
     # ── Sundered Sky (first-auto crit modifier) ─────────────────────────────
     "Sundered Sky": {
@@ -1210,6 +1229,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "temporary_lethality_ranged": 12.0,
         "temporary_lethality_duration": 4.0,
         "energized_max_stacks": 100,
+        "energized_attack_stacks": 6,
+        "energized_distance_units_per_stack": 24.0,
+        # V26.09 Galvanize lets a damaging ability consume a ready
+        # Energized effect before the triggering attack/ability packet.
+        "energized_ability_trigger": True,
     },
     # ── Unending Despair (periodic AoE damage) ──────────────────────────────
     "Unending Despair": {
@@ -1261,6 +1285,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "attack_refund",
         "applies_on_hit",
         "energized_max_stacks",
+        "energized_ability_trigger",
         "cleave_on_hit",
     }
 )
@@ -1337,6 +1362,25 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Death's Dance": frozenset({"damage_deferral_ticks", "defy_heal_ticks"}),
     "Stridebreaker": frozenset({"cooldown"}),
     "Titanic Hydra": frozenset({"active_cooldown"}),
+    "Rapid Firecannon": frozenset(
+        {
+            "energized_attack_stacks",
+            "energized_distance_units_per_stack",
+        }
+    ),
+    "Statikk Shiv": frozenset({"energized_distance_units_per_stack"}),
+    "Stormrazor": frozenset(
+        {
+            "energized_attack_stacks",
+            "energized_distance_units_per_stack",
+        }
+    ),
+    "Voltaic Cyclosword": frozenset(
+        {
+            "energized_attack_stacks",
+            "energized_distance_units_per_stack",
+        }
+    ),
     "Sundered Sky": frozenset(
         {
             "heal_base_ad_ratio",
@@ -1684,6 +1728,7 @@ class FirstAutoEffect:
     temporary_lethality_duration: float = 0.0
     energized_max_stacks: int = 0
     energized_attack_stacks: int = 0
+    energized_ability_trigger: bool = False
     chain_targets_min: int = 0
     chain_targets_max: int = 0
 
@@ -2509,6 +2554,7 @@ def _compile_first_auto(
             if "energized_attack_stacks" in values
             else 0
         ),
+        energized_ability_trigger=bool(values.get("energized_ability_trigger", False)),
         chain_targets_min=(
             int(required.number("chain_targets_min"))
             if "chain_targets_min" in values
@@ -3337,14 +3383,17 @@ def energized_proc_indices(
     item_name: str,
     num_attacks: int,
     *,
-    initial_stacks: int = 100,
+    initial_stacks: float = 100,
+    movement_units_per_attack: Sequence[float] | None = None,
 ) -> tuple[int, ...]:
     """Return attack indices that consume an Energized charge.
 
-    Statikk's attack-generated 15-stack branch is parser-sourced. Other
-    Energized items require movement/other state that this helper cannot
-    infer; they fail closed unless the caller explicitly supplies a full
-    opening charge, rather than silently assuming a recharge cadence.
+    The charge schedule follows the shared Wiki Energized entry: movement
+    contributes one charge per sourced distance unit and each basic attack
+    contributes the item's attack branch (15 for Statikk, 6 for the ordinary
+    Energized family).  ``movement_units_per_attack`` is an explicit authored
+    schedule; an omitted schedule means an attack-only timeline with zero
+    movement, never a guessed distance.
     """
     if num_attacks <= 0:
         return ()
@@ -3352,26 +3401,65 @@ def energized_proc_indices(
     if not values or "energized_max_stacks" not in values:
         raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing 'energized_max_stacks'")
     maximum = int(required_effect_value(item_name, "energized_max_stacks"))
-    stacks = max(0, min(int(initial_stacks), maximum))
-    attack_gain = values.get("energized_attack_stacks")
-    if item_name == "Statikk Shiv" and attack_gain is None:
+    stacks = max(0.0, min(float(initial_stacks), float(maximum)))
+    if "energized_attack_stacks" not in values:
         raise KeyError(
-            "ITEM_EFFECTS['Statikk Shiv'] is missing 'energized_attack_stacks' — "
+            f"ITEM_EFFECTS[{item_name!r}] is missing 'energized_attack_stacks' — "
             "parser/schema bug; check passive_parser"
         )
-    if attack_gain is None and stacks < maximum:
-        raise ValueError(
-            f"{item_name} Energized recharge requires movement/state input; "
-            "provide a full opening charge or an authored gain schedule"
+    gain = int(required_effect_value(item_name, "energized_attack_stacks"))
+    distance_per_stack = float(
+        values.get(
+            "energized_distance_units_per_stack",
+            ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"],
         )
-    gain = int(attack_gain or 0)
+    )
+    if distance_per_stack <= 0.0:
+        raise ValueError(f"{item_name} has invalid Energized distance cadence")
+    movement = tuple(movement_units_per_attack or ())
+    if len(movement) > num_attacks:
+        raise ValueError(f"{item_name} movement schedule has more entries than attacks")
+    if any(
+        isinstance(units, bool) or not isinstance(units, (int, float)) or units < 0
+        for units in movement
+    ):
+        raise ValueError(
+            f"{item_name} movement schedule must contain non-negative numbers"
+        )
     procs: list[int] = []
     for index in range(num_attacks):
+        if index < len(movement):
+            stacks = min(
+                float(maximum), stacks + float(movement[index]) / distance_per_stack
+            )
         if stacks >= maximum:
             procs.append(index)
             stacks = 0
-        stacks = min(maximum, stacks + gain)
+        stacks = min(float(maximum), stacks + gain)
     return tuple(procs)
+
+
+def energized_schedule_receipt(item_name: str) -> dict[str, Any]:
+    """Return the complete source receipt used by an Energized schedule."""
+    maximum = int(required_effect_value(item_name, "energized_max_stacks"))
+    attack_stacks = int(required_effect_value(item_name, "energized_attack_stacks"))
+    values = ITEM_EFFECTS.get(item_name, {})
+    distance = float(
+        values.get(
+            "energized_distance_units_per_stack",
+            ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"],
+        )
+    )
+    if maximum <= 0 or attack_stacks <= 0 or distance <= 0.0:
+        raise ValueError(f"{item_name} has invalid Energized schedule values")
+    return {
+        "source_url": ENERGIZED_SOURCE_RECEIPT["source_url"],
+        "source_revision_id": ENERGIZED_SOURCE_RECEIPT["source_revision_id"],
+        "max_stacks": maximum,
+        "attack_stacks": attack_stacks,
+        "distance_units_per_stack": distance,
+        "movement_schedule": "explicit_per_attack; omitted_means_zero_distance",
+    }
 
 
 def runaan_secondary_target_count(

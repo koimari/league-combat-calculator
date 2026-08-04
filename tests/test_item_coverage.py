@@ -146,8 +146,8 @@ def test_phantom_hit_items_have_explicit_duplicate_on_hit_coverage():
             assert coverage["optimizer_eligible"] is False
 
 
-def test_temporary_lethality_state_cannot_be_scored_without_ordered_penetration():
-    """Firmament-style temporary lethality must stay fail-closed."""
+def test_temporary_lethality_state_requires_exact_ability_order():
+    """Galvanize stays fail-closed when the ability trigger is coarse."""
     stateful_items = [
         name
         for name, effect in ITEM_EFFECTS.items()
@@ -181,7 +181,7 @@ def test_temporary_lethality_state_cannot_be_scored_without_ordered_penetration(
         ("Essence Reaver", "modeled_effect"),
         ("Dusk and Dawn", "modeled_effect"),
         ("Voltaic Cyclosword", "blocked"),
-        ("Statikk Shiv", "blocked"),
+        ("Statikk Shiv", "modeled_effect"),
         ("Titanic Hydra", "modeled_effect"),
         ("The Collector", "modeled_effect"),
         ("Death's Dance", "modeled_effect"),

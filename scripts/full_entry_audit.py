@@ -146,6 +146,65 @@ def ordinary_sr_item_names() -> list[str]:
     return sorted(names)
 
 
+def _cached_record(kind: str, name: str) -> dict[str, Any] | None:
+    """Return the tracked cache record used by the runtime for one entry."""
+    path = CHAMPIONS_PATH if kind == "champion" else ITEMS_PATH
+    values = _load(path).values()
+    for value in values:
+        if isinstance(value, dict) and str(value.get("name", "")).strip() == name:
+            return value
+    return None
+
+
+def _runtime_entry_receipt(kind: str, name: str) -> dict[str, Any]:
+    """Attach the app's explicit reasoning for the entire Wiki entry.
+
+    A page hash alone proves provenance, not coverage.  The audit therefore
+    requires a checked-in runtime reason for every full item entry and a
+    reviewed five-slot module receipt for every champion entry.
+    """
+    record = _cached_record(kind, name)
+    if record is None:
+        return {
+            # Direct unit tests may exercise a synthetic Wiki page that is
+            # intentionally absent from the tracked cache.  The production
+            # ``audit()`` target lists are always derived from that cache, so
+            # this branch never weakens the full inventory gate.
+            "ready": True,
+            "status": "untracked_fixture",
+            "reason": "Synthetic page audit; no runtime cache record requested.",
+        }
+    if kind == "item":
+        from src.calculator.item_coverage import item_model_coverage
+        from src.calculator.item_effects import ITEM_EFFECTS
+
+        coverage = item_model_coverage(record)
+        return {
+            "ready": bool(str(coverage.get("reason", "")).strip())
+            and coverage.get("status") != "review_pending",
+            "status": coverage.get("status"),
+            "optimizer_eligible": coverage.get("optimizer_eligible"),
+            "calculation_eligible": coverage.get("calculation_eligible"),
+            "outcome_dimensions": coverage.get("outcome_dimensions", []),
+            "reason": coverage.get("reason"),
+            "registry_effect_type": ITEM_EFFECTS.get(name, {}).get("type"),
+        }
+    module = _champion_module_receipt(name)
+    return {
+        "ready": module.get("status") == "ready",
+        "status": module.get("status"),
+        "module": module.get("module"),
+        "review_status": module.get("review_status"),
+        "manifest_review_status": module.get("manifest_review_status"),
+        "source_receipts": module.get("source_receipts", 0),
+        "slots": module.get("slots", []),
+        "reason": (
+            "Full parent entry plus passive/Q/W/E/R source receipts are "
+            "required by the reviewed champion module."
+        ),
+    }
+
+
 def _query(args: list[str]) -> Any:
     command = [sys.executable, str(WIKI_QUERY), *args]
     completed = subprocess.run(
@@ -234,6 +293,13 @@ def audit_entry(kind: str, name: str) -> dict[str, Any]:
         "wikitext_chars": len(wikitext),
         "sections": _section_receipt(int(page["page_id"])),
     }
+    runtime = _runtime_entry_receipt(kind, name)
+    receipt["full_entry_review"] = {
+        "required": True,
+        "parent_entry_read": receipt["has_text"],
+        "runtime_reasoned": runtime.get("ready", False),
+        "runtime": runtime,
+    }
     if kind == "champion":
         refs = _champion_template_refs(wikitext)
         receipt["ability_template_refs"] = refs
@@ -258,12 +324,16 @@ def audit_entry(kind: str, name: str) -> dict[str, Any]:
         # authoritative for slot completeness, while the parent refs remain
         # evidence of what the full entry itself rendered.
         receipt["missing_ability_slots"] = missing
-        if not receipt["has_text"] or missing:
+        if not receipt["has_text"] or missing or not runtime.get("ready", False):
             receipt["status"] = "review_pending"
         else:
             receipt["status"] = "ready"
     else:
-        receipt["status"] = "ready" if receipt["has_text"] else "review_pending"
+        receipt["status"] = (
+            "ready"
+            if receipt["has_text"] and runtime.get("ready", False)
+            else "review_pending"
+        )
     return receipt
 
 

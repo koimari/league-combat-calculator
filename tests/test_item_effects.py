@@ -30,6 +30,7 @@ from src.calculator.item_effects import (
     guinsoo_swing_schedule,
     yun_tal_swing_schedule,
     energized_proc_indices,
+    energized_schedule_receipt,
     hydra_cleave_secondary_ad_damage,
     hydra_secondary_target_damage,
     item_bonus_health_multiplier,
@@ -486,11 +487,29 @@ class TestResolveDamageEffects:
     @pytest.mark.parametrize(
         "item_name", ["Rapid Firecannon", "Stormrazor", "Voltaic Cyclosword"]
     )
-    def test_energized_recharge_fails_closed_without_movement_state(
+    def test_energized_attack_only_schedule_is_explicit_without_movement(
         self, item_name: str
     ) -> None:
-        with pytest.raises(ValueError, match="recharge requires movement/state"):
-            energized_proc_indices(item_name, 10, initial_stacks=0)
+        # An omitted movement schedule is an explicit zero-distance timeline,
+        # not an invented recharge or a partial result.
+        assert energized_proc_indices(item_name, 10, initial_stacks=0) == ()
+
+    def test_energized_movement_schedule_uses_shared_24_unit_source(self) -> None:
+        # 10 movement intervals of 240 units plus six attack charges each
+        # crosses 100 charges on the sixth attack.
+        assert energized_proc_indices(
+            "Rapid Firecannon",
+            10,
+            initial_stacks=0,
+            movement_units_per_attack=[240.0] * 10,
+        ) == (6,)
+
+    def test_energized_schedule_receipt_is_shared_and_typed(self) -> None:
+        receipt = energized_schedule_receipt("Rapid Firecannon")
+        assert receipt["source_revision_id"] == 4013385
+        assert receipt["max_stacks"] == 100
+        assert receipt["attack_stacks"] == 6
+        assert receipt["distance_units_per_stack"] == pytest.approx(24.0)
 
     def test_missing_voltaic_temporary_lethality_names_item_and_key(
         self, monkeypatch: pytest.MonkeyPatch
