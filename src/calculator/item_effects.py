@@ -526,6 +526,36 @@ def item_option_active(
 # Normal cached-data operation does not merge from this table. It is the
 # explicit whole-system fallback and the parity reference for parser updates.
 _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
+    # ── Ordered sustain packets ─────────────────────────────────────────
+    # These values are intentionally registry-owned.  The cached item JSON
+    # still supplies ordinary stats, but the current Wiki entries describe
+    # the stateful heal/regen branches below and those branches are not
+    # reliably represented in the Riot description cache.
+    "Doran's Blade": {
+        "type": "sustain",
+        "direct_heal_post_mitigation_ratio": 0.025,
+        "direct_heal_aoe_effectiveness": 0.333,
+        # The current entry replaced the old Warmonger omnivamp stat with
+        # Life Draining.  Keep the override beside the sourced replacement so
+        # a stale cache value cannot leak into the public stat bundle.
+        "stat_override_omnivamp_percent": 0.0,
+    },
+    "Doran's Ring": {
+        "type": "sustain",
+        "drain_restoration_per_second": 1.0,
+        "drain_combat_restoration_per_second": 2.0,
+        "drain_combat_duration": 5.0,
+        "drain_health_conversion": 0.45,
+        "drain_tick_interval": 1.0,
+    },
+    "Doran's Shield": {
+        "type": "sustain",
+        "enduring_focus_total_melee": 40.0,
+        "enduring_focus_total_reduced": 30.0,
+        "enduring_focus_missing_health_cap": 0.75,
+        "enduring_focus_duration": 8.0,
+        "health_regen_tick_interval": 0.5,
+    },
     # ── On-Hit (per auto attack) ──────────────────────────────────────────
     "Cull": {
         "type": "on_hit_heal",
@@ -1311,6 +1341,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Warmog's Armor": {
         "type": "stat_conversion",
         "item_bonus_health_ratio": 0.12,
+        "heart_bonus_health_threshold": 2000.0,
+        "heart_max_health_ratio_per_tick": 0.015,
+        "heart_tick_interval": 0.5,
+        "heart_champion_damage_cooldown": 8.0,
+        "heart_nonchampion_damage_cooldown": 3.0,
     },
     # ── Starting defenses (consumed by defensive_effects.py) ─────────────
     "Kaenic Rookern": {
@@ -1552,6 +1587,40 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
 )
 
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
+    "Doran's Blade": frozenset(
+        {
+            "direct_heal_post_mitigation_ratio",
+            "direct_heal_aoe_effectiveness",
+            "stat_override_omnivamp_percent",
+        }
+    ),
+    "Doran's Ring": frozenset(
+        {
+            "drain_restoration_per_second",
+            "drain_combat_restoration_per_second",
+            "drain_combat_duration",
+            "drain_health_conversion",
+            "drain_tick_interval",
+        }
+    ),
+    "Doran's Shield": frozenset(
+        {
+            "enduring_focus_total_melee",
+            "enduring_focus_total_reduced",
+            "enduring_focus_missing_health_cap",
+            "enduring_focus_duration",
+            "health_regen_tick_interval",
+        }
+    ),
+    "Warmog's Armor": frozenset(
+        {
+            "heart_bonus_health_threshold",
+            "heart_max_health_ratio_per_tick",
+            "heart_tick_interval",
+            "heart_champion_damage_cooldown",
+            "heart_nonchampion_damage_cooldown",
+        }
+    ),
     "Cull": frozenset({"health_per_on_hit"}),
     "Banshee's Veil": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
     "Edge of Night": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
@@ -1764,6 +1833,30 @@ def required_effect_value(item_name: str, key: str) -> Any:
             "passive_parser"
         )
     return effect[key]
+
+
+def sustain_effect_value(item_name: str, key: str) -> float:
+    """Read one sourced sustain value from an item's typed effect record."""
+    value = required_effect_value(item_name, key)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(
+            f"ITEM_EFFECTS[{item_name!r}][{key!r}] must be numeric for sustain"
+        )
+    return float(value)
+
+
+def override_item_stat(item_name: str, stat_key: str, value: float) -> float:
+    """Apply a source-backed stat correction when the cache is stale.
+
+    A small number of item pages deliberately replace a stat passive with a
+    named effect (Doran's Blade's old omnivamp is one example).  The typed
+    registry owns that correction; callers never supply a fallback literal.
+    """
+    key = f"stat_override_{stat_key}"
+    effect = ITEM_EFFECTS.get(item_name, {})
+    if key not in effect:
+        return float(value)
+    return sustain_effect_value(item_name, key)
 
 
 def _item_names(items: list[dict[str, Any]]) -> set[str]:
@@ -3033,6 +3126,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "spellblade",
         "secondary_target",
         "stat_conversion",
+        "sustain",
         "target_mitigation",
         "target_attack_speed_aura",
         "target_threshold_health",

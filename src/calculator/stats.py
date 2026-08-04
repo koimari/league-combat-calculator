@@ -8,6 +8,7 @@ from .item_effects import (
     input_option_retribution_bonus_ad,
     input_option_crit_chance,
     input_option_stat_bonuses,
+    override_item_stat,
     resolve_stat_effects,
 )
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
@@ -247,6 +248,11 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "heal_and_shield_power_percent": (
             get_flat("healAndShieldPower") + get_percent("healAndShieldPower")
         ),
+        # Health regeneration has both a flat HP5 component (Doran's Shield,
+        # Rejuvenation Bead, ...) and a percentage-base component (Warmog's,
+        # Spirit Visage).  Dropping the flat value silently removed the
+        # strongest part of several starter/defensive item entries.
+        "health_regen_flat": get_flat("healthRegen"),
         "health_regen_percent": get_percent("healthRegen"),
         "tenacity_percent": get_percent("tenacity"),
         "gold_per_10": get_flat("goldPer10"),
@@ -254,6 +260,11 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "move_speed_flat": get_flat("movespeed"),
         "move_speed_percent": get_percent("movespeed"),
     }
+    extracted["omnivamp_percent"] = override_item_stat(
+        str(item_data.get("name") or "unknown item"),
+        "omnivamp_percent",
+        extracted["omnivamp_percent"],
+    )
     _ITEM_STATS_MEMO[id(item_data)] = (item_data, extracted)
     return extracted
 
@@ -297,6 +308,7 @@ def calculate_total_stats(
         "lifesteal_percent": 0.0,
         "omnivamp_percent": 0.0,
         "heal_and_shield_power_percent": 0.0,
+        "health_regen_flat": 0.0,
         "health_regen_percent": 0.0,
         "tenacity_percent": 0.0,
         "gold_per_10": 0.0,
@@ -345,6 +357,15 @@ def calculate_total_stats(
         * (1.0 + total_item_stats["mana_regen_percent"] / 100.0)
         / 5.0
     )
+    base_health_regen_per_five = growth_stat(
+        cdm.get("healthRegen", {}).get("flat", 0),
+        cdm.get("healthRegen", {}).get("perLevel", 0),
+        level,
+    )
+    health_regen_per_five = (
+        base_health_regen_per_five + total_item_stats["health_regen_flat"]
+    ) * (1.0 + total_item_stats["health_regen_percent"] / 100.0)
+    health_regen_per_second = health_regen_per_five / 5.0
     # Every stat-granting item passive, compiled once. item_effects owns
     # the per-item knowledge; this function owns the application order.
     bonuses = resolve_stat_effects(
@@ -506,6 +527,9 @@ def calculate_total_stats(
         "max_mana": round(total_mana),
         "bonus_mana": round(total_item_stats["mana"]),
         "resource_regen_per_second": resource_regen_per_second,
+        "base_health_regen_per_five": base_health_regen_per_five,
+        "health_regen_per_five": health_regen_per_five,
+        "health_regen_per_second": health_regen_per_second,
         "lifesteal_percent": total_item_stats["lifesteal_percent"],
         "omnivamp_percent": total_item_stats["omnivamp_percent"]
         + bonuses.bonus_omnivamp,

@@ -36,7 +36,7 @@ from .auto_attack_policy import (
 )
 from .role_quests import max_champion_level, validate_role
 from .rune_effects import validate_keystone_request
-from .stats import calculate_total_stats
+from .stats import calculate_total_stats, get_item_stats
 
 DEFAULT_TARGET: dict[str, float] = {
     "health": 1000.0,
@@ -64,7 +64,11 @@ _PUBLIC_FIGHT_MODES = frozenset({"one_rotation", "time_based", "timed", "auto_on
 _NONSTANDARD_RANK_CHAMPIONS = frozenset({"Elise", "Jayce", "Karma", "Nidalee", "Udyr"})
 
 
-def _item_self_healing_events(result: Mapping[str, Any]) -> list[dict[str, Any]]:
+def _item_self_healing_events(
+    result: Mapping[str, Any],
+    items: list[Mapping[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Materialize only timestamp-certified item self-heal packets.
 
     Spellblade item rows carry their accepted proc times alongside the
@@ -74,6 +78,173 @@ def _item_self_healing_events(result: Mapping[str, Any]) -> list[dict[str, Any]]
     healing while the damage breakdown still records the source row.
     """
     events: list[dict[str, Any]] = []
+    item_names = {str(item.get("name", "")) for item in (items or ())}
+    stats = result.get("champion_stats")
+    stats = stats if isinstance(stats, Mapping) else {}
+    damage_events = result.get("damage_events")
+    damage_events = damage_events if isinstance(damage_events, list) else []
+    duration = fight_duration_seconds
+    if duration is None:
+        schedule = result.get("auto_attack_schedule")
+        if isinstance(schedule, Mapping):
+            try:
+                duration = float(schedule.get("window_seconds", 0.0))
+            except (TypeError, ValueError):
+                duration = 0.0
+        else:
+            duration = max(
+                (
+                    float(event.get("time", 0.0))
+                    for event in damage_events
+                    if isinstance(event, Mapping)
+                ),
+                default=0.0,
+            )
+    duration = max(0.0, float(duration or 0.0))
+
+    # Life Draining is a direct post-mitigation heal, not the old Doran's
+    # Blade omnivamp stat.  Unknown ability scope is conservatively priced at
+    # the sourced area/pet effectiveness rather than being promoted as full.
+    if "Doran's Blade" in item_names:
+        ratio = item_effects.sustain_effect_value(
+            "Doran's Blade", "direct_heal_post_mitigation_ratio"
+        )
+        reduced = item_effects.sustain_effect_value(
+            "Doran's Blade", "direct_heal_aoe_effectiveness"
+        )
+        heal_events: list[dict[str, Any]] = []
+        for event in damage_events:
+            if not isinstance(event, Mapping):
+                continue
+            try:
+                amount = float(event.get("damage", 0.0))
+                time = float(event.get("time", 0.0))
+            except (TypeError, ValueError):
+                continue
+            if amount <= 0.0 or not math.isfinite(amount) or not math.isfinite(time):
+                continue
+            source_key = str(event.get("source_key", ""))
+            full_effect = bool(event.get("basic_attack")) or source_key.startswith(
+                ("auto_attacks", "on_hit_")
+            )
+            effectiveness = 1.0 if full_effect else reduced
+            heal_events.append(
+                {
+                    "time": time,
+                    "amount": amount * ratio * effectiveness,
+                    "trigger_source": source_key,
+                    "effectiveness": effectiveness,
+                }
+            )
+        if heal_events:
+            events.extend(
+                {
+                    "time": event["time"],
+                    "amount": event["amount"],
+                    "source": "Doran's Blade (Life Draining)",
+                    "kind": "item_proc",
+                    "healing_modifier": True,
+                    "_trigger_source": event["trigger_source"],
+                    "_trigger_time": event["time"],
+                    "_trigger_sequence": index,
+                    "effectiveness": event["effectiveness"],
+                }
+                for index, event in enumerate(heal_events)
+                if event["amount"] > 0.0
+            )
+
+    # Drain restores mana first and only heals when the actor cannot gain
+    # mana.  The result carries the end-of-window resource receipt, so a
+    # manaless/full-resource actor is the only state for which a health heal
+    # can be certified without inventing a starting-mana assumption.
+    if "Doran's Ring" in item_names:
+        max_mana = float(stats.get("max_mana", 0.0) or 0.0)
+        remaining = float(result.get("resource_remaining", 0.0) or 0.0)
+        can_only_heal = max_mana <= 0.0 or remaining >= max_mana - 1e-9
+        if can_only_heal and duration > 0.0:
+            base_rate = item_effects.sustain_effect_value(
+                "Doran's Ring", "drain_restoration_per_second"
+            )
+            combat_rate = item_effects.sustain_effect_value(
+                "Doran's Ring", "drain_combat_restoration_per_second"
+            )
+            combat_window = item_effects.sustain_effect_value(
+                "Doran's Ring", "drain_combat_duration"
+            )
+            conversion = item_effects.sustain_effect_value(
+                "Doran's Ring", "drain_health_conversion"
+            )
+            tick = item_effects.sustain_effect_value(
+                "Doran's Ring", "drain_tick_interval"
+            )
+            champion_hits: list[float] = []
+            for event in damage_events:
+                if not isinstance(event, Mapping):
+                    continue
+                try:
+                    hit_time = float(event.get("time", 0.0))
+                    hit_damage = float(event.get("damage", 0.0) or 0.0)
+                except (TypeError, ValueError):
+                    continue
+                if hit_damage > 0.0 and math.isfinite(hit_time):
+                    champion_hits.append(hit_time)
+            time = tick
+            sequence = 0
+            while time <= duration + 1e-9:
+                boosted = any(
+                    0.0 <= time - hit <= combat_window for hit in champion_hits
+                )
+                rate = combat_rate if boosted else base_rate
+                events.append(
+                    {
+                        "time": round(time, 6),
+                        "amount": rate * conversion,
+                        "source": "Doran's Ring (Drain)",
+                        "kind": "item_proc",
+                        "actor_wide": True,
+                        "_trigger_sequence": sequence,
+                    }
+                )
+                sequence += 1
+                time += tick
+
+    # Item-provided health regeneration is a timestamped stat contribution.
+    # Keep champion base regeneration out of the item self-heal stream (the
+    # public one-pair result has historically exposed only sourced packets),
+    # while still applying every item's flat/percent contribution in the
+    # coupled survival ledger.  The contribution is computed from typed item
+    # accessors, not from a call-site literal.
+    item_regen_flat = 0.0
+    item_regen_percent = 0.0
+    for item in items or ():
+        item_stats = get_item_stats(dict(item))
+        item_regen_flat += float(item_stats["health_regen_flat"])
+        item_regen_percent += float(item_stats["health_regen_percent"])
+    base_regen_per_second = (
+        float(stats.get("base_health_regen_per_five", 0.0) or 0.0) / 5.0
+    )
+    item_regen = (
+        (base_regen_per_second * (1.0 + item_regen_percent / 100.0))
+        + item_regen_flat / 5.0
+        - base_regen_per_second
+    )
+    if item_regen > 0.0 and duration > 0.0:
+        time = 0.5
+        sequence = 0
+        while time <= duration + 1e-9:
+            events.append(
+                {
+                    "time": round(time, 6),
+                    "amount": item_regen * 0.5,
+                    "source": "Health regeneration",
+                    "kind": "regen",
+                    "actor_wide": True,
+                    "_trigger_sequence": sequence,
+                }
+            )
+            sequence += 1
+            time += 0.5
+
     breakdown = result.get("breakdown", {})
     if not isinstance(breakdown, Mapping):
         return events
@@ -150,6 +321,8 @@ def _item_self_healing_events(result: Mapping[str, Any]) -> list[dict[str, Any]]
                     "_trigger_time": event_time,
                     "_trigger_sequence": sequence,
                 }
+                if raw_event.get("healing_category"):
+                    materialized["healing_category"] = raw_event["healing_category"]
                 amount_formula = raw_event.get("amount_formula")
                 if callable(amount_formula):
                     materialized["amount_formula"] = amount_formula
@@ -712,7 +885,8 @@ def run_fight(
         params.fight_duration_seconds,
     )
     result["self_healing_events"] = sorted(
-        champion_healing + _item_self_healing_events(result),
+        champion_healing
+        + _item_self_healing_events(result, items, params.fight_duration_seconds),
         key=lambda event: (
             float(event.get("time", 0.0)),
             str(event.get("kind", "")),

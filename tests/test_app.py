@@ -1563,7 +1563,9 @@ class TestIconUrlsAreHttps:
         bloodthirster = next(item for item in items if item["name"] == "Bloodthirster")
         doran_blade = next(item for item in items if item["name"] == "Doran's Blade")
         assert bloodthirster["lifesteal"] == 15.0
-        assert doran_blade["omnivamp"] == 2.5
+        # Current full Wiki entry replaces the stale cache's old omnivamp
+        # stat with Life Draining, a post-mitigation heal passive.
+        assert doran_blade["omnivamp"] == 0.0
         assert all(
             key in bloodthirster
             for key in (

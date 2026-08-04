@@ -662,6 +662,11 @@ def _add_lifesteal_events(
                     "time": event_time,
                     "amount": amount,
                     "trigger_source": source_key,
+                    # Life steal is a stat-scaled vamp effect.  Spirit
+                    # Visage does not amplify the stat itself; the ordered
+                    # survival ledger uses this category to avoid applying
+                    # Boundless Vitality a second time.
+                    "healing_category": "vamp",
                 }
             )
 
@@ -719,6 +724,9 @@ def _add_omnivamp_events(
                     "time": event_time,
                     "amount": amount,
                     "trigger_source": str(event.get("source_key", "")),
+                    # Omnivamp is likewise a direct stat conversion rather
+                    # than a received-healing packet for Spirit Visage.
+                    "healing_category": "vamp",
                 }
             )
     if not heals:
