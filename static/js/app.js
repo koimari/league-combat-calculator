@@ -1,6 +1,6 @@
 const DDRAGON = "https://ddragon.leagueoflegends.com/cdn/16.15.1/img";
 
-let DATA;
+let DATA = { champions: [], items: [] };
 let BIS_PROFILES = {};
 let EFFECT_CATALOG = {};
 let pickerContext = null;
@@ -3142,7 +3142,7 @@ for (const id of ["baseDamage", "apRatio", "physicalDamage", "adRatio"]) $(id).a
 Promise.all([
   fetch("/static/data.json").then((response) => { if (!response.ok) throw new Error("Patch snapshot failed to load"); return response.json(); }),
   fetch("/api/champions").then((response) => { if (!response.ok) throw new Error("Champion availability failed to load"); return response.json(); }),
-  fetch("/api/config").then((response) => { if (!response.ok) throw new Error("Calculator config failed to load"); return response.json(); }),
+  fetch("/api/config").then((response) => response.ok ? response.json() : { item_options: {}, champion_options: {}, keystones: [], input_limits: {} }),
   fetch("/static/ability-catalog.json").then((response) => { if (!response.ok) throw new Error("Ability catalogue failed to load"); return response.json(); }),
   fetch("/static/bis-profiles.json").then((response) => { if (!response.ok) throw new Error("Wiki BIS profile failed to load"); return response.json(); }),
   fetch("/static/effect-catalog.json").then((response) => { if (!response.ok) throw new Error("Wiki effect catalogue failed to load"); return response.json(); }),
