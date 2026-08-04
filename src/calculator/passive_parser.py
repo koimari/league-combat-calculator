@@ -1234,14 +1234,75 @@ def _parse_eclipse(
     text: str,
     cooldown_field: float | None = None,
 ) -> dict[str, Any]:
-    """Parse Eclipse Ever Rising Moon proc."""
+    """Parse Eclipse Ever Rising Moon's proc and self-shield.
+
+    The current cached Wiki branch carries three melee/ranged pairs in one
+    sentence: proc damage, shield base, and bonus-AD shield scaling.  Keep
+    each pair parser-owned so a patch-day cache refresh cannot silently leave
+    the coupled timeline with an old shield value.
+    """
     result: dict[str, Any] = {"damage_type": "physical"}
-    rd_pcts = _extract_rd_percentages(text)
-    if rd_pcts:
-        result["target_max_hp_ratio_melee"] = rd_pcts[0]
-        result["target_max_hp_ratio_ranged"] = rd_pcts[1]
+    rd_pairs = _extract_all_rd_values(text)
+    if rd_pairs:
+        damage_pair = rd_pairs[0]
+        damage_melee = _extract_percentage(damage_pair[0])
+        damage_ranged = _extract_percentage(damage_pair[1])
+        if damage_melee is not None and damage_ranged is not None:
+            result["target_max_hp_ratio_melee"] = damage_melee
+            result["target_max_hp_ratio_ranged"] = damage_ranged
+    if len(rd_pairs) >= 2:
+        shield_pair = _extract_rd_numbers("{{rd|%s|%s}}" % rd_pairs[1])
+        if shield_pair is not None:
+            result["shield_melee_base"] = shield_pair[0]
+            result["shield_ranged_base"] = shield_pair[1]
+    if len(rd_pairs) >= 3:
+        ratio_pair = rd_pairs[2]
+        ratio_melee = _extract_percentage(ratio_pair[0])
+        ratio_ranged = _extract_percentage(ratio_pair[1])
+        if ratio_melee is not None and ratio_ranged is not None:
+            result["shield_melee_bonus_ad_ratio"] = ratio_melee
+            result["shield_ranged_bonus_ad_ratio"] = ratio_ranged
+    duration_match = re.search(
+        r"grants?.*?shield.*?for\s+(\d+(?:\.\d+)?)\s+seconds",
+        _resolve_simple_templates(text),
+        re.IGNORECASE | re.DOTALL,
+    )
+    if duration_match:
+        result["shield_duration"] = float(duration_match.group(1))
     if cooldown_field is not None:
         result["cooldown"] = cooldown_field
+    return result
+
+
+def _parse_deaths_dance(text: str) -> dict[str, Any]:
+    """Parse Death's Dance Ignore Pain and Defy state transitions."""
+    result: dict[str, Any] = {}
+    resolved = _resolve_simple_templates(text)
+    deferral = _extract_rd_percentages(text)
+    if deferral is not None and "stores" in resolved.lower():
+        result["damage_deferral_melee"] = deferral[0]
+        result["damage_deferral_ranged"] = deferral[1]
+        duration_match = re.search(
+            r"over\s+(\d+(?:\.\d+)?)\s+seconds", resolved, re.IGNORECASE
+        )
+        if duration_match:
+            result["damage_deferral_duration"] = float(duration_match.group(1))
+    if "remaining stored damage" in resolved.lower():
+        window_match = re.search(
+            r"within\s+(\d+(?:\.\d+)?)\s+seconds", resolved, re.IGNORECASE
+        )
+        heal_match = re.search(
+            r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+AD", text, re.IGNORECASE
+        )
+        duration_match = re.search(
+            r"over\s+(\d+(?:\.\d+)?)\s+seconds", resolved, re.IGNORECASE
+        )
+        if window_match:
+            result["defy_window"] = float(window_match.group(1))
+        if heal_match:
+            result["defy_heal_bonus_ad_ratio"] = float(heal_match.group(1)) / 100.0
+        if duration_match:
+            result["defy_heal_duration"] = float(duration_match.group(1))
     return result
 
 
@@ -2283,6 +2344,10 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     # ── Max HP Proc ──
     "Eclipse": [
         ("passive", "Ever Rising Moon", _parse_eclipse, {"use_cooldown_field": True})
+    ],
+    "Death's Dance": [
+        ("passive", "Ignore Pain", _parse_deaths_dance, {}),
+        ("passive", "Defy", _parse_deaths_dance, {}),
     ],
     # ── Lethality Proc ──
     "Bastionbreaker": [

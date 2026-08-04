@@ -42,6 +42,16 @@ class StartingDefenses:
     revive_health_amount: float = 0.0
     revive_delay: float = 0.0
     revive_cooldown: float = 0.0
+    # Death's Dance ordered defenses.  The participant timeline consumes
+    # these fields only when the item is present; zero is the fail-closed
+    # absence state for every other loadout.
+    damage_deferral_fraction: float = 0.0
+    damage_deferral_duration: float = 0.0
+    damage_deferral_ticks: int = 0
+    defy_window: float = 0.0
+    defy_heal_bonus_ad_ratio: float = 0.0
+    defy_heal_duration: float = 0.0
+    defy_heal_ticks: int = 0
     assumptions: tuple[str, ...] = ()
     sources: tuple[DefenseSource, ...] = ()
     coverage: str = "base_and_items_only"
@@ -85,6 +95,15 @@ class StartingDefenses:
                 "health_amount": round(self.revive_health_amount, 1),
                 "delay": round(self.revive_delay, 1),
                 "cooldown": round(self.revive_cooldown, 1),
+            },
+            "death_dance": {
+                "damage_deferral_fraction": round(self.damage_deferral_fraction, 3),
+                "damage_deferral_duration": round(self.damage_deferral_duration, 1),
+                "damage_deferral_ticks": int(self.damage_deferral_ticks),
+                "defy_window": round(self.defy_window, 1),
+                "defy_heal_bonus_ad_ratio": round(self.defy_heal_bonus_ad_ratio, 3),
+                "defy_heal_duration": round(self.defy_heal_duration, 1),
+                "defy_heal_ticks": int(self.defy_heal_ticks),
             },
             "assumptions": list(self.assumptions),
             "sources": [
@@ -149,6 +168,16 @@ _GUARDIAN_ANGEL_SOURCE = DefenseSource(
     source_url="https://wiki.leagueoflegends.com/en-us/Guardian_Angel",
     revision_id=4046863,
     revision_timestamp="2026-07-28T22:43:08Z",
+)
+
+_DEATHS_DANCE_SOURCE = DefenseSource(
+    label="Death's Dance — Ignore Pain / Defy",
+    source_url="https://wiki.leagueoflegends.com/en-us/Death%27s_Dance",
+    # Item mechanics are read from the patch-stamped cached item source; the
+    # cache does not expose a MediaWiki revision id, so zero explicitly marks
+    # this provenance as cache-backed rather than inventing a revision.
+    revision_id=0,
+    revision_timestamp="cached data/items.json (patch 16.15)",
 )
 
 _IMMORTAL_SHIELDBOW_SOURCE = DefenseSource(
@@ -343,6 +372,13 @@ def resolve_starting_defenses(
     revive_health_amount = champion_defenses.revive_health_amount
     revive_delay = champion_defenses.revive_delay
     revive_cooldown = champion_defenses.revive_cooldown
+    damage_deferral_fraction = champion_defenses.damage_deferral_fraction
+    damage_deferral_duration = champion_defenses.damage_deferral_duration
+    damage_deferral_ticks = champion_defenses.damage_deferral_ticks
+    defy_window = champion_defenses.defy_window
+    defy_heal_bonus_ad_ratio = champion_defenses.defy_heal_bonus_ad_ratio
+    defy_heal_duration = champion_defenses.defy_heal_duration
+    defy_heal_ticks = champion_defenses.defy_heal_ticks
     assumptions = list(champion_defenses.assumptions)
     sources = list(champion_defenses.sources)
 
@@ -441,6 +477,35 @@ def resolve_starting_defenses(
         )
         sources.append(_GUARDIAN_ANGEL_SOURCE)
 
+    if "Death's Dance" in names:
+        is_melee = bool(stats.get("is_melee", False))
+        damage_deferral_fraction = float(
+            required_effect_value(
+                "Death's Dance",
+                "damage_deferral_melee" if is_melee else "damage_deferral_ranged",
+            )
+        )
+        damage_deferral_duration = float(
+            required_effect_value("Death's Dance", "damage_deferral_duration")
+        )
+        damage_deferral_ticks = int(
+            required_effect_value("Death's Dance", "damage_deferral_ticks")
+        )
+        defy_window = float(required_effect_value("Death's Dance", "defy_window"))
+        defy_heal_bonus_ad_ratio = float(
+            required_effect_value("Death's Dance", "defy_heal_bonus_ad_ratio")
+        )
+        defy_heal_duration = float(
+            required_effect_value("Death's Dance", "defy_heal_duration")
+        )
+        defy_heal_ticks = int(required_effect_value("Death's Dance", "defy_heal_ticks"))
+        assumptions.append(
+            "Death's Dance Ignore Pain defers the sourced fraction of each "
+            "post-mitigation physical or magic packet; Defy clears the "
+            "remaining store and heals after a qualifying champion takedown."
+        )
+        sources.append(_DEATHS_DANCE_SOURCE)
+
     has_shield = (
         magic_shield > 0
         or physical_shield > 0
@@ -538,6 +603,13 @@ def resolve_starting_defenses(
         revive_health_amount=revive_health_amount,
         revive_delay=revive_delay,
         revive_cooldown=revive_cooldown,
+        damage_deferral_fraction=damage_deferral_fraction,
+        damage_deferral_duration=damage_deferral_duration,
+        damage_deferral_ticks=damage_deferral_ticks,
+        defy_window=defy_window,
+        defy_heal_bonus_ad_ratio=defy_heal_bonus_ad_ratio,
+        defy_heal_duration=defy_heal_duration,
+        defy_heal_ticks=defy_heal_ticks,
         assumptions=tuple(assumptions),
         sources=tuple(sources),
         coverage="modeled_starting_defenses",

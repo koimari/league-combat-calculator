@@ -126,7 +126,7 @@ from collections.abc import Mapping, Sequence
 from collections import Counter
 from dataclasses import dataclass, field, replace
 from operator import itemgetter
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 from . import item_effects
 from . import rune_effects
@@ -1374,6 +1374,11 @@ def _ordered_damage_events(
                 event_precision = event.get("event_precision")
                 if event_precision is not None:
                     row["event_precision"] = str(event_precision)
+            shield_events = entry.get("self_shield_events")
+            if isinstance(shield_events, list) and ordinal - 1 < len(shield_events):
+                shield = shield_events[ordinal - 1]
+                if isinstance(shield, Mapping):
+                    row["self_shield"] = dict(shield)
             raw_damage = event.get("raw_damage")
             if raw_damage is not None:
                 row["raw_damage"] = float(raw_damage)
@@ -1382,6 +1387,8 @@ def _ordered_damage_events(
                 row["raw_formula"] = raw_formula
             if event.get("basic_attack"):
                 row["basic_attack"] = True
+            if isinstance(event.get("self_shield"), Mapping):
+                row["self_shield"] = dict(event["self_shield"])
             if event.get("basic_attack") or source_key.startswith(
                 ("auto_attacks", "on_hit_")
             ):
@@ -7982,9 +7989,39 @@ def _add_single_proc_on_hits(
             "count": procs,
         }
         if stack_events:
+            self_shield_events: list[dict[str, Any]] = []
             for event in stack_events:
                 event["damage"] = total_damage / procs
+                if effect.self_shield_duration > 0.0:
+                    shield_base = (
+                        effect.self_shield_melee_base
+                        if state.is_melee
+                        else effect.self_shield_ranged_base
+                    )
+                    shield_ratio = (
+                        effect.self_shield_melee_bonus_ad_ratio
+                        if state.is_melee
+                        else effect.self_shield_ranged_bonus_ad_ratio
+                    )
+                    self_shield_events.append(
+                        {
+                            "amount": max(
+                                0.0,
+                                shield_base
+                                + shield_ratio
+                                * float(
+                                    state.champion_stats.get("bonus_attack_damage", 0.0)
+                                ),
+                            ),
+                            "duration": effect.self_shield_duration,
+                            "source": source.display_name,
+                        }
+                    )
             breakdown[source.breakdown_key]["damage_events"] = stack_events
+            if self_shield_events:
+                breakdown[source.breakdown_key][
+                    "self_shield_events"
+                ] = self_shield_events
             breakdown[source.breakdown_key]["event_phase"] = "effect"
         state.total_damage += total_damage
 

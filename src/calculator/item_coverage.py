@@ -336,9 +336,7 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
         "Blessing of the Mountain's opening damage reduction is not modelled."
     ),
     "Chainlaced Crushers": "Noxian Persistence's magic shield is not modelled.",
-    "Death's Dance": "Ignore Pain's damage deferral is not modelled.",
     "Doran's Shield": "Endure's combat health regeneration is not modelled.",
-    "Eclipse": "Ever Rising Moon's target-side shield trigger is not modelled.",
     "Fimbulwinter": "Awe bonus health and Everlasting shields are not modelled.",
     "Force of Nature": (
         "Steadfast's target-side stack timing is not modelled: champion magic "

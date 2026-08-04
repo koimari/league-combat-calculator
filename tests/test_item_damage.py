@@ -2146,6 +2146,18 @@ class TestEclipseEverRisingMoon:
         proc = fight["breakdown"]["proc_Eclipse"]
         assert proc["damage_type"] == "physical"
         assert proc["total_damage"] > 0
+        assert proc["self_shield_events"] == [
+            {
+                "amount": 80.0,
+                "duration": 2.0,
+                "source": "Eclipse (Ever Rising Moon)",
+            }
+        ]
+        assert fight["damage_events"][-1]["self_shield"] == {
+            "amount": 80.0,
+            "duration": 2.0,
+            "source": "Eclipse (Ever Rising Moon)",
+        }
 
     def test_eclipse_damage_mitigated_by_armor(self) -> None:
         """Eclipse physical damage should be reduced by target armor."""

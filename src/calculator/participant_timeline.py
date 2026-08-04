@@ -335,6 +335,13 @@ def _has_stateful_defense(defenses: Any) -> bool:
     ) or bool(getattr(defenses, "spell_shield_ready", False))
 
 
+def _has_ordered_item_defense(items: Iterable[Mapping[str, Any]]) -> bool:
+    """Return whether a loadout needs the full ordered item event walk."""
+    return any(
+        str(item.get("name", "")) in {"Eclipse", "Death's Dance"} for item in items
+    )
+
+
 def _is_authored_ability_event(event: Mapping[str, Any]) -> bool:
     """Identify a champion cast without treating passive/proc rows as casts.
 
@@ -808,6 +815,8 @@ def _simulate_survival(
             "overhealing": 0.0,
             "healing_reduced": 0.0,
             "support_shield_received": 0.0,
+            "support_shield_expired": 0.0,
+            "timed_shields": [],
             "temporary_health_received": 0.0,
             "temporary_health_amount": 0.0,
             "temporary_health_until": 0.0,
@@ -880,6 +889,15 @@ def _simulate_survival(
             "revived": False,
             "revive_used": False,
             "terminal_phase": "alive",
+            "damage_deferral_pending": 0.0,
+            "damage_deferral_cleared": 0.0,
+            "deferred_batches": {},
+            "cleared_deferred_batches": set(),
+            "damage_records": [],
+            "defy_triggered": False,
+            "defy_trigger_time": None,
+            "defy_heal_received": 0.0,
+            "defy_triggered_damage_ids": set(),
         }
 
     # Normalize stateful packets before sorting.  Pair engines remain the
@@ -887,6 +905,9 @@ def _simulate_survival(
     # explicitly authored metadata on a packet and therefore fail closed
     # when a mechanic has no trigger/timing contract.
     expanded_incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    expanded_healing: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for participant_id, events in healing.items():
+        expanded_healing[participant_id].extend(dict(event) for event in events)
 
     def _insert_receipt_clone(
         source_event: dict[str, Any], clone: dict[str, Any]
@@ -943,6 +964,12 @@ def _simulate_survival(
                     "_redirect_fraction": redirect_fraction,
                     "_event_id": f"{event.get('_event_id', '')}:redirect",
                 }
+                redirected["_sk"] = _action_key(
+                    float(redirected.get("time", 0.0)),
+                    0.0,
+                    redirect_target,
+                    redirected,
+                )
                 expanded_incoming[redirect_target].append(redirected)
                 _insert_receipt_clone(event, redirected)
                 # The source packet's outgoing receipt represents the direct
@@ -958,6 +985,33 @@ def _simulate_survival(
                     "_redirected_amount": original_amount * redirect_fraction,
                     "_redirect_fraction": redirect_fraction,
                 }
+
+            # Death's Dance receives post-mitigation physical and magic
+            # packets.  Apply its typed defense metadata here, before the
+            # shared split logic, so every authored source (abilities, autos,
+            # item procs, and reactive packets) follows the same path.
+            target_defenses = combatant_by_id.get(target_id)
+            if (
+                target_defenses is not None
+                and not event.get("_deferred")
+                and str(event.get("damage_type", "")) in {"physical", "magic"}
+                and float(event.get("damage", 0.0) or 0.0) > 0.0
+                and float(
+                    getattr(target_defenses.defenses, "damage_deferral_fraction", 0.0)
+                    or 0.0
+                )
+                > 0.0
+                and "deferred_fraction" not in event
+            ):
+                event["deferred_fraction"] = float(
+                    target_defenses.defenses.damage_deferral_fraction
+                )
+                event["deferred_duration"] = float(
+                    target_defenses.defenses.damage_deferral_duration
+                )
+                event["deferred_ticks"] = int(
+                    target_defenses.defenses.damage_deferral_ticks
+                )
 
             # Deferred damage (for example a damage-deferral passive) is
             # represented only when the packet provides all timing fields.
@@ -989,6 +1043,14 @@ def _simulate_survival(
                     "_deferred_total": full_amount * deferred_fraction,
                 }
                 tick_amount = full_amount * deferred_fraction / deferred_ticks
+                batch_id = str(event.get("_event_id", ""))
+                target_state = states[target_id]
+                target_state["deferred_batches"][batch_id] = (
+                    full_amount * deferred_fraction
+                )
+                target_state["damage_deferral_pending"] += (
+                    full_amount * deferred_fraction
+                )
                 for tick in range(1, deferred_ticks + 1):
                     deferred = {
                         **event,
@@ -1001,10 +1063,23 @@ def _simulate_survival(
                         "_event_id": f"{event.get('_event_id', '')}:deferred:{tick}",
                         "_deferred": True,
                         "_deferred_from": event.get("_event_id"),
+                        "_deferred_batch_id": batch_id,
                     }
+                    deferred["_sk"] = _action_key(
+                        float(deferred.get("time", 0.0)),
+                        0.0,
+                        target_id,
+                        deferred,
+                    )
                     expanded_incoming[target_id].append(deferred)
                     _insert_receipt_clone(original, deferred)
             expanded_incoming[target_id].append(event)
+
+    if isinstance(healing, MutableMapping):
+        healing.clear()
+        healing.update(expanded_healing)
+    else:
+        healing = expanded_healing
 
     # Guardian Angel's Rebirth is triggered by the first lethal packet, but
     # that trigger is only knowable during the live survival walk.  Author a
@@ -1048,6 +1123,143 @@ def _simulate_survival(
         expanded_incoming[participant_id].extend(candidates)
     incoming = expanded_incoming
 
+    def _expire_timed_shields(state: dict[str, Any], event_time: float) -> None:
+        """Remove unused timed shields before an event at their expiry."""
+        remaining: list[dict[str, Any]] = []
+        for shield in state["timed_shields"]:
+            expires_at = float(shield.get("expires_at", 0.0) or 0.0)
+            amount = max(0.0, float(shield.get("amount", 0.0) or 0.0))
+            if expires_at <= event_time + 1e-9:
+                if amount > 0.0:
+                    state["shields"]["general_shield"] = max(
+                        0.0, state["shields"]["general_shield"] - amount
+                    )
+                    state["support_shield_expired"] += amount
+                continue
+            remaining.append(shield)
+        state["timed_shields"] = remaining
+
+    def _consume_general_shield(state: dict[str, Any], amount: float) -> float:
+        """Consume earliest-expiring timed shields before untimed general ones."""
+        remaining = max(0.0, float(amount))
+        absorbed = 0.0
+        for shield in sorted(
+            state["timed_shields"],
+            key=lambda entry: float(entry.get("expires_at", float("inf"))),
+        ):
+            available = max(0.0, float(shield.get("amount", 0.0) or 0.0))
+            used = min(available, remaining)
+            if used <= 0.0:
+                continue
+            shield["amount"] = available - used
+            remaining -= used
+            absorbed += used
+            state["shields"]["general_shield"] = max(
+                0.0, state["shields"]["general_shield"] - used
+            )
+            if remaining <= 1e-9:
+                break
+        if remaining > 0.0:
+            used = min(state["shields"]["general_shield"], remaining)
+            state["shields"]["general_shield"] -= used
+            absorbed += used
+        state["timed_shields"] = [
+            shield
+            for shield in state["timed_shields"]
+            if float(shield.get("amount", 0.0) or 0.0) > 1e-9
+        ]
+        return absorbed
+
+    current_action_index = -1
+
+    def _trigger_defy(target_id: str, event_time: float) -> None:
+        """Trigger Defy for every allied holder that recently damaged target."""
+        target = combatant_by_id.get(target_id)
+        if target is None:
+            return
+        for holder_id, holder in combatant_by_id.items():
+            holder_state = states[holder_id]
+            if holder_id == target_id or holder.team == target.team:
+                continue
+            defenses = holder.defenses
+            window = max(0.0, float(getattr(defenses, "defy_window", 0.0) or 0.0))
+            if window <= 0.0 or holder_state["death_time"] is not None:
+                continue
+            matching = [
+                record
+                for record in holder_state["damage_records"]
+                if record["target"] == target_id
+                and event_time - record["time"] <= window + 1e-9
+                and event_time >= record["time"] - 1e-9
+            ]
+            if not matching or holder_state["defy_triggered"]:
+                continue
+            holder_state["defy_triggered"] = True
+            holder_state["defy_trigger_time"] = float(event_time)
+            holder_state["defy_triggered_damage_ids"].update(
+                record["event_id"] for record in matching
+            )
+            cleared = sum(holder_state["deferred_batches"].values())
+            holder_state["damage_deferral_cleared"] += cleared
+            holder_state["damage_deferral_pending"] = 0.0
+            holder_state["cleared_deferred_batches"].update(
+                holder_state["deferred_batches"]
+            )
+            holder_state["deferred_batches"].clear()
+            duration_value = max(
+                0.0, float(getattr(defenses, "defy_heal_duration", 0.0) or 0.0)
+            )
+            ticks = int(getattr(defenses, "defy_heal_ticks", 0) or 0)
+            heal_ratio = max(
+                0.0,
+                float(getattr(defenses, "defy_heal_bonus_ad_ratio", 0.0) or 0.0),
+            )
+            bonus_ad = max(0.0, float(holder.stats.get("bonus_attack_damage", 0.0)))
+            if (
+                duration_value <= 0.0
+                or ticks <= 0
+                or heal_ratio <= 0.0
+                or bonus_ad <= 0.0
+            ):
+                continue
+            total_heal = bonus_ad * heal_ratio
+            trigger_id = matching[-1]["event_id"]
+            for tick in range(1, ticks + 1):
+                heal_event = {
+                    "time": float(event_time) + duration_value * tick / ticks,
+                    "kind": "heal",
+                    "amount": total_heal / ticks,
+                    "source": "Death's Dance (Defy)",
+                    "source_key": "heal_Death's Dance",
+                    "attacker": holder_id,
+                    "target": holder_id,
+                    "_event_id": (
+                        f"{holder_id}:defy:{target_id}:"
+                        f"{round(float(event_time), 9)}:{tick}"
+                    ),
+                    "_defy_trigger_id": trigger_id,
+                    "_defy_target_id": target_id,
+                    "_defy_window": window,
+                    "sequence": tick - 1,
+                }
+                expanded_healing[holder_id].append(heal_event)
+                if isinstance(healing, MutableMapping):
+                    healing[holder_id] = expanded_healing[holder_id]
+                action = (
+                    _action_key(
+                        float(heal_event["time"]),
+                        1.0,
+                        holder_id,
+                        heal_event,
+                    ),
+                    holder_id,
+                    heal_event,
+                )
+                insertion = max(current_action_index + 1, 0)
+                while insertion < len(actions) and actions[insertion][0] <= action[0]:
+                    insertion += 1
+                actions.insert(insertion, action)
+
     actions: list[tuple[tuple[Any, ...], str, dict[str, Any]]] = []
     damage_event_status: dict[str, str] = {}
     for participant_id, events in support_effects.items():
@@ -1058,9 +1270,14 @@ def _simulate_survival(
             # priority merely because both are support effects.
             kind = str(event.get("kind", ""))
             priority = (
-                -2.0
-                if kind in {"stasis", "invulnerability", "untargetable", "spell_shield"}
-                else (-1.0 if kind in {"shield", "temporary_health"} else 1.0)
+                float(event.get("_priority", 0.0))
+                if "_priority" in event
+                else (
+                    -2.0
+                    if kind
+                    in {"stasis", "invulnerability", "untargetable", "spell_shield"}
+                    else (-1.0 if kind in {"shield", "temporary_health"} else 1.0)
+                )
             )
             actions.append(
                 (
@@ -1106,7 +1323,11 @@ def _simulate_survival(
         )
     actions.sort(key=itemgetter(0))
 
-    for action_key, participant_id, event in actions:
+    action_index = 0
+    while action_index < len(actions):
+        current_action_index = action_index
+        action_key, participant_id, event = actions[action_index]
+        action_index += 1
         event_time, phase = action_key[0], action_key[1]
         state = states[participant_id]
         trigger_id = event.get("_trigger_event_id")
@@ -1124,6 +1345,8 @@ def _simulate_survival(
             event["applied_amount"] = 0.0
             event["skipped_reason"] = "outside_window"
             continue
+
+        _expire_timed_shields(state, event_time)
 
         if (
             state["healing_reduction_until"] > 0.0
@@ -1211,6 +1434,14 @@ def _simulate_survival(
                 )
                 event["applied_amount"] = round(duration_value, 6)
             continue
+        defy_trigger_id = event.get("_defy_trigger_id")
+        if (
+            defy_trigger_id is not None
+            and str(defy_trigger_id) not in state["defy_triggered_damage_ids"]
+        ):
+            event["applied_amount"] = 0.0
+            event["skipped_reason"] = "defy_not_triggered"
+            continue
         if trigger_id is not None and (
             damage_event_status.get(str(trigger_id)) != "applied"
         ):
@@ -1237,6 +1468,37 @@ def _simulate_survival(
             event["damage"] = 0.0
             event["applied_amount"] = 0.0
             event["skipped_reason"] = "target_dead"
+            continue
+        if kind == "shield":
+            amount = max(0.0, float(event.get("amount", 0.0) or 0.0))
+            amount *= state["healing_received_multiplier"]
+            duration_value = max(0.0, float(event.get("duration", 0.0) or 0.0))
+            if amount <= 0.0:
+                event["applied_amount"] = 0.0
+                event["skipped_reason"] = "shield_not_available"
+                continue
+            state["shields"]["general_shield"] += amount
+            state["support_shield_received"] += amount
+            if duration_value > 0.0:
+                expires_at = event_time + duration_value
+                state["timed_shields"].append(
+                    {"amount": amount, "expires_at": expires_at}
+                )
+                event["expires_at"] = round(expires_at, 3)
+            event["applied_amount"] = round(amount, 6)
+            continue
+        deferred_batch_id = event.get("_deferred_batch_id")
+        if (
+            deferred_batch_id is not None
+            and str(deferred_batch_id) in state["cleared_deferred_batches"]
+        ):
+            if annotate:
+                event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                event["live_damage"] = 0.0
+                event["overkill"] = 0.0
+            event["damage"] = 0.0
+            event["applied_amount"] = 0.0
+            event["skipped_reason"] = "defy_cleared_deferred_damage"
             continue
         if phase >= 0 and (
             state["stasis_until"] > event_time
@@ -1323,12 +1585,7 @@ def _simulate_survival(
         if phase == -1:
             kind = str(event.get("kind", ""))
             amount = max(0.0, float(event.get("amount", 0.0)))
-            if kind == "shield":
-                amount *= state["healing_received_multiplier"]
-                state["shields"]["general_shield"] += amount
-                state["support_shield_received"] += amount
-                event["applied_amount"] = round(amount, 6)
-            elif kind == "temporary_health":
+            if kind == "temporary_health":
                 duration_value = max(0.0, float(event.get("duration", 0.0) or 0.0))
                 if amount <= 0.0 or duration_value <= 0.0:
                     event["applied_amount"] = 0.0
@@ -1402,6 +1659,8 @@ def _simulate_survival(
                     event["healing_reduction_factor"] = round(reduction_factor, 6)
                     event["overheal"] = round(excess - temporary_health, 6)
                 event["applied_amount"] = round(received, 6)
+                if event.get("_defy_trigger_id") is not None:
+                    state["defy_heal_received"] += received
             continue
         if phase == 1:
             amount = max(0.0, float(event.get("amount", 0.0)))
@@ -1458,12 +1717,25 @@ def _simulate_survival(
                 event["healing_reduction_factor"] = round(reduction_factor, 6)
                 event["overheal"] = round(excess - temporary_health, 6)
             event["applied_amount"] = round(received, 6)
+            if event.get("_defy_trigger_id") is not None:
+                state["defy_heal_received"] += received
             continue
 
         amount = max(0.0, float(event.get("damage", 0.0)))
         event_id = event.get("_event_id")
         if event_id is not None:
             damage_event_status[str(event_id)] = "applied"
+        if event.get("_deferred"):
+            batch_id = str(event.get("_deferred_batch_id", ""))
+            if batch_id in state["deferred_batches"]:
+                state["deferred_batches"][batch_id] = max(
+                    0.0, state["deferred_batches"][batch_id] - amount
+                )
+                state["damage_deferral_pending"] = max(
+                    0.0, state["damage_deferral_pending"] - amount
+                )
+                if state["deferred_batches"][batch_id] <= 1e-9:
+                    del state["deferred_batches"][batch_id]
         original_amount = amount
         raw_formula = event.get("raw_formula")
         raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
@@ -1534,8 +1806,7 @@ def _simulate_survival(
                 state["healing_received"] += heal
                 state["threshold_health_triggered"] = True
                 event["threshold_health_triggered"] = True
-        general_absorbed = min(state["shields"]["general_shield"], amount)
-        state["shields"]["general_shield"] -= general_absorbed
+        general_absorbed = _consume_general_shield(state, amount)
         amount -= general_absorbed
         state["shield_absorbed"] += general_absorbed
         event_absorbed += general_absorbed
@@ -1554,6 +1825,19 @@ def _simulate_survival(
         # and ``live_damage`` above for diagnostics without letting overkill
         # inflate team-fight TTD or BIS scores.
         event["damage"] = round(event_absorbed + applied_to_health, 6)
+        if (
+            source_id in states
+            and source_id != participant_id
+            and not event.get("_deferred")
+            and event["damage"] > 0.0
+        ):
+            states[str(source_id)]["damage_records"].append(
+                {
+                    "target": participant_id,
+                    "time": float(event_time),
+                    "event_id": str(event_id or ""),
+                }
+            )
         # The Collector is an authored terminal transition.  Its threshold
         # is carried by the attacker's event from the cached item effect; it
         # never contributes extra damage or fires from an aggregate row.
@@ -1576,6 +1860,7 @@ def _simulate_survival(
             event["execute_threshold"] = round(state["max_health"] * execute_ratio, 6)
             if state["first_death_time"] is None:
                 state["first_death_time"] = float(event_time)
+            _trigger_defy(participant_id, float(event_time))
         attacker_profiles = reduction_profiles.get(str(source_id), ())
         matching_profiles = (
             matching_healing_reduction(attacker_profiles, damage_type)
@@ -1648,6 +1933,7 @@ def _simulate_survival(
         if state["health"] <= 0.0 and state["death_time"] is None:
             if state["first_death_time"] is None:
                 state["first_death_time"] = float(event_time)
+            _trigger_defy(participant_id, float(event_time))
             state["death_time"] = min(float(duration), event_time)
             state["terminal_phase"] = "dead"
             # A revive packet is intentionally scheduled by the caller.  A
@@ -1655,6 +1941,7 @@ def _simulate_survival(
             # no item is inferred from the loadout here.
 
     for state in states.values():
+        _expire_timed_shields(state, float(duration))
         if (
             state["temporary_health_amount"] > 0.0
             and state["temporary_health_until"] > 0.0
@@ -1691,6 +1978,7 @@ def _simulate_survival(
             "overhealing": round(state["overhealing"], 1),
             "healing_reduced": round(state["healing_reduced"], 1),
             "support_shield_received": round(state["support_shield_received"], 1),
+            "support_shield_expired": round(state["support_shield_expired"], 1),
             "temporary_health_received": round(state["temporary_health_received"], 1),
             "temporary_health_until": round(state["temporary_health_until"], 3),
             "temporary_health_expired_at": state["temporary_health_expired_at"],
@@ -1699,6 +1987,7 @@ def _simulate_survival(
                 state["max_health"]
                 + state["starting_shield"]
                 + state["support_shield_received"]
+                - state["support_shield_expired"]
                 + state["healing_received"],
                 1,
             ),
@@ -1751,6 +2040,26 @@ def _simulate_survival(
             "threshold_shield_triggered": bool(state["threshold_shield_triggered"]),
             "threshold_shield_expired_at": state["threshold_shield_expired_at"],
             "threshold_health_triggered": bool(state["threshold_health_triggered"]),
+            "damage_deferral_fraction": round(
+                float(
+                    getattr(
+                        combatant_by_id[participant_id].defenses,
+                        "damage_deferral_fraction",
+                        0.0,
+                    )
+                    or 0.0
+                ),
+                3,
+            ),
+            "damage_deferral_pending": round(state["damage_deferral_pending"], 1),
+            "damage_deferral_cleared": round(state["damage_deferral_cleared"], 1),
+            "defy_triggered": bool(state["defy_triggered"]),
+            "defy_trigger_time": (
+                round(state["defy_trigger_time"], 3)
+                if state["defy_trigger_time"] is not None
+                else None
+            ),
+            "defy_heal_received": round(state["defy_heal_received"], 1),
         }
     return result
 
@@ -2452,6 +2761,7 @@ def _compiled_survival_walk(
     overhealing = [0.0] * count
     healing_reduced = [0.0] * count
     support_shield_received = [0.0] * count
+    support_shield_expired = [0.0] * count
     temporary_health_received = [0.0] * count
     temporary_health_amount = [0.0] * count
     temporary_health_until = [0.0] * count
@@ -2704,10 +3014,12 @@ def _compiled_survival_walk(
                 "overhealing": round(overhealing[index], 1),
                 "healing_reduced": round(healing_reduced[index], 1),
                 "support_shield_received": round(support_shield_received[index], 1),
+                "support_shield_expired": round(support_shield_expired[index], 1),
                 "effective_health": round(
                     max_healths[index]
                     + starting_shield
                     + support_shield_received[index]
+                    - support_shield_expired[index]
                     + healing_received[index],
                     1,
                 ),
@@ -2749,6 +3061,12 @@ def _compiled_survival_walk(
                 "threshold_shield_triggered": False,
                 "threshold_shield_expired_at": None,
                 "threshold_health_triggered": False,
+                "damage_deferral_fraction": 0.0,
+                "damage_deferral_pending": 0.0,
+                "damage_deferral_cleared": 0.0,
+                "defy_triggered": False,
+                "defy_trigger_time": None,
+                "defy_heal_received": 0.0,
                 "healing_reduction_events": list(hr_events[index]),
             }
         )
@@ -3320,6 +3638,13 @@ def build_participant_timeline(
             healing_reduction_profiles(loadout.item_data) for loadout in enemies
         )
         and not any(healing_reduction_profiles(loadout.item_data) for loadout in allies)
+        # Eclipse and Death's Dance carry ordered self-state that the compact
+        # panel cannot represent (timed shields, deferral, and Defy).
+        and not _has_ordered_item_defense(items)
+        and not any(
+            _has_ordered_item_defense(loadout.item_data)
+            for loadout in (*enemies, *allies)
+        )
         # Collector is a terminal target-state transition, not a score-only
         # damage effect; keep it on the authoritative event walk.
         and not any(item.get("name") == "The Collector" for item in items)
@@ -3359,6 +3684,7 @@ def build_participant_timeline(
     incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
     healing: dict[str, list[dict[str, Any]]] = defaultdict(list)
     support_effects: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    ordered_item_support_ids: set[str] = set()
     support_attached: set[str] = set()
     breakdown: dict[str, dict[str, Any]] = defaultdict(
         lambda: {
@@ -3439,6 +3765,46 @@ def build_participant_timeline(
                     enriched = dict(template) if copy_templates else template
                     attacker_outgoing.append(enriched)
                     defender_incoming.append(enriched)
+                    shield_payload = enriched.get("self_shield")
+                    shield_event_id = str(enriched.get("_event_id", ""))
+                    if (
+                        isinstance(shield_payload, Mapping)
+                        and shield_event_id
+                        and shield_event_id not in ordered_item_support_ids
+                    ):
+                        try:
+                            shield_amount = max(0.0, float(shield_payload["amount"]))
+                            shield_duration = max(
+                                0.0, float(shield_payload["duration"])
+                            )
+                        except (KeyError, TypeError, ValueError):
+                            # An incomplete parser receipt cannot be turned
+                            # into a guessed defensive event.
+                            shield_amount = 0.0
+                            shield_duration = 0.0
+                        if shield_amount > 0.0 and shield_duration > 0.0:
+                            support_effects[attacker.participant_id].append(
+                                {
+                                    "time": float(enriched.get("time", 0.0)),
+                                    "kind": "shield",
+                                    "amount": shield_amount,
+                                    "duration": shield_duration,
+                                    "source": str(
+                                        shield_payload.get(
+                                            "source", "Eclipse (Ever Rising Moon)"
+                                        )
+                                    ),
+                                    "source_key": "shield_Eclipse",
+                                    "attacker": attacker.participant_id,
+                                    "target": attacker.participant_id,
+                                    "target_scope": "self",
+                                    "target_policy": "self",
+                                    "_event_id": f"{shield_event_id}:shield",
+                                    "_trigger_event_id": shield_event_id,
+                                    "_priority": 0.5,
+                                }
+                            )
+                            ordered_item_support_ids.add(shield_event_id)
                 attacker_healing = healing[attacker.participant_id]
                 for template in packet["heals"]:
                     if template.get("actor_wide"):
@@ -3694,16 +4060,16 @@ def build_participant_timeline(
                     else {}
                 ),
                 **(
+                    {"trigger_event_id": str(event["_trigger_event_id"])}
+                    if event.get("_trigger_event_id") is not None
+                    else {}
+                ),
+                **(
                     {"sequence": int(event["sequence"])}
                     if event.get("sequence") is not None
                     else {}
                 ),
                 **({"reactive": True} if event.get("_reactive") else {}),
-                **(
-                    {"trigger_event_id": str(event["_trigger_event_id"])}
-                    if event.get("_trigger_event_id") is not None
-                    else {}
-                ),
                 **(
                     {"spell_shield_source": str(event["spell_shield_source"])}
                     if event.get("spell_shield_source")
@@ -3860,6 +4226,11 @@ def build_participant_timeline(
                 **(
                     {"event_id": str(event["_event_id"])}
                     if event.get("_event_id") is not None
+                    else {}
+                ),
+                **(
+                    {"trigger_event_id": str(event["_trigger_event_id"])}
+                    if event.get("_trigger_event_id") is not None
                     else {}
                 ),
                 "source": event.get("source", ""),

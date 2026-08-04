@@ -1841,30 +1841,27 @@ _BIS_OBJECTIVES: dict[str, dict[str, str]] = {
     },
 }
 
-# These two items have defensive effects that materially change a survival-
-# coupled score, but their trigger/timing ledgers are not yet implemented.
-# They must remain visible as audit receipts and out of the ranked set rather
-# than being ranked as if their tooltip effects were zero.
-_BIS_UNMODELED_DEFENSIVE_EFFECTS: dict[str, str] = {
+_BIS_CERTIFIED_DEFENSIVE_EFFECTS: dict[str, str] = {
     "Eclipse": (
-        "Eclipse shield trigger, amount, and two-second expiry are not yet "
-        "event-modelled; the candidate is withheld instead of ranking on "
-        "damage-only behavior."
+        "Ever Rising Moon's two-hit trigger creates a timestamped self shield "
+        "with its sourced melee/ranged amount and two-second expiry."
     ),
     "Death's Dance": (
-        "Death's Dance Ignore Pain damage deferral and Defy reset are not yet "
-        "event-modelled; the candidate is withheld instead of ranking on "
-        "armor-only behavior."
+        "Ignore Pain splits post-mitigation physical/magic damage into sourced "
+        "true-damage ticks; Defy clears the remaining store and heals on a "
+        "qualifying takedown."
     ),
-}
-
-_BIS_CERTIFIED_DEFENSIVE_EFFECTS: dict[str, str] = {
     "Sundered Sky": (
         "Lightshield Strike's first-hit heal is timestamped and included in "
         "the participant survival/eHP ledger; any sourced temporary-health "
         "overheal is applied through the same ordered heal event."
     ),
 }
+
+# Retained as an explicit API field for clients that display the audit
+# contract.  A non-empty entry means the candidate is withheld; CP6 now
+# certifies Eclipse and Death's Dance through the ordered event walk.
+_BIS_UNMODELED_DEFENSIVE_EFFECTS: dict[str, str] = {}
 
 
 def _bis_defensive_effect_receipt(

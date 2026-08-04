@@ -831,6 +831,13 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "stack_required": 2,
         "stack_window": 2.0,
         "cooldown": 6.0,
+        # Ever Rising Moon's self-shield is attached to the exact completed
+        # pair event and consumed by the coupled participant timeline.
+        "shield_melee_base": 160.0,
+        "shield_ranged_base": 80.0,
+        "shield_melee_bonus_ad_ratio": 0.40,
+        "shield_ranged_bonus_ad_ratio": 0.20,
+        "shield_duration": 2.0,
     },
     # ── Lethality Proc (ability damage trigger) ──────────────────────────
     "Bastionbreaker": {
@@ -1062,6 +1069,20 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "revive_health_ratio": 0.50,
         "revive_delay": 4.0,
         "revive_cooldown": 300.0,
+    },
+    "Death's Dance": {
+        "type": "defensive_start",
+        # Ignore Pain stores post-mitigation physical and magic damage.  The
+        # participant timeline expands it into one-third true-damage ticks;
+        # Defy clears the remainder and heals on a sourced takedown.
+        "damage_deferral_melee": 0.30,
+        "damage_deferral_ranged": 0.10,
+        "damage_deferral_duration": 3.0,
+        "damage_deferral_ticks": 3,
+        "defy_window": 3.0,
+        "defy_heal_bonus_ad_ratio": 0.75,
+        "defy_heal_duration": 2.0,
+        "defy_heal_ticks": 2,
     },
     # Annul is ready at the opening of a modeled exchange.  The timeline
     # consumes it on the first authored hostile ability; cooldown/rearm is
@@ -1313,6 +1334,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     ),
     "Stormsurge": frozenset({"damage_threshold_ratio", "damage_threshold_window"}),
     "Eclipse": frozenset({"stack_required", "stack_window"}),
+    "Death's Dance": frozenset({"damage_deferral_ticks", "defy_heal_ticks"}),
     "Stridebreaker": frozenset({"cooldown"}),
     "Titanic Hydra": frozenset({"active_cooldown"}),
     "Sundered Sky": frozenset(
@@ -1444,6 +1466,38 @@ def _item_names(items: list[dict[str, Any]]) -> set[str]:
 def has_item(items: list[dict[str, Any]], item_name: str) -> bool:
     """Return whether a resolved build contains one canonical item name."""
     return item_name in _item_names(items)
+
+
+def death_dance_deferral_fraction(
+    items: list[dict[str, Any]], *, is_melee: bool
+) -> float:
+    """Return Death's Dance's sourced Ignore Pain fraction for this holder."""
+    if not has_item(items, "Death's Dance"):
+        return 0.0
+    key = "damage_deferral_melee" if is_melee else "damage_deferral_ranged"
+    return float(required_effect_value("Death's Dance", key))
+
+
+def death_dance_defy_heal_amount(
+    items: list[dict[str, Any]], *, bonus_attack_damage: float
+) -> float:
+    """Return Death's Dance's sourced Defy heal for the holder's bonus AD."""
+    if not has_item(items, "Death's Dance"):
+        return 0.0
+    ratio = float(required_effect_value("Death's Dance", "defy_heal_bonus_ad_ratio"))
+    return max(0.0, float(bonus_attack_damage)) * ratio
+
+
+def eclipse_shield_amount(
+    items: list[dict[str, Any]], *, bonus_attack_damage: float, is_melee: bool
+) -> float:
+    """Return Eclipse's sourced shield amount for a completed pair."""
+    if not has_item(items, "Eclipse"):
+        return 0.0
+    suffix = "melee" if is_melee else "ranged"
+    base = float(required_effect_value("Eclipse", f"shield_{suffix}_base"))
+    ratio = float(required_effect_value("Eclipse", f"shield_{suffix}_bonus_ad_ratio"))
+    return max(0.0, base + ratio * float(bonus_attack_damage))
 
 
 # ---------------------------------------------------------------------------
@@ -1601,6 +1655,13 @@ class CooldownProcEffect:
     # cooldown procs.
     stack_required: int = 0
     stack_window: float = 0.0
+    # Eclipse's completed pair also creates a self shield.  These values are
+    # parser-owned and remain zero for ordinary cooldown procs.
+    self_shield_melee_base: float = 0.0
+    self_shield_ranged_base: float = 0.0
+    self_shield_melee_bonus_ad_ratio: float = 0.0
+    self_shield_ranged_bonus_ad_ratio: float = 0.0
+    self_shield_duration: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -2525,6 +2586,17 @@ def _compile_max_hp_proc(
     ranged_ratio = required.number("target_max_hp_ratio_ranged")
     stack_required = int(required.number("stack_required"))
     stack_window = required.number("stack_window")
+    shield_melee_base = 0.0
+    shield_ranged_base = 0.0
+    shield_melee_bonus_ad_ratio = 0.0
+    shield_ranged_bonus_ad_ratio = 0.0
+    shield_duration = 0.0
+    if item_name == "Eclipse":
+        shield_melee_base = required.number("shield_melee_base")
+        shield_ranged_base = required.number("shield_ranged_base")
+        shield_melee_bonus_ad_ratio = required.number("shield_melee_bonus_ad_ratio")
+        shield_ranged_bonus_ad_ratio = required.number("shield_ranged_bonus_ad_ratio")
+        shield_duration = required.number("shield_duration")
 
     def raw(inputs: DamageInputs) -> float:
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
@@ -2536,6 +2608,11 @@ def _compile_max_hp_proc(
         late_phase=True,
         stack_required=stack_required,
         stack_window=stack_window,
+        self_shield_melee_base=shield_melee_base,
+        self_shield_ranged_base=shield_ranged_base,
+        self_shield_melee_bonus_ad_ratio=shield_melee_bonus_ad_ratio,
+        self_shield_ranged_bonus_ad_ratio=shield_ranged_bonus_ad_ratio,
+        self_shield_duration=shield_duration,
     )
 
 
