@@ -60,6 +60,8 @@ from src.calculator.item_effects import (
     item_input_options_meta,
     input_option_retribution_bonus_ad,
     input_option_crit_chance,
+    hubris_input_bonus_ad,
+    endless_hunger_input_omnivamp,
     validate_item_input_options,
     shield_reduction_fraction,
     required_effect_value,
@@ -123,6 +125,38 @@ def test_stateful_health_and_time_inputs_are_typed_and_sourced() -> None:
     assert metadata["Heartsteel"]["options"]["bonus_health"]["max"] == 10000
     assert metadata["Rod of Ages"]["options"]["timeless_stacks"]["max"] == 10
     assert metadata["Yun Tal Wildarrows"]["options"]["crit_stacks"]["max"] == 125
+
+
+def test_cp13_item_state_controls_are_bounded_and_typed() -> None:
+    parsed = validate_item_input_options(
+        {
+            "Actualizer": {"mana_made_real_active": 1},
+            "Hubris": {"eminence_stacks": 12, "eminence_active_seconds": 45},
+            "Endless Hunger": {"feast_active_seconds": 8},
+            "Manamune": {"manaflow_bonus_mana": 360},
+        }
+    )
+    assert parsed["Hubris"]["eminence_stacks"] == 12
+    assert parsed["Manamune"]["manaflow_bonus_mana"] == 360
+    with pytest.raises(ValueError, match="eminence_active_seconds"):
+        validate_item_input_options(
+            {"Hubris": {"eminence_stacks": 1, "eminence_active_seconds": 91}}
+        )
+
+
+def test_cp13_takedown_states_read_typed_registry_values() -> None:
+    assert hubris_input_bonus_ad(
+        _build("Hubris"),
+        {"Hubris": {"eminence_stacks": 4, "eminence_active_seconds": 30}},
+    ) == pytest.approx(24.0)
+    assert hubris_input_bonus_ad(
+        _build("Hubris"),
+        {"Hubris": {"eminence_stacks": 4, "eminence_active_seconds": 0}},
+    ) == pytest.approx(0.0)
+    assert endless_hunger_input_omnivamp(
+        _build("Endless Hunger"),
+        {"Endless Hunger": {"feast_active_seconds": 8}},
+    ) == pytest.approx(15.0)
 
 
 def test_yun_tal_crit_state_is_typed_and_melee_ranged_capped() -> None:

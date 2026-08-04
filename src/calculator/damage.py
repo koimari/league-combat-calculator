@@ -2863,11 +2863,14 @@ def _effective_timed_cooldown(
     basic_ability_haste: float,
 ) -> float:
     """Effective recast cooldown in timed mode: ability haste, Spear of
-    Shojin basic-ability haste (Q/W/E), and Navori auto-attack refunds."""
+    Shojin basic-ability haste (Q/W/E), ultimate haste (R), and Navori
+    auto-attack refunds."""
     base_cd = ability_info.get("cooldown", 0.0)
     total_haste = state.ability_haste
     if ability_key in ("Q", "W", "E"):
         total_haste += basic_ability_haste
+    elif ability_key == "R":
+        total_haste += float(state.champion_stats.get("ultimate_haste", 0.0) or 0.0)
     cd = effective_cooldown(base_cd, total_haste)
     if result.navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
         cd = _navori_effective_cd(cd, result.autos_per_second, result.navori_refund)

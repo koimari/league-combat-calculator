@@ -92,3 +92,34 @@ def test_champion_module_receipts_cover_every_cached_champion():
     assert all(
         set(receipt["slots"]) == {"P", "Q", "W", "E", "R"} for receipt in receipts
     )
+
+
+def test_expected_effects_names_every_item_branch_and_champion_slot():
+    item = audit._expected_effects(
+        "item",
+        {
+            "passives": [
+                {"name": "Passive", "description": "Deals damage.", "stats": {}}
+            ],
+            "active": [
+                {"name": "Active", "description": "Grants a shield.", "stats": {}}
+            ],
+        },
+    )
+    assert item["effect_count"] == 2
+    assert {row["name"] for row in item["effects"]} == {"Passive", "Active"}
+    champion = audit._expected_effects(
+        "champion",
+        {
+            "abilities": {
+                slot: [
+                    {"name": f"{slot} ability", "effects": [{"description": "text"}]}
+                ]
+                for slot in audit.REQUIRED_CHAMPION_SLOTS
+            }
+        },
+    )
+    assert [row["slot"] for row in champion["effects"]] == list(
+        audit.REQUIRED_CHAMPION_SLOTS
+    )
+    assert all(row["variant_count"] == 1 for row in champion["effects"])

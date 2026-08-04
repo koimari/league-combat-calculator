@@ -272,7 +272,10 @@ def _find_passive_by_name(
     name: str,
 ) -> dict[str, Any] | None:
     """Find a passive entry by its name field."""
+    unnamed = name.casefold() in {"none", "", "unnamed"}
     for passive in item_data.get("passives", []):
+        if unnamed and not str(passive.get("name") or "").strip():
+            return passive
         if str(passive.get("name") or "").casefold() == name.casefold():
             return passive
     return None
@@ -1059,6 +1062,171 @@ def _parse_axiom_flux(text: str) -> dict[str, Any]:
     }
 
 
+def _parse_ultimate_haste(text: str) -> dict[str, Any]:
+    """Parse a passive that grants a fixed amount of ultimate haste."""
+    text_resolved = _resolve_simple_templates(text)
+    match = re.search(
+        r"(\d+(?:\.\d+)?)\s+(?:\[\[Haste#[^\]]+\|)?ultimate\s+haste",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if not match:
+        return {}
+    return {"ultimate_haste": float(match.group(1))}
+
+
+def _parse_manaflow(text: str) -> dict[str, Any]:
+    """Parse the shared Tear-family Manaflow charge and transform state."""
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {}
+    interval = re.search(r"charge every\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved)
+    charges = re.search(r"up to\s+(\d+)\s+charges", text_resolved)
+    if interval:
+        result["manaflow_charge_interval"] = float(interval.group(1))
+    if charges:
+        result["manaflow_max_charges"] = int(charges.group(1))
+    # The first percentage-free mana amount is the ordinary target amount;
+    # the following champion branch is deliberately read separately.
+    mana_values = re.findall(
+        r"(?:grant|increased\s+to)\s+\{\{as\|(\d+(?:\.\d+)?)"
+        r"|(?:grant|increased\s+to)\s+(\d+(?:\.\d+)?)\s+bonus\s+mana",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    flat_values = [float(first or second) for first, second in mana_values]
+    if flat_values:
+        result["manaflow_bonus_mana_per_trigger"] = flat_values[0]
+    if len(flat_values) > 1:
+        result["manaflow_bonus_mana_per_champion"] = flat_values[1]
+    maximum = re.search(
+        r"maximum(?:'''|\s+of\s+)?[^\d]*(\d+(?:\.\d+)?)\s*(?:'''bonus'''\s+)?mana",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if maximum:
+        result["manaflow_bonus_mana_max"] = float(maximum.group(1))
+    return result
+
+
+def _parse_manaflow_transform(text: str) -> dict[str, Any]:
+    """Parse the Tear-family transform threshold from its unnamed branch."""
+    text_resolved = _resolve_simple_templates(text)
+    match = re.search(
+        r"at\s+(?:\{\{as\|)?(\d+(?:\.\d+)?)\s*(?:'''bonus'''\s+)?mana",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    if not match:
+        return {}
+    return {"manaflow_transform_bonus_mana": float(match.group(1))}
+
+
+def _parse_rod_timeless(text: str) -> dict[str, Any]:
+    """Parse Rod of Ages' minute-based Timeless progression."""
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {}
+    values = re.search(
+        r"gains\s+\{\{as\|(\d+(?:\.\d+)?).*?health\}\},\s*"
+        r"\{\{as\|(\d+(?:\.\d+)?).*?mana\}\},\s*and\s*"
+        r"\{\{as\|(\d+(?:\.\d+)?).*?ability\s+power\}\}",
+        text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if values:
+        result.update(
+            {
+                "timeless_bonus_health_per_stack": float(values.group(1)),
+                "timeless_bonus_mana_per_stack": float(values.group(2)),
+                "timeless_bonus_ap_per_stack": float(values.group(3)),
+            }
+        )
+    maximum = re.search(r"up\s+to\s+(\d+)\s+times", text_resolved, re.IGNORECASE)
+    if maximum:
+        result["timeless_max_stacks"] = int(maximum.group(1))
+    if re.search(
+        r"reaching\s+maximum\s+stacks.*?gain\s+a\s+level", text_resolved, re.I | re.S
+    ):
+        result["timeless_level_gain_at_max"] = True
+    return result
+
+
+def _parse_swiftmarch_fervor(text: str) -> dict[str, Any]:
+    """Parse Swiftmarch's total-movement-speed adaptive-force conversion."""
+    text_resolved = _resolve_simple_templates(text)
+    match = re.search(
+        r"adaptive\s+force\}\}\s+equal\s+to\s+\{\{as\|(\d+(?:\.\d+)?)%\s+of\s+your\s+'''total'''\s+movement\s+speed",
+        text,
+        re.IGNORECASE,
+    )
+    return (
+        {"adaptive_force_per_total_move_speed": float(match.group(1)) / 100.0}
+        if match
+        else {}
+    )
+
+
+def _parse_endless_hunger_feast(text: str) -> dict[str, Any]:
+    """Parse Endless Hunger's takedown-gated omnivamp window."""
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {}
+    omnivamp = re.search(
+        r"grants?\s+.*?\{\{as\|(\d+(?:\.\d+)?)%\s+omnivamp", text, re.I
+    )
+    duration = re.search(r"for\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.I)
+    window = re.search(r"within\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.I)
+    if omnivamp:
+        result["feast_omnivamp_percent"] = float(omnivamp.group(1))
+    if duration:
+        result["feast_duration"] = float(duration.group(1))
+    if window:
+        result["feast_trigger_window"] = float(window.group(1))
+    return result
+
+
+def _parse_harmony(text: str) -> dict[str, Any]:
+    """Parse a support item's bonus-mana heal/shield-power conversion."""
+    text_resolved = _resolve_simple_templates(text)
+    match = re.search(
+        r"(\d+(?:\.\d+)?)%\s+'''bonus'''\s+mana",
+        text_resolved,
+        re.IGNORECASE,
+    )
+    return (
+        {"bonus_mana_to_heal_shield_power_ratio": float(match.group(1)) / 100.0}
+        if match
+        else {}
+    )
+
+
+def _parse_zeke_frostfire(text: str) -> dict[str, Any]:
+    """Parse Zeke's Frostfire Tempest packet and trigger window."""
+    text_resolved = _resolve_simple_templates(text)
+    result: dict[str, Any] = {"damage_type": "magic"}
+    total = re.search(r"\{\{ap\|(\d+(?:\.\d+)?)\s*\*\s*5", text)
+    per_tick = re.search(r"\{\{ap\|(\d+(?:\.\d+)?)\s*/\s*4", text)
+    if total:
+        result["base"] = float(total.group(1)) * 5.0
+    elif per_tick:
+        result["base"] = float(per_tick.group(1)) * 5.0
+    interval = re.search(r"every\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.I)
+    duration = re.search(r"for\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.I)
+    cooldown = re.search(r"(\d+(?:\.\d+)?)\s+second\s+cooldown", text_resolved, re.I)
+    slow = re.search(
+        r"slows?(?:\}\})?\s+them\s+by\s+(\d+(?:\.\d+)?)%",
+        text_resolved,
+        re.I,
+    )
+    if interval:
+        result["tick_interval"] = float(interval.group(1))
+    if duration:
+        result["duration"] = float(duration.group(1))
+    if cooldown:
+        result["cooldown"] = float(cooldown.group(1))
+    if slow:
+        result["slow_percent"] = float(slow.group(1))
+    return result
+
+
 def _parse_blackfire_amp(text: str) -> dict[str, Any]:
     """Parse Blackfire Torch's AP amplification passive."""
     result: dict[str, Any] = {}
@@ -1226,6 +1394,31 @@ def _parse_actualizer(text: str) -> dict[str, Any]:
     )
     if per_mana_match:
         result["amp_per_100_bonus_mana"] = float(per_mana_match.group(1)) / 100.0
+
+    duration_match = re.search(
+        r"for\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.IGNORECASE
+    )
+    if duration_match:
+        result["mana_made_real_duration"] = float(duration_match.group(1))
+    if re.search(r"cost\s+100%\s+more\s+mana", text_resolved, re.IGNORECASE):
+        result["mana_cost_multiplier"] = 2.0
+    cooldown_match = re.search(
+        r"(\d+(?:\.\d+)?)\s+second\s+cooldown", text_resolved, re.IGNORECASE
+    )
+    if cooldown_match:
+        result["mana_made_real_cooldown"] = float(cooldown_match.group(1))
+    if re.search(
+        r"cooldowns?\s+progress\s+(\d+(?:\.\d+)?)%\s+faster", text_resolved, re.I
+    ):
+        speed_match = re.search(
+            r"cooldowns?\s+progress\s+(\d+(?:\.\d+)?)%\s+faster",
+            text_resolved,
+            re.I,
+        )
+        if speed_match:
+            result["basic_cooldown_progress_multiplier"] = (
+                1.0 + float(speed_match.group(1)) / 100.0
+            )
 
     return result
 
@@ -1824,6 +2017,14 @@ def _parse_heartsteel(text: str) -> dict[str, Any]:
     if hp_match:
         result["max_hp_ratio"] = float(hp_match.group(1)) / 100.0
 
+    permanent_match = re.search(
+        r"(?:grant|grants).*?(\d+(?:\.\d+)?)%\s+of\s+that\s+amount",
+        text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if permanent_match:
+        result["permanent_bonus_health_ratio"] = float(permanent_match.group(1)) / 100.0
+
     cd_match = re.search(r"(\d+)\s+second\s+cooldown", text)
     if cd_match:
         result["cooldown"] = float(cd_match.group(1))
@@ -2269,6 +2470,7 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     ],
     "Endless Hunger": [
         ("passive", "Famine", _parse_endless_hunger_famine, {}),
+        ("passive", "Feast", _parse_endless_hunger_feast, {}),
     ],
     # ── Spellblade ──
     "Sheen": [("passive", "Spellblade", _parse_spellblade, {})],
@@ -2317,7 +2519,10 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     ],
     "Scout's Slingshot": [("passive", "Bullseye", _parse_bullseye, {})],
     # ── Ult Proc ──
-    "Malignance": [("passive", "Hatefog", _parse_malignance, {})],
+    "Malignance": [
+        ("passive", "Scorn", _parse_ultimate_haste, {}),
+        ("passive", "Hatefog", _parse_malignance, {}),
+    ],
     # ── Active Items ──
     "Hextech Rocketbelt": [("active", "Supersonic", _parse_active_flat_ap, {})],
     "Hextech Gunblade": [("active", "Lightning Bolt", _parse_gunblade_active, {})],
@@ -2339,8 +2544,18 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     "Hexoptics C44": [("passive", "Magnification", _parse_hexoptics_magnification, {})],
     "Horizon Focus": [("passive", "Hypershot", _parse_horizon_focus, {})],
     # ── Ult Attack Speed Buffs ──
-    "Experimental Hexplate": [("passive", "Overdrive", _parse_hexplate, {})],
-    "Fiendhunter Bolts": [("passive", "Opening Barrage", _parse_fiendhunter, {})],
+    "Experimental Hexplate": [
+        ("passive", "Hexcharged", _parse_ultimate_haste, {}),
+        ("passive", "Overdrive", _parse_hexplate, {}),
+    ],
+    "Fiendhunter Bolts": [
+        ("passive", "Night Vigil", _parse_ultimate_haste, {}),
+        ("passive", "Opening Barrage", _parse_fiendhunter, {}),
+    ],
+    "Zeke's Convergence": [
+        ("passive", "Cryocombustion", _parse_ultimate_haste, {}),
+        ("passive", "Frostfire Tempest", _parse_zeke_frostfire, {}),
+    ],
     # ── Max HP Proc ──
     "Eclipse": [
         ("passive", "Ever Rising Moon", _parse_eclipse, {"use_cooldown_field": True})
@@ -2376,12 +2591,34 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
         ("passive", "Retribution", _parse_overlord_retribution, {}),
     ],
     "Seraph's Embrace": [("passive", "Awe", _parse_mana_to_ap_awe, {})],
-    "Archangel's Staff": [("passive", "Awe", _parse_mana_to_ap_awe, {})],
+    "Archangel's Staff": [
+        ("passive", "Awe", _parse_mana_to_ap_awe, {}),
+        ("passive", "Manaflow", _parse_manaflow, {}),
+        ("passive", "None", _parse_manaflow_transform, {}),
+    ],
+    "Manamune": [
+        ("passive", "Awe", _parse_muramana_awe, {}),
+        ("passive", "Manaflow", _parse_manaflow, {}),
+        ("passive", "None", _parse_manaflow_transform, {}),
+    ],
     "Fimbulwinter": [("passive", "Awe", _parse_mana_to_health_awe, {})],
-    "Winter's Approach": [("passive", "Awe", _parse_mana_to_health_awe, {})],
+    "Winter's Approach": [
+        ("passive", "Awe", _parse_mana_to_health_awe, {}),
+        ("passive", "Manaflow", _parse_manaflow, {}),
+        ("passive", "None", _parse_manaflow_transform, {}),
+    ],
+    "Whispering Circlet": [
+        ("passive", "Harmony", _parse_harmony, {}),
+        ("passive", "Manaflow", _parse_manaflow, {}),
+        ("passive", "None", _parse_manaflow_transform, {}),
+    ],
+    "Rod of Ages": [
+        ("passive", "Timeless", _parse_rod_timeless, {}),
+    ],
     "Rabadon's Deathcap": [("passive", "Magical Opus", _parse_rabadons_opus, {})],
     "Dawncore": [("passive", "First Light", _parse_dawncore_first_light, {})],
     "Bandlepipes": [("passive", "Fanfare", _parse_bandlepipes_fanfare, {})],
+    "Swiftmarch": [("passive", "Noxian Fervor", _parse_swiftmarch_fervor, {})],
     "Staff of Flowing Water": [("passive", "Rapids", _parse_flowing_water_rapids, {})],
     "Sterak's Gage": [("passive", "The Claws that Catch", _parse_steraks_claws, {})],
     "Warmog's Armor": [("passive", "Warmog's Vitality", _parse_warmogs_vitality, {})],

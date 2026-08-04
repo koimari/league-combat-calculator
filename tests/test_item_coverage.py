@@ -177,6 +177,7 @@ def test_temporary_lethality_state_requires_exact_ability_order():
         ("Actualizer", "blocked"),
         ("Overlord's Bloodmail", "modeled_state"),
         ("Yun Tal Wildarrows", "modeled_effect"),
+        ("Swiftmarch", "modeled_effect"),
         ("Lich Bane", "modeled_effect"),
         ("Essence Reaver", "modeled_effect"),
         ("Dusk and Dawn", "modeled_effect"),
