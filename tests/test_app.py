@@ -951,6 +951,9 @@ def test_bis_frontend_surfaces_backend_withheld_candidate_receipts():
     assert 'aria-label="${escapeHtml(entry.name || "Candidate")} withheld"' in source
     assert "const rows = certifiedRows" in source
     assert "Partial event order is an audit receipt, never a ranked preview" in source
+    assert "const partialCards = displayPartialRows.map" in source
+    assert "partial event order ·" in source
+    assert "certified subset · search not exhaustive" in source
 
 
 def test_bis_frontend_sends_and_filters_by_the_selected_objective():

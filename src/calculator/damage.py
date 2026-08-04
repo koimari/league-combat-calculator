@@ -3986,6 +3986,18 @@ def _add_precomputed_proc_damage(
             proc_count = len(authored_proc_times)
             if proc_count <= 0:
                 continue
+        elif (
+            info.get("timeline_event_model") == "ziggs_short_fuse"
+            and state.one_rotation
+            and rotation is not None
+            and state.num_auto_attacks >= int(proc_count)
+        ):
+            # A one-rotation request supplies a fixed Short Fuse proc count.
+            # When the authored auto stream contains at least that many
+            # swings, attach each proc to its corresponding swing so the
+            # candidate timeline is ordered rather than leaving every build
+            # partial merely because the passive row was aggregated.
+            authored_proc_times = _auto_attack_timestamps(state)[: int(proc_count)]
         if (
             info.get("event_order_certified") == "auto_stack_proc"
             and not state.one_rotation

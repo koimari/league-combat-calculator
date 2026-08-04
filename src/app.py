@@ -2335,14 +2335,27 @@ def api_bis():
                 "certification": (
                     "bis_event_order_certified"
                     if coverage_complete
-                    else "bis_withheld_partial_event_order"
+                    else (
+                        "bis_certified_subset_not_exhaustive"
+                        if certified_ranked
+                        else "bis_no_certified_candidates"
+                    )
                 ),
                 "note": (
                     "Every candidate has complete sourced event order."
                     if coverage_complete
                     else (
-                        "BIS is withheld: one or more candidates were not fully "
-                        "evaluated or still have partial event order."
+                        (
+                            "Certified candidates are available, but exhaustive "
+                            "BIS is withheld because one or more candidates were "
+                            "not fully evaluated or still have partial event order."
+                        )
+                        if certified_ranked
+                        else (
+                            "No candidate has complete sourced event order; BIS "
+                            "is withheld and only partial or pre-timeline receipts "
+                            "are shown."
+                        )
                     )
                 )
                 + (f" {target_coverage_note}" if target_coverage_note else ""),

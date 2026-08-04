@@ -1475,6 +1475,7 @@ def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch)
     assert body["certified_candidate_count"] == 1
     assert body["withheld_candidate_count"] == 1
     assert body["coverage"]["complete"] is False
+    assert body["coverage"]["certification"] == "bis_certified_subset_not_exhaustive"
     withheld = body["withheld_candidates"]
     assert withheld[0]["name"] == "Luden's Echo"
     assert withheld[0]["reason"] == "candidate_loadout_unavailable"
@@ -1768,6 +1769,8 @@ def test_bis_never_labels_partial_event_order_as_certified():
     )
     assert body["partial_candidate_count"] == len(body["partial_candidates"])
     assert body["certified_candidate_count"] == len(body["candidates"])
+    if not body["candidates"]:
+        assert body["coverage"]["certification"] == "bis_no_certified_candidates"
     assert (
         body["partial_candidate_count"]
         + body["certified_candidate_count"]

@@ -2899,13 +2899,19 @@ async function openBackendBis(path) {
     // backend remains the authority for ordering complete candidates.
     const rows = certifiedRows;
     const displayRows = rows.slice(0, 24);
+    const displayPartialRows = partialRows.slice(0, 24);
     const coverage = result.coverage?.complete
       ? "complete sourced coverage"
-      : "BIS withheld until every candidate is certified";
+      : certifiedRows.length
+        ? "certified subset · search not exhaustive"
+        : "no certified candidate · search not exhaustive";
     const candidateScope = result.candidate_scope?.startsWith("role-tagged:")
       ? `${result.candidate_scope.slice("role-tagged:".length)} role-compatible`
       : "all supported";
     const displayNote = rows.length > displayRows.length ? ` · showing top ${displayRows.length}` : "";
+    const partialDisplayNote = partialRows.length > displayPartialRows.length
+      ? ` · showing ${displayPartialRows.length} partial receipts`
+      : "";
     const withheldRows = Array.isArray(result.withheld_candidates) ? result.withheld_candidates : [];
     const withheldCount = Number(result.withheld_candidate_count || withheldRows.length || 0);
     const withheldNames = withheldRows.slice(0, 3).map((entry) => entry.name).filter(Boolean).join(", ");
@@ -2914,7 +2920,9 @@ async function openBackendBis(path) {
       : "";
     const responseObjective = result.objective || {};
     const objectiveLabel = responseObjective.label || OBJECTIVES[selectedObjective].label;
-    const partialNote = partialRows.length ? ` · ${partialRows.length} partial receipts withheld` : "";
+    const partialNote = partialRows.length
+      ? ` · ${partialRows.length} partial receipts withheld${partialDisplayNote}`
+      : "";
     $("bisSummary").textContent = `${subject.champion} · ${objectiveLabel} · ${certifiedRows.length} certified of ${result.candidate_count || rows.length} ${candidateScope} candidates · ${coverage}${displayNote}${withheldNote}${partialNote}`;
     const evaluatedCards = displayRows.map((entry, index) => {
       const item = findItemByBackendName(entry.name);
@@ -2924,12 +2932,21 @@ async function openBackendBis(path) {
       const detail = `${item ? itemStatsLine(item) : "Sourced item stats"} · ${bisComponentLine(entry.components)}${defensiveNote}`;
       return `<article class="bis-row"><span class="bis-rank">${String(index + 1).padStart(2, "0")}</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(detail)}</small></div><p><strong>${fmt(entry.score)}</strong><span>${escapeHtml(bisMetricLabel(entry.metric))}</span></p><button type="button" data-bis-value="${item ? item.id : ""}" ${item ? "" : "disabled"}>Use</button></article>`;
     }).join("");
+    const partialCards = displayPartialRows.map((entry) => {
+      const item = findItemByBackendName(entry.name);
+      const timeline = entry.timeline_coverage || {};
+      const coarseSources = Array.isArray(timeline.coarse_sources) && timeline.coarse_sources.length
+        ? ` · coarse: ${timeline.coarse_sources.join(", ")}`
+        : "";
+      const detail = timeline.note || "The candidate has incomplete event-order coverage.";
+      return `<article class="bis-row partial"><span class="bis-rank">—</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name || "Candidate")}</strong><small>Withheld · partial event order · ${escapeHtml(detail)}${escapeHtml(coarseSources)}</small></div><p><strong>—</strong><span>Not rankable</span></p><button type="button" disabled aria-label="${escapeHtml(entry.name || "Candidate")} partial event order">Withheld</button></article>`;
+    }).join("");
     const withheldCards = withheldRows.slice(0, 24).map((entry) => {
       const item = findItemByBackendName(entry.name);
       const reason = String(entry.reason || "candidate not evaluated").replaceAll("_", " ");
       return `<article class="bis-row partial withheld"><span class="bis-rank">—</span><img src="${item ? itemImage(item.id) : escapeHtml(entry.icon || "")}" alt="" /><div><strong>${escapeHtml(entry.name || "Candidate")}</strong><small>Withheld · ${escapeHtml(reason)}${entry.detail ? ` · ${escapeHtml(entry.detail)}` : ""}</small></div><p><strong>—</strong><span>No score</span></p><button type="button" disabled aria-label="${escapeHtml(entry.name || "Candidate")} withheld">Withheld</button></article>`;
     }).join("");
-    $("bisList").innerHTML = evaluatedCards + withheldCards || `<p class="picker-empty">${escapeHtml(result.coverage?.note || "No legal candidate has complete sourced mechanics for this timeline.")}${withheldCount ? ` ${escapeHtml(withheldCount === 1 ? "One candidate was withheld before timeline evaluation." : `${withheldCount} candidates were withheld before timeline evaluation.`)}` : ""}</p>`;
+    $("bisList").innerHTML = evaluatedCards + partialCards + withheldCards || `<p class="picker-empty">${escapeHtml(result.coverage?.note || "No legal candidate has complete sourced mechanics for this timeline.")}${withheldCount ? ` ${escapeHtml(withheldCount === 1 ? "One candidate was withheld before timeline evaluation." : `${withheldCount} candidates were withheld before timeline evaluation.`)}` : ""}</p>`;
   } catch (error) {
     $("bisSummary").textContent = "BIS unavailable";
     $("bisList").innerHTML = `<p class="picker-empty">${escapeHtml(error.message)}</p>`;
