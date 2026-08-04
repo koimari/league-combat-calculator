@@ -86,7 +86,13 @@ from calculator.scenario import (
     ChampionLoadout,
     parse_roster,
 )
-from calculator.role_quests import require_level_within_cap, role_quest_meta
+from calculator.role_quests import (
+    require_level_within_cap,
+    boot_upgrade_contract,
+    role_quest_meta,
+    support_quest_item_contract,
+    support_quest_item_stage,
+)
 from calculator.timeline_coverage import combine_timeline_coverages
 from calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
@@ -1214,6 +1220,7 @@ def api_items():
                 "price": item.get("price", 0),
                 "into": item.get("into") or [],
                 "categories": item.get("categories") or [],
+                "support_quest_stage": support_quest_item_stage(item.get("name")),
                 "model_coverage": item_model_coverage(item),
                 "target_model_coverage": target_item_model_coverage(item),
             }
@@ -1227,6 +1234,8 @@ def api_items():
 @app.route("/api/boots")
 def api_boots():
     """Return tier-2 and quest-only tier-3 boots for the role-aware picker."""
+    upgrade_pairs = boot_upgrade_contract()
+    upgrade_from = {pair["upgraded"]: pair["base"] for pair in upgrade_pairs.values()}
     result = sorted(
         [
             {
@@ -1251,6 +1260,15 @@ def api_boots():
                 "into": item.get("into") or [],
                 "categories": item.get("categories") or [],
                 "tier": item.get("tier"),
+                "upgrade_from": upgrade_from.get(item.get("name")),
+                "upgrade_to": next(
+                    (
+                        pair["upgraded"]
+                        for pair in upgrade_pairs.values()
+                        if pair["base"] == item.get("name")
+                    ),
+                    None,
+                ),
                 "model_coverage": item_model_coverage(item),
                 "target_model_coverage": target_item_model_coverage(item),
             }
@@ -1298,6 +1316,10 @@ def api_config():
             "input_limits": PUBLIC_INPUT_LIMITS,
             "champion_options": champion_options_meta_map(),
             "item_options": item_input_options_meta(),
+            "role_quest": {
+                "support_item": support_quest_item_contract(),
+                "boot_upgrades": boot_upgrade_contract(),
+            },
             "champion_engine": {
                 "registered_count": len(_ENGINE_CHAMPIONS),
                 "reviewed_count": len(_VERIFIED_CHAMPIONS),

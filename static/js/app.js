@@ -17,6 +17,7 @@ const engine = {
   defaultTarget: { health: 1000, bonus_health: 0, armor: 100, mr: 100 },
   fightDefaults: {},
   exclusivityGroups: {},
+  roleQuest: {},
   itemCatalogReady: false,
   fightLimits: { fight_duration: [1, 10] },
   pendingTimer: null,
@@ -128,6 +129,9 @@ function mergeItemCoverage(catalog) {
       backendAvailable: true,
       modelCoverage: metadata.model_coverage || null,
       targetModelCoverage: metadata.target_model_coverage || null,
+      supportQuestStage: metadata.support_quest_stage || metadata.supportQuestStage || null,
+      upgradeFrom: metadata.upgrade_from || metadata.upgradeFrom || null,
+      upgradeTo: metadata.upgrade_to || metadata.upgradeTo || null,
     };
   });
   catalog.forEach((entry) => {
@@ -141,6 +145,9 @@ function mergeItemCoverage(catalog) {
       targetModelCoverage: entry.target_model_coverage || null,
       into: entry.into || [],
       categories: entry.categories || [],
+      supportQuestStage: entry.support_quest_stage || entry.supportQuestStage || null,
+      upgradeFrom: entry.upgrade_from || entry.upgradeFrom || null,
+      upgradeTo: entry.upgrade_to || entry.upgradeTo || null,
     });
   });
   engine.itemCatalogReady = true;
@@ -279,6 +286,78 @@ function itemName(id, fallback = "Empty slot") {
 
 function backendItemReady(item) {
   return !engine.itemCatalogReady || item?.backendAvailable !== false;
+}
+
+function roleQuestStateForPath(path) {
+  const parts = String(path || "").split(".");
+  if (parts[0] === "attacker") {
+    return {
+      role: state.attacker.role || "",
+      complete: Boolean(state.attacker.roleQuestComplete),
+    };
+  }
+  if ((parts[0] === "targets" || parts[0] === "allies") && parts.length > 1) {
+    const loadout = state[parts[0]]?.[Number(parts[1])];
+    return {
+      role: loadout?.role || "",
+      complete: Boolean(loadout?.roleQuestComplete),
+    };
+  }
+  return { role: "", complete: false };
+}
+
+function supportQuestItemBlockReason(item, path) {
+  const stage = item?.supportQuestStage;
+  if (!stage) return "";
+  const { role, complete } = roleQuestStateForPath(path);
+  if (role !== "support") return "Support quest items require the support role.";
+  if (complete && stage !== "upgraded") {
+    return "A completed support quest requires an upgraded support item.";
+  }
+  if (!complete && stage === "upgraded") {
+    return "Complete the support role quest before equipping an upgraded support item.";
+  }
+  return "";
+}
+
+function roleQuestBootUpgradeName(item, complete) {
+  const role = state.attacker.role;
+  if (!item || role !== "mid") {
+    return Number(item?.tier) >= 3
+      ? (item?.upgradeFrom || null)
+      : item?.name;
+  }
+  if (complete && Number(item.tier) < 3) return item.upgradeTo || null;
+  if (!complete && Number(item.tier) >= 3) return item.upgradeFrom || null;
+  return item.name;
+}
+
+function normalizeAttackerBootForRole(bootId) {
+  const item = getItem(bootId);
+  if (!item) return 0;
+  const targetName = roleQuestBootUpgradeName(item, Boolean(state.attacker.roleQuestComplete));
+  if (!targetName || targetName === item.name) return Number(bootId);
+  return findItemByBackendName(targetName)?.id || Number(bootId);
+}
+
+function normalizeAttackerBootsForRole() {
+  ["A", "B"].forEach((side) => {
+    const key = "questBoot" + side;
+    if (!state.attacker[key]) return;
+    state.attacker[key] = normalizeAttackerBootForRole(state.attacker[key]);
+  });
+}
+
+function normalizeRosterBootForRole(loadout) {
+  const item = getItem(loadout?.boots);
+  if (!item) return;
+  const midUpgrade = loadout.role === "mid" && Boolean(loadout.roleQuestComplete);
+  const targetName = midUpgrade
+    ? (Number(item.tier) < 3 ? item.upgradeTo : item.name)
+    : (Number(item.tier) >= 3 ? item.upgradeFrom : item.name);
+  if (targetName && targetName !== item.name) {
+    loadout.boots = findItemByBackendName(targetName)?.id || loadout.boots;
+  }
 }
 
 function findItemByBackendName(name) {
@@ -528,7 +607,9 @@ function includeBootsForSide(side) {
 }
 
 function questBootIds() {
-  return state.attacker.role === "mid" ? TIER_THREE_BOOTS : TIER_TWO_BOOTS;
+  return state.attacker.role === "mid" && state.attacker.roleQuestComplete
+    ? TIER_THREE_BOOTS
+    : TIER_TWO_BOOTS;
 }
 
 function magicPenLabel(stats) {
@@ -788,7 +869,9 @@ function roleQuestNote() {
   if (state.attacker.role === "mid") return "+8% bonus AD and AP · Tier 3 boots use one of six slots.";
   if (state.attacker.role === "bottom") return "Six item slots · boots move into the dedicated quest slot.";
   if (state.attacker.role === "top") return "+600 XP · +12.5% future XP · level cap 20 · no item-slot change.";
-  if (state.attacker.role === "support") return "Reserved ward / support quest slot · excluded from damage scoring.";
+  if (state.attacker.role === "support") return state.attacker.roleQuestComplete
+    ? "Completed quest: choose one upgraded support item in a build slot; its sourced stats/effects remain in the calculation."
+    : "Support quest incomplete: upgraded support items stay locked until the quest is complete.";
   if (state.attacker.role === "top") return "Level cap raised to 20 · no item-slot change.";
   return "No item-slot change for this role.";
 }
@@ -831,8 +914,8 @@ function renderBuildStrip(side) {
   const boot = includeBootsForSide(side)
     ? `<div class="quest-item"><span>${state.attacker.role === "mid" && usesQuestBootSlot() ? "Tier 3 boots" : "Boots"}</span>${itemSlot(questBootPath(side), state.attacker[`questBoot${side}`], false, true)}</div>`
     : "";
-  const support = state.attacker.role === "support" && state.attacker.roleQuestComplete
-    ? `<div class="utility-slot" title="This slot is not included in damage scoring"><span>Quest / wards</span><b>◆</b><small>Utility</small></div>`
+  const support = state.attacker.role === "support"
+    ? `<div class="utility-slot" title="Support quest state controls which support item stage is legal"><span>Support quest</span><b>${state.attacker.roleQuestComplete ? "UPGRADED" : "IN PROGRESS"}</b><small>${state.attacker.roleQuestComplete ? "Choose an upgraded support item in a build slot" : "Upgrade locked until quest complete"}</small></div>`
     : "";
   return `<div class="complete-build build-${side.toLowerCase()}">
     <div class="complete-build-head"><strong>Build ${side}</strong><span>${ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0)} combat ${plural(ordinarySlotCount(side) + (includeBootsForSide(side) ? 1 : 0), "slot")} + keystone${support ? " + utility" : ""}</span><button class="boots-toggle ${includeBootsForSide(side) ? "active" : ""}" type="button" data-include-boots="${side}" aria-pressed="${includeBootsForSide(side)}">${includeBootsForSide(side) ? "Boots included" : "No boots"}</button></div>
@@ -2271,12 +2354,17 @@ function createPickerContent(entries, selected, query, includeEmpty) {
       : null;
     const calculationEligible = itemCoverage?.calculation_eligible
       ?? (itemCoverage?.optimizer_eligible ?? false);
-    const itemBlocked = Boolean(itemCoverage && calculationEligible === false);
+    const roleQuestReason = pickerContext.type === "item"
+      ? supportQuestItemBlockReason(entry, pickerContext.path)
+      : "";
+    const itemBlocked = Boolean(
+      (itemCoverage && calculationEligible === false) || roleQuestReason
+    );
     const detail = pickerContext.type === "champion"
       ? `${entry.tags.join(" · ")} · ${entry.resource}`
       : isKeystone
         ? `${entry.path} keystone${entry.implemented ? "" : " · not modeled yet"}`
-        : `${itemStatsLine(entry)}${itemCoverage?.status ? ` · ${itemCoverage.status.replaceAll("_", " ")}` : ""}`;
+        : `${itemStatsLine(entry)}${itemCoverage?.status ? ` · ${itemCoverage.status.replaceAll("_", " ")}` : ""}${roleQuestReason ? ` · ${roleQuestReason}` : ""}`;
     const button = document.createElement("button");
     const image = document.createElement("img");
     button.type = "button";
@@ -2285,7 +2373,7 @@ function createPickerContent(entries, selected, query, includeEmpty) {
     if ((isKeystone && !entry.implemented) || itemBlocked) {
       button.disabled = true;
       button.title = itemBlocked
-        ? (itemCoverage?.reason || "This item is withheld until its selected model is supported.")
+        ? (roleQuestReason || itemCoverage?.reason || "This item is withheld until its selected model is supported.")
         : "This keystone is not modeled yet; its numbers would be estimates.";
     }
     image.src = imageUrl;
@@ -3344,6 +3432,7 @@ document.addEventListener("click", (event) => {
   }
   if (event.target.closest("#questToggle")) {
     state.attacker.roleQuestComplete = !state.attacker.roleQuestComplete;
+    normalizeAttackerBootsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     invalidateOptimization();
     return render();
@@ -3377,8 +3466,7 @@ document.addEventListener("click", (event) => {
   const roleButton = event.target.closest("[data-role]");
   if (roleButton) {
     state.attacker.role = roleButton.dataset.role;
-    state.attacker.questBootA = 0;
-    state.attacker.questBootB = 0;
+    normalizeAttackerBootsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     syncAbilityInputsToLevel();
     invalidateOptimization();
@@ -3386,8 +3474,7 @@ document.addEventListener("click", (event) => {
   }
   if (event.target.closest("[data-role-quest]")) {
     state.attacker.roleQuestComplete = !state.attacker.roleQuestComplete;
-    state.attacker.questBootA = 0;
-    state.attacker.questBootB = 0;
+    normalizeAttackerBootsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     syncAbilityInputsToLevel();
     invalidateOptimization();
@@ -3438,6 +3525,7 @@ document.addEventListener("click", (event) => {
     // Keep the explicit boots selection in browser state.  A rerender or
     // quest toggle must not erase the user's item; the backend remains the
     // authority for whether its tier is legal for the new role state.
+    normalizeRosterBootForRole(loadout);
     if (loadout.role !== "top" && loadout.level > 18) loadout.level = 18;
     invalidateOptimization();
     return render();
@@ -3662,6 +3750,7 @@ document.addEventListener("change", (event) => {
   loadout.role = rosterRoleSelect.value;
   if (!loadout.role) loadout.roleQuestComplete = false;
   // Role changes rerender the card but do not erase the selected boots.
+  normalizeRosterBootForRole(loadout);
   if (loadout.role !== "top" && loadout.level > 18) loadout.level = 18;
   invalidateOptimization();
   render();
@@ -3707,6 +3796,8 @@ Promise.all([
     engine.defaultTarget = config.default_target || engine.defaultTarget;
     engine.fightDefaults = config.fight_defaults || {};
     engine.exclusivityGroups = config.exclusivity_groups || {};
+    engine.roleQuest = config.role_quest || {};
+    normalizeAttackerBootsForRole();
     const fightDefaults = engine.fightDefaults;
     state.fight.aaUptimeMode = fightDefaults.auto_attack_uptime_mode || "calculated";
     if (fightDefaults.mode === "one_rotation") {

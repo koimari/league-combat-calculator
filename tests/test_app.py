@@ -1575,6 +1575,70 @@ class TestIconUrlsAreHttps:
     def test_boot_api_marks_role_quest_tiers(self):
         boots = app_module.app.test_client().get("/api/boots").get_json()
         assert {boot["tier"] for boot in boots} == {2, 3}
+        by_name = {boot["name"]: boot for boot in boots}
+        assert by_name["Plated Steelcaps"]["upgrade_to"] == "Armored Advance"
+        assert by_name["Armored Advance"]["upgrade_from"] == "Plated Steelcaps"
+
+    def test_config_exposes_support_quest_item_gate(self):
+        config = app_module.app.test_client().get("/api/config").get_json()
+        support = config["role_quest"]["support_item"]
+        assert support["complete_allowed_stages"] == ["upgraded"]
+        assert "Dream Maker" in support["stages"]["upgraded"]
+        assert "World Atlas" in support["stages"]["starter"]
+
+    def test_boot_stats_change_damage_and_omnivamp_healing(self):
+        client = app_module.app.test_client()
+        base = {
+            "champion": "Jinx",
+            "level": 12,
+            "items": [],
+            "role": "bottom",
+            "target_health": 2_000,
+            "target_armor": 100,
+            "target_mr": 100,
+            "auto_attack_uptime": 1.0,
+            "auto_attack_uptime_mode": "explicit",
+            "fight_duration": 10,
+            "enemies": [{"champion": "Galio", "level": 12, "role": "mid"}],
+        }
+        no_boots = client.post("/api/calculate", json=base).get_json()
+        attack_speed_boots = client.post(
+            "/api/calculate",
+            json={**base, "boots": "Berserker's Greaves"},
+        ).get_json()
+        omnivamp_boots = client.post(
+            "/api/calculate",
+            json={**base, "boots": "Gluttonous Greaves"},
+        ).get_json()
+
+        assert attack_speed_boots["total_damage"] > no_boots["total_damage"]
+        assert (
+            attack_speed_boots["champion_stats"]["attack_speed"]
+            > no_boots["champion_stats"]["attack_speed"]
+        )
+        assert omnivamp_boots["champion_stats"]["omnivamp_percent"] == 4.0
+        main = next(
+            row
+            for row in omnivamp_boots["combat"]["participants"]
+            if row["participant_id"] == "main"
+        )
+        assert main["survival"]["healing_received"] > 0
+
+    def test_completed_mid_quest_accepts_upgraded_magic_penetration_boots(self):
+        response = app_module.app.test_client().post(
+            "/api/calculate",
+            json={
+                "champion": "Ziggs",
+                "level": 12,
+                "role": "mid",
+                "role_quest_complete": True,
+                "boots": "Spellslinger's Shoes",
+                "items": [],
+            },
+        )
+
+        assert response.status_code == 200
+        assert response.get_json()["champion_stats"]["magic_penetration_flat"] == 18.0
 
     def test_ability_icons_are_https(self):
         abilities = app_module.app.test_client().get("/api/abilities/Aatrox").get_json()

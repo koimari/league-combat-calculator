@@ -7,7 +7,12 @@ selection for convenience, but the API and optimizer remain the authority.
 from collections.abc import Iterable
 from typing import Any
 
-from .role_quests import validate_role
+from .role_quests import (
+    SUPPORT_QUEST_STARTER_STAGES,
+    SUPPORT_QUEST_UPGRADED_STAGE,
+    support_quest_item_stage,
+    validate_role,
+)
 
 ITEM_EXCLUSIVITY_GROUPS: dict[str, frozenset[str]] = {
     "Glory": frozenset({"Dark Seal", "Mejai's Soulstealer"}),
@@ -140,6 +145,7 @@ def validate_resolved_loadout(
     role_quest_complete: bool = False,
 ) -> None:
     """Reject an inventory that cannot exist in a live game."""
+    parsed_role = validate_role(role)
     ordinary = list(ordinary_items)
     equipped = ([boots] if boots else []) + ordinary
     names = [str(item.get("name", "")) for item in equipped]
@@ -165,6 +171,31 @@ def validate_resolved_loadout(
             raise ValueError(
                 f"{boots['name']} is tier {actual_tier}; this role state "
                 f"requires tier-{expected_tier} boots"
+            )
+
+    support_items = [
+        name for name in names if support_quest_item_stage(name) is not None
+    ]
+    if support_items:
+        if parsed_role != "support":
+            raise ValueError("Support quest items require the support role")
+        if len(support_items) > 1:
+            raise ValueError("A build may contain at most one support quest item")
+        support_stage = support_quest_item_stage(support_items[0])
+        allowed_stages = (
+            {SUPPORT_QUEST_UPGRADED_STAGE}
+            if role_quest_complete
+            else set(SUPPORT_QUEST_STARTER_STAGES)
+        )
+        if support_stage not in allowed_stages:
+            required = (
+                "an upgraded support item"
+                if role_quest_complete
+                else "complete the support quest, then equip an upgraded support item"
+            )
+            raise ValueError(
+                f"{support_items[0]} is not legal for this support quest state; "
+                f"equip {required}"
             )
 
     seen_groups: dict[str, str] = {}
