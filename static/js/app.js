@@ -453,6 +453,24 @@ function normalizeAttackerBootsForRole() {
   });
 }
 
+function normalizeAttackerSupportItemsForRole() {
+  ["A", "B"].forEach((side) => {
+    const items = state.attacker[`build${side}`] || [];
+    const stacks = state.attacker[`build${side}Stacks`] || [];
+    items.forEach((itemId, index) => {
+      const item = getItem(itemId);
+      const stage = item?.supportQuestStage;
+      if (!stage) return;
+      const legal = state.attacker.role === "support"
+        && (state.attacker.roleQuestComplete ? stage === "upgraded" : stage !== "upgraded");
+      if (!legal) {
+        items[index] = 0;
+        stacks[index] = 0;
+      }
+    });
+  });
+}
+
 function normalizeRosterBootForRole(loadout) {
   const item = getItem(loadout?.boots);
   if (!item) return;
@@ -463,6 +481,27 @@ function normalizeRosterBootForRole(loadout) {
   if (targetName && targetName !== item.name) {
     loadout.boots = findItemByBackendName(targetName)?.id || loadout.boots;
   }
+}
+
+function normalizeRosterSupportItemsForRole(loadout) {
+  if (!loadout?.items) return;
+  loadout.items = loadout.items.map((itemId, index) => {
+    const item = getItem(itemId);
+    const stage = item?.supportQuestStage;
+    if (!stage) return itemId;
+    const legal = loadout.role === "support"
+      && (loadout.roleQuestComplete ? stage === "upgraded" : stage !== "upgraded");
+    if (!legal) {
+      if (loadout.itemStacks) loadout.itemStacks[index] = 0;
+      return 0;
+    }
+    return itemId;
+  });
+}
+
+function normalizeRosterRoleState(loadout) {
+  normalizeRosterBootForRole(loadout);
+  normalizeRosterSupportItemsForRole(loadout);
 }
 
 function findItemByBackendName(name) {
@@ -3667,6 +3706,7 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("#questToggle")) {
     state.attacker.roleQuestComplete = !state.attacker.roleQuestComplete;
     normalizeAttackerBootsForRole();
+    normalizeAttackerSupportItemsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     invalidateOptimization();
     return render();
@@ -3701,6 +3741,7 @@ document.addEventListener("click", (event) => {
   if (roleButton) {
     state.attacker.role = roleButton.dataset.role;
     normalizeAttackerBootsForRole();
+    normalizeAttackerSupportItemsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     syncAbilityInputsToLevel();
     invalidateOptimization();
@@ -3709,6 +3750,7 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("[data-role-quest]")) {
     state.attacker.roleQuestComplete = !state.attacker.roleQuestComplete;
     normalizeAttackerBootsForRole();
+    normalizeAttackerSupportItemsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     syncAbilityInputsToLevel();
     invalidateOptimization();
@@ -3759,7 +3801,7 @@ document.addEventListener("click", (event) => {
     // Keep the explicit boots selection in browser state.  A rerender or
     // quest toggle must not erase the user's item; the backend remains the
     // authority for whether its tier is legal for the new role state.
-    normalizeRosterBootForRole(loadout);
+    normalizeRosterRoleState(loadout);
     if (loadout.role !== "top" && loadout.level > 18) loadout.level = 18;
     invalidateOptimization();
     return render();
@@ -3892,6 +3934,14 @@ document.addEventListener("click", (event) => {
     const selectedPath = pickerContext.path;
     if (pickerContext.type === "item") setStackValue(pickerContext.path, 0);
     setPath(pickerContext.path, pickerContext.type === "item" ? Number(option.dataset.pickerValue) : option.dataset.pickerValue);
+    if (pickerContext.type === "item") {
+      if (/^attacker\.build[AB]\./.test(selectedPath)) {
+        normalizeAttackerSupportItemsForRole();
+      } else if (/^(targets|allies)\.\d+\.(items|boots)$/.test(selectedPath)) {
+        const [root, indexText] = selectedPath.split(".");
+        normalizeRosterRoleState(state[root]?.[Number(indexText)]);
+      }
+    }
     if (pickerContext.type === "champion" && selectedPath === "attacker.champion") {
       resetAbilityInputs();
       resetChampionOptions();
@@ -4012,7 +4062,7 @@ document.addEventListener("change", (event) => {
   loadout.role = rosterRoleSelect.value;
   if (!loadout.role) loadout.roleQuestComplete = false;
   // Role changes rerender the card but do not erase the selected boots.
-  normalizeRosterBootForRole(loadout);
+  normalizeRosterRoleState(loadout);
   if (loadout.role !== "top" && loadout.level > 18) loadout.level = 18;
   invalidateOptimization();
   render();
