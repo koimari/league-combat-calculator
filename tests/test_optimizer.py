@@ -377,6 +377,57 @@ def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch
     )
 
 
+def test_coupled_optimizer_excludes_audited_item_timing_before_ranking(monkeypatch):
+    """Audited item timing gaps are receipts, not search-wide partials."""
+
+    def fake_timeline(*_args, **kwargs):
+        items = kwargs.get("items") or _args[2]
+        excluded = any(item.get("name") == "Eclipse" for item in items)
+        return {
+            "breakdown": [{"participant_id": "main", "total_damage": 900.0}],
+            "participants": [],
+            "events": [],
+            "timeline_coverage": {
+                "complete": not excluded,
+                "exact_sources": [] if excluded else ["Q"],
+                "coarse_sources": ["proc_Eclipse"] if excluded else [],
+            },
+        }
+
+    monkeypatch.setattr(
+        "src.calculator.optimizer.build_participant_timeline", fake_timeline
+    )
+    result = optimize_build(
+        "Aatrox",
+        get_champion("Aatrox"),
+        level=6,
+        max_legendary_slots=1,
+        locked_boots="Sorcerer's Shoes",
+        enemy_loadouts=[object()],
+        require_complete_timeline=True,
+    )
+
+    coverage = result["search_timeline_coverage"]
+    assert result["is_certified_best"] is True
+    assert coverage["complete"] is True
+    assert coverage["coarse_sources"] == []
+    assert coverage["excluded_sources"] == ["proc_Eclipse"]
+    assert coverage["excluded_evaluations"] > 0
+    assert result["timeline_withheld_evaluations"] == 0
+    assert result["timeline_excluded_evaluations"] > 0
+    excluded = [
+        row
+        for row in result["timeline_withheld_candidates"]
+        if "Eclipse" in row["items"]
+    ]
+    assert excluded
+    assert all(
+        row["reason"] == "candidate_excluded_unresolved_timing"
+        and row["exclusion_type"] == "applicability"
+        for row in excluded
+    )
+
+
 def test_coupled_ranked_build_uses_its_participant_timeline_receipt(monkeypatch):
     """Ranked coupled rows must not fall back to raw pair-fight coverage."""
 

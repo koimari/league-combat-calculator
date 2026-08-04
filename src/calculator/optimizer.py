@@ -29,7 +29,10 @@ from .pipeline import FightParams, run_fight
 from .defensive_effects import resolve_starting_defenses
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .stats import calculate_total_stats
-from .timeline_coverage import combine_timeline_coverages
+from .timeline_coverage import (
+    applicability_exclusion_sources,
+    combine_timeline_coverages,
+)
 
 # Item exclusivity groups — at most one item from each group per build
 # (e.g. Spellblade items are mutually exclusive in-game). This table is
@@ -147,8 +150,12 @@ def _evaluate_build(
         if timeline_audit is not None and audit_delta is not None:
             timeline_audit["evaluations"] += audit_delta["evaluations"]
             timeline_audit["partial_evaluations"] += audit_delta["partial_evaluations"]
+            timeline_audit["excluded_evaluations"] += audit_delta[
+                "excluded_evaluations"
+            ]
             timeline_audit["exact_sources"].update(audit_delta["exact_sources"])
             timeline_audit["coarse_sources"].update(audit_delta["coarse_sources"])
+            timeline_audit["excluded_sources"].update(audit_delta["excluded_sources"])
         return score
     audit_before = (
         None
@@ -156,8 +163,10 @@ def _evaluate_build(
         else (
             timeline_audit["evaluations"],
             timeline_audit["partial_evaluations"],
+            timeline_audit["excluded_evaluations"],
             set(timeline_audit["exact_sources"]),
             set(timeline_audit["coarse_sources"]),
+            set(timeline_audit["excluded_sources"]),
         )
     )
     score = _evaluate_build_uncached(
@@ -178,8 +187,12 @@ def _evaluate_build(
             "partial_evaluations": (
                 timeline_audit["partial_evaluations"] - audit_before[1]
             ),
-            "exact_sources": timeline_audit["exact_sources"] - audit_before[2],
-            "coarse_sources": timeline_audit["coarse_sources"] - audit_before[3],
+            "excluded_evaluations": (
+                timeline_audit["excluded_evaluations"] - audit_before[2]
+            ),
+            "exact_sources": timeline_audit["exact_sources"] - audit_before[3],
+            "coarse_sources": timeline_audit["coarse_sources"] - audit_before[4],
+            "excluded_sources": (timeline_audit["excluded_sources"] - audit_before[5]),
         }
     score_memo[memo_key] = (score, audit_delta)
     return score
@@ -269,17 +282,41 @@ def _evaluate_build_uncached(
                 )
             return float("-inf")
         coverage = combat.get("timeline_coverage", {})
+        excluded_sources = (
+            applicability_exclusion_sources(coverage)
+            if require_complete_timeline
+            else []
+        )
         if timeline_audit is not None:
             timeline_audit["evaluations"] += 1
             timeline_audit["exact_sources"].update(coverage.get("exact_sources", []))
-            timeline_audit["coarse_sources"].update(coverage.get("coarse_sources", []))
             # Coupled searches score through this full participant timeline.
             # Keep its receipt attached to the exact build so the public
             # ranked row cannot later substitute a raw pair-fight receipt.
             timeline_audit.setdefault("build_coverages", {})[
                 _build_receipt_key(items)
             ] = dict(coverage)
-            if not coverage.get("complete", False):
+            if excluded_sources:
+                # These three item packets have correct aggregate damage but
+                # no sourced hit boundary in a generic cast.  They are safe
+                # to exclude before ranking, unlike an unknown partial source.
+                # Keep the full coarse receipt on the candidate row while
+                # keeping the search-level certification about scored builds.
+                timeline_audit["excluded_evaluations"] += 1
+                timeline_audit["excluded_sources"].update(excluded_sources)
+                timeline_audit.setdefault("withheld_builds", {})[
+                    _build_receipt_key(items)
+                ] = _public_build_receipt(
+                    items,
+                    coverage,
+                    "candidate_excluded_unresolved_timing",
+                    exclusion_type="applicability",
+                )
+            else:
+                timeline_audit["coarse_sources"].update(
+                    coverage.get("coarse_sources", [])
+                )
+            if not coverage.get("complete", False) and not excluded_sources:
                 timeline_audit["partial_evaluations"] += 1
                 timeline_audit.setdefault("withheld_builds", {})[
                     _build_receipt_key(items)
@@ -371,11 +408,26 @@ def _evaluate_build_uncached(
         result = run_fight(champion_data, level, items, target_params)
         results.append(result)
     coverage = _combined_build_timeline_coverage(results)
+    excluded_sources = (
+        applicability_exclusion_sources(coverage) if require_complete_timeline else []
+    )
     if timeline_audit is not None:
         timeline_audit["evaluations"] += 1
         timeline_audit["exact_sources"].update(coverage["exact_sources"])
-        timeline_audit["coarse_sources"].update(coverage["coarse_sources"])
-        if not coverage["complete"]:
+        if excluded_sources:
+            timeline_audit["excluded_evaluations"] += 1
+            timeline_audit["excluded_sources"].update(excluded_sources)
+            timeline_audit.setdefault("withheld_builds", {})[
+                _build_receipt_key(items)
+            ] = _public_build_receipt(
+                items,
+                coverage,
+                "candidate_excluded_unresolved_timing",
+                exclusion_type="applicability",
+            )
+        else:
+            timeline_audit["coarse_sources"].update(coverage["coarse_sources"])
+        if not coverage["complete"] and not excluded_sources:
             timeline_audit["partial_evaluations"] += 1
             timeline_audit.setdefault("withheld_builds", {})[
                 _build_receipt_key(items)
@@ -444,6 +496,8 @@ def _public_build_receipt(
     items: list[dict[str, Any]],
     coverage: dict[str, Any],
     reason: str,
+    *,
+    exclusion_type: str | None = None,
 ) -> dict[str, Any]:
     """Serialize one candidate withheld before ranking as an audit row."""
     boots = next(
@@ -454,7 +508,7 @@ def _public_build_receipt(
         ),
         None,
     )
-    return {
+    receipt = {
         "items": [
             str(item.get("name", ""))
             for item in items
@@ -464,17 +518,29 @@ def _public_build_receipt(
         "timeline_coverage": dict(coverage),
         "reason": str(reason),
     }
+    if exclusion_type is not None:
+        receipt["exclusion_type"] = str(exclusion_type)
+    return receipt
 
 
 def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
     """Serialize precision across every candidate evaluation in this search."""
     evaluations = int(audit["evaluations"])
     partial_evaluations = int(audit["partial_evaluations"])
+    excluded_evaluations = int(audit.get("excluded_evaluations", 0))
     coarse_sources = sorted(audit["coarse_sources"])
     exact_sources = sorted(set(audit["exact_sources"]) - set(coarse_sources))
-    complete = evaluations > 0 and partial_evaluations == 0
+    scored_evaluations = max(0, evaluations - excluded_evaluations)
+    excluded_sources = sorted(audit.get("excluded_sources", set()))
+    complete = scored_evaluations > 0 and partial_evaluations == 0
     if complete:
-        note = f"All {evaluations:,} candidate evaluations are event-ordered."
+        note = f"All {scored_evaluations:,} scored candidate evaluations are event-ordered."
+        if excluded_evaluations:
+            names = ", ".join(excluded_sources) or "audited item timing"
+            note += (
+                f" {excluded_evaluations:,} candidate evaluations were excluded "
+                f"before ranking ({names})."
+            )
     elif coarse_sources:
         note = (
             f"{partial_evaluations:,} of {evaluations:,} candidate evaluations use "
@@ -485,14 +551,21 @@ def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
     return {
         "complete": complete,
         "certification": (
-            "candidate_event_order_certified"
+            (
+                "candidate_event_order_certified_with_exclusions"
+                if excluded_evaluations
+                else "candidate_event_order_certified"
+            )
             if complete
             else "partial_candidate_event_order"
         ),
         "evaluations": evaluations,
+        "scored_evaluations": scored_evaluations,
+        "excluded_evaluations": excluded_evaluations,
         "partial_evaluations": partial_evaluations,
         "exact_sources": exact_sources,
         "coarse_sources": coarse_sources,
+        "excluded_sources": excluded_sources,
         "note": note,
     }
 
@@ -756,8 +829,10 @@ def optimize_build(
     timeline_audit = {
         "evaluations": 0,
         "partial_evaluations": 0,
+        "excluded_evaluations": 0,
         "exact_sources": set(),
         "coarse_sources": set(),
+        "excluded_sources": set(),
         "build_coverages": {},
         "withheld_builds": {},
     }
@@ -1105,10 +1180,15 @@ def optimize_build(
         "search_guarantee": (
             (
                 (
-                    "exhaustive_event_ordered_candidates"
+                    "event_ordered_candidates_with_explicit_exclusions"
                     if require_complete_timeline
-                    and timeline_audit["partial_evaluations"] > 0
-                    else "exhaustive_legal_candidates"
+                    and timeline_audit["excluded_evaluations"] > 0
+                    else (
+                        "exhaustive_event_ordered_candidates"
+                        if require_complete_timeline
+                        and timeline_audit["partial_evaluations"] > 0
+                        else "exhaustive_legal_candidates"
+                    )
                 )
                 if candidate_coverage["complete"]
                 else "exhaustive_modeled_candidates"
@@ -1134,6 +1214,10 @@ def optimize_build(
         "timeline_withheld_evaluations": (
             timeline_audit["partial_evaluations"] if require_complete_timeline else 0
         ),
+        "timeline_excluded_evaluations": (
+            timeline_audit["excluded_evaluations"] if require_complete_timeline else 0
+        ),
+        "timeline_excluded_sources": sorted(timeline_audit["excluded_sources"]),
         "timeline_withheld_candidate_count": len(timeline_withheld_candidates),
         "timeline_withheld_candidates": timeline_withheld_candidates,
         "gold_budget": gold_budget,

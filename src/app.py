@@ -80,6 +80,7 @@ from calculator.optimizer import (
 )
 from calculator.stats import MAX_LEVEL
 from calculator.stats import calculate_total_stats, get_item_stats
+from calculator.timeline_coverage import applicability_exclusion_sources
 from calculator.scenario import (
     MAX_ALLIES,
     MAX_ENEMIES,
@@ -2220,6 +2221,26 @@ def api_bis():
                 allies=candidate_allies,
                 focus_participant_id=("main" if subject_team == "main" else subject_id),
             )
+            candidate_coverage = combat.get("timeline_coverage", {})
+            timing_exclusions = applicability_exclusion_sources(candidate_coverage)
+            if timing_exclusions:
+                names = ", ".join(timing_exclusions)
+                withheld_candidates.append(
+                    {
+                        "name": candidate["name"],
+                        "icon": _https_icon(candidate.get("icon", "")),
+                        "reason": "candidate_excluded_unresolved_timing",
+                        "exclusion_type": "applicability",
+                        "excluded_sources": timing_exclusions,
+                        "detail": (
+                            "Candidate was excluded before BIS ranking because "
+                            f"{names} has no sourced hit boundary for this "
+                            "rotation."
+                        ),
+                        "timeline_coverage": candidate_coverage,
+                    }
+                )
+                continue
             objective = combat["objective"]
             focus = next(
                 row
@@ -2308,8 +2329,18 @@ def api_bis():
             f"receipts; {first['champion']} · {first['name']}: {first['reason']}"
         )
     candidate_count = len(candidates)
+    timing_excluded = [
+        row
+        for row in withheld_candidates
+        if row.get("reason") == "candidate_excluded_unresolved_timing"
+    ]
+    blocking_withheld = [
+        row
+        for row in withheld_candidates
+        if row.get("reason") != "candidate_excluded_unresolved_timing"
+    ]
     coverage_complete = (
-        bool(certified_ranked) and not partial_ranked and not withheld_candidates
+        bool(certified_ranked) and not partial_ranked and not blocking_withheld
     )
     return jsonify(
         {
@@ -2341,12 +2372,16 @@ def api_bis():
             "coverage": {
                 "complete": coverage_complete,
                 "certification": (
-                    "bis_event_order_certified"
-                    if coverage_complete
+                    "bis_event_order_certified_with_exclusions"
+                    if coverage_complete and timing_excluded
                     else (
-                        "bis_certified_subset_not_exhaustive"
-                        if certified_ranked
-                        else "bis_no_certified_candidates"
+                        "bis_event_order_certified"
+                        if coverage_complete
+                        else (
+                            "bis_certified_subset_not_exhaustive"
+                            if certified_ranked
+                            else "bis_no_certified_candidates"
+                        )
                     )
                 ),
                 "note": (
@@ -2366,10 +2401,17 @@ def api_bis():
                         )
                     )
                 )
+                + (
+                    f" {len(timing_excluded)} candidate timing receipt(s) were "
+                    "excluded before ranking."
+                    if timing_excluded
+                    else ""
+                )
                 + (f" {target_coverage_note}" if target_coverage_note else ""),
             },
             "target_coverage_filtered": len(target_coverage_filtered),
             "target_coverage_note": target_coverage_note,
+            "timing_excluded_candidate_count": len(timing_excluded),
         }
     )
 

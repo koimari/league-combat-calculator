@@ -1482,6 +1482,62 @@ def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch)
     assert withheld[0]["timeline_coverage"]["complete"] is False
 
 
+def test_bis_excludes_audited_item_timing_before_ranking(monkeypatch):
+    """Known item timing gaps stay visible without becoming partial BIS rows."""
+
+    candidates = [
+        get_item_by_name("Bastionbreaker"),
+        get_item_by_name("Warmog's Armor"),
+    ]
+    monkeypatch.setattr(
+        "src.app._bis_candidate_pool",
+        lambda *_args, **_kwargs: candidates,
+    )
+
+    def fake_timeline(*args, **_kwargs):
+        items = args[2]
+        excluded = any(item["name"] == "Bastionbreaker" for item in items)
+        return {
+            "objective": {"focus_damage_before_death": 100.0},
+            "participants": [
+                {
+                    "participant_id": "main",
+                    "survival": {
+                        "effective_health": 1_000.0,
+                        "healing_received": 0.0,
+                        "support_shield_received": 0.0,
+                    },
+                }
+            ],
+            "timeline_coverage": {
+                "complete": not excluded,
+                "certification": (
+                    "partial_event_order" if excluded else "event_order_certified"
+                ),
+                "exact_sources": [],
+                "coarse_sources": ["shaped_charge_Bastionbreaker"] if excluded else [],
+            },
+        }
+
+    monkeypatch.setattr("src.app.build_participant_timeline", fake_timeline)
+    response = app.test_client().post("/api/bis", json=_bis_request("main"))
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["partial_candidates"] == []
+    assert body["candidates"]
+    assert body["coverage"]["complete"] is True
+    assert body["coverage"]["certification"] == (
+        "bis_event_order_certified_with_exclusions"
+    )
+    row = next(
+        row for row in body["withheld_candidates"] if row["name"] == "Bastionbreaker"
+    )
+    assert row["reason"] == "candidate_excluded_unresolved_timing"
+    assert row["exclusion_type"] == "applicability"
+    assert row["excluded_sources"] == ["shaped_charge_Bastionbreaker"]
+
+
 def test_bis_endpoint_keeps_ally_and_enemy_in_the_same_timeline():
     app.config["TESTING"] = True
     client = app.test_client()
