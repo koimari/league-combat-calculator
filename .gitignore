@@ -27,3 +27,4 @@ Desktop.ini
 .playwright-cli/
 output/
 .vercel
+data/bin/
