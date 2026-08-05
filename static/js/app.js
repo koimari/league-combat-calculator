@@ -3807,11 +3807,20 @@ document.addEventListener("click", (event) => {
     }
     return render();
   }
-  const levelButton = event.target.closest("[data-level-delta]");
+  const levelButton = event.target.closest("[data-level]");
   if (levelButton) {
-    state.attacker.level = Math.max(1, Math.min(attackerLevelCap(), state.attacker.level + Number(levelButton.dataset.levelDelta)));
-    syncAbilityInputsToLevel();
-    invalidateOptimization();
+    const levelPath = levelButton.dataset.level;
+    if (levelPath === "attacker.level") {
+      state.attacker.level = Math.max(1, Math.min(attackerLevelCap(), state.attacker.level + Number(levelButton.dataset.delta)));
+      syncAbilityInputsToLevel();
+      invalidateOptimization();
+    } else {
+      const rosterLevel = levelPath.match(/^(targets|allies)\.(\d+)\.level$/);
+      const rosterLoadout = rosterLevel ? state[rosterLevel[1]]?.[Number(rosterLevel[2])] : null;
+      const cap = rosterLoadout?.role === "top" && rosterLoadout.roleQuestComplete ? 20 : 18;
+      setPath(levelPath, Math.max(1, Math.min(cap, Number(pathValue(levelPath)) + Number(levelButton.dataset.delta))));
+      invalidateOptimization();
+    }
     return render();
   }
   const bisObjectiveButton = event.target.closest("[data-bis-objective]");
@@ -3949,17 +3958,6 @@ document.addEventListener("click", (event) => {
     normalizeRosterRoleState(loadout);
     if (loadout.role !== "top" && loadout.level > 18) loadout.level = 18;
     invalidateOptimization();
-    return render();
-  }
-  const rosterLevelButton = event.target.closest("[data-level]");
-  if (rosterLevelButton) {
-    const rosterLevel = rosterLevelButton.dataset.level.match(/^(targets|allies)\.(\d+)\.level$/);
-    const rosterLoadout = rosterLevel ? state[rosterLevel[1]]?.[Number(rosterLevel[2])] : null;
-    const cap = rosterLevelButton.dataset.level === "attacker.level"
-      ? attackerLevelCap()
-      : (rosterLoadout?.role === "top" && rosterLoadout.roleQuestComplete ? 20 : 18);
-    setPath(rosterLevelButton.dataset.level, Math.max(1, Math.min(cap, Number(pathValue(rosterLevelButton.dataset.level)) + Number(rosterLevelButton.dataset.delta))));
-    if (rosterLevelButton.dataset.level === "attacker.level") syncAbilityInputsToLevel();
     return render();
   }
   const rosterRankButton = event.target.closest("[data-roster-rank]");
