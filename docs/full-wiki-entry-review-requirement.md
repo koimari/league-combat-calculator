@@ -30,9 +30,9 @@ Generated champion packet modules are deliberately not certification evidence.
 They may remain importable so the backend can return a deterministic,
 fail-closed explanation, but `/api/champions` must expose them as
 `generated_packet` and unavailable for reviewed champion options until an exact
-module has passed this requirement. After CP10.2 the baseline is 237 ordinary
-items audited, 101 exact champion modules, and 72 generated champion packets;
-the release gate remains open until the latter 72 are replaced by exact
+module has passed this requirement. After CP10.5 the baseline is 237 ordinary
+items audited, 111 exact champion modules, and 62 generated champion packets;
+the release gate remains open until the latter 62 are replaced by exact
 modules or an explicitly sourced, tested out-of-scope classification.
 
 For every item effect, the receipt must retain the full parent-page evidence
