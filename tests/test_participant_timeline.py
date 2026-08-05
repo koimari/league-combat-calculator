@@ -2287,6 +2287,68 @@ def test_grievous_sources_reset_for_a_new_proc_after_expiry():
     assert events[1]["sources"] == ["Mortal Reminder · Grievous Wounds"]
 
 
+def test_overlapping_grievous_sources_share_one_sourced_reduction_window():
+    """Concurrent anti-heal sources are recorded together without stacking.
+
+    The patch rule applies the strongest active Grievous Wounds factor once;
+    source provenance still lists every qualifying attacker item so the event
+    ledger remains auditable for multi-item and multi-participant fights.
+    """
+    source = _dummy_combatant("source", "main", health=100.0)
+    source = Combatant(
+        participant_id=source.participant_id,
+        team=source.team,
+        champion_data=source.champion_data,
+        level=source.level,
+        items=(
+            get_item_by_name("Morellonomicon"),
+            get_item_by_name("Oblivion Orb"),
+        ),
+        stats=source.stats,
+        defenses=source.defenses,
+    )
+    target = _dummy_combatant("target", "enemy", health=200.0)
+    result = _simulate_survival(
+        [source, target],
+        {
+            "target": [
+                {
+                    "time": 0.0,
+                    "damage": 100.0,
+                    "damage_type": "magic",
+                    "attacker": "source",
+                    "target": "target",
+                    "sequence": 0,
+                    "_event_id": "overlap",
+                }
+            ]
+        },
+        {
+            "target": [
+                {
+                    "time": 1.0,
+                    "amount": 100.0,
+                    "attacker": "target",
+                    "source": "overlapping anti-heal test",
+                }
+            ]
+        },
+        {},
+        10.0,
+    )
+
+    assert result["target"]["healing_received"] == pytest.approx(60.0)
+    assert result["target"]["healing_reduced"] == pytest.approx(40.0)
+    assert result["target"]["healing_reduction_until"] == pytest.approx(3.0)
+    assert result["target"]["healing_reduction_events"][0]["factor"] == pytest.approx(
+        0.6
+    )
+    assert result["target"]["healing_reduction_events"][0]["sources"] == [
+        "Morellonomicon · Grievous Wounds",
+        "Oblivion Orb · Grievous Wounds",
+    ]
+
+
 def _thorns_combatant(
     participant_id: str,
     team: str,
