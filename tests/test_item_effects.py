@@ -62,6 +62,8 @@ from src.calculator.item_effects import (
     input_option_crit_chance,
     hubris_input_bonus_ad,
     endless_hunger_input_omnivamp,
+    actualizer_active_seconds,
+    item_state_receipts,
     validate_item_input_options,
     shield_reduction_fraction,
     required_effect_value,
@@ -154,6 +156,70 @@ def test_cp13_item_state_controls_are_bounded_and_typed() -> None:
         validate_item_input_options(
             {"Hubris": {"eminence_stacks": 1, "eminence_active_seconds": 91}}
         )
+
+
+def test_actualizer_active_window_is_explicit_and_boundary_clipped() -> None:
+    items = _build("Actualizer")
+    assert actualizer_active_seconds(
+        items,
+        {"Actualizer": {"mana_made_real_active_seconds": 8.0}},
+        fight_duration_seconds=12.0,
+    ) == pytest.approx(8.0)
+    assert actualizer_active_seconds(
+        items,
+        {"Actualizer": {"mana_made_real_active_seconds": 0.0}},
+        fight_duration_seconds=12.0,
+    ) == pytest.approx(0.0)
+    assert actualizer_active_seconds(
+        items,
+        {"Actualizer": {"mana_made_real_active": 1}},
+        fight_duration_seconds=4.0,
+    ) == pytest.approx(4.0)
+
+
+def test_cp13_state_receipt_contains_all_conversion_and_timed_boundaries() -> None:
+    items = _build(
+        "Actualizer",
+        "Riftmaker",
+        "Overlord's Bloodmail",
+        "Heartsteel",
+        "Archangel's Staff",
+        "Rod of Ages",
+        "Hubris",
+        "Axiom Arc",
+        "Endless Hunger",
+        "Swiftmarch",
+        "Yun Tal Wildarrows",
+        "The Collector",
+    )
+    receipts = item_state_receipts(
+        items,
+        {
+            "Actualizer": {"mana_made_real_active_seconds": 8.0},
+            "Heartsteel": {"bonus_health": 500},
+            "Archangel's Staff": {"manaflow_bonus_mana": 360},
+            "Rod of Ages": {"timeless_stacks": 10},
+            "Hubris": {"eminence_stacks": 4, "eminence_active_seconds": 30},
+            "Endless Hunger": {"feast_active_seconds": 8},
+            "Yun Tal Wildarrows": {"crit_stacks": 12},
+        },
+        fight_duration_seconds=12.0,
+        is_melee=True,
+        bonus_health=400.0,
+        bonus_mana=600.0,
+        max_mana=1200.0,
+        total_attack_damage=200.0,
+        total_move_speed=400.0,
+        lethality=20.0,
+    )
+    by_item = {entry["item"]: entry for entry in receipts}
+    assert by_item["Actualizer"]["active_until"] == pytest.approx(8.0)
+    assert by_item["Riftmaker"]["omnivamp_percent"] == pytest.approx(10.0)
+    assert by_item["Archangel's Staff"]["transformed"] is True
+    assert by_item["Rod of Ages"]["level_gain"] is True
+    assert by_item["Hubris"]["bonus_ad"] == pytest.approx(24.0)
+    assert by_item["Endless Hunger"]["omnivamp"] == pytest.approx(15.0)
+    assert by_item["The Collector"]["feeds_takedown_state"] is True
 
 
 def test_cp16_stasis_seconds_is_a_bounded_float_state() -> None:
@@ -475,6 +541,9 @@ class TestResolveDamageEffects:
         assert riftmaker_max_stack_omnivamp(
             fight_duration_seconds=4.0
         ) == pytest.approx(10.0)
+        assert riftmaker_max_stack_omnivamp(
+            fight_duration_seconds=4.0, is_melee=False
+        ) == pytest.approx(6.0)
 
     def test_riftmaker_max_stack_omnivamp_fails_closed_when_missing(
         self, monkeypatch: pytest.MonkeyPatch

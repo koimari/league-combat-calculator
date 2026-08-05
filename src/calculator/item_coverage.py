@@ -21,23 +21,13 @@ ItemCoverageStatus = Literal[
 # These mechanics can change TDD, casts, resources, or target durability.  The
 # optimiser withholds them until the named mechanic has an explicit model.
 _BLOCKED_REASONS: dict[str, str] = {
-    "Axiom Arc": "Flux takedown cooldown refunds are not modelled.",
     "Ardent Censer": "Sanctify's conditional self buff and on-hit damage are not modelled.",
-    "Endless Hunger": (
-        "Feast's takedown-triggered 15% omnivamp for 8 seconds is not modelled."
-    ),
     "Fimbulwinter": "Awe's mana scaling and Everlasting shield state are not modelled.",
-    "Hubris": "Eminence takedown stacks and temporary attack damage are not modelled.",
     "Immortal Path": "Now and Forever's health-state damage amplification is not modelled.",
     "Imperial Mandate": (
         "Control's ability haste and Command's damage amplification are not modelled."
     ),
-    "Manamune": "Awe's mana scaling and Manaflow stack state are not modelled.",
-    "Rod of Ages": "Timeless minute stacks and level gain are not modelled.",
     "Umbral Glaive": "Nightstalker's first-attack true damage is not modelled.",
-    "Whispering Circlet": "Manaflow stacks and the Diadem transformation state are not modelled.",
-    "Winter's Approach": "Awe's mana scaling and Manaflow transformation state are not modelled.",
-    "Zeke's Convergence": "Ultimate haste and Frostfire Tempest damage are not modelled.",
     "Cull": (
         "Reap's 100-minion progression and 350 gold completion payout are not "
         "modelled."
@@ -82,31 +72,21 @@ _PARTIAL_BLOCKED_REASONS: dict[str, str] = {
         "are not modelled; only the holder's sourced attack-speed packet is "
         "represented."
     ),
-    "Actualizer": (
-        "Mana Made Real's active duration, doubled mana costs, basic-cooldown "
-        "progress, and heal/shield amplification are not modelled."
-    ),
-    "Archangel's Staff": (
-        "Awe's bonus-mana-to-ability-power conversion is modeled, but Manaflow's "
-        "charge/bonus-mana progression and the Seraph's Embrace transformation "
-        "state are not scheduled."
-    ),
-    "Winter's Approach": (
-        "Awe's bonus-mana-to-health conversion is modeled, but Manaflow's "
-        "charge/transform state is not scheduled."
-    ),
-    "Endless Hunger": (
-        "Famine's bonus-AD ability haste is modeled, but Feast's takedown-triggered "
-        "15% omnivamp for 8 seconds is not scheduled."
-    ),
-    "Hubris": (
-        "Eminence's takedown trigger, 90-second duration, and permanent stack "
-        "state are not scheduled in the participant ledger."
-    ),
-    "Axiom Arc": (
-        "Flux's takedown trigger, three-second damage window, and ultimate "
-        "cooldown refund are not scheduled in the participant ledger."
-    ),
+}
+
+# These items have explicit scenario state and a single shared receipt ledger
+# for their timed/progression branches.  They remain separate from ordinary
+# ``ITEM_EFFECTS`` so an item cannot become optimizer-eligible merely because
+# one static stat conversion was parsed.
+_STATEFUL_MODELED_ITEMS: dict[str, str] = {
+    "Actualizer": "Mana Made Real is represented by its bounded active window, resource multiplier, and cooldown-progress receipt.",
+    "Archangel's Staff": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+    "Manamune": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+    "Whispering Circlet": "Harmony, Manaflow, and Diadem state are represented by the bounded bonus-mana control and transformation receipt.",
+    "Winter's Approach": "Awe, Manaflow, and Fimbulwinter transformation state are represented by the bounded bonus-mana control and transformation receipt.",
+    "Hubris": "Eminence's bounded starting stacks and timed window are represented by a sourced state receipt.",
+    "Axiom Arc": "Flux's sourced takedown refund fraction and trigger window are represented by a terminal-state receipt.",
+    "Endless Hunger": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
 }
 
 
@@ -353,8 +333,6 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",
     "Mikael's Blessing": "Purify's activated heal is not modelled.",
     "Redemption": "Intervention's activated target healing is not modelled.",
-    "Whispering Circlet": "Manaflow health state is not exposed for target modelling.",
-    "Winter's Approach": "Awe and Manaflow health state are not modelled.",
 }
 
 # Product-facing outcome dimensions for utility and non-TDD effects.  These
@@ -477,6 +455,9 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
                 else "The represented mechanic changes defense, not outgoing TDD."
             )
         )
+    elif name in _STATEFUL_MODELED_ITEMS:
+        status = "modeled_state"
+        reason = _STATEFUL_MODELED_ITEMS[name]
     elif name in _PARTIAL_BLOCKED_REASONS:
         status = "blocked"
         reason = _PARTIAL_BLOCKED_REASONS[name]

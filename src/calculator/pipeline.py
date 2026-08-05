@@ -423,14 +423,18 @@ def _has_omnivamp_stat(stats: Mapping[str, Any]) -> bool:
 
 
 def _has_riftmaker_max_stack_omnivamp(
-    items: list[dict[str, Any]], fight_duration_seconds: float
+    items: list[dict[str, Any]],
+    fight_duration_seconds: float,
+    *,
+    is_melee: bool = True,
 ) -> bool:
     """Return whether the fight reaches Riftmaker's conditional heal state."""
     if not any(item.get("name") == "Riftmaker" for item in items):
         return False
     return (
         item_effects.riftmaker_max_stack_omnivamp(
-            fight_duration_seconds=fight_duration_seconds
+            fight_duration_seconds=fight_duration_seconds,
+            is_melee=is_melee,
         )
         > 0.0
     )
@@ -819,7 +823,11 @@ def run_fight(
         and not _has_item_self_healing(item_damage_effects)
         and not _has_lifesteal_stat(fight_stats)
         and not _has_omnivamp_stat(fight_stats)
-        and not _has_riftmaker_max_stack_omnivamp(items, params.fight_duration_seconds)
+        and not _has_riftmaker_max_stack_omnivamp(
+            items,
+            params.fight_duration_seconds,
+            is_melee=bool(fight_stats.get("is_melee", True)),
+        )
         # Forced/empowered basic attacks are authored on ability rows. Keep
         # the dict ledger so reactive defenders (Bramble/Thornmail) retain
         # the basic-attack marker instead of losing it in the light tuple
@@ -841,9 +849,26 @@ def run_fight(
         ),
         score_only=score_only,
         tuple_ledger=tuple_ledger,
+        item_options=params.item_options,
     )
     result["champion_stats"] = fight_stats
     result["auto_attack_policy"] = auto_attack_policy
+    # Every stateful item shares one typed, inspectable receipt.  The receipt
+    # is descriptive metadata over the same accessors the engine consumed;
+    # it is returned on manual, optimizer, and roster paths so a caller can
+    # distinguish authored state from an implicit always-on assumption.
+    result["item_state_receipts"] = item_effects.item_state_receipts(
+        items,
+        params.item_options,
+        fight_duration_seconds=params.fight_duration_seconds,
+        is_melee=bool(fight_stats.get("is_melee", True)),
+        bonus_health=float(fight_stats.get("bonus_health", 0.0) or 0.0),
+        bonus_mana=float(fight_stats.get("bonus_mana", 0.0) or 0.0),
+        max_mana=float(fight_stats.get("max_mana", 0.0) or 0.0),
+        total_attack_damage=float(fight_stats.get("attack_damage", 0.0) or 0.0),
+        total_move_speed=float(fight_stats.get("move_speed", 0.0) or 0.0),
+        lethality=float(fight_stats.get("lethality", 0.0) or 0.0),
+    )
     auto_row = result.get("breakdown", {}).get("auto_attacks", {})
     auto_total = (
         int(auto_row.get("count", 0) or 0) if isinstance(auto_row, Mapping) else 0
@@ -863,12 +888,17 @@ def run_fight(
         result.setdefault("notes", []).append(
             "Auto attacks withheld: calculated uptime is unavailable for one or more cast-time sources."
         )
-    if _has_riftmaker_max_stack_omnivamp(items, params.fight_duration_seconds):
+    if _has_riftmaker_max_stack_omnivamp(
+        items,
+        params.fight_duration_seconds,
+        is_melee=bool(fight_stats.get("is_melee", True)),
+    ):
         result["champion_stats"] = dict(fight_stats)
         result["champion_stats"]["omnivamp_percent"] = result["champion_stats"].get(
             "omnivamp_percent", 0.0
         ) + item_effects.riftmaker_max_stack_omnivamp(
-            fight_duration_seconds=params.fight_duration_seconds
+            fight_duration_seconds=params.fight_duration_seconds,
+            is_melee=bool(fight_stats.get("is_melee", True)),
         )
     if tuple_ledger:
         # The predicate above IS derive_self_healing's dispatch gate, so

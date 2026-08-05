@@ -2355,7 +2355,8 @@ class TestBreakdownProcRowShape:
 
         assert response.status_code == 200
         result = response.get_json()
-        assert result["champion_stats"]["omnivamp_percent"] == pytest.approx(10.0)
+        # Ahri is ranged: the fully stacked Void Corruption branch is 6%.
+        assert result["champion_stats"]["omnivamp_percent"] == pytest.approx(6.0)
         assert result["self_healing"] > 0.0
         assert result["self_healing_events"]
         assert all(
