@@ -72,6 +72,15 @@ Champion modules exist for all 173, but "class" behaviors (e.g., Vayne W true-da
   minions, Baron) — game-logic layer for Practice-Tool reproducibility, not
   champion formulas.
 
+
+**WS1 status (2026-08-05):** complete article inventory built and tracked —
+`data/wiki/article-index.json` (4,231 namespace-0 non-redirect articles with
+pageid/length/categories) + `scripts/decompose_wiki.py` (index rebuild + raw
+wikitext fetch). Validated: all 173 calculator champions are present (2 are
+cache-name aliases: Renata Glasc, Wukong). Per-family parsers for mechanics/
+buffs/status pages are the next WS1 step; the wiki is template-heavy, so they
+follow the lolstaticdata extraction pattern.
+
 ## 3. The decomposition architecture (path to "nothing partial")
 
 **Principle:** every champion/item is a *composition of the game's fundamental behaviors*. Two authoritative sources feed one atomic catalog:
