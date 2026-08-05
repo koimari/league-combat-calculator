@@ -1,0 +1,794 @@
+[
+  {
+    "atom_id": "crowd-control-mobility.airborne",
+    "name": "Airborne",
+    "keywords": [
+      "airborne",
+      "knock up",
+      "knockup",
+      "knock back",
+      "knockback",
+      "knock aside",
+      "pull",
+      "forced displacement",
+      "displacement",
+      "airborne status",
+      "move block"
+    ],
+    "description": "Forced-displacement crowd control: the unit is flung in a direction (knock up/back/aside/pull) and cannot move, attack, or cast for the duration; tenacity does not affect it.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Dash",
+      "Blink"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.blind",
+    "name": "Blind",
+    "keywords": [
+      "blind",
+      "blinded",
+      "miss",
+      "on-hit miss",
+      "attack miss"
+    ],
+    "description": "The blinded unit's basic attacks miss (deal no damage, no on-hit effects) for the duration; attacks can still be declared.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Cleanse"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.cripple",
+    "name": "Cripple",
+    "keywords": [
+      "cripple",
+      "crippled",
+      "attack speed slow",
+      "attack-speed slow",
+      "as slow",
+      "cripple-immune"
+    ],
+    "description": "Reduces the target's total attack speed by a percentage for the duration (attack-speed slow); stacks multiplicatively.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Slow resist",
+      "Tenacity",
+      "Combat status"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.disarm",
+    "name": "Disarm",
+    "keywords": [
+      "disarm",
+      "disarmed",
+      "cannot declare attacks",
+      "attack lockout"
+    ],
+    "description": "The disarmed unit cannot declare basic-attack commands for the duration; reloading (Graves/Jhin) is a related lockout, not a disarm.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Interrupt"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.disrupt",
+    "name": "Disrupt",
+    "keywords": [
+      "disrupt",
+      "disrupted",
+      "interrupt",
+      "interrupt channel",
+      "channel interrupt",
+      "cast-inhibiting"
+    ],
+    "description": "Instant, duration-less effect that interrupts channeled and charged abilities; not itself a status/debuff.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Interrupt"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.drowsy",
+    "name": "Drowsy",
+    "keywords": [
+      "drowsy",
+      "drowsiness",
+      "falling asleep",
+      "gradual slow"
+    ],
+    "description": "Gradually slows the unit over its duration, then causes it to fall asleep; tenacity does not shorten it, slow resist weakens its slow component.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Slow resist",
+      "Tenacity"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.sleep",
+    "name": "Sleep",
+    "keywords": [
+      "sleep",
+      "asleep",
+      "sleep debuff",
+      "drowsy aftermath"
+    ],
+    "description": "Full disable (move/attack/cast/item actives) that ends prematurely when the sleeper takes damage; occurs after Drowsy.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Cleanse",
+      "Slow resist"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.forced-action",
+    "name": "Forced Action",
+    "keywords": [
+      "forced action",
+      "forced movement",
+      "forced action cc",
+      "uncontrollable movement"
+    ],
+    "description": "Umbrella crowd-control family in which the victim loses control of its own movement/attacks (subtypes: Berserk, Charm, Flee, Taunt); ends early if the source dies (except Berserk).",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.berserk",
+    "name": "Berserk",
+    "keywords": [
+      "berserk",
+      "berserked",
+      "frenzy",
+      "forced basic attack"
+    ],
+    "description": "Forced action subtype: the unit must basic-attack a nearby unit (allies can be targeted) for the duration.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.charm",
+    "name": "Charm",
+    "keywords": [
+      "charm",
+      "charmed",
+      "walk toward source"
+    ],
+    "description": "Forced action subtype: the unit walks toward the source with reduced movement speed for the duration.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.flee",
+    "name": "Flee",
+    "keywords": [
+      "flee",
+      "fleeing",
+      "fear",
+      "feared",
+      "walk away from source"
+    ],
+    "description": "Forced action subtype: the unit walks directly away from the source with reduced movement speed; 'Fear' is the deprecated name for the same effect.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Combat status"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.taunt",
+    "name": "Taunt",
+    "keywords": [
+      "taunt",
+      "taunted",
+      "forced basic attack on source"
+    ],
+    "description": "Forced action subtype: the unit must basic-attack the taunting source for the duration (attack commands inhibited, not disabled).",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.ground",
+    "name": "Ground",
+    "keywords": [
+      "ground",
+      "grounded",
+      "ground effect",
+      "cannot activate mobility spells",
+      "grounded zone"
+    ],
+    "description": "The grounded unit cannot activate movement spells (dashes, blinks, Flash, Recall) but can still walk and be displaced; commonly a persistent zone.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Dash",
+      "Blink",
+      "Cleanse"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.kinematics",
+    "name": "Kinematics",
+    "keywords": [
+      "kinematics",
+      "dragged",
+      "dragged to",
+      "forced drag",
+      "continual drag"
+    ],
+    "description": "The unit is continually dragged toward a unit or location until reached; not an airborne/displacement effect and disables nothing by itself.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.knockdown",
+    "name": "Knockdown",
+    "keywords": [
+      "knockdown",
+      "knocked down",
+      "dash interrupt",
+      "displacement interrupt",
+      "grounded mid-dash"
+    ],
+    "description": "Instant, duration-less effect that interrupts a dash or airborne displacement and places the unit on the ground.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Dash",
+      "Interrupt"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.nearsight",
+    "name": "Nearsight",
+    "keywords": [
+      "nearsight",
+      "nearsighted",
+      "sight radius",
+      "reduced vision",
+      "lose allied vision"
+    ],
+    "description": "Reduces the unit's sight radius and removes vision of allies and external sources for the duration; tenacity does not affect it.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Combat status"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.root",
+    "name": "Root",
+    "keywords": [
+      "root",
+      "rooted",
+      "snare",
+      "snares",
+      "root/snare",
+      "immobilize",
+      "cannot move"
+    ],
+    "description": "The rooted unit cannot control movement or activate movement spells but can still attack, cast, and be displaced.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Dash",
+      "Blink",
+      "Cleanse"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.silence",
+    "name": "Silence",
+    "keywords": [
+      "silence",
+      "silenced",
+      "cannot cast",
+      "cast-inhibiting"
+    ],
+    "description": "The silenced unit cannot cast abilities or activate item actives for the duration; interrupts channels.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Cleanse"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.polymorph",
+    "name": "Polymorph",
+    "keywords": [
+      "polymorph",
+      "polymorphed",
+      "critter",
+      "hex",
+      "squirrel"
+    ],
+    "description": "Silences the unit and turns it into a helpless critter; Lulu's version also disarms and slows.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.slow",
+    "name": "Slow",
+    "keywords": [
+      "slow",
+      "slowed",
+      "slow debuff",
+      "movement speed slow",
+      "slow stacking",
+      "strongest slow",
+      "slow ratio"
+    ],
+    "description": "Reduces the unit's movement speed by a percentage or flat amount for the duration; only the strongest slow applies, and percentage slows cannot push MS below 110.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Slow resist",
+      "Movement speed",
+      "Cleanse",
+      "Combat status"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.stasis",
+    "name": "Stasis",
+    "keywords": [
+      "stasis",
+      "zhonya's hourglass",
+      "stasis (buff)",
+      "invulnerable",
+      "untargetable",
+      "statis"
+    ],
+    "description": "Full disable that also makes the unit invulnerable and untargetable; cannot be cleansed, unaffected by tenacity, disables even summoner spells.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Cleanse"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.stun",
+    "name": "Stun",
+    "keywords": [
+      "stun",
+      "stunned",
+      "stun duration"
+    ],
+    "description": "Full disable: cannot move, attack, cast, or activate items for the duration; interrupts channels and attack windups; reduced by tenacity.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Cleanse",
+      "Tenacity"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.suspension",
+    "name": "Suspension",
+    "keywords": [
+      "suspension",
+      "suspended",
+      "fake airborne",
+      "stun+airborne"
+    ],
+    "description": "Stun variant (unique to Nami's Aqua Prison) that also pretends to be airborne so Yasuo's Last Breath can target the victim.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.suppression",
+    "name": "Suppression",
+    "keywords": [
+      "suppression",
+      "suppressed",
+      "disable all summoner spells"
+    ],
+    "description": "Full disable that also blocks ALL summoner spells (including Cleanse) for the duration; unaffected by tenacity.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control",
+      "Types of Crowd Control/Summary",
+      "Cleanse"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.immobilize",
+    "name": "Immobilize",
+    "keywords": [
+      "immobilize",
+      "immobilizing",
+      "immobilized",
+      "hard cc",
+      "hard crowd control",
+      "total cc"
+    ],
+    "description": "Buzzword for CC that removes control of movement: Airborne, Forced Action, Root, Sleep, Stasis, Stun (Suspension), Suppression; hard CC vs soft CC distinction.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control/Summary",
+      "Tenacity"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.cc-immunity",
+    "name": "Crowd Control Immunity",
+    "keywords": [
+      "cc immunity",
+      "cc-immune",
+      "crowd control immunity",
+      "can't be disabled",
+      "spell immune",
+      "total cc immunity",
+      "displacement immunity",
+      "unstoppable",
+      "cannot be disabled"
+    ],
+    "description": "Status preventing any CC from being applied (already-applied CC keeps working); displacement immunity is the subset covering airborne/knockdown/kinematics/sleep/stasis.",
+    "wiki_pages": [
+      "Crowd control",
+      "Types of Crowd Control/Summary",
+      "Slow resist"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.tenacity",
+    "name": "Tenacity",
+    "keywords": [
+      "tenacity",
+      "crowd control reduction",
+      "cc reduction",
+      "tenacity stacking",
+      "tenacity groups a b c"
+    ],
+    "description": "Stat that reduces incoming CC durations by a percentage (not airborne, drowsy, nearsight, stasis, suppression); minimum 0.3s, stacks multiplicatively within groups A/B/C and additively across groups; negative tenacity lengthens CC.",
+    "wiki_pages": [
+      "Tenacity",
+      "Crowd control",
+      "Cleanse"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.slow-resist",
+    "name": "Slow Resist",
+    "keywords": [
+      "slow resist",
+      "slow resistance",
+      "slow reduction stat",
+      "slow resist stacking"
+    ],
+    "description": "Stat that reduces the strength (percentage) of slows, including self-slows; stacks multiplicatively, does not affect flat MS reductions.",
+    "wiki_pages": [
+      "Slow resist",
+      "Movement speed",
+      "Crowd control"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.slow-immunity",
+    "name": "Slow Immunity",
+    "keywords": [
+      "slow immune",
+      "slow immunity",
+      "can't be slowed",
+      "slow-immune"
+    ],
+    "description": "Status that prevents slows from being applied at all (stronger than 100% slow resist); also prevents Drowsy's slow but not the Sleep.",
+    "wiki_pages": [
+      "Slow resist",
+      "Crowd control"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.cripple-immunity",
+    "name": "Cripple Immunity",
+    "keywords": [
+      "cripple immune",
+      "cripple immunity",
+      "attack speed slow immune"
+    ],
+    "description": "Status that prevents cripple (attack-speed slow) effects from being applied.",
+    "wiki_pages": [
+      "Slow resist",
+      "Crowd control"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.cleanse",
+    "name": "Cleanse",
+    "keywords": [
+      "cleanse",
+      "cleansing",
+      "cc removal",
+      "quicksilver",
+      "remove crowd control",
+      "cleanse debuff"
+    ],
+    "description": "Action that removes applicable crowd-control debuffs (and some summoner-spell debuffs); castable while disabled, but not under suppression/stasis; airborne forced movement and stasis are un-cleansable.",
+    "wiki_pages": [
+      "Cleanse",
+      "Crowd control",
+      "Types of Crowd Control/Summary"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.brittle",
+    "name": "Brittle",
+    "keywords": [
+      "brittle",
+      "brittled",
+      "tenacity reduction",
+      "-30% tenacity",
+      "ornn brittle"
+    ],
+    "description": "Debuff that reduces the target's tenacity by 30% (making CC last longer) and ends prematurely when the target is immobilized.",
+    "wiki_pages": [
+      "Crowd control",
+      "Tenacity"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.channel",
+    "name": "Channel",
+    "keywords": [
+      "channel",
+      "channeled",
+      "channeling",
+      "charged",
+      "charging",
+      "cast time",
+      "channel interrupt"
+    ],
+    "description": "Ability state that can be cancelled by disruptive CC (Disrupt, silence, stun, etc.); charged abilities are channels toggled by two activations.",
+    "wiki_pages": [
+      "Crowd control",
+      "Interrupt",
+      "Types of Crowd Control/Summary"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.lockout",
+    "name": "Lockout",
+    "keywords": [
+      "lockout",
+      "locked out",
+      "reload",
+      "action lock",
+      "self lockout"
+    ],
+    "description": "Unit unable to perform certain actions because it is executing another action (e.g. Graves/Jhin reload); does not interact with CC mechanics.",
+    "wiki_pages": [
+      "Types of Crowd Control",
+      "Dash"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.cc-score",
+    "name": "Crowd Control Score",
+    "keywords": [
+      "crowd control score",
+      "cc score",
+      "post-game cc stat"
+    ],
+    "description": "Post-game statistic scoring CC inflicted per second of debuff duration (e.g. 1 pt for stun/root/airborne, 0.5 for blind/ground, 0.16 for slow/cripple).",
+    "wiki_pages": [
+      "Crowd control"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.dash",
+    "name": "Dash",
+    "keywords": [
+      "dash",
+      "dashes",
+      "dash ability",
+      "dash interrupt",
+      "auto-targeted dash",
+      "direction dash",
+      "unit-targeted dash",
+      "terrain dash",
+      "rift herald rodeo",
+      "cannot bypass terrain"
+    ],
+    "description": "Movement that travels the intervening distance toward a direction/location/target; blocked by Ground/Root, interrupted by Knockdown/Airborne/Stasis, mostly cannot be cast while immobilized.",
+    "wiki_pages": [
+      "Dash",
+      "Types of Crowd Control/Summary",
+      "Crowd control",
+      "Blink",
+      "Interrupt"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.blink",
+    "name": "Blink",
+    "keywords": [
+      "blink",
+      "blinks",
+      "instant movement",
+      "teleport",
+      "flash",
+      "blink ability"
+    ],
+    "description": "Instantaneous repositioning without traversing the space between; blocked by Ground/Root, can exit Veigar's Event Horizon, places unit at nearest passable terrain if targeted into a wall.",
+    "wiki_pages": [
+      "Blink",
+      "Dash",
+      "Types of Crowd Control/Summary",
+      "Crowd control"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.lunge",
+    "name": "Lunge",
+    "keywords": [
+      "lunge",
+      "lunging",
+      "cast animation movement",
+      "empowered attack movement"
+    ],
+    "description": "Movement during a cast or empowered-attack animation to close range; distinct from dashes (does not trigger dash interactions).",
+    "wiki_pages": [
+      "Dash"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.ghost",
+    "name": "Ghost",
+    "keywords": [
+      "ghost",
+      "ghost summoner spell",
+      "unit collision",
+      "ignore unit collision",
+      "move through units"
+    ],
+    "description": "Summoner spell granting bonus movement speed (additive, ramping 24-48%) and ignoring unit collision for ~10s.",
+    "wiki_pages": [
+      "Ghost",
+      "Movement speed"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.movement-speed",
+    "name": "Movement Speed",
+    "keywords": [
+      "movement speed",
+      "move speed",
+      "ms",
+      "flat movement speed",
+      "percent movement speed",
+      "additive ms",
+      "multiplicative ms",
+      "movement speed scaling",
+      "homeguard",
+      "cloudbringer's grace",
+      "speed shrine",
+      "hand of baron"
+    ],
+    "description": "Stat for travel rate (units/sec): base + flat bonuses, additive % bonuses, multiplicative bonuses, then highest slow, then soft caps; some abilities/items scale with the unit's MS.",
+    "wiki_pages": [
+      "Movement speed",
+      "Ghost",
+      "Slow resist"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.movement-speed-caps",
+    "name": "Movement Speed Soft Caps",
+    "keywords": [
+      "soft cap",
+      "movement speed cap",
+      "415",
+      "490",
+      "220",
+      "110 floor",
+      "ms soft cap"
+    ],
+    "description": "Soft caps on raw MS: 415-490 at 80%, above 490 at 50%; below 220 a floor formula applies and slows cannot push MS under 110.",
+    "wiki_pages": [
+      "Movement speed"
+    ],
+    "family": "crowd-control-mobility"
+  },
+  {
+    "atom_id": "crowd-control-mobility.combat-status",
+    "name": "Combat Status",
+    "keywords": [
+      "combat",
+      "in-combat",
+      "out-of-combat",
+      "combat status",
+      "enter combat",
+      "leave combat"
+    ],
+    "description": "State tracking whether a unit has dealt/received damage or CC from an enemy; out-of-combat typically triggers ~5s later and gates MS effects, boots, runes, and buffs.",
+    "wiki_pages": [
+      "Combat status"
+    ],
+    "family": "crowd-control-mobility"
+  }
+]

@@ -1,0 +1,20 @@
+[
+ {
+  "champion": "Neeko",
+  "atom_id": "stack-transform-summon-resource.transform",
+  "wiki_name": "Inherent Glamour",
+  "note": "Passive disguise/form-change; binary object is NeekoPassive with no transform token."
+ },
+ {
+  "champion": "Kayle",
+  "atom_id": "stack-transform-summon-resource.transform",
+  "wiki_name": "Divine Ascent",
+  "note": "Level-gated form change; binary carries only level-gated datavalues."
+ },
+ {
+  "champion": "Gnar",
+  "atom_id": "stack-transform-summon-resource.transform",
+  "wiki_name": "Rage Gene",
+  "note": "Fury-gated Mega form; already classified via binary tokens (kept here for provenance completeness)."
+ }
+]

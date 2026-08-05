@@ -1,0 +1,981 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleEAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 23210
+  },
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleEAttackMelee"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleEPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleEAbility/KayleEPassive"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleEPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleEAbility/KayleEPassive"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KayleQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleQAbility/KayleQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KayleQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleQAbility/KayleQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KayleQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleQAbility/KayleQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mana",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Mana",
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleQAbility/KayleQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "vision-economy.item-sellback",
+  "family": "vision-economy",
+  "behavior": "KayleQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Gold"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleQAbility/KayleQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KayleEnrageConeMisVFX2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 850.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KaylePassiveAbility/KayleEnrageConeMisVFX2"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleEnrageCounter",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KaylePassiveAbility/KayleEnrageCounter"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleEnrageCounter",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KaylePassiveAbility/KayleEnrageCounter"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleEnrageCounter",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KaylePassiveAbility/KayleEnrageCounter"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "KaylePassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Ghost",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KaylePassiveAbility/KaylePassive"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.attack-damage",
+  "family": "damage",
+  "behavior": "KaylePassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Attack damage",
+    "Physical damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KaylePassiveAbility/KaylePassive"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KaylePassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KaylePassiveAbility/KaylePassive"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaylePassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KaylePassiveAbility/KaylePassive"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ward-unit",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KaylePassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KaylePassiveAbility/KaylePassive"
+   ]
+  }
+ },
+ {
+  "atom_id": "vision-economy.leveling",
+  "family": "vision-economy",
+  "behavior": "KaylePassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Experience (champion)",
+    "Experience"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KaylePassiveAbility/KaylePassive"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KayleEnrageConeMisUpgrade",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 850.0,
+   "damage_type": null,
+   "affects_type_flags": 22538
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleEnrageConeMisUpgrade"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "KayleWHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleWAbility/KayleWHeal"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleWHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleWAbility/KayleWHeal"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "KayleW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 15.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 1
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleWAbility/KayleW"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 15.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 1
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleWAbility/KayleW"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 16896
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 16896
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 554.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack3"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 554.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack3"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 16896
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack2"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 16896
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack2"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KayleEnrageConeMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 22538
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleEnrageConeMis"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 554.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack4"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 554.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack4"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "KayleR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 80.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleRAbility/KayleR"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KayleR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 80.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleRAbility/KayleR"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KayleR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 80.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleRAbility/KayleR"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 80.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleRAbility/KayleR"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "kayle Passive (Divine Ascent)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless",
+    "Divine Ascent"
+   ],
+   "binary": [],
+   "source": "wiki-passive-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KayleQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleQAbility/KayleQMis"
+   ],
+   "inherited_from": "KayleQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KayleQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleQAbility/KayleQMis"
+   ],
+   "inherited_from": "KayleQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KayleQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleQAbility/KayleQMis"
+   ],
+   "inherited_from": "KayleQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mana",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KayleQMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Mana",
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleQAbility/KayleQMis"
+   ],
+   "inherited_from": "KayleQ"
+  }
+ },
+ {
+  "atom_id": "vision-economy.item-sellback",
+  "family": "vision-economy",
+  "behavior": "KayleQMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 900.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Gold"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleQAbility/KayleQMis"
+   ],
+   "inherited_from": "KayleQ"
+  }
+ }
+]

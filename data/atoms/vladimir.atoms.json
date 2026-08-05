@@ -1,0 +1,1488 @@
+[
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "VladimirEMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1200.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "{08606bf4}"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.on-heal-effect",
+  "family": "heal-shield",
+  "behavior": "VladimirEMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1200.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Healing"
+   ],
+   "binary": [
+    "{08606bf4}"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VladimirESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{d3a3b479}"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirESlow",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{d3a3b479}"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "VladimirE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 5.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirEAbility/VladimirE"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VladimirE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 5.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirEAbility/VladimirE"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VladimirE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 5.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirEAbility/VladimirE"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VladimirE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 5.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirEAbility/VladimirE"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "VladimirE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 5.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirEAbility/VladimirE"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 5.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirEAbility/VladimirE"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 5.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirEAbility/VladimirE"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirBloodGorged",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBloodGorgedAbility/VladimirBloodGorged"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "VladimirRHealMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirRHealMissile"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.on-heal-effect",
+  "family": "heal-shield",
+  "behavior": "VladimirRHealMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirRHealMissile"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirHemoplagueMissile",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 1100.0,
+   "damage_type": null,
+   "affects_type_flags": 7183
+  },
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueMissile"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VladimirHemoplague",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 120.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueAbility/VladimirHemoplague"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VladimirHemoplague",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 120.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueAbility/VladimirHemoplague"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "VladimirHemoplague",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 120.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueAbility/VladimirHemoplague"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirHemoplague",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 120.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueAbility/VladimirHemoplague"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirHemoplague",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 120.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueAbility/VladimirHemoplague"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VladimirSanguinePoolSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolSlow"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirSanguinePoolSlow",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolSlow"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirTidesofBlood",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 4.5,
+   "cooldown_rank_max": 4.5,
+   "range": 350.0,
+   "damage_type": null,
+   "affects_type_flags": 15375
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTidesofBlood"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "VladimirCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirCritAttack"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Ghost",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.max-health-increase-restores-current",
+  "family": "heal-shield",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Health",
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.on-heal-effect",
+  "family": "heal-shield",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.vamp",
+  "family": "heal-shield",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Vamp",
+    "Vampirism",
+    "Life steal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.health-as-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-minion",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "vision-economy.deep-ward",
+  "family": "vision-economy",
+  "behavior": "VladimirSanguinePool",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 31.0,
+   "cooldown_rank_max": 16.0,
+   "range": 1050.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Deep Ward",
+    "Ward"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolAbility/VladimirSanguinePool"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "VladimirTidesofBloodHeal",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 17413
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTidesofBloodHeal"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VladimirTidesofBloodNuke",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTidesofBloodNuke"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "VladimirTransfusionHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1500.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTransfusionHeal"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.on-heal-effect",
+  "family": "heal-shield",
+  "behavior": "VladimirTransfusionHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1500.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "provenance": {
+   "wiki": [
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTransfusionHeal"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirQBuild",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQBuild"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirHemoplagueDebuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueDebuff"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirHemoplagueDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueDebuff"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirHemoplagueDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueDebuff"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "VladimirQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.100000381469727,
+   "cooldown_rank_max": 3.5,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Ghost",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQAbility/VladimirQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VladimirQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.100000381469727,
+   "cooldown_rank_max": 3.5,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQAbility/VladimirQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.on-damage",
+  "family": "damage",
+  "behavior": "VladimirQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.100000381469727,
+   "cooldown_rank_max": 3.5,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "On-damage effects",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQAbility/VladimirQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.spell-effects",
+  "family": "damage",
+  "behavior": "VladimirQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.100000381469727,
+   "cooldown_rank_max": 3.5,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Ability damage",
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQAbility/VladimirQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.drain",
+  "family": "heal-shield",
+  "behavior": "VladimirQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.100000381469727,
+   "cooldown_rank_max": 3.5,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Vamp",
+    "Life steal"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQAbility/VladimirQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "VladimirQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.100000381469727,
+   "cooldown_rank_max": 3.5,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQAbility/VladimirQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.on-heal-effect",
+  "family": "heal-shield",
+  "behavior": "VladimirQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.100000381469727,
+   "cooldown_rank_max": 3.5,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQAbility/VladimirQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal-shield.vamp",
+  "family": "heal-shield",
+  "behavior": "VladimirQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.100000381469727,
+   "cooldown_rank_max": 3.5,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Vamp",
+    "Vampirism",
+    "Life steal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQAbility/VladimirQ"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirQFrenzy",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQFrenzy"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack3"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack3"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack2"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack2"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack4"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack4"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirTidesofBloodCost",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTidesofBloodCost"
+   ]
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.health-as-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VladimirTidesofBloodCost",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTidesofBloodCost"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack"
+   ]
+  }
+ }
+]

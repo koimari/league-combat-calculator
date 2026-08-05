@@ -1,0 +1,837 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "name": "Stack",
+  "keywords": [
+   "stack",
+   "stacks",
+   "stacking",
+   "counter",
+   "charge",
+   "pips",
+   "instance"
+  ],
+  "description": "A buff or debuff that can be increased in count (up to a cap) under certain circumstances; potency is usually multiplied by the number of stacks, and some stacks are counters that build toward a different, triggerable effect (e.g. Caitlyn's Headshot).",
+  "wiki_pages": [
+   "Stack",
+   "Stacking",
+   "Buff",
+   "Debuff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack-duration-refresh",
+  "family": "stack-transform-summon-resource",
+  "name": "Stack duration refresh",
+  "keywords": [
+   "duration refresh",
+   "refresh",
+   "reset duration",
+   "per-instance refresh",
+   "expire at once",
+   "interval expiry"
+  ],
+  "description": "Stacking effects with durations refresh per instance; all stacks reset to the most recent application's full duration, and when the effect times out all stacks expire at once (a few exceptions, e.g. Nautilus' Titan's Wrath, expire in intervals or per-stack).",
+  "wiki_pages": [
+   "Stack",
+   "Stacking",
+   "Debuff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack-cap",
+  "family": "stack-transform-summon-resource",
+  "name": "Maximum stacks",
+  "keywords": [
+   "maximum stacks",
+   "cap",
+   "stack limit",
+   "stacks up to N",
+   "predetermined number"
+  ],
+  "description": "A stacking effect has a predetermined maximum number of stacks; at the cap, further applications no longer increase the count (e.g. Rev'd up stacks up to 3, Concussive Blows up to 4, Hemorrhage up to 5).",
+  "wiki_pages": [
+   "Stack",
+   "Stacking",
+   "Buff",
+   "Debuff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack-consumption",
+  "family": "stack-transform-summon-resource",
+  "name": "Stack consumption / threshold trigger",
+  "keywords": [
+   "consume",
+   "expend",
+   "spend",
+   "empowered",
+   "threshold",
+   "trigger",
+   "at maximum",
+   "readiness"
+  ],
+  "description": "Stacks that are consumed or spent to power a trigger: expending all stacks to empower the next ability (Rengar Ferocity, Renekton Rage), consuming stacks to apply a bonus effect (Blade of the Ruined King at 3 stacks), or gating an empowered state until a counter is full.",
+  "wiki_pages": [
+   "Stack",
+   "Debuff",
+   "Ability resource"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.effect-stacking",
+  "family": "stack-transform-summon-resource",
+  "name": "Effect stacking",
+  "keywords": [
+   "effect stacking",
+   "non-stacking",
+   "stack with itself",
+   "aura stacking",
+   "same effect",
+   "different effects"
+  ],
+  "description": "Whether an effect applied several times to the same unit stacks or not: different effects always stack with each other; a non-stacking effect only resets its duration on reapplication; auras do not stack with themselves (a unit affected by two identical auras receives the effect once), with exceptions for aura user-vs-recipient effects.",
+  "wiki_pages": [
+   "Stacking",
+   "Buff",
+   "Debuff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "name": "Additive stacking",
+  "keywords": [
+   "stacks additively",
+   "additive",
+   "1:1",
+   "sum",
+   "flat values",
+   "percentage values"
+  ],
+  "description": "Multiple sources of the same statistic combine by simple addition (e.g. two +100 health items grant +200 health); applies to most stats including mana, health, AD, AP, armor, attack speed bonuses, lifesteal and flat penetration.",
+  "wiki_pages": [
+   "Stacking",
+   "Mana"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.multiplicative-stacking",
+  "family": "stack-transform-summon-resource",
+  "name": "Multiplicative stacking",
+  "keywords": [
+   "stacks multiplicatively",
+   "multiplicative",
+   "damage reduction",
+   "damage factor",
+   "diminishing"
+  ],
+  "description": "Sources combine by multiplying the underlying factors (10% + 10% damage reduction = 0.9 x 0.9 = 19% total reduction); applies to percent penetration, cripples, slow resist and to damage amplifiers vs damage reductions.",
+  "wiki_pages": [
+   "Stacking"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "name": "Buff",
+  "keywords": [
+   "buff",
+   "buffs",
+   "beneficial",
+   "status effect",
+   "temporary",
+   "permanent",
+   "aura",
+   "neutral buff",
+   "Dragon Slayer",
+   "Hand of Baron",
+   "Aspect of the Dragon",
+   "Crest of Insight",
+   "Crest of Cinders",
+   "Glimpse of the Void",
+   "Speed Shrine"
+  ],
+  "description": "A status effect that gives a champion or minion a beneficial boost; most buffs are temporary, some permanent (e.g. Tristana's Draw a Bead) or conditional; most are lost on death; buffs granted by one champion to another apply the granting champion's magic penetration and damage modifiers; most buffs do not stack with themselves (reapplication only resets duration), a few stack up to N times (e.g. Milio's Warm Hugs up to 2).",
+  "wiki_pages": [
+   "Buff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff-duration-class",
+  "family": "stack-transform-summon-resource",
+  "name": "Buff duration classes",
+  "keywords": [
+   "indefinite",
+   "conditionally indefinite",
+   "temporary",
+   "toggled",
+   "permanent",
+   "duration"
+  ],
+  "description": "The wiki classifies buffs by duration semantics: indefinite (permanent or until consumed), conditionally indefinite (lasts until a condition like taking damage or leaving combat), temporary (fixed duration), and toggled (active form states such as Elise's Spider Form / Human Form).",
+  "wiki_pages": [
+   "Buff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "name": "Debuff",
+  "keywords": [
+   "debuff",
+   "debuffs",
+   "negative status",
+   "crowd control",
+   "statistical",
+   "mark-oriented",
+   "damage over time",
+   "damage modification"
+  ],
+  "description": "A status effect that negatively impacts a unit's combat performance; all crowd control counts as a debuff; the wiki categorizes debuffs into statistical, mark-oriented, damage-over-time and damage-modification types; debuffs do not stack with themselves unless stated, and are always temporary or conditional (they do not persist after the target's death).",
+  "wiki_pages": [
+   "Debuff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "name": "Mark",
+  "keywords": [
+   "mark",
+   "marks",
+   "mark-oriented",
+   "stacking mark",
+   "trigger",
+   "consume",
+   "Plasma",
+   "Hemorrhage",
+   "Silver Bolts",
+   "Concussive Blows",
+   "Death Mark",
+   "Blight"
+  ],
+  "description": "A debuff category whose stacks or presence are meant to be consumed or triggered by subsequent effects: stacking marks with a cap (Braum's Concussive Blows 4, Darius' Hemorrhage 5, Vayne's Silver Bolts 3) that detonate or empower follow-up damage when maxed, and single marks that enable follow-up abilities (Zed's Death Mark, LeBlanc's Sigil of Malice).",
+  "wiki_pages": [
+   "Debuff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-over-time",
+  "family": "stack-transform-summon-resource",
+  "name": "Damage over time (DoT) debuff",
+  "keywords": [
+   "damage over time",
+   "dot",
+   "burn",
+   "poison",
+   "bleed",
+   "blaze",
+   "toxic",
+   "venom",
+   "Ignite"
+  ],
+  "description": "A debuff that deals damage in ticks over a duration; several DoTs are stacking (Brand's Blaze up to 3, Twitch's Deadly Venom up to 6, Briar's Crimson Curse up to 5); Nautilus' Titan's Wrath stacks infinitely but individual stacks do not reset the duration.",
+  "wiki_pages": [
+   "Debuff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
+  "family": "stack-transform-summon-resource",
+  "name": "Damage modification debuff",
+  "keywords": [
+   "damage modification",
+   "increased damage taken",
+   "reduced damage dealt",
+   "vulnerability",
+   "grievous wounds",
+   "antiheal",
+   "Exhaust",
+   "Cursed Touch",
+   "Power Chord",
+   "Hemoplague"
+  ],
+  "description": "Debuffs that alter the damage a target deals or receives (e.g. Amumu's Cursed Touch, Sona's Power Chord - Diminuendo, Vladimir's Hemoplague, Exhaust); includes antiheal/grievous wounds item debuffs and shield-reduction effects.",
+  "wiki_pages": [
+   "Debuff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "name": "Transform",
+  "keywords": [
+   "transform",
+   "transformation",
+   "form",
+   "shapeshift",
+   "shapeshifter",
+   "morph",
+   "Spider Form",
+   "Human Form",
+   "Mercury Hammer",
+   "Mercury Cannon",
+   "Cougar",
+   "Mega Gnar",
+   "True Form",
+   "All Out",
+   "disguise",
+   "Inherent Glamour",
+   "disguised",
+   "level-gated form",
+   "Ascended",
+   "level up form",
+   "Divine Ascension"
+  ],
+  "description": "A champion switches between two or more distinct forms with separate abilities, statistics and sometimes portraits (Elise Spider/Human, Jayce Mercury Hammer/Cannon, Nidalee Cougar, Gnar Mini/Mega, Bel'Veth True Form, K'Sante All Out); the wiki tags these champions under the Shapeshifter champion category. Also covers disguise passives (Neeko Inherent Glamour) and level-gated forms (Kayle Divine Ascension).",
+  "wiki_pages": [
+   "Buff",
+   "Debuff",
+   "Gnar",
+   "Ability resource",
+   "Manaless"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.resource-gated-transform",
+  "family": "stack-transform-summon-resource",
+  "name": "Resource-gated transformation",
+  "keywords": [
+   "rage",
+   "fury",
+   "Rage Gene",
+   "Mega Gnar",
+   "transform on max",
+   "deplete to revert",
+   "Dragon's Descent",
+   "resource"
+  ],
+  "description": "A transformation gated by a resource: the resource builds in combat and at maximum forces (Gnar's Rage Gene transforms him into Mega Gnar, then depletes over time to transform back) or permits (Shyvana's Dragon's Descent) the form change.",
+  "wiki_pages": [
+   "Ability resource",
+   "Gnar",
+   "Buff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "name": "Toggled form",
+  "keywords": [
+   "toggle",
+   "toggled",
+   "stance",
+   "Switcheroo!",
+   "Burrow",
+   "Unburrow",
+   "Spider Form",
+   "Human Form",
+   "Transform"
+  ],
+  "description": "Form-switching abilities that act as a toggle with no duration: Elise's Spider Form / Human Form, Jayce's Transform Mercury Hammer/Cannon, Jinx's Switcheroo!, Rek'Sai's Burrow/Unburrow.",
+  "wiki_pages": [
+   "Buff"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "name": "Ranged/melee reclassification on transform",
+  "keywords": [
+   "ranged",
+   "melee",
+   "ranged-to-melee",
+   "classification",
+   "Rage Gene",
+   "Mega Gnar"
+  ],
+  "description": "Transforming changes the champion's ranged/melee classification, altering which items and effects apply; Gnar, Elise, Nidalee, Jayce and Kayle are the only champions conditionally considered both ranged and melee (e.g. Mega Gnar becomes melee).",
+  "wiki_pages": [
+   "Gnar"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "name": "Pet (champion summoned unit)",
+  "keywords": [
+   "pet",
+   "pets",
+   "summoned unit",
+   "companion",
+   "Tibbers",
+   "Daisy",
+   "Voidling",
+   "Spiderling",
+   "Sand Soldier",
+   "Packmate",
+   "Mist Walker",
+   "Tentacle",
+   "Ball",
+   "Spirit Blade",
+   "Shadow"
+  ],
+  "description": "An AI-controlled unit summoned by a champion to assist on the battlefield; pets are a type of champion summoned unit, can be controllable (owner inputs commands, e.g. Ivern's Daisy), uncontrollable (static, e.g. Illaoi's tentacles) or self-controlled (instinct-driven, e.g. Kalista's Sentinel); damage dealt by pets is credited to the summoning champion.",
+  "wiki_pages": [
+   "Pets",
+   "Champion summoned units"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.leash-range",
+  "family": "stack-transform-summon-resource",
+  "name": "Leash / control range",
+  "keywords": [
+   "leash range",
+   "control range",
+   "blink back",
+   "boundary",
+   "return to owner",
+   "Move Pet Click"
+  ],
+  "description": "A radius relative to the pet's source that the pet cannot physically pass; at max leash range the pet usually blinks back to the caster's location (e.g. Tibbers, Heimerdinger turrets, Illaoi tentacles, Daisy, LeBlanc clone, Orianna ball, Shaco clone, Zed shadow).",
+  "wiki_pages": [
+   "Pets"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "name": "Clone",
+  "keywords": [
+   "clone",
+   "clones",
+   "Mirror Image",
+   "Hallucinate",
+   "Shapesplitter",
+   "Afterimage",
+   "Mist Wraith",
+   "Corpse",
+   "takedown attribution"
+  ],
+  "description": "A copy of a champion that counts as a champion for targeting and most non-takedown interactions but otherwise behaves as a pet; clones inherit item stats and some buffs, their basic attacks do not trigger spell effects, and takedowns scored by clones are attributed to their owner; clones may be controllable (LeBlanc, Shaco, Wukong, Neeko) or uncontrollable.",
+  "wiki_pages": [
+   "Pets",
+   "Champion summoned units"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-minion",
+  "family": "stack-transform-summon-resource",
+  "name": "Summoned minion",
+  "keywords": [
+   "minion",
+   "summoned unit",
+   "Tibbers",
+   "Daisy",
+   "Voidling",
+   "Spiderling",
+   "Sand Soldier",
+   "Packmate",
+   "Mist Walker",
+   "Bloblet",
+   "Plant",
+   "autonomous"
+  ],
+  "description": "A champion-created minion with its own independent health and stats that exists for a limited time or while the summoner is nearby; damage dealt is credited to the summoning champion and may scale with the summoner's stats; most behave autonomously, some are player-controllable (Tibbers, Daisy).",
+  "wiki_pages": [
+   "Champion summoned units",
+   "Pets"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "name": "Trap",
+  "keywords": [
+   "trap",
+   "traps",
+   "trigger",
+   "stealth",
+   "arm time",
+   "Lotus Trap",
+   "Bushwhack",
+   "Jack in the Box",
+   "Noxious Trap",
+   "Yordle Snap Trap",
+   "Flame Chompers",
+   "Sapling",
+   "Volatile Spiderling"
+  ],
+  "description": "An autonomous unit that is triggered when valid targets enter its trigger range; traps enter stealth after a brief arm time, are revealed by control wards / sweepers, and their damage is classified as ability damage credited to the champion; traps can be targetable (Jhin, Nidalee, Shaco, Teemo) or non-targetable (Caitlyn, Jinx, Maokai, Elise, Bard, Zac).",
+  "wiki_pages": [
+   "Champion summoned units"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "name": "Summoned terrain and structures",
+  "keywords": [
+   "terrain",
+   "wall",
+   "structure",
+   "turret",
+   "Sun Disc",
+   "Crystallize",
+   "Cataclysm",
+   "Pillar of Ice",
+   "Dark Procession",
+   "Weaver's Wall"
+  ],
+  "description": "Player-created terrain units that block movement (Anivia's Crystallize, Jarvan's Cataclysm, Trundle's Pillar of Ice, Yorick's Dark Procession) and champion-summoned structures such as Azir's Sun Disc turret; terrain usually cannot be targeted directly except in special cases.",
+  "wiki_pages": [
+   "Champion summoned units"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ward-unit",
+  "family": "stack-transform-summon-resource",
+  "name": "Ward unit",
+  "keywords": [
+   "ward",
+   "wards",
+   "Control Ward",
+   "Stealth Ward",
+   "Farsight Ward",
+   "Totem Ward",
+   "sight",
+   "Sweeper Drone",
+   "Safeguard",
+   "Teleport"
+  ],
+  "description": "A summoner- or item-created unit that grants sight and is a valid target for some effects (Lee Sin's Safeguard, Teleport) but invalid for most others; classified separately from minions, monsters and champions (Stealth Ward, Control Ward, Farsight Ward).",
+  "wiki_pages": [
+   "Champion summoned units"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ability-resource",
+  "family": "stack-transform-summon-resource",
+  "name": "Ability resource",
+  "keywords": [
+   "ability resource",
+   "resource bar",
+   "primary resource",
+   "secondary resource",
+   "casting resource",
+   "health bar",
+   "pips"
+  ],
+  "description": "A tangible resource shown on the champion's health bar that limits or empowers gameplay by being consumed or generated through ability casting and basic attacking; each champion has at most two resources - a primary one (resource line) and a secondary one (pips or champion-specific icons).",
+  "wiki_pages": [
+   "Ability resource",
+   "Resource"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mana",
+  "family": "stack-transform-summon-resource",
+  "name": "Mana",
+  "keywords": [
+   "mana",
+   "MP",
+   "mana cost",
+   "mana pool",
+   "mana regeneration",
+   "maximum mana",
+   "bonus mana",
+   "blue bar",
+   "stacks additively"
+  ],
+  "description": "The primary casting resource of most champions: a blue bar under the health bar; abilities expend mana costs, the pool refills slowly via mana regeneration and can be restored actively; maximum mana = base + bonus mana; mana stacks additively (1:1) and can scale ability/item effects (Muramana, Kassadin Riftwalk, Ryze).",
+  "wiki_pages": [
+   "Mana",
+   "Ability resource"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.energy",
+  "family": "stack-transform-summon-resource",
+  "name": "Energy",
+  "keywords": [
+   "energy",
+   "yellow bar",
+   "200 energy",
+   "Shen 400",
+   "regeneration",
+   "Crest of Insight",
+   "ninja"
+  ],
+  "description": "An alternative casting resource shown as a yellow bar: regenerates much faster than mana but has a small fixed pool (base 200; Shen 400) that cannot be improved through growth; ultimates cost no energy; the only buff that increases energy regeneration is Crest of Insight.",
+  "wiki_pages": [
+   "Energy",
+   "Ability resource",
+   "Manaless"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.manaless",
+  "family": "stack-transform-summon-resource",
+  "name": "Manaless",
+  "keywords": [
+   "manaless",
+   "no mana",
+   "alternative resource",
+   "without mana",
+   "secondary bar"
+  ],
+  "description": "A champion that does not use nor benefit from mana or mana regeneration (28 champions); manaless champions either use an alternative resource (energy, fury, ferocity, heat, etc.), use the secondary bar as a duration indicator, or have no resource at all.",
+  "wiki_pages": [
+   "Manaless",
+   "Ability resource",
+   "Mana"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.resourceless",
+  "family": "stack-transform-summon-resource",
+  "name": "Resourceless",
+  "keywords": [
+   "resourceless",
+   "no resource",
+   "no secondary bar",
+   "Garen",
+   "Katarina",
+   "Riven",
+   "Viego",
+   "Dr. Mundo",
+   "Zac"
+  ],
+  "description": "A champion with no primary or secondary resource bar at all (Garen, Katarina, Riven, Viego, Dr. Mundo, Zac); internal engine resource index = 2 (none).",
+  "wiki_pages": [
+   "Ability resource",
+   "Manaless"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "name": "Fury / Rage resource family",
+  "keywords": [
+   "fury",
+   "rage",
+   "battlefury",
+   "dragonfury",
+   "gnarfury",
+   "Grit",
+   "Courage",
+   "Awakening",
+   "Crimson Rush",
+   "Determination",
+   "Rage Gene",
+   "Battle Fury",
+   "Dragon's Descent",
+   "Ferocity"
+  ],
+  "description": "An umbrella of champion-specific momentum resources generated in combat (often decaying out of combat) that gate an empowerment or transformation: Gnar's Rage (gnarfury), Renekton's Rage (rage), Rek'Sai's Fury, Sett's Grit, Shyvana's Dragon Fury (dragonfury), Kled's Courage, Tryndamere's Battle Fury (battlefury), Udyr's Awakening, Vladimir's Crimson Rush, Zaahen's Cultivation of War.",
+  "wiki_pages": [
+   "Ability resource",
+   "Manaless"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.heat",
+  "family": "stack-transform-summon-resource",
+  "name": "Heat (overheat)",
+  "keywords": [
+   "heat",
+   "overheat",
+   "Rumble",
+   "Junkyard Titan",
+   "empowered",
+   "disabled"
+  ],
+  "description": "Rumble's resource (internal index 7): casting basic abilities generates heat, which decays when not casting; above a threshold his basic abilities are empowered, and at maximum he overheats - losing heat rapidly while abilities are disabled and basic attacks are enhanced.",
+  "wiki_pages": [
+   "Ability resource"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ferocity",
+  "family": "stack-transform-summon-resource",
+  "name": "Ferocity",
+  "keywords": [
+   "ferocity",
+   "Rengar",
+   "empowered",
+   "pips",
+   "orange bar",
+   "Unseen Predator"
+  ],
+  "description": "Rengar's resource (internal index 9): generated by casting basic abilities successfully, lost after being out of combat; at maximum, his next basic ability consumes all of it to become empowered; shown as pips that turn orange at max.",
+  "wiki_pages": [
+   "Ability resource",
+   "Manaless"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.blood-well",
+  "family": "stack-transform-summon-resource",
+  "name": "Blood Well",
+  "keywords": [
+   "blood well",
+   "bloodwell",
+   "World Ender",
+   "Demonic Ascension",
+   "Demonic Energy",
+   "Aatrox",
+   "Swain",
+   "Sylas",
+   "duration"
+  ],
+  "description": "A resource (internal index 10) that thematically drains life force, generated through a champion's empowered form and depleting at a set rate: Aatrox's World Ender, Swain's Demonic Ascension (as Demonic Energy), and Sylas when hijacking those ultimates.",
+  "wiki_pages": [
+   "Ability resource",
+   "Manaless"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.flow",
+  "family": "stack-transform-summon-resource",
+  "name": "Flow",
+  "keywords": [
+   "flow",
+   "wind",
+   "Way of the Wanderer",
+   "Way of the Hunter",
+   "Yasuo",
+   "Yone",
+   "shield",
+   "blue bar"
+  ],
+  "description": "Yasuo's and Yone's resource (internal index 11, 'wind'): generated while moving; at maximum it is consumed and converted into a shield upon taking damage from champions or monsters.",
+  "wiki_pages": [
+   "Ability resource",
+   "Manaless"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "name": "Ammo / stocked charges",
+  "keywords": [
+   "ammo",
+   "charges",
+   "stock",
+   "reload",
+   "shells",
+   "pips",
+   "Graves",
+   "Jhin",
+   "Gwen",
+   "Xayah",
+   "Pyromania",
+   "Spirit Rush"
+  ],
+  "description": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere), and readiness indicators (Annie's Pyromania stun, Pantheon empowered cast, Ryze runes).",
+  "wiki_pages": [
+   "Ability resource"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.moonlight",
+  "family": "stack-transform-summon-resource",
+  "name": "Moonlight",
+  "keywords": [
+   "moonlight",
+   "Aphelios",
+   "ammo",
+   "weapon",
+   "reserve"
+  ],
+  "description": "Aphelios' exclusive resource (internal index 13) functioning as ammunition for each of his weapons: the bar is divided into five parts of 10 ammo, expended by basic attacks and his weapon active; a weapon with no moonlight goes to the reserve and is replenished when gained again.",
+  "wiki_pages": [
+   "Ability resource"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.health-as-resource",
+  "family": "stack-transform-summon-resource",
+  "name": "Health as a casting resource",
+  "keywords": [
+   "health cost",
+   "health resource",
+   "blood cost",
+   "casting resource",
+   "percentage health"
+  ],
+  "description": "Certain champions expend a set quantity or percentage of their health to cast some or all abilities, either instead of or in addition to an ability resource; some resourceless champions (Vladimir, Mordekaiser, Zac, etc.) have health costs.",
+  "wiki_pages": [
+   "Ability resource",
+   "Manaless"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.resource-duration-indicator",
+  "family": "stack-transform-summon-resource",
+  "name": "Secondary bar as duration indicator",
+  "keywords": [
+   "duration indicator",
+   "countdown",
+   "remaining duration",
+   "secondary bar",
+   "Blood Well",
+   "Frenzy",
+   "True Form",
+   "All Out",
+   "Soul Unbound",
+   "centiseconds"
+  ],
+  "description": "The secondary resource bar is used to count down the remaining duration of an ability or state instead of a spendable pool: Aatrox's World Ender (Blood Well in seconds), Bel'Veth's Endless Banquet (True Form), Briar's Blood Frenzy (Frenzy), K'Sante's All Out and Karthus' Death Defied (mana bar), Yone's Soul Unbound (Flow in centiseconds).",
+  "wiki_pages": [
+   "Manaless",
+   "Ability resource"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.internal-resource-index",
+  "family": "stack-transform-summon-resource",
+  "name": "Internal (engine) resource types",
+  "keywords": [
+   "internal",
+   "engine",
+   "resource index",
+   "mana",
+   "energy",
+   "none",
+   "shield",
+   "battlefury",
+   "dragonfury",
+   "rage",
+   "heat",
+   "gnarfury",
+   "ferocity",
+   "bloodwell",
+   "wind",
+   "ammo",
+   "moonlight",
+   "other"
+  ],
+  "description": "Riot's internal resource type indices as documented by the wiki: 0 mana, 1 energy, 2 none, 3 shield (Mordekaiser), 4 battlefury (Tryndamere), 5 dragonfury (Briar/Shyvana/Vex), 6 rage (Renekton), 7 heat (Rumble/Samira), 8 gnarfury (Gnar/Rek'Sai/Sett/Kled/Udyr/Vladimir), 9 ferocity (Rengar), 10 bloodwell (Aatrox/Swain/Sylas), 11 wind (Yasuo/Yone), 12 ammo, 13 moonlight (Aphelios), 14 other.",
+  "wiki_pages": [
+   "Ability resource"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.soul",
+  "family": "stack-transform-summon-resource",
+  "name": "Soul (stack currency)",
+  "keywords": [
+   "soul",
+   "souls",
+   "Mist",
+   "Black Mist",
+   "Mist Ward"
+  ],
+  "description": "A stack currency collected from takedowns/deaths (Senna Mist, Thresh souls) that permanently scales a stat.",
+  "wiki_pages": [
+   "Stack",
+   "Stacking",
+   "Senna",
+   "Thresh"
+  ]
+ }
+]

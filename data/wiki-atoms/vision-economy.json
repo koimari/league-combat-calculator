@@ -1,0 +1,654 @@
+[
+  {
+    "atom_id": "vision-economy.sight",
+    "family": "vision-economy",
+    "name": "Sight (Vision / Fog of War)",
+    "keywords": [
+      "sight",
+      "vision",
+      "fog of war",
+      "standard sight",
+      "line of sight",
+      "reveal",
+      "vision radius",
+      "brush",
+      "unseen"
+    ],
+    "description": "Standard vision that dispels Fog of War over a radius around units, structures and wards (champions 1350, minions 1200, wards 900, Farsight Wards 500); enemy units become visible when their center enters the radius, and terrain/brush block line of sight.",
+    "wiki_pages": [
+      "Sight",
+      "Ward",
+      "Vision score",
+      "Stealth"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.stealth",
+    "family": "vision-economy",
+    "name": "Stealth (umbrella)",
+    "keywords": [
+      "stealth",
+      "stealthed",
+      "hidden",
+      "conceal",
+      "camouflage",
+      "invisibility",
+      "vanish"
+    ],
+    "description": "Positive effects that temporarily conceal a unit from enemy sight regardless of Fog of War; divided into Camouflage, Invisibility and Stealthed traps, broken by attacking/casting and countered by true sight.",
+    "wiki_pages": [
+      "Stealth",
+      "Ward",
+      "Vision Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.camouflage",
+    "family": "vision-economy",
+    "name": "Camouflage",
+    "keywords": [
+      "camouflage",
+      "stealth",
+      "detection radius",
+      "direct line of sight"
+    ],
+    "description": "Stealth category that conceals the unit only while no enemy champion is within its detection radius with direct line of sight; the smallest detection radius wins among multiple sources, and invisibility overrides camouflage.",
+    "wiki_pages": [
+      "Stealth",
+      "Control Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.invisibility",
+    "family": "vision-economy",
+    "name": "Invisibility",
+    "keywords": [
+      "invisibility",
+      "invisible",
+      "stealth",
+      "true sight only"
+    ],
+    "description": "Stealth category that fully conceals the unit until it attacks or casts; only true sight (e.g. turrets, Vision/Control Wards, Mark) reveals it.",
+    "wiki_pages": [
+      "Stealth",
+      "Vision Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.stealthed-trap",
+    "family": "vision-economy",
+    "name": "Stealthed Trap",
+    "keywords": [
+      "stealthed trap",
+      "hidden trap",
+      "trap",
+      "stealth",
+      "disabled ward"
+    ],
+    "description": "Deployable traps and wards that are stealthed and only revealed by true-sight sources such as Control Wards, Sweeper Drones or Umbral Glaive's Blackout.",
+    "wiki_pages": [
+      "Stealth",
+      "Ward",
+      "Control Ward",
+      "Sight"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.true-sight",
+    "family": "vision-economy",
+    "name": "True Sight",
+    "keywords": [
+      "true sight",
+      "reveal",
+      "revealed",
+      "exposed",
+      "pink ward",
+      "vision ward",
+      "real sight"
+    ],
+    "description": "A form of sight that reveals stealthed units, wards and traps and always includes standard sight; granted by turrets, Control Wards, Oracle Lens, Umbral Glaive, Scryer's Bloom and select abilities/summoner spells.",
+    "wiki_pages": [
+      "Sight",
+      "Stealth",
+      "Vision Ward",
+      "Control Ward",
+      "Ward",
+      "Vision score"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.nearsight",
+    "family": "vision-economy",
+    "name": "Nearsight",
+    "keywords": [
+      "nearsight",
+      "nearsighted",
+      "blind",
+      "reduced sight",
+      "vision radius reduced"
+    ],
+    "description": "Debuff that shrinks the victim's sight radius, removing allied ward vision (including wards the victim placed), blocking true sight and unobstructed vision, and preventing detection of stealthed wards/traps.",
+    "wiki_pages": [
+      "Sight",
+      "Stealth",
+      "Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.obscured-vision",
+    "family": "vision-economy",
+    "name": "Obscured Vision",
+    "keywords": [
+      "obscured vision",
+      "silhouette",
+      "sweeper drone",
+      "oracle lens",
+      "detection",
+      "tremor sense",
+      "blood trail"
+    ],
+    "description": "Detection that exposes a hidden unit's position via silhouette, movement or VFX without making it visible or targetable; unaffected by nearsight.",
+    "wiki_pages": [
+      "Sight",
+      "Stealth"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.unobstructed-vision",
+    "family": "vision-economy",
+    "name": "Unobstructed Vision",
+    "keywords": [
+      "unobstructed vision",
+      "over terrain",
+      "through walls",
+      "see over walls",
+      "see behind terrain"
+    ],
+    "description": "A type of sight that passes through terrain so the unit sees beyond its normal sight radius; cannot see into brush from outside and is entirely negated by nearsight.",
+    "wiki_pages": [
+      "Sight"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.attacker-reveal",
+    "family": "vision-economy",
+    "name": "Attacker Reveal (Fog of War)",
+    "keywords": [
+      "attacker reveal",
+      "fog of war reveal",
+      "position reveal",
+      "attack from fog"
+    ],
+    "description": "Using a unit-targeted spell or basic attack from inside Fog of War reveals a 300-unit radius around the attacker to the enemy team for 2 seconds after the attack completes.",
+    "wiki_pages": [
+      "Sight"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.ward",
+    "family": "vision-economy",
+    "name": "Ward (Deployable Vision Unit)",
+    "keywords": [
+      "ward",
+      "sight ward",
+      "totem ward",
+      "stealth ward",
+      "control ward",
+      "farsight ward",
+      "effigy",
+      "trinket",
+      "vision unit",
+      "distinguished order of ward longevity and health"
+    ],
+    "description": "A deployable unit that removes Fog of War over a radius: Stealth/Totem Wards are stealthed with 900 sight and 3 HP, Control Wards are visible with 4 HP and reveal+disable, Farsight Wards have 500 sight, and Fiddlesticks' Effigy counts as a ward.",
+    "wiki_pages": [
+      "Ward",
+      "Stealth Ward",
+      "Vision Ward",
+      "Control Ward",
+      "Zombie Ward",
+      "Vision score",
+      "Deep Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.ward-limit",
+    "family": "vision-economy",
+    "name": "Ward Placement Limit",
+    "keywords": [
+      "ward limit",
+      "ward cap",
+      "replace",
+      "earliest ward",
+      "3 wards",
+      "1 control ward",
+      "limit 3"
+    ],
+    "description": "A player can have at most 3 Stealth/Totem Wards (shared pool) and 1 Control Ward placed at a time; placing beyond the limit replaces the oldest ward of that type, and Zombie Wards do not count toward the limit.",
+    "wiki_pages": [
+      "Ward",
+      "Stealth Ward",
+      "Control Ward",
+      "Zombie Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.ward-fade-in",
+    "family": "vision-economy",
+    "name": "Ward Stealth Fade-in",
+    "keywords": [
+      "fade-in",
+      "visible on placement",
+      "destealth",
+      "revealed on placement",
+      "stealth delay"
+    ],
+    "description": "Newly placed Stealth/Totem Wards are visible for 1-2 seconds (Totem 2s, Stealth 1s) before becoming stealthed; targeting an allied ward with Teleport or unit-targeted abilities exposes it (Teleport refreshes the exposure during its channel).",
+    "wiki_pages": [
+      "Ward",
+      "Stealth Ward",
+      "Vision Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.ward-disabling",
+    "family": "vision-economy",
+    "name": "Ward Disabling",
+    "keywords": [
+      "disabled ward",
+      "disable",
+      "control ward",
+      "sweeper drone",
+      "blackout",
+      "umbral glaive",
+      "scryer's bloom",
+      "red static"
+    ],
+    "description": "Control Wards, Sweeper Drones and Umbral Glaive's Blackout disable enemy wards (and reveal stealthed traps), removing their vision entirely; disabled wards grant no sight and Scryer's Bloom gives true sight of wards hit for 12s.",
+    "wiki_pages": [
+      "Ward",
+      "Control Ward",
+      "Sight",
+      "Stealth",
+      "Vision score"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.ward-destruction",
+    "family": "vision-economy",
+    "name": "Ward Destruction & Bounty",
+    "keywords": [
+      "ward takedown",
+      "ward bounty",
+      "5 gold",
+      "10 gold",
+      "30 gold",
+      "1 gold",
+      "ward health",
+      "1 damage per hit",
+      "regenerate",
+      "kill gold"
+    ],
+    "description": "Wards have fixed health (3 for Stealth/Totem, 4 for Control/Vision), take exactly 1 damage per basic attack regardless of damage, regenerate out of combat, and grant gold on destruction (5g; historically 10-30g with XP that was removed in V14.19); revealer and killer both earn the bounty when vision was provided.",
+    "wiki_pages": [
+      "Ward",
+      "Stealth Ward",
+      "Vision Ward",
+      "Control Ward",
+      "Zombie Ward",
+      "Vision score"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.ward-rubble",
+    "family": "vision-economy",
+    "name": "Ward Rubble",
+    "keywords": [
+      "ward rubble",
+      "rubble",
+      "debris",
+      "remains",
+      "ward debris"
+    ],
+    "description": "Wards that are destroyed, expire or are replaced leave behind rubble for 5 minutes (fading over time) that can reveal the enemy's warding habits.",
+    "wiki_pages": [
+      "Ward",
+      "Vision Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.ward-timer",
+    "family": "vision-economy",
+    "name": "Ward Timer",
+    "keywords": [
+      "ward timer",
+      "ward ping",
+      "wither",
+      "expiring",
+      "minimap indicator",
+      "remaining duration"
+    ],
+    "description": "Pinging or attacking an enemy ward within 10 seconds of placement shows an accurate expiry timer for that ward, and allied wards appear withered on the minimap once a third of their duration remains.",
+    "wiki_pages": [
+      "Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.vision-score",
+    "family": "vision-economy",
+    "name": "Vision Score",
+    "keywords": [
+      "vision score",
+      "ward lifetime provided",
+      "ward lifetime denied",
+      "staleness",
+      "redundancy",
+      "safety",
+      "pointlessness",
+      "scryer's bloom",
+      "speed shrine",
+      "vision mechanics"
+    ],
+    "description": "Post-game stat estimating vision influence (~1 point per minute of ward lifetime provided or denied, permanent wards worth 1.5 min denied) with modifiers for staleness (-50%), redundancy (-25% to -75%), safety and pointlessness (-100%), plus points from vision-only abilities and effects like Scryer's Bloom.",
+    "wiki_pages": [
+      "Vision score",
+      "Stealth Ward",
+      "Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.zombie-ward",
+    "family": "vision-economy",
+    "name": "Zombie Ward",
+    "keywords": [
+      "zombie ward",
+      "spawned ward",
+      "ward takedown",
+      "rune",
+      "ward assist"
+    ],
+    "description": "Domination rune (removed V25.S1.1) that spawned a friendly visible ward (1100 sight, 1 HP, 120s, outside the ward limit, 1g bounty) where an enemy ward was destroyed with the user's kill or vision assist.",
+    "wiki_pages": [
+      "Zombie Ward",
+      "Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.deep-ward",
+    "family": "vision-economy",
+    "name": "Deep Ward",
+    "keywords": [
+      "deep ward",
+      "enemy jungle",
+      "river",
+      "bonus health",
+      "duration",
+      "rune"
+    ],
+    "description": "Domination rune that empowers Stealth/Totem Wards placed in the enemy jungle (and river at level 9) with +1 bonus health and extended duration (+30-45s Stealth, +30-120s Totem).",
+    "wiki_pages": [
+      "Deep Ward",
+      "Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.starting-gold",
+    "family": "vision-economy",
+    "name": "Starting Gold",
+    "keywords": [
+      "starting gold",
+      "initial gold",
+      "start gold",
+      "500",
+      "1400"
+    ],
+    "description": "The gold every champion begins a match with, fixed by map/game mode: 500 on Summoner's Rift, 1400 on Howling Abyss.",
+    "wiki_pages": [
+      "Gold"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.passive-gold-generation",
+    "family": "vision-economy",
+    "name": "Passive Gold Generation",
+    "keywords": [
+      "passive gold",
+      "gold per 10 seconds",
+      "gp10",
+      "gold generation",
+      "base gold generation",
+      "gold income"
+    ],
+    "description": "Gold earned without player action at a per-10-seconds rate ticked every 0.5s after a start delay (20.4/10s at 1:05 on Summoner's Rift, 60/10s at 1:00 on Howling Abyss); increasable by gold income items.",
+    "wiki_pages": [
+      "Gold",
+      "Gold income"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.kill-bounty",
+    "family": "vision-economy",
+    "name": "Kill Gold Bounty",
+    "keywords": [
+      "gold bounty",
+      "kill gold",
+      "bounty",
+      "minion gold",
+      "monster gold",
+      "ward gold",
+      "inhibitor gold"
+    ],
+    "description": "Gold awarded to the killer for slaying units (champions, minions, monsters, wards, inhibitors); champion kills uniquely generate additional assist gold, and some units dispense global or local bounties shared with the team.",
+    "wiki_pages": [
+      "Gold",
+      "Champion gold bounties",
+      "Ward",
+      "Experience (champion)"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.assist-bounty",
+    "family": "vision-economy",
+    "name": "Assist Bounty",
+    "keywords": [
+      "assist",
+      "assist gold",
+      "assist bounty",
+      "shared equally",
+      "half the kill bounty"
+    ],
+    "description": "Extra gold generated on assisted champion kills, split equally among assisters at half the kill bounty (capped at 50% of the base bounty) with a 50%-to-100% early-game ramp from 0:55 to 2:55.",
+    "wiki_pages": [
+      "Champion gold bounties",
+      "Gold"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.champion-bounty",
+    "family": "vision-economy",
+    "name": "Champion Bounty (Shut Down)",
+    "keywords": [
+      "shut down",
+      "kill streak",
+      "death streak",
+      "bounty",
+      "accrual",
+      "depreciation",
+      "extended bounty",
+      "gold value",
+      "snowball",
+      "comeback",
+      "bounty gauge",
+      "scoreboard"
+    ],
+    "description": "Champion kill reward that scales with performance: base bounty 300g until level 6 then +10g/level (cap 420g), accruing 1 bounty per 3g earned from kills/assists and 1 per 20g from minion/monster/support gold (1:7 while behind), depreciating 1 per 3.5g distributed on death, with Shut Down bounties (beyond base+100) fully removed and extended bounties (beyond base+700) rolling over respawns.",
+    "wiki_pages": [
+      "Champion gold bounties",
+      "Gold"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.first-blood",
+    "family": "vision-economy",
+    "name": "First Blood",
+    "keywords": [
+      "first blood",
+      "100 bonus gold",
+      "first kill"
+    ],
+    "description": "The first champion kill of the match grants the killer 100 bonus gold on top of the slain champion's normal bounty.",
+    "wiki_pages": [
+      "Champion gold bounties",
+      "Gold"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.global-local-bounty",
+    "family": "vision-economy",
+    "name": "Global & Local Bounties",
+    "keywords": [
+      "global gold",
+      "local bounty",
+      "shared equally",
+      "nearby allies",
+      "turret plating",
+      "epic monster",
+      "team gold"
+    ],
+    "description": "Some units (all turrets, certain epic monsters) dispense bounties shared equally team-wide regardless of range/death (global) or among nearby living allies (local); Turret Plating splits gold among nearby champions, with the destroyer's share guaranteed regardless of range.",
+    "wiki_pages": [
+      "Gold",
+      "Champion gold bounties"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.gold-income-item",
+    "family": "vision-economy",
+    "name": "Gold Income Items (Support Quest)",
+    "keywords": [
+      "gold income",
+      "economy item",
+      "support item",
+      "quest",
+      "minion sharing",
+      "poking",
+      "world atlas",
+      "runic compass",
+      "tribute",
+      "spoils of war",
+      "favor"
+    ],
+    "description": "Support economy items (World Atlas into Runic Compass) generate bonus gold through passive income plus charges earned by minion sharing near an ally or poking enemy champions, upgrading after completing a 400g quest per tier.",
+    "wiki_pages": [
+      "Gold income",
+      "Gold"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.item-sellback",
+    "family": "vision-economy",
+    "name": "Item Sellback",
+    "keywords": [
+      "sell",
+      "refund",
+      "70%",
+      "40%",
+      "shop",
+      "sellback"
+    ],
+    "description": "Most items sell to the shop for 70% of their total cost; consumables, gold-generating items, Doran's items, Dark Seal and Guardian Angel sell for only 40%, and some items (jungle/support quest items, elixirs) cannot be sold at all.",
+    "wiki_pages": [
+      "Gold"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.experience-bounty",
+    "family": "vision-economy",
+    "name": "Experience Bounty",
+    "keywords": [
+      "experience",
+      "xp",
+      "exp",
+      "bounty",
+      "level up",
+      "skill point",
+      "experience range"
+    ],
+    "description": "XP dispensed when units die: dying champions to allies within 1600 units (kill/assist credit guarantees the share), minions within 1500 units, monsters to their killer exclusively (epic monsters locally, Baron globally), all split equally among eligible champions.",
+    "wiki_pages": [
+      "Experience (champion)",
+      "Experience",
+      "Ward"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.experience-sharing",
+    "family": "vision-economy",
+    "name": "Solo & Shared Experience",
+    "keywords": [
+      "solo experience",
+      "shared experience",
+      "yield modifier",
+      "experience split",
+      "130%"
+    ],
+    "description": "Yield modifiers for minion-type bounties: one champion receives 100% of the bounty, while multiple champions generate ~130% total split equally (65% each for two, 43.3% for three, down to 21.7% for six).",
+    "wiki_pages": [
+      "Experience (champion)"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.comeback-experience",
+    "family": "vision-economy",
+    "name": "Comeback Experience",
+    "keywords": [
+      "comeback",
+      "catch-up experience",
+      "level difference",
+      "comeback bonus",
+      "comeback penalty",
+      "comeback xp"
+    ],
+    "description": "XP modifiers from level difference: lower-level champions earn more XP (up to +200% from minions 6 levels higher, +20% per level beyond 1.0 for champion kills) while higher-level earners are penalized up to -60%.",
+    "wiki_pages": [
+      "Experience (champion)"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.jungle-experience",
+    "family": "vision-economy",
+    "name": "Jungle Experience Rules",
+    "keywords": [
+      "jungle item",
+      "monster hunter",
+      "minion farming penalty",
+      "jungle comeback",
+      "large monster",
+      "jungle companion"
+    ],
+    "description": "Jungle item users always earn bonus XP from large monsters and +50 XP per level of disadvantage when behind the average level, but suffer reduced XP from minion kills (70%-to-0 penalty over 20 minutes, plus a 50% Monster Hunter cut when minion gold exceeds 40% of monster gold, removed at 14 min).",
+    "wiki_pages": [
+      "Experience (champion)"
+    ]
+  },
+  {
+    "atom_id": "vision-economy.leveling",
+    "family": "vision-economy",
+    "name": "Leveling & Level Cap",
+    "keywords": [
+      "level up",
+      "level cap",
+      "max level",
+      "xp required",
+      "18",
+      "20",
+      "skill point",
+      "stat growth"
+    ],
+    "description": "XP thresholds grant levels (280 XP to level 2, +100 each level to 1880 at 18); each level-up automatically awards stat growth and a skill point, with the default cap 18 raised to 20 by the Top Lane Role Quest (30 in URF, 41 in Arena).",
+    "wiki_pages": [
+      "Experience (champion)",
+      "Experience"
+    ]
+  }
+]
