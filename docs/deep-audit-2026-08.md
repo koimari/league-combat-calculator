@@ -15,9 +15,22 @@ Base: `820acbc3` (current production SHA) · Tier: local-commit/local-browser ev
 - **Fimbulwinter** — partial candidate (uncertified CC-packet branch); visible as audit row, never ranked.
 - Consequence: these items can never be "best in slot" until their event timing is exact. → closes #43/#44/#14.
 
-### 2.2 Champion self-healing — only 9 of ~40 self-healers
+### 2.2 Champion self-healing — only 9 modeled; 22+ heal-named mechanics missing
 `HEALING_RULE_CHAMPIONS` = Aatrox, Ambessa, Darius, Warwick, Dr. Mundo, Irelia, Renekton, Soraka, Briar.
-Unmodeled self-healers (need per-champion receipts): Vladimir, Swain, Sylas, Fiora, Nasus, Tryndamere, Olaf, Mordekaiser, Tahm Kench, Cho'Gath, Sion, Maokai, Sett, Gwen, Camille, Akali, Illaoi, Rhaast (Kayn), Galio, Galio… (full audit: enumerate every champion with sourced self-heal formula and diff against the rule set).
+
+Binary evidence (scan of all 203 decomposed CharacterRecords for heal-named
+spells/buffs) — modeled or missing:
+
+- Modeled: Dr. Mundo (`DrMundoRHeal`), Soraka (`SorakaQRegen`) ✓ (others use non-heal spell names)
+- **Missing from the self-heal model** (sourced heal mechanics present in the game data):
+  Alistar (passive heal), Bard (W health pack), Cho'Gath (Feast), Ekko (R heal), Fiora (R heal),
+  Garen (passive heal), Illaoi (tentacle heal), Kayle (W heal), Kindred (W passive heal),
+  K'Sante (R conversion), Locke (consume attack), Pyke (P grey-health toggle), Rakan (Q heal),
+  Rek'Sai (P regen), Seraphine (W2 heal), Sett (passive regen), Sylas (W damage+heal),
+  Trundle (passive heal), Udyr (W heal), Vladimir (Q/W/R heals), Yuumi (P heal), Zoe (W heal summoner spell) — 22
+- Additional champions whose heal mechanics use non-"heal" spell names (Swain R, Nasus passive,
+  Maokai passive, Tahm Kench, Volibear W, Xin Zhao W, Mordekaiser, Gwen, Camille…) need a
+  field-level audit of each CharacterRecord's BuffData/SpellData — seed for WS4.
 
 ### 2.3 Ally champion support — only items + a few champions
 Verified: Lulu "Help, Pix!" shield (rank 5 → 230 shield to main, `support_events`) works.
