@@ -1040,9 +1040,9 @@ def test_config_exposes_the_champion_review_boundary():
     )
 
     assert engine["registered_count"] == 173
-    assert engine["reviewed_count"] == 123
-    assert engine["generated_count"] == 50
-    assert engine["unreviewed_count"] == 50
+    assert engine["reviewed_count"] == 135
+    assert engine["generated_count"] == 38
+    assert engine["unreviewed_count"] == 38
     assert engine["module_contract"] == "full_entry_wiki_receipt"
 
 
@@ -1843,7 +1843,7 @@ class TestIconUrlsAreHttps:
             set(champion["abilities"]) == {"P", "Q", "W", "E", "R"}
             for champion in champions
         )
-        assert sum(champion["verified"] for champion in champions) == 123
+        assert sum(champion["verified"] for champion in champions) == 135
         by_name = {champion["name"]: champion for champion in champions}
         assert by_name["Aatrox"]["engine_registration"] == "reviewed_module"
         assert by_name["Teemo"]["engine_registration"] == "generated_packet"

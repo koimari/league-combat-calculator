@@ -40,7 +40,7 @@ def test_known_complex_kits_report_their_actual_blocker_categories():
         "verification": "reviewed_module",
         "blockers": [],
     }
-    for name in ("Teemo", "Ryze", "Samira"):
+    for name in ("Sona", "Swain", "Sylas"):
         report = attacker_availability(by_name[name], verified)
         assert report["ready"] is False
         assert report["verification"] == "blocked"

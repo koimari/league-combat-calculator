@@ -21,7 +21,7 @@ def test_packet_asset_covers_all_173_cached_champions():
 def test_every_generated_champion_has_an_explicit_unreviewed_packet_module():
     asset = _asset()
     assert set(_GENERIC_CHAMPION_MODULES) <= set(asset["champions"])
-    assert len(_GENERIC_CHAMPION_MODULES) == 50
+    assert len(_GENERIC_CHAMPION_MODULES) == 38
     for champion, module_name in _GENERIC_CHAMPION_MODULES.items():
         module = importlib.import_module(f"src.calculator.champions.{module_name}")
         assert module.REVIEW_STATUS == "generated_packet", champion
