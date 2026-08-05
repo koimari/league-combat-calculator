@@ -21,6 +21,24 @@ implementation or an explicit no-damage/unsupported classification.
 The release gate is `scripts/full_entry_audit.py`. It must report every
 in-scope entry as `ready`, with no `review_pending` records and no missing
 champion slots. The audit receipt records the page revision, content hashes,
-section/effect expectations, and the runtime coverage reason. A clean unit
-test without this full-entry receipt does not authorize promotion or issue
-closure.
+section/effect expectations, the per-effect verdict, and the runtime coverage
+reason for each manual-attacker, enemy-target, ally-roster, optimizer, API,
+and frontend path. A clean unit test without this full-entry receipt does not
+authorize promotion or issue closure.
+
+Generated champion packet modules are deliberately not certification evidence.
+They may remain importable so the backend can return a deterministic,
+fail-closed explanation, but `/api/champions` must expose them as
+`generated_packet` and unavailable for reviewed champion options until an exact
+module has passed this requirement. The current baseline is 237 ordinary
+items audited, 53 exact champion modules, and 120 generated champion packets;
+the release gate remains open until the latter 120 are replaced by exact
+modules or an explicitly sourced, tested out-of-scope classification.
+
+For every item effect, the receipt must retain the full parent-page evidence
+even when the runtime currently withholds the branch. A branch may not be
+collapsed into a single item-level “supported” flag: its passive/active name,
+all described branches, cooldown/range metadata, typed runtime verdict,
+issue references, and path coverage must remain inspectable. The same rule
+applies to each champion P/Q/W/E/R slot, including utility-only slots and
+alternate forms.

@@ -84,11 +84,19 @@ def test_item_scope_includes_transformed_and_non_purchasable_records(monkeypatch
 
 
 def test_champion_module_receipts_cover_every_cached_champion():
-    """The full-entry gate cannot pass while a registered module is missing."""
+    """The full-entry gate distinguishes exact modules from generated packets."""
     names = audit.champion_names()
     assert len(names) == 173
     receipts = [audit._champion_module_receipt(name) for name in names]
-    assert all(receipt["status"] == "ready" for receipt in receipts)
+    assert sum(receipt["status"] == "ready" for receipt in receipts) == 53
+    assert sum(receipt["status"] == "review_pending" for receipt in receipts) == 120
+    assert all(
+        receipt["registration"] == "generated_packet"
+        and receipt["error"]
+        and receipt["slot_coverage"]
+        for receipt in receipts
+        if receipt["status"] == "review_pending"
+    )
     assert all(
         set(receipt["slots"]) == {"P", "Q", "W", "E", "R"} for receipt in receipts
     )
@@ -116,6 +124,7 @@ def test_expected_effects_names_every_item_branch_and_champion_slot():
     )
     assert item["effect_count"] == 2
     assert {row["name"] for row in item["effects"]} == {"Passive", "Active"}
+    assert all("descriptions" in row for row in item["effects"])
     champion = audit._expected_effects(
         "champion",
         {
@@ -131,3 +140,43 @@ def test_expected_effects_names_every_item_branch_and_champion_slot():
         audit.REQUIRED_CHAMPION_SLOTS
     )
     assert all(row["variant_count"] == 1 for row in champion["effects"])
+
+
+def test_item_effect_receipt_keeps_each_branch_and_runtime_path_visible():
+    expected = audit._expected_effects(
+        "item",
+        {
+            "passives": [
+                {
+                    "name": "Cleave",
+                    "description": "Hits nearby enemies.",
+                    "branches": [
+                        {"description": "Primary"},
+                        {"description": "Secondary"},
+                    ],
+                    "stats": {},
+                }
+            ]
+        },
+    )
+    runtime = {
+        "status": "blocked",
+        "reason": "Secondary target timing is not modeled.",
+        "review_issue_refs": [43],
+        "calculation_eligible": False,
+        "optimizer_eligible": False,
+    }
+
+    rows = audit._item_effect_coverage(expected, runtime)
+
+    assert len(rows) == 1
+    assert rows[0]["verdict"] == "withheld"
+    assert rows[0]["issue_refs"] == [43]
+    assert rows[0]["paths"] == {
+        "manual_attacker": False,
+        "enemy_target": False,
+        "ally_roster": False,
+        "optimizer": False,
+        "api": True,
+        "frontend": True,
+    }

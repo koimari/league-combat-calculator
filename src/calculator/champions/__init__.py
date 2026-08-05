@@ -119,8 +119,9 @@ _ENGINE_CHAMPION_MODULES: dict[str, str] = {
 # not indicate a runtime generic/archetype path.
 _GENERIC_CHAMPION_MODULES = _GENERATED_CHAMPION_MODULES
 # Public/internal callers historically imported ``_CHAMPION_MODULES``. Keep
-# that symbol, but make it the complete reviewed registration map now that
-# every cached champion has a dedicated packet module.
+# that symbol, but make it the complete engine registration map now that every
+# cached champion has a dedicated packet module. Certification is exposed
+# separately through ``reviewed_champion_names``.
 _CHAMPION_MODULES: dict[str, str] = _ENGINE_CHAMPION_MODULES
 
 # Resolved module ``parse_abilities`` callables — the import system already
@@ -396,8 +397,27 @@ def champion_options_meta_map() -> dict[str, dict[str, list]]:
 
 
 def registered_champion_names() -> list[str]:
-    """Display names of all champions with dedicated reviewed modules."""
+    """Display names of all champions with a dedicated engine module.
+
+    This is the runnable registration surface, not the certification surface.
+    Generated packet modules remain registered so the calculator can expose a
+    deterministic, fail-closed result while their full champion-specific
+    mechanics are completed.
+    """
     return sorted(_CHAMPION_MODULES)
+
+
+def reviewed_champion_names() -> list[str]:
+    """Display names whose modules passed the exact champion review gate.
+
+    Hand-authored modules are the only modules that currently carry the exact
+    stateful contract.  Generated packet modules deliberately stay out of
+    this set until their full Wiki parent entry, all P/Q/W/E/R mechanics, and
+    focused tests are complete.  Keeping this separate from
+    :func:`registered_champion_names` prevents a generated file from being
+    presented as a reviewed champion merely because it imports successfully.
+    """
+    return sorted(_CUSTOM_CHAMPION_MODULES)
 
 
 def registered_engine_champion_names() -> list[str]:
@@ -410,17 +430,18 @@ def registered_engine_champion_names() -> list[str]:
 
 
 def engine_registration_kind(champion_name: str) -> str | None:
-    """Return the public review status for a registered champion module.
+    """Return the public registration kind for one champion module.
 
-    Packet modules are generated source files, but they are not an implicit
-    generic fallback: each one has a named P/Q/W/E/R manifest, a full-entry
-    Wiki receipt, and a dedicated import target.  Once that manifest is
-    reviewed, the public contract must not label the module as unreviewed.
-    The generator-vs-hand-authored distinction remains internal in
-    ``_GENERATED_CHAMPION_MODULES`` for maintenance and test tooling.
+    ``generated_packet`` is intentionally distinct from ``reviewed_module``.
+    A generated packet is a deterministic runtime implementation, but its
+    full champion-specific Wiki mechanics have not yet passed the exact
+    module gate in issue #15.  The API can therefore keep the backend path
+    available without claiming that the packet is reviewed.
     """
-    if champion_name in _CHAMPION_MODULES:
+    if champion_name in _CUSTOM_CHAMPION_MODULES:
         return "reviewed_module"
+    if champion_name in _GENERATED_CHAMPION_MODULES:
+        return "generated_packet"
     return None
 
 

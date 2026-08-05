@@ -414,6 +414,45 @@ _UTILITY_DIMENSIONS: dict[str, tuple[str, ...]] = {
     "The Collector": ("execute", "takedown_state"),
 }
 
+# Concrete GitHub owners for source-backed gaps.  The full-entry audit exposes
+# these references beside every withheld effect so a page review cannot end
+# with an untracked prose note.  The umbrella #40 remains the release gate;
+# child issues own the implementation family.
+_REVIEW_ISSUE_REFS: dict[str, tuple[int, ...]] = {
+    "Stridebreaker": (43,),
+    "Voltaic Cyclosword": (43,),
+    "Runaan's Hurricane": (43,),
+    "Fimbulwinter": (44, 46),
+    "Endless Hunger": (44, 45),
+    "Whispering Circlet": (44,),
+    "Archangel's Staff": (44,),
+    "Manamune": (44,),
+    "Tear of the Goddess": (44,),
+    "Winter's Approach": (44,),
+    "Zeke's Convergence": (44,),
+    "Axiom Arc": (44,),
+    "Hubris": (44,),
+    "Doran's Helm": (45,),
+    "Actualizer": (45,),
+    "Catalyst of Aeons": (45,),
+    "Ardent Censer": (48,),
+    "Bandlepipes": (48,),
+    "World Atlas": (48, 50, 82),
+    "Runic Compass": (48, 50, 82),
+    "Imperial Mandate": (48,),
+    "Redemption": (48,),
+    "Mikael's Blessing": (48,),
+    "Locket of the Iron Solari": (46, 48),
+    "Cull": (50,),
+    "Phage": (50,),
+    "Umbral Glaive": (50,),
+}
+
+
+def review_issue_refs(item_name: str) -> list[int]:
+    """Return concrete child issues for a source-backed coverage gap."""
+    return list(_REVIEW_ISSUE_REFS.get(str(item_name), (40,)))
+
 
 def _has_described_effect(item: dict[str, Any]) -> bool:
     """Return whether cached Wiki data describes a passive or active."""
@@ -508,6 +547,9 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
             and (status != "blocked" or name in _CALCULATION_ALLOWED_BLOCKED)
         ),
         "outcome_dimensions": list(_UTILITY_DIMENSIONS.get(name, ())),
+        "review_issue_refs": (
+            review_issue_refs(name) if status in {"blocked", "review_pending"} else []
+        ),
         "reason": reason,
     }
 
@@ -538,6 +580,9 @@ def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
         "status": status,
         "calculation_eligible": status not in {"blocked", "review_pending"},
         "outcome_dimensions": list(_UTILITY_DIMENSIONS.get(name, ())),
+        "review_issue_refs": (
+            review_issue_refs(name) if status in {"blocked", "review_pending"} else []
+        ),
         "reason": reason,
     }
 
@@ -680,6 +725,7 @@ __all__ = [
     "require_certified_target_timeline",
     "require_optimizer_item_coverage",
     "require_target_item_coverage",
+    "review_issue_refs",
     "target_build_coverage",
     "target_item_model_coverage",
 ]

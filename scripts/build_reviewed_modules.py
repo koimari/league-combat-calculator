@@ -390,7 +390,7 @@ def _render_module(name: str, option_keys: list[str]) -> str:
         f"from ..packet_module import build_packet_module\n\n"
         f"{option_comment}"
         f"parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module({name!r})\n"
-        "REVIEW_STATUS = 'reviewed_packet'\n"
+        "REVIEW_STATUS = 'generated_packet'\n"
     )
 
 

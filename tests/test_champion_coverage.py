@@ -3,7 +3,7 @@
 import json
 
 from src.calculator.champion_coverage import attacker_availability
-from src.calculator.champions import registered_champion_names
+from src.calculator.champions import reviewed_champion_names
 
 
 def _champions():
@@ -12,7 +12,7 @@ def _champions():
 
 
 def test_every_cached_champion_has_an_explicit_attacker_status():
-    verified = set(registered_champion_names())
+    verified = set(reviewed_champion_names())
     reports = [attacker_availability(champion, verified) for champion in _champions()]
 
     assert len(reports) == 173
@@ -32,25 +32,30 @@ def test_every_cached_champion_has_an_explicit_attacker_status():
 
 
 def test_known_complex_kits_report_their_actual_blocker_categories():
-    verified = set(registered_champion_names())
+    verified = set(reviewed_champion_names())
     by_name = {champion["name"]: champion for champion in _champions()}
 
-    for name in ("Aphelios", "Teemo", "Nami", "Olaf"):
-        assert attacker_availability(by_name[name], verified) == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
-        }
+    assert attacker_availability(by_name["Aphelios"], verified) == {
+        "ready": True,
+        "verification": "reviewed_module",
+        "blockers": [],
+    }
+    for name in ("Teemo", "Nami", "Olaf"):
+        report = attacker_availability(by_name[name], verified)
+        assert report["ready"] is False
+        assert report["verification"] == "blocked"
+        assert report["blockers"]
 
 
 def test_unsupported_scaling_names_the_affected_ability():
-    verified = set(registered_champion_names())
+    verified = set(reviewed_champion_names())
     reports = [attacker_availability(champion, verified) for champion in _champions()]
-    assert all(report["ready"] for report in reports)
+    assert any(not report["ready"] for report in reports)
+    assert all(report["blockers"] for report in reports if not report["ready"])
 
 
 def test_reviewed_module_overrides_heuristic_complexity():
-    verified = set(registered_champion_names())
+    verified = set(reviewed_champion_names())
     ziggs = next(champion for champion in _champions() if champion["name"] == "Ziggs")
 
     assert attacker_availability(ziggs, verified)["ready"] is True
