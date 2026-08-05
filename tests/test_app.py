@@ -935,18 +935,13 @@ def test_frontend_level_controls_routable_contract_uses_data_level_delta():
         "const rosterMatch = levelPath.match(/^(targets|allies)\\.(\\d+)\\.level$/)"
         in source
     )
-    assert (
-        "const cap = levelPath === \"attacker.level\""
-        in source
-    )
+    assert 'const cap = levelPath === "attacker.level"' in source
     assert (
         "setPath(levelPath, Math.max(1, Math.min(cap, "
         "Number(pathValue(levelPath)) + Number(levelButton.dataset.levelDelta || levelButton.dataset.delta || 0))));"
         in source
     )
-    assert (
-        'document.querySelectorAll("[data-level-delta]")' in source
-    )
+    assert 'document.querySelectorAll("[data-level-delta]")' in source
 
 
 def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_effect():
