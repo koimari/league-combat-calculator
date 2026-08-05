@@ -833,5 +833,38 @@
    "Senna",
    "Thresh"
   ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "name": "Summon (unit)",
+  "keywords": [
+   "summon",
+   "pet",
+   "minion",
+   "voidling",
+   "turret",
+   "tibbers"
+  ],
+  "description": "Spawns a controllable unit/pet (Trait_Pet).",
+  "wiki_pages": [
+   "Champion summoned units",
+   "Pets"
+  ]
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "name": "Upgrade (ability)",
+  "keywords": [
+   "upgrade",
+   "evolve",
+   "enhance"
+  ],
+  "description": "Permanently enhances an ability or stat (Trait_Upgrade).",
+  "wiki_pages": [
+   "Stack",
+   "Buff"
+  ]
  }
 ]

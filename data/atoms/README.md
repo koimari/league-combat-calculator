@@ -1,47 +1,42 @@
-# data/atoms — fundamental behavior atoms (WS3)
+# data/atoms — fundamental behavior atoms (WS3, v3)
 
 The atomic catalog: every champion mechanic decomposed into typed behavior
-atoms with dual provenance (wiki page + game binary). Per-champion atom files
-are gitignored (regenerable from `data/bin`); the summaries and report are
-tracked.
+atoms with dual provenance (wiki page + game binary). Schema:
+`atoms.schema.json`. Per-champion atom files are gitignored (regenerable from
+`data/bin`); `atom-summary.json`, `classification-report.json`,
+`unclassified.json`, and the Vladimir sample are tracked.
 
-## Pipeline
+## Classifier v3 (data-driven)
 
-`scripts/extract_atoms.py` (v2, data-driven) classifies every SpellObject in a
-champion's CharacterRecord:
+- **Identity**: wiki vocabularies in `data/wiki-atoms/` (177+ atoms, 6
+  families + `interaction`) are the only identity source — zero hardcoded
+  champion/spell names in code.
+- **Semantic layer**: `spell-tags.json` maps the game's own `mSpellTags`
+  vocabulary (Trait_ActiveHeal, Trait_Shield, Trait_Invisibility,
+  Trait_Pet, Trait_Transformation, Trait_AttackReset, PositiveEffect_MoveBlock,
+  ...) to atoms + target policy.
+- **Wiki-driven champion maps** (`champion-passive-atoms.json`,
+  `champion-spell-atoms.json`): form-change passives (Neeko/Kayle), shared-
+  script summons (Annie Tibbers, Heimer turrets, Malzahar Voidlings, Yorick,
+  Zyra, Ivern, Azir, Kindred, Illaoi), traps, and clones (LeBlanc, Zed,
+  Wukong) — behaviors the binaries cannot express as SpellObject tags.
+- **Two-tier matching**: strong hits (object-name tokens, multi-token
+  keywords, tags) always count; weak hits (single datavalue tokens) only when
+  no strong hit exists (cap 2) — removed ~3,000 spurious atoms with zero
+  object-level recall loss.
+- **Clone inheritance**: `*Missile/*Attack/*Mis/*Mini/*Hit/*Return` variants
+  (digit-stripped, incl. the game's "Missle" typo) inherit the parent spell's
+  atoms.
+- **Noise**: engine/cosmetic artifacts (Managers, VFX, Trackers, skins,
+  tooltips, UI helpers) are excluded by object name only.
 
-1. Loads the wiki behavior-atom vocabularies (`../wiki-atoms/*.json`, 177 atoms
-   in 5 families) — the only source of atom identity. No champion names or
-   spell names are hardcoded in the classifier.
-2. Tokenizes spell/buff names (`mScriptName`, `mAlternateName`, ObjectName,
-   buff tooltip names), `mSpellCalculations` names and `DataValues` names
-   (camelCase splits, singular/plural stem matching) and matches them against
-   atom keywords.
-3. Augments with binary signals: `mSpellTags` (explicit tag->atom map),
-   cooldown/castRange presence, `mAffectsTypeFlags` (raw), and generic rules
-   (execute = ultimate + damage-cap datavalues; crit-attack names; nuke names).
-4. Data-driven noise guards: champion-name prefixes are stripped from script
-   names; vocab keywords made of champion names or corpus-generic tokens
-   ("duration", "ability damage") are ignored; ambiguous shared keywords only
-   vote for their home atom; substring traps ("miss" in missile, "stance" in
-   distance, "wind" in window) are blocked.
+## Current state (v3)
 
-## Files
-
-| File | Contents |
-|---|---|
-| `<champ>.atoms.json` | per-champion atom list (gitignored, regenerable) |
-| `atom-summary.json` | family -> champions |
-| `unclassified.json` | per champion: SpellObjects with no atom match, each flagged noise vs real-looking |
-| `classification-report.json` | per champion family counts, unclassified notes, sanity checks, classifier improvements |
-
-## Validation set (2026-08 deep audit)
-
-20 diverse champions: Aatrox, Aphelios, Cho'Gath, Gnar, Jinx, Kayle, Kha'Zix,
-Kindred, Nasus, Neeko, Pyke, Senna, Sion, Sylas, Thresh, Udyr, Veigar, Viktor,
-Zeri, Vladimir.
-
-Result: 1029 atoms, 256 unclassified SpellObjects (103 real-looking, 153
-engine/cosmetic artifacts). 5/7 curated sanity mechanics pass; Neeko and
-Kayle transform fail because their binaries never contain transform/disguise
-tokens (see classification-report.json suggestions).
+- 173-wiki-champion universe (excludes TFT/test entities).
+- ~8,300 atoms classified; ~1,300 unclassified objects (646 real mechanics —
+  mostly clones/passives for the next iteration; 652 noise).
+- **19/19 sanity checks** across 7 families (heals, shields, stealth,
+  summons, clones, executes, resets, DoT, slows, dashes, transforms).
+- Known limitation: damage_type is null for most damage atoms — the
+  CharacterRecord bins do not carry damage types; that data lives in the
+  wiki ability pages (WS1) and spell bins, and is the next iteration's fix.

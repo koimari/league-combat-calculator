@@ -1,0 +1,44 @@
+[
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "name": "Attack reset",
+  "keywords": [
+   "reset",
+   "attack reset"
+  ],
+  "description": "Resets the basic-attack timer, allowing an immediate follow-up attack (Trait_AttackReset).",
+  "wiki_pages": [
+   "Attack speed",
+   "Basic attack"
+  ]
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "name": "Parry / block",
+  "keywords": [
+   "parry",
+   "block",
+   "deflect"
+  ],
+  "description": "Negates or reflects incoming damage/attacks for a window (Trait_Parry).",
+  "wiki_pages": [
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "interaction.projectile-destruction",
+  "family": "interaction",
+  "name": "Projectile destruction",
+  "keywords": [
+   "projectile destruction",
+   "destroy projectile",
+   "wind wall"
+  ],
+  "description": "Destroys incoming enemy projectiles (Trait_ProjectileDestruction).",
+  "wiki_pages": [
+   "Damage"
+  ]
+ }
+]

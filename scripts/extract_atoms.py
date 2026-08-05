@@ -240,8 +240,24 @@ NOISE_TOKENS = {
     "test", "icon", "vo", "runcycle", "runanimation", "cosmetic", "wrapper",
     "fakecast", "satisfaction", "vs", "blackhole", "idle", "animation",
     "helper", "banner", "dummy", "defeat", "victory", "indicator", "warning",
-    "wins", "ready",
+    "wins", "ready", "tooltip", "counter", "definitions", "cancel", "cancelable",
+    "cancomplete", "display", "ui", "hud", "bar", "icon2d", "card", "slot",
+    "overhead", "glow", "flash", "sparkle", "trail", "fx", "loot", "chest",
+    "hextech", "chestguard", "victoryscreen", "defeatscreen", "announce",
+    "goldfish", "sequencer", "cleanup", "guide", "state", "states",
 }
+
+# Noise is decided from the OBJECT NAME only, never from DataValues/calc
+# names (those carry parameter tokens like max/rank/level and would wrongly
+# flag real spells).
+
+TAG_MAP_FILE = VOCAB_DIR / "spell-tags.json"
+
+
+def load_tag_map() -> dict:
+    if TAG_MAP_FILE.exists():
+        return json.loads(TAG_MAP_FILE.read_text())
+    return {}
 
 ALLY_TOKENS = {"ally", "allies", "allied", "friend", "friendly", "team", "teammate"}
 ENEMY_TOKENS = {"enemy", "enemies", "hostile"}
@@ -253,19 +269,26 @@ ENEMY_TOKENS = {"enemy", "enemies", "hostile"}
 PASSIVE_MAP_FILE = VOCAB_DIR / "champion-passive-atoms.json"
 
 def load_passive_map() -> dict[str, list[dict]]:
-    """Wiki-driven champion-passive atom assignments (form-change passives
-    whose binary objects carry no transform token). Data-driven, not code."""
-    if not PASSIVE_MAP_FILE.exists():
-        return {}
+    """Wiki-driven champion atom assignments for mechanics the binaries
+    cannot express via SpellObject tags (form-change passives, shared-script
+    summons, clones). Data-driven, not code."""
     out: dict[str, list[dict]] = {}
-    for entry in json.loads(PASSIVE_MAP_FILE.read_text()):
-        out.setdefault(champion_key(entry["champion"]), []).append(entry)
+    for fname in ("champion-passive-atoms.json", "champion-spell-atoms.json"):
+        f = VOCAB_DIR / fname
+        if f.exists():
+            for entry in json.loads(f.read_text()):
+                out.setdefault(champion_key(entry["champion"]), []).append(entry)
     return out
 
 def load_vocab() -> dict[str, dict]:
     atoms = {}
     for f in sorted(VOCAB_DIR.glob("*.json")):
-        for a in json.loads(f.read_text()):
+        if f.name in ("spell-tags.json", "champion-passive-atoms.json"):
+            continue
+        data = json.loads(f.read_text())
+        if not isinstance(data, list):
+            continue
+        for a in data:
             atoms[a["atom_id"]] = a
     return atoms
 
@@ -371,7 +394,9 @@ def object_features(obj: dict, key: str, champ_norm: str) -> dict:
 
 
 def is_noise(feat: dict) -> bool:
-    return bool(feat["toks"] & NOISE_TOKENS)
+    name_toks = set(tokens(feat["name"]))
+    key_toks = set(tokens(feat["key"].rsplit("/", 1)[-1]))
+    return bool((name_toks | key_toks) & NOISE_TOKENS)
 
 
 def infer_trigger(feat: dict) -> str:
@@ -391,6 +416,9 @@ def infer_trigger(feat: dict) -> str:
 
 
 def infer_target(atom_id: str, feat: dict) -> str:
+    tag_tp = (feat.get("tag_targets") or {}).get(atom_id)
+    if tag_tp:
+        return tag_tp
     toks = feat["toks"]
     if toks & ALLY_TOKENS:
         return "ally"
@@ -424,7 +452,7 @@ def infer_damage_type(feat: dict) -> str | None:
 # --------------------------------------------------------------------------
 # Classification
 # --------------------------------------------------------------------------
-def classify_object(feat: dict, keyword_index) -> list[tuple[str, str]]:
+def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, str]]:
     """Return [(atom_id, family), ...] for one SpellObject."""
     hits: dict[str, str] = {}
     for atom_id, family, specs in keyword_index:
@@ -432,10 +460,39 @@ def classify_object(feat: dict, keyword_index) -> list[tuple[str, str]]:
             if keyword_matches(nk, ktoks, feat["toks"], feat["hay"]):
                 hits[atom_id] = family
                 break
-    # binary tag signals
+    # Split keyword hits into strong (name-based) vs weak (datavalue-only).
+    name_toks = set(tokens(feat["match_name"]))
+    strong: dict[str, str] = {}
+    weak: dict[str, str] = {}
+    for atom_id, family, specs in keyword_index:
+        matched = False
+        for nk, ktoks in specs:
+            if keyword_matches(nk, ktoks, feat["toks"], feat["hay"]):
+                matched = True
+                if nk in name_toks or len(ktoks) >= 2:
+                    strong[atom_id] = family
+                else:
+                    weak[atom_id] = family
+                break
+    hits: dict[str, str] = {}
+    for atom_id, family in strong.items():
+        hits[atom_id] = family
+    if not strong:
+        for atom_id, family in list(weak.items())[:2]:
+            hits[atom_id] = family
+    # binary tag signals: tags are the engine's own semantic vocabulary, so a
+    # tag-backed atom always wins even if the free-text matcher disagrees.
     for tag in feat["tags"]:
-        for atom_id in TAG_ATOMS.get(tag, []):
-            hits.setdefault(atom_id, atom_id.split(".", 1)[0])
+        mapped = (tag_map or {}).get(tag) or TAG_ATOMS.get(tag)
+        if mapped:
+            if len(mapped) == 2:
+                atom_id, _tp = mapped
+            else:
+                atom_id, _tp = mapped, None
+            if not atom_id:
+                continue
+            hits[atom_id] = atom_id.split(".", 1)[0]
+            feat.setdefault("tag_targets", {})[atom_id] = _tp
     # generic execute rule: an ultimate-tagged damage spell whose data values
     # carry a damage cap is an execute (below-health-threshold kill).
     is_ult = any(t.startswith("Trait_Ultimate") for t in feat["tags"])
@@ -454,7 +511,7 @@ def classify_object(feat: dict, keyword_index) -> list[tuple[str, str]]:
     return sorted(hits.items())
 
 
-def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, passive_map=None) -> dict:
+def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, passive_map=None, tag_map=None) -> dict:
     ser = json.loads(bin_path.read_text())
     atoms: dict[tuple[str, str], dict] = {}   # (atom_id, behavior) -> atom
     unclassified: list[dict] = []
@@ -471,7 +528,7 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
                 "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)",
             })
             continue
-        hits = classify_object(feat, keyword_index)
+        hits = classify_object(feat, keyword_index, tag_map)
         if not hits:
             unclassified.append({
                 "name": feat["name"], "object": key,
@@ -538,8 +595,9 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
     # Clone inheritance: *Missile / *Attack / *Mis / *LineAttack / *Hit /
     # *Return variants of an already-classified parent inherit the parent's
     # atoms (the clone is the same mechanic with a different delivery object).
-    clone_suffixes = ("Missile", "Mis", "Attack", "LineAttack", "Hit", "Return",
-                      "Mini", "MissileReturn", "Nuke", "Debuff")
+    clone_suffixes = ("ReturnMissile", "MissileReturn", "Missile", "Missle", "Mis",
+                      "LineAttack", "Attack", "MiniAttack", "Hit", "Return", "Mini",
+                      "Nuke", "Debuff")
     behavior_atoms: dict[str, list[tuple[str, str]]] = {}
     for (atom_id, behavior), a in atoms.items():
         behavior_atoms.setdefault(behavior, []).append((atom_id, a["family"]))
@@ -549,13 +607,17 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
             still_unclassified.append(entry)
             continue
         name = entry["name"]
+        base = name.rstrip("0123456789")
         parent = None
         for suffix in clone_suffixes:
-            if name.endswith(suffix) and len(name) > len(suffix) + 3:
-                cand = name[: -len(suffix)]
+            if base.endswith(suffix) and len(base) > len(suffix) + 3:
+                cand = base[: -len(suffix)]
                 if cand in behavior_atoms:
                     parent = cand
                     break
+        if parent is None and base != name:
+            if base in behavior_atoms:
+                parent = base
         if parent is None:
             still_unclassified.append(entry)
             continue
@@ -644,7 +706,9 @@ def build_report(results: list[dict], vocab, sanity: list[dict], suggestions: li
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--champions", default=None,
-                    help="comma-separated champion names (default: all in data/bin/characters)")
+                    help="comma-separated champion names (default: 173-wiki-champion universe)")
+    ap.add_argument("--all-bins", action="store_true",
+                    help="process every WAD entity including TFT/test champions")
     ap.add_argument("--out", default=str(DEFAULT_OUT))
     args = ap.parse_args(argv)
 
@@ -657,6 +721,11 @@ def main(argv=None) -> int:
     if args.champions:
         wanted = {champion_key(c) for c in args.champions.split(",") if c.strip()}
         bin_files = [f for f in bin_files if champion_key(f.name[:-len(".bin.json")]) in wanted]
+    elif not args.all_bins:
+        # default universe: the 173 wiki champions (excludes TFT/test entities)
+        champ_data = json.loads(Path("data/champions.json").read_text())
+        universe = {champion_key(n) for n in champ_data}
+        bin_files = [f for f in bin_files if champion_key(f.name[:-len(".bin.json")]) in universe]
     if not bin_files:
         print("no champion binaries matched", file=sys.stderr)
         return 2
@@ -665,11 +734,12 @@ def main(argv=None) -> int:
     champ_tokens = champion_name_tokens()
     keyword_index = build_keyword_index(vocab, generic_tokens, champ_tokens)
     passive_map = load_passive_map()
+    tag_map = load_tag_map()
 
     results = []
     for f in bin_files:
         champ = f.name[:-len(".bin.json")]
-        results.append(extract_champion(champ, f, keyword_index, vocab, passive_map))
+        results.append(extract_champion(champ, f, keyword_index, vocab, passive_map, tag_map))
         (out / f"{champ}.atoms.json").write_text(
             json.dumps(results[-1]["atoms"], indent=1))
 
@@ -742,6 +812,32 @@ def build_sanity_and_suggestions(results, vocab):
           "NeekoPassive", "NeekoPassive has no transform/disguise tokens; clone+stealth captured on W.")
     check("Kayle transform (Divine Ascent)", "kayle", "stack-transform-summon-resource.transform",
           "KaylePassive", "Level-gated form change is only visible as LevelForPassiveRank datavalues.")
+
+    # Extended semantic-layer checks (tag-backed atoms)
+    check("Senna Q ally heal (Piercing Darkness)", "senna", "heal-shield.heal",
+          "SennaQ", "Trait_ActiveHeal + BaseHeal datavalue; target should be ally/self.")
+    check("Thresh W ally shield (Dark Passage)", "thresh", "heal-shield.shield",
+          "ThreshW", "Trait_Shield + ShieldPerSoul datavalue.")
+    check("Kayle W ally heal", "kayle", "heal-shield.heal",
+          "KayleW", "ally-targeted heal via Trait_ActiveHeal.")
+    check("Twitch Q stealth (Ambush)", "twitch", "vision-economy.stealth",
+          "HideInShadows", "Trait_Invisibility.")
+    check("Malzahar voidling summon", "malzahar", "stack-transform-summon-resource.summon",
+          "MalzaharW", "Trait_Pet summon.")
+    check("Annie Tibbers summon", "annie", "stack-transform-summon-resource.summon",
+          "EmpoweredTibbers", "Trait_Pet summon.")
+    check("LeBlanc clone", "leblanc", "stack-transform-summon-resource.clone",
+          "MirrorImage", "Trait_CreateClone.")
+    check("Darius R execute reset", "darius", "interaction.attack-reset",
+          "NoxianTactics", "Trait_AttackReset on ultimate.")
+    check("Teemo poison DoT", "teemo", "damage.dot",
+          "TeemoR", "Trait_DoT poison.")
+    check("Ashe slow", "ashe", "crowd-control-mobility.slow",
+          "Ashe", "PositiveEffect_MoveBlock slow.")
+    check("Lee Sin dash", "leesin", "crowd-control-mobility.dash",
+          "LeeSinQ", "Trait_PlayerSelectedDashDirection.")
+    check("Heimerdinger turret summon", "heimerdinger", "stack-transform-summon-resource.summon",
+          "HeimerdingerTurretBehavior", "Trait_Pet/turret summon.")
 
     suggestions = [
         "Extend the transform atom (or add a 'disguise / level-gated form' atom) with keywords for level-gated "

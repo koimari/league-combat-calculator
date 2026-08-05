@@ -1,0 +1,242 @@
+{
+ "Trait_DamageAbility": [
+  "damage.damage-instance",
+  "enemy"
+ ],
+ "Trait_DoT": [
+  "damage.dot",
+  "enemy"
+ ],
+ "Trait_Strike": [
+  "damage.basic-attack",
+  "enemy"
+ ],
+ "Trait_MultiTargetAttack": [
+  "damage.aoe",
+  "enemy"
+ ],
+ "Trait_Low_Damage": [
+  "damage.damage-instance",
+  "enemy"
+ ],
+ "Trait_AoE": [
+  "damage.aoe",
+  "enemy"
+ ],
+ "Trait_Ultimate": [
+  null,
+  null
+ ],
+ "Trait_RecastOrReplaceSpell": [
+  null,
+  null
+ ],
+ "Trait_SignatureSpell": [
+  null,
+  null
+ ],
+ "Trait_FreeRecast": [
+  null,
+  null
+ ],
+ "Trait_NoCooldown": [
+  null,
+  null
+ ],
+ "Trait_ActiveHeal": [
+  "heal-shield.heal",
+  "ally"
+ ],
+ "Trait_SelfHeal": [
+  "heal-shield.heal",
+  "self"
+ ],
+ "Trait_Shield": [
+  "heal-shield.shield",
+  "ally"
+ ],
+ "Trait_PassiveShield": [
+  "heal-shield.shield",
+  "self"
+ ],
+ "Trait_ImmobilizingCCSpell": [
+  "crowd-control-mobility.immobilize",
+  "enemy"
+ ],
+ "Trait_ImmobilizingCCAbility": [
+  "crowd-control-mobility.immobilize",
+  "enemy"
+ ],
+ "Trait_SwapsIntoImmobilizingCCAbility": [
+  "crowd-control-mobility.immobilize",
+  "enemy"
+ ],
+ "Trait_KnockBack": [
+  "crowd-control-mobility.knockback",
+  "enemy"
+ ],
+ "PositiveEffect_MoveBlock": [
+  "crowd-control-mobility.slow",
+  "enemy"
+ ],
+ "Trait_CCImmune": [
+  "crowd-control-mobility.cc-immunity",
+  "self"
+ ],
+ "Trait_Immune": [
+  "crowd-control-mobility.cc-immunity",
+  "self"
+ ],
+ "Trait_Untargetable": [
+  "crowd-control-mobility.untargetable",
+  "self"
+ ],
+ "Trait_ChannelSpell": [
+  "crowd-control-mobility.channel",
+  "self"
+ ],
+ "SpecialCase_StasisLocked": [
+  "crowd-control-mobility.stasis",
+  "self"
+ ],
+ "Trait_PlayerSelectedDashDirection": [
+  "crowd-control-mobility.dash",
+  "self"
+ ],
+ "PositiveEffect_Teleport": [
+  "crowd-control-mobility.blink",
+  "self"
+ ],
+ "PositiveEffect_Boon": [
+  "stack-transform-summon-resource.buff",
+  "self"
+ ],
+ "PositiveEffect_EmpowerAttack": [
+  "damage.on-hit",
+  "self"
+ ],
+ "Trait_AttackBuff_Duration": [
+  "stack-transform-summon-resource.buff",
+  "self"
+ ],
+ "Trait_Parry": [
+  "interaction.parry",
+  "self"
+ ],
+ "Trait_Toggle": [
+  "stack-transform-summon-resource.toggle-form",
+  "self"
+ ],
+ "Trait_Invisibility": [
+  "vision-economy.stealth",
+  "self"
+ ],
+ "Trait_Camouflage": [
+  "vision-economy.stealth",
+  "self"
+ ],
+ "Trait_Transformation": [
+  "stack-transform-summon-resource.transform",
+  "self"
+ ],
+ "Trait_CreateClone": [
+  "stack-transform-summon-resource.clone",
+  "self"
+ ],
+ "Trait_Pet": [
+  "stack-transform-summon-resource.summon",
+  "self"
+ ],
+ "Trait_Trap": [
+  "stack-transform-summon-resource.trap",
+  "enemy"
+ ],
+ "Trait_CreateTerrain": [
+  "stack-transform-summon-resource.summon",
+  "self"
+ ],
+ "Trait_AttackReset": [
+  "interaction.attack-reset",
+  "self"
+ ],
+ "Trait_Ammo": [
+  "stack-transform-summon-resource.ammo",
+  "self"
+ ],
+ "Trait_Upgrade": [
+  "stack-transform-summon-resource.upgrade",
+  "self"
+ ],
+ "Trait_ProjectileDestruction": [
+  "interaction.projectile-destruction",
+  "self"
+ ],
+ "Trait_NonPrimaryAttack": [
+  null,
+  null
+ ],
+ "Trait_NotBenefitFromHaste": [
+  null,
+  null
+ ],
+ "Trait_Melee_SmallWindup": [
+  null,
+  null
+ ],
+ "Trait_Melee_BigWindup": [
+  null,
+  null
+ ],
+ "Trait_Ranged_StopsFirstHit": [
+  null,
+  null
+ ],
+ "Trait_Ranged_Piercing": [
+  null,
+  null
+ ],
+ "Trait_Ranged_Zone": [
+  null,
+  null
+ ],
+ "Trait_Target_Area": [
+  null,
+  null
+ ],
+ "Trait_Target_Directional": [
+  null,
+  null
+ ],
+ "Trait_PassiveSlot": [
+  null,
+  null
+ ],
+ "Trait_Kinematic": [
+  null,
+  null
+ ],
+ "Trait_SylasSpecialAttackOverride": [
+  null,
+  null
+ ],
+ "Trait_UltimateReactivation": [
+  null,
+  null
+ ],
+ "Trait_SummonerSmite": [
+  "damage.damage-instance",
+  "enemy"
+ ],
+ "SpecialCase_CastNotTriggerTear": [
+  null,
+  null
+ ],
+ "SpecialCase_DelayedCooldown": [
+  null,
+  null
+ ],
+ "SpecialCase_CastWhileTeleporting": [
+  null,
+  null
+ ]
+}

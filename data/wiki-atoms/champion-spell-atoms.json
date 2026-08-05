@@ -1,0 +1,128 @@
+[
+ {
+  "champion": "Annie",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "Tibbers",
+  "note": "R summons Tibbers (shared summon script)."
+ },
+ {
+  "champion": "Heimerdinger",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "H-28G Evolution Turret",
+  "note": "Q/W turrets + R turret upgrade."
+ },
+ {
+  "champion": "Malzahar",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "Voidling",
+  "note": "W summons Voidlings."
+ },
+ {
+  "champion": "Yorick",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "Mist Walker / Maiden",
+  "note": "W ghouls + R Maiden."
+ },
+ {
+  "champion": "Zyra",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "Plant",
+  "note": "W seeds sprout plants."
+ },
+ {
+  "champion": "Ivern",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "Daisy",
+  "note": "R summons Daisy."
+ },
+ {
+  "champion": "Azir",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "Sand Soldier",
+  "note": "W summons Sand Soldiers."
+ },
+ {
+  "champion": "Kindred",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "Wolf",
+  "note": "W summons Wolf."
+ },
+ {
+  "champion": "Illaoi",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "Tentacle",
+  "note": "Passive/W/R spawn tentacles."
+ },
+ {
+  "champion": "Shaco",
+  "atom_id": "stack-transform-summon-resource.trap",
+  "wiki_name": "Jack in the Box",
+  "note": "W places a trap."
+ },
+ {
+  "champion": "Teemo",
+  "atom_id": "stack-transform-summon-resource.trap",
+  "wiki_name": "Noxious Trap",
+  "note": "R places mushrooms (traps)."
+ },
+ {
+  "champion": "Nidalee",
+  "atom_id": "stack-transform-summon-resource.trap",
+  "wiki_name": "Bushwhack",
+  "note": "W places traps."
+ },
+ {
+  "champion": "Caitlyn",
+  "atom_id": "stack-transform-summon-resource.trap",
+  "wiki_name": "Yordle Snap Trap",
+  "note": "W places traps."
+ },
+ {
+  "champion": "Jhin",
+  "atom_id": "stack-transform-summon-resource.trap",
+  "wiki_name": "Captive Audience",
+  "note": "E places traps."
+ },
+ {
+  "champion": "Maokai",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "Sapling",
+  "note": "E throws sapling (mobile ward/summon)."
+ },
+ {
+  "champion": "Zyra",
+  "atom_id": "stack-transform-summon-resource.summon",
+  "wiki_name": "Seed",
+  "note": "Passive/W seeds."
+ },
+ {
+  "champion": "LeBlanc",
+  "atom_id": "stack-transform-summon-resource.clone",
+  "wiki_name": "Mirror Image",
+  "note": "Passive + R create clones (shared clonechampion script)."
+ },
+ {
+  "champion": "Neeko",
+  "atom_id": "stack-transform-summon-resource.clone",
+  "wiki_name": "Shapesplitter",
+  "note": "W creates a clone."
+ },
+ {
+  "champion": "Zed",
+  "atom_id": "stack-transform-summon-resource.clone",
+  "wiki_name": "Living Shadow",
+  "note": "W creates a shadow (clone-like unit)."
+ },
+ {
+  "champion": "Wukong",
+  "atom_id": "stack-transform-summon-resource.clone",
+  "wiki_name": "Warrior Trickster",
+  "note": "W creates a decoy clone."
+ },
+ {
+  "champion": "Neeko",
+  "atom_id": "stack-transform-summon-resource.transform",
+  "wiki_name": "Inherent Glamour",
+  "note": "Passive disguise as any champion (already in passive map)."
+ }
+]

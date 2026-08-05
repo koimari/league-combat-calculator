@@ -1,730 +1,730 @@
 [
-  {
-    "atom_id": "damage.damage-instance",
-    "family": "damage",
-    "name": "Damage instance (damage event)",
-    "keywords": [
-      "damage",
-      "damage instance",
-      "damage event",
-      "damage dealt",
-      "health deduction",
-      "NonRedirectable",
-      "Indirect"
-    ],
-    "description": "A discrete offensive interaction that deducts a unit's current health; every damage event carries one damage type (physical/magic/true), zero or more script tags (BasicAttack, ActiveSpell, AOE, Periodic, Item, Proc, Pet, NonRedirectable, Indirect), and zero or more properties controlling interaction with lifesteal, on-hit events, aggro, immunity and dodges.",
-    "wiki_pages": [
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.physical",
-    "family": "damage",
-    "name": "Physical damage",
-    "keywords": [
-      "physical damage",
-      "armor",
-      "basic attack damage",
-      "AD damage"
-    ],
-    "description": "Damage type mitigated by armor; dealt by all unmodified basic attacks and many AD-scaling abilities/item effects. Mitigation is a percentage: raw x 100/(100+armor); armor's effectiveness can be reduced by armor penetration.",
-    "wiki_pages": [
-      "Damage",
-      "Physical damage"
-    ]
-  },
-  {
-    "atom_id": "damage.magic",
-    "family": "damage",
-    "name": "Magic damage",
-    "keywords": [
-      "magic damage",
-      "magic resistance",
-      "AP damage",
-      "magical"
-    ],
-    "description": "Damage type mitigated by magic resistance; dealt by most AP-scaling abilities and some item effects. Mitigation is a percentage: raw x 100/(100+MR); MR's effectiveness can be reduced by magic penetration.",
-    "wiki_pages": [
-      "Damage",
-      "Magic damage"
-    ]
-  },
-  {
-    "atom_id": "damage.true",
-    "family": "damage",
-    "name": "True damage",
-    "keywords": [
-      "true damage",
-      "pure damage",
-      "ignores armor",
-      "ignores magic resistance",
-      "ignore damage reduction",
-      "Smite",
-      "Ignite",
-      "Vayne Silver Bolts",
-      "Olaf Reckless Swing",
-      "invulnerability",
-      "spell shield",
-      "shield"
-    ],
-    "description": "Damage type not reduced by resistances or almost all damage-reduction effects; still respects shields and invulnerability, is blocked by spell shields, and is affected by most damage amplifiers (except jungle-item/Smite/Ignite true damage). Not to be confused with raw damage.",
-    "wiki_pages": [
-      "Damage",
-      "True damage"
-    ]
-  },
-  {
-    "atom_id": "damage.raw",
-    "family": "damage",
-    "name": "Raw damage",
-    "keywords": [
-      "raw",
-      "internalraw",
-      "raw damage",
-      "ignores shields",
-      "Nexus Obelisk",
-      "execute",
-      "death protection"
-    ],
-    "description": "Engine-level damage class (API 'raw') that ignores shields and is negated only by invulnerability or spell shield; ignores death-protection effects by default. The 'internalraw' variant additionally ignores invulnerability. Used by executes such as Urgot's Fear Beyond Death, Pyke's Death from Below, and the Nexus Obelisk.",
-    "wiki_pages": [
-      "Damage",
-      "Execution",
-      "True damage"
-    ]
-  },
-  {
-    "atom_id": "damage.basic-attack",
-    "family": "damage",
-    "name": "Basic attack",
-    "keywords": [
-      "basic attack",
-      "auto attack",
-      "AA",
-      "basic damage",
-      "attack windup",
-      "empowered basic attack",
-      "attack damage (damage class)",
-      "zero-resource damage"
-    ],
-    "description": "The fundamental zero-resource damage source; engine-level 'basic damage' class (API 'attack') dealt by any unit's basic attack and attack-like abilities. Basic attacks deal physical damage by default, can critically strike, apply attack (on-hit/on-attack) effects, draw minion aggro, and are subject to dodge/block/blind.",
-    "wiki_pages": [
-      "Damage",
-      "Attack damage",
-      "Attack effects"
-    ]
-  },
-  {
-    "atom_id": "damage.attack-damage",
-    "family": "damage",
-    "name": "Attack damage (stat)",
-    "keywords": [
-      "attack damage",
-      "AD",
-      "bonus attack damage",
-      "base attack damage",
-      "total attack damage",
-      "AD ratio",
-      "AD scaling"
-    ],
-    "description": "One of the two main offensive champion stats; determines the unmodified physical damage of basic attacks and serves as a scaling ratio (base/bonus/total AD) for many abilities, items and runes. Stacks additively; AD ratios may be attached to any damage type, not just physical.",
-    "wiki_pages": [
-      "Attack damage",
-      "Physical damage",
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.ability-damage",
-    "family": "damage",
-    "name": "Ability damage (archetype)",
-    "keywords": [
-      "ability damage",
-      "spell damage",
-      "area damage",
-      "persistent damage",
-      "spell vamp",
-      "turrets",
-      "call for help"
-    ],
-    "description": "Archetypal damage dealt by most abilities (and some empowered basic attacks/items/runes/summoner spells); the pre-requisite for triggering ability (spell) effects. Engine classes spell, spellaoe and spellpersist all count as ability damage; deals generate turret aggression but do not trigger minion Call For Help.",
-    "wiki_pages": [
-      "Ability damage",
-      "Damage",
-      "Attack effects/Abilities"
-    ]
-  },
-  {
-    "atom_id": "damage.spell-effects",
-    "family": "damage",
-    "name": "Spell effects (ability effects)",
-    "keywords": [
-      "ability effects",
-      "spell effects",
-      "ActiveSpell",
-      "Liandry's Torment",
-      "Rylai's Crystal Scepter",
-      "Luden's Echo",
-      "on-damage"
-    ],
-    "description": "Effects that trigger when a damage instance qualifies as ability damage (ActiveSpell tag), e.g. Liandry's Torment and Rylai's Crystal Scepter. The basic rule: all damage-dealing abilities excluding attack effects deal ability damage; item/runes/summoner-spell damage can also carry the tag.",
-    "wiki_pages": [
-      "Ability damage",
-      "Damage over time",
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.critical-strike",
-    "family": "damage",
-    "name": "Critical strike (event)",
-    "keywords": [
-      "critical strike",
-      "crit",
-      "critical strike damage",
-      "200%",
-      "crit chance",
-      "crit damage",
-      "Randuin's Omen",
-      "structures"
-    ],
-    "description": "A damage event modified by a percentage above 100% (default critical strike damage 200%); occurs semi-randomly on basic attacks via crit chance, or conditionally on certain abilities/items. Interacts exclusively with crit chance, crit damage and Randuin's Omen's Resilience; basic attacks cannot crit structures (with listed exceptions).",
-    "wiki_pages": [
-      "Critical strike",
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.critical-chance",
-    "family": "damage",
-    "name": "Critical strike chance",
-    "keywords": [
-      "critical strike chance",
-      "crit chance",
-      "% crit",
-      "crit%",
-      "additive",
-      "dynamic probability"
-    ],
-    "description": "Stat denoting the probability a basic attack critically strikes; stacks additively, caps at 100%, and its probability dynamically updates based on recent crit/non-crit outcomes. Some effects scale with excess crit chance (e.g. Senna's Absolution).",
-    "wiki_pages": [
-      "Critical strike"
-    ]
-  },
-  {
-    "atom_id": "damage.critical-damage",
-    "family": "damage",
-    "name": "Critical strike damage (stat)",
-    "keywords": [
-      "critical strike damage",
-      "crit damage",
-      "bonus critical damage",
-      "critical strike modifier",
-      "critical strike multiplier",
-      "Infinity Edge",
-      "Yasuo Way of the Wanderer",
-      "Yone Way of the Hunter"
-    ],
-    "description": "Multiplier applied to a critically striking damage instance, 200% by default (since v26.01; 175% before v10.23); stacks additively and is modified by items like Infinity Edge and abilities like Yasuo's Way of the Wanderer. Average damage = base x (1 + critChance x (critMod - 1)).",
-    "wiki_pages": [
-      "Critical strike",
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.on-hit",
-    "family": "damage",
-    "name": "On-hit effects",
-    "keywords": [
-      "on-hit",
-      "on hit",
-      "on-hit effects",
-      "attack effects",
-      "on-hit damage",
-      "Wit's End",
-      "Blade of the Ruined King",
-      "Kraken Slayer",
-      "Guinsoo's Rageblade",
-      "Runaan's Hurricane",
-      "Statikk Shiv",
-      "dodge",
-      "block",
-      "blind",
-      "parry",
-      "deflect",
-      "on-hit effectiveness"
-    ],
-    "description": "Effects applied and/or triggered when a basic attack (or attack-like ability) hits its target; hits do not occur on dodge/block/blind. Abilities may apply on-hit effects at reduced effectiveness (e.g. 25%/50%/75%). Also called 'attack effects' or 'proc damage' in game files.",
-    "wiki_pages": [
-      "Attack effects",
-      "On-damage effects",
-      "Attack effects/Abilities",
-      "Ability damage"
-    ]
-  },
-  {
-    "atom_id": "damage.on-attack",
-    "family": "damage",
-    "name": "On-attack effects",
-    "keywords": [
-      "on-attack",
-      "on attacking",
-      "attack windup",
-      "on-attack effects",
-      "Guinsoo's Rageblade",
-      "Runaan's Hurricane",
-      "Rapid Firecannon",
-      "Lethal Tempo",
-      "Fleet Footwork"
-    ],
-    "description": "Effects that trigger when a champion completes their basic attack's windup (before the hit lands), e.g. Guinsoo's Rageblade, Runaan's Hurricane, Lethal Tempo. Distinct from on-hit effects which require the attack to actually hit.",
-    "wiki_pages": [
-      "Attack effects"
-    ]
-  },
-  {
-    "atom_id": "damage.on-damage",
-    "family": "damage",
-    "name": "On-damage effects",
-    "keywords": [
-      "on-damage",
-      "on damage dealt",
-      "on damage taken",
-      "on-damage effects",
-      "Blackfire Torch",
-      "Liandry's Torment",
-      "Rylai's Crystal Scepter",
-      "Doran's Shield",
-      "Black Cleaver",
-      "Morellonomicon",
-      "physical damage trigger",
-      "magic damage trigger"
-    ],
-    "description": "Effects triggered upon dealing (or receiving) damage, often keyed to the damage subtype: e.g. Blackfire Torch/Liandry's on any damage, Black Cleaver/Executioner's on physical damage, Hexdrinker/Morellonomicon on magic damage. These are the 'damage received' and 'damage dealt' hooks.",
-    "wiki_pages": [
-      "On-damage effects",
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.dot",
-    "family": "damage",
-    "name": "Damage over time (DoT)",
-    "keywords": [
-      "damage over time",
-      "DoT",
-      "tick",
-      "tickrate",
-      "periodic damage",
-      "persistent damage",
-      "burn",
-      "refresh",
-      "stack",
-      "Crest of Cinders",
-      "Aspect of the Dragon",
-      "Scorchclaw's Slash",
-      "Ignite",
-      "Liandry's Torment",
-      "tether",
-      "location-sourced",
-      "unit-sourced",
-      "aura"
-    ],
-    "description": "Damage dealt over an extended period in individually specified intervals called ticks (e.g. every 1s/0.5s/0.25s/0.125s). Subtypes: target-sourced (refreshable debuff), tether-sourced (removed when tether breaks), location-sourced area DoTs, and unit-sourced area DoTs (auras/directions). Usually classified as persistent damage and carries the Periodic tag.",
-    "wiki_pages": [
-      "Damage over time",
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.execute",
-    "family": "damage",
-    "name": "Execute",
-    "keywords": [
-      "execute",
-      "certain death",
-      "missing health",
-      "health threshold",
-      "minimum health threshold",
-      "The Collector",
-      "Aspect of the Dragon",
-      "Pyke Death from Below",
-      "Urgot Fear Beyond Death",
-      "Draven Whirling Death",
-      "Aurelion Sol Singularity",
-      "raw damage"
-    ],
-    "description": "Certain death from an effect, usually conditional on the target being below a specific percent health threshold, or damage that scales with the target's missing health. Executes are dealt as raw damage (ignoring shields) with no damage tags.",
-    "wiki_pages": [
-      "Execution",
-      "True damage",
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.aoe",
-    "family": "damage",
-    "name": "Area-of-effect damage",
-    "keywords": [
-      "area of effect",
-      "AOE",
-      "area damage",
-      "spellaoe",
-      "splash",
-      "cleave",
-      "cone",
-      "chain lightning",
-      "persistent area damage"
-    ],
-    "description": "Damage capable of hitting multiple units, recognized by the AOE tag; engine-level class 'area damage' (API spellaoe). Pets are more resilient to AOE damage; AOE often accompanies the ActiveSpell tag.",
-    "wiki_pages": [
-      "Damage",
-      "Damage over time"
-    ]
-  },
-  {
-    "atom_id": "damage.proc",
-    "family": "damage",
-    "name": "Proc damage",
-    "keywords": [
-      "proc",
-      "proc damage",
-      "secondary effect",
-      "on-hit application",
-      "Wit's End",
-      "Jax R",
-      "Kog'Maw W",
-      "Blade of the Ruined King",
-      "spell effects exclusion"
-    ],
-    "description": "A damage tag for instances applied as secondary effects (mostly automatic on-hit applications); intended to be excluded from interacting with most other effects. Engine-level class 'proc damage' (API 'proc').",
-    "wiki_pages": [
-      "Damage",
-      "On-damage effects"
-    ]
-  },
-  {
-    "atom_id": "damage.damage-tags",
-    "family": "damage",
-    "name": "Script-level damage tags",
-    "keywords": [
-      "BasicAttack",
-      "ActiveSpell",
-      "AOE",
-      "Periodic",
-      "Item",
-      "Proc",
-      "Pet",
-      "NonRedirectable",
-      "Indirect",
-      "script-level",
-      "default damage"
-    ],
-    "description": "The script-level classification system on damage instances (any instance can carry none or multiple tags): BasicAttack, ActiveSpell, AOE, Periodic, Item, Proc, Pet, NonRedirectable, Indirect. Effects without any tag are 'default damage'; executes are additionally tagged as raw damage.",
-    "wiki_pages": [
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.tag-basicattack",
-    "family": "damage",
-    "name": "BasicAttack damage tag",
-    "keywords": [
-      "BasicAttack",
-      "basic attack tag",
-      "Warden's Mail",
-      "Runaan's Hurricane",
-      "Plated Steelcaps",
-      "Ezreal Mystic Shot",
-      "Fiora Lunge",
-      "empowered basic attack",
-      "attack-like spell",
-      "Conqueror"
-    ],
-    "description": "Tag on the primary damage instance of basic attacks, empowered basic attacks, attack-like spells and automatic attack-like effects (e.g. Runaan's Hurricane); interacts with Warden's Mail and is reduced by Plated Steelcaps, and can trigger Conqueror.",
-    "wiki_pages": [
-      "Damage",
-      "Attack effects"
-    ]
-  },
-  {
-    "atom_id": "damage.tag-activespell",
-    "family": "damage",
-    "name": "ActiveSpell damage tag",
-    "keywords": [
-      "ActiveSpell",
-      "spell effects",
-      "ability effects",
-      "empowered basic attack",
-      "mana",
-      "cooldown",
-      "spell vamp"
-    ],
-    "description": "Tag on damage instances of most abilities and some systemic effects that makes them trigger spell effects, including most empowered basic attacks; often associated with spending mana and/or cooldown.",
-    "wiki_pages": [
-      "Damage",
-      "Ability damage"
-    ]
-  },
-  {
-    "atom_id": "damage.tag-periodic",
-    "family": "damage",
-    "name": "Periodic damage tag",
-    "keywords": [
-      "Periodic",
-      "periodic damage",
-      "DoT",
-      "tick",
-      "sleep",
-      "Malzahar Malefic Visions",
-      "Singed Poison Trail",
-      "Liandry's Torment",
-      "Lucian The Culling",
-      "Morgana Tormented Shadow"
-    ],
-    "description": "Tag for repetitive damage: damage debuffs (DoTs), most non-targeted spells dealing damage repeatedly, and repeat hits of some abilities; periodic damage does not interrupt sleep.",
-    "wiki_pages": [
-      "Damage",
-      "Damage over time"
-    ]
-  },
-  {
-    "atom_id": "damage.tag-item",
-    "family": "damage",
-    "name": "Item damage tag",
-    "keywords": [
-      "Item",
-      "item damage",
-      "summoner spell damage",
-      "non-champion source",
-      "Tiamat Cleave",
-      "Liandry's Torment"
-    ],
-    "description": "Tag recognizing damage as coming from a non-champion source such as an item or summoner spell; lets effects meant for champion abilities (e.g. Tiamat's Cleave, Liandry's Torment) ignore those instances.",
-    "wiki_pages": [
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.tag-pet",
-    "family": "damage",
-    "name": "Pet damage",
-    "keywords": [
-      "Pet",
-      "pet damage",
-      "Tibbers",
-      "Daisy",
-      "Voidling",
-      "Maiden of the Mist",
-      "pet basic attack",
-      "Infernal Dragon Soul"
-    ],
-    "description": "Tag (and engine class 'pet damage', API 'pet') for damage dealt by most pet basic attacks; pet damage may or may not be tagged BasicAttack depending on the pet, affecting interactions like Infernal Dragon Soul, Plated Steelcaps and Conqueror.",
-    "wiki_pages": [
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.damage-properties",
-    "family": "damage",
-    "name": "Damage instance properties",
-    "keywords": [
-      "ApplyLifesteal",
-      "EnableCallForHelp",
-      "RespectImmunity",
-      "RespectDodge",
-      "TriggerOnHitEvents",
-      "TriggerDamageEvents",
-      "ApplyOmnivamp",
-      "ApplySpellvamp",
-      "ApplyDamageModifier",
-      "EnableKill",
-      "ApplyCritical",
-      "ApplyAttackRatio",
-      "ApplyPhysicalVamp",
-      "minion aggro"
-    ],
-    "description": "Per-instance boolean properties in the game scripts that force behaviors: ApplyLifesteal (100% lifesteal, no AoE penalty), EnableCallForHelp (draws minion aggro), RespectDodge, TriggerOnHitEvents, TriggerDamageEvents, ApplyOmnivamp; legacy names include ApplySpellvamp, ApplyDamageModifier, EnableKill, ApplyCritical, ApplyAttackRatio.",
-    "wiki_pages": [
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.reactive",
-    "family": "damage",
-    "name": "Reactive damage",
-    "keywords": [
-      "reactive",
-      "reflected damage",
-      "Thornmail",
-      "Bramble Vest",
-      "thorns",
-      "return damage"
-    ],
-    "description": "Engine-level damage class (API 'reactive') for damage dealt by Thorns-type reflection effects; only Thornmail and Bramble Vest use it, while similar reflection effects (Annie, Rammus) are classified as area damage.",
-    "wiki_pages": [
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.persistent-area",
-    "family": "damage",
-    "name": "Persistent area damage",
-    "keywords": [
-      "persistent area damage",
-      "persistent damage",
-      "periodic",
-      "Mordekaiser Darkness Rise",
-      "Morgana Tormented Shadow",
-      "Rumble The Equalizer",
-      "spell vamp",
-      "Arcane Comet"
-    ],
-    "description": "Abilities classified as area damage on the engine level but periodic on the script level: engine-level effects (spell vamp) trigger at reduced healing while script-level effects (Arcane Comet) trigger the DoT cooldown reduction.",
-    "wiki_pages": [
-      "Damage",
-      "Damage over time"
-    ]
-  },
-  {
-    "atom_id": "damage.modifier",
-    "family": "damage",
-    "name": "Damage modifier (amplification/reduction)",
-    "keywords": [
-      "damage modifier",
-      "damage amplification",
-      "damage reduction",
-      "percent damage reduction",
-      "flat damage reduction",
-      "multiplicative",
-      "Exhaust",
-      "Plated Steelcaps",
-      "Alistar Unbreakable Will"
-    ],
-    "description": "Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction.",
-    "wiki_pages": [
-      "Damage",
-      "True damage"
-    ]
-  },
-  {
-    "atom_id": "damage.resistance-mitigation",
-    "family": "damage",
-    "name": "Resistance mitigation",
-    "keywords": [
-      "armor",
-      "magic resistance",
-      "resistances",
-      "mitigation",
-      "post-mitigation damage",
-      "negative resistance",
-      "100/(100+R)"
-    ],
-    "description": "Armor and magic resistance reduce incoming physical/magic damage by a percentage (actual = raw x 100/(100 + resistance)); negative resistances amplify damage. The amount actually received is called post-mitigation damage.",
-    "wiki_pages": [
-      "Damage",
-      "Physical damage",
-      "Magic damage"
-    ]
-  },
-  {
-    "atom_id": "damage.penetration",
-    "family": "damage",
-    "name": "Penetration and resistance reduction",
-    "keywords": [
-      "armor penetration",
-      "magic penetration",
-      "lethality",
-      "flat penetration",
-      "percent penetration",
-      "resistance reduction",
-      "armor shred",
-      "magic shred"
-    ],
-    "description": "Effects that reduce the target's effective resistances before mitigation: percent penetration applies before flat penetration, results cannot go below 0, and only resistance reduction effects can drive armor/MR negative.",
-    "wiki_pages": [
-      "Damage",
-      "Physical damage",
-      "Magic damage"
-    ]
-  },
-  {
-    "atom_id": "damage.vamp",
-    "family": "damage",
-    "name": "Damage-based healing (vamp)",
-    "keywords": [
-      "life steal",
-      "spell vamp",
-      "omnivamp",
-      "physical vamp",
-      "healing from damage",
-      "ApplyLifesteal",
-      "ApplyOmnivamp",
-      "basic damage",
-      "ability damage"
-    ],
-    "description": "Healing derived from a percentage of damage dealt: life steal applies to anything classified as basic damage, spell vamp to ability damage, physical vamp to physical damage, and omnivamp to all damage. ApplyLifesteal forces lifesteal on an instance (100% effectiveness by default, no AoE penalty).",
-    "wiki_pages": [
-      "Damage",
-      "Physical damage",
-      "Ability damage"
-    ]
-  },
-  {
-    "atom_id": "damage.capped",
-    "family": "damage",
-    "name": "Capped damage",
-    "keywords": [
-      "capped damage",
-      "damage cap",
-      "minion cap",
-      "monster cap",
-      "target's max health",
-      "target's health scaling"
-    ],
-    "description": "Abilities scaling with the target's health that have a maximum amount they can deal, mostly against minions/monsters; damage is reduced to the cap before damage reductions are applied, so negative resistances can push post-mitigation damage above the cap.",
-    "wiki_pages": [
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.zero-damage",
-    "family": "damage",
-    "name": "Zero-damage instances",
-    "keywords": [
-      "0 damage",
-      "zero damage",
-      "proc damage 0",
-      "spell damage 0",
-      "Anivia Crystallize",
-      "Bard Tempered Fate",
-      "Ignite application",
-      "combat status",
-      "turret aggro"
-    ],
-    "description": "Effects that deal 0 damage but still trigger events that occur upon dealing/taking damage (drawing turret aggro, in-combat status), either without applying spell effects (0 proc damage) or while applying them (0 ability damage).",
-    "wiki_pages": [
-      "Damage"
-    ]
-  },
-  {
-    "atom_id": "damage.cosmetic-critical",
-    "family": "damage",
-    "name": "Cosmetic critical strike (successfully enhanced damage)",
-    "keywords": [
-      "cosmetic critical strike",
-      "successfully enhanced damage",
-      "critical strike icon",
-      "impact text",
-      "Karthus Lay Waste",
-      "Caitlyn Piltover Peacemaker",
-      "Lulu Glitterlance",
-      "single target hit"
-    ],
-    "description": "Unique impact text (large damage number) shown when an ability deals increased damage by successfully passing a condition (e.g. Karthus' Lay Waste hitting a single target); visually similar to a critical strike but not an actual crit and not tied to crit stats.",
-    "wiki_pages": [
-      "Damage",
-      "Critical strike"
-    ]
-  }
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "name": "Damage instance (damage event)",
+  "keywords": [
+   "damage",
+   "damage instance",
+   "damage event",
+   "damage dealt",
+   "health deduction",
+   "NonRedirectable",
+   "Indirect"
+  ],
+  "description": "A discrete offensive interaction that deducts a unit's current health; every damage event carries one damage type (physical/magic/true), zero or more script tags (BasicAttack, ActiveSpell, AOE, Periodic, Item, Proc, Pet, NonRedirectable, Indirect), and zero or more properties controlling interaction with lifesteal, on-hit events, aggro, immunity and dodges.",
+  "wiki_pages": [
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.physical",
+  "family": "damage",
+  "name": "Physical damage",
+  "keywords": [
+   "physical damage",
+   "armor",
+   "basic attack damage",
+   "AD damage"
+  ],
+  "description": "Damage type mitigated by armor; dealt by all unmodified basic attacks and many AD-scaling abilities/item effects. Mitigation is a percentage: raw x 100/(100+armor); armor's effectiveness can be reduced by armor penetration.",
+  "wiki_pages": [
+   "Damage",
+   "Physical damage"
+  ]
+ },
+ {
+  "atom_id": "damage.magic",
+  "family": "damage",
+  "name": "Magic damage",
+  "keywords": [
+   "magic damage",
+   "magic resistance",
+   "AP damage",
+   "magical"
+  ],
+  "description": "Damage type mitigated by magic resistance; dealt by most AP-scaling abilities and some item effects. Mitigation is a percentage: raw x 100/(100+MR); MR's effectiveness can be reduced by magic penetration.",
+  "wiki_pages": [
+   "Damage",
+   "Magic damage"
+  ]
+ },
+ {
+  "atom_id": "damage.true",
+  "family": "damage",
+  "name": "True damage",
+  "keywords": [
+   "true damage",
+   "pure damage",
+   "ignores armor",
+   "ignores magic resistance",
+   "ignore damage reduction",
+   "Smite",
+   "Ignite",
+   "Vayne Silver Bolts",
+   "Olaf Reckless Swing",
+   "invulnerability",
+   "spell shield",
+   "shield"
+  ],
+  "description": "Damage type not reduced by resistances or almost all damage-reduction effects; still respects shields and invulnerability, is blocked by spell shields, and is affected by most damage amplifiers (except jungle-item/Smite/Ignite true damage). Not to be confused with raw damage.",
+  "wiki_pages": [
+   "Damage",
+   "True damage"
+  ]
+ },
+ {
+  "atom_id": "damage.raw",
+  "family": "damage",
+  "name": "Raw damage",
+  "keywords": [
+   "raw",
+   "internalraw",
+   "raw damage",
+   "ignores shields",
+   "Nexus Obelisk",
+   "execute",
+   "death protection"
+  ],
+  "description": "Engine-level damage class (API 'raw') that ignores shields and is negated only by invulnerability or spell shield; ignores death-protection effects by default. The 'internalraw' variant additionally ignores invulnerability. Used by executes such as Urgot's Fear Beyond Death, Pyke's Death from Below, and the Nexus Obelisk.",
+  "wiki_pages": [
+   "Damage",
+   "Execution",
+   "True damage"
+  ]
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "name": "Basic attack",
+  "keywords": [
+   "basic attack",
+   "auto attack",
+   "AA",
+   "basic damage",
+   "attack windup",
+   "empowered basic attack",
+   "attack damage (damage class)",
+   "zero-resource damage"
+  ],
+  "description": "The fundamental zero-resource damage source; engine-level 'basic damage' class (API 'attack') dealt by any unit's basic attack and attack-like abilities. Basic attacks deal physical damage by default, can critically strike, apply attack (on-hit/on-attack) effects, draw minion aggro, and are subject to dodge/block/blind.",
+  "wiki_pages": [
+   "Damage",
+   "Attack damage",
+   "Attack effects"
+  ]
+ },
+ {
+  "atom_id": "damage.attack-damage",
+  "family": "damage",
+  "name": "Attack damage (stat)",
+  "keywords": [
+   "attack damage",
+   "AD",
+   "bonus attack damage",
+   "base attack damage",
+   "total attack damage",
+   "AD ratio",
+   "AD scaling"
+  ],
+  "description": "One of the two main offensive champion stats; determines the unmodified physical damage of basic attacks and serves as a scaling ratio (base/bonus/total AD) for many abilities, items and runes. Stacks additively; AD ratios may be attached to any damage type, not just physical.",
+  "wiki_pages": [
+   "Attack damage",
+   "Physical damage",
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.ability-damage",
+  "family": "damage",
+  "name": "Ability damage (archetype)",
+  "keywords": [
+   "ability damage",
+   "spell damage",
+   "area damage",
+   "persistent damage",
+   "spell vamp",
+   "turrets",
+   "call for help"
+  ],
+  "description": "Archetypal damage dealt by most abilities (and some empowered basic attacks/items/runes/summoner spells); the pre-requisite for triggering ability (spell) effects. Engine classes spell, spellaoe and spellpersist all count as ability damage; deals generate turret aggression but do not trigger minion Call For Help.",
+  "wiki_pages": [
+   "Ability damage",
+   "Damage",
+   "Attack effects/Abilities"
+  ]
+ },
+ {
+  "atom_id": "damage.spell-effects",
+  "family": "damage",
+  "name": "Spell effects (ability effects)",
+  "keywords": [
+   "ability effects",
+   "spell effects",
+   "ActiveSpell",
+   "Liandry's Torment",
+   "Rylai's Crystal Scepter",
+   "Luden's Echo",
+   "on-damage"
+  ],
+  "description": "Effects that trigger when a damage instance qualifies as ability damage (ActiveSpell tag), e.g. Liandry's Torment and Rylai's Crystal Scepter. The basic rule: all damage-dealing abilities excluding attack effects deal ability damage; item/runes/summoner-spell damage can also carry the tag.",
+  "wiki_pages": [
+   "Ability damage",
+   "Damage over time",
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "name": "Critical strike (event)",
+  "keywords": [
+   "critical strike",
+   "crit",
+   "critical strike damage",
+   "200%",
+   "crit chance",
+   "crit damage",
+   "Randuin's Omen",
+   "structures"
+  ],
+  "description": "A damage event modified by a percentage above 100% (default critical strike damage 200%); occurs semi-randomly on basic attacks via crit chance, or conditionally on certain abilities/items. Interacts exclusively with crit chance, crit damage and Randuin's Omen's Resilience; basic attacks cannot crit structures (with listed exceptions).",
+  "wiki_pages": [
+   "Critical strike",
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.critical-chance",
+  "family": "damage",
+  "name": "Critical strike chance",
+  "keywords": [
+   "critical strike chance",
+   "crit chance",
+   "% crit",
+   "crit%",
+   "additive",
+   "dynamic probability"
+  ],
+  "description": "Stat denoting the probability a basic attack critically strikes; stacks additively, caps at 100%, and its probability dynamically updates based on recent crit/non-crit outcomes. Some effects scale with excess crit chance (e.g. Senna's Absolution).",
+  "wiki_pages": [
+   "Critical strike"
+  ]
+ },
+ {
+  "atom_id": "damage.critical-damage",
+  "family": "damage",
+  "name": "Critical strike damage (stat)",
+  "keywords": [
+   "critical strike damage",
+   "crit damage",
+   "bonus critical damage",
+   "critical strike modifier",
+   "critical strike multiplier",
+   "Infinity Edge",
+   "Yasuo Way of the Wanderer",
+   "Yone Way of the Hunter"
+  ],
+  "description": "Multiplier applied to a critically striking damage instance, 200% by default (since v26.01; 175% before v10.23); stacks additively and is modified by items like Infinity Edge and abilities like Yasuo's Way of the Wanderer. Average damage = base x (1 + critChance x (critMod - 1)).",
+  "wiki_pages": [
+   "Critical strike",
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "name": "On-hit effects",
+  "keywords": [
+   "on-hit",
+   "on hit",
+   "on-hit effects",
+   "attack effects",
+   "on-hit damage",
+   "Wit's End",
+   "Blade of the Ruined King",
+   "Kraken Slayer",
+   "Guinsoo's Rageblade",
+   "Runaan's Hurricane",
+   "Statikk Shiv",
+   "dodge",
+   "block",
+   "blind",
+   "parry",
+   "deflect",
+   "on-hit effectiveness"
+  ],
+  "description": "Effects applied and/or triggered when a basic attack (or attack-like ability) hits its target; hits do not occur on dodge/block/blind. Abilities may apply on-hit effects at reduced effectiveness (e.g. 25%/50%/75%). Also called 'attack effects' or 'proc damage' in game files.",
+  "wiki_pages": [
+   "Attack effects",
+   "On-damage effects",
+   "Attack effects/Abilities",
+   "Ability damage"
+  ]
+ },
+ {
+  "atom_id": "damage.on-attack",
+  "family": "damage",
+  "name": "On-attack effects",
+  "keywords": [
+   "on-attack",
+   "on attacking",
+   "attack windup",
+   "on-attack effects",
+   "Guinsoo's Rageblade",
+   "Runaan's Hurricane",
+   "Rapid Firecannon",
+   "Lethal Tempo",
+   "Fleet Footwork"
+  ],
+  "description": "Effects that trigger when a champion completes their basic attack's windup (before the hit lands), e.g. Guinsoo's Rageblade, Runaan's Hurricane, Lethal Tempo. Distinct from on-hit effects which require the attack to actually hit.",
+  "wiki_pages": [
+   "Attack effects"
+  ]
+ },
+ {
+  "atom_id": "damage.on-damage",
+  "family": "damage",
+  "name": "On-damage effects",
+  "keywords": [
+   "on-damage",
+   "on damage dealt",
+   "on damage taken",
+   "on-damage effects",
+   "Blackfire Torch",
+   "Liandry's Torment",
+   "Rylai's Crystal Scepter",
+   "Doran's Shield",
+   "Black Cleaver",
+   "Morellonomicon",
+   "physical damage trigger",
+   "magic damage trigger"
+  ],
+  "description": "Effects triggered upon dealing (or receiving) damage, often keyed to the damage subtype: e.g. Blackfire Torch/Liandry's on any damage, Black Cleaver/Executioner's on physical damage, Hexdrinker/Morellonomicon on magic damage. These are the 'damage received' and 'damage dealt' hooks.",
+  "wiki_pages": [
+   "On-damage effects",
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "name": "Damage over time (DoT)",
+  "keywords": [
+   "damage over time",
+   "DoT",
+   "tick",
+   "tickrate",
+   "periodic damage",
+   "persistent damage",
+   "burn",
+   "refresh",
+   "stack",
+   "Crest of Cinders",
+   "Aspect of the Dragon",
+   "Scorchclaw's Slash",
+   "Ignite",
+   "Liandry's Torment",
+   "tether",
+   "location-sourced",
+   "unit-sourced",
+   "aura"
+  ],
+  "description": "Damage dealt over an extended period in individually specified intervals called ticks (e.g. every 1s/0.5s/0.25s/0.125s). Subtypes: target-sourced (refreshable debuff), tether-sourced (removed when tether breaks), location-sourced area DoTs, and unit-sourced area DoTs (auras/directions). Usually classified as persistent damage and carries the Periodic tag.",
+  "wiki_pages": [
+   "Damage over time",
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "name": "Execute",
+  "keywords": [
+   "execute",
+   "certain death",
+   "missing health",
+   "health threshold",
+   "minimum health threshold",
+   "The Collector",
+   "Aspect of the Dragon",
+   "Pyke Death from Below",
+   "Urgot Fear Beyond Death",
+   "Draven Whirling Death",
+   "Aurelion Sol Singularity",
+   "raw damage"
+  ],
+  "description": "Certain death from an effect, usually conditional on the target being below a specific percent health threshold, or damage that scales with the target's missing health. Executes are dealt as raw damage (ignoring shields) with no damage tags.",
+  "wiki_pages": [
+   "Execution",
+   "True damage",
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "name": "Area-of-effect damage",
+  "keywords": [
+   "area of effect",
+   "AOE",
+   "area damage",
+   "spellaoe",
+   "splash",
+   "cleave",
+   "cone",
+   "chain lightning",
+   "persistent area damage"
+  ],
+  "description": "Damage capable of hitting multiple units, recognized by the AOE tag; engine-level class 'area damage' (API spellaoe). Pets are more resilient to AOE damage; AOE often accompanies the ActiveSpell tag.",
+  "wiki_pages": [
+   "Damage",
+   "Damage over time"
+  ]
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "name": "Proc damage",
+  "keywords": [
+   "proc",
+   "proc damage",
+   "secondary effect",
+   "on-hit application",
+   "Wit's End",
+   "Jax R",
+   "Kog'Maw W",
+   "Blade of the Ruined King",
+   "spell effects exclusion"
+  ],
+  "description": "A damage tag for instances applied as secondary effects (mostly automatic on-hit applications); intended to be excluded from interacting with most other effects. Engine-level class 'proc damage' (API 'proc').",
+  "wiki_pages": [
+   "Damage",
+   "On-damage effects"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-tags",
+  "family": "damage",
+  "name": "Script-level damage tags",
+  "keywords": [
+   "BasicAttack",
+   "ActiveSpell",
+   "AOE",
+   "Periodic",
+   "Item",
+   "Proc",
+   "Pet",
+   "NonRedirectable",
+   "Indirect",
+   "script-level",
+   "default damage"
+  ],
+  "description": "The script-level classification system on damage instances (any instance can carry none or multiple tags): BasicAttack, ActiveSpell, AOE, Periodic, Item, Proc, Pet, NonRedirectable, Indirect. Effects without any tag are 'default damage'; executes are additionally tagged as raw damage.",
+  "wiki_pages": [
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "name": "BasicAttack damage tag",
+  "keywords": [
+   "BasicAttack",
+   "basic attack tag",
+   "Warden's Mail",
+   "Runaan's Hurricane",
+   "Plated Steelcaps",
+   "Ezreal Mystic Shot",
+   "Fiora Lunge",
+   "empowered basic attack",
+   "attack-like spell",
+   "Conqueror"
+  ],
+  "description": "Tag on the primary damage instance of basic attacks, empowered basic attacks, attack-like spells and automatic attack-like effects (e.g. Runaan's Hurricane); interacts with Warden's Mail and is reduced by Plated Steelcaps, and can trigger Conqueror.",
+  "wiki_pages": [
+   "Damage",
+   "Attack effects"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "name": "ActiveSpell damage tag",
+  "keywords": [
+   "ActiveSpell",
+   "spell effects",
+   "ability effects",
+   "empowered basic attack",
+   "mana",
+   "cooldown",
+   "spell vamp"
+  ],
+  "description": "Tag on damage instances of most abilities and some systemic effects that makes them trigger spell effects, including most empowered basic attacks; often associated with spending mana and/or cooldown.",
+  "wiki_pages": [
+   "Damage",
+   "Ability damage"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-periodic",
+  "family": "damage",
+  "name": "Periodic damage tag",
+  "keywords": [
+   "Periodic",
+   "periodic damage",
+   "DoT",
+   "tick",
+   "sleep",
+   "Malzahar Malefic Visions",
+   "Singed Poison Trail",
+   "Liandry's Torment",
+   "Lucian The Culling",
+   "Morgana Tormented Shadow"
+  ],
+  "description": "Tag for repetitive damage: damage debuffs (DoTs), most non-targeted spells dealing damage repeatedly, and repeat hits of some abilities; periodic damage does not interrupt sleep.",
+  "wiki_pages": [
+   "Damage",
+   "Damage over time"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "name": "Item damage tag",
+  "keywords": [
+   "Item",
+   "item damage",
+   "summoner spell damage",
+   "non-champion source",
+   "Tiamat Cleave",
+   "Liandry's Torment"
+  ],
+  "description": "Tag recognizing damage as coming from a non-champion source such as an item or summoner spell; lets effects meant for champion abilities (e.g. Tiamat's Cleave, Liandry's Torment) ignore those instances.",
+  "wiki_pages": [
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.tag-pet",
+  "family": "damage",
+  "name": "Pet damage",
+  "keywords": [
+   "Pet",
+   "pet damage",
+   "Tibbers",
+   "Daisy",
+   "Voidling",
+   "Maiden of the Mist",
+   "pet basic attack",
+   "Infernal Dragon Soul"
+  ],
+  "description": "Tag (and engine class 'pet damage', API 'pet') for damage dealt by most pet basic attacks; pet damage may or may not be tagged BasicAttack depending on the pet, affecting interactions like Infernal Dragon Soul, Plated Steelcaps and Conqueror.",
+  "wiki_pages": [
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.damage-properties",
+  "family": "damage",
+  "name": "Damage instance properties",
+  "keywords": [
+   "ApplyLifesteal",
+   "EnableCallForHelp",
+   "RespectImmunity",
+   "RespectDodge",
+   "TriggerOnHitEvents",
+   "TriggerDamageEvents",
+   "ApplyOmnivamp",
+   "ApplySpellvamp",
+   "ApplyDamageModifier",
+   "EnableKill",
+   "ApplyCritical",
+   "ApplyAttackRatio",
+   "ApplyPhysicalVamp",
+   "minion aggro"
+  ],
+  "description": "Per-instance boolean properties in the game scripts that force behaviors: ApplyLifesteal (100% lifesteal, no AoE penalty), EnableCallForHelp (draws minion aggro), RespectDodge, TriggerOnHitEvents, TriggerDamageEvents, ApplyOmnivamp; legacy names include ApplySpellvamp, ApplyDamageModifier, EnableKill, ApplyCritical, ApplyAttackRatio.",
+  "wiki_pages": [
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.reactive",
+  "family": "damage",
+  "name": "Reactive damage",
+  "keywords": [
+   "reactive",
+   "reflected damage",
+   "Thornmail",
+   "Bramble Vest",
+   "thorns",
+   "return damage"
+  ],
+  "description": "Engine-level damage class (API 'reactive') for damage dealt by Thorns-type reflection effects; only Thornmail and Bramble Vest use it, while similar reflection effects (Annie, Rammus) are classified as area damage.",
+  "wiki_pages": [
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.persistent-area",
+  "family": "damage",
+  "name": "Persistent area damage",
+  "keywords": [
+   "persistent area damage",
+   "persistent damage",
+   "periodic",
+   "Mordekaiser Darkness Rise",
+   "Morgana Tormented Shadow",
+   "Rumble The Equalizer",
+   "spell vamp",
+   "Arcane Comet"
+  ],
+  "description": "Abilities classified as area damage on the engine level but periodic on the script level: engine-level effects (spell vamp) trigger at reduced healing while script-level effects (Arcane Comet) trigger the DoT cooldown reduction.",
+  "wiki_pages": [
+   "Damage",
+   "Damage over time"
+  ]
+ },
+ {
+  "atom_id": "damage.modifier",
+  "family": "damage",
+  "name": "Damage modifier (amplification/reduction)",
+  "keywords": [
+   "damage modifier",
+   "damage amplification",
+   "damage reduction",
+   "percent damage reduction",
+   "flat damage reduction",
+   "multiplicative",
+   "Exhaust",
+   "Plated Steelcaps",
+   "Alistar Unbreakable Will"
+  ],
+  "description": "Independent damage value modifiers distinct from resistances: percentage damage amplification, percentage damage reduction, and flat damage reduction; percent modifiers stack multiplicatively with each other and with resistance-based reduction.",
+  "wiki_pages": [
+   "Damage",
+   "True damage"
+  ]
+ },
+ {
+  "atom_id": "damage.resistance-mitigation",
+  "family": "damage",
+  "name": "Resistance mitigation",
+  "keywords": [
+   "armor",
+   "magic resistance",
+   "resistances",
+   "mitigation",
+   "post-mitigation damage",
+   "negative resistance",
+   "100/(100+R)"
+  ],
+  "description": "Armor and magic resistance reduce incoming physical/magic damage by a percentage (actual = raw x 100/(100 + resistance)); negative resistances amplify damage. The amount actually received is called post-mitigation damage.",
+  "wiki_pages": [
+   "Damage",
+   "Physical damage",
+   "Magic damage"
+  ]
+ },
+ {
+  "atom_id": "damage.penetration",
+  "family": "damage",
+  "name": "Penetration and resistance reduction",
+  "keywords": [
+   "armor penetration",
+   "magic penetration",
+   "lethality",
+   "flat penetration",
+   "percent penetration",
+   "resistance reduction",
+   "armor shred",
+   "magic shred"
+  ],
+  "description": "Effects that reduce the target's effective resistances before mitigation: percent penetration applies before flat penetration, results cannot go below 0, and only resistance reduction effects can drive armor/MR negative.",
+  "wiki_pages": [
+   "Damage",
+   "Physical damage",
+   "Magic damage"
+  ]
+ },
+ {
+  "atom_id": "damage.vamp",
+  "family": "damage",
+  "name": "Damage-based healing (vamp)",
+  "keywords": [
+   "life steal",
+   "spell vamp",
+   "omnivamp",
+   "physical vamp",
+   "healing from damage",
+   "ApplyLifesteal",
+   "ApplyOmnivamp",
+   "basic damage",
+   "ability damage"
+  ],
+  "description": "Healing derived from a percentage of damage dealt: life steal applies to anything classified as basic damage, spell vamp to ability damage, physical vamp to physical damage, and omnivamp to all damage. ApplyLifesteal forces lifesteal on an instance (100% effectiveness by default, no AoE penalty).",
+  "wiki_pages": [
+   "Damage",
+   "Physical damage",
+   "Ability damage"
+  ]
+ },
+ {
+  "atom_id": "damage.capped",
+  "family": "damage",
+  "name": "Capped damage",
+  "keywords": [
+   "capped damage",
+   "damage cap",
+   "minion cap",
+   "monster cap",
+   "target's max health",
+   "target's health scaling"
+  ],
+  "description": "Abilities scaling with the target's health that have a maximum amount they can deal, mostly against minions/monsters; damage is reduced to the cap before damage reductions are applied, so negative resistances can push post-mitigation damage above the cap.",
+  "wiki_pages": [
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.zero-damage",
+  "family": "damage",
+  "name": "Zero-damage instances",
+  "keywords": [
+   "0 damage",
+   "zero damage",
+   "proc damage 0",
+   "spell damage 0",
+   "Anivia Crystallize",
+   "Bard Tempered Fate",
+   "Ignite application",
+   "combat status",
+   "turret aggro"
+  ],
+  "description": "Effects that deal 0 damage but still trigger events that occur upon dealing/taking damage (drawing turret aggro, in-combat status), either without applying spell effects (0 proc damage) or while applying them (0 ability damage).",
+  "wiki_pages": [
+   "Damage"
+  ]
+ },
+ {
+  "atom_id": "damage.cosmetic-critical",
+  "family": "damage",
+  "name": "Cosmetic critical strike (successfully enhanced damage)",
+  "keywords": [
+   "cosmetic critical strike",
+   "successfully enhanced damage",
+   "critical strike icon",
+   "impact text",
+   "Karthus Lay Waste",
+   "Caitlyn Piltover Peacemaker",
+   "Lulu Glitterlance",
+   "single target hit"
+  ],
+  "description": "Unique impact text (large damage number) shown when an ability deals increased damage by successfully passing a condition (e.g. Karthus' Lay Waste hitting a single target); visually similar to a critical strike but not an actual crit and not tied to crit stats.",
+  "wiki_pages": [
+   "Damage",
+   "Critical strike"
+  ]
+ }
 ]
