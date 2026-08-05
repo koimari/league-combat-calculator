@@ -35886,9 +35886,10 @@
           "R",
           "W",
           "auto_attacks",
+          "damage_amp_Immortal Path",
           "heal_omnivamp"
         ],
-        "total_damage": 817.29
+        "total_damage": 849.98
       },
       "vayne": {
         "breakdown_keys": [
@@ -35897,10 +35898,11 @@
           "R",
           "W",
           "auto_attacks",
+          "damage_amp_Immortal Path",
           "heal_omnivamp",
           "on_hit_ability_W"
         ],
-        "total_damage": 788.1
+        "total_damage": 819.62
       }
     },
     "Immortal Shieldbow": {
@@ -40061,7 +40063,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "8b2e75249f2e277ecacecfc01bc6100101bca2b1",
+    "git_head": "cdda7c26f7700a0819839d085a3ade0f2663c3fc",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785725170.32038,

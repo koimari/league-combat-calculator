@@ -50,6 +50,9 @@ class StartingDefenses:
     basic_damage_flat_reduction_cap: float = 0.0
     critical_strike_damage_multiplier: float = 1.0
     healing_received_multiplier: float = 1.0
+    # Maw's Lifeline grants a temporary omnivamp stat after its shield fires;
+    # the ordered timeline toggles this only on the authored threshold event.
+    maw_lifeline_omnivamp_percent: float = 0.0
     threshold_shield_amount: float = 0.0
     threshold_shield_health_ratio: float = 0.0
     threshold_shield_duration: float = 0.0
@@ -137,6 +140,9 @@ class StartingDefenses:
             },
             "incoming_damage": incoming_damage,
             "healing_received_multiplier": round(self.healing_received_multiplier, 3),
+            "maw_lifeline_omnivamp_percent": round(
+                self.maw_lifeline_omnivamp_percent, 3
+            ),
             "threshold_shield": {
                 "amount": round(self.threshold_shield_amount, 1),
                 "health_ratio": round(self.threshold_shield_health_ratio, 3),
@@ -302,12 +308,9 @@ _HEXDRINKER_SOURCE = DefenseSource(
 
 _MAW_SOURCE = DefenseSource(
     label="Maw of Malmortius — Lifeline",
-    source_url=(
-        "https://wiki.leagueoflegends.com/en-us/"
-        "Module:ItemData/data/Maw_of_Malmortius"
-    ),
-    revision_id=3905768,
-    revision_timestamp="2025-06-04T01:58:07Z",
+    source_url="https://wiki.leagueoflegends.com/en-us/Maw_of_Malmortius",
+    revision_id=3984424,
+    revision_timestamp="2026-01-14T23:08:00Z",
 )
 
 _SERAPHS_SOURCE = DefenseSource(
@@ -524,6 +527,7 @@ def resolve_starting_defenses(
         champion_defenses.critical_strike_damage_multiplier
     )
     healing_received_multiplier = champion_defenses.healing_received_multiplier
+    maw_lifeline_omnivamp_percent = champion_defenses.maw_lifeline_omnivamp_percent
     threshold_shield_amount = champion_defenses.threshold_shield_amount
     threshold_shield_health_ratio = champion_defenses.threshold_shield_health_ratio
     threshold_shield_duration = champion_defenses.threshold_shield_duration
@@ -688,6 +692,14 @@ def resolve_starting_defenses(
         ) = _lifeline_defense(lifeline_name, level, stats)
         assumptions.append(lifeline_assumption)
         sources.append(lifeline_source)
+        if lifeline_name == "Maw of Malmortius":
+            maw_lifeline_omnivamp_percent = float(
+                required_effect_value(lifeline_name, "lifeline_omnivamp_percent")
+            )
+            assumptions.append(
+                "Maw of Malmortius grants its sourced temporary omnivamp only "
+                "after Lifeline triggers; the ordered ledger schedules that state."
+            )
 
     if "Protoplasm Harness" in names:
         effect = ITEM_EFFECTS["Protoplasm Harness"]
@@ -927,6 +939,7 @@ def resolve_starting_defenses(
         basic_damage_flat_reduction_cap=basic_damage_flat_reduction_cap,
         critical_strike_damage_multiplier=critical_strike_damage_multiplier,
         healing_received_multiplier=healing_received_multiplier,
+        maw_lifeline_omnivamp_percent=maw_lifeline_omnivamp_percent,
         threshold_shield_amount=threshold_shield_amount,
         threshold_shield_health_ratio=threshold_shield_health_ratio,
         threshold_shield_duration=threshold_shield_duration,

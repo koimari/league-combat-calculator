@@ -386,6 +386,11 @@ class FightConfig:
     target_revive_delay: float = 0.0
     target_revive_cooldown: float = 0.0
     enforce_resource_limits: bool = False
+    # Ordered external resource restores (time, amount) are supplied by the
+    # coupled participant ledger for items such as Catalyst of Aeons.  The
+    # engine consumes them before a simultaneous cast is admitted; ordinary
+    # one-pair callers leave this empty.
+    resource_restore_events: tuple[tuple[float, float], ...] = ()
     roster_target_index: int = 0
     roster_target_count: int = 1
     # Selected keystone rune by name ("" = none). Resolution fails closed
@@ -426,6 +431,7 @@ class FightState:
     is_melee: bool
     level: int
     enforce_resource_limits: bool
+    resource_restore_events: tuple[tuple[float, float], ...]
     target_basic_damage_multiplier: float
     target_basic_damage_flat_reduction: float
     target_basic_damage_flat_reduction_cap: float
@@ -2186,6 +2192,7 @@ def _resolve_combat_state(
         is_melee=is_melee,
         level=level,
         enforce_resource_limits=config.enforce_resource_limits,
+        resource_restore_events=tuple(config.resource_restore_events),
         target_basic_damage_multiplier=config.target_basic_damage_multiplier,
         target_basic_damage_flat_reduction=(config.target_basic_damage_flat_reduction),
         target_basic_damage_flat_reduction_cap=(
@@ -3249,6 +3256,38 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         (cast_time, 1, order_index, ordinal, "cast", key, 0.0)
         for cast_time, order_index, ordinal, key in events
     ]
+    # Catalyst's damage-taken restoration is an external, timestamped input
+    # from the coupled participant ledger.  It is ordered before casts at the
+    # same timestamp, matching the sourced hit -> resource update -> input
+    # sequence.  Malformed rows are ignored here; the producer is required to
+    # fail closed before constructing this typed tuple.
+    for restore_index, (restore_time, restore_amount) in enumerate(
+        state.resource_restore_events
+    ):
+        try:
+            restore_time = float(restore_time)
+            restore_amount = float(restore_amount)
+        except (TypeError, ValueError):
+            continue
+        if (
+            not math.isfinite(restore_time)
+            or not math.isfinite(restore_amount)
+            or restore_amount <= 0.0
+            or restore_time < 0.0
+            or restore_time > state.fight_duration_seconds + _CAST_SCHEDULE_EPS
+        ):
+            continue
+        timeline.append(
+            (
+                restore_time,
+                0,
+                -1,
+                restore_index,
+                "restore",
+                "Catalyst of Aeons",
+                restore_amount,
+            ),
+        )
     heapq.heapify(timeline)
     while timeline:
         (
@@ -9561,6 +9600,15 @@ def calculate_fight_damage(
         "cast_timeline": rotation.cast_events,
         "resource_spent": rotation.resource_spent,
         "resource_remaining": rotation.resource_remaining,
+        "resource_restore_events": [
+            {
+                "time": round(float(time), 6),
+                "amount": round(float(amount), 6),
+                "source": "Catalyst of Aeons (Eternity)",
+            }
+            for time, amount in state.resource_restore_events
+            if math.isfinite(float(time)) and math.isfinite(float(amount))
+        ],
         "timeline_coverage": timeline_coverage,
         "damage_events": damage_events,
         **shield_outcome,

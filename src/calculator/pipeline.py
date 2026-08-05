@@ -208,6 +208,65 @@ def _item_self_healing_events(
                 sequence += 1
                 time += tick
 
+    # Catalyst's Eternity heal is tied to each accepted mana-spending cast.
+    # The cast timeline is the only certified timestamp/resource receipt; an
+    # aggregate resource total is deliberately not converted into a guessed
+    # heal.  The sourced 20-per-second cap is applied in one-second buckets,
+    # while each cast is independently capped at 20.
+    if "Catalyst of Aeons" in item_names:
+        cast_timeline = result.get("cast_timeline")
+        if not isinstance(cast_timeline, list):
+            cast_timeline = []
+        heal_ratio = item_effects.sustain_effect_value(
+            "Catalyst of Aeons", "mana_spent_heal_ratio"
+        )
+        cast_cap = item_effects.sustain_effect_value(
+            "Catalyst of Aeons", "mana_spent_heal_cap_per_cast"
+        )
+        second_cap = item_effects.sustain_effect_value(
+            "Catalyst of Aeons", "mana_spent_heal_cap_per_second"
+        )
+        healed_by_second: dict[int, float] = {}
+        for cast in cast_timeline:
+            if not isinstance(cast, Mapping):
+                continue
+            try:
+                event_time = float(cast["time"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if not math.isfinite(event_time):
+                continue
+            try:
+                before = float(cast.get("resource_before", 0.0) or 0.0)
+                after = float(cast.get("resource_after", 0.0) or 0.0)
+                spent = max(0.0, before - after)
+            except (TypeError, ValueError):
+                spent = 0.0
+            if spent <= 0.0:
+                try:
+                    spent = max(0.0, float(cast.get("resource_cost", 0.0) or 0.0))
+                except (TypeError, ValueError):
+                    spent = 0.0
+            if spent <= 0.0:
+                continue
+            bucket = math.floor(event_time + 1e-9)
+            remaining = max(0.0, second_cap - healed_by_second.get(bucket, 0.0))
+            amount = min(cast_cap, heal_ratio * spent, remaining)
+            if amount <= 0.0:
+                continue
+            healed_by_second[bucket] = healed_by_second.get(bucket, 0.0) + amount
+            events.append(
+                {
+                    "time": event_time,
+                    "amount": amount,
+                    "source": "Catalyst of Aeons (Eternity)",
+                    "kind": "item_proc",
+                    "_trigger_source": str(cast.get("slot", "cast")),
+                    "_trigger_time": event_time,
+                    "_trigger_sequence": int(cast.get("ordinal", 1) or 1) - 1,
+                }
+            )
+
     # Item-provided health regeneration is a timestamped stat contribution.
     # Keep champion base regeneration out of the item self-heal stream (the
     # public one-pair result has historically exposed only sourced packets),
@@ -376,7 +435,9 @@ def _item_self_healing_events(
     return events
 
 
-def _has_item_self_healing(effects: Any) -> bool:
+def _has_item_self_healing(
+    effects: Any, items: list[Mapping[str, Any]] | None = None
+) -> bool:
     """Whether an item build can emit timestamped self-heal packets.
 
     The score-only tuple ledger is safe only when both the champion and the
@@ -402,6 +463,9 @@ def _has_item_self_healing(effects: Any) -> bool:
                 effects.first_auto_crit.heal_base_ad_ratio > 0.0
                 or effects.first_auto_crit.heal_missing_health_ratio > 0.0
             )
+        )
+        or any(
+            str(item.get("name", "")) in {"Catalyst of Aeons"} for item in (items or ())
         )
     )
 
@@ -820,7 +884,7 @@ def run_fight(
         score_only
         and params.target_threshold_health_heal <= 0
         and champion_data.get("name", "") not in HEALING_RULE_CHAMPIONS
-        and not _has_item_self_healing(item_damage_effects)
+        and not _has_item_self_healing(item_damage_effects, items)
         and not _has_lifesteal_stat(fight_stats)
         and not _has_omnivamp_stat(fight_stats)
         and not _has_riftmaker_max_stack_omnivamp(

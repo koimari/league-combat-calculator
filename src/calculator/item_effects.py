@@ -130,6 +130,21 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         "source_url": "https://wiki.leagueoflegends.com/en-us/Riftmaker",
         "source_revision_id": 4047644,
     },
+    "Immortal Path": {
+        "options": {
+            "slay_stacks": {
+                "type": "int",
+                "label": "Slay takedown stacks",
+                "default": 0,
+                "min": 0,
+                "max": 10,
+                "step": 1,
+                "bonus_omnivamp_per_unit": 0.6,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Immortal_Path",
+        "source_revision_id": 4042850,
+    },
     "Hubris": {
         "options": {
             "eminence_stacks": {
@@ -908,6 +923,17 @@ def endless_hunger_input_omnivamp(
     return required_effect_value("Endless Hunger", "feast_omnivamp_percent")
 
 
+def immortal_path_input_omnivamp(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int]] | None,
+) -> float:
+    """Return Immortal Path's explicit Slay takedown omnivamp."""
+    if "Immortal Path" not in _item_names(items):
+        return 0.0
+    stacks = input_option_value(items, item_options, "Immortal Path", "slay_stacks")
+    return stacks * required_effect_value("Immortal Path", "slay_omnivamp_per_stack")
+
+
 def swiftmarch_adaptive_force(
     items: list[dict[str, Any]],
     *,
@@ -1186,6 +1212,43 @@ def item_state_receipts(
             ),
         )
 
+    if "Immortal Path" in names:
+        options = item_options or {}
+        stacks = input_option_value(items, options, "Immortal Path", "slay_stacks")
+        add(
+            "Immortal Path",
+            "slay_stacks",
+            slay_stacks=max(0, stacks),
+            max_stacks=int(required_effect_value("Immortal Path", "slay_max_stacks")),
+            omnivamp=immortal_path_input_omnivamp(list(items), options),
+            assumed_health_state="above_half",
+            damage_amp=required_effect_value(
+                "Immortal Path", "health_state_damage_amp_above_half"
+            ),
+            below_half_healing_multiplier=required_effect_value(
+                "Immortal Path", "health_state_healing_multiplier_below_half"
+            ),
+        )
+
+    if "Catalyst of Aeons" in names:
+        add(
+            "Catalyst of Aeons",
+            "cast_heal_only",
+            damage_taken_to_mana_ratio=required_effect_value(
+                "Catalyst of Aeons", "damage_taken_to_mana_ratio"
+            ),
+            mana_spent_heal_ratio=required_effect_value(
+                "Catalyst of Aeons", "mana_spent_heal_ratio"
+            ),
+            mana_spent_heal_cap_per_cast=required_effect_value(
+                "Catalyst of Aeons", "mana_spent_heal_cap_per_cast"
+            ),
+            mana_spent_heal_cap_per_second=required_effect_value(
+                "Catalyst of Aeons", "mana_spent_heal_cap_per_second"
+            ),
+            resource_restore_status="modeled_ordered_incoming_resource_ledger",
+        )
+
     for item_name in (
         "Experimental Hexplate",
         "Fiendhunter Bolts",
@@ -1275,6 +1338,22 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "enduring_focus_missing_health_cap": 0.75,
         "enduring_focus_duration": 8.0,
         "health_regen_tick_interval": 0.5,
+    },
+    "Catalyst of Aeons": {
+        "type": "sustain",
+        # Eternity converts champion damage taken into mana and heals for a
+        # quarter of mana spent, capped at 20 per accepted cast/second.
+        "damage_taken_to_mana_ratio": 0.10,
+        "mana_spent_heal_ratio": 0.25,
+        "mana_spent_heal_cap_per_cast": 20.0,
+        "mana_spent_heal_cap_per_second": 20.0,
+    },
+    "Immortal Path": {
+        "type": "damage_amp",
+        "health_state_damage_amp_above_half": 0.04,
+        "health_state_healing_multiplier_below_half": 0.12,
+        "slay_omnivamp_per_stack": 0.6,
+        "slay_max_stacks": 10,
     },
     # ── On-Hit (per auto attack) ──────────────────────────────────────────
     "Cull": {
@@ -2250,6 +2329,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "shield_ranged_bonus_ad_ratio": 1.125,
         "duration": 3.0,
         "damage_type": "magic",
+        "lifeline_omnivamp_percent": 10.0,
     },
     "Seraph's Embrace": {
         "type": "stat_conversion",
@@ -2459,6 +2539,22 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "health_regen_tick_interval",
         }
     ),
+    "Catalyst of Aeons": frozenset(
+        {
+            "damage_taken_to_mana_ratio",
+            "mana_spent_heal_ratio",
+            "mana_spent_heal_cap_per_cast",
+            "mana_spent_heal_cap_per_second",
+        }
+    ),
+    "Immortal Path": frozenset(
+        {
+            "health_state_damage_amp_above_half",
+            "health_state_healing_multiplier_below_half",
+            "slay_omnivamp_per_stack",
+            "slay_max_stacks",
+        }
+    ),
     "Warmog's Armor": frozenset(
         {
             "heart_bonus_health_threshold",
@@ -2536,6 +2632,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "shield_ranged_base",
             "shield_ranged_bonus_ad_ratio",
             "duration",
+            "lifeline_omnivamp_percent",
         }
     ),
     "Sunfire Aegis": frozenset({"event_interval"}),
@@ -3947,7 +4044,18 @@ def _compile_damage_amplifier(
     """Compile one supported amplifier schema into a fight-time formula."""
     required = _RequiredValues(item_name, values)
 
-    if "damage_amp_per_second" in values:
+    if "health_state_damage_amp_above_half" in values:
+        # The public scenario starts at full health.  The source also has a
+        # below-half healing branch, which is applied by the ordered survival
+        # ledger; this damage packet therefore records the explicit
+        # above-half starting-state assumption rather than guessing a live
+        # health transition in the compact damage engine.
+        fixed_amp = required.number("health_state_damage_amp_above_half")
+
+        def amp_fraction(_duration: float, _target_bonus_health: float) -> float:
+            return fixed_amp
+
+    elif "damage_amp_per_second" in values:
         per_second = required.number("damage_amp_per_second")
         maximum = required.number("damage_amp_max")
 
@@ -5300,6 +5408,7 @@ def resolve_stat_effects(
     )
     hubris_ad = hubris_input_bonus_ad(items, item_options)
     feast_omnivamp = endless_hunger_input_omnivamp(items, item_options)
+    immortal_path_omnivamp = immortal_path_input_omnivamp(items, item_options)
     famine_ability_haste = endless_hunger_ability_haste(
         items,
         bonus_attack_damage=bonus_attack_damage + permanent_bonus_ad + hubris_ad,
@@ -5345,7 +5454,7 @@ def resolve_stat_effects(
         basic_ability_haste=basic_ability_haste(items),
         ability_haste=famine_ability_haste,
         ultimate_haste=ultimate_haste,
-        bonus_omnivamp=feast_omnivamp,
+        bonus_omnivamp=feast_omnivamp + immortal_path_omnivamp,
         bonus_heal_shield_power=harmony_power,
         bonus_move_speed_percent=input_move_speed,
         item_bonus_health_multiplier=health_multiplier,
