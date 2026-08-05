@@ -582,9 +582,23 @@ function itemOptionSpecs(id) {
   }));
 }
 
+// These controls predate the typed `itemOptions` map and still feed the
+// legacy `itemStacks` arrays used by the local stat preview.  All other
+// one-field inputs must render through itemOptionControls so that state such
+// as Zhonya's explicit Time Stop duration is visible and serialized from the
+// correct state bucket.
+const LEGACY_STACK_ITEM_NAMES = new Set([
+  "Dark Seal",
+  "Mejai's Soulstealer",
+  "Heartsteel",
+  "Rod of Ages",
+  "Yun Tal Wildarrows",
+  "Overlord's Bloodmail",
+]);
+
 function stackSpec(id) {
   const configured = itemOptionSpec(id);
-  if (configured) return configured;
+  if (configured && LEGACY_STACK_ITEM_NAMES.has(itemName(id))) return configured;
   // Keep the picker usable during the brief pre-catalogue loading window.
   if (Number(id) === 1082) return { key: "glory_stacks", label: "Glory stacks", min: 0, max: 10, step: 1, statEffects: { bonus_ap_per_unit: 4 } };
   if (Number(id) === 3041) return { key: "glory_stacks", label: "Glory stacks", min: 0, max: 25, step: 1, statEffects: { bonus_ap_per_unit: 5, move_speed_threshold: 10, move_speed_percent: 10 } };
@@ -619,7 +633,7 @@ function itemOptionControls(path, id, compact = false) {
   // Legacy stack controls render the single state option for stack-backed
   // items. Every other one-option item (for example Time Stop or Ichorshield)
   // still needs its typed scenario control visible in the UI.
-  if (specs.length === 0 || (specs.length === 1 && stackSpec(id))) return "";
+  if (specs.length === 0 || (specs.length === 1 && LEGACY_STACK_ITEM_NAMES.has(itemName(id)))) return "";
   const kind = participantKindForPath(path);
   return `<div class="item-option-controls ${compact ? "compact" : ""}" aria-label="${escapeHtml(itemName(id))} state">${specs.map((spec) => {
     const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);
@@ -1544,7 +1558,7 @@ function engineItemOptions(ids, stacks = [], optionValues = []) {
     const item = getItem(id);
     const specs = item && itemOptionSpecs(id);
     if (!item || !specs.length) return;
-    if (specs.length === 1) {
+    if (specs.length === 1 && LEGACY_STACK_ITEM_NAMES.has(item.name || item.backendName)) {
       const spec = specs[0];
       options[item.backendName || item.name] = { [spec.key]: Number(stacks[index] || 0) };
       return;
