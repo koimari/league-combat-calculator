@@ -326,6 +326,74 @@ def _target_params(base: FightParams, defender: Combatant) -> FightParams:
     return replace(base, **_target_overrides(defender))
 
 
+def _has_catalyst(items: Iterable[Mapping[str, Any]]) -> bool:
+    """Return whether a participant owns Catalyst's ordered resource passive."""
+    return any(str(item.get("name", "")) == "Catalyst of Aeons" for item in items)
+
+
+def _catalyst_resource_restores(
+    actor: Combatant,
+    incoming: Mapping[str, Iterable[Mapping[str, Any]]],
+    duration: float,
+) -> tuple[tuple[tuple[float, float], ...], bool]:
+    """Derive Catalyst restores from complete incoming champion packets.
+
+    Eternity uses pre-mitigation damage from champions.  The coupled ledger
+    therefore accepts only packets with an explicit finite ``raw_damage`` and
+    a timestamp inside the authored window.  Returning ``complete=False`` is
+    the fail-closed signal; callers never substitute post-mitigation damage or
+    an aggregate estimate.
+    """
+    if not _has_catalyst(actor.items):
+        return (), True
+    ratio = sustain_effect_value("Catalyst of Aeons", "damage_taken_to_mana_ratio")
+    restores: list[tuple[float, float]] = []
+    for event in incoming.get(actor.participant_id, ()):
+        if not isinstance(event, Mapping):
+            continue
+        source_id = str(event.get("attacker", ""))
+        if not source_id or source_id == actor.participant_id:
+            continue
+        if event.get("_reactive") or event.get("_deferred"):
+            continue
+        try:
+            event_time = float(event.get("time", 0.0))
+            raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            return (), False
+        if (
+            not math.isfinite(event_time)
+            or not math.isfinite(raw_damage)
+            or event_time < 0.0
+            or event_time > duration + 1e-9
+        ):
+            return (), False
+        if raw_damage <= 0.0:
+            # Zero-damage/marker packets are not damage taken and therefore
+            # do not mint mana.  They remain valid ledger rows.
+            continue
+        amount = raw_damage * ratio
+        if amount > 0.0:
+            restores.append((event_time, amount))
+    restores.sort(key=lambda row: row[0])
+    return tuple(restores), True
+
+
+def _actor_params_with_resource_restores(
+    base: FightParams,
+    actor: Combatant,
+    resource_restores: Mapping[str, tuple[tuple[float, float], ...]] | None,
+) -> FightParams:
+    """Attach one actor's typed external resource ledger to its fight params."""
+    params = _actor_params(base, actor)
+    if resource_restores is None:
+        return params
+    return replace(
+        params,
+        resource_restore_events=tuple(resource_restores.get(actor.participant_id, ())),
+    )
+
+
 def _defensive_signature(defender: Combatant) -> tuple[Any, ...]:
     """A hashable key equal exactly when ``_target_params`` would be equal."""
     return tuple(_target_overrides(defender).values())
@@ -5110,6 +5178,8 @@ def build_participant_timeline(
     include_receipt: bool = True,
     reuse_main_stats: bool = False,
     search_context: CoupledSearchContext | None = None,
+    _resource_restores: Mapping[str, tuple[tuple[float, float], ...]] | None = None,
+    _resource_pass: bool = False,
 ) -> dict[str, Any]:
     """Compose all selected actors and return the coupled combat receipt.
 
@@ -5136,6 +5206,12 @@ def build_participant_timeline(
     presorted invariant actions instead of re-enriching them.  Identical
     numbers by construction and by test; ignored outside score mode.
     """
+    if _resource_restores is not None:
+        params = replace(
+            params,
+            resource_restore_events=tuple(_resource_restores.get("main", ())),
+        )
+
     if (
         search_context is not None
         and not include_receipt
@@ -5232,7 +5308,9 @@ def build_participant_timeline(
         for attacker in attackers:
             if not defenders:
                 continue
-            actor_params = _actor_params(params, attacker)
+            actor_params = _actor_params_with_resource_restores(
+                params, attacker, _resource_restores
+            )
             for defender_index, defender in enumerate(defenders):
                 # Secondary-target item branches are allocated against the
                 # current attacker group, not the outer request's default
@@ -5393,7 +5471,9 @@ def build_participant_timeline(
     for attacker in all_actors:
         if attacker.participant_id in support_attached:
             continue
-        actor_params = _actor_params(params, attacker)
+        actor_params = _actor_params_with_resource_restores(
+            params, attacker, _resource_restores
+        )
         fallback = run_fight(
             attacker.champion_data,
             attacker.level,
@@ -5409,6 +5489,45 @@ def build_participant_timeline(
             incoming,
         )
         support_attached.add(attacker.participant_id)
+
+    # Eternity's mana restore is the one sustain branch whose state changes
+    # future ability admission.  The first pass supplies the complete
+    # incoming champion ledger; rerun the pair fights once with those exact
+    # (time, pre-mitigation-damage × typed ratio) restores attached to each
+    # Catalyst holder.  A second cache is intentional: cached baseline
+    # packets were priced without the external resource events.
+    if not _resource_pass:
+        resource_restores: dict[str, tuple[tuple[float, float], ...]] = {}
+        for actor in all_actors:
+            restores, complete = _catalyst_resource_restores(
+                actor, incoming, params.fight_duration_seconds
+            )
+            if not complete:
+                raise ValueError(
+                    f"Catalyst of Aeons resource ledger is unavailable for "
+                    f"{actor.participant_id}: an incoming champion packet "
+                    "does not expose finite pre-mitigation damage."
+                )
+            if restores:
+                resource_restores[actor.participant_id] = restores
+        if resource_restores:
+            return build_participant_timeline(
+                champion_data,
+                level,
+                items,
+                params,
+                main_stats=main_stats,
+                main_defenses=main_defenses,
+                enemies=enemies,
+                allies=allies,
+                focus_participant_id=focus_participant_id,
+                pair_result_cache={},
+                include_receipt=include_receipt,
+                reuse_main_stats=reuse_main_stats,
+                search_context=None,
+                _resource_restores=resource_restores,
+                _resource_pass=True,
+            )
 
     # Knight's Vow is the one ally packet whose trigger lives on the
     # recipient's incoming/outgoing ledgers rather than on a heal/shield cast.

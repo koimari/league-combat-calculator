@@ -5,7 +5,13 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.pipeline import FightParams, _item_self_healing_events, run_fight
+from src.calculator.pipeline import (
+    FightParams,
+    _item_self_healing_events,
+    run_fight,
+)
+from src.calculator.champions import parse_champion_abilities
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.participant_timeline import Combatant, _simulate_survival
 from src.calculator.stats import calculate_total_stats, get_item_stats
 
@@ -104,6 +110,49 @@ def test_catalyst_heals_from_timestamped_mana_spent_with_sourced_caps():
     assert [event["time"] for event in events if "Catalyst" in event["source"]] == [
         0.1,
         1.1,
+    ]
+
+
+def test_catalyst_damage_taken_restore_reenters_ordered_resource_admission(
+    ahri_data,
+):
+    """Eternity's pre-mitigation restore can pay for a later cast."""
+    item = get_item_by_name("Catalyst of Aeons")
+    stats = calculate_total_stats(ahri_data, 18, [item])
+    abilities = parse_champion_abilities(
+        ahri_data, 18, stats["ability_power"], champion_stats=stats
+    )
+    q = dict(abilities["Q"])
+    q.update({"resource_type": "MANA", "resource_cost": 300.0, "cooldown": 1.0})
+    stats.update(
+        {
+            "max_mana": 500.0,
+            "resource_regen_per_second": 0.0,
+        }
+    )
+    result = calculate_fight_damage(
+        stats,
+        {"Q": q},
+        [item],
+        FightParams(
+            target_health=10000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            fight_duration_seconds=4.0,
+            one_rotation=False,
+            enforce_resource_limits=True,
+            cast_order=["Q"],
+            resource_restore_events=((1.5, 200.0),),
+        ),
+    )
+    assert result["breakdown"]["Q"]["casts"] == 2
+    assert result["cast_timeline"][1]["resource_before"] == pytest.approx(400.0)
+    assert result["resource_restore_events"] == [
+        {
+            "time": 1.5,
+            "amount": 200.0,
+            "source": "Catalyst of Aeons (Eternity)",
+        }
     ]
 
 

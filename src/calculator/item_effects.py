@@ -1246,7 +1246,7 @@ def item_state_receipts(
             mana_spent_heal_cap_per_second=required_effect_value(
                 "Catalyst of Aeons", "mana_spent_heal_cap_per_second"
             ),
-            resource_restore_status="pending_ordered_incoming_resource_ledger",
+            resource_restore_status="modeled_ordered_incoming_resource_ledger",
         )
 
     for item_name in (

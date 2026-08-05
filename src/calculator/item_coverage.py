@@ -37,10 +37,6 @@ _BLOCKED_REASONS: dict[str, str] = {
     ),
     "Phage": "Rage's conditional movement-speed state is not modelled.",
     "Tear of the Goddess": "Manaflow stack progression is not modelled.",
-    "Catalyst of Aeons": (
-        "Eternity's damage-based mana restoration is not yet represented in the "
-        "shared resource ledger; its timestamped per-cast healing is modeled."
-    ),
     "Runic Compass": (
         "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active "
         "are not modelled."
@@ -83,6 +79,7 @@ _STATEFUL_MODELED_ITEMS: dict[str, str] = {
     "Axiom Arc": "Flux's sourced takedown refund fraction and trigger window are represented by a terminal-state receipt.",
     "Endless Hunger": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
     "Immortal Path": "Slay stacks, above-half damage amplification, and the bounded health-state receipt are represented; below-half recovery is applied by the ordered ledger.",
+    "Catalyst of Aeons": "Eternity's pre-mitigation champion-damage mana restoration and capped per-cast healing are represented by the ordered resource and participant ledgers.",
 }
 
 
