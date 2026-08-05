@@ -271,6 +271,23 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
         "Time Stop is priced only from the explicit bounded active-seconds "
         "scenario input; item presence alone never assumes stasis."
     ),
+    "Locket of the Iron Solari": (
+        "Devotion is represented by the shared participant support ledger: an "
+        "explicit active_seconds input emits the sourced shield to the holder "
+        "and selected teammates. Passive target calculations do not assume the "
+        "active and therefore remain safe when no roster target is authored."
+    ),
+    "Mikael's Blessing": (
+        "Purify is represented by the shared participant support ledger: an "
+        "explicit active_seconds input emits the sourced cleanse/heal to the "
+        "selected teammate. Passive target calculations do not invent a cast."
+    ),
+    "Redemption": (
+        "Intervention is represented by the shared participant support ledger: "
+        "an explicit active_seconds input schedules its delayed ally heal and "
+        "enemy true-damage area packet for the selected roster. Passive target "
+        "calculations do not invent the active."
+    ),
     "Spectre's Cowl": (
         "The current full Wiki entry confirms that Incorporeal was removed in "
         "V14.6; the remaining target-relevant behavior is its sourced base "
@@ -332,9 +349,6 @@ _TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
 
 _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
-    "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",
-    "Mikael's Blessing": "Purify's activated heal is not modelled.",
-    "Redemption": "Intervention's activated target healing is not modelled.",
 }
 
 # Product-facing outcome dimensions for utility and non-TDD effects.  These
