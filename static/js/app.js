@@ -2462,7 +2462,7 @@ function renderPrototypeChampion() {
   levelInput.disabled = levelCapability.supported === false;
   levelInput.title = capabilityTitle(levelCapability);
   levelInput.dataset.capabilityField = "level";
-  document.querySelectorAll("[data-level]").forEach((button) => {
+  document.querySelectorAll("[data-level-delta]").forEach((button) => {
     button.disabled = levelCapability.supported === false;
     button.title = capabilityTitle(levelCapability);
     button.dataset.capabilityField = "level";
