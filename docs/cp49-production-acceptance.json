@@ -1,0 +1,79 @@
+{
+  "checkpoint": "CP18",
+  "issue": 49,
+  "title": "Reactive bidirectional effects and Grievous Wounds",
+  "status": "production_verified_residual_open",
+  "production": {
+    "url": "https://scryglass-item-calculator.vercel.app/",
+    "deployment_id": "dpl_AL7i5DWwUxV5org1cP2ASJ39Ygqf",
+    "sha": "f3a7853a994293390a26f4dff11e3612e579dd35",
+    "state": "READY"
+  },
+  "browser_scenarios": [
+    {
+      "name": "thornmail_reactive_retaliation",
+      "participants": ["Ahri (main)", "Aatrox (enemy)"],
+      "inputs": ["Enemy Thornmail selected", "Calculated auto scheduling"],
+      "observed": [
+        "Enemy item picker labels Thornmail as modeled",
+        "Event order is certified with 13 ordered events",
+        "Ledger contains Thornmail thorns receipts at 0s, 1.6s, and 3.2s",
+        "Result remains event-derived and displays 136 TDD"
+      ]
+    },
+    {
+      "name": "unending_despair_defender_pulse",
+      "participants": ["Ahri (main)", "Aatrox (enemy)"],
+      "inputs": ["Enemy Unending Despair selected", "Calculated auto scheduling"],
+      "observed": [
+        "Enemy item picker labels Unending Despair as modeled",
+        "Event order is certified with 11 ordered events",
+        "Ledger contains the 4s periodic Unending Despair packet and the sourced self-heal"
+      ]
+    },
+    {
+      "name": "knights_vow_roster_state",
+      "participants": ["Ahri (main)", "Lulu (ally/support)", "Aatrox (enemy)"],
+      "inputs": ["Ally Knight's Vow selected", "Worthy ally index control visible", "Range and holder-health gates visible", "Ally modeled effects enabled"],
+      "observed": [
+        "The frontend exposes all typed Knight's Vow state controls",
+        "The coupled result is event-derived with 18 ordered events"
+      ]
+    }
+  ],
+  "local_gates": {
+    "pytest": "3032 passed",
+    "pylint": "9.60/10",
+    "black": "passed",
+    "javascript": "node --check passed",
+    "diff": "git diff --check passed",
+    "golden": "identical",
+    "item_umbrella": {
+      "passed": true,
+      "ordinary_source_items": 209,
+      "review_pending": 0,
+      "unexplained_blocks": 0,
+      "target_blocked": 0
+    },
+    "acceptance_matrix": {
+      "passed": 10,
+      "scenario_count": 10,
+      "optimizer_withheld_reason": "Known coarse candidate sources remain fail-closed outside this CP18 scope."
+    },
+    "champion_matrix": {
+      "passed": true,
+      "registered": 173,
+      "exercised": 173,
+      "outcome_counts": {
+        "certified_with_item_scope_gap": 173,
+        "partial_or_unexhaustive": 0
+      }
+    }
+  },
+  "source_requirement": "The reactive item entries and every champion entry remain governed by the full parent-entry League Wiki audit; all entries carry source revisions and parent_entry_read receipts.",
+  "residual_scope": [
+    "Issue #18 still owns the final shared ordered-participant contract.",
+    "Issue #48 still owns the remaining ally/team item families beyond the production-verified support packet slice.",
+    "Issue #40 remains the item umbrella gate; no closure is claimed here."
+  ]
+}
