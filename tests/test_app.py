@@ -931,9 +931,15 @@ def test_frontend_level_controls_routable_contract_uses_data_level():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
     assert 'const levelButton = event.target.closest("[data-level]")' in source
-    assert "if (levelPath === \"attacker.level\")" in source
-    assert "const rosterLevel = levelPath.match(/^(targets|allies)\\.(\\d+)\\.level$/)" in source
-    assert "setPath(levelPath, Math.max(1, Math.min(cap, Number(pathValue(levelPath)) + Number(levelButton.dataset.delta))));" in source
+    assert 'if (levelPath === "attacker.level")' in source
+    assert (
+        "const rosterLevel = levelPath.match(/^(targets|allies)\\.(\\d+)\\.level$/)"
+        in source
+    )
+    assert (
+        "setPath(levelPath, Math.max(1, Math.min(cap, Number(pathValue(levelPath)) + Number(levelButton.dataset.delta))));"
+        in source
+    )
 
 
 def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_effect():
@@ -947,14 +953,32 @@ def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_e
         "fight_duration": 5,
         "enemies": [{"champion": "Annie", "level": 18, "items": []}],
     }
-    live_payload = {**zero_payload, "item_options": {"Stridebreaker": {"active_seconds": 1.0}}}
+    live_payload = {
+        **zero_payload,
+        "item_options": {"Stridebreaker": {"active_seconds": 1.0}},
+    }
 
     baseline = client.post("/api/calculate", json=zero_payload).get_json()
     with_effect = client.post("/api/calculate", json=live_payload).get_json()
 
-    assert baseline["combat"]["utility_outcomes"]["participants"]["main"]["slow"]["event_count"] == 0
-    assert with_effect["combat"]["utility_outcomes"]["participants"]["main"]["slow"]["event_count"] > 0
-    assert with_effect["combat"]["utility_outcomes"]["participants"]["main"]["movement"]["event_count"] > 0
+    assert (
+        baseline["combat"]["utility_outcomes"]["participants"]["main"]["slow"][
+            "event_count"
+        ]
+        == 0
+    )
+    assert (
+        with_effect["combat"]["utility_outcomes"]["participants"]["main"]["slow"][
+            "event_count"
+        ]
+        > 0
+    )
+    assert (
+        with_effect["combat"]["utility_outcomes"]["participants"]["main"]["movement"][
+            "event_count"
+        ]
+        > 0
+    )
 
 
 def test_damage_breakdown_leads_with_result_and_keeps_event_audit_disclosed():
