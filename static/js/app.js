@@ -1930,7 +1930,19 @@ function renderExactBreakdown(aResult, bResult) {
   const supportRows = (aResult?.combat?.support_events || []).filter((event) => Number(event.applied_amount || event.amount || 0) > 0).map((event) => {
     const target = labels.get(event.target || event.recipient) || event.target || event.recipient || "selected teammate";
     const policy = event.target_policy || event.target_scope || "explicit recipient";
-    return `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(event.source || "support")} · ${escapeHtml(event.kind || "support")} · to ${escapeHtml(target)}</small></td><td>${fmt(event.applied_amount || event.amount || 0)}<small>${escapeHtml(policy)}</small></td></tr>`;
+    const details = [
+      Number.isFinite(Number(event.bonus_attack_speed_percent)) ? `${fmt(event.bonus_attack_speed_percent)}% AS` : "",
+      Number.isFinite(Number(event.on_hit_magic_damage)) ? `${fmt(event.on_hit_magic_damage)} on-hit magic` : "",
+      Number.isFinite(Number(event.ability_power)) && Number(event.ability_power) ? `+${fmt(event.ability_power)} AP` : "",
+      Number.isFinite(Number(event.ability_haste)) && Number(event.ability_haste) ? `+${fmt(event.ability_haste)} AH` : "",
+      Number.isFinite(Number(event.bonus_move_speed_percent)) ? `${fmt(event.bonus_move_speed_percent)}% MS` : "",
+      Number.isFinite(Number(event.chain_fraction)) ? `${Math.round(Number(event.chain_fraction) * 100)}% chain` : "",
+      Number.isFinite(Number(event.armor_reduction_percent)) ? `${Math.round(Number(event.armor_reduction_percent) * 100)}% armor shred` : "",
+      Number.isFinite(Number(event.mr_reduction_percent)) ? `${Math.round(Number(event.mr_reduction_percent) * 100)}% MR shred` : "",
+      Number.isFinite(Number(event.multiplier)) && Number(event.multiplier) !== 1 ? `${Math.round((Number(event.multiplier) - 1) * 100)}% damage` : "",
+      event.cleanse ? "cleanse" : "",
+    ].filter(Boolean).join(" · ");
+    return `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(event.source || "support")} · ${escapeHtml(event.kind || "support")} · to ${escapeHtml(target)}${details ? ` · ${escapeHtml(details)}` : ""}</small></td><td>${fmt(event.applied_amount || event.amount || 0)}<small>${escapeHtml(policy)}</small></td></tr>`;
   }).join("");
   const eventSection = eventRows || healingRows || supportRows ? `<details class="breakdown-audit"><summary>Audit trail <span>Event order · timestamps</span></summary><section class="combat-event-ledger" aria-label="Event order audit"><header><div><p class="eyebrow">Event order</p><h2>Timestamped events</h2></div><span>Outgoing · incoming · recovery · support</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Event</th><th>Applied value</th></tr></thead><tbody>${eventRows}${healingRows}${supportRows}</tbody></table></div></section></details>` : "";
   const outcome = `<p class="breakdown-outcome" role="status">${escapeHtml(breakdownOutcome(aMainTotal, bResult ? bMainTotal : null))}</p>`;
@@ -2656,7 +2668,19 @@ function renderPrototypeResult(aResult = null, bResult = null) {
     const timeLabel = Number.isFinite(time) ? `${one(time)}s` : "time withheld";
     const recipient = eventLabel(event.target || event.recipient);
     const policy = event.target_policy || event.target_scope || "explicit recipient";
-    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} → ${escapeHtml(recipient)} · ${escapeHtml(event.source || "support")}</span><strong>${fmt(Number(event.applied_amount ?? event.amount ?? 0))} ${escapeHtml(event.kind || "support")} · ${escapeHtml(policy)}</strong></div>`;
+    const details = [
+      Number.isFinite(Number(event.bonus_attack_speed_percent)) ? `${fmt(event.bonus_attack_speed_percent)}% AS` : "",
+      Number.isFinite(Number(event.on_hit_magic_damage)) ? `${fmt(event.on_hit_magic_damage)} on-hit magic` : "",
+      Number.isFinite(Number(event.ability_power)) && Number(event.ability_power) ? `+${fmt(event.ability_power)} AP` : "",
+      Number.isFinite(Number(event.ability_haste)) && Number(event.ability_haste) ? `+${fmt(event.ability_haste)} AH` : "",
+      Number.isFinite(Number(event.bonus_move_speed_percent)) ? `${fmt(event.bonus_move_speed_percent)}% MS` : "",
+      Number.isFinite(Number(event.chain_fraction)) ? `${Math.round(Number(event.chain_fraction) * 100)}% chain` : "",
+      Number.isFinite(Number(event.armor_reduction_percent)) ? `${Math.round(Number(event.armor_reduction_percent) * 100)}% armor shred` : "",
+      Number.isFinite(Number(event.mr_reduction_percent)) ? `${Math.round(Number(event.mr_reduction_percent) * 100)}% MR shred` : "",
+      Number.isFinite(Number(event.multiplier)) && Number(event.multiplier) !== 1 ? `${Math.round((Number(event.multiplier) - 1) * 100)}% damage` : "",
+      event.cleanse ? "cleanse" : "",
+    ].filter(Boolean).join(" · ");
+    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} → ${escapeHtml(recipient)} · ${escapeHtml(event.source || "support")}${details ? ` · ${escapeHtml(details)}` : ""}</span><strong>${fmt(Number(event.applied_amount ?? event.amount ?? 0))} ${escapeHtml(event.kind || "support")} · ${escapeHtml(policy)}</strong></div>`;
   });
   const overflow = combatEvents.length > 24 || healingEvents.length > 12 || supportEvents.length > 12
     ? `<div class="ledger-line"><span>Additional receipts</span><strong>${combatEvents.length > 24 ? combatEvents.length - 24 : 0} damage · ${healingEvents.length > 12 ? healingEvents.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`

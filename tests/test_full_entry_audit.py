@@ -55,7 +55,7 @@ def test_champion_audit_requires_parent_and_all_namespace_10_templates(monkeypat
     assert any(args[:2] == ["page", "--title"] for args in calls)
 
 
-def test_item_scope_excludes_removed_or_non_purchasable_items(monkeypatch):
+def test_item_scope_includes_transformed_and_non_purchasable_records(monkeypatch):
     monkeypatch.setattr(
         audit,
         "_load",
@@ -80,7 +80,7 @@ def test_item_scope_excludes_removed_or_non_purchasable_items(monkeypatch):
             },
         },
     )
-    assert audit.ordinary_sr_item_names() == ["One"]
+    assert audit.ordinary_sr_item_names() == ["One", "Three"]
 
 
 def test_champion_module_receipts_cover_every_cached_champion():
@@ -92,6 +92,14 @@ def test_champion_module_receipts_cover_every_cached_champion():
     assert all(
         set(receipt["slots"]) == {"P", "Q", "W", "E", "R"} for receipt in receipts
     )
+
+
+def test_full_item_scope_includes_transformed_records():
+    names = audit.ordinary_sr_item_names()
+    assert len(names) == 237
+    assert "Diadem of Songs" in names
+    assert "Muramana" in names
+    assert "Seraph's Embrace" in names
 
 
 def test_expected_effects_names_every_item_branch_and_champion_slot():

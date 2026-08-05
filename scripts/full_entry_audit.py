@@ -129,19 +129,23 @@ def champion_names() -> list[str]:
 
 
 def ordinary_sr_item_names() -> list[str]:
-    """Return all non-removed, purchasable, classic-SR cached item names."""
+    """Return every non-removed classic-SR item record in the cache.
+
+    The audit scope is deliberately broader than the shop.  Transformed
+    records (for example Diadem of Songs and Muramana) and non-purchasable
+    system records still have Wiki entries whose mechanics must be reviewed
+    and explicitly classified before the release gate can pass.
+    """
     names: set[str] = set()
     for value in _load(ITEMS_PATH).values():
         if not isinstance(value, dict):
             continue
         modes = value.get("modes") or {}
-        shop = value.get("shop") or {}
         name = str(value.get("name", "")).strip()
         if (
             name
             and bool(modes.get("classic sr 5v5"))
             and not bool(value.get("removed"))
-            and bool(shop.get("purchasable"))
         ):
             names.add(name)
     return sorted(names)

@@ -1324,6 +1324,11 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
         "Overlord's Bloodmail",
         "Zhonya's Hourglass",
         "Seeker's Armguard",
+        "Locket of the Iron Solari",
+        "Mikael's Blessing",
+        "Redemption",
+        "Shurelya's Battlesong",
+        "Knight's Vow",
     } <= set(options)
     assert (
         options["Heartsteel"]["stat_effects"]["bonus_health"]["bonus_health_per_unit"]
@@ -1347,6 +1352,13 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
     assert "LEGACY_STACK_ITEM_NAMES" in source
     assert "specs.length === 1 && LEGACY_STACK_ITEM_NAMES.has(itemName(id))" in source
     assert "crit_chance_per_stack_${suffix}" in source
+    assert "bonus_attack_speed_percent" in source
+    assert "on_hit_magic_damage" in source
+    assert "chain_fraction" in source
+    assert (
+        options["Locket of the Iron Solari"]["options"]["active_seconds"]["max"] == 30.0
+    )
+    assert options["Knight's Vow"]["options"]["worthy_target_index"]["max"] == 4
 
 
 def test_frontend_consumes_backend_sustain_stat_families():
@@ -2007,7 +2019,7 @@ def test_calculate_accepts_manual_attacker_runaan_item():
     assert response.status_code == 200
 
 
-def test_calculate_rejects_incomplete_roster_participant_item():
+def test_calculate_accepts_typed_ally_item_team_effects():
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -2017,10 +2029,13 @@ def test_calculate_rejects_incomplete_roster_participant_item():
         },
     )
 
-    assert response.status_code == 400
-    assert response.get_json()["error"].startswith(
-        "Ally Lulu item Ardent Censer cannot be used in a calculation yet"
+    assert response.status_code == 200
+    support = response.get_json()["combat"]["support_events"]
+    sanctify = next(
+        event for event in support if event["source"] == "Ardent Censer — Sanctify"
     )
+    assert sanctify["bonus_attack_speed_percent"] == 25.0
+    assert sanctify["on_hit_magic_damage"] == 20.0
 
 
 @pytest.mark.parametrize(

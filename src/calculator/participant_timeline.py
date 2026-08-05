@@ -19,6 +19,11 @@ from .pipeline import FightParams, require_fight_mode_support, run_fight
 from .scenario import ResolvedLoadout
 from .timeline_coverage import combine_timeline_coverages
 from .support_effects import derive_ally_effects
+from .item_support_effects import (
+    derive_item_support_effects,
+    has_ordered_item_team_effects,
+    schedule_knights_vow,
+)
 from .healing_reduction import (
     GRIEVOUS_WOUNDS_FACTOR,
     healing_reduction_profiles,
@@ -665,6 +670,9 @@ def _support_effect_templates(
     attacker: Combatant,
     result: Mapping[str, Any],
     all_actors: list[Combatant],
+    *,
+    damage_events: Iterable[Mapping[str, Any]] | None = None,
+    target_id: str | None = None,
 ) -> list[dict[str, Any]]:
     """Derive one actor's sourced shield/heal packets, resolved to targets.
 
@@ -703,6 +711,34 @@ def _support_effect_templates(
                     ),
                 }
             )
+    item_result = dict(result)
+    if damage_events is not None:
+        item_result["damage_events"] = list(damage_events)
+        if (
+            target_id
+            and float(result.get("target_ending_health", 1.0) or 0.0) <= 0.0
+            and item_result["damage_events"]
+        ):
+            kill_time = max(
+                float(event.get("time", 0.0) or 0.0)
+                for event in item_result["damage_events"]
+                if isinstance(event, Mapping)
+            )
+            item_result["takedown_events"] = [
+                {
+                    "time": kill_time,
+                    "target": target_id,
+                    "attacker": attacker.participant_id,
+                }
+            ]
+    templates.extend(
+        derive_item_support_effects(
+            attacker,
+            item_result,
+            all_actors,
+            trigger_effects=templates,
+        )
+    )
     return templates
 
 
@@ -715,6 +751,20 @@ def _attach_support_effects(
     """Attach one actor's sourced shield/heal packets exactly once."""
     for template in _support_effect_templates(attacker, result, all_actors):
         support_effects[template["target"]].append(dict(template))
+
+
+def _has_ordered_item_team_effects(
+    items: Iterable[Mapping[str, Any]],
+    enemies: Iterable[ResolvedLoadout] = (),
+    allies: Iterable[ResolvedLoadout] = (),
+) -> bool:
+    """Return whether any participant needs the full item-team event walk."""
+    if has_ordered_item_team_effects(items):
+        return True
+    return any(
+        has_ordered_item_team_effects(loadout.item_data)
+        for loadout in (*enemies, *allies)
+    )
 
 
 def _thorns_return_damage(
@@ -922,6 +972,14 @@ def _simulate_survival(
             "healing_reduced": 0.0,
             "support_shield_received": 0.0,
             "support_shield_expired": 0.0,
+            # Cross-participant item packets are kept as explicit live state
+            # rather than folded into a starting stat guess.  The receipt
+            # records each activation and the damage walk consumes only the
+            # still-active entries.
+            "support_buffs": [],
+            "active_damage_modifiers": [],
+            "active_on_hit_magic": [],
+            "utility_effects": [],
             "timed_shields": [],
             "temporary_health_received": 0.0,
             "temporary_health_amount": 0.0,
@@ -2035,6 +2093,94 @@ def _simulate_survival(
                 event["expires_at"] = round(expires_at, 3)
             event["applied_amount"] = round(amount, 6)
             continue
+        if kind == "stat_buff":
+            duration_value = max(0.0, float(event.get("duration", 0.0) or 0.0))
+            if duration_value <= 0.0:
+                event["applied_amount"] = 0.0
+                event["skipped_reason"] = "stat_buff_not_available"
+                continue
+            buff = {
+                "source": str(event.get("source", "Ally stat buff")),
+                "until": event_time + duration_value,
+                "bonus_attack_speed_percent": float(
+                    event.get("bonus_attack_speed_percent", 0.0) or 0.0
+                ),
+                "ability_power": float(event.get("ability_power", 0.0) or 0.0),
+                "ability_haste": float(event.get("ability_haste", 0.0) or 0.0),
+                "on_hit_magic_damage": float(
+                    event.get("on_hit_magic_damage", 0.0) or 0.0
+                ),
+            }
+            state["support_buffs"].append(buff)
+            if buff["on_hit_magic_damage"] > 0.0:
+                state["active_on_hit_magic"].append(
+                    {
+                        "source": buff["source"],
+                        "amount": buff["on_hit_magic_damage"],
+                        "until": buff["until"],
+                    }
+                )
+            event["expires_at"] = round(event_time + duration_value, 3)
+            event["applied_amount"] = round(float(event.get("amount", 0.0)), 6)
+            continue
+        if kind == "damage_modifier":
+            duration_value = max(0.0, float(event.get("duration", 0.0) or 0.0))
+            persistent = bool(event.get("persistent"))
+            if duration_value <= 0.0 and not persistent:
+                event["applied_amount"] = 0.0
+                event["skipped_reason"] = "damage_modifier_not_available"
+                continue
+            modifier = {
+                "source": str(event.get("source", "Damage modifier")),
+                "until": float("inf") if persistent else event_time + duration_value,
+                "multiplier": float(event.get("multiplier", 1.0) or 1.0),
+                "reduction": (
+                    float(event.get("amount", 0.0) or 0.0)
+                    if event.get("damage_reduction")
+                    else 0.0
+                ),
+                "damage_reduction": bool(event.get("damage_reduction")),
+                "next_event_only": bool(event.get("next_event_only")),
+                "armor_reduction_percent": float(
+                    event.get("armor_reduction_percent", 0.0) or 0.0
+                ),
+                "mr_reduction_percent": float(
+                    event.get("mr_reduction_percent", 0.0) or 0.0
+                ),
+                "resistance_type": str(event.get("resistance_type", "")),
+                "owner": str(event.get("owner", "")),
+            }
+            state["active_damage_modifiers"].append(modifier)
+            if not persistent:
+                event["expires_at"] = round(event_time + duration_value, 3)
+            event["applied_amount"] = round(float(event.get("amount", 0.0)), 6)
+            continue
+        if kind in {"on_hit_magic", "movement", "cleanse"}:
+            state["utility_effects"].append(
+                {
+                    "source": str(event.get("source", kind)),
+                    "kind": kind,
+                    "time": event_time,
+                    "amount": float(event.get("amount", 0.0) or 0.0),
+                    "duration": float(event.get("duration", 0.0) or 0.0),
+                }
+            )
+            if kind == "on_hit_magic":
+                duration_value = max(0.0, float(event.get("duration", 0.0) or 0.0))
+                state["active_on_hit_magic"].append(
+                    {
+                        "source": str(event.get("source", "On-hit magic")),
+                        "amount": float(event.get("amount", 0.0) or 0.0),
+                        "until": event_time + duration_value,
+                        "next_event_only": bool(event.get("next_event_only")),
+                    }
+                )
+            event["applied_amount"] = round(float(event.get("amount", 0.0)), 6)
+            if event.get("duration") is not None:
+                event["expires_at"] = round(
+                    event_time + float(event.get("duration", 0.0) or 0.0), 3
+                )
+            continue
         deferred_batch_id = event.get("_deferred_batch_id")
         if (
             deferred_batch_id is not None
@@ -2132,6 +2278,129 @@ def _simulate_survival(
             continue
         _update_combat_state(participant_id, event, float(event_time))
         _reprice_dynamic_resistance(participant_id, event)
+        # Apply live cross-participant modifiers after the pair engine's
+        # sourced mitigation and before shields/health.  Flat Dream Maker
+        # reduction is post-mitigation; Imperial-style all-source modifiers
+        # multiply the remaining packet.  Both consume only an authored
+        # duration/trigger and therefore never become permanent item stats.
+        active_modifiers = [
+            modifier
+            for modifier in state["active_damage_modifiers"]
+            if float(modifier.get("until", 0.0)) > event_time
+        ]
+        state["active_damage_modifiers"] = active_modifiers
+        for modifier in list(active_modifiers):
+            if modifier.get("owner") and modifier.get("owner") == source_id:
+                # The originating holder's pair engine already priced its
+                # own stack/amp.  The packet exists for every other eligible
+                # participant in the coupled ledger.
+                continue
+            is_attack_or_spell = bool(
+                event.get("is_ability")
+                or event.get("basic_attack")
+                or str(event.get("source_key", "")) == "auto_attacks"
+            )
+            resistance_key = str(modifier.get("resistance_type", ""))
+            reduction_key = (
+                "armor_reduction_percent"
+                if resistance_key == "armor"
+                else (
+                    "mr_reduction_percent"
+                    if resistance_key in {"mr", "magic_resistance"}
+                    else ""
+                )
+            )
+            if reduction_key:
+                relevant_type = (
+                    "physical" if reduction_key.startswith("armor") else "magic"
+                )
+                if event.get("damage_type") != relevant_type:
+                    continue
+                if not is_attack_or_spell:
+                    continue
+                baseline_key = (
+                    "_baseline_effective_armor"
+                    if reduction_key.startswith("armor")
+                    else "_baseline_effective_mr"
+                )
+                try:
+                    baseline = float(event[baseline_key])
+                    percentage = max(
+                        0.0,
+                        min(1.0, float(modifier.get(reduction_key, 0.0) or 0.0)),
+                    )
+                except (KeyError, TypeError, ValueError):
+                    event["support_resistance_reduction_unavailable"] = reduction_key
+                    continue
+                before = max(0.0, float(event.get("damage", 0.0) or 0.0))
+                baseline_factor = apply_resistance(1.0, baseline)
+                reduced_factor = apply_resistance(
+                    1.0, max(0.0, baseline * (1.0 - percentage))
+                )
+                if baseline_factor > 0.0:
+                    event["damage"] = before * reduced_factor / baseline_factor
+                    event.setdefault("support_resistance_reduction", []).append(
+                        {
+                            "source": modifier["source"],
+                            "type": reduction_key,
+                            "fraction": round(percentage, 6),
+                            "factor": round(reduced_factor / baseline_factor, 6),
+                        }
+                    )
+                continue
+            if not is_attack_or_spell:
+                continue
+            if modifier.get("damage_reduction"):
+                before = max(0.0, float(event.get("damage", 0.0) or 0.0))
+                reduction = min(before, max(0.0, float(modifier.get("reduction", 0.0))))
+                event["damage"] = before - reduction
+                event["support_damage_reduction"] = {
+                    "source": modifier["source"],
+                    "amount": round(reduction, 6),
+                }
+                if modifier.get("next_event_only"):
+                    active_modifiers.remove(modifier)
+            else:
+                factor = max(0.0, float(modifier.get("multiplier", 1.0) or 1.0))
+                before = max(0.0, float(event.get("damage", 0.0) or 0.0))
+                event["damage"] = before * factor
+                event["support_damage_multiplier"] = {
+                    "source": modifier["source"],
+                    "multiplier": round(factor, 6),
+                }
+        source_state = states.get(str(source_id))
+        active_on_hit = [
+            bonus
+            for bonus in (source_state["active_on_hit_magic"] if source_state else [])
+            if float(bonus.get("until", 0.0)) > event_time
+        ]
+        if source_state is not None:
+            source_state["active_on_hit_magic"] = active_on_hit
+        if source_state is not None and (
+            event.get("basic_attack")
+            or str(event.get("source_key", "")) == "auto_attacks"
+            or event.get("is_ability")
+        ):
+            for bonus in list(active_on_hit):
+                raw_bonus = max(0.0, float(bonus.get("amount", 0.0) or 0.0))
+                if raw_bonus <= 0.0:
+                    continue
+                effective_mr = event.get("_baseline_effective_mr", 0.0)
+                try:
+                    effective_mr = float(effective_mr)
+                except (TypeError, ValueError):
+                    effective_mr = 0.0
+                bonus_damage = apply_resistance(raw_bonus, effective_mr)
+                event["damage"] = float(event.get("damage", 0.0) or 0.0) + bonus_damage
+                event.setdefault("support_on_hit_magic", []).append(
+                    {
+                        "source": bonus["source"],
+                        "raw": round(raw_bonus, 6),
+                        "mitigated": round(bonus_damage, 6),
+                    }
+                )
+                if bonus.get("next_event_only"):
+                    active_on_hit.remove(bonus)
         # Celestial Opposition's Blessed reduction is a target-state modifier,
         # not a basic-attack modifier.  Apply it to authored champion damage
         # after the pair engine's resistance math and refresh the exact
@@ -3879,7 +4148,10 @@ def _context_setup(
             support_templates = packet.get("support")
             if support_templates is None:
                 support_templates = _support_effect_templates(
-                    attacker, packet["result"], all_actors_by_index
+                    attacker,
+                    packet["result"],
+                    all_actors_by_index,
+                    damage_events=packet.get("events", ()),
                 )
                 packet["support"] = support_templates
             base.add_support_templates(support_templates, attacker_i, context.index_of)
@@ -3967,7 +4239,10 @@ def _build_signature_panel(
         support_templates = packet.get("support")
         if support_templates is None:
             support_templates = _support_effect_templates(
-                attacker, packet["result"], all_actors
+                attacker,
+                packet["result"],
+                all_actors,
+                damage_events=packet.get("events", ()),
             )
             packet["support"] = support_templates
         sig.add_support_templates(support_templates, attacker_i, context.index_of)
@@ -4332,6 +4607,11 @@ def build_participant_timeline(
             or _has_active_warmog(loadout)
             for loadout in (*enemies, *allies)
         )
+        # Ally/team packets carry timestamped shields, heals, stat buffs, and
+        # debuffs.  The compact optimizer panel cannot apply those state
+        # transitions without silently dropping a recipient, so use the
+        # authoritative event walk whenever one is equipped in the roster.
+        and not _has_ordered_item_team_effects(items, enemies, allies)
         # Collector is a terminal target-state transition, not a score-only
         # damage effect; keep it on the authoritative event walk.
         and not any(item.get("name") == "The Collector" for item in items)
@@ -4511,7 +4791,11 @@ def build_participant_timeline(
                     support_templates = packet.get("support")
                     if support_templates is None:
                         support_templates = _support_effect_templates(
-                            attacker, result, all_actors
+                            attacker,
+                            result,
+                            all_actors,
+                            damage_events=packet.get("events", ()),
+                            target_id=defender.participant_id,
                         )
                         packet["support"] = support_templates
                     for template in support_templates:
@@ -4549,6 +4833,12 @@ def build_participant_timeline(
         )
         _attach_support_effects(attacker, fallback, all_actors, support_effects)
         support_attached.add(attacker.participant_id)
+
+    # Knight's Vow is the one ally packet whose trigger lives on the
+    # recipient's incoming/outgoing ledgers rather than on a heal/shield cast.
+    # Resolve its single explicit Worthy tether after all pair events exist so
+    # the redirect and holder-heal receipts share the same event order.
+    schedule_knights_vow(all_actors, incoming, outgoing, support_effects)
 
     _coalesce_darius_q_heals(healing)
     _schedule_thorns_events(all_actors, incoming, outgoing)
@@ -4793,6 +5083,43 @@ def build_participant_timeline(
                     else {}
                 ),
                 **(
+                    {"redirect_source": str(event["redirect_source"])}
+                    if event.get("redirect_source")
+                    else {}
+                ),
+                **(
+                    {
+                        "support_damage_multiplier": dict(
+                            event["support_damage_multiplier"]
+                        )
+                    }
+                    if event.get("support_damage_multiplier")
+                    else {}
+                ),
+                **(
+                    {
+                        "support_damage_reduction": dict(
+                            event["support_damage_reduction"]
+                        )
+                    }
+                    if event.get("support_damage_reduction")
+                    else {}
+                ),
+                **(
+                    {
+                        "support_resistance_reduction": list(
+                            event["support_resistance_reduction"]
+                        )
+                    }
+                    if event.get("support_resistance_reduction")
+                    else {}
+                ),
+                **(
+                    {"support_on_hit_magic": list(event["support_on_hit_magic"])}
+                    if event.get("support_on_hit_magic")
+                    else {}
+                ),
+                **(
                     {"deferred_from": str(event["_deferred_from"])}
                     if event.get("_deferred_from")
                     else {}
@@ -4922,12 +5249,58 @@ def build_participant_timeline(
                 ),
                 "source": event.get("source", ""),
                 "kind": event.get("kind", ""),
-                "amount": round(float(event.get("amount", 0.0)), 1),
+                "amount": round(float(event.get("amount", 0.0)), 6),
                 "applied_amount": round(
-                    float(event.get("applied_amount", event.get("amount", 0.0))), 1
+                    float(event.get("applied_amount", event.get("amount", 0.0))), 6
                 ),
                 "target_scope": event.get("target_scope", ""),
                 "target_policy": event.get("target_policy", ""),
+                **(
+                    {
+                        key: round(float(event[key]), 6)
+                        for key in (
+                            "bonus_attack_speed_percent",
+                            "on_hit_magic_damage",
+                            "ability_power",
+                            "ability_haste",
+                            "bonus_move_speed_percent",
+                            "chain_fraction",
+                            "multiplier",
+                            "cooldown",
+                            "charges_consumed",
+                            "beam_delay",
+                            "armor_reduction_percent",
+                            "mr_reduction_percent",
+                            "stack_count",
+                        )
+                        if event.get(key) is not None
+                    }
+                ),
+                **(
+                    {
+                        key: bool(event[key])
+                        for key in (
+                            "damage_reduction",
+                            "next_event_only",
+                            "all_sources",
+                            "cleanse",
+                            "persistent",
+                        )
+                        if event.get(key) is not None
+                    }
+                ),
+                **(
+                    {"trigger": str(event["trigger"])}
+                    if event.get("trigger") is not None
+                    else {}
+                ),
+                **(
+                    {
+                        key: str(event[key])
+                        for key in ("resistance_type", "owner", "range_assumption")
+                        if event.get(key) is not None
+                    }
+                ),
                 **(
                     {"duration": round(float(event["duration"]), 3)}
                     if event.get("duration") is not None

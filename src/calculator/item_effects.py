@@ -283,7 +283,273 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         "source_url": "https://wiki.leagueoflegends.com/en-us/Zhonya's_Hourglass",
         "source_revision_id": 3902922,
     },
+    # Ally/team actives use an explicit timestamp.  A zero value means that
+    # the active was not used in the authored window; the timeline never
+    # invents a cast at t=0 merely because the item is equipped.
+    "Locket of the Iron Solari": {
+        "options": {
+            "active_seconds": {
+                "type": "float",
+                "label": "Devotion active seconds",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 30.0,
+                "step": 0.5,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Locket_of_the_Iron_Solari",
+        "source_revision_id": 4022957,
+    },
+    "Mikael's Blessing": {
+        "options": {
+            "active_seconds": {
+                "type": "float",
+                "label": "Purify active seconds",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 30.0,
+                "step": 0.5,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Mikael%27s_Blessing",
+        "source_revision_id": 3984364,
+    },
+    "Redemption": {
+        "options": {
+            "active_seconds": {
+                "type": "float",
+                "label": "Intervention active seconds",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 30.0,
+                "step": 0.5,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Redemption",
+        "source_revision_id": 4015392,
+    },
+    "Shurelya's Battlesong": {
+        "options": {
+            "active_seconds": {
+                "type": "float",
+                "label": "Inspiring Speech active seconds",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 30.0,
+                "step": 0.5,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Shurelya%27s_Battlesong",
+        "source_revision_id": 3984368,
+    },
+    "Knight's Vow": {
+        "options": {
+            "worthy_target_index": {
+                "type": "int",
+                "label": "Worthy ally index",
+                "default": 0,
+                "min": 0,
+                "max": 4,
+                "step": 1,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Knight%27s_Vow",
+        "source_revision_id": 4023793,
+    },
 }
+
+
+# Typed, source-owned ally/team packets.  These values are deliberately kept
+# outside the outgoing-damage registry: the regular item compiler remains the
+# authority for the holder's own damage, while this table is the authority for
+# cross-participant effects.  Every consumer uses ``ally_item_effect_value``
+# so a partial refresh fails loudly instead of borrowing a call-site literal.
+ALLY_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
+    "Ardent Censer": {
+        "sanctify_bonus_attack_speed": 25.0,
+        "sanctify_on_hit_magic": 20.0,
+        "sanctify_duration": 6.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Ardent_Censer",
+        "source_revision_id": 4031605,
+    },
+    "Abyssal Mask": {
+        "magic_damage_amp": 0.12,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Abyssal_Mask",
+        "source_revision_id": 3984960,
+    },
+    "Bandlepipes": {
+        "fanfare_bonus_move_speed": 20.0,
+        "fanfare_duration_melee": 8.0,
+        "fanfare_duration_ranged": 4.0,
+        "fanfare_ally_attack_speed_melee": 30.0,
+        "fanfare_ally_attack_speed_ranged": 20.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Bandlepipes",
+        "source_revision_id": 4013408,
+    },
+    "Black Cleaver": {
+        "armor_reduction_per_stack": 0.06,
+        "armor_reduction_max_stacks": 5,
+        "armor_reduction_duration": 6.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Black_Cleaver",
+        "source_revision_id": 4036012,
+    },
+    "Bloodletter's Curse": {
+        "mr_reduction_per_stack": 0.075,
+        "mr_reduction_max_stacks": 4,
+        "mr_reduction_duration": 6.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Bloodletter%27s_Curse",
+        "source_revision_id": 3981906,
+    },
+    "Bloodsong": {
+        "expose_weakness_melee": 0.08,
+        "expose_weakness_ranged": 0.05,
+        "expose_weakness_duration": 4.0,
+        "expose_weakness_cooldown": 1.5,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Bloodsong",
+        "source_revision_id": 4028002,
+    },
+    "Cryptbloom": {
+        "life_from_death_base_heal": 100.0,
+        "life_from_death_ap_ratio": 0.20,
+        "life_from_death_nova_duration": 1.75,
+        "life_from_death_cooldown": 60.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Cryptbloom",
+        "source_revision_id": 3989109,
+    },
+    "Diadem of Songs": {
+        "harmony_bonus_mana_ratio": 0.005,
+        "consonance_max_mana_ratio": 0.008,
+        "consonance_cooldown": 1.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Diadem_of_Songs",
+        "source_revision_id": 3993317,
+    },
+    "Dream Maker": {
+        "level_scaling_start": 7,
+        "blue_reduction_min": 50.0,
+        "blue_reduction_max": 194.0,
+        "purple_magic_min": 40.0,
+        "purple_magic_max": 160.0,
+        "dream_duration": 3.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Dream_Maker",
+        "source_revision_id": 4030400,
+    },
+    "Echoes of Helia": {
+        "charge_damage_ratio": 0.30,
+        "charge_cap_min": 80.0,
+        "charge_cap_max": 250.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Echoes_of_Helia",
+        "source_revision_id": 4046489,
+    },
+    "Imperial Mandate": {
+        "command_damage_amp": 0.07,
+        "command_duration": 4.0,
+        "control_ability_haste": 20.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Imperial_Mandate",
+        "source_revision_id": 4034680,
+    },
+    "Knight's Vow": {
+        "redirect_fraction": 0.14,
+        "holder_heal_fraction": 0.12,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Knight%27s_Vow",
+        "source_revision_id": 4023793,
+    },
+    "Locket of the Iron Solari": {
+        "level_scaling_start": 9,
+        "shield_min": 290.0,
+        "shield_max": 360.0,
+        "shield_duration": 2.5,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Locket_of_the_Iron_Solari",
+        "source_revision_id": 4022957,
+    },
+    "Mikael's Blessing": {
+        "heal_min": 100.0,
+        "heal_max": 250.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Mikael%27s_Blessing",
+        "source_revision_id": 3984364,
+    },
+    "Moonstone Renewer": {
+        "heal_chain_fraction": 0.30,
+        "shield_chain_fraction": 0.35,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Moonstone_Renewer",
+        "source_revision_id": 4022988,
+    },
+    "Redemption": {
+        "heal_min": 150.0,
+        "heal_max": 350.0,
+        "enemy_max_health_true_damage_ratio": 0.10,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Redemption",
+        "source_revision_id": 4015392,
+    },
+    "Shurelya's Battlesong": {
+        "bonus_move_speed_percent": 30.0,
+        "duration": 4.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Shurelya%27s_Battlesong",
+        "source_revision_id": 3984368,
+    },
+    "Solstice Sleigh": {
+        "level_scaling_start": 7,
+        "bonus_move_speed_percent": 20.0,
+        "temporary_health_min": 50.0,
+        "temporary_health_max": 230.0,
+        "duration": 2.5,
+        "cooldown": 30.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Solstice_Sleigh",
+        "source_revision_id": 4028003,
+    },
+    "Staff of Flowing Water": {
+        "bonus_ability_power": 40.0,
+        "bonus_ability_haste": 15.0,
+        "duration": 6.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Staff_of_Flowing_Water",
+        "source_revision_id": 4031602,
+    },
+}
+
+
+def ally_item_effect_value(item_name: str, key: str) -> float:
+    """Return one required numeric cross-participant item value."""
+    record = ALLY_ITEM_EFFECTS.get(item_name)
+    if not isinstance(record, Mapping):
+        raise KeyError(f"ALLY_ITEM_EFFECTS[{item_name!r}] is missing")
+    if key not in record:
+        raise KeyError(
+            f"ALLY_ITEM_EFFECTS[{item_name!r}] is missing {key!r} — "
+            "source/schema bug"
+        )
+    value = record[key]
+    if isinstance(value, bool):
+        raise ValueError(f"ALLY_ITEM_EFFECTS[{item_name!r}][{key!r}] must be numeric")
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"ALLY_ITEM_EFFECTS[{item_name!r}][{key!r}] must be numeric"
+        ) from exc
+    if not math.isfinite(parsed):
+        raise ValueError(f"ALLY_ITEM_EFFECTS[{item_name!r}][{key!r}] must be finite")
+    return parsed
+
+
+def ally_item_level_value(
+    item_name: str, low_key: str, high_key: str, level: int
+) -> float:
+    """Interpolate a sourced level-scaled ally packet value.
+
+    The cached Wiki qualifiers sometimes hold the low value through level 6
+    or 8 before scaling to level 18.  ``level_scaling_start`` keeps that
+    breakpoint in the typed source registry instead of hiding it in a caller.
+    """
+    low = ally_item_effect_value(item_name, low_key)
+    high = ally_item_effect_value(item_name, high_key)
+    record = ALLY_ITEM_EFFECTS.get(item_name)
+    start = 1
+    if isinstance(record, Mapping) and "level_scaling_start" in record:
+        start = max(
+            1, min(18, int(ally_item_effect_value(item_name, "level_scaling_start")))
+        )
+    clamped = max(start, min(18, int(level)))
+    span = max(1, 18 - start)
+    return low + (high - low) * (clamped - start) / span
 
 
 def _item_option_schemas(config: Mapping[str, Any]) -> Mapping[str, Mapping[str, Any]]:
