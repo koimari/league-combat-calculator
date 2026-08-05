@@ -1040,9 +1040,9 @@ def test_config_exposes_the_champion_review_boundary():
     )
 
     assert engine["registered_count"] == 173
-    assert engine["reviewed_count"] == 147
-    assert engine["generated_count"] == 26
-    assert engine["unreviewed_count"] == 26
+    assert engine["reviewed_count"] == 159
+    assert engine["generated_count"] == 14
+    assert engine["unreviewed_count"] == 14
     assert engine["module_contract"] == "full_entry_wiki_receipt"
 
 
@@ -1843,10 +1843,10 @@ class TestIconUrlsAreHttps:
             set(champion["abilities"]) == {"P", "Q", "W", "E", "R"}
             for champion in champions
         )
-        assert sum(champion["verified"] for champion in champions) == 147
+        assert sum(champion["verified"] for champion in champions) == 159
         by_name = {champion["name"]: champion for champion in champions}
         assert by_name["Aatrox"]["engine_registration"] == "reviewed_module"
-        assert by_name["Udyr"]["engine_registration"] == "generated_packet"
+        assert by_name["Xerath"]["engine_registration"] == "generated_packet"
 
 
 class TestChampionVerifiedFlags:
@@ -1859,7 +1859,7 @@ class TestChampionVerifiedFlags:
         assert by_name["Aatrox"] is True
         assert by_name["Bel'Veth"] is True
         assert by_name["Kled"] is True
-        assert by_name["Udyr"] is False
+        assert by_name["Xerath"] is False
 
     def test_unverified_champions_expose_specific_fail_closed_reasons(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
@@ -1870,11 +1870,11 @@ class TestChampionVerifiedFlags:
             "verification": "reviewed_module",
             "blockers": [],
         }
-        assert by_name["Udyr"]["availability"]["ready"] is False
-        assert by_name["Udyr"]["availability"]["verification"] == "blocked"
-        assert by_name["Udyr"]["availability"]["blockers"]
-        assert by_name["Udyr"]["engine_registration"] == "generated_packet"
-        assert by_name["Udyr"]["patch_last_changed"]
+        assert by_name["Xerath"]["availability"]["ready"] is False
+        assert by_name["Xerath"]["availability"]["verification"] == "blocked"
+        assert by_name["Xerath"]["availability"]["blockers"]
+        assert by_name["Xerath"]["engine_registration"] == "generated_packet"
+        assert by_name["Xerath"]["patch_last_changed"]
 
     def test_verified_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
