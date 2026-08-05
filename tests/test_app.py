@@ -1433,6 +1433,24 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
     assert options["Stridebreaker"]["options"]["active_seconds"]["max"] == 30.0
 
 
+def test_frontend_renders_typed_item_state_controls_for_roster_participants():
+    """Target/ally slots must expose the same typed state contract as builds.
+
+    Zhonya's/Seeker's Time Stop is a participant-specific input.  Keeping the
+    roster renderer wired to ``itemOptionControls`` prevents the backend from
+    accepting a state that an enemy or ally cannot author in the UI.
+    """
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "function prototypeRosterItemSlot(root, index, loadout, slot)" in source
+    assert 'item && !isBoots ? itemOptionControls(path, id, true) : ""' in source
+    assert (
+        "item_options: engineItemOptions(itemIds, target.itemStacks, target.itemOptions)"
+        in source
+    )
+    assert "function engineAlly(ally)" in source
+
+
 def test_frontend_consumes_backend_sustain_stat_families():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
