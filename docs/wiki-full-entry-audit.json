@@ -109847,37 +109847,33 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                43
-              ],
+              "issue_refs": [],
               "name": "Cleave",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Breaking Shockwave's movement-speed/slow sibling is not modeled; its active secondary damage packet is represented.",
-              "verdict": "withheld"
+              "reason": "Damage-relevant effects are represented by the fight model.",
+              "verdict": "modeled"
             },
             {
               "branch": "active",
-              "issue_refs": [
-                43
-              ],
+              "issue_refs": [],
               "name": "Breaking Shockwave",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Breaking Shockwave's movement-speed/slow sibling is not modeled; its active secondary damage packet is represented.",
-              "verdict": "withheld"
+              "reason": "Damage-relevant effects are represented by the fight model.",
+              "verdict": "modeled"
             }
           ],
           "effects": [
@@ -109908,29 +109904,25 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Breaking Shockwave's movement-speed/slow sibling is not modeled; its active secondary damage packet is represented."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "91e4a85d368c3d73bada49845b26c9fcf91eab5b0c2a338fbe9e321f861e52fd",
+        "expected_effects_sha256": "85460777f5d6048576a38f1438ce47ca6668ca64ef6d9271c4affe9535482a93",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [
             "multi_target",
             "slow",
             "movement"
           ],
           "ready": true,
-          "reason": "Breaking Shockwave's movement-speed/slow sibling is not modeled; its active secondary damage packet is represented.",
+          "reason": "Damage-relevant effects are represented by the fight model.",
           "registry_effect_type": "active",
-          "review_issue_refs": [
-            43
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -111666,54 +111658,48 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                43
-              ],
+              "issue_refs": [],
               "name": "Energized",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Firmament's attack-only Energized schedule and pre-trigger lethality are modeled, but Galvanize's ability trigger is withheld until the selected champion supplies an exact damaging ability event rather than a cast boundary.",
-              "verdict": "withheld"
+              "reason": "Damage-relevant effects are represented by the fight model.",
+              "verdict": "modeled"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                43
-              ],
+              "issue_refs": [],
               "name": "Galvanize",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Firmament's attack-only Energized schedule and pre-trigger lethality are modeled, but Galvanize's ability trigger is withheld until the selected champion supplies an exact damaging ability event rather than a cast boundary.",
-              "verdict": "withheld"
+              "reason": "Damage-relevant effects are represented by the fight model.",
+              "verdict": "modeled"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                43
-              ],
+              "issue_refs": [],
               "name": "Firmament",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Firmament's attack-only Energized schedule and pre-trigger lethality are modeled, but Galvanize's ability trigger is withheld until the selected champion supplies an exact damaging ability event rather than a cast boundary.",
-              "verdict": "withheld"
+              "reason": "Damage-relevant effects are represented by the fight model.",
+              "verdict": "modeled"
             }
           ],
           "effects": [
@@ -111757,25 +111743,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Firmament's attack-only Energized schedule and pre-trigger lethality are modeled, but Galvanize's ability trigger is withheld until the selected champion supplies an exact damaging ability event rather than a cast boundary."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "3c2d7bdf3a8a26838cdc569789aea2468cd3f66c8ec1c021c0c840bf1a70d716",
+        "expected_effects_sha256": "a2494440ecb02c36236060ce32db32a2a484f3831f71f6d3454a87435abe0f43",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Firmament's attack-only Energized schedule and pre-trigger lethality are modeled, but Galvanize's ability trigger is withheld until the selected champion supplies an exact damaging ability event rather than a cast boundary.",
+          "reason": "Damage-relevant effects are represented by the fight model.",
           "registry_effect_type": "on_hit_once",
-          "review_issue_refs": [
-            43
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },

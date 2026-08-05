@@ -4867,7 +4867,16 @@ class TestVoltaicCyclosword(_FightHarness):
         row = result["breakdown"]["on_hit_once_Voltaic Cyclosword_ability"]
         assert row["count"] == 1
         assert row["damage_events"][0]["time"] == pytest.approx(0.0)
+        assert row["damage_events"][0]["event_precision"] == "ability_cast_instance"
         assert row["temporary_lethality"]["applied_to_triggering_event"] is True
+        assert (
+            "on_hit_once_Voltaic Cyclosword_ability"
+            in result["timeline_coverage"]["exact_sources"]
+        )
+        assert (
+            "on_hit_once_Voltaic Cyclosword_ability"
+            not in result["timeline_coverage"]["coarse_sources"]
+        )
         ledger = result["damage_events"]
         assert ledger[0]["source_key"] == "on_hit_once_Voltaic Cyclosword_ability"
         assert ledger[0]["order"] < ledger[1]["order"]

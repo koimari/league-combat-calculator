@@ -7502,9 +7502,11 @@ def _first_damaging_ability_event(
     """Return the first authored damaging ability event, if one exists.
 
     Voltaic's current Galvanize branch can consume a ready Energized effect
-    from an ability.  Prefer a module-authored packet timestamp; a cast
-    boundary is retained only as an explicit fallback when the ability has
-    damage but no sub-event ledger.
+    from an ability. Prefer a module-authored packet timestamp; when a
+    generated module has only an authored damaging cast total, use the
+    sourced ability-cast instance as the trigger boundary. That boundary is
+    distinct from an uncertified packet timestamp: Galvanize is defined by
+    the ability cast instance, not by an invented sub-event order.
     """
     for cast_event in rotation.cast_events:
         if not isinstance(cast_event, Mapping):
@@ -7534,7 +7536,7 @@ def _first_damaging_ability_event(
                     if event_time is not None:
                         return event_time, "exact"
             if float(row.get("total_damage", 0.0) or 0.0) > 0.0:
-                return cast_time, "cast_boundary"
+                return cast_time, "ability_cast_instance"
     return None
 
 

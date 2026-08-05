@@ -16,6 +16,7 @@ from .item_effects import (
     ALLY_ITEM_EFFECTS,
     ally_item_effect_value,
     ally_item_level_value,
+    required_effect_value,
 )
 
 
@@ -733,6 +734,54 @@ def derive_item_support_effects(
                         "Shurelya's Battlesong", "bonus_move_speed_percent"
                     ),
                     target_scope="all_selected_teammates",
+                )
+            )
+    active_time = _option(attacker, "Stridebreaker", "active_seconds")
+    if "Stridebreaker" in names and active_time > 0.0:
+        slow_percent = float(required_effect_value("Stridebreaker", "slow_percent"))
+        slow_duration = float(required_effect_value("Stridebreaker", "slow_duration"))
+        move_speed_percent = float(
+            required_effect_value("Stridebreaker", "bonus_move_speed_percent")
+        )
+        move_speed_duration = float(
+            required_effect_value("Stridebreaker", "bonus_move_speed_duration")
+        )
+        area_radius = float(required_effect_value("Stridebreaker", "area_radius"))
+        front_offset = float(required_effect_value("Stridebreaker", "front_offset"))
+        for target in (
+            actor for actor in all_actors if not _same_side(attacker, actor)
+        ):
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=target,
+                    time=active_time,
+                    kind="slow",
+                    source="Stridebreaker — Breaking Shockwave",
+                    amount=slow_percent,
+                    duration=slow_duration,
+                    target_scope="enemy_champions_in_radius",
+                    slow_percent=slow_percent,
+                    range_assumption=f"within_{area_radius:g}_units",
+                    cast_geometry=f"{front_offset:g}_unit_front_offset",
+                    trigger="explicit_active_seconds",
+                )
+            )
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=attacker,
+                    time=active_time,
+                    kind="movement",
+                    source="Stridebreaker — Breaking Shockwave",
+                    amount=move_speed_percent,
+                    duration=move_speed_duration,
+                    target_scope="self_per_champion_hit",
+                    bonus_move_speed_percent=move_speed_percent,
+                    champion_hit_target=target.participant_id,
+                    range_assumption=f"within_{area_radius:g}_units",
+                    cast_geometry=f"{front_offset:g}_unit_front_offset",
+                    trigger="explicit_active_seconds",
                 )
             )
     return packets

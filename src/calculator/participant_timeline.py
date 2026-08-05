@@ -811,6 +811,7 @@ def _utility_outcome_receipt(
     ]
     movement = [event for event in support if event.get("kind") == "movement"]
     cleanse = [event for event in support if event.get("kind") == "cleanse"]
+    slow = [event for event in support if event.get("kind") == "slow"]
     movement_speed_percent_seconds = sum(
         abs(
             float(
@@ -819,6 +820,11 @@ def _utility_outcome_receipt(
         )
         * max(0.0, float(event.get("duration", 0.0) or 0.0))
         for event in movement
+    )
+    slow_percent_seconds = sum(
+        abs(float(event.get("slow_percent", event.get("amount", 0.0)) or 0.0))
+        * max(0.0, float(event.get("duration", 0.0) or 0.0))
+        for event in slow
     )
     targeting = [
         event.get("targeting")
@@ -852,6 +858,8 @@ def _utility_outcome_receipt(
         applied_dimensions.add("movement")
     if cleanse:
         applied_dimensions.add("cleanse")
+    if slow:
+        applied_dimensions.add("slow")
     if secondary:
         applied_dimensions.add("multi_target")
     return {
@@ -863,6 +871,10 @@ def _utility_outcome_receipt(
             "speed_percent_seconds": round(movement_speed_percent_seconds, 6),
         },
         "cleanse": {"event_count": len(cleanse)},
+        "slow": {
+            "event_count": len(slow),
+            "percent_seconds": round(slow_percent_seconds, 6),
+        },
         "multi_target": {
             "packet_count": len(secondary),
             "allocated_packet_count": sum(
@@ -2583,7 +2595,7 @@ def _simulate_survival(
                 event["expires_at"] = round(event_time + duration_value, 3)
             event["applied_amount"] = round(float(event.get("amount", 0.0)), 6)
             continue
-        if kind in {"on_hit_magic", "movement", "cleanse"}:
+        if kind in {"on_hit_magic", "movement", "cleanse", "slow"}:
             state["utility_effects"].append(
                 {
                     "source": str(event.get("source", kind)),
@@ -5804,6 +5816,7 @@ def build_participant_timeline(
                             "ability_power",
                             "ability_haste",
                             "bonus_move_speed_percent",
+                            "slow_percent",
                             "chain_fraction",
                             "multiplier",
                             "cooldown",
