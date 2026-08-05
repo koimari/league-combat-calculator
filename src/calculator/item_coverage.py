@@ -33,7 +33,6 @@ _BLOCKED_REASONS: dict[str, str] = {
         "Control's ability haste and Command's damage amplification are not modelled."
     ),
     "Manamune": "Awe's mana scaling and Manaflow stack state are not modelled.",
-    "Redemption": "Intervention's target-max-health true damage is not modelled.",
     "Rod of Ages": "Timeless minute stacks and level gain are not modelled.",
     "Umbral Glaive": "Nightstalker's first-attack true damage is not modelled.",
     "Whispering Circlet": "Manaflow stacks and the Diadem transformation state are not modelled.",

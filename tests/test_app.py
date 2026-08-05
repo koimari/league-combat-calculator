@@ -1298,6 +1298,16 @@ def test_primary_participant_ledger_surfaces_backend_support_events():
     assert "support shield received" in source
 
 
+def test_frontend_surfaces_native_utility_and_target_allocation_receipts():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "utility_outcomes?.focus" in source
+    assert "Applied non-TDD outcomes" in source
+    assert "speed_percent_seconds" in source
+    assert "target_allocation" in source
+    assert "authored roster-index policy" in source
+
+
 def test_frontend_consumes_backend_calculation_defaults():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 

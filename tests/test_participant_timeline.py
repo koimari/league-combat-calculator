@@ -891,6 +891,119 @@ def test_api_includes_sourced_lulu_ally_shield_in_main_ehp():
     assert combat["objective"]["main_team_effective_health"] > 0
 
 
+def test_api_exposes_native_utility_dimensions_without_converting_them_to_tdd():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": [],
+            "fight_mode": "timed",
+            "fight_duration": 5,
+            "enemies": [{"champion": "Annie", "level": 18, "items": []}],
+            "allies": [
+                {
+                    "champion": "Lulu",
+                    "level": 18,
+                    "items": ["Shurelya's Battlesong"],
+                    "item_options": {"Shurelya's Battlesong": {"active_seconds": 1.0}},
+                    "ally_effects_enabled": True,
+                }
+            ],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    utility = combat["utility_outcomes"]["participants"]["ally:Lulu"]
+    assert utility["contract"] == "utility_outcomes_v1"
+    assert utility["movement"]["event_count"] > 0
+    assert utility["movement"]["speed_percent_seconds"] == pytest.approx(240.0)
+    assert "movement" in utility["applied_dimensions"]
+    assert "no cross-unit utility score" in utility["metric_note"]
+
+
+def test_secondary_packets_use_the_selected_roster_index_and_are_certified():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Runaan's Hurricane"],
+            "fight_mode": "auto_only",
+            "fight_duration": 5,
+            "auto_attacks_only": True,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+            "enemies": [
+                {"champion": "Annie", "level": 18, "items": []},
+                {"champion": "Jinx", "level": 18, "items": []},
+            ],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    allocation = combat["target_allocation"]
+    assert allocation["complete"] is True
+    assert allocation["secondary_packet_count"] > 0
+    assert (
+        allocation["allocated_secondary_packet_count"]
+        == allocation["secondary_packet_count"]
+    )
+    bolts = [
+        event
+        for event in combat["events"]
+        if event.get("source") == "secondary_Runaan's Hurricane"
+    ]
+    assert bolts
+    assert all(event["targeting"]["allocated_target_index"] == 1 for event in bolts)
+
+
+def test_redemption_active_emits_sourced_area_true_damage_and_heal_packets():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": [],
+            "fight_mode": "timed",
+            "fight_duration": 5,
+            "enemies": [
+                {"champion": "Annie", "level": 18, "items": []},
+                {"champion": "Jinx", "level": 18, "items": []},
+            ],
+            "allies": [
+                {
+                    "champion": "Lulu",
+                    "level": 18,
+                    "items": ["Redemption"],
+                    "item_options": {"Redemption": {"active_seconds": 1.0}},
+                    "ally_effects_enabled": True,
+                }
+            ],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    damage = [
+        event
+        for event in combat["events"]
+        if event["source"] == "Redemption — Intervention"
+    ]
+    assert {event["target"] for event in damage} == {"enemy:Annie", "enemy:Jinx"}
+    assert all(event["damage_type"] == "true" for event in damage)
+    assert all(event["event_precision"] == "exact" for event in damage)
+    support = [
+        event
+        for event in combat["support_events"]
+        if event["source"] == "Redemption — Intervention"
+    ]
+    assert any(event["kind"] == "heal" for event in support)
+    assert all(event["range_assumption"] == "within_5500_units" for event in support)
+
+
 def test_public_damage_events_follow_ledger_time_order():
     app.config["TESTING"] = True
     response = app.test_client().post(

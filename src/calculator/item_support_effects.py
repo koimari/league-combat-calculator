@@ -662,19 +662,55 @@ def derive_item_support_effects(
         )
     active_time = _option(attacker, "Redemption", "active_seconds")
     if "Redemption" in names and active_time > 0.0:
+        beam_delay = ally_item_effect_value("Redemption", "beam_delay")
+        range_units = ally_item_effect_value("Redemption", "target_area_range_units")
         for target in (attacker, *teammates):
             packets.append(
                 _packet(
                     attacker=attacker,
                     target=target,
-                    time=active_time + 2.5,
+                    time=active_time + beam_delay,
                     kind="heal",
                     source="Redemption — Intervention",
                     amount=ally_item_level_value(
                         "Redemption", "heal_min", "heal_max", target.level
                     ),
                     target_scope="redemption_allies_in_radius",
-                    beam_delay=2.5,
+                    beam_delay=beam_delay,
+                    range_assumption=f"within_{range_units:g}_units",
+                )
+            )
+        # Intervention is also an area true-damage packet.  The calculator has
+        # no map coordinates, so every selected enemy is an explicit roster
+        # target under the sourced area-radius assumption; no proximity order
+        # is invented.  The packet enters the normal phase-0 damage walk so
+        # shields, death cutoffs, and attribution remain shared with all other
+        # damage events.
+        true_damage_ratio = ally_item_effect_value(
+            "Redemption", "enemy_max_health_true_damage_ratio"
+        )
+        for target in (
+            actor for actor in all_actors if not _same_side(attacker, actor)
+        ):
+            amount = (
+                max(0.0, float(target.stats.get("health", 0.0))) * true_damage_ratio
+            )
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=target,
+                    time=active_time + beam_delay,
+                    kind="damage",
+                    source="Redemption — Intervention",
+                    amount=amount,
+                    damage=amount,
+                    damage_type="true",
+                    event_precision="exact",
+                    target_scope="enemy_champions_in_radius",
+                    range_assumption=f"within_{range_units:g}_units",
+                    beam_delay=beam_delay,
+                    _priority=0.0,
+                    sequence=0,
                 )
             )
     active_time = _option(attacker, "Shurelya's Battlesong", "active_seconds")
