@@ -497,6 +497,7 @@ function normalizeRosterSupportItemsForRole(loadout) {
       && (loadout.roleQuestComplete ? stage === "upgraded" : stage !== "upgraded");
     if (!legal) {
       if (loadout.itemStacks) loadout.itemStacks[index] = 0;
+      if (loadout.itemOptions) loadout.itemOptions[index] = {};
       return 0;
     }
     return itemId;
@@ -4194,7 +4195,9 @@ document.addEventListener("change", (event) => {
   const roleSelect = event.target.closest("#roleSelect");
   if (roleSelect) {
     state.attacker.role = roleSelect.value || null;
+    if (!state.attacker.role) state.attacker.roleQuestComplete = false;
     normalizeAttackerBootsForRole();
+    normalizeAttackerSupportItemsForRole();
     state.attacker.level = Math.min(state.attacker.level, attackerLevelCap());
     invalidateOptimization();
     return render();

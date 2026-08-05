@@ -1175,6 +1175,53 @@ def test_roster_role_quest_control_round_trips_enemy_and_ally_state():
     assert body["allies"][0]["role_quest_complete"] is True
 
 
+def test_support_quest_transition_clears_stale_item_state_and_backend_gate_matches_ui():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "if (loadout.itemOptions) loadout.itemOptions[index] = {};" in source
+    assert (
+        "state.attacker.role = roleSelect.value || null;\n"
+        "    if (!state.attacker.role) state.attacker.roleQuestComplete = false;\n"
+        "    normalizeAttackerBootsForRole();\n"
+        "    normalizeAttackerSupportItemsForRole();"
+    ) in source
+
+    client = app_module.app.test_client()
+    for root in ("enemies", "allies"):
+        complete_payload = {
+            "champion": "Ziggs",
+            "level": 12,
+            root: [
+                {
+                    "champion": "Nami",
+                    "level": 12,
+                    "role": "support",
+                    "role_quest_complete": True,
+                    "boots": "Ionian Boots of Lucidity",
+                    "include_boots": True,
+                    "items": ["Bloodsong"],
+                }
+            ],
+        }
+        complete = client.post("/api/calculate", json=complete_payload)
+        assert complete.status_code == 200
+
+        incomplete_payload = {
+            **complete_payload,
+            root: [
+                {
+                    **complete_payload[root][0],
+                    "role_quest_complete": False,
+                }
+            ],
+        }
+        incomplete = client.post("/api/calculate", json=incomplete_payload)
+        assert incomplete.status_code == 400
+        assert (
+            "not legal for this support quest state" in incomplete.get_json()["error"]
+        )
+
+
 def test_resistance_table_surfaces_all_backend_starting_defense_receipts():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
