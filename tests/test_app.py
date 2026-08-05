@@ -1148,15 +1148,17 @@ def test_frontend_click_handlers_use_path_resolved_item_option_metadata_for_main
     assert "function itemOptionIdForPath(path)" in source
     assert "const value = Number(pathValue(path));" in source
     assert (
-        "if (parts[0] === \"attacker\" && (parts[1] === \"buildA\" || parts[1] === \"buildB\"))" in source
+        'if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB"))'
+        in source
     )
     assert "return state.attacker[parts[1]]?.[Number(parts[2])];" in source
     assert "function itemOptionSpecsForPath(path)" in source
-    assert (
-        "const specs = itemOptionSpecsForPath(path);" in source
-    )
+    assert "const specs = itemOptionSpecsForPath(path);" in source
     assert "itemOptionState(path)[key] = Number(value);" in source
-    assert "const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);" in source
+    assert (
+        "const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);"
+        in source
+    )
 
 
 def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats():
