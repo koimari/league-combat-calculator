@@ -1,0 +1,233 @@
+"""K'Sante's marked attack, charge-scaled W and All Out mixed damage."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from ..ability_spec import DamagePart
+from .engine import ONHIT, SlotCtx, build_parser
+from .reviewed_batch_01 import no_damage, source_row
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    simple_damage,
+)
+
+
+def _marked_attack(ctx: SlotCtx, ability: dict[str, Any]) -> float:
+    base = extract_value(ability, "Bonus Damage", ctx.level)
+    ratio = extract_value(ability, "Max Health Damage", ctx.level) / 100.0
+    all_out = bool(ctx.options.get("all_out", False))
+    extra = (
+        0.01
+        + 0.01 * ctx.stats.get("bonus_armor", 0.0) / 100.0
+        + 0.01 * ctx.stats.get("bonus_magic_resistance", 0.0) / 100.0
+        if all_out
+        else 0.0
+    )
+    return base + (ratio + extra) * float(
+        ctx.target.get("target_max_health", 0.0) or 0.0
+    )
+
+
+def _dauntless(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    count = min(max(int(ctx.options.get("p_marks", 1)), 0), 8)
+    if count <= 0:
+        return None
+    value = _marked_attack(ctx, ability)
+    return {
+        "name": ability.get("name", "Dauntless Instinct"),
+        "damage_type": "physical",
+        "total_raw": value * count,
+        "parts": (
+            DamagePart(
+                "physical",
+                value,
+                count=count,
+                basic_damage=True,
+                time_offset=0.0,
+                hit_interval=0.5,
+            ),
+        ),
+        "proc_count": count,
+        "event_phase": "effect",
+        "damage_events": [
+            {
+                "time": i * 0.5,
+                "damage_type": "physical",
+                "damage": value,
+                "event_precision": "phase_order",
+            }
+            for i in range(count)
+        ],
+        "detail": f"{count} marked attack consumption(s); All Out bonus is {bool(ctx.options.get('all_out', False))}.",
+    }
+
+
+_dauntless.phase = ONHIT
+
+
+def _ntofo(ctx: SlotCtx) -> dict[str, Any] | None:
+    return simple_damage(attr="Physical Damage", dmg_type="physical")(ctx)
+
+
+def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    charge = min(max(float(ctx.options.get("w_charge", 1.0)), 0.0), 1.0)
+    physical = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
+    if bool(ctx.options.get("all_out", False)):
+        low = extract_named(
+            ability, "Minimum Bonus True Damage", rank, ctx.stats, ctx.target
+        )
+        high = extract_named(
+            ability, "Maximum Bonus True Damage", rank, ctx.stats, ctx.target
+        )
+        true_value = low + (high - low) * charge
+        parts = (
+            DamagePart("physical", physical),
+            DamagePart("true", true_value, time_offset=charge),
+        )
+        total = physical + true_value
+    else:
+        parts = (DamagePart("physical", physical, time_offset=charge),)
+        total = physical
+    entry = damage_entry(
+        ability.get("name", "Path Maker"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+    entry["parts"] = parts
+    entry["detail"] = (
+        f"{charge:.2f} charge; All Out true damage is {bool(ctx.options.get('all_out', False))}."
+    )
+    return entry
+
+
+def _all_out(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
+    if bool(ctx.options.get("r_terrain", False)):
+        strike = extract_named(
+            ability, "Strike Physical Damage", rank, ctx.stats, ctx.target
+        )
+        parts = (
+            DamagePart("physical", value, time_offset=0.3),
+            DamagePart("physical", strike, time_offset=0.432),
+        )
+        total = value + strike
+    else:
+        parts = (DamagePart("physical", value, time_offset=0.3),)
+        total = value
+    entry = damage_entry(
+        ability.get("name", "All Out"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+    entry["parts"] = parts
+    entry["detail"] = (
+        "Terrain strike is explicit; the 65% health threshold, omnivamp and resist conversion are state."
+    )
+    if bool(ctx.options.get("all_out", False)):
+        entry["stat_buff"] = {
+            "bonus_attack_speed": extract_value(ability, "Bonus Attack Speed", rank),
+            "armor_penetration_percent": 50.0,
+        }
+    return entry
+
+
+SLOTS = {
+    "P": _dauntless,
+    "Q": _ntofo,
+    "W": _path_maker,
+    "E": lambda ctx: no_damage(
+        ctx,
+        name="Footwork",
+        reason="Dash and self/ally shield are defensive/ally utility.",
+    ),
+    "R": _all_out,
+}
+parse_abilities = build_parser(SLOTS, "K'Sante")
+OPTIONS = [
+    {
+        "key": "p_marks",
+        "type": "int",
+        "default": 1,
+        "min": 0,
+        "max": 8,
+        "label": "Dauntless Instinct marked attacks",
+    },
+    {
+        "key": "w_charge",
+        "type": "float",
+        "default": 1.0,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.25,
+        "label": "Path Maker charge fraction",
+    },
+    {
+        "key": "r_terrain",
+        "type": "bool",
+        "default": False,
+        "label": "All Out terrain strike",
+    },
+    {"key": "all_out", "type": "bool", "default": False, "label": "All Out state"},
+]
+ASSUMPTIONS = [
+    "Dauntless Instinct is an explicit marked-attack proc, not an assumed proc on every auto.",
+    "Path Maker uses its physical packet and optionally the authored All Out true-damage range; charge duration is explicit.",
+    "All Out terrain routing, health threshold, omnivamp and resistance conversion remain visible state rather than hidden arithmetic.",
+]
+SOURCES = [
+    source_row(
+        "K'Sante parent entry",
+        "https://wiki.leagueoflegends.com/en-us/K%27Sante",
+        4011715,
+        "2026-04-22T20:20:34Z",
+    ),
+    source_row(
+        "K'Sante Q template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/Q",
+        3471718,
+        "2022-10-16T16:23:55Z",
+    ),
+    source_row(
+        "K'Sante W template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/W",
+        3471720,
+        "2022-10-16T16:25:10Z",
+    ),
+    source_row(
+        "K'Sante E template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/E",
+        3471722,
+        "2022-10-16T16:25:47Z",
+    ),
+    source_row(
+        "K'Sante R template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/R",
+        3471724,
+        "2022-10-16T16:26:26Z",
+    ),
+]
+MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
+REVIEW_STATUS = "reviewed_module"
