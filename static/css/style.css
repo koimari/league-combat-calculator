@@ -294,12 +294,20 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .stack-control button { display: grid; place-items: center; width: 22px; height: 20px; padding: 0; border: 1px solid var(--line-dark); background: transparent; color: var(--ink); font-size: 13px; line-height: 1; }
 .stack-control button:hover, .stack-control button:focus-visible { border-color: var(--ink); background: var(--black); color: var(--white); }
 .stack-control output { min-width: 0; overflow: hidden; color: var(--muted); font: 700 8px/1 var(--mono); text-align: center; text-overflow: ellipsis; white-space: nowrap; }
-.item-option-controls { display: grid; gap: 5px; }
+.item-option-controls { display: grid; gap: 5px; min-width: 0; width: 100%; }
 .slot-wrap > .item-option-controls,
 .roster-slot-wrap > .item-option-controls {
   margin-top: 4px;
+  min-width: 0;
+  width: 100%;
 }
-.item-option-controls label { display: grid; gap: 3px; }
+.item-option-controls label {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
 .roster-slot-wrap { display: grid; min-width: 0; gap: 3px; }
 .roster-slot-label { min-height: 12px; color: var(--ink-soft); font: 8px/1 var(--mono); letter-spacing: .08em; text-align: center; text-transform: uppercase; }
 .roster-boots-wrap .roster-item-slot { border-color: var(--ink-soft); }

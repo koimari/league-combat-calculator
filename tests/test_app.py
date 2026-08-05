@@ -971,12 +971,20 @@ def test_frontend_layout_separates_item_option_rows():
 
     assert "display: grid;" in option_block
     assert "gap: 5px;" in option_block
-    label_block = source[source.index(".item-option-controls label {") : source.index(".roster-slot-wrap {")]
+    assert "min-width: 0;" in option_block
+    assert "width: 100%;" in option_block
+    label_block = source[
+        source.index(".item-option-controls label {") : source.index(
+            ".roster-slot-wrap {"
+        )
+    ]
     assert "display: grid;" in label_block
-    assert (
-        ".slot-wrap > .item-option-controls,\n.roster-slot-wrap > .item-option-controls {\n  margin-top: 4px;\n}"
-        in source
-    )
+    assert "min-width: 0;" in label_block
+    assert "overflow-wrap: anywhere;" in label_block
+    assert "white-space: normal;" in label_block
+    assert ".slot-wrap > .item-option-controls," in source
+    assert "margin-top: 4px;" in source
+    assert "width: 100%;" in source
 
 
 def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_effect():
