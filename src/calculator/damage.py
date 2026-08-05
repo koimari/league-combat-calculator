@@ -7785,7 +7785,10 @@ def _first_damaging_ability_event(
                     )
                     event_time = _finite_numeric_receipt(first.get("time"))
                     if event_time is not None:
-                        return event_time, "exact"
+                        event_precision = str(
+                            first.get("event_precision", "cast_boundary")
+                        )
+                        return event_time, event_precision
             if float(row.get("total_damage", 0.0) or 0.0) > 0.0:
                 return cast_time, "ability_cast_instance"
     return None

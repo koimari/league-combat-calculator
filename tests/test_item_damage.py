@@ -4988,6 +4988,42 @@ class TestVoltaicCyclosword(_FightHarness):
         assert ledger[0]["source_key"] == "on_hit_once_Voltaic Cyclosword_ability"
         assert ledger[0]["order"] < ledger[1]["order"]
 
+    def test_voltaic_galvanize_preserves_cast_boundary_ability_precision(self) -> None:
+        """Galvanize keeps authored cast-boundary timing from ability damage rows."""
+        stats = self._make_stats()
+        abilities = {
+            "Q": {
+                "name": "Test ability",
+                "rank": 1,
+                "cooldown": 5.0,
+                "parts": (
+                    DamagePart(
+                        "magic",
+                        hp_scaled_damage=lambda missing_ratio: 50.0
+                        + 0.0 * missing_ratio,
+                    ),
+                ),
+                "total_raw": 50.0,
+                "damage_type": "magic",
+            }
+        }
+        result = calculate_fight_damage(
+            stats,
+            abilities,
+            [{"name": "Voltaic Cyclosword"}],
+            FightConfig(
+                target_health=2000,
+                target_armor=50,
+                target_magic_resistance=50,
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+            ),
+        )
+        row = result["breakdown"]["on_hit_once_Voltaic Cyclosword_ability"]
+        assert row["count"] == 1
+        assert row["damage_events"][0]["event_precision"] == "cast_boundary"
+
     def test_voltaic_parsed_values(self) -> None:
         """Parser extracts the reworked Firmament: current-HP physical damage
         (melee 9% / ranged 7%) capped at 200."""
