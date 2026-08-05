@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "checkpoint": "CP10.2",
+  "issue": 15,
+  "title": "Exact champion modules: Hecarim through Kassadin",
+  "status": "local_validated_preview_pending",
+  "batch": [
+    "Hecarim",
+    "Heimerdinger",
+    "Hwei",
+    "Illaoi",
+    "Irelia",
+    "Ivern",
+    "Janna",
+    "Jax",
+    "Jhin",
+    "K'Sante",
+    "Karma",
+    "Kassadin"
+  ],
+  "source_requirement": "Every batch module was checked against its complete League Wiki parent entry, every parent-referenced P/Q/W/E/R template, and any full-page branch needed to explain a state or pet packet. Numeric values remain source-backed and ordered; utility and unsupported branches retain user-visible reasons.",
+  "source_receipts": {
+    "parent_revisions": {
+      "Hecarim": 3957268,
+      "Heimerdinger": 4025016,
+      "Hwei": 4044079,
+      "Illaoi": 4033192,
+      "Irelia": 3892607,
+      "Ivern": 4015438,
+      "Janna": 3892602,
+      "Jax": 3979077,
+      "Jhin": 4022310,
+      "K'Sante": 4011715,
+      "Karma": 4001401,
+      "Kassadin": 4008773
+    },
+    "full_entry_audit": {
+      "passed": false,
+      "snapshot_complete": true,
+      "champions_expected": 173,
+      "items_expected": 237,
+      "entries_audited": 410,
+      "ready": 314,
+      "review_pending": 96,
+      "champion_modules_ready": 77,
+      "champion_modules_review_pending": 96,
+      "next_pending_batch": [
+        "Katarina",
+        "Kayle",
+        "Kayn",
+        "Kennen",
+        "Kha'Zix",
+        "Kindred",
+        "Kled",
+        "LeBlanc",
+        "Lee Sin",
+        "Leona",
+        "Lillia",
+        "Locke"
+      ]
+    }
+  },
+  "local_gates": {
+    "pytest": "3070 passed",
+    "pylint": "9.51/10; exit 0; pre-existing repository warnings retained",
+    "black": "405 files unchanged",
+    "javascript_syntax": "node --check static/js/app.js passed",
+    "diff_check": "passed",
+    "golden_snapshot": "recaptured and compare is identical after the intentional CP10.2 behavior delta",
+    "acceptance_matrix": "10/10 calculate scenarios passed; optimizer withholding remains the known CP6 coarse-source gate",
+    "champion_optimizer_matrix": {
+      "registered": 173,
+      "exercised": 173,
+      "passed": true,
+      "outcomes": {
+        "certified": 173,
+        "partial_or_unexhaustive": 0
+      }
+    },
+    "item_umbrella_audit": {
+      "passed": true,
+      "ordinary_source_items": 209,
+      "review_pending": 0,
+      "attacker_blocked": 0,
+      "target_blocked": 0,
+      "unexplained_blocks": 0,
+      "path_mismatches": 0,
+      "unresolved_source_conflicts": 0
+    }
+  },
+  "promotion_gate": "Do not close #15 or claim CP10 complete until all 173 parent entries are ready and production verification reaches the exact merged SHA."
+}

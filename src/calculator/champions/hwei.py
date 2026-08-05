@@ -1,0 +1,300 @@
+"""Hwei's three-subject variants, Signature explosion and despair timeline."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from ..ability_spec import DamagePart
+from .engine import SlotCtx, build_parser
+from .reviewed_batch_01 import no_damage, source_row
+from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+
+
+def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Emit Hwei's sourced Signature detonation as an explicit proc count."""
+    ability = ctx.ability("P", 0)
+    if ability is None:
+        return None
+
+    def _per_proc(inner_ctx: SlotCtx, inner_ability: dict[str, Any]) -> float:
+        return extract_named(
+            inner_ability,
+            "Per-Level Scaling",
+            inner_ctx.level,
+            inner_ctx.stats,
+            inner_ctx.target,
+        )
+
+    entry = proc_damage(
+        _per_proc,
+        "magic",
+        count_option="p_triggers",
+        default_count=1,
+        name=ability.get("name", "Signature of the Visionary"),
+        phase_order_events=True,
+    )(ctx)
+    if entry is not None:
+        entry["detail"] = (
+            f"{entry['proc_count']} completed Signature mark(s); each sourced mark detonates once after the second spell hit."
+        )
+    return entry
+
+
+def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
+    variant = min(max(int(ctx.options.get("q_variant", 0)), 0), 2)
+    ability = ctx.ability("Q", variant + 1)
+    if ability is None:
+        return None
+    rank = ctx.rank_for("Q")
+    if rank < 1:
+        return None
+    if variant == 0:
+        value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+        parts = (DamagePart("magic", value, time_offset=0.25),)
+        detail = "Devastating Fire; target-max-health scaling and its monster cap remain source-backed."
+    elif variant == 1:
+        base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+        maximum = extract_named(ability, "Maximum Damage", rank, ctx.stats, ctx.target)
+        missing = min(max(float(ctx.options.get("q_missing_health", 1.0)), 0.0), 1.0)
+        value = base + (maximum - base) * missing
+        parts = (
+            DamagePart(
+                "magic",
+                base,
+                hp_scaled_damage=lambda ratio: base + (maximum - base) * ratio,
+                time_offset=1.0,
+            ),
+        )
+        detail = f"Severing Bolt missing-health fraction {missing:.2f}; isolated/immobilized target gate is explicit."
+    else:
+        explosions = min(max(int(ctx.options.get("q_explosions", 7)), 1), 7)
+        shock = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+        fissure = extract_named(
+            ability, "Total Fissure Magic Damage", rank, ctx.stats, ctx.target
+        )
+        value = shock * explosions + fissure * explosions
+        parts = (
+            DamagePart(
+                "magic", shock, count=explosions, time_offset=0.6, hit_interval=0.2
+            ),
+            DamagePart(
+                "magic", fissure, count=explosions, time_offset=0.8, hit_interval=0.2
+            ),
+        )
+        detail = f"Molten Fissure: {explosions} shockwaves plus one sourced fissure packet per eruption."
+    entry = damage_entry(
+        ability.get("name", "Hwei Q"),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "magic",
+    )
+    entry["parts"] = parts
+    entry["detail"] = detail
+    return entry
+
+
+def _serenity(ctx: SlotCtx) -> dict[str, Any] | None:
+    variant = min(max(int(ctx.options.get("w_variant", 0)), 0), 2)
+    ability = ctx.ability("W", variant + 1)
+    if ability is None:
+        return None
+    rank = ctx.rank_for("W")
+    if rank < 1:
+        return None
+    if variant == 0:
+        return no_damage(
+            ctx,
+            name=ability.get("name", "Fleeting Current"),
+            reason="Movement-speed path and ghosting are utility state.",
+            slot="W",
+        )
+    if variant == 1:
+        shield = extract_named(
+            ability, "Total Maximum Shield", rank, ctx.stats, ctx.target
+        )
+        return no_damage(
+            ctx,
+            name=ability.get("name", "Pool of Reflection"),
+            reason=f"Protective pool; maximum self shield is {shield:g} and ally reduction is source-backed.",
+            slot="W",
+        )
+    bonus = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
+    hits = min(max(int(ctx.options.get("we_hits", 3)), 1), 3)
+    entry = no_damage(
+        ctx,
+        name=ability.get("name", "Stirring Lights"),
+        reason=f"Three empowered hits; {hits} next-hit charges selected.",
+        slot="W",
+    )
+    if entry is not None:
+        entry["on_hit"] = {
+            "name": "Stirring Lights",
+            "damage_per_hit": bonus,
+            "damage_type": "magic",
+        }
+        entry["detail"] = (
+            f"{hits} sourced hit(s) receive {bonus:g} bonus magic damage and mana restoration."
+        )
+    return entry
+
+
+def _torment(ctx: SlotCtx) -> dict[str, Any] | None:
+    variant = min(max(int(ctx.options.get("e_variant", 0)), 0), 2)
+    ability = ctx.ability("E", variant + 1)
+    if ability is None:
+        return None
+    rank = ctx.rank_for("E")
+    if rank < 1:
+        return None
+    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability.get("name", "Hwei E"),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "magic",
+    )
+    entry["parts"] = (
+        DamagePart("magic", value, time_offset=0.6 if variant == 2 else 0.3),
+    )
+    entry["detail"] = ("Grim Visage", "Gaze of the Abyss", "Crushing Maw")[
+        variant
+    ] + "; fear/root/pull are explicit control state."
+    return entry
+
+
+def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability("R", 0)
+    if ability is None:
+        return None
+    rank = ctx.rank_for("R")
+    if rank < 1:
+        return None
+    tick = extract_named(ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target)
+    explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    parts = (
+        DamagePart("magic", tick, count=12, time_offset=0.0, hit_interval=0.25),
+        DamagePart("magic", explosion, time_offset=3.0),
+    )
+    entry = damage_entry(
+        ability.get("name", "Spiraling Despair"),
+        rank,
+        extract_cooldown(ability, rank),
+        tick * 12 + explosion,
+        "magic",
+    )
+    entry["parts"] = parts
+    entry["event_order_certified"] = "twelve ticks then terminal explosion"
+    entry["detail"] = (
+        "Three-second aura: twelve 0.25-second Despair ticks and the sourced terminal explosion."
+    )
+    return entry
+
+
+SLOTS = {
+    "P": _signature,
+    "Q": _subject_damage,
+    "W": _serenity,
+    "E": _torment,
+    "R": _despair,
+}
+parse_abilities = build_parser(SLOTS, "Hwei")
+OPTIONS = [
+    {
+        "key": "q_variant",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "label": "Disaster subject (QQ/QW/QE)",
+    },
+    {
+        "key": "q_missing_health",
+        "type": "float",
+        "default": 1.0,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1,
+        "label": "Severing Bolt missing-health fraction",
+    },
+    {
+        "key": "q_explosions",
+        "type": "int",
+        "default": 7,
+        "min": 1,
+        "max": 7,
+        "label": "Molten Fissure explosions",
+    },
+    {
+        "key": "w_variant",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "label": "Serenity subject (WQ/WW/WE)",
+    },
+    {
+        "key": "we_hits",
+        "type": "int",
+        "default": 3,
+        "min": 1,
+        "max": 3,
+        "label": "Stirring Lights hits",
+    },
+    {
+        "key": "e_variant",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "label": "Torment subject (EQ/EW/EE)",
+    },
+    {
+        "key": "p_triggers",
+        "type": "int",
+        "default": 1,
+        "min": 0,
+        "max": 8,
+        "label": "Signature detonations",
+    },
+]
+ASSUMPTIONS = [
+    "The three subject toggles are state-only; the selected QQ/QW/QE, WQ/WW/WE and EQ/EW/EE entries are explicit variants.",
+    "Severing Bolt exposes the source maximum-damage branch without assuming the immobilized/isolated target gate.",
+    "Signature marks and Stirring Lights charges are visible state; no same-cast mark consumption is inferred.",
+]
+SOURCES = [
+    source_row(
+        "Hwei parent entry",
+        "https://wiki.leagueoflegends.com/en-us/Hwei",
+        4044079,
+        "2026-07-17T19:49:12Z",
+    ),
+    source_row(
+        "Hwei Q template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hwei/Q",
+        3634053,
+        "2023-11-21T03:28:28Z",
+    ),
+    source_row(
+        "Hwei W template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hwei/W",
+        3632882,
+        "2023-11-19T16:01:01Z",
+    ),
+    source_row(
+        "Hwei E template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hwei/E",
+        3632883,
+        "2023-11-19T16:01:08Z",
+    ),
+    source_row(
+        "Hwei R template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hwei/R",
+        3632890,
+        "2023-11-19T16:03:40Z",
+    ),
+]
+MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
+REVIEW_STATUS = "reviewed_module"

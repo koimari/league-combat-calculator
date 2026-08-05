@@ -430,6 +430,12 @@ def on_hit_entry(
     """Build an on-hit entry the fight engine applies per auto attack."""
     return {
         "name": name,
+        "damage_type": dmg_type,
+        "total_raw": 0.0,
+        # Rotation consumers expect every ability row to expose an ordered
+        # parts tuple, even when the row's damage is attached to the next
+        # basic attack rather than dealt by the cast itself.
+        "parts": (),
         "on_hit": {
             "name": f"{name} (on-hit)",
             "damage_per_hit": damage_per_hit,
