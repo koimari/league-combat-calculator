@@ -986,6 +986,19 @@ def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_e
     )
 
 
+def test_frontend_click_handlers_handle_missing_main_build_option_buckets():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "function itemOptionState(path)" in source
+    assert (
+        "const optionBuckets = state.attacker[key] || (state.attacker[key] = [{}, {}, {}, {}, {}, {}]);" in source
+    )
+    assert (
+        "return optionBuckets[Number(parts[2])] || (optionBuckets[Number(parts[2])] = {});" in source
+    )
+    assert "return Number.isFinite(id) && id > 0 ? id : 0;" in source
+
+
 def test_damage_breakdown_leads_with_result_and_keeps_event_audit_disclosed():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
@@ -1146,12 +1159,13 @@ def test_frontend_click_handlers_use_path_resolved_item_option_metadata_for_main
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
     assert "function itemOptionIdForPath(path)" in source
-    assert "const value = Number(pathValue(path));" in source
+    assert "const parts = String(path || \"\").split(\".\");" in source
+    assert "const id = Number(state.attacker[parts[1]]?.[Number(parts[2])]);" in source
     assert (
         'if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB"))'
         in source
     )
-    assert "return state.attacker[parts[1]]?.[Number(parts[2])];" in source
+    assert "return Number.isFinite(id) && id > 0 ? id : 0;" in source
     assert "function itemOptionSpecsForPath(path)" in source
     assert "const specs = itemOptionSpecsForPath(path);" in source
     assert "itemOptionState(path)[key] = Number(value);" in source

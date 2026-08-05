@@ -570,16 +570,17 @@ function itemOptionSpec(id) {
 
 function itemOptionIdForPath(path) {
   const parts = String(path || "").split(".");
-  const value = Number(pathValue(path));
-  if (Number.isFinite(value) && value > 0) return value;
   if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB")) {
-    return state.attacker[parts[1]]?.[Number(parts[2])];
+    const id = Number(state.attacker[parts[1]]?.[Number(parts[2])]);
+    return Number.isFinite(id) && id > 0 ? id : 0;
   }
   if ((parts[0] === "targets" || parts[0] === "allies") && parts[2] === "items") {
     const loadout = state[parts[0]]?.[Number(parts[1])];
-    return loadout?.items?.[Number(parts[3])];
+    const id = Number(loadout?.items?.[Number(parts[3])]);
+    return Number.isFinite(id) && id > 0 ? id : 0;
   }
-  return value;
+  const value = Number(pathValue(path));
+  return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
 function itemOptionSpecsForPath(path) {
@@ -628,7 +629,8 @@ function itemOptionState(path) {
   const parts = path.split(".");
   if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB")) {
     const key = `${parts[1]}ItemOptions`;
-    return state.attacker[key][Number(parts[2])] || (state.attacker[key][Number(parts[2])] = {});
+    const optionBuckets = state.attacker[key] || (state.attacker[key] = [{}, {}, {}, {}, {}, {}]);
+    return optionBuckets[Number(parts[2])] || (optionBuckets[Number(parts[2])] = {});
   }
   if ((parts[0] === "targets" || parts[0] === "allies") && parts[2] === "items") {
     const loadout = state[parts[0]][Number(parts[1])];
