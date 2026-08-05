@@ -1,0 +1,63 @@
+{
+  "checkpoint": "CP10.5",
+  "scope": [
+    "Naafiri",
+    "Nami",
+    "Nasus",
+    "Nautilus",
+    "Neeko",
+    "Nidalee",
+    "Nilah",
+    "Nocturne",
+    "Nunu & Willump",
+    "Olaf",
+    "Orianna",
+    "Ornn"
+  ],
+  "newly_certified": [
+    "Naafiri",
+    "Nami",
+    "Nasus",
+    "Nautilus",
+    "Neeko",
+    "Nidalee",
+    "Nilah",
+    "Nocturne",
+    "Nunu & Willump",
+    "Olaf"
+  ],
+  "already_exact_modules": ["Orianna", "Ornn"],
+  "full_entry_wiki_audit": {
+    "source": "https://wiki.leagueoflegends.com/en-us/",
+    "snapshot_manifest_sha256": "b45fecdf18719e2409b6cf9791b72fefcd9c8f229f514dedf910cfbabe18d39c",
+    "parent_and_ability_receipts": 72,
+    "parent_revisions": {
+      "Naafiri": 4025794,
+      "Nami": 4024660,
+      "Nasus": 3892649,
+      "Nautilus": 4013858,
+      "Neeko": 3892682,
+      "Nidalee": 4008141,
+      "Nilah": 4007960,
+      "Nocturne": 3949583,
+      "Nunu & Willump": 3275996,
+      "Olaf": 3952811,
+      "Orianna": 3892665,
+      "Ornn": 4012186
+    },
+    "ability_template_receipts": 60,
+    "status": "ready"
+  },
+  "full_audit_totals_after_batch": {
+    "entries_audited": 410,
+    "champion_modules_ready": 111,
+    "champion_modules_review_pending": 62,
+    "passed": false
+  },
+  "notes": [
+    "The complete parent entry was read for every champion in scope; each parent enumerates passive plus Q/W/E/R references.",
+    "Ten previously generated packets now have exact reviewed modules; Orianna and Ornn were already exact modules and are included to preserve the alphabetical audit receipt boundary.",
+    "The runtime packet asset supplies typed rank arrays and cooldowns; non-damaging state and utility branches remain explicit state/out-of-scope rows.",
+    "The detailed parent and ability-template hashes, text, and section receipts are in docs/wiki-full-entry-audit.json."
+  ]
+}
