@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "checkpoint": "CP21",
+  "run_at": "2026-08-05T03:30:00Z",
+  "production": {
+    "url": "https://scryglass-item-calculator.vercel.app/",
+    "deployment_id": "dpl_7cwkQHLmu6e9hTCfgU8Cb9zuRRSB",
+    "sha": "bec9df1a9c901c2398b80cf6863be1062a58cdb0",
+    "ready": true,
+    "browser_account": "KoiAccessAccount"
+  },
+  "local_gates": {
+    "pytest": "3006 passed",
+    "pylint": "9.61/10",
+    "black": "393 files unchanged",
+    "javascript_syntax": "passed",
+    "diff_check": "passed",
+    "golden_snapshot": "identical",
+    "acceptance_matrix": "10/10",
+    "champion_optimizer_matrix": {
+      "exercised": 173,
+      "passed": true,
+      "partial_or_unexhaustive": 0
+    },
+    "full_wiki_entry_audit": {
+      "champions": 173,
+      "items": 237,
+      "entries_ready": 410,
+      "review_pending": 0
+    },
+    "item_umbrella_audit": {
+      "attacker_blocked": 24,
+      "target_blocked": 6,
+      "review_pending": 0,
+      "unexplained_blocks": 0,
+      "path_mismatches": 0,
+      "unresolved_source_conflicts": 0
+    }
+  },
+  "production_scenarios": [
+    {
+      "id": "ziggs-gunmetal-upgrade",
+      "click_state": "Ziggs level 12 mid, role quest complete, Gunmetal Greaves selected",
+      "participants": ["main:Ziggs", "enemy:Galio"],
+      "api_result": "REVIEWED",
+      "result": "600 TDD",
+      "coverage": "Gunmetal enabled as stats only; AS 0.8, MS 370, 5% life steal",
+      "optimizer": "83 certified of 83 mid-role-compatible candidates",
+      "explanation": "Noxian Gait is explicitly out of scope; sourced boot stats remain applied."
+    },
+    {
+      "id": "roster-quest-and-boots",
+      "click_state": "Galio level 12 mid quest complete; Plated Steelcaps selected",
+      "participants": ["main:Ziggs", "enemy:Galio"],
+      "api_result": "REVIEWED",
+      "result": "816 TDD after Armored Advance upgrade",
+      "coverage": "Enemy boot auto-upgraded from Plated Steelcaps to Armored Advance",
+      "optimizer": "83 certified of 83",
+      "explanation": "Enemy quest and boot state serialized and recalculated."
+    },
+    {
+      "id": "ally-support-quest",
+      "click_state": "Lulu level 12 support quest complete; Dream Maker selected",
+      "participants": ["main:Ziggs", "ally:Lulu", "enemy:Galio"],
+      "api_result": "REVIEWED",
+      "result": "816 TDD / 209 utility in the coupled timeline",
+      "coverage": "World Atlas was disabled with the completed-quest reason; Dream Maker was enabled",
+      "optimizer": "83 certified of 83",
+      "explanation": "Support quest completion gates starter versus upgraded support items."
+    },
+    {
+      "id": "objective-filters",
+      "click_state": "Same roster, each objective selected in turn",
+      "participants": ["main:Ziggs", "ally:Lulu", "enemy:Galio"],
+      "api_result": "REVIEWED when the objective has an admissible outcome",
+      "result": "overall B 900 vs A 816; survival tie 1650 eHP; damage B 1036 vs A 952; utility tie 209",
+      "coverage": "Kill pressure correctly withheld when no target can be defeated; became available at a killable target",
+      "optimizer": "Overall 83/83; kill 83/83; survival 83/83; damage 83/83; utility 83/83",
+      "explanation": "Kill pressure remains fail-closed for a no-kill scenario rather than inventing a time."
+    },
+    {
+      "id": "high-risk-item-effects",
+      "click_state": "Eclipse in Build A, Death's Dance in Build B",
+      "participants": ["main:Ziggs", "ally:Lulu", "enemy:Galio"],
+      "api_result": "REVIEWED",
+      "result": "Eclipse 613 TDD / 1722 eHP / 93 utility; Death's Dance 598 TDD / 1699 eHP / 49 utility",
+      "coverage": "Both candidates remained eligible and ranked",
+      "optimizer": "Eclipse appeared in utility BIS with its sourced shield explanation",
+      "explanation": "Eclipse shield and Death's Dance survival/healing effects are not withheld."
+    },
+    {
+      "id": "target-item-and-recovery",
+      "click_state": "Thornmail on enemy; Fimbulwinter inspected as a blocked target option; clear/re-render",
+      "participants": ["main:Ziggs", "ally:Lulu", "enemy:Galio"],
+      "api_result": "REVIEWED",
+      "result": "747 TDD vs 734 TDD after Thornmail; clear returned the same reviewed state",
+      "coverage": "Fimbulwinter disabled with its explicit shield/health-state reason",
+      "optimizer": "83/83 after recovery",
+      "explanation": "Unsupported target mechanics fail closed and recover without leaving a stale error."
+    },
+    {
+      "id": "timeline-and-controls",
+      "click_state": "2 rotations, 10-second windows, calculated then explicit auto scheduling; E hits 2; R Outer blast",
+      "participants": ["main:Ziggs", "ally:Lulu", "enemy:Galio"],
+      "api_result": "REVIEWED",
+      "result": "78% calculated with 6 autos/rotation; explicit 78% accepted",
+      "coverage": "Copy B to A, replace, clear, boots off/on, ally effects on, and rerender all completed",
+      "optimizer": "Objective filters remained available after each transition",
+      "explanation": "Ordered rotations and calculated/explicit auto scheduling remain consistent."
+    },
+    {
+      "id": "champion-fixtures",
+      "click_state": "Akshan, Bel'Veth, Qiyana, and Wukong representative production fixtures",
+      "participants": ["main:Akshan", "main:Bel'Veth", "main:Qiyana", "main:Wukong", "enemy:Galio"],
+      "api_result": "REVIEWED or QUALIFIED with visible qualification; no partial/unexhaustive status",
+      "result": "Successful non-error calculations",
+      "coverage": "Local 173-champion matrix is certified with zero partial/unexhaustive outcomes",
+      "optimizer": "No production candidate withholding observed in the representative fixtures",
+      "explanation": "Champion-specific options remain visible and qualified where the UI exposes sourced uncertainty."
+    }
+  ],
+  "preview_note": "The CP20 follow-up preview was READY at the exact PR SHA, but Vercel SSO redirected the dedicated browser and authenticated fetch; production verification above is the authoritative live evidence.",
+  "release_gate": "open",
+  "release_gate_reason": "CP21 evidence is recorded; #20 remains open while the child item-family acceptance and any remaining qualified champion fixtures are reconciled."
+}
