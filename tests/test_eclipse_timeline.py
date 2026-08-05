@@ -2,6 +2,9 @@
 
 from src.calculator.ability_spec import DamagePart
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.app import _load_public_champion
+from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.pipeline import FightParams, run_fight
 
 
 def _stats() -> dict:
@@ -121,3 +124,33 @@ def test_eclipse_can_pair_an_ability_with_an_authored_auto_swing() -> None:
     assert row["count"] == 1
     assert row["damage_events"][0]["time"] == 0.0
     assert row["damage_events"][0]["event_precision"] == "exact"
+
+
+def test_ziggs_reviewed_single_hit_packets_keep_eclipse_event_order_exact() -> None:
+    """Ziggs' direct Q/W/E/R packets certify Eclipse's third trigger."""
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 20,
+            "rotations": 2,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 0,
+            "auto_attack_uptime_mode": "calculated",
+            "ability_ranks": {"Q": 4, "W": 3, "E": 3, "R": 2},
+            "role": "mid",
+            "role_quest_complete": True,
+        },
+        deterministic=True,
+    )
+    result = run_fight(
+        _load_public_champion("Ziggs"),
+        12,
+        [get_item_by_name("Eclipse")],
+        params,
+    )
+
+    row = result["breakdown"]["proc_Eclipse"]
+    assert row["count"] >= 2
+    assert all(event["event_precision"] == "exact" for event in row["damage_events"])
+    assert "proc_Eclipse" in result["timeline_coverage"]["exact_sources"]
+    assert result["timeline_coverage"]["complete"] is True

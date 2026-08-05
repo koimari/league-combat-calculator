@@ -114,13 +114,28 @@ def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Maximum Total Magic Damage", rank, ctx.stats, ctx.target
     )
     total = min(full + (mines - 1) * reduced, cap)
-    return damage_entry(
+    entry = damage_entry(
         ability.get("name", "Hexplosive Minefield"),
         rank,
         extract_cooldown(ability, rank),
         total,
         "magic",
     )
+    entry["event_order_certified"] = "single_hit"
+    return entry
+
+
+def _single_hit_certified(parser: Any) -> Any:
+    """Attach the reviewed one-hit boundary to a slot parser result."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is not None:
+            entry["event_order_certified"] = "single_hit"
+        return entry
+
+    parse.phase = getattr(parser, "phase", "damage")
+    return parse
 
 
 OPTIONS = [
@@ -161,16 +176,23 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # These reviewed packets are one direct champion hit at the authored cast
+    # boundary.  The explicit certification is important to ordered item
+    # passives (Eclipse/Muramana/Bastionbreaker): it is not a guessed
+    # multi-tick schedule, and E's mine count remains a single aggregate
+    # packet under the selected ``mines_hit`` option.
+    "Q": _single_hit_certified(simple_damage(attr="Magic Damage", dmg_type="magic")),
+    "W": _single_hit_certified(simple_damage(attr="Magic Damage", dmg_type="magic")),
     "E": _hexplosive_minefield,
-    "R": by_option(
-        "r_sweet_spot",
-        {
-            True: simple_damage(attr="Epicenter Magic Damage", dmg_type="magic"),
-            False: simple_damage(attr="Reduced Damage", dmg_type="magic"),
-        },
-        default=True,
+    "R": _single_hit_certified(
+        by_option(
+            "r_sweet_spot",
+            {
+                True: simple_damage(attr="Epicenter Magic Damage", dmg_type="magic"),
+                False: simple_damage(attr="Reduced Damage", dmg_type="magic"),
+            },
+            default=True,
+        )
     ),
     "P": _short_fuse,
 }

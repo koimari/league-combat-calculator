@@ -31672,6 +31672,7 @@
           "cast_time": 0.25,
           "cooldown": 16.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Hexplosive Minefield",
           "parts": [
             "DamagePart(magic, amount=66.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -31685,6 +31686,7 @@
           "cast_time": 0.25,
           "cooldown": 4.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Bouncing Bomb",
           "parts": [
             "DamagePart(magic, amount=280.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -31698,6 +31700,7 @@
           "cast_time": 0.38,
           "cooldown": 95.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Mega Inferno Bomb",
           "parts": [
             "DamagePart(magic, amount=500.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -31711,6 +31714,7 @@
           "cast_time": 0.25,
           "cooldown": 16.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Satchel Charge",
           "parts": [
             "DamagePart(magic, amount=140.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -40057,7 +40061,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "8fe0dc71d4f068a7b17f4b6ac3f266ffef23ac8d",
+    "git_head": "8b2e75249f2e277ecacecfc01bc6100101bca2b1",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785725170.32038,
