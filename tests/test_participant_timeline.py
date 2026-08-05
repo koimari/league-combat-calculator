@@ -2481,6 +2481,102 @@ def test_deaths_dance_defers_damage_and_defy_clears_remaining_ticks():
     assert sum(event["amount"] for event in healing["main"]) == pytest.approx(75.0)
 
 
+def test_maw_lifeline_enables_post_trigger_omnivamp():
+    from src.calculator.defensive_effects import StartingDefenses
+
+    holder = Combatant(
+        participant_id="main",
+        team="main",
+        champion_data={"name": "Aatrox"},
+        level=18,
+        items=(get_item_by_name("Maw of Malmortius"),),
+        stats={"health": 100.0, "is_melee": True},
+        defenses=StartingDefenses(
+            threshold_shield_amount=20.0,
+            threshold_shield_health_ratio=0.30,
+            threshold_shield_duration=3.0,
+            threshold_shield_damage_type="magic",
+            maw_lifeline_omnivamp_percent=10.0,
+        ),
+    )
+    enemy = _dummy_combatant("enemy", "enemy", health=100.0)
+    incoming = {
+        "main": [
+            {
+                "time": 0.0,
+                "damage": 90.0,
+                "damage_type": "magic",
+                "attacker": "enemy",
+                "target": "main",
+                "sequence": 0,
+                "_event_id": "lifeline",
+            }
+        ],
+        "enemy": [
+            {
+                "time": 1.0,
+                "damage": 20.0,
+                "damage_type": "physical",
+                "attacker": "main",
+                "target": "enemy",
+                "basic_attack": True,
+                "source_key": "auto_attacks",
+                "sequence": 0,
+                "_event_id": "followup",
+            }
+        ],
+    }
+    result = _simulate_survival([holder, enemy], incoming, {}, {}, 2.0)
+    assert result["main"]["threshold_shield_triggered"] is True
+    assert result["main"]["healing_received"] == pytest.approx(2.0)
+
+
+def test_immortal_path_below_half_amplifies_non_vamp_recovery():
+    holder = Combatant(
+        participant_id="main",
+        team="main",
+        champion_data={"name": "Aatrox"},
+        level=18,
+        items=(get_item_by_name("Immortal Path"),),
+        stats={"health": 100.0},
+        defenses=SimpleNamespace(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=0.0,
+            healing_received_multiplier=1.0,
+        ),
+    )
+    enemy = _dummy_combatant("enemy", "enemy", health=100.0)
+    result = _simulate_survival(
+        [holder, enemy],
+        {
+            "main": [
+                {
+                    "time": 0.0,
+                    "damage": 60.0,
+                    "damage_type": "true",
+                    "attacker": "enemy",
+                    "target": "main",
+                    "_event_id": "hit",
+                }
+            ]
+        },
+        {
+            "main": [
+                {
+                    "time": 1.0,
+                    "amount": 10.0,
+                    "kind": "heal",
+                    "source": "direct",
+                }
+            ]
+        },
+        {},
+        2.0,
+    )
+    assert result["main"]["healing_received"] == pytest.approx(11.2)
+
+
 def test_deaths_dance_defy_starts_heal_at_delayed_takedown_once():
     from src.calculator.defensive_effects import resolve_starting_defenses
 

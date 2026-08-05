@@ -96919,7 +96919,7 @@
                 "manual_attacker": false,
                 "optimizer": false
               },
-              "reason": "Eternity's damage-based mana restoration and per-cast healing are not modelled.",
+              "reason": "Eternity's damage-based mana restoration is not yet represented in the shared resource ledger; its timestamped per-cast healing is modeled.",
               "verdict": "withheld"
             }
           ],
@@ -96939,11 +96939,11 @@
             }
           ],
           "runtime_gaps": [
-            "Eternity's damage-based mana restoration and per-cast healing are not modelled."
+            "Eternity's damage-based mana restoration is not yet represented in the shared resource ledger; its timestamped per-cast healing is modeled."
           ],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "5d9560ea3f078e6ea4538513798d268f3c4968db8f21a252c07b871301255f6d",
+        "expected_effects_sha256": "a924340ad18c2c81331e836df4de1ffb1b1fa9a6a0193b8cd7c592c29b164d0c",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
@@ -96951,8 +96951,8 @@
           "optimizer_eligible": false,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Eternity's damage-based mana restoration and per-cast healing are not modelled.",
-          "registry_effect_type": null,
+          "reason": "Eternity's damage-based mana restoration is not yet represented in the shared resource ledger; its timestamped per-cast healing is modeled.",
+          "registry_effect_type": "sustain",
           "review_issue_refs": [
             45
           ],
@@ -98592,20 +98592,18 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                45
-              ],
+              "issue_refs": [],
               "name": "Helping Hand",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Helping Hand's 5 bonus physical damage is restricted to minions; the item's combat regeneration state is not modelled.",
-              "verdict": "withheld"
+              "reason": "Helping Hand's 5 bonus physical damage is restricted to minions; the full Wiki entry has no champion-facing sustain branch.",
+              "verdict": "out_of_scope"
             }
           ],
           "effects": [
@@ -98623,25 +98621,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Helping Hand's 5 bonus physical damage is restricted to minions; the item's combat regeneration state is not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "65b81f080ce5326cbffcc6c65e8ba3bb6f77c31495c919fa2ede06943adb22d5",
+        "expected_effects_sha256": "220ae8916b7435c69edcde6edfd7809a8e0360759b5d586a07c13a16f40e3d0d",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Helping Hand's 5 bonus physical damage is restricted to minions; the item's combat regeneration state is not modelled.",
+          "reason": "Helping Hand's 5 bonus physical damage is restricted to minions; the full Wiki entry has no champion-facing sustain branch.",
           "registry_effect_type": null,
-          "review_issue_refs": [
-            45
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "stats_only"
         },
         "runtime_reasoned": true
       },
@@ -102464,37 +102458,33 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                40
-              ],
+              "issue_refs": [],
               "name": "Slay",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Now and Forever's health-state damage amplification is not modelled.",
-              "verdict": "withheld"
+              "reason": "Slay stacks, above-half damage amplification, and the bounded health-state receipt are represented; below-half recovery is applied by the ordered ledger.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                40
-              ],
+              "issue_refs": [],
               "name": "Now and Forever",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Now and Forever's health-state damage amplification is not modelled.",
-              "verdict": "withheld"
+              "reason": "Slay stacks, above-half damage amplification, and the bounded health-state receipt are represented; below-half recovery is applied by the ordered ledger.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -102525,25 +102515,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Now and Forever's health-state damage amplification is not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "4b5918086d9c9e128d3567832ea0112641537cab15e131702948b7c20685fd6a",
+        "expected_effects_sha256": "171605304ceb5bda96263fb6ccb4a4266c71aa06971059befe7b5c47400c247c",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Now and Forever's health-state damage amplification is not modelled.",
-          "registry_effect_type": null,
-          "review_issue_refs": [
-            40
-          ],
-          "status": "blocked"
+          "reason": "Slay stacks, above-half damage amplification, and the bounded health-state receipt are represented; below-half recovery is applied by the ordered ledger.",
+          "registry_effect_type": "damage_amp",
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },

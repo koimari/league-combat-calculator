@@ -393,6 +393,9 @@ def _has_ordered_item_sustain(
         "Doran's Blade",
         "Doran's Ring",
         "Doran's Shield",
+        "Catalyst of Aeons",
+        "Immortal Path",
+        "Maw of Malmortius",
     }
     for item in items:
         name = str(item.get("name", ""))
@@ -1277,6 +1280,21 @@ def _simulate_survival(
                 1.0,
                 float(getattr(defenses, "healing_received_multiplier", 1.0) or 1.0),
             ),
+            "maw_lifeline_omnivamp_percent": max(
+                0.0,
+                float(getattr(defenses, "maw_lifeline_omnivamp_percent", 0.0) or 0.0),
+            ),
+            "maw_lifeline_omnivamp_active": False,
+            "immortal_path_below_half_healing_multiplier": (
+                sustain_effect_value(
+                    "Immortal Path", "health_state_healing_multiplier_below_half"
+                )
+                if any(
+                    str(item.get("name", "")) == "Immortal Path"
+                    for item in combatant.items
+                )
+                else 0.0
+            ),
             "threshold_shield": max(
                 0.0, float(getattr(defenses, "threshold_shield_amount", 0.0) or 0.0)
             ),
@@ -1988,7 +2006,9 @@ def _simulate_survival(
             str(item.get("name", "")) == "Doran's Shield" for item in combatant.items
         ):
             return
-        if float(event.get("damage", 0.0) or 0.0) <= 0.0:
+        # Enduring Focus does not trigger from damage absorbed entirely by a
+        # shield; only health damage starts the recovery window.
+        if float(event.get("_applied_to_health", 0.0) or 0.0) <= 0.0:
             return
         total_melee = sustain_effect_value(
             "Doran's Shield", "enduring_focus_total_melee"
@@ -2034,7 +2054,28 @@ def _simulate_survival(
         for tick_index in range(1, ticks + 1):
             heal_event = {
                 "time": round(event_time + tick * tick_index, 6),
-                "amount": total / ticks,
+                # Enduring Focus is based on current missing health, not the
+                # health state at the triggering hit.  Re-evaluate the
+                # diminishing-return formula at every sourced tick.
+                "amount": 0.0,
+                "amount_formula": (
+                    lambda current_health, maximum_health, total_cap=total_cap, missing_cap=missing_cap, ticks=ticks: (
+                        total_cap
+                        * min(
+                            1.0,
+                            max(
+                                0.0,
+                                (
+                                    1.0 - current_health / maximum_health
+                                    if maximum_health > 0.0
+                                    else 0.0
+                                ),
+                            )
+                            / missing_cap,
+                        )
+                        / ticks
+                    )
+                ),
                 "source": "Doran's Shield (Enduring Focus)",
                 "kind": "regen",
                 "attacker": participant_id,
@@ -2069,7 +2110,17 @@ def _simulate_survival(
         """Apply received-healing modifiers except to vamp stat packets."""
         if str(event.get("healing_category", "")) == "vamp":
             return 1.0
-        return float(state["healing_received_multiplier"])
+        multiplier = float(state["healing_received_multiplier"])
+        below_half_bonus = float(
+            state.get("immortal_path_below_half_healing_multiplier", 0.0) or 0.0
+        )
+        if (
+            below_half_bonus > 0.0
+            and state["max_health"] > 0.0
+            and state["health"] <= state["max_health"] * 0.5 + 1e-9
+        ):
+            multiplier *= 1.0 + below_half_bonus
+        return multiplier
 
     def _apply_ichorshield(
         state: dict[str, Any], event: MutableMapping[str, Any], excess: float
@@ -3133,6 +3184,11 @@ def _simulate_survival(
                 state["shields"]["general_shield"] += state["threshold_shield"]
                 state["threshold_shield"] = 0.0
                 event["threshold_shield_triggered"] = True
+                if state["maw_lifeline_omnivamp_percent"] > 0.0:
+                    state["maw_lifeline_omnivamp_active"] = True
+                    event["maw_lifeline_omnivamp_activated"] = round(
+                        state["maw_lifeline_omnivamp_percent"], 6
+                    )
             if health_due:
                 bonus = state["threshold_health_bonus"]
                 state["max_health"] += bonus
@@ -3164,9 +3220,41 @@ def _simulate_survival(
         # and ``live_damage`` above for diagnostics without letting overkill
         # inflate team-fight TTD or BIS scores.
         event["damage"] = round(event_absorbed + applied_to_health, 6)
+        event["_applied_to_health"] = round(applied_to_health, 6)
         if event["damage"] > 0.0:
             state["last_damage_time"] = float(event_time)
             _schedule_doran_shield_recovery(participant_id, event, float(event_time))
+        # Maw's post-Lifeline omnivamp is a temporary holder stat.  Apply it
+        # to the exact post-mitigation packet that follows the trigger; do not
+        # let reactive/deferred packets or true damage manufacture healing.
+        if (
+            source_id in states
+            and source_id != participant_id
+            and states[str(source_id)]["maw_lifeline_omnivamp_active"]
+            and not event.get("_reactive")
+            and not event.get("_deferred")
+            and damage_type in {"physical", "magic"}
+            and event["damage"] > 0.0
+        ):
+            holder_state = states[str(source_id)]
+            maw_heal = event["damage"] * (
+                holder_state["maw_lifeline_omnivamp_percent"] / 100.0
+            )
+            if maw_heal > 0.0:
+                heal_event = {
+                    "time": float(event_time),
+                    "amount": maw_heal,
+                    "source": "Maw of Malmortius (Lifeline omnivamp)",
+                    "kind": "heal",
+                    "healing_category": "vamp",
+                    "attacker": str(source_id),
+                    "target": str(source_id),
+                    "_event_id": f"{event_id}:maw-omnivamp",
+                    "_trigger_event_id": event_id,
+                    "sequence": _event_sequence(event) + 1,
+                }
+                expanded_healing[str(source_id)].append(heal_event)
+                _insert_live_heal(heal_event, str(source_id))
         # Noxian Endurance/Persistence grant their typed shield *after* the
         # triggering champion hit.  Keep the shield in the timed pool so it
         # expires and is consumed in the same order as every other sourced

@@ -1712,7 +1712,7 @@ class TestIconUrlsAreHttps:
         assert items["Rod of Ages"]["model_coverage"]["status"] == "modeled_state"
         assert items["Heartsteel"]["model_coverage"]["optimizer_eligible"] is True
         assert items["Rod of Ages"]["model_coverage"]["optimizer_eligible"] is True
-        assert boots["Immortal Path"]["model_coverage"]["status"] == "blocked"
+        assert boots["Immortal Path"]["model_coverage"]["status"] == "modeled_state"
         assert items["Guardian Angel"]["model_coverage"]["outcome_dimensions"] == [
             "revive"
         ]

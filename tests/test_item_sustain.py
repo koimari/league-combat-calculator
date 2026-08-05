@@ -63,6 +63,50 @@ def test_dorans_ring_converts_only_when_mana_cannot_be_gained():
     assert _item_self_healing_events(full_mana, [item], 2.0) == []
 
 
+def test_catalyst_heals_from_timestamped_mana_spent_with_sourced_caps():
+    item = get_item_by_name("Catalyst of Aeons")
+    result = {
+        "champion_stats": {},
+        "damage_events": [],
+        "breakdown": {},
+        "cast_timeline": [
+            {
+                "time": 0.1,
+                "slot": "Q",
+                "ordinal": 1,
+                "resource_before": 500.0,
+                "resource_after": 400.0,
+                "resource_cost": 100.0,
+            },
+            {
+                "time": 0.2,
+                "slot": "W",
+                "ordinal": 1,
+                "resource_before": 400.0,
+                "resource_after": 300.0,
+                "resource_cost": 100.0,
+            },
+            {
+                "time": 1.1,
+                "slot": "E",
+                "ordinal": 1,
+                "resource_before": 300.0,
+                "resource_after": 200.0,
+                "resource_cost": 100.0,
+            },
+        ],
+    }
+    events = _item_self_healing_events(result, [item], 2.0)
+    assert [event["amount"] for event in events if "Catalyst" in event["source"]] == [
+        20.0,
+        20.0,
+    ]
+    assert [event["time"] for event in events if "Catalyst" in event["source"]] == [
+        0.1,
+        1.1,
+    ]
+
+
 def test_dorans_blade_no_longer_reports_stale_omnivamp(ahri_data):
     """The current entry's Life Draining passive supersedes old cache text."""
     params = FightParams.from_request(

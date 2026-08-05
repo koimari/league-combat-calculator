@@ -42,3 +42,11 @@ all described branches, cooldown/range metadata, typed runtime verdict,
 issue references, and path coverage must remain inspectable. The same rule
 applies to each champion P/Q/W/E/R slot, including utility-only slots and
 alternate forms.
+
+This requirement is also a patch-day and implementation gate. A patch refresh
+must run the repository's `$patch-update` workflow before any new value is
+promoted. A new or changed item effect must follow `$add-item-effect`: capture
+the complete parent page first, keep numeric values in typed item accessors,
+and add focused ordered-event tests for every accepted branch. A parser
+refresh, Riot tooltip, or isolated module excerpt never substitutes for the
+full-page review receipt.

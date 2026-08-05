@@ -23,7 +23,6 @@ ItemCoverageStatus = Literal[
 _BLOCKED_REASONS: dict[str, str] = {
     "Ardent Censer": "Sanctify's conditional self buff and on-hit damage are not modelled.",
     "Fimbulwinter": "Awe's mana scaling and Everlasting shield state are not modelled.",
-    "Immortal Path": "Now and Forever's health-state damage amplification is not modelled.",
     "Imperial Mandate": (
         "Control's ability haste and Command's damage amplification are not modelled."
     ),
@@ -36,15 +35,11 @@ _BLOCKED_REASONS: dict[str, str] = {
         "Support Quest's 400 gold Shared Riches upgrade and Runic Compass/Ward "
         "transition are not modelled."
     ),
-    "Doran's Helm": (
-        "Helping Hand's 5 bonus physical damage is restricted to minions; the "
-        "item's combat regeneration state is not modelled."
-    ),
     "Phage": "Rage's conditional movement-speed state is not modelled.",
     "Tear of the Goddess": "Manaflow stack progression is not modelled.",
     "Catalyst of Aeons": (
-        "Eternity's damage-based mana restoration and per-cast healing are not "
-        "modelled."
+        "Eternity's damage-based mana restoration is not yet represented in the "
+        "shared resource ledger; its timestamped per-cast healing is modeled."
     ),
     "Runic Compass": (
         "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active "
@@ -87,6 +82,7 @@ _STATEFUL_MODELED_ITEMS: dict[str, str] = {
     "Hubris": "Eminence's bounded starting stacks and timed window are represented by a sourced state receipt.",
     "Axiom Arc": "Flux's sourced takedown refund fraction and trigger window are represented by a terminal-state receipt.",
     "Endless Hunger": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
+    "Immortal Path": "Slay stacks, above-half damage amplification, and the bounded health-state receipt are represented; below-half recovery is applied by the ordered ledger.",
 }
 
 
@@ -98,6 +94,10 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
     "Doran's Ring": (
         "Drain restores mana first and converts to a sourced health packet only "
         "when the actor cannot gain mana; Helping Hand is minion-only."
+    ),
+    "Doran's Helm": (
+        "Helping Hand's 5 bonus physical damage is restricted to minions; the "
+        "full Wiki entry has no champion-facing sustain branch."
     ),
     "Doran's Shield": (
         "Enduring Focus's sourced missing-health regeneration is replayed after "
@@ -403,6 +403,7 @@ _REVIEW_ISSUE_REFS: dict[str, tuple[int, ...]] = {
     "Doran's Helm": (45,),
     "Actualizer": (45,),
     "Catalyst of Aeons": (45,),
+    "Immortal Path": (45,),
     "Ardent Censer": (48,),
     "Bandlepipes": (48,),
     "World Atlas": (48, 50, 82),

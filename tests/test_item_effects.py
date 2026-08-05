@@ -927,6 +927,20 @@ class TestResolveStatEffects:
         assert bonuses.permanent_ap_multiplier == 1.0
         assert bonuses.permanent_bonus_ad == 0.0
 
+    def test_immortal_path_slay_stacks_add_typed_omnivamp(self) -> None:
+        bonuses = resolve_stat_effects(
+            _build("Immortal Path"),
+            bonus_mana=0.0,
+            max_mana=500.0,
+            bonus_health=0.0,
+            base_attack_damage=100.0,
+            bonus_mana_regen_percent=0.0,
+            is_melee=True,
+            level=18,
+            item_options={"Immortal Path": {"slay_stacks": 10}},
+        )
+        assert bonuses.bonus_omnivamp == pytest.approx(6.0)
+
     def test_combined_build_resolves_every_conversion(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
