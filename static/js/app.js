@@ -4011,8 +4011,12 @@ document.addEventListener("click", (event) => {
     const path = itemOptionButton.dataset.itemOptionPath;
     const key = itemOptionButton.dataset.itemOptionKey;
     const optionId = Number(itemOptionButton.dataset.itemOptionId);
-    const specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);
-    const spec = specs.find((entry) => entry.key === key);
+    let specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);
+    let spec = specs.find((entry) => entry.key === key);
+    if (!spec) {
+      specs = itemOptionSpecsForPath(path);
+      spec = specs.find((entry) => entry.key === key);
+    }
     if (!spec) return;
     const next = Math.max(spec.min, Math.min(spec.max, itemOptionValue(path, key) + Number(itemOptionButton.dataset.delta || 0)));
     setItemOptionValue(path, key, next);

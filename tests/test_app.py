@@ -1173,13 +1173,26 @@ def test_frontend_click_handlers_use_path_resolved_item_option_metadata_for_main
     assert 'data-item-option-id="${escapeHtml(id)}"' in source
     assert "const optionId = Number(itemOptionButton.dataset.itemOptionId);" in source
     assert (
-        "const specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);"
+        "let specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);"
         in source
     )
     assert (
         "const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);"
         in source
     )
+
+
+def test_frontend_click_handlers_fallback_to_path_resolved_item_options_when_rendered_id_stale():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert (
+        "let specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);"
+        in source
+    )
+    assert "let spec = specs.find((entry) => entry.key === key);" in source
+    assert "if (!spec) {" in source
+    assert "specs = itemOptionSpecsForPath(path);" in source
+    assert "spec = specs.find((entry) => entry.key === key);" in source
 
 
 def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats():
