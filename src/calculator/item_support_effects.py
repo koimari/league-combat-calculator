@@ -718,6 +718,25 @@ def schedule_knights_vow(
             continue
         fraction = ally_item_effect_value("Knight's Vow", "redirect_fraction")
         heal_fraction = ally_item_effect_value("Knight's Vow", "holder_heal_fraction")
+        within_range = _option(holder, "Knight's Vow", "worthy_within_range", 1.0)
+        holder_health_ready = _option(
+            holder, "Knight's Vow", "holder_above_30_percent", 1.0
+        )
+        # Pledge is unit-targeted and only operates inside 1250 units.  The
+        # roster has no spatial coordinates, so the scenario must expose the
+        # authored in-range assumption instead of letting the calculator
+        # silently guess it.  The holder-health gate is checked again by the
+        # ordered survival walk as health changes over time.
+        if within_range <= 0.0 or holder_health_ready <= 0.0:
+            reason = (
+                "worthy_out_of_range"
+                if within_range <= 0.0
+                else "holder_health_gate_disabled"
+            )
+            for event in incoming.get(target.participant_id, []):
+                if str(event.get("damage_type", "")) in {"physical", "magic"}:
+                    event["redirect_skipped_reason"] = reason
+            continue
         for event in incoming.get(target.participant_id, []):
             if str(event.get("damage_type", "")) not in {"physical", "magic"}:
                 continue
@@ -734,6 +753,16 @@ def schedule_knights_vow(
             event["redirect_fraction"] = fraction
             event["redirect_target"] = holder.participant_id
             event["redirect_source"] = "Knight's Vow — Sacrifice"
+            event["redirect_pre_mitigation_required"] = True
+            event["redirect_holder_health_ratio"] = ally_item_effect_value(
+                "Knight's Vow", "holder_health_threshold_ratio"
+            )
+            event["redirect_range_units"] = ally_item_effect_value(
+                "Knight's Vow", "worthy_range_units"
+            )
+            event["redirect_source_revision_id"] = int(
+                ally_item_effect_value("Knight's Vow", "source_revision_id")
+            )
         for event in outgoing.get(target.participant_id, []):
             if str(event.get("damage_type", "")) not in {"physical", "magic", "true"}:
                 continue
@@ -750,6 +779,15 @@ def schedule_knights_vow(
                     amount=amount * heal_fraction,
                     target_scope="holder_from_worthy_damage",
                     healing_category="knights_vow",
+                    requires_holder_health_ratio=ally_item_effect_value(
+                        "Knight's Vow", "holder_health_threshold_ratio"
+                    ),
+                    range_units=ally_item_effect_value(
+                        "Knight's Vow", "worthy_range_units"
+                    ),
+                    source_revision_id=int(
+                        ally_item_effect_value("Knight's Vow", "source_revision_id")
+                    ),
                 )
             )
 

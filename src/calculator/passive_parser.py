@@ -2311,6 +2311,10 @@ def _parse_unending_despair(text: str) -> dict[str, Any]:
     if interval_match:
         result["interval"] = float(interval_match.group(1))
 
+    range_match = re.search(r"within\s+.*?(\d+(?:\.\d+)?)\s+units", text, re.IGNORECASE)
+    if range_match:
+        result["range_units"] = float(range_match.group(1))
+
     # Bonus health ratio: "N% of your '''bonus''' health"
     hp_match = re.search(
         r"(\d+(?:\.\d+)?)%\s+of\s+your\s+'''bonus'''\s+health",

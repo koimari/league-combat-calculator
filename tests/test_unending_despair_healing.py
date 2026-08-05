@@ -25,6 +25,7 @@ def test_anguish_parser_reads_post_mitigation_self_heal_multiplier():
     assert parsed
 
     assert parsed["interval"] == 4.0
+    assert parsed["range_units"] == 650.0
     assert parsed["bonus_hp_ratio"] == 0.03
     assert parsed["self_heal_post_mitigation_multiplier"] == 2.5
 
@@ -48,6 +49,11 @@ def test_anguish_emits_exact_periodic_damage_and_self_healing_events():
 
     assert [event["time"] for event in damage_events] == [4.0, 8.0]
     assert all(event["event_precision"] == "exact" for event in damage_events)
+    assert all(event["target_range_units"] == 650.0 for event in damage_events)
+    assert all(
+        event["target_scope"] == "enemy_champions_within_range"
+        for event in damage_events
+    )
     assert [event["time"] for event in healing_events] == [4.0, 8.0]
     assert all(
         event["amount"] == event_damage["damage"] * multiplier

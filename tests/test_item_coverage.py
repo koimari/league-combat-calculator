@@ -417,8 +417,8 @@ def test_bramble_vest_is_an_explicitly_modeled_target_item():
 def test_thornmail_is_modeled_as_a_typed_target_reactive_item():
     """Armor-scaled Thorns now participate in target coverage."""
     attacker = item_model_coverage(get_item_by_name("Thornmail"))
-    assert attacker["status"] == "blocked"
-    assert attacker["optimizer_eligible"] is False
+    assert attacker["status"] == "modeled_effect"
+    assert attacker["optimizer_eligible"] is True
     assert target_item_model_coverage(get_item_by_name("Thornmail"))["status"] == (
         "modeled"
     )
