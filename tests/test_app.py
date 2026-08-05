@@ -1195,6 +1195,16 @@ def test_frontend_click_handlers_fallback_to_path_resolved_item_options_when_ren
     assert "spec = specs.find((entry) => entry.key === key);" in source
 
 
+def test_frontend_click_handler_runs_in_capture_phase_for_live_bootstrap_resilience():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    start = source.find('document.addEventListener("click", (event) => {')
+    assert start != -1
+    end = source.find('document.addEventListener("input", (event) => {', start)
+    delegated_block = source[start:end]
+    assert "}, true);" in delegated_block
+
+
 def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 

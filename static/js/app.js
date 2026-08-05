@@ -4139,7 +4139,7 @@ document.addEventListener("click", (event) => {
     closeBis();
     return render();
   }
-});
+}, true);
 
 document.addEventListener("input", (event) => {
   const protoRange = event.target.closest("[data-proto-range]");
