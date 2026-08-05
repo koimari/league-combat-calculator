@@ -40,7 +40,7 @@ def test_known_complex_kits_report_their_actual_blocker_categories():
         "verification": "reviewed_module",
         "blockers": [],
     }
-    for name in ("Xerath", "Xin Zhao", "Yasuo"):
+    for name in ("Zoe", "Zyra"):
         report = attacker_availability(by_name[name], verified)
         assert report["ready"] is False
         assert report["verification"] == "blocked"
@@ -50,7 +50,7 @@ def test_known_complex_kits_report_their_actual_blocker_categories():
 def test_unsupported_scaling_names_the_affected_ability():
     verified = set(reviewed_champion_names())
     reports = [attacker_availability(champion, verified) for champion in _champions()]
-    assert any(not report["ready"] for report in reports)
+    assert sum(not report["ready"] for report in reports) == 2
     assert all(report["blockers"] for report in reports if not report["ready"])
 
 
