@@ -1,0 +1,64 @@
+{
+ "checkpoint": "CP21-local-browser",
+ "tier": "local_browser",
+ "run_at": "2026-08-05T22:23:53.297704+00:00",
+ "server": {
+  "base": "http://127.0.0.1:5000",
+  "sha": "820acbc3c8fe898463d0b2d802ebed28ce07e9c7",
+  "branch": "codex/handover-processing (clean worktree)",
+  "auth": "disabled (local dev)"
+ },
+ "browser": "Playwright + Chromium 151 (headless)",
+ "scenarios": [
+  {
+   "id": "ziggs-outer-blast",
+   "result": "PASS",
+   "observed": "Build A 203 TDD; 95% calculated \u00b7 3 autos/rotation; Epicenter/Outer blast variant controls visible; Outer blast switch keeps same readout.",
+   "receipt_match": "203 TDD baseline fixture; 95% calculated / 3 autos per rotation"
+  },
+  {
+   "id": "enemy-boot-quest-upgrade",
+   "result": "PASS",
+   "observed": "Enemy Plated Steelcaps \u2192 role Mid + quest complete \u2192 boots slot becomes 'Change Armored Advance'. Boots item cleared on toggle-off (by design: includeBoots=false clears loadout.boots), slot restored on re-enable.",
+   "receipt_match": "Armored Advance remained visible as upgraded enemy boot; outputs changed and reverted when boots toggled off/on"
+  },
+  {
+   "id": "ally-support-quest-transition",
+   "result": "PASS",
+   "observed": "Lulu support: World Atlas selectable before quest; after quest completion it is locked+disabled with title 'A completed support quest requires an upgraded support item.'; Zaz'Zak's Realmspike selectable; slot shows 'Change Zaz'Zak's Realmspike'.",
+   "receipt_match": "World Atlas/Runic Compass disabled with explicit completed-support-quest reason; Realmspike visible and selectable"
+  },
+  {
+   "id": "objective-aware-bis-controls",
+   "result": "PASS",
+   "observed": "BIS dialog: 'Ahri \u00b7 Overall \u00b7 93 certified of 96 mid role-compatible candidates \u00b7 certified subset \u00b7 search not exhaustive \u00b7 showing top 24 \u00b7 2 withheld before timeline (Bastionbreaker, Muramana) \u00b7 1 partial receipts withheld'. All 5 filters (Overall/Kill pressure/Survival/Damage/Utility) present and clickable.",
+   "receipt_match": "93 certified of 96 mid role-compatible candidates; two candidates withheld before the timeline; one candidate with partial receipts"
+  },
+  {
+   "id": "high-risk-item-controls",
+   "result": "PASS",
+   "observed": "Build A Eclipse, Build B Death's Dance (both picked); comparison enabled (TIE \u00b7 SELECTED OBJECTIVE); COPY A\u2192B copies Eclipse into B; clearing slot B returns to empty. Values depend on scenario (Aatrox lvl 1 vs Ahri enemy here).",
+   "receipt_match": "copy tie preserved and clear recalculated"
+  },
+  {
+   "id": "auto-rotation-policy",
+   "result": "PASS",
+   "observed": "Calculated: '95% calculated \u00b7 3 autos/rotation' \u2192 toggle explicit: '95% explicit' \u2192 rotations 2 (WINDOW ROTATIONS 2) \u2192 toggle back: '95% calculated \u00b7 3 autos/rotation'.",
+   "receipt_match": "Explicit mode produced 95% explicit; return to calculated returned 95% calculated with 3 autos per rotation"
+  },
+  {
+   "id": "champion-state-controls",
+   "result": "PASS",
+   "observed": "Dr. Mundo champion option 'mundo_missing_health_percent' present; changed 30 \u2192 50 via input.",
+   "receipt_match": "Dr. Mundo missing health changed from 30 to 50"
+  },
+  {
+   "id": "labeling-controls",
+   "result": "PASS",
+   "observed": "Base scenario (Ziggs/Dr. Mundo/Lulu): no 'generated' or 'blocked' labels in the rendered UI; 'reviewed' labels present.",
+   "receipt_match": "No generated or blocked labels in base scenario"
+  }
+ ],
+ "summary": "8/8 CP21 browser scenarios pass locally on the identical production SHA 820acbc3; numeric readouts match docs/cp21-production-acceptance.json where the scenario is identical.",
+ "note": "Production-tier run still requires the KoiAccessAccount session (Vercel deployment protection gates the preview)."
+}

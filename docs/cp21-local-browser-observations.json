@@ -1,0 +1,67 @@
+{
+ "s2": {
+  "steelcaps_picked": {
+   "selected": true,
+   "enabled": true,
+   "locked": false,
+   "title": ""
+  },
+  "boots_after_quest": "Change Armored Advance",
+  "upgraded_to_armored_advance": true,
+  "boots_when_off": null,
+  "boots_when_on": "Add boots"
+ },
+ "s3": {
+  "error": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"#pickerGrid button\").first\n    - locator resolved to <button disabled type=\"button\" data-picker-value=\"3865\" class=\"picker-option  locked\" title=\"A completed support quest requires an upgraded support item.\">\u2026</button>\n  - a"
+ },
+ "s4": {
+  "intro": "Ahri \u00b7 Overall \u00b7 93 certified of 96 mid role-compatible candidates \u00b7 certified subset \u00b7 search not exhaustive \u00b7 showing top 24 \u00b7 2 withheld before timeline (Bastionbreaker, Muramana) \u00b7 1 partial receipts withheld\nEvery candidate is scored into the selected scenario context.",
+  "filter_buttons": [
+   "Overall",
+   "Kill pressure",
+   "Survival",
+   "Damage",
+   "Utility"
+  ],
+  "filter_Overall": "Ahri \u00b7 Overall \u00b7 93 certified of 96 mid role-compatible candidates \u00b7 certified subset \u00b7 search not exhaustive \u00b7 showing top 24 \u00b7 2 withheld before timeline (Bastionbreaker, Muramana) \u00b7 1 partial receipts withheld\nEvery candidate is scored into the selected scenario context.",
+  "filter_Kill pressure": "Ahri \u00b7 Kill pressure \u00b7 93 certified of 96 mid role-compatible candidates \u00b7 certified subset \u00b7 search not exhaustive \u00b7 showing top 24 \u00b7 2 withheld before timeline (Bastionbreaker, Muramana) \u00b7 1 partial receipts withheld\nEvery candidate is scored into the selected scenario context.",
+  "filter_Survival": "Ahri \u00b7 Survival \u00b7 93 certified of 96 mid role-compatible candidates \u00b7 certified subset \u00b7 search not exhaustive \u00b7 showing top 24 \u00b7 2 withheld before timeline (Bastionbreaker, Muramana) \u00b7 1 partial receipts withheld\nEvery candidate is scored into the selected scenario context.",
+  "filter_Damage": "Ahri \u00b7 Damage \u00b7 93 certified of 96 mid role-compatible candidates \u00b7 certified subset \u00b7 search not exhaustive \u00b7 showing top 24 \u00b7 2 withheld before timeline (Bastionbreaker, Muramana) \u00b7 1 partial receipts withheld\nEvery candidate is scored into the selected scenario context.",
+  "filter_Utility": "Ahri \u00b7 Utility \u00b7 93 certified of 96 mid role-compatible candidates \u00b7 certified subset \u00b7 search not exhaustive \u00b7 showing top 24 \u00b7 2 withheld before timeline (Bastionbreaker, Muramana) \u00b7 1 partial receipts withheld\nEvery candidate is scored into the selected scenario context."
+ },
+ "s5": {
+  "a_eclipse": {
+   "selected": true,
+   "enabled": true,
+   "locked": false,
+   "title": ""
+  },
+  "b_deaths_dance": {
+   "selected": true,
+   "enabled": true,
+   "locked": false,
+   "title": ""
+  },
+  "results_before_copy": "BUILD A\n590 TDD\nCOPY B \u2192 A\nBASELINE\nA\nEclipse\nItem effect\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\nKeystone\n+ Add keystone\nBUILD B\n590 TDD\nCOPY A \u2192 B\nTIE \u00b7 SELECTED OBJECTIVE\nB\nDeath's Dance\nItem effect\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\nKeystone\n+ Add keystone\n+\nFind best item for a slot\nROSTER\n1 ENEMIES \u00b7 0 ALLIES\nENEMIES\n+ ADD\nAhri\nthe Nine-",
+  "results_after_copy": "BUILD A\n590 TDD\nCOPY B \u2192 A\nBASELINE\nA\nEclipse\nItem effect\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\nKeystone\n+ Add keystone\nBUILD B\n590 TDD\nCOPY A \u2192 B\nTIE \u00b7 SELECTED OBJECTIVE\nB\nEclipse\nItem effect\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\nKeystone\n+ Add keystone\n+\nFind best item for a slot\nROSTER\n1 ENEMIES \u00b7 0 ALLIES\nENEMIES\n+ ADD\nAhri\nthe Nine-Tailed",
+  "results_after_clear": "BUILD B\n\u2014\nCOPY A \u2192 B\nLEAD \u00b7 SELECTED OBJECTIVE\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\n+\nAdd item\nKeystone\n+ Add keystone\n+\nFind best item for a slot\nROSTER\n1 ENEMIES \u00b7 0 ALLIES\nENEMIES"
+ },
+ "s6": {
+  "initial": "AUTO UPTIME USE EXPLICIT 95% calculated \u00b7 3 autos/rotation RESULT REVIEWED OVERALL A SELECTED \u2014  Build A is the selected build for",
+  "explicit": "AUTO UPTIME USE CALCULATED 95% explicit RESULT REVIEWED OVERALL A SELECTED \u2014  Build A is the selected build for this scenario. Ena",
+  "rotations_line": "ROTATIONS MAIN CHAMPION Ziggs  the Hexplosives Expert  ROLE ",
+  "uptime_after_rotations": "MPLETE BOOTS ON + + + + + BOOTS + WIKI ABILITY RANKS Q \u2212 1 + W \u2212 0 + E \u2212 0 + R \u2212 0 + Effects off WINDOW ASSUMED ACTIONS LAND ROTATIONS 2 WINDOW PER ROTATION 5s AUTO UPTIME USE CALCULATED 95% explicit RESULT REVIEWED OVERALL A SELECTED \u2014  Build A is the selected build for this scenario. Ena",
+  "back_calculated": "AUTO UPTIME USE EXPLICIT 95% calculated \u00b7 3 autos/rotation RESULT REVIEWED OVERALL A SELECTED \u2014  Build A is the selected build for"
+ },
+ "s7": {
+  "missing_health_input": true,
+  "value_before": "30",
+  "value_after": "50",
+  "has_missing_health_50": false
+ },
+ "s8": {
+  "no_generated_label": true,
+  "no_blocked_label": true,
+  "reviewed_present": true
+ }
+}
