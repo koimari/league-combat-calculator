@@ -29,57 +29,27 @@ BATCH_04 = (
     "Morgana",
 )
 
-_AUDIT_PATH = (
-    Path(__file__).resolve().parents[3] / "docs" / "wiki-full-entry-audit.json"
+_SOURCE_PATH = (
+    Path(__file__).resolve().parents[3] / "static" / "cp10_batch_04_sources.json"
 )
 
 
 def _full_entry_sources(name: str) -> list[dict[str, object]]:
-    """Load the parent plus P/Q/W/E/R source receipts from the local audit."""
+    """Load the parent plus P/Q/W/E/R receipts from a deployable asset."""
 
     try:
-        payload = json.loads(_AUDIT_PATH.read_text(encoding="utf-8"))
+        payload = json.loads(_SOURCE_PATH.read_text(encoding="utf-8"))
     except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
-        raise RuntimeError(f"Full-entry audit is unavailable: {_AUDIT_PATH}") from exc
-    entries = payload.get("entries") if isinstance(payload, dict) else None
-    if not isinstance(entries, list):
-        raise RuntimeError("Full-entry audit has no entry list")
-    receipt = next(
-        (
-            row
-            for row in entries
-            if isinstance(row, dict)
-            and row.get("kind") == "champion"
-            and row.get("name") == name
-        ),
-        None,
-    )
-    if not isinstance(receipt, dict):
-        raise RuntimeError(f"Full-entry audit has no receipt for {name!r}")
-    parent = {
-        "label": f"{name} parent entry",
-        "url": receipt.get("source_url"),
-        "revision_id": receipt.get("revision_id"),
-        "revision_timestamp": receipt.get("revision_timestamp"),
-    }
-    templates = receipt.get("ability_templates")
-    if not isinstance(templates, list) or len(templates) != 5:
-        raise RuntimeError(f"Full-entry audit for {name!r} does not cover P/Q/W/E/R")
-    rows = [parent]
-    rows.extend(
-        {
-            "label": f"{name} {template.get('slot')} ability entry",
-            "url": template.get("source_url"),
-            "revision_id": template.get("revision_id"),
-            "revision_timestamp": template.get("revision_timestamp"),
-        }
-        for template in templates
-        if isinstance(template, dict)
-    )
-    if len(rows) != 6 or any(not all(row.values()) for row in rows):
         raise RuntimeError(
-            f"Full-entry audit for {name!r} has incomplete source receipts"
-        )
+            f"CP10.4 source receipts are unavailable: {_SOURCE_PATH}"
+        ) from exc
+    rows = payload.get(name) if isinstance(payload, dict) else None
+    if (
+        not isinstance(rows, list)
+        or len(rows) != 6
+        or any(not isinstance(row, dict) or not all(row.values()) for row in rows)
+    ):
+        raise RuntimeError(f"CP10.4 source receipts for {name!r} are incomplete")
     return rows
 
 
