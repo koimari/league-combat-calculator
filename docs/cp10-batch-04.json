@@ -1,0 +1,43 @@
+{
+  "checkpoint": "CP10.4",
+  "scope": [
+    "Lucian",
+    "Lulu",
+    "Lux",
+    "Malphite",
+    "Malzahar",
+    "Maokai",
+    "Master Yi",
+    "Mel",
+    "Milio",
+    "Miss Fortune",
+    "Mordekaiser",
+    "Morgana"
+  ],
+  "full_entry_wiki_audit": {
+    "source": "https://wiki.leagueoflegends.com/en-us/",
+    "snapshot_manifest_sha256": "b45fecdf18719e2409b6cf9791b72fefcd9c8f229f514dedf910cfbabe18d39c",
+    "parent_and_ability_receipts": 72,
+    "parent_revisions": {
+      "Lucian": 3910934,
+      "Lulu": 4028678,
+      "Lux": 4007955,
+      "Malphite": 4007956,
+      "Malzahar": 4041817,
+      "Maokai": 4008184,
+      "Master Yi": 4016673,
+      "Mel": 3993020,
+      "Milio": 3892686,
+      "Miss Fortune": 4036014,
+      "Mordekaiser": 3897120,
+      "Morgana": 4012904
+    },
+    "ability_template_receipts": 60,
+    "status": "ready"
+  },
+  "notes": [
+    "The complete parent entry was read for every champion; each parent enumerates passive plus Q/W/E/R references.",
+    "The runtime packet asset supplies typed rank arrays and cooldowns; non-damaging state and utility branches remain explicit out-of-scope rows.",
+    "The detailed parent and ability-template hashes, text, and section receipts are in docs/wiki-full-entry-audit.json."
+  ]
+}

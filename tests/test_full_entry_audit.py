@@ -88,8 +88,8 @@ def test_champion_module_receipts_cover_every_cached_champion():
     names = audit.champion_names()
     assert len(names) == 173
     receipts = [audit._champion_module_receipt(name) for name in names]
-    assert sum(receipt["status"] == "ready" for receipt in receipts) == 89
-    assert sum(receipt["status"] == "review_pending" for receipt in receipts) == 84
+    assert sum(receipt["status"] == "ready" for receipt in receipts) == 101
+    assert sum(receipt["status"] == "review_pending" for receipt in receipts) == 72
     assert all(
         receipt["registration"] == "generated_packet"
         and receipt["error"]
