@@ -87,6 +87,7 @@ from calculator.scenario import (
     MAX_LOADOUT_ITEMS,
     ChampionLoadout,
     parse_roster,
+    validate_item_input_options,
 )
 from calculator.role_quests import (
     require_level_within_cap,
@@ -1717,10 +1718,14 @@ def _bis_replaced_loadout(
     slot_index: int,
     slot_kind: str,
     candidate_name: str,
+    candidate_item_options: dict[str, int | float] | None = None,
 ) -> ChampionLoadout:
     """Replace one ordinary or boots slot while preserving sourced options."""
+    item_options = dict(loadout.item_options or {})
+    if candidate_item_options:
+        item_options[candidate_name] = dict(candidate_item_options)
     if slot_kind == "boots":
-        return replace(loadout, boots=candidate_name)
+        return replace(loadout, boots=candidate_name, item_options=item_options)
     items = list(loadout.items)
     if slot_index < 0 or slot_index > MAX_LOADOUT_ITEMS - 1:
         raise ValueError("slot_index must be between 0 and 5")
@@ -1733,7 +1738,7 @@ def _bis_replaced_loadout(
     # The browser represents empty slots as absent request entries.  A
     # candidate is therefore the only item introduced for a previously empty
     # slot; duplicate validation remains owned by ChampionLoadout.resolve.
-    return replace(loadout, items=tuple(items))
+    return replace(loadout, items=tuple(items), item_options=item_options)
 
 
 def _role_scoped_bis_candidates(
@@ -2129,6 +2134,9 @@ def api_bis():
             main_loadout.champion_data["name"], main_request.level
         )
         _validate_champion_options(main_loadout.champion_data["name"], data)
+        candidate_item_options = validate_item_input_options(
+            data.get("candidate_item_options")
+        )
         enemies = [loadout.resolve() for loadout in enemy_requests]
         allies = [loadout.resolve() for loadout in ally_requests]
         require_roster_fight_window_support(
@@ -2172,11 +2180,24 @@ def api_bis():
     target_coverage_filtered: list[dict[str, object]] = []
     for candidate in candidates:
         try:
+            candidate_params = fight_params
+            candidate_specific_item_options = candidate_item_options.get(
+                candidate["name"]
+            )
+            if candidate_specific_item_options:
+                candidate_params = replace(
+                    fight_params,
+                    item_options={
+                        **(fight_params.item_options or {}),
+                        candidate["name"]: candidate_specific_item_options,
+                    },
+                )
             candidate_request = _bis_replaced_loadout(
                 subject_base,
                 slot_index=slot_index,
                 slot_kind=slot_kind,
                 candidate_name=candidate["name"],
+                candidate_item_options=candidate_specific_item_options,
             )
             resolved_subject = candidate_request.resolve()
             if (
@@ -2238,7 +2259,7 @@ def api_bis():
                 candidate_main.champion_data,
                 candidate_main.request.level,
                 list(candidate_main.item_data),
-                fight_params,
+                candidate_params,
                 main_stats=candidate_main.stats,
                 main_defenses=candidate_main.defenses,
                 enemies=candidate_enemies,
