@@ -29,3 +29,4 @@ output/
 .vercel
 data/bin/
 data/wiki-raw/
+data/atoms/*.atoms.json

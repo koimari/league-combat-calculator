@@ -1,0 +1,83 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "League fundamental behavior atom",
+ "description": "An atomic game behavior with dual provenance (wiki page + game binary). Every champion/item mechanic is a composition of these atoms.",
+ "type": "object",
+ "required": [
+  "atom_id",
+  "family",
+  "behavior",
+  "provenance"
+ ],
+ "properties": {
+  "atom_id": {
+   "type": "string",
+   "description": "stable id, e.g. 'heal.self.flat'"
+  },
+  "family": {
+   "enum": [
+    "damage",
+    "heal",
+    "shield",
+    "crowd_control",
+    "stack",
+    "transform",
+    "summon",
+    "execute",
+    "resource",
+    "movement",
+    "vision",
+    "buff",
+    "debuff",
+    "interaction",
+    "economy"
+   ]
+  },
+  "behavior": {
+   "type": "string",
+   "description": "canonical behavior name"
+  },
+  "trigger": {
+   "type": "string",
+   "description": "trigger condition (on_cast/on_hit/on_takedown/threshold/...)"
+  },
+  "target_policy": {
+   "type": "string",
+   "description": "self/ally/enemy/all"
+  },
+  "parameters": {
+   "type": "object",
+   "description": "typed numeric parameters (amount, ratio, duration, cap...)"
+  },
+  "provenance": {
+   "type": "object",
+   "required": [
+    "wiki",
+    "binary"
+   ],
+   "properties": {
+    "wiki": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "wiki page titles"
+    },
+    "binary": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "game binary spell/buff object names"
+    }
+   }
+  },
+  "instances": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "description": "champions/items that use this atom"
+  }
+ }
+}

@@ -1,0 +1,282 @@
+[
+ {
+  "atom_id": "heal.vladimir.VladimirEMissile",
+  "family": "heal",
+  "behavior": "VladimirEMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1200.0
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "{08606bf4}"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd_control.vladimir.VladimirESlow",
+  "family": "crowd_control",
+  "behavior": "VladimirESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "{d3a3b479}"
+   ]
+  }
+ },
+ {
+  "atom_id": "buff.vladimir.VladimirBloodGorged",
+  "family": "buff",
+  "behavior": "VladimirBloodGorged",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 0.0
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBloodGorgedAbility/VladimirBloodGorged"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal.vladimir.VladimirRHealMissile",
+  "family": "heal",
+  "behavior": "VladimirRHealMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 80000.0
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirRHealMissile"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.vladimir.VladimirHemoplagueMissile",
+  "family": "damage",
+  "behavior": "VladimirHemoplagueMissile",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 8.0,
+   "range": 1100.0
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueMissile"
+   ]
+  }
+ },
+ {
+  "atom_id": "crowd_control.vladimir.VladimirSanguinePoolSlow",
+  "family": "crowd_control",
+  "behavior": "VladimirSanguinePoolSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirSanguinePoolSlow"
+   ]
+  }
+ },
+ {
+  "atom_id": "buff.vladimir.VladimirBloodBallVFXBuff",
+  "family": "buff",
+  "behavior": "VladimirBloodBallVFXBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBloodBallVFXBuff"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal.vladimir.VladimirTidesofBloodHeal",
+  "family": "heal",
+  "behavior": "VladimirTidesofBloodHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTidesofBloodHeal"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.vladimir.VladimirTidesofBloodNuke",
+  "family": "damage",
+  "behavior": "VladimirTidesofBloodNuke",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTidesofBloodNuke"
+   ]
+  }
+ },
+ {
+  "atom_id": "heal.vladimir.VladimirTransfusionHeal",
+  "family": "heal",
+  "behavior": "VladimirTransfusionHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1500.0
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTransfusionHeal"
+   ]
+  }
+ },
+ {
+  "atom_id": "buff.vladimir.VladimirQBuild",
+  "family": "buff",
+  "behavior": "VladimirQBuild",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQBuild"
+   ]
+  }
+ },
+ {
+  "atom_id": "damage.vladimir.VladimirHemoplagueDebuff",
+  "family": "damage",
+  "behavior": "VladimirHemoplagueDebuff",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirHemoplagueDebuff"
+   ]
+  }
+ },
+ {
+  "atom_id": "buff.vladimir.VladimirQFrenzy",
+  "family": "buff",
+  "behavior": "VladimirQFrenzy",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirQFrenzy"
+   ]
+  }
+ },
+ {
+  "atom_id": "resource.vladimir.VladimirTidesofBloodCost",
+  "family": "resource",
+  "behavior": "VladimirTidesofBloodCost",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null
+  },
+  "provenance": {
+   "wiki": [
+    "vladimir"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirTidesofBloodCost"
+   ]
+  }
+ }
+]
