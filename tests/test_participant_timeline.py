@@ -923,6 +923,32 @@ def test_api_exposes_native_utility_dimensions_without_converting_them_to_tdd():
     assert "no cross-unit utility score" in utility["metric_note"]
 
 
+def test_api_exposes_stridebreaker_slow_and_movement_receipts():
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Stridebreaker"],
+            "item_options": {"Stridebreaker": {"active_seconds": 1.0}},
+            "fight_mode": "timed",
+            "fight_duration": 5,
+            "enemies": [{"champion": "Annie", "level": 18, "items": []}],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    utility = combat["utility_outcomes"]["participants"]["main"]
+    assert utility["slow"]["event_count"] == 1
+    assert utility["slow"]["percent_seconds"] == pytest.approx(105.0)
+    assert utility["movement"]["event_count"] == 1
+    assert utility["movement"]["speed_percent_seconds"] == pytest.approx(105.0)
+    assert {"slow", "movement"} <= set(utility["applied_dimensions"])
+    slow = next(event for event in combat["support_events"] if event["kind"] == "slow")
+    assert slow["slow_percent"] == pytest.approx(35.0)
+
+
 def test_secondary_packets_use_the_selected_roster_index_and_are_certified():
     app.config["TESTING"] = True
     response = app.test_client().post(

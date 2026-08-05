@@ -342,6 +342,20 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         "source_url": "https://wiki.leagueoflegends.com/en-us/Shurelya%27s_Battlesong",
         "source_revision_id": 3984368,
     },
+    "Stridebreaker": {
+        "options": {
+            "active_seconds": {
+                "type": "float",
+                "label": "Breaking Shockwave active seconds",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 30.0,
+                "step": 0.5,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Stridebreaker",
+        "source_revision_id": 4015388,
+    },
     "Knight's Vow": {
         "options": {
             "worthy_target_index": {
@@ -1358,6 +1372,14 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Breaking Shockwave: 80% total AD + slow
         "total_ad_ratio": 0.80,
         "cooldown": 15.0,
+        # Breaking Shockwave's sourced utility siblings. These values are
+        # consumed through required_effect_value by the participant ledger.
+        "slow_percent": 35.0,
+        "slow_duration": 3.0,
+        "bonus_move_speed_percent": 35.0,
+        "bonus_move_speed_duration": 3.0,
+        "area_radius": 450.0,
+        "front_offset": 100.0,
     },
     # Note: Goredrinker, Everfrost, Galeforce, Prowler's Claw are
     # DISTRIBUTED items (Arena only) — not available on Summoner's Rift.
@@ -2218,7 +2240,17 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Stormsurge": frozenset({"damage_threshold_ratio", "damage_threshold_window"}),
     "Eclipse": frozenset({"stack_required", "stack_window"}),
     "Death's Dance": frozenset({"damage_deferral_ticks", "defy_heal_ticks"}),
-    "Stridebreaker": frozenset({"cooldown"}),
+    "Stridebreaker": frozenset(
+        {
+            "cooldown",
+            "slow_percent",
+            "slow_duration",
+            "bonus_move_speed_percent",
+            "bonus_move_speed_duration",
+            "area_radius",
+            "front_offset",
+        }
+    ),
     "Titanic Hydra": frozenset({"active_cooldown"}),
     "Rapid Firecannon": frozenset(
         {

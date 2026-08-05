@@ -107,16 +107,6 @@ _PARTIAL_BLOCKED_REASONS: dict[str, str] = {
         "Flux's takedown trigger, three-second damage window, and ultimate "
         "cooldown refund are not scheduled in the participant ledger."
     ),
-    "Stridebreaker": (
-        "Breaking Shockwave's movement-speed/slow sibling is not modeled; its "
-        "active secondary damage packet is represented."
-    ),
-    "Voltaic Cyclosword": (
-        "Firmament's attack-only Energized schedule and pre-trigger lethality are "
-        "modeled, but Galvanize's ability trigger is withheld until the selected "
-        "champion supplies an exact damaging ability event rather than a cast "
-        "boundary."
-    ),
 }
 
 

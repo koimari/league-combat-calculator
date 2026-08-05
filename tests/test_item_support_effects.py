@@ -132,6 +132,32 @@ def test_explicit_locket_active_has_no_implicit_t_zero_cast():
     assert derive_item_support_effects(no_cast, {}, [no_cast, target]) == []
 
 
+def test_stridebreaker_active_emits_sourced_slow_and_movement_packets():
+    """Breaking Shockwave records both utility siblings for each hit target."""
+    holder = _actor(
+        "main:Ahri",
+        "main",
+        ("Stridebreaker",),
+        item_options={"Stridebreaker": {"active_seconds": 1.5}},
+    )
+    enemy = _actor("enemy:Annie", "enemy", ())
+
+    packets = derive_item_support_effects(holder, {}, [holder, enemy])
+
+    slow = [p for p in packets if p["kind"] == "slow"]
+    movement = [p for p in packets if p["kind"] == "movement"]
+    assert len(slow) == 1
+    assert slow[0]["target"] == enemy.participant_id
+    assert slow[0]["amount"] == pytest.approx(35.0)
+    assert slow[0]["duration"] == pytest.approx(3.0)
+    assert slow[0]["range_assumption"] == "within_450_units"
+    assert slow[0]["cast_geometry"] == "100_unit_front_offset"
+    assert len(movement) == 1
+    assert movement[0]["target"] == holder.participant_id
+    assert movement[0]["bonus_move_speed_percent"] == pytest.approx(35.0)
+    assert movement[0]["champion_hit_target"] == enemy.participant_id
+
+
 def test_cc_only_packets_require_an_authored_immobilize_marker():
     holder = _actor("ally:Lulu", "ally", ("Bandlepipes", "Imperial Mandate"))
     target = _actor("main:Ahri", "main", ())

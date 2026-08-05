@@ -125,6 +125,10 @@ def test_secondary_packet_ratios_cannot_be_scored_without_multi_target_ledger():
         if item_name in {"Profane Hydra", "Ravenous Hydra"}:
             # AD-scaled active packets are now allocated by the roster ledger.
             continue
+        if item_name == "Stridebreaker":
+            # Breaking Shockwave is now allocated through the same roster
+            # ledger and its slow/movement siblings have utility receipts.
+            continue
         coverage = item_model_coverage(get_item_by_name(item_name))
         assert coverage["status"] == "blocked", item_name
         assert coverage["optimizer_eligible"] is False
@@ -146,8 +150,8 @@ def test_phantom_hit_items_have_explicit_duplicate_on_hit_coverage():
             assert coverage["optimizer_eligible"] is False
 
 
-def test_temporary_lethality_state_requires_exact_ability_order():
-    """Galvanize stays fail-closed when the ability trigger is coarse."""
+def test_temporary_lethality_state_accepts_the_sourced_ability_cast_trigger():
+    """Galvanize is certified from the sourced ability-cast trigger contract."""
     stateful_items = [
         name
         for name, effect in ITEM_EFFECTS.items()
@@ -156,8 +160,8 @@ def test_temporary_lethality_state_requires_exact_ability_order():
     assert stateful_items
     for item_name in stateful_items:
         coverage = item_model_coverage(get_item_by_name(item_name))
-        assert coverage["status"] == "blocked", item_name
-        assert coverage["optimizer_eligible"] is False
+        assert coverage["status"] == "modeled_effect", item_name
+        assert coverage["optimizer_eligible"] is True
 
 
 @pytest.mark.parametrize(
@@ -181,7 +185,7 @@ def test_temporary_lethality_state_requires_exact_ability_order():
         ("Lich Bane", "modeled_effect"),
         ("Essence Reaver", "modeled_effect"),
         ("Dusk and Dawn", "modeled_effect"),
-        ("Voltaic Cyclosword", "blocked"),
+        ("Voltaic Cyclosword", "modeled_effect"),
         ("Statikk Shiv", "modeled_effect"),
         ("Titanic Hydra", "modeled_effect"),
         ("The Collector", "modeled_effect"),
@@ -558,19 +562,19 @@ def test_ally_item_packets_without_timing_remain_target_blocked(item_name):
 
 
 @pytest.mark.parametrize("item_name", ["Stridebreaker"])
-def test_stridebreaker_secondary_scope_is_explicitly_withheld(item_name):
-    """Stridebreaker remains blocked for its separate slow-state sibling."""
+def test_stridebreaker_utility_scope_is_explicitly_modelled(item_name):
+    """Breaking Shockwave exposes its typed slow and movement siblings."""
     coverage = item_model_coverage(get_item_by_name(item_name))
     assert "multi_target" in coverage["outcome_dimensions"]
-    assert coverage["status"] == "blocked"
-    assert coverage["optimizer_eligible"] is False
-    assert coverage["review_issue_refs"] == [43]
+    assert {"slow", "movement"} <= set(coverage["outcome_dimensions"])
+    assert coverage["status"] == "modeled_effect"
+    assert coverage["optimizer_eligible"] is True
+    assert coverage["review_issue_refs"] == []
 
 
 @pytest.mark.parametrize(
     ("item_name", "issue_refs"),
     [
-        ("Voltaic Cyclosword", [43]),
         ("Fimbulwinter", [44, 46]),
         ("World Atlas", [48, 50, 82]),
     ],

@@ -1363,6 +1363,7 @@ def test_frontend_surfaces_native_utility_and_target_allocation_receipts():
     assert "utility_outcomes?.focus" in source
     assert "Applied non-TDD outcomes" in source
     assert "speed_percent_seconds" in source
+    assert "utility.slow?.percent_seconds" in source
     assert "target_allocation" in source
     assert "authored roster-index policy" in source
 
@@ -1397,6 +1398,7 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
         "Mikael's Blessing",
         "Redemption",
         "Shurelya's Battlesong",
+        "Stridebreaker",
         "Knight's Vow",
     } <= set(options)
     assert (
@@ -1428,6 +1430,7 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
         options["Locket of the Iron Solari"]["options"]["active_seconds"]["max"] == 30.0
     )
     assert options["Knight's Vow"]["options"]["worthy_target_index"]["max"] == 4
+    assert options["Stridebreaker"]["options"]["active_seconds"]["max"] == 30.0
 
 
 def test_frontend_consumes_backend_sustain_stat_families():
