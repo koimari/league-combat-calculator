@@ -132,6 +132,48 @@ def test_explicit_locket_active_has_no_implicit_t_zero_cast():
     assert derive_item_support_effects(no_cast, {}, [no_cast, target]) == []
 
 
+def test_cp20_progression_items_emit_typed_economy_vision_and_movement_receipts():
+    holder = _actor(
+        "main:Ahri",
+        "main",
+        ("Cull", "Phage", "World Atlas"),
+        item_options={
+            "Cull": {"reap_minion_kills": 100},
+            "World Atlas": {"shared_riches_gold": 400, "ward_uses": 3},
+        },
+    )
+    target = _actor("enemy:Aatrox", "enemy", ())
+    packets = derive_item_support_effects(
+        holder,
+        {
+            "damage_events": [
+                {"time": 0.0, "source_key": "auto_attacks", "damage": 10.0},
+                {"time": 1.0, "source_key": "auto_attacks", "damage": 10.0},
+            ]
+        },
+        [holder, target],
+    )
+
+    reap = next(packet for packet in packets if packet["source"] == "Cull — Reap")
+    assert reap["gold_amount"] == pytest.approx(450.0)
+    assert reap["completion_granted"] is True
+    atlas_gold = next(
+        packet
+        for packet in packets
+        if packet["source"] == "World Atlas — Shared Riches"
+    )
+    assert atlas_gold["gold_amount"] == pytest.approx(400.0)
+    wards = next(
+        packet for packet in packets if packet["source"] == "World Atlas — Ward"
+    )
+    assert wards["ward_uses"] == pytest.approx(3.0)
+    rage = [packet for packet in packets if packet["source"] == "Phage — Rage"]
+    assert [packet["time"] for packet in rage] == [0.0, 1.0]
+    assert all(
+        packet["bonus_move_speed_percent"] == pytest.approx(10.0) for packet in rage
+    )
+
+
 def test_stridebreaker_active_emits_sourced_slow_and_movement_packets():
     """Breaking Shockwave records both utility siblings for each hit target."""
     holder = _actor(

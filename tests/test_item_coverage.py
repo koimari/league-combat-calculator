@@ -215,20 +215,20 @@ def test_multitool_is_not_a_summoners_rift_optimizer_candidate():
     assert "Multitool" not in names
 
 
-def test_candidate_receipt_names_every_withheld_item():
+def test_candidate_receipt_is_complete_after_item_umbrella_reconciliation():
     candidates = get_eligible_legendaries() + get_eligible_boots(tier=2)
     receipt = optimizer_candidate_coverage(candidates)
     excluded_names = {entry["name"] for entry in receipt["excluded"]}
 
-    assert receipt["complete"] is False
+    assert receipt["complete"] is True
     assert receipt["eligible_candidates"] == len(candidates)
     assert receipt["scored_candidates"] + receipt["excluded_count"] == len(candidates)
-    assert "Umbral Glaive" in excluded_names
+    assert excluded_names == set()
     assert "Rod of Ages" not in excluded_names
     assert "Runaan's Hurricane" not in excluded_names
 
 
-def test_optimizer_withholds_unmodeled_candidates_and_returns_receipt():
+def test_optimizer_reports_exhaustive_legal_candidates_after_item_reconciliation():
     result = optimize_build(
         get_champion("Ahri"),
         level=18,
@@ -241,7 +241,7 @@ def test_optimizer_withholds_unmodeled_candidates_and_returns_receipt():
 
     assert result["items"]
     assert not (set(result["items"]) & excluded_names)
-    assert result["search_guarantee"] == "exhaustive_modeled_candidates"
+    assert result["search_guarantee"] == "exhaustive_legal_candidates"
     assert result["is_certified_best"] is False
 
 
@@ -526,12 +526,12 @@ def test_dusk_and_dawn_self_heal_is_calculation_eligible():
     assert coverage["optimizer_eligible"] is True
 
 
-def test_cull_combat_receipt_is_calculation_eligible_but_optimizer_blocked():
-    """Reap's health receipt is callable while its quest remains withheld."""
+def test_cull_progression_receipt_is_calculation_and_optimizer_eligible():
+    """Reap's health and quest receipts share one modeled state ledger."""
     coverage = item_model_coverage(get_item_by_name("Cull"))
 
     assert coverage["calculation_eligible"] is True
-    assert coverage["optimizer_eligible"] is False
+    assert coverage["optimizer_eligible"] is True
     require_calculation_item_coverage(
         [get_item_by_name("Cull")], participant="Attacker"
     )
@@ -600,18 +600,11 @@ def test_fimbulwinter_is_event_certified_and_not_optimizer_blocked():
     assert "Everlasting" in target["reason"]
 
 
-@pytest.mark.parametrize(
-    ("item_name", "issue_refs"),
-    [
-        ("World Atlas", [48, 50, 82]),
-    ],
-)
-def test_withheld_item_packets_are_linked_to_their_implementation_issues(
-    item_name, issue_refs
-):
-    coverage = item_model_coverage(get_item_by_name(item_name))
-    assert coverage["status"] == "blocked"
-    assert coverage["review_issue_refs"] == issue_refs
+def test_world_atlas_support_quest_receipt_is_reconciled():
+    coverage = item_model_coverage(get_item_by_name("World Atlas"))
+    assert coverage["status"] == "modeled_state"
+    assert coverage["optimizer_eligible"] is True
+    assert coverage["review_issue_refs"] == []
 
 
 def test_ravenous_hydra_active_scope_is_modelled_with_lifesteal():
@@ -652,21 +645,21 @@ def test_long_lived_stack_items_name_missing_state_input(item_name, required_sta
 
 
 @pytest.mark.parametrize(
-    ("item_name", "reason_fragment"),
+    "item_name",
     [
-        ("Cull", "100-minion"),
-        ("World Atlas", "400 gold"),
+        "Cull",
+        "Phage",
+        "Runic Compass",
+        "Tear of the Goddess",
+        "Umbral Glaive",
+        "World Atlas",
     ],
 )
-def test_economy_and_quest_items_name_the_missing_progression_state(
-    item_name, reason_fragment
-):
-    """Source-declared gold/quest transitions stay withheld and explain why."""
+def test_remaining_cp20_items_are_explicitly_modeled(item_name):
     coverage = item_model_coverage(get_item_by_name(item_name))
-
-    assert coverage["status"] == "blocked"
-    assert coverage["optimizer_eligible"] is False
-    assert reason_fragment in coverage["reason"]
+    assert coverage["status"] == "modeled_state"
+    assert coverage["optimizer_eligible"] is True
+    assert coverage["review_issue_refs"] == []
 
 
 def test_dusk_and_dawn_self_heal_receipt_promotes_attacker_coverage():

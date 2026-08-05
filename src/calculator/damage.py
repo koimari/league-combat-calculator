@@ -8219,6 +8219,13 @@ def _add_single_proc_on_hits(
 
         for effect in state.damage_effects.first_autos:
             source = effect.source
+            if not item_effects.first_auto_state_ready(
+                state.items, state.item_options, source.item_name
+            ):
+                # Blackout's unseen gate is an explicit scenario input.  A
+                # equipped Umbral Glaive never guesses that the target was
+                # unseen; without the ready receipt, the proc is withheld.
+                continue
             chain_target_count = 0
             if effect.chain_targets_max > 0:
                 # Statikk's one energized proc is a single chain across the

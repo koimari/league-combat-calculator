@@ -3567,6 +3567,52 @@ class TestHeartsteelDamage:
         assert abs(damage - 70.0) < 0.01
 
 
+class TestUmbralGlaiveNightstalker:
+    """Blackout readiness gates the typed first-auto true-damage packet."""
+
+    @staticmethod
+    def _stats() -> dict[str, float]:
+        return {
+            "attack_damage": 100.0,
+            "base_attack_damage": 100.0,
+            "ability_power": 0.0,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 1.0,
+            "lethality": 18.0,
+            "flat_armor_penetration": 18.0,
+            "magic_penetration_flat": 0.0,
+            "magic_penetration_percent": 0.0,
+            "armor_penetration_percent": 0.0,
+            "critical_strike_chance": 0.0,
+            "is_melee": False,
+            "level": 18,
+        }
+
+    def test_ready_state_adds_true_damage_and_default_withholds(self) -> None:
+        config = FightConfig(
+            target_health=5000.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            fight_duration_seconds=1.0,
+            auto_attack_uptime=1.0,
+            one_rotation=True,
+        )
+        unavailable = calculate_fight_damage(
+            self._stats(), {}, _build("Umbral Glaive"), config
+        )
+        ready = calculate_fight_damage(
+            self._stats(),
+            {},
+            _build("Umbral Glaive"),
+            config,
+            item_options={"Umbral Glaive": {"nightstalker_ready": 1}},
+        )
+        assert "on_hit_once_Umbral Glaive" not in unavailable["breakdown"]
+        assert ready["breakdown"]["on_hit_once_Umbral Glaive"][
+            "total_damage"
+        ] == pytest.approx(77.0)
+
+
 class TestHexopticsC44BasicDamageAmp:
     """Tests for Hexoptics C44 Magnification basic damage amplification."""
 

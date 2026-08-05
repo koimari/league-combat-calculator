@@ -392,8 +392,8 @@ def test_optimize_api_labels_partial_candidate_search_without_claiming_certified
         "partial_candidate_event_order"
     )
     assert payload["search_timeline_coverage"]["partial_evaluations"] > 0
-    assert payload["candidate_coverage"]["complete"] is False
-    assert payload["candidate_coverage"]["excluded_count"] > 0
+    assert payload["candidate_coverage"]["complete"] is True
+    assert payload["candidate_coverage"]["excluded_count"] == 0
 
 
 def test_optimize_api_darius_returns_visible_event_certified_build():

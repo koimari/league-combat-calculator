@@ -883,6 +883,8 @@ def _utility_outcome_receipt(
     movement = [event for event in support if event.get("kind") == "movement"]
     cleanse = [event for event in support if event.get("kind") == "cleanse"]
     slow = [event for event in support if event.get("kind") == "slow"]
+    economy = [event for event in support if event.get("kind") == "economy"]
+    vision = [event for event in support if event.get("kind") == "vision"]
     movement_speed_percent_seconds = sum(
         abs(
             float(
@@ -933,6 +935,10 @@ def _utility_outcome_receipt(
         applied_dimensions.add("slow")
     if secondary:
         applied_dimensions.add("multi_target")
+    if economy:
+        applied_dimensions.add("economy")
+    if vision:
+        applied_dimensions.add("vision")
     return {
         "contract": "utility_outcomes_v1",
         "dimensions": dimensions,
@@ -946,6 +952,26 @@ def _utility_outcome_receipt(
             "event_count": len(slow),
             "percent_seconds": round(slow_percent_seconds, 6),
         },
+        "economy": {
+            "event_count": len(economy),
+            "gold": round(
+                sum(
+                    float(event.get("gold_amount", event.get("amount", 0.0)) or 0.0)
+                    for event in economy
+                ),
+                6,
+            ),
+        },
+        "vision": {
+            "event_count": len(vision),
+            "ward_uses": round(
+                sum(
+                    float(event.get("ward_uses", event.get("amount", 0.0)) or 0.0)
+                    for event in vision
+                ),
+                6,
+            ),
+        },
         "multi_target": {
             "packet_count": len(secondary),
             "allocated_packet_count": sum(
@@ -953,7 +979,11 @@ def _utility_outcome_receipt(
             ),
         },
         "scored_support_amount": round(
-            sum(float(event.get("applied_amount", 0.0) or 0.0) for event in support),
+            sum(
+                float(event.get("applied_amount", 0.0) or 0.0)
+                for event in support
+                if event.get("kind") not in {"economy", "vision"}
+            ),
             6,
         ),
         "item_coverage": [
@@ -967,9 +997,9 @@ def _utility_outcome_receipt(
             if entry.get("outcome_dimensions")
         ],
         "metric_note": (
-            "Movement and cleanse remain separate units; no cross-unit utility "
-            "score is inferred. Healing, shielding, and applied support amounts "
-            "remain event-derived values."
+            "Movement, cleanse, economy, and vision remain separate units; no "
+            "cross-unit utility score is inferred. Healing, shielding, and "
+            "applied support amounts remain event-derived values."
         ),
     }
 
@@ -2714,7 +2744,14 @@ def _simulate_survival(
                 event["expires_at"] = round(event_time + duration_value, 3)
             event["applied_amount"] = round(float(event.get("amount", 0.0)), 6)
             continue
-        if kind in {"on_hit_magic", "movement", "cleanse", "slow"}:
+        if kind in {
+            "on_hit_magic",
+            "movement",
+            "cleanse",
+            "slow",
+            "economy",
+            "vision",
+        }:
             state["utility_effects"].append(
                 {
                     "source": str(event.get("source", kind)),
@@ -2722,6 +2759,8 @@ def _simulate_survival(
                     "time": event_time,
                     "amount": float(event.get("amount", 0.0) or 0.0),
                     "duration": float(event.get("duration", 0.0) or 0.0),
+                    "gold_amount": float(event.get("gold_amount", 0.0) or 0.0),
+                    "ward_uses": float(event.get("ward_uses", 0.0) or 0.0),
                 }
             )
             if kind == "on_hit_magic":
@@ -6037,6 +6076,10 @@ def build_participant_timeline(
                             "nearby_enemy_count",
                             "multi_target_multiplier",
                             "cooldown_until",
+                            "gold_amount",
+                            "ward_uses",
+                            "quest_threshold",
+                            "minion_kills",
                         )
                         if event.get(key) is not None
                     }
@@ -6050,6 +6093,7 @@ def build_participant_timeline(
                             "all_sources",
                             "cleanse",
                             "persistent",
+                            "completion_granted",
                         )
                         if event.get(key) is not None
                     }

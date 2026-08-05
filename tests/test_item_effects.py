@@ -1461,3 +1461,37 @@ class TestThornsEffects:
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Bramble Vest", broken)
         with pytest.raises(KeyError, match="Bramble Vest.*base"):
             item_effects.thorns_effects(_build("Bramble Vest"))
+
+
+class TestCp20ItemState:
+    """The residual item family has typed state and no guessed fallbacks."""
+
+    def test_umbral_nightstalker_formula_reads_lethality(self) -> None:
+        effect = item_effects.resolve_damage_effects(_build("Umbral Glaive"))
+        assert len(effect.first_autos) == 1
+        source = effect.first_autos[0].source
+        assert source.damage_type == "true"
+        assert source.raw_damage(
+            DamageInputs({"lethality": 18.0}, 18, False, 2000.0, 2000.0)
+        ) == pytest.approx(77.0)
+
+    def test_cp20_options_validate_and_apply_manaflow(self) -> None:
+        options = item_effects.validate_item_input_options(
+            {
+                "Tear of the Goddess": {"manaflow_bonus_mana": 360},
+                "Umbral Glaive": {"nightstalker_ready": 1},
+                "World Atlas": {"shared_riches_gold": 400, "ward_uses": 3},
+            }
+        )
+        assert item_effects.input_option_stat_bonuses(
+            [{"name": "Tear of the Goddess"}], options
+        )[3] == pytest.approx(360.0)
+        assert (
+            item_effects.input_option_value(
+                [{"name": "Umbral Glaive"}],
+                options,
+                "Umbral Glaive",
+                "nightstalker_ready",
+            )
+            == 1
+        )

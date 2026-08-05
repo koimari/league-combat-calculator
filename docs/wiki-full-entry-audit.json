@@ -95007,20 +95007,18 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                48
-              ],
+              "issue_refs": [],
               "name": "Sanctify",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Sanctify's conditional self buff and on-hit damage are not modelled.",
-              "verdict": "withheld"
+              "reason": "Sanctify is represented by the shared participant support ledger: an explicit heal or shield trigger schedules the sourced holder/ally attack-speed and on-hit-magic packets.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -95038,25 +95036,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Sanctify's conditional self buff and on-hit damage are not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "aff97e3f9a6618e803bcadeb83d6db77b5d3a7976bb8222a775baf74e53a1714",
+        "expected_effects_sha256": "f9b8c0006337de5b7e92f33bff03c2b04106bdb1e7bb3ea78ea691f1393a808c",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Sanctify's conditional self buff and on-hit damage are not modelled.",
+          "reason": "Sanctify is represented by the shared participant support ledger: an explicit heal or shield trigger schedules the sourced holder/ally attack-speed and on-hit-magic packets.",
           "registry_effect_type": null,
-          "review_issue_refs": [
-            48
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -95428,20 +95422,18 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                48
-              ],
+              "issue_refs": [],
               "name": "Fanfare",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Fanfare's conditional movement speed and nearby-ally attack-speed buff are not modelled; only the holder's sourced attack-speed packet is represented.",
-              "verdict": "withheld"
+              "reason": "Fanfare is represented by the shared participant support ledger: an authored immobilize or slow schedules the sourced movement and holder/ally attack-speed packets.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -95461,28 +95453,24 @@
               ]
             }
           ],
-          "runtime_gaps": [
-            "Fanfare's conditional movement speed and nearby-ally attack-speed buff are not modelled; only the holder's sourced attack-speed packet is represented."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "23bbd21957d7ff06b3327f7646b0ac3b8c0e17bf879b1535e1ad8bb5138e0ab0",
+        "expected_effects_sha256": "63d2b0106eb69c0d13a11b7340135f86642f185b0cb30d2569879c4710a48b10",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [
             "ally_support",
             "stat_buff"
           ],
           "ready": true,
-          "reason": "Fanfare's conditional movement speed and nearby-ally attack-speed buff are not modelled; only the holder's sourced attack-speed packet is represented.",
+          "reason": "Fanfare is represented by the shared participant support ledger: an authored immobilize or slow schedules the sourced movement and holder/ally attack-speed packets.",
           "registry_effect_type": "stat_conversion",
-          "review_issue_refs": [
-            48
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -97829,9 +97817,7 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                50
-              ],
+              "issue_refs": [],
               "name": "Reap",
               "paths": {
                 "ally_roster": true,
@@ -97839,10 +97825,10 @@
                 "enemy_target": true,
                 "frontend": true,
                 "manual_attacker": true,
-                "optimizer": false
+                "optimizer": true
               },
-              "reason": "Reap's 100-minion progression and 350 gold completion payout are not modelled.",
-              "verdict": "withheld"
+              "reason": "Reap's authored minion-kill progression, completion payout, and on-hit health receipt share one explicit state/economy ledger.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -97861,29 +97847,25 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Reap's 100-minion progression and 350 gold completion payout are not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "20e3f9f8a3ce19d98438e029a4570f0c6bc056e4109a9c289a9c6b15863f09ec",
+        "expected_effects_sha256": "349c0ee54075c9157d8af9a00d771b16bfbba118355ab28735df1c1329eaa3d2",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
           "calculation_eligible": true,
-          "optimizer_eligible": false,
+          "optimizer_eligible": true,
           "outcome_dimensions": [
             "economy",
             "progression",
             "on_hit"
           ],
           "ready": true,
-          "reason": "Reap's 100-minion progression and 350 gold completion payout are not modelled.",
+          "reason": "Reap's authored minion-kill progression, completion payout, and on-hit health receipt share one explicit state/economy ledger.",
           "registry_effect_type": "on_hit_heal",
-          "review_issue_refs": [
-            50
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -102617,37 +102599,33 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                48
-              ],
+              "issue_refs": [],
               "name": "Control",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Control's ability haste and Command's damage amplification are not modelled.",
-              "verdict": "withheld"
+              "reason": "Command is represented by the shared participant support ledger: an authored crowd-control event schedules its all-source damage amplifier for the selected target and duration.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                48
-              ],
+              "issue_refs": [],
               "name": "Command",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Control's ability haste and Command's damage amplification are not modelled.",
-              "verdict": "withheld"
+              "reason": "Command is represented by the shared participant support ledger: an authored crowd-control event schedules its all-source damage amplifier for the selected target and duration.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -102680,25 +102658,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Control's ability haste and Command's damage amplification are not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "9a3ba0b3b45e06f5a3b384ac240d12f51c0c3a26e07486625b9cec708822f68f",
+        "expected_effects_sha256": "8372bab958a611a414fccd9af169b368693530f9d865b11bfe38fe9bdae922f5",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Control's ability haste and Command's damage amplification are not modelled.",
+          "reason": "Command is represented by the shared participant support ledger: an authored crowd-control event schedules its all-source damage amplifier for the selected target and duration.",
           "registry_effect_type": null,
-          "review_issue_refs": [
-            48
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -105578,20 +105552,18 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                50
-              ],
+              "issue_refs": [],
               "name": "Rage",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Rage's conditional movement-speed state is not modelled.",
-              "verdict": "withheld"
+              "reason": "Rage is emitted once per authored basic attack with the sourced melee or ranged movement-speed window.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -105609,25 +105581,23 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Rage's conditional movement-speed state is not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "e77f5464124f9056c4c819153a8459689f5d86efc7d6f23ec3ce812e7ababdb7",
+        "expected_effects_sha256": "5644a550eefca23b314b2726ca78d0ac2a0a5665e18df342ec16fea18cbca82e",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
-          "outcome_dimensions": [],
-          "ready": true,
-          "reason": "Rage's conditional movement-speed state is not modelled.",
-          "registry_effect_type": null,
-          "review_issue_refs": [
-            50
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [
+            "movement"
           ],
-          "status": "blocked"
+          "ready": true,
+          "reason": "Rage is emitted once per authored basic attack with the sourced melee or ranged movement-speed window.",
+          "registry_effect_type": "stat_conversion",
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -107444,60 +107414,48 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                48,
-                50,
-                82
-              ],
+              "issue_refs": [],
               "name": "Support Quest",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active are not modelled.",
-              "verdict": "withheld"
+              "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                48,
-                50,
-                82
-              ],
+              "issue_refs": [],
               "name": "Shared Riches",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active are not modelled.",
-              "verdict": "withheld"
+              "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "active",
-              "issue_refs": [
-                48,
-                50,
-                82
-              ],
+              "issue_refs": [],
               "name": "Ward",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active are not modelled.",
-              "verdict": "withheld"
+              "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -107541,27 +107499,26 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active are not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "0878bb0d18462834d8243969a2aec7245720951b27deb8a9c49315aa947e4c6d",
+        "expected_effects_sha256": "574416cd0b86a15a0622d170fc08cb6344f5376acd69ebdb6e4a46996e001e80",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
-          "outcome_dimensions": [],
-          "ready": true,
-          "reason": "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active are not modelled.",
-          "registry_effect_type": null,
-          "review_issue_refs": [
-            48,
-            50,
-            82
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [
+            "economy",
+            "quest",
+            "ally_support",
+            "vision"
           ],
-          "status": "blocked"
+          "ready": true,
+          "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+          "registry_effect_type": "stat_conversion",
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -110286,37 +110243,33 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Manaflow",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Manaflow stack progression is not modelled.",
-              "verdict": "withheld"
+              "reason": "Manaflow's bounded bonus-mana progression and minion-only Helping Hand boundary are explicit state receipts.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Helping Hand",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Manaflow stack progression is not modelled.",
-              "verdict": "withheld"
+              "reason": "Manaflow's bounded bonus-mana progression and minion-only Helping Hand boundary are explicit state receipts.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -110347,25 +110300,24 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Manaflow stack progression is not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "790dd51962df494d127cbdea101e6f9858ebeda75ae792161e050ab6414d7629",
+        "expected_effects_sha256": "5ffabf398f6099a3b67674913778b658e4e517ae00eda235215c5b6a78683bb5",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
-          "outcome_dimensions": [],
-          "ready": true,
-          "reason": "Manaflow stack progression is not modelled.",
-          "registry_effect_type": null,
-          "review_issue_refs": [
-            44
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [
+            "progression",
+            "resource"
           ],
-          "status": "blocked"
+          "ready": true,
+          "reason": "Manaflow's bounded bonus-mana progression and minion-only Helping Hand boundary are explicit state receipts.",
+          "registry_effect_type": "stat_conversion",
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -111200,54 +111152,48 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                50
-              ],
+              "issue_refs": [],
               "name": "Blackout",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Nightstalker's first-attack true damage is not modelled.",
-              "verdict": "withheld"
+              "reason": "Nightstalker's unseen-ready state gates a typed first-auto true-damage packet; Blackout remains a separate vision dimension.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                50
-              ],
+              "issue_refs": [],
               "name": "Blackout",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Nightstalker's first-attack true damage is not modelled.",
-              "verdict": "withheld"
+              "reason": "Nightstalker's unseen-ready state gates a typed first-auto true-damage packet; Blackout remains a separate vision dimension.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                50
-              ],
+              "issue_refs": [],
               "name": "Nightstalker",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Nightstalker's first-attack true damage is not modelled.",
-              "verdict": "withheld"
+              "reason": "Nightstalker's unseen-ready state gates a typed first-auto true-damage packet; Blackout remains a separate vision dimension.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -111291,27 +111237,23 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Nightstalker's first-attack true damage is not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "10a9733de8ef635adda19d3124773d791dabf0263292be0d915f9c670da737f0",
+        "expected_effects_sha256": "8493f735bff94d2dae2d1381e51e58af111b4c93c633928e2772496b749a2cb7",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [
             "vision"
           ],
           "ready": true,
-          "reason": "Nightstalker's first-attack true damage is not modelled.",
-          "registry_effect_type": null,
-          "review_issue_refs": [
-            50
-          ],
-          "status": "blocked"
+          "reason": "Nightstalker's unseen-ready state gates a typed first-auto true-damage packet; Blackout remains a separate vision dimension.",
+          "registry_effect_type": "on_hit_once",
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -112370,41 +112312,33 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                48,
-                50,
-                82
-              ],
+              "issue_refs": [],
               "name": "Support Quest",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Support Quest's 400 gold Shared Riches upgrade and Runic Compass/Ward transition are not modelled.",
-              "verdict": "withheld"
+              "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                48,
-                50,
-                82
-              ],
+              "issue_refs": [],
               "name": "Shared Riches",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Support Quest's 400 gold Shared Riches upgrade and Runic Compass/Ward transition are not modelled.",
-              "verdict": "withheld"
+              "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -112435,31 +112369,26 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Support Quest's 400 gold Shared Riches upgrade and Runic Compass/Ward transition are not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "6d1e08eb030dfd39964f9d2bdf0e215a5bd1008dfab06a2269a0ad096f39060a",
+        "expected_effects_sha256": "03a4d131d0322e50eb87b5b4a8c240c1e3ec51e42a01adf27599c20fa37ea828",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [
             "economy",
             "quest",
-            "ally_support"
+            "ally_support",
+            "vision"
           ],
           "ready": true,
-          "reason": "Support Quest's 400 gold Shared Riches upgrade and Runic Compass/Ward transition are not modelled.",
-          "registry_effect_type": null,
-          "review_issue_refs": [
-            48,
-            50,
-            82
-          ],
-          "status": "blocked"
+          "reason": "Support Quest, Shared Riches, and Ward charges are explicit state/economy and vision receipts.",
+          "registry_effect_type": "stat_conversion",
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },

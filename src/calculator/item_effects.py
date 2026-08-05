@@ -246,6 +246,98 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         "source_url": "https://wiki.leagueoflegends.com/en-us/Fimbulwinter",
         "source_revision_id": 3984419,
     },
+    "Cull": {
+        "options": {
+            "reap_minion_kills": {
+                "type": "int",
+                "label": "Reap minion kills",
+                "default": 0,
+                "min": 0,
+                "max": 100,
+                "step": 1,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Cull",
+        "source_revision_id": 4025119,
+    },
+    "Phage": {
+        "options": {},
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Phage",
+        "source_revision_id": 3916202,
+    },
+    "Runic Compass": {
+        "options": {
+            "shared_riches_gold": {
+                "type": "int",
+                "label": "Shared Riches gold",
+                "default": 0,
+                "min": 0,
+                "max": 800,
+                "step": 20,
+            },
+            "ward_uses": {
+                "type": "int",
+                "label": "Ward uses",
+                "default": 0,
+                "min": 0,
+                "max": 3,
+                "step": 1,
+            },
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Runic_Compass",
+        "source_revision_id": 4028000,
+    },
+    "Tear of the Goddess": {
+        "options": {
+            "manaflow_bonus_mana": {
+                "type": "int",
+                "label": "Manaflow bonus mana",
+                "default": 0,
+                "min": 0,
+                "max": 360,
+                "step": 6,
+                "bonus_mana_per_unit": 1.0,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Tear_of_the_Goddess",
+        "source_revision_id": 4026380,
+    },
+    "Umbral Glaive": {
+        "options": {
+            "nightstalker_ready": {
+                "type": "int",
+                "label": "Nightstalker ready",
+                "default": 0,
+                "min": 0,
+                "max": 1,
+                "step": 1,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Umbral_Glaive",
+        "source_revision_id": 4013390,
+    },
+    "World Atlas": {
+        "options": {
+            "shared_riches_gold": {
+                "type": "int",
+                "label": "Shared Riches gold",
+                "default": 0,
+                "min": 0,
+                "max": 400,
+                "step": 15,
+            },
+            "ward_uses": {
+                "type": "int",
+                "label": "Ward uses",
+                "default": 0,
+                "min": 0,
+                "max": 3,
+                "step": 1,
+            },
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/World_Atlas",
+        "source_revision_id": 4004090,
+    },
     "Bloodthirster": {
         "options": {
             "starting_ichorshield": {
@@ -716,6 +808,16 @@ def stat_conversion_metadata(item_name: str) -> dict[str, float]:
         "feast_omnivamp_percent",
         "feast_duration",
         "feast_trigger_window",
+        "rage_bonus_move_speed_melee",
+        "rage_bonus_move_speed_ranged",
+        "rage_duration",
+        "shared_riches_interval",
+        "shared_riches_gold_minion",
+        "shared_riches_gold_melee",
+        "shared_riches_gold_ranged",
+        "support_quest_threshold",
+        "ward_charges",
+        "helping_hand_minion_damage",
     )
     if item_name in {"Bandlepipes", "Experimental Hexplate"}:
         keys += ("bonus_attack_speed_melee", "bonus_attack_speed_ranged")
@@ -893,6 +995,20 @@ def input_option_float_value(
             f"{schema['min']} and {schema['max']}"
         )
     return parsed
+
+
+_READY_FIRST_AUTO_ITEMS = frozenset({"Umbral Glaive"})
+
+
+def first_auto_state_ready(
+    items: Sequence[Mapping[str, Any]],
+    item_options: Mapping[str, Mapping[str, int | float]] | None,
+    item_name: str,
+) -> bool:
+    """Return whether a first-auto item's explicit ready gate is armed."""
+    if item_name not in _READY_FIRST_AUTO_ITEMS:
+        return True
+    return input_option_value(items, item_options, item_name, "nightstalker_ready") > 0
 
 
 def hubris_input_bonus_ad(
@@ -1155,6 +1271,95 @@ def item_state_receipts(
             total_mana=max_mana,
         )
 
+    if "Tear of the Goddess" in names:
+        option_value = float(
+            (item_options or {})
+            .get("Tear of the Goddess", {})
+            .get("manaflow_bonus_mana", 0)
+        )
+        cap = required_effect_value("Tear of the Goddess", "manaflow_bonus_mana_max")
+        add(
+            "Tear of the Goddess",
+            "manaflow_complete" if option_value >= cap else "manaflow_progress",
+            manaflow_bonus_mana=min(option_value, cap),
+            manaflow_cap=cap,
+            transformed=False,
+            helping_hand_minion_damage=required_effect_value(
+                "Tear of the Goddess", "helping_hand_minion_damage"
+            ),
+            total_mana=max_mana,
+        )
+
+    if "Cull" in names:
+        kills = input_option_value(
+            list(items), item_options, "Cull", "reap_minion_kills"
+        )
+        max_gold = required_effect_value("Cull", "reap_max_gold")
+        add(
+            "Cull",
+            "reap_complete" if kills >= max_gold else "reap_progress",
+            minion_kills=min(float(kills), max_gold),
+            minion_gold=min(float(kills), max_gold)
+            * required_effect_value("Cull", "reap_gold_per_minion"),
+            completion_gold=(
+                required_effect_value("Cull", "reap_completion_gold")
+                if kills >= max_gold
+                else 0.0
+            ),
+            max_minion_kills=max_gold,
+        )
+
+    if "Umbral Glaive" in names:
+        ready = input_option_value(
+            list(items), item_options, "Umbral Glaive", "nightstalker_ready"
+        )
+        add(
+            "Umbral Glaive",
+            "nightstalker_ready" if ready else "nightstalker_unavailable",
+            ready=bool(ready),
+            true_damage=required_effect_value("Umbral Glaive", "base")
+            + required_effect_value("Umbral Glaive", "lethality_ratio") * lethality,
+            unseen_window_seconds=required_effect_value(
+                "Umbral Glaive", "nightstalker_unseen_seconds"
+            ),
+            trigger_window_seconds=required_effect_value(
+                "Umbral Glaive", "nightstalker_trigger_window"
+            ),
+        )
+
+    for quest_item in ("World Atlas", "Runic Compass"):
+        if quest_item not in names:
+            continue
+        options = item_options or {}
+        state = options.get(quest_item, {})
+        gold = float(state.get("shared_riches_gold", 0) or 0)
+        wards = int(state.get("ward_uses", 0) or 0)
+        cap = required_effect_value(quest_item, "support_quest_threshold")
+        add(
+            quest_item,
+            "quest_complete" if gold >= cap else "quest_progress",
+            shared_riches_gold=min(gold, cap),
+            quest_threshold=cap,
+            ward_uses=min(
+                max(0, wards), int(required_effect_value(quest_item, "ward_charges"))
+            ),
+            shared_riches_interval=required_effect_value(
+                quest_item, "shared_riches_interval"
+            ),
+        )
+
+    if "Phage" in names:
+        add(
+            "Phage",
+            "rage_on_authored_basic_attack",
+            bonus_move_speed=(
+                required_effect_value("Phage", "rage_bonus_move_speed_melee")
+                if is_melee
+                else required_effect_value("Phage", "rage_bonus_move_speed_ranged")
+            ),
+            duration=required_effect_value("Phage", "rage_duration"),
+        )
+
     if "Rod of Ages" in names:
         stacks = int(
             (item_options or {}).get("Rod of Ages", {}).get("timeless_stacks", 0)
@@ -1392,6 +1597,52 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # progression, so this sourced value is intentionally code-owned;
         # the progression remains fail-closed in item_coverage.py.
         "health_per_on_hit": 3.0,
+        "reap_gold_per_minion": 1.0,
+        "reap_max_gold": 100.0,
+        "reap_completion_gold": 350.0,
+    },
+    "Phage": {
+        "type": "stat_conversion",
+        "rage_bonus_move_speed_melee": 20.0,
+        "rage_bonus_move_speed_ranged": 10.0,
+        "rage_duration": 2.0,
+    },
+    "Runic Compass": {
+        "type": "stat_conversion",
+        "shared_riches_interval": 20.0,
+        "shared_riches_gold_minion": 20.0,
+        "shared_riches_gold_melee": 24.0,
+        "shared_riches_gold_ranged": 22.0,
+        "support_quest_threshold": 800.0,
+        "ward_charges": 3.0,
+    },
+    "Tear of the Goddess": {
+        "type": "stat_conversion",
+        "manaflow_charge_interval": 8.0,
+        "manaflow_bonus_mana_per_trigger": 3.0,
+        "manaflow_bonus_mana_per_champion": 6.0,
+        "manaflow_bonus_mana_max": 360.0,
+        "helping_hand_minion_damage": 5.0,
+    },
+    "World Atlas": {
+        "type": "stat_conversion",
+        "shared_riches_interval": 20.0,
+        "shared_riches_gold_minion": 15.0,
+        "shared_riches_gold_melee": 22.0,
+        "shared_riches_gold_ranged": 20.0,
+        "support_quest_threshold": 400.0,
+        "ward_charges": 3.0,
+    },
+    "Umbral Glaive": {
+        "type": "on_hit_once",
+        "formula": "flat_plus_lethality",
+        "base": 50.0,
+        "lethality_ratio": 1.5,
+        "nightstalker_unseen_seconds": 1.0,
+        "nightstalker_trigger_window": 4.0,
+        "damage_type": "true",
+        "breakdown_key": "on_hit_once_Umbral Glaive",
+        "display_name": "Umbral Glaive (Nightstalker)",
     },
     "Nashor's Tooth": {
         "type": "on_hit",
@@ -2606,7 +2857,58 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "everlasting_trigger_kind",
         }
     ),
-    "Cull": frozenset({"health_per_on_hit"}),
+    "Cull": frozenset(
+        {
+            "health_per_on_hit",
+            "reap_gold_per_minion",
+            "reap_max_gold",
+            "reap_completion_gold",
+        }
+    ),
+    "Phage": frozenset(
+        {
+            "rage_bonus_move_speed_melee",
+            "rage_bonus_move_speed_ranged",
+            "rage_duration",
+        }
+    ),
+    "Runic Compass": frozenset(
+        {
+            "shared_riches_interval",
+            "shared_riches_gold_minion",
+            "shared_riches_gold_melee",
+            "shared_riches_gold_ranged",
+            "support_quest_threshold",
+            "ward_charges",
+        }
+    ),
+    "Tear of the Goddess": frozenset(
+        {
+            "manaflow_charge_interval",
+            "manaflow_bonus_mana_per_trigger",
+            "manaflow_bonus_mana_per_champion",
+            "manaflow_bonus_mana_max",
+            "helping_hand_minion_damage",
+        }
+    ),
+    "World Atlas": frozenset(
+        {
+            "shared_riches_interval",
+            "shared_riches_gold_minion",
+            "shared_riches_gold_melee",
+            "shared_riches_gold_ranged",
+            "support_quest_threshold",
+            "ward_charges",
+        }
+    ),
+    "Umbral Glaive": frozenset(
+        {
+            "base",
+            "lethality_ratio",
+            "nightstalker_unseen_seconds",
+            "nightstalker_trigger_window",
+        }
+    ),
     "Banshee's Veil": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
     "Edge of Night": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
     "Verdant Barrier": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
@@ -3888,6 +4190,13 @@ def _compile_first_auto(
 
         def raw(inputs: DamageInputs) -> float:
             return base + max_hp_ratio * inputs.champion_stats.get("health", 0.0)
+
+    elif formula == "flat_plus_lethality":
+        base = required.number("base")
+        lethality_ratio = required.number("lethality_ratio")
+
+        def raw(inputs: DamageInputs) -> float:
+            return base + lethality_ratio * inputs.champion_stats.get("lethality", 0.0)
 
     elif formula == "current_hp":
         melee_ratio = required.number("current_hp_ratio_melee")

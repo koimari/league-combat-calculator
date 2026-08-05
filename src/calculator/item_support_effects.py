@@ -226,6 +226,122 @@ def derive_item_support_effects(
     takedown_events = _takedown_triggers(result)
     damage_events = _damage_triggers(result)
 
+    # Reap is a progression/economy branch, not a guessed combat bonus.  The
+    # authored minion-kill count is bounded by its sourced 100-kill quest and
+    # produces one inspectable gold receipt only after the caller supplies it.
+    if "Cull" in names:
+        minion_kills = max(0.0, _option(attacker, "Cull", "reap_minion_kills"))
+        cap = required_effect_value("Cull", "reap_max_gold")
+        per_minion = required_effect_value("Cull", "reap_gold_per_minion")
+        completion_gold = required_effect_value("Cull", "reap_completion_gold")
+        earned = min(minion_kills, cap) * per_minion
+        if minion_kills >= cap:
+            earned += completion_gold
+        if earned > 0.0:
+            source_meta = ITEM_INPUT_OPTIONS["Cull"]
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=attacker,
+                    time=0.0,
+                    kind="economy",
+                    source="Cull — Reap",
+                    amount=earned,
+                    target_scope="self",
+                    gold_amount=earned,
+                    minion_kills=min(minion_kills, cap),
+                    completion_granted=minion_kills >= cap,
+                    source_url=source_meta["source_url"],
+                    source_revision_id=source_meta["source_revision_id"],
+                )
+            )
+
+    # Rage is emitted from the same authored auto stream used by the damage
+    # ledger.  No movement state is invented when the stream is absent or
+    # coarse; each qualifying basic attack gets its own timestamped packet.
+    if "Phage" in names:
+        is_melee = bool(attacker.stats.get("is_melee", False))
+        speed_key = (
+            "rage_bonus_move_speed_melee"
+            if is_melee
+            else "rage_bonus_move_speed_ranged"
+        )
+        bonus_speed = required_effect_value("Phage", speed_key)
+        duration = required_effect_value("Phage", "rage_duration")
+        source_meta = ITEM_INPUT_OPTIONS["Phage"]
+        for event in result.get("damage_events", ()):
+            if not isinstance(event, Mapping):
+                continue
+            if str(event.get("source_key", "")) != "auto_attacks" and not bool(
+                event.get("basic_attack")
+            ):
+                continue
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=attacker,
+                    time=_event_time(event),
+                    kind="movement",
+                    source="Phage — Rage",
+                    amount=bonus_speed,
+                    duration=duration,
+                    target_scope="self",
+                    bonus_move_speed_percent=bonus_speed,
+                    trigger="authored_basic_attack",
+                    source_url=source_meta["source_url"],
+                    source_revision_id=source_meta["source_revision_id"],
+                )
+            )
+
+    # Support Quest is represented as explicit economy and vision outcomes.
+    # The role-quest contract decides which transformed item is equipped; this
+    # packet layer records only the authored progress/ward state for that item.
+    for quest_item in ("World Atlas", "Runic Compass"):
+        if quest_item not in names:
+            continue
+        source_meta = ITEM_INPUT_OPTIONS[quest_item]
+        gold = max(0.0, _option(attacker, quest_item, "shared_riches_gold"))
+        gold_cap = required_effect_value(quest_item, "support_quest_threshold")
+        if gold > 0.0:
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=attacker,
+                    time=0.0,
+                    kind="economy",
+                    source=f"{quest_item} — Shared Riches",
+                    amount=min(gold, gold_cap),
+                    target_scope="self",
+                    gold_amount=min(gold, gold_cap),
+                    quest_threshold=gold_cap,
+                    source_url=source_meta["source_url"],
+                    source_revision_id=source_meta["source_revision_id"],
+                )
+            )
+        ward_uses = max(
+            0.0,
+            min(
+                _option(attacker, quest_item, "ward_uses"),
+                required_effect_value(quest_item, "ward_charges"),
+            ),
+        )
+        if ward_uses > 0.0:
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=attacker,
+                    time=0.0,
+                    kind="vision",
+                    source=f"{quest_item} — Ward",
+                    amount=ward_uses,
+                    target_scope="self",
+                    ward_uses=ward_uses,
+                    quest_threshold=gold_cap,
+                    source_url=source_meta["source_url"],
+                    source_revision_id=source_meta["source_revision_id"],
+                )
+            )
+
     # Fimbulwinter's Everlasting is a self shield that fires only from an
     # explicitly marked immobilize, or a slow for a melee holder.  Its
     # current-mana threshold and cooldown are resolved from the same ordered

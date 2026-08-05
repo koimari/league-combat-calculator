@@ -531,8 +531,8 @@ def test_one_open_slot_is_exhaustive_for_modeled_items_and_has_runner_up():
     )
 
     assert result["is_certified_best"] is False
-    assert result["search_guarantee"] == "exhaustive_modeled_candidates"
-    assert result["candidate_coverage"]["excluded_count"] > 0
+    assert result["search_guarantee"] == "exhaustive_legal_candidates"
+    assert result["candidate_coverage"]["excluded_count"] == 0
     assert len(result["ranked_builds"]) == 2
     assert result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
 
