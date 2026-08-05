@@ -1700,6 +1700,16 @@ class TestIconUrlsAreHttps:
             "/api/calculate",
             json={**base, "boots": "Gluttonous Greaves"},
         ).get_json()
+        gunmetal_response = client.post(
+            "/api/calculate",
+            json={
+                **base,
+                "role": "mid",
+                "role_quest_complete": True,
+                "boots": "Gunmetal Greaves",
+            },
+        )
+        gunmetal_boots = gunmetal_response.get_json()
 
         assert attack_speed_boots["total_damage"] > no_boots["total_damage"]
         assert (
@@ -1713,6 +1723,12 @@ class TestIconUrlsAreHttps:
             if row["participant_id"] == "main"
         )
         assert main["survival"]["healing_received"] > 0
+        assert gunmetal_response.status_code == 200
+        assert (
+            gunmetal_boots["champion_stats"]["attack_speed"]
+            > no_boots["champion_stats"]["attack_speed"]
+        )
+        assert gunmetal_boots["champion_stats"]["lifesteal_percent"] == 5.0
 
     def test_completed_mid_quest_accepts_upgraded_magic_penetration_boots(self):
         response = app_module.app.test_client().post(

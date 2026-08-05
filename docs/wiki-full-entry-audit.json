@@ -51404,22 +51404,22 @@
           ],
           "effect_count": 0,
           "effects": [],
-          "runtime_gaps": [
-            "Riot's cached description declares Noxian Gait (attacks grant decaying movement speed for 2 seconds), but the item passive is absent from the cached Wiki branches and its magnitude cannot be sourced safely."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "1b87f443d734a53a6cfbc99fbb0f213e6f8ebf0512d2fff90457ddef9204ae88",
+        "expected_effects_sha256": "cd69c0fc9c8b47198742aa47cf537e9bdb46c1a694d901b38bea0de18e3d3679",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
-          "outcome_dimensions": [],
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [
+            "movement"
+          ],
           "ready": true,
-          "reason": "Riot's cached description declares Noxian Gait (attacks grant decaying movement speed for 2 seconds), but the item passive is absent from the cached Wiki branches and its magnitude cannot be sourced safely.",
+          "reason": "Noxian Gait's Riot-only movement branch remains explicitly out of scope because its magnitude and spacing input are not sourced; the boot's attack-speed and life-steal stats are still applied.",
           "registry_effect_type": null,
-          "status": "blocked"
+          "status": "stats_only"
         },
         "runtime_reasoned": true
       },

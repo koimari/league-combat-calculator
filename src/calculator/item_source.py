@@ -112,8 +112,9 @@ ACKNOWLEDGED_SOURCE_CONFLICTS: dict[str, dict[str, str]] = {
             "The Riot-only branch is retained as an explicit source conflict: "
             "its movement-speed magnitude is absent from the current Wiki entry "
             "and the supported fight model has no sourced movement/spacing input "
-            "that could price the on-hit utility. The boot remains fail-closed in "
-            "attacker coverage rather than silently dropping the branch."
+            "that could price the on-hit utility. The movement sub-effect remains "
+            "explicitly out of scope while the boot's sourced attack-speed and "
+            "life-steal stats stay eligible."
         ),
     },
     "Radiant Virtue": {

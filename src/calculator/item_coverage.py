@@ -56,14 +56,6 @@ _BLOCKED_REASONS: dict[str, str] = {
         "Eternity's damage-based mana restoration and per-cast healing are not "
         "modelled."
     ),
-    "Gunmetal Greaves": (
-        "Riot's cached description declares Noxian Gait (attacks grant decaying "
-        "movement speed for 2 seconds), but the item passive is absent from the "
-        "cached Wiki branches and its magnitude cannot be sourced safely. The "
-        "movement/spacing outcome is outside the supported objective model, so "
-        "the upgraded boot remains explicitly blocked rather than silently "
-        "dropping Noxian Gait."
-    ),
     "Runic Compass": (
         "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active "
         "are not modelled."
@@ -159,6 +151,11 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
         "timeline; it does not add direct damage."
     ),
     "Cosmic Drive": "Spelldance grants movement speed, not direct damage.",
+    "Gunmetal Greaves": (
+        "Noxian Gait's Riot-only movement branch remains explicitly out of scope "
+        "because its magnitude and spacing input are not sourced; the boot's "
+        "attack-speed and life-steal stats are still applied."
+    ),
     "Cryptbloom": "Life From Death is a post-takedown heal.",
     "Death's Dance": "Ignore Pain and Defy change incoming damage and healing.",
     "Diadem of Songs": "Harmony and Consonance change healing, not outgoing damage.",
@@ -481,12 +478,12 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     elif name in ITEM_INPUT_OPTIONS:
         status = "modeled_state"
         reason = "The item exposes its damage-relevant state as a scenario control."
-    elif not _has_described_effect(item):
-        status = "stats_only"
-        reason = "The item has no separate passive or active in the cached Wiki data."
     elif name in _REVIEWED_STATS_ONLY:
         status = "stats_only"
         reason = _REVIEWED_STATS_ONLY[name]
+    elif not _has_described_effect(item):
+        status = "stats_only"
+        reason = "The item has no separate passive or active in the cached Wiki data."
     elif item.get("id") is not None or item.get("icon"):
         # A cached source item is a real selectable record, even when its
         # passive/active has not been reviewed yet.  Keep the public contract
