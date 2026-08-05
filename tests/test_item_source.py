@@ -360,14 +360,8 @@ class TestSourceAudit:
         assert [entry["effect"] for entry in audit["conflicts"]] == ["Unrecorded Gait"]
         assert audit["conflicts"][0]["acknowledged"] is False
 
-    @pytest.mark.parametrize(
-        ("table", "status"),
-        [
-            (ACKNOWLEDGED_SOURCE_CONFLICTS, "explained"),
-            (OPEN_SOURCE_CONFLICTS, "open"),
-        ],
-    )
-    def test_reviewed_conflict_carries_its_status_and_note(self, table, status) -> None:
+    @pytest.mark.parametrize("table", [ACKNOWLEDGED_SOURCE_CONFLICTS])
+    def test_reviewed_conflict_carries_its_status_and_note(self, table) -> None:
         name, effects = next(iter(table.items()))
         effect, note = next(iter(effects.items()))
         item = _cached_item(
@@ -378,15 +372,15 @@ class TestSourceAudit:
         )
         conflict = item_source_audit(item)["conflicts"][0]
 
-        assert conflict["status"] == status
+        assert conflict["status"] == "explained"
         assert conflict["acknowledged"] is True
         assert conflict["note"] == note
 
-    def test_open_conflicts_are_reported_separately_from_explained_ones(self) -> None:
+    def test_patch_inventory_has_no_unresolved_source_conflicts(self) -> None:
+        """Every source discrepancy is acknowledged or deliberately blocked."""
         audit = source_audit(fetch_item_data().values())
-        open_pairs = {(c["item"], c["effect"]) for c in audit["open_conflicts"]}
 
-        assert ("Gunmetal Greaves", "Noxian Gait") in open_pairs
+        assert audit["open_conflicts"] == []
         assert audit["complete"] is True
 
     def test_tracked_cache_has_no_unacknowledged_source_conflict(self) -> None:

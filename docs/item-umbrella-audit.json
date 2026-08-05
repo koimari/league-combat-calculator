@@ -1,0 +1,4427 @@
+{
+  "audit": "item_umbrella_runtime_coverage",
+  "counts": {
+    "attacker_blocked": 25,
+    "manual_items_and_boots": 202,
+    "optimizer_items_and_boots": 130,
+    "ordinary_source_items": 209,
+    "path_mismatches": 0,
+    "review_pending": 0,
+    "runtime_items": 202,
+    "target_blocked": 6,
+    "unexplained_blocks": 0,
+    "unresolved_source_conflicts": 0
+  },
+  "entries": [
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Abyssal Mask",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Abyssal Mask",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Abyssal Mask",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Actualizer",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Mana Made Real's active duration, doubled mana costs, basic-cooldown progress, and heal/shield amplification are not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Actualizer",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Actualizer",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Aether Wisp",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Aether Wisp",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Aether Wisp",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Amplifying Tome",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Amplifying Tome",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Amplifying Tome",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Archangel's Staff",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Awe's bonus-mana-to-ability-power conversion is modeled, but Manaflow's charge/bonus-mana progression and the Seraph's Embrace transformation state are not scheduled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Archangel's Staff",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Archangel's Staff",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Ardent Censer",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Sanctify's conditional self buff and on-hit damage are not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Ardent Censer",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Ardent Censer",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Armored Advance",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Armored Advance",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Armored Advance",
+        "outcome_dimensions": [],
+        "reason": "Noxian Endurance grants a typed five-second physical shield after an authored champion physical-damage event; Plating reduces basic damage.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Axiom Arc",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [
+          "progression",
+          "resource"
+        ],
+        "reason": "Flux's takedown trigger, three-second damage window, and ultimate cooldown refund are not scheduled in the participant ledger.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Axiom Arc",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Axiom Arc",
+        "outcome_dimensions": [
+          "progression",
+          "resource"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "B. F. Sword",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "B. F. Sword",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "B. F. Sword",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Bami's Cinder",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Bami's Cinder",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Bami's Cinder",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Bandleglass Mirror",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Bandleglass Mirror",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Bandleglass Mirror",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Bandlepipes",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [
+          "ally_support",
+          "stat_buff"
+        ],
+        "reason": "Fanfare's conditional movement speed and nearby-ally attack-speed buff are not modelled; only the holder's sourced attack-speed packet is represented.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Bandlepipes",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Bandlepipes",
+        "outcome_dimensions": [
+          "ally_support",
+          "stat_buff"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Banshee's Veil",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "spell_protection"
+        ],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Banshee's Veil",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Banshee's Veil",
+        "outcome_dimensions": [
+          "spell_protection"
+        ],
+        "reason": "Annul is ready at the opening and consumes every packet belonging to the first source-backed Q/W/E/R cast; auto attacks and later casts land.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Bastionbreaker",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Bastionbreaker",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Bastionbreaker",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Berserker's Greaves",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Berserker's Greaves",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Berserker's Greaves",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Black Cleaver",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Black Cleaver",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Black Cleaver",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Blackfire Torch",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Blackfire Torch",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Blackfire Torch",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Blade of the Ruined King",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Blade of the Ruined King",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Blade of the Ruined King",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Blasting Wand",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Blasting Wand",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Blasting Wand",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Blighting Jewel",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Blighting Jewel",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Blighting Jewel",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Bloodletter's Curse",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Bloodletter's Curse",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Bloodletter's Curse",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Bloodsong",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Bloodsong",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Bloodsong",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Bloodthirster",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Bloodthirster",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Bloodthirster",
+        "outcome_dimensions": [],
+        "reason": "Ichorshield converts certified lifesteal excess into a persistent general shield capped by the sourced level maximum; an explicit starting state is accepted when supplied.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Boots",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": false,
+      "name": "Boots",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Boots",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Boots of Swiftness",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "slow_resistance",
+          "movement"
+        ],
+        "reason": "Fleetfooted grants slow resistance.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Boots of Swiftness",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Boots of Swiftness",
+        "outcome_dimensions": [
+          "slow_resistance",
+          "movement"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Bramble Vest",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Bramble Vest",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Bramble Vest",
+        "outcome_dimensions": [],
+        "reason": "Thorns' reactive damage and Grievous Wounds are scheduled from the attacker's modeled basic-attack events in the coupled timeline.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Catalyst of Aeons",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Eternity's damage-based mana restoration and per-cast healing are not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Catalyst of Aeons",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Catalyst of Aeons",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Caulfield's Warhammer",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Caulfield's Warhammer",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Caulfield's Warhammer",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Celestial Opposition",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Celestial Opposition",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Celestial Opposition",
+        "outcome_dimensions": [],
+        "reason": "Blessing of the Mountain applies the sourced 35% champion-damage reduction and its two-second linger in the ordered ledger.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Chain Vest",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Chain Vest",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Chain Vest",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Chainlaced Crushers",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Chainlaced Crushers",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Chainlaced Crushers",
+        "outcome_dimensions": [],
+        "reason": "Noxian Persistence grants a typed five-second magic shield after an authored champion magic-damage event.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Chempunk Chainsword",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Hackshorn applies sourced three-second Grievous Wounds in the coupled timeline; it does not add direct damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Chempunk Chainsword",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Chempunk Chainsword",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Cloak of Agility",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Cloak of Agility",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Cloak of Agility",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Cloth Armor",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Cloth Armor",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Cloth Armor",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Control Ward",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": false,
+      "name": "Control Ward",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Control Ward",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Cosmic Drive",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "movement"
+        ],
+        "reason": "Spelldance grants movement speed, not direct damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Cosmic Drive",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Cosmic Drive",
+        "outcome_dimensions": [
+          "movement"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Crimson Lucidity",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Its passives grant summoner haste and movement speed.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Crimson Lucidity",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Crimson Lucidity",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Cryptbloom",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Life From Death is a post-takedown heal.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Cryptbloom",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Cryptbloom",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Crystalline Bracer",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Crystalline Bracer",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Crystalline Bracer",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Cull",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [
+          "economy",
+          "progression",
+          "on_hit"
+        ],
+        "reason": "Reap's 100-minion progression and 350 gold completion payout are not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Cull",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Cull",
+        "outcome_dimensions": [
+          "economy",
+          "progression",
+          "on_hit"
+        ],
+        "reason": "Reap's 3-health champion on-hit heal is replayed for the target actor; its minion progression and gold payout remain optimizer-only gaps.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Dagger",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Dagger",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Dagger",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Dark Seal",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "status": "modeled_state"
+      },
+      "manual": true,
+      "name": "Dark Seal",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Dark Seal",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Dawncore",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Dawncore",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Dawncore",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Dead Man's Plate",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Dead Man's Plate",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Dead Man's Plate",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Death's Dance",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Ignore Pain's post-mitigation deferral ticks and Defy's takedown clear/heal are represented in the ordered participant timeline.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Death's Dance",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Death's Dance",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Diadem of Songs",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Harmony and Consonance change healing, not outgoing damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Diadem of Songs",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Diadem of Songs",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Doran's Blade",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Doran's Blade",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Doran's Blade",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Doran's Bow",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Doran's Bow",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Doran's Bow",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Doran's Helm",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Helping Hand's 5 bonus physical damage is restricted to minions; the item's combat regeneration state is not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Doran's Helm",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Doran's Helm",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Doran's Ring",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Doran's Ring",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Doran's Ring",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Doran's Shield",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Doran's Shield",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Doran's Shield",
+        "outcome_dimensions": [],
+        "reason": "Enduring Focus's sourced missing-health regeneration is replayed after incoming champion damage.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Dream Maker",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Dream Maker affects an ally, not the item holder's TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Dream Maker",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Dream Maker",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Dusk and Dawn",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Dusk and Dawn",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Dusk and Dawn",
+        "outcome_dimensions": [],
+        "reason": "Spellblade's self-heal is replayed from each certified empowered attack in the target actor's own participant timeline.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Echoes of Helia",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Soul Siphon stores damage only to heal an ally.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Echoes of Helia",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Echoes of Helia",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Eclipse",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Eclipse",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Eclipse",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Edge of Night",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "spell_protection"
+        ],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Edge of Night",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Edge of Night",
+        "outcome_dimensions": [
+          "spell_protection"
+        ],
+        "reason": "Annul is ready at the opening and consumes every packet belonging to the first source-backed Q/W/E/R cast; auto attacks and later casts land.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Elixir of Iron",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": false,
+      "name": "Elixir of Iron",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Elixir of Iron",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Elixir of Sorcery",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": false,
+      "name": "Elixir of Sorcery",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Elixir of Sorcery",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Elixir of Wrath",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": false,
+      "name": "Elixir of Wrath",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Elixir of Wrath",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Endless Hunger",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Famine's bonus-AD ability haste is modeled, but Feast's takedown-triggered 15% omnivamp for 8 seconds is not scheduled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Endless Hunger",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Endless Hunger",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Essence Reaver",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Essence Reaver",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Essence Reaver",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Executioner's Calling",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Executioner's Calling",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Executioner's Calling",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Experimental Hexplate",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Experimental Hexplate",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Experimental Hexplate",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Faerie Charm",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Faerie Charm",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Faerie Charm",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Fated Ashes",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Fated Ashes",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Fated Ashes",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Fiendhunter Bolts",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Fiendhunter Bolts",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Fiendhunter Bolts",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Fiendish Codex",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Fiendish Codex",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Fiendish Codex",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Fimbulwinter",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Awe's bonus-mana-to-health conversion is modeled, but Everlasting's conditional shield and cooldown state are not scheduled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Fimbulwinter",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": false,
+        "name": "Fimbulwinter",
+        "outcome_dimensions": [],
+        "reason": "Awe bonus health and Everlasting shields are not modelled.",
+        "status": "blocked"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Forbidden Idol",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Forbidden Idol",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Forbidden Idol",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Force of Nature",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "movement",
+          "defense"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Force of Nature",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Force of Nature",
+        "outcome_dimensions": [
+          "movement",
+          "defense"
+        ],
+        "reason": "Steadfast stacks are scheduled from exact incoming champion magic-damage events, including expiry and the maximum-stack bonus resistance.",
+        "status": "modeled_event_certified"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Frozen Heart",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "attack_speed_reduction"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Frozen Heart",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Frozen Heart",
+        "outcome_dimensions": [
+          "attack_speed_reduction"
+        ],
+        "reason": "Winter's Caress applies its sourced 20% total attack-speed cripple to the opposing participant's authored swing schedule when the selected roster pair is assumed within the enemy-only 700-unit aura.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Giant's Belt",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Giant's Belt",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Giant's Belt",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Glacial Buckler",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Glacial Buckler",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Glacial Buckler",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Glowing Mote",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Glowing Mote",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Glowing Mote",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Gluttonous Greaves",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Slay grants omnivamp, not outgoing damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Gluttonous Greaves",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Gluttonous Greaves",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Guardian Angel",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "revive"
+        ],
+        "reason": "Guardian Angel's Rebirth is modeled in the target survival ledger; it changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Guardian Angel",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Guardian Angel",
+        "outcome_dimensions": [
+          "revive"
+        ],
+        "reason": "Rebirth restores 50% base health four seconds after the first lethal packet; the coupled survival ledger applies it once when the event falls inside the selected window.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Guinsoo's Rageblade",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Guinsoo's Rageblade",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Guinsoo's Rageblade",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Gunmetal Greaves",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [
+          "movement"
+        ],
+        "reason": "Riot's cached description declares Noxian Gait (attacks grant decaying movement speed for 2 seconds), but the item passive is absent from the cached Wiki branches and its magnitude cannot be sourced safely. The movement/spacing outcome is outside the supported objective model, so the upgraded boot remains explicitly blocked rather than silently dropping Noxian Gait.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Gunmetal Greaves",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Gunmetal Greaves",
+        "outcome_dimensions": [
+          "movement"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Gustwalker Hatchling",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Gustwalker Hatchling",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Gustwalker Hatchling",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Haunting Guise",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Haunting Guise",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Haunting Guise",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Health Potion",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": false,
+      "name": "Health Potion",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Health Potion",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Hearthbound Axe",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Hearthbound Axe",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Hearthbound Axe",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Heartsteel",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "progression",
+          "health_state"
+        ],
+        "reason": "Colossal Consumption's permanent bonus-health state is supplied through the explicit bounded scenario control.",
+        "status": "modeled_state"
+      },
+      "manual": true,
+      "name": "Heartsteel",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Heartsteel",
+        "outcome_dimensions": [
+          "progression",
+          "health_state"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Hexdrinker",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Hexdrinker",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Hexdrinker",
+        "outcome_dimensions": [],
+        "reason": "Lifeline's level-scaled 30%-health magic shield is modeled when every damage event is event-certified; uncertified timed fights are withheld.",
+        "status": "modeled_event_certified"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Hexoptics C44",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Hexoptics C44",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Hexoptics C44",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Hextech Alternator",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Hextech Alternator",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Hextech Alternator",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Hextech Gunblade",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Hextech Gunblade",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Hextech Gunblade",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Hextech Rocketbelt",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Hextech Rocketbelt",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Hextech Rocketbelt",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Hollow Radiance",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Hollow Radiance",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Hollow Radiance",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Horizon Focus",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "vision",
+          "damage_amplification"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Horizon Focus",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Horizon Focus",
+        "outcome_dimensions": [
+          "vision",
+          "damage_amplification"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Hubris",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [
+          "progression",
+          "stat_conversion"
+        ],
+        "reason": "Eminence's takedown trigger, 90-second duration, and permanent stack state are not scheduled in the participant ledger.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Hubris",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Hubris",
+        "outcome_dimensions": [
+          "progression",
+          "stat_conversion"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Hullbreaker",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Hullbreaker",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Hullbreaker",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Iceborn Gauntlet",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Iceborn Gauntlet",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Iceborn Gauntlet",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Immortal Path",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Now and Forever's health-state damage amplification is not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Immortal Path",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Immortal Path",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Immortal Shieldbow",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Immortal Shieldbow",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Immortal Shieldbow",
+        "outcome_dimensions": [],
+        "reason": "Lifeline's level-scaled 30%-health shield is modeled when every damage event is event-certified; uncertified timed fights are withheld.",
+        "status": "modeled_event_certified"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Imperial Mandate",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Control's ability haste and Command's damage amplification are not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Imperial Mandate",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Imperial Mandate",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Infinity Edge",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Infinity Edge",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Infinity Edge",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Ionian Boots of Lucidity",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Ionian Insight grants summoner spell haste.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Ionian Boots of Lucidity",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Ionian Boots of Lucidity",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Jak'Sho, The Protean",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Jak'Sho, The Protean",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Jak'Sho, The Protean",
+        "outcome_dimensions": [],
+        "reason": "Voidborn Resilience's one-stack-per-second combat state is scheduled from the exact event ledger and multiplies bonus resistances at max.",
+        "status": "modeled_event_certified"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Kaenic Rookern",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Kaenic Rookern",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Kaenic Rookern",
+        "outcome_dimensions": [],
+        "reason": "Magebane's ready maximum-health magic shield is modelled.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Kindlegem",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Kindlegem",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Kindlegem",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Knight's Vow",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "status": "modeled_state"
+      },
+      "manual": true,
+      "name": "Knight's Vow",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Knight's Vow",
+        "outcome_dimensions": [],
+        "reason": "Pledge redirects 14% of eligible pre-mitigation physical or magic damage to the explicitly selected Worthy holder, and Sacrifice heals the holder from post-mitigation Worthy damage while its sourced range and health gates are active.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Kraken Slayer",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Kraken Slayer",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Kraken Slayer",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Last Whisper",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Last Whisper",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Last Whisper",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Liandry's Torment",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Liandry's Torment",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Liandry's Torment",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Lich Bane",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Lich Bane",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Lich Bane",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Locket of the Iron Solari",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "ally_support",
+          "shield"
+        ],
+        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "status": "modeled_state"
+      },
+      "manual": true,
+      "name": "Locket of the Iron Solari",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": false,
+        "name": "Locket of the Iron Solari",
+        "outcome_dimensions": [
+          "ally_support",
+          "shield"
+        ],
+        "reason": "Devotion's activated shield is not modelled.",
+        "status": "blocked"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Long Sword",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Long Sword",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Long Sword",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Lord Dominik's Regards",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Lord Dominik's Regards",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Lord Dominik's Regards",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Lost Chapter",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Enlighten restores mana on level-up; it adds no direct damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Lost Chapter",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Lost Chapter",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Luden's Echo",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Luden's Echo",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Luden's Echo",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Malignance",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Malignance",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Malignance",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Manamune",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Awe's mana scaling and Manaflow stack state are not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Manamune",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Manamune",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Maw of Malmortius",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Maw of Malmortius",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Maw of Malmortius",
+        "outcome_dimensions": [],
+        "reason": "Lifeline's bonus-AD-scaled 30%-health magic shield is modeled when every damage event is event-certified; uncertified timed fights are withheld.",
+        "status": "modeled_event_certified"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Mejai's Soulstealer",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "progression",
+          "stat_conversion"
+        ],
+        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "status": "modeled_state"
+      },
+      "manual": true,
+      "name": "Mejai's Soulstealer",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Mejai's Soulstealer",
+        "outcome_dimensions": [
+          "progression",
+          "stat_conversion"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Mercurial Scimitar",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "cleanse",
+          "movement"
+        ],
+        "reason": "Quicksilver cleanses crowd control and grants movement speed.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Mercurial Scimitar",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Mercurial Scimitar",
+        "outcome_dimensions": [
+          "cleanse",
+          "movement"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Mercury's Treads",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Mercury's Treads",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Mercury's Treads",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Mikael's Blessing",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "ally_support",
+          "cleanse",
+          "sustain"
+        ],
+        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "status": "modeled_state"
+      },
+      "manual": true,
+      "name": "Mikael's Blessing",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": false,
+        "name": "Mikael's Blessing",
+        "outcome_dimensions": [
+          "ally_support",
+          "cleanse",
+          "sustain"
+        ],
+        "reason": "Purify's activated heal is not modelled.",
+        "status": "blocked"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Moonstone Renewer",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Starlit Grace chains healing or shielding.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Moonstone Renewer",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Moonstone Renewer",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Morellonomicon",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Grievous Wounds reduces recipient healing in the coupled timeline; it does not add direct damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Morellonomicon",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Morellonomicon",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Mortal Reminder",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Grievous Wounds reduces recipient healing in the coupled timeline; it does not add direct damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Mortal Reminder",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Mortal Reminder",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Mosstomper Seedling",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Mosstomper Seedling",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Mosstomper Seedling",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Muramana",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Muramana",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Muramana",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Nashor's Tooth",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Nashor's Tooth",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Nashor's Tooth",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Navori Flickerblade",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Navori Flickerblade",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Navori Flickerblade",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Needlessly Large Rod",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Needlessly Large Rod",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Needlessly Large Rod",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Negatron Cloak",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Negatron Cloak",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Negatron Cloak",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Noonquiver",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Noonquiver",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Noonquiver",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Null-Magic Mantle",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Null-Magic Mantle",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Null-Magic Mantle",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Oblivion Orb",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Oblivion Orb",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Oblivion Orb",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Overlord's Bloodmail",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Tyranny is modeled and Retribution uses the explicit bounded starting missing-health scenario control.",
+        "status": "modeled_state"
+      },
+      "manual": true,
+      "name": "Overlord's Bloodmail",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Overlord's Bloodmail",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Phage",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Rage's conditional movement-speed state is not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Phage",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Phage",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Phantom Dancer",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "movement"
+        ],
+        "reason": "Spectral Waltz grants ghosting.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Phantom Dancer",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Phantom Dancer",
+        "outcome_dimensions": [
+          "movement"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Pickaxe",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Pickaxe",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Pickaxe",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Plated Steelcaps",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Plated Steelcaps",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Plated Steelcaps",
+        "outcome_dimensions": [],
+        "reason": "Plating's 10% non-true basic-damage reduction is modelled.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Profane Hydra",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "multi_target"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Profane Hydra",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Profane Hydra",
+        "outcome_dimensions": [
+          "multi_target"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Protoplasm Harness",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Protoplasm Harness",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Protoplasm Harness",
+        "outcome_dimensions": [],
+        "reason": "Lifeline's level-scaled temporary health and resist-scaled healing are modeled when every damage event is event-certified. The calculation fails closed if damage reaches the unsourced temporary-health expiry boundary.",
+        "status": "modeled_event_certified"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Quicksilver Sash",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Quicksilver is defensive cleanse.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Quicksilver Sash",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Quicksilver Sash",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Rabadon's Deathcap",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Rabadon's Deathcap",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Rabadon's Deathcap",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Randuin's Omen",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "slow",
+          "critical_mitigation"
+        ],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Randuin's Omen",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Randuin's Omen",
+        "outcome_dimensions": [
+          "slow",
+          "critical_mitigation"
+        ],
+        "reason": "Resilience's 30% incoming critical-strike damage reduction is modelled.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Rapid Firecannon",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "energized",
+          "range"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Rapid Firecannon",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Rapid Firecannon",
+        "outcome_dimensions": [
+          "energized",
+          "range"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Ravenous Hydra",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "multi_target",
+          "sustain"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Ravenous Hydra",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Ravenous Hydra",
+        "outcome_dimensions": [
+          "multi_target",
+          "sustain"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Rectrix",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Rectrix",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Rectrix",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Recurve Bow",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Recurve Bow",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Recurve Bow",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Redemption",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "ally_support",
+          "sustain"
+        ],
+        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "status": "modeled_state"
+      },
+      "manual": true,
+      "name": "Redemption",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": false,
+        "name": "Redemption",
+        "outcome_dimensions": [
+          "ally_support",
+          "sustain"
+        ],
+        "reason": "Intervention's activated target healing is not modelled.",
+        "status": "blocked"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Refillable Potion",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Potion charges restore the holder's health; they add no outgoing target damage.",
+        "status": "stats_only"
+      },
+      "manual": false,
+      "name": "Refillable Potion",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Refillable Potion",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Rejuvenation Bead",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Rejuvenation Bead",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Rejuvenation Bead",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Riftmaker",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Riftmaker",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Riftmaker",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Rod of Ages",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "progression",
+          "health_state",
+          "resource"
+        ],
+        "reason": "Timeless stacks and their sourced health, mana, and ability-power conversions are supplied through the explicit bounded scenario control.",
+        "status": "modeled_state"
+      },
+      "manual": true,
+      "name": "Rod of Ages",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Rod of Ages",
+        "outcome_dimensions": [
+          "progression",
+          "health_state",
+          "resource"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Ruby Crystal",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Ruby Crystal",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Ruby Crystal",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Runaan's Hurricane",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "multi_target",
+          "copied_on_hit"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Runaan's Hurricane",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Runaan's Hurricane",
+        "outcome_dimensions": [
+          "multi_target",
+          "copied_on_hit"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Runic Compass",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active are not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Runic Compass",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Runic Compass",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Rylai's Crystal Scepter",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "slow"
+        ],
+        "reason": "Rimefrost slows without adding direct damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Rylai's Crystal Scepter",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Rylai's Crystal Scepter",
+        "outcome_dimensions": [
+          "slow"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Sapphire Crystal",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Sapphire Crystal",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Sapphire Crystal",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Scorchclaw Pup",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Scorchclaw Pup",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Scorchclaw Pup",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Scout's Slingshot",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Scout's Slingshot",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Scout's Slingshot",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Seeker's Armguard",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Seeker's Armguard",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Seeker's Armguard",
+        "outcome_dimensions": [],
+        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Seraph's Embrace",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Seraph's Embrace",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Seraph's Embrace",
+        "outcome_dimensions": [],
+        "reason": "Lifeline's maximum-mana-scaled 30%-health shield is modeled when every damage event is event-certified; uncertified timed fights are withheld.",
+        "status": "modeled_event_certified"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Serpent's Fang",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Serpent's Fang",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Serpent's Fang",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Serrated Dirk",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Serrated Dirk",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Serrated Dirk",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Serylda's Grudge",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "slow"
+        ],
+        "reason": "Bitter Cold slows without adding direct damage.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Serylda's Grudge",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Serylda's Grudge",
+        "outcome_dimensions": [
+          "slow"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Shadowflame",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Shadowflame",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Shadowflame",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Shattered Armguard",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Shattered Armguard",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Shattered Armguard",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Sheen",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Sheen",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Sheen",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Shurelya's Battlesong",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "movement",
+          "ally_support"
+        ],
+        "reason": "The item exposes its damage-relevant state as a scenario control.",
+        "status": "modeled_state"
+      },
+      "manual": true,
+      "name": "Shurelya's Battlesong",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Shurelya's Battlesong",
+        "outcome_dimensions": [
+          "movement",
+          "ally_support"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Solstice Sleigh",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "ally_support",
+          "movement",
+          "sustain"
+        ],
+        "reason": "Going Sledding heals and grants movement speed.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Solstice Sleigh",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Solstice Sleigh",
+        "outcome_dimensions": [
+          "ally_support",
+          "movement",
+          "sustain"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Sorcerer's Shoes",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Sorcerer's Shoes",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Sorcerer's Shoes",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Spear of Shojin",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Spear of Shojin",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Spear of Shojin",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Spectre's Cowl",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Spectre's Cowl",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Spectre's Cowl",
+        "outcome_dimensions": [],
+        "reason": "The current full Wiki entry confirms that Incorporeal was removed in V14.6; the remaining target-relevant behavior is its sourced base health-regeneration stat, with no post-damage passive to schedule.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Spellslinger's Shoes",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Spellslinger's Shoes",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Spellslinger's Shoes",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Spirit Visage",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Spirit Visage",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Spirit Visage",
+        "outcome_dimensions": [],
+        "reason": "Boundless Vitality amplifies modeled healing, shields, and regeneration received in the participant ledger.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Staff of Flowing Water",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Staff of Flowing Water",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Staff of Flowing Water",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Statikk Shiv",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "multi_target",
+          "energized"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Statikk Shiv",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Statikk Shiv",
+        "outcome_dimensions": [
+          "multi_target",
+          "energized"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Steel Sigil",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Steel Sigil",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Steel Sigil",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Sterak's Gage",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Sterak's Gage",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Sterak's Gage",
+        "outcome_dimensions": [],
+        "reason": "Lifeline's bonus-health-scaled 30%-health shield is modeled when every damage event is event-certified; uncertified timed fights are withheld.",
+        "status": "modeled_event_certified"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Stormrazor",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "energized",
+          "movement"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Stormrazor",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Stormrazor",
+        "outcome_dimensions": [
+          "energized",
+          "movement"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Stormsurge",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Stormsurge",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Stormsurge",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Stridebreaker",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [
+          "multi_target",
+          "slow",
+          "movement"
+        ],
+        "reason": "Breaking Shockwave's movement-speed/slow sibling is not modeled; its active secondary damage packet is represented.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Stridebreaker",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Stridebreaker",
+        "outcome_dimensions": [
+          "multi_target",
+          "slow",
+          "movement"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Sundered Sky",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Sundered Sky",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Sundered Sky",
+        "outcome_dimensions": [],
+        "reason": "Lightshield Strike's base-AD plus missing-health heal is replayed on the first attack; excess healing becomes sourced 8-second temporary health in the participant ledger.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Sunfire Aegis",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Sunfire Aegis",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Sunfire Aegis",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Swiftmarch",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "movement",
+          "stat_conversion"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Swiftmarch",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Swiftmarch",
+        "outcome_dimensions": [
+          "movement",
+          "stat_conversion"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Tear of the Goddess",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Manaflow stack progression is not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Tear of the Goddess",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Tear of the Goddess",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Terminus",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Terminus",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Terminus",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "The Brutalizer",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "The Brutalizer",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "The Brutalizer",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "The Collector",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "execute",
+          "takedown_state"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "The Collector",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "The Collector",
+        "outcome_dimensions": [
+          "execute",
+          "takedown_state"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Thornmail",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Thornmail",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Thornmail",
+        "outcome_dimensions": [],
+        "reason": "Thornmail's 20 magic damage plus 10% wearer bonus-armor Thorns and Grievous Wounds are scheduled from modeled basic-attack events.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Tiamat",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Tiamat",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Tiamat",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Titanic Hydra",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "multi_target"
+        ],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Titanic Hydra",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Titanic Hydra",
+        "outcome_dimensions": [
+          "multi_target"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Trinity Force",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Trinity Force",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Trinity Force",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Tunneler",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Tunneler",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Tunneler",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Umbral Glaive",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [
+          "vision"
+        ],
+        "reason": "Nightstalker's first-attack true damage is not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Umbral Glaive",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Umbral Glaive",
+        "outcome_dimensions": [
+          "vision"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Unending Despair",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Unending Despair",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Unending Despair",
+        "outcome_dimensions": [],
+        "reason": "Anguish's every-four-second magic pulse and 250% post-mitigation self-heal are scheduled on the certified participant ledger for the selected enemy targets assumed within its 650-unit area.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Vampiric Scepter",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Vampiric Scepter",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Vampiric Scepter",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Verdant Barrier",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Verdant Barrier",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Verdant Barrier",
+        "outcome_dimensions": [],
+        "reason": "Annul is ready at the opening and consumes every packet belonging to the first source-backed Q/W/E/R cast; auto attacks and later casts land.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Void Staff",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Void Staff",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Void Staff",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Voltaic Cyclosword",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Firmament's attack-only Energized schedule and pre-trigger lethality are modeled, but Galvanize's ability trigger is withheld until the selected champion supplies an exact damaging ability event rather than a cast boundary.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Voltaic Cyclosword",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Voltaic Cyclosword",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Warden's Mail",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The represented mechanic changes defense, not outgoing TDD.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Warden's Mail",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Warden's Mail",
+        "outcome_dimensions": [],
+        "reason": "Rock Solid's post-mitigation 15 reduction, capped at 20%, is modelled.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Warmog's Armor",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Warmog's Armor",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Warmog's Armor",
+        "outcome_dimensions": [],
+        "reason": "Warmog's Vitality modifies item health; combat regeneration stays inactive while the target is taking damage.",
+        "status": "modeled"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Whispering Circlet",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Manaflow stacks and the Diadem transformation state are not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Whispering Circlet",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": false,
+        "name": "Whispering Circlet",
+        "outcome_dimensions": [],
+        "reason": "Manaflow health state is not exposed for target modelling.",
+        "status": "blocked"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Winged Moonplate",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Winged Moonplate",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Winged Moonplate",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Winter's Approach",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Awe's bonus-mana-to-health conversion is modeled, but Manaflow's charge/transform state is not scheduled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Winter's Approach",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": false,
+        "name": "Winter's Approach",
+        "outcome_dimensions": [],
+        "reason": "Awe and Manaflow health state are not modelled.",
+        "status": "blocked"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Wit's End",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Wit's End",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Wit's End",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "World Atlas",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [
+          "economy",
+          "quest",
+          "ally_support"
+        ],
+        "reason": "Support Quest's 400 gold Shared Riches upgrade and Runic Compass/Ward transition are not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "World Atlas",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "World Atlas",
+        "outcome_dimensions": [
+          "economy",
+          "quest",
+          "ally_support"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Youmuu's Ghostblade",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "movement"
+        ],
+        "reason": "Haunt and Wraith Step grant movement speed.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Youmuu's Ghostblade",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Youmuu's Ghostblade",
+        "outcome_dimensions": [
+          "movement"
+        ],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Yun Tal Wildarrows",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Yun Tal Wildarrows",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Yun Tal Wildarrows",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Zaz'Zak's Realmspike",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "Damage-relevant effects are represented by the fight model.",
+        "status": "modeled_effect"
+      },
+      "manual": true,
+      "name": "Zaz'Zak's Realmspike",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Zaz'Zak's Realmspike",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Zeal",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [],
+        "reason": "The item has no separate passive or active in the cached Wiki data.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Zeal",
+      "optimizer": false,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Zeal",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": false,
+        "name": "Zeke's Convergence",
+        "optimizer_eligible": false,
+        "outcome_dimensions": [],
+        "reason": "Ultimate haste and Frostfire Tempest damage are not modelled.",
+        "status": "blocked"
+      },
+      "manual": true,
+      "name": "Zeke's Convergence",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Zeke's Convergence",
+        "outcome_dimensions": [],
+        "reason": "No reviewed effect on this item changes incoming damage or starting durability in the passive-target model.",
+        "status": "not_target_relevant"
+      }
+    },
+    {
+      "attacker": {
+        "calculation_eligible": true,
+        "name": "Zhonya's Hourglass",
+        "optimizer_eligible": true,
+        "outcome_dimensions": [
+          "stasis"
+        ],
+        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+        "status": "stats_only"
+      },
+      "manual": true,
+      "name": "Zhonya's Hourglass",
+      "optimizer": true,
+      "target": {
+        "calculation_eligible": true,
+        "name": "Zhonya's Hourglass",
+        "outcome_dimensions": [
+          "stasis"
+        ],
+        "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+        "status": "modeled"
+      }
+    }
+  ],
+  "passed": true,
+  "path_mismatches": [],
+  "review_pending": [],
+  "source_complete": true,
+  "unexplained_blocks": [],
+  "unresolved_source_conflicts": []
+}

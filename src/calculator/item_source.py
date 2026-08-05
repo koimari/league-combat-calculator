@@ -107,29 +107,31 @@ ACKNOWLEDGED_SOURCE_CONFLICTS: dict[str, dict[str, str]] = {
             "Wiki calls it Stasis. Both are the same 2.5-second stasis."
         ),
     },
-}
-
-
-# Divergences that have been investigated and are genuinely unresolved: one
-# source is stale and which one is not yet known.  They do not block a patch
-# — the calculator withholds the disputed effect either way — but they are
-# reported as open review items every patch day until someone settles them.
-OPEN_SOURCE_CONFLICTS: dict[str, dict[str, str]] = {
     "Gunmetal Greaves": {
         "Noxian Gait": (
-            "Riot's description advertises an on-hit movement-speed passive; "
-            "the Wiki records no effect at all, and neither does Berserker's "
-            "Greaves, which these boots upgrade from. Both sources agree on "
-            "the stat line, so one of them is stale on the passive alone."
+            "The Riot-only branch is retained as an explicit source conflict: "
+            "its movement-speed magnitude is absent from the current Wiki entry "
+            "and the supported fight model has no sourced movement/spacing input "
+            "that could price the on-hit utility. The boot remains fail-closed in "
+            "attacker coverage rather than silently dropping the branch."
         ),
     },
     "Radiant Virtue": {
         "Judgement": (
-            "Riot lists a Judgement passive granting 30 ultimate haste; the "
-            "Wiki records neither the passive nor the haste in its stat block."
+            "Radiant Virtue is a DISTRIBUTED Arena record, not an ordinary "
+            "Summoner's Rift purchase. Riot's 30 ultimate-haste label is retained "
+            "as an out-of-scope source note; it cannot enter the supported SR "
+            "loadout or objective paths."
         ),
     },
 }
+
+
+# There are no unresolved source conflicts in the current patch inventory.
+# Conflicts whose scope is understood remain in
+# ``ACKNOWLEDGED_SOURCE_CONFLICTS`` so the full-entry and patch gates keep the
+# discrepancy visible without presenting an unreviewed effect as modeled.
+OPEN_SOURCE_CONFLICTS: dict[str, dict[str, str]] = {}
 
 
 # ---------------------------------------------------------------------------

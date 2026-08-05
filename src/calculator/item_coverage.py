@@ -59,7 +59,10 @@ _BLOCKED_REASONS: dict[str, str] = {
     "Gunmetal Greaves": (
         "Riot's cached description declares Noxian Gait (attacks grant decaying "
         "movement speed for 2 seconds), but the item passive is absent from the "
-        "cached Wiki branches and its magnitude cannot be sourced safely."
+        "cached Wiki branches and its magnitude cannot be sourced safely. The "
+        "movement/spacing outcome is outside the supported objective model, so "
+        "the upgraded boot remains explicitly blocked rather than silently "
+        "dropping Noxian Gait."
     ),
     "Runic Compass": (
         "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active "
@@ -373,6 +376,7 @@ _TARGET_BLOCKED_REASONS: dict[str, str] = {
 # than being silently presented as a stat-only item.
 _UTILITY_DIMENSIONS: dict[str, tuple[str, ...]] = {
     "Bandlepipes": ("ally_support", "stat_buff"),
+    "Gunmetal Greaves": ("movement",),
     "Cull": ("economy", "progression", "on_hit"),
     "Heartsteel": ("progression", "health_state"),
     "Hubris": ("progression", "stat_conversion"),
