@@ -1,0 +1,20 @@
+{
+ "source": "local client 16.15.8024387",
+ "files": {
+  "champions": {
+   "count": 203,
+   "sample": [
+    "aatrox",
+    "ahri",
+    "akali",
+    "akshan",
+    "alistar",
+    "ambessa",
+    "amumu",
+    "anivia",
+    "annie",
+    "aphelios"
+   ]
+  }
+ }
+}
