@@ -197,14 +197,14 @@ def test_representative_item_classifications(item_name, expected_status):
     )
 
 
-def test_gunmetal_gait_source_conflict_is_explicitly_blocked():
-    """Riot-only Noxian Gait cannot be treated as a complete stat-only boot."""
+def test_gunmetal_gait_source_conflict_keeps_boot_stats_eligible():
+    """The unresolved movement branch is explicit without losing boot stats."""
     coverage = item_model_coverage(get_item_by_name("Gunmetal Greaves"))
 
-    assert coverage["status"] == "blocked"
-    assert coverage["optimizer_eligible"] is False
+    assert coverage["status"] == "stats_only"
+    assert coverage["optimizer_eligible"] is True
     assert "Noxian Gait" in coverage["reason"]
-    assert "magnitude cannot be sourced safely" in coverage["reason"]
+    assert "out of scope" in coverage["reason"]
 
 
 def test_multitool_is_not_a_summoners_rift_optimizer_candidate():
