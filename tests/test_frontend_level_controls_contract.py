@@ -37,3 +37,14 @@ def test_level_controls_use_level_delta_path_contract():
         "setPath(levelPath, Math.max(1, Math.min(cap, Number(pathValue(levelPath)) + Number(levelButton.dataset.levelDelta || levelButton.dataset.delta || 0))))"
         in source
     )
+
+
+def test_level_controls_roster_path_selector_scope_is_attacker_specific():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert (
+        "document.querySelectorAll('button[data-level-path=\"attacker.level\"]')"
+        in source
+    )
+    assert 'data-level-path="${root}.${index}.level"' in source
+    assert 'data-level-path="attacker.level"' in source
