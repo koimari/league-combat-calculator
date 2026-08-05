@@ -1,190 +1,6 @@
 {
   "audit": "league_wiki_full_parent_entry",
-  "champion_module_failures": [
-    {
-      "error": "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15.",
-      "invalid_slots": [],
-      "manifest_review_status": "reviewed_packet",
-      "missing_slots": [],
-      "module": "generated.zoe",
-      "name": "Zoe",
-      "registration": "generated_packet",
-      "review_status": "generated_packet",
-      "slot_coverage": [
-        {
-          "issue_refs": [
-            15,
-            18
-          ],
-          "kind": "packet",
-          "name": "More Sparkles!",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-          "slot": "P",
-          "source": [
-            "P",
-            0
-          ],
-          "status": "generated_pending"
-        },
-        {
-          "issue_refs": [
-            15,
-            18
-          ],
-          "kind": "packet",
-          "name": "Paddle Star!",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-          "slot": "Q",
-          "source": [
-            "Q",
-            0
-          ],
-          "status": "generated_pending"
-        },
-        {
-          "issue_refs": [
-            15,
-            18
-          ],
-          "kind": "packet",
-          "name": "Spell Thief",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-          "slot": "W",
-          "source": [
-            "W",
-            0
-          ],
-          "status": "generated_pending"
-        },
-        {
-          "issue_refs": [
-            15,
-            18
-          ],
-          "kind": "packet",
-          "name": "Sleepy Trouble Bubble",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-          "slot": "E",
-          "source": [
-            "E",
-            0
-          ],
-          "status": "generated_pending"
-        },
-        {
-          "issue_refs": [],
-          "kind": "no_damage",
-          "name": "Portal Jump",
-          "reason": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-          "slot": "R",
-          "source": [
-            "R",
-            0
-          ],
-          "status": "out_of_scope"
-        }
-      ],
-      "slots": [
-        "P",
-        "Q",
-        "W",
-        "E",
-        "R"
-      ],
-      "source_receipts": 1,
-      "status": "review_pending"
-    },
-    {
-      "error": "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15.",
-      "invalid_slots": [],
-      "manifest_review_status": "reviewed_packet",
-      "missing_slots": [],
-      "module": "generated.zyra",
-      "name": "Zyra",
-      "registration": "generated_packet",
-      "review_status": "generated_packet",
-      "slot_coverage": [
-        {
-          "issue_refs": [],
-          "kind": "no_damage",
-          "name": "Garden of Thorns",
-          "reason": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-          "slot": "P",
-          "source": [
-            "P",
-            0
-          ],
-          "status": "out_of_scope"
-        },
-        {
-          "issue_refs": [
-            15,
-            18
-          ],
-          "kind": "packet",
-          "name": "Deadly Spines",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-          "slot": "Q",
-          "source": [
-            "Q",
-            0
-          ],
-          "status": "generated_pending"
-        },
-        {
-          "issue_refs": [],
-          "kind": "no_damage",
-          "name": "Rampant Growth",
-          "reason": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-          "slot": "W",
-          "source": [
-            "W",
-            0
-          ],
-          "status": "out_of_scope"
-        },
-        {
-          "issue_refs": [
-            15,
-            18
-          ],
-          "kind": "packet",
-          "name": "Grasping Roots",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-          "slot": "E",
-          "source": [
-            "E",
-            0
-          ],
-          "status": "generated_pending"
-        },
-        {
-          "issue_refs": [
-            15,
-            18
-          ],
-          "kind": "packet",
-          "name": "Stranglethorns",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-          "slot": "R",
-          "source": [
-            "R",
-            0
-          ],
-          "status": "generated_pending"
-        }
-      ],
-      "slots": [
-        "P",
-        "Q",
-        "W",
-        "E",
-        "R"
-      ],
-      "source_receipts": 1,
-      "status": "review_pending"
-    }
-  ],
+  "champion_module_failures": [],
   "champion_modules": [
     {
       "invalid_slots": [],
@@ -13780,74 +13596,61 @@
       "status": "ready"
     },
     {
-      "error": "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15.",
       "invalid_slots": [],
       "manifest_review_status": "reviewed_packet",
       "missing_slots": [],
-      "module": "generated.zoe",
+      "module": "zoe",
       "name": "Zoe",
-      "registration": "generated_packet",
-      "review_status": "generated_packet",
+      "registration": "reviewed_module",
+      "review_status": "reviewed_module",
       "slot_coverage": [
         {
-          "issue_refs": [
-            15,
-            18
-          ],
+          "issue_refs": [],
           "kind": "packet",
           "name": "More Sparkles!",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+          "reason": "Slot is implemented by the reviewed champion module.",
           "slot": "P",
           "source": [
             "P",
             0
           ],
-          "status": "generated_pending"
+          "status": "modeled"
         },
         {
-          "issue_refs": [
-            15,
-            18
-          ],
+          "issue_refs": [],
           "kind": "packet",
           "name": "Paddle Star!",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+          "reason": "Slot is implemented by the reviewed champion module.",
           "slot": "Q",
           "source": [
             "Q",
             0
           ],
-          "status": "generated_pending"
+          "status": "modeled"
         },
         {
-          "issue_refs": [
-            15,
-            18
-          ],
+          "issue_refs": [],
           "kind": "packet",
           "name": "Spell Thief",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+          "reason": "Slot is implemented by the reviewed champion module.",
           "slot": "W",
           "source": [
             "W",
             0
           ],
-          "status": "generated_pending"
+          "status": "modeled"
         },
         {
-          "issue_refs": [
-            15,
-            18
-          ],
+          "issue_refs": [],
           "kind": "packet",
           "name": "Sleepy Trouble Bubble",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+          "reason": "Slot is implemented by the reviewed champion module.",
           "slot": "E",
           "source": [
             "E",
             0
           ],
-          "status": "generated_pending"
+          "status": "modeled"
         },
         {
           "issue_refs": [],
@@ -13870,17 +13673,16 @@
         "R"
       ],
       "source_receipts": 1,
-      "status": "review_pending"
+      "status": "ready"
     },
     {
-      "error": "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15.",
       "invalid_slots": [],
       "manifest_review_status": "reviewed_packet",
       "missing_slots": [],
-      "module": "generated.zyra",
+      "module": "zyra",
       "name": "Zyra",
-      "registration": "generated_packet",
-      "review_status": "generated_packet",
+      "registration": "reviewed_module",
+      "review_status": "reviewed_module",
       "slot_coverage": [
         {
           "issue_refs": [],
@@ -13895,19 +13697,16 @@
           "status": "out_of_scope"
         },
         {
-          "issue_refs": [
-            15,
-            18
-          ],
+          "issue_refs": [],
           "kind": "packet",
           "name": "Deadly Spines",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+          "reason": "Slot is implemented by the reviewed champion module.",
           "slot": "Q",
           "source": [
             "Q",
             0
           ],
-          "status": "generated_pending"
+          "status": "modeled"
         },
         {
           "issue_refs": [],
@@ -13922,34 +13721,28 @@
           "status": "out_of_scope"
         },
         {
-          "issue_refs": [
-            15,
-            18
-          ],
+          "issue_refs": [],
           "kind": "packet",
           "name": "Grasping Roots",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+          "reason": "Slot is implemented by the reviewed champion module.",
           "slot": "E",
           "source": [
             "E",
             0
           ],
-          "status": "generated_pending"
+          "status": "modeled"
         },
         {
-          "issue_refs": [
-            15,
-            18
-          ],
+          "issue_refs": [],
           "kind": "packet",
           "name": "Stranglethorns",
-          "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+          "reason": "Slot is implemented by the reviewed champion module.",
           "slot": "R",
           "source": [
             "R",
             0
           ],
-          "status": "generated_pending"
+          "status": "modeled"
         }
       ],
       "slots": [
@@ -13960,18 +13753,18 @@
         "R"
       ],
       "source_receipts": 1,
-      "status": "review_pending"
+      "status": "ready"
     }
   ],
   "counts": {
     "champion_modules_expected": 173,
-    "champion_modules_ready": 171,
-    "champion_modules_review_pending": 2,
+    "champion_modules_ready": 173,
+    "champion_modules_review_pending": 0,
     "champions_expected": 173,
     "entries_audited": 410,
     "items_expected": 237,
-    "ready": 408,
-    "review_pending": 2
+    "ready": 410,
+    "review_pending": 0
   },
   "entries": [
     {
@@ -78880,69 +78673,55 @@
             "E",
             "R"
           ],
-          "runtime_gaps": [
-            "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15."
-          ],
+          "runtime_gaps": [],
           "slot_coverage": [
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "More Sparkles!",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "P",
               "source": [
                 "P",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Paddle Star!",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "Q",
               "source": [
                 "Q",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Spell Thief",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "W",
               "source": [
                 "W",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Sleepy Trouble Bubble",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "E",
               "source": [
                 "E",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
               "issue_refs": [],
@@ -78959,80 +78738,65 @@
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "502f219ecee99b3662ffa86bd7299e1b93d581db93eae6fb6f8e172e7cc4d7df",
+        "expected_effects_sha256": "f1f4c651c25880013d6ed4ea255c63ea1b73bfdd8cd967e348c53dc14543c421",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "issue_refs": [
-            15,
-            18
-          ],
+          "issue_refs": [],
           "manifest_review_status": "reviewed_packet",
-          "module": "generated.zoe",
-          "ready": false,
-          "reason": "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15.",
-          "registration": "generated_packet",
-          "review_status": "generated_packet",
+          "module": "zoe",
+          "ready": true,
+          "reason": "Full parent entry plus passive/Q/W/E/R source receipts are required by the reviewed champion module.",
+          "registration": "reviewed_module",
+          "review_status": "reviewed_module",
           "slot_coverage": [
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "More Sparkles!",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "P",
               "source": [
                 "P",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Paddle Star!",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "Q",
               "source": [
                 "Q",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Spell Thief",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "W",
               "source": [
                 "W",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Sleepy Trouble Bubble",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "E",
               "source": [
                 "E",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
               "issue_refs": [],
@@ -79055,9 +78819,9 @@
             "R"
           ],
           "source_receipts": 1,
-          "status": "review_pending"
+          "status": "ready"
         },
-        "runtime_reasoned": false
+        "runtime_reasoned": true
       },
       "has_text": true,
       "kind": "champion",
@@ -79112,7 +78876,7 @@
         }
       ],
       "source_url": "https://wiki.leagueoflegends.com/en-us/Zoe",
-      "status": "review_pending",
+      "status": "ready",
       "title": "Zoe",
       "wikitext_chars": 2614
     },
@@ -79282,9 +79046,7 @@
             "E",
             "R"
           ],
-          "runtime_gaps": [
-            "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15."
-          ],
+          "runtime_gaps": [],
           "slot_coverage": [
             {
               "issue_refs": [],
@@ -79299,19 +79061,16 @@
               "status": "out_of_scope"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Deadly Spines",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "Q",
               "source": [
                 "Q",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
               "issue_refs": [],
@@ -79326,52 +79085,43 @@
               "status": "out_of_scope"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Grasping Roots",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "E",
               "source": [
                 "E",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Stranglethorns",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "R",
               "source": [
                 "R",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             }
           ],
           "source_record": "cached_champion_entry"
         },
-        "expected_effects_sha256": "791eb6baa8084ff121dbfd5589e83fa10817f6baac80c5e03fae4d8613289401",
+        "expected_effects_sha256": "3522f51879a7f2e73ac46c70c850255671c2225505dca238960f685d4da4d995",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "issue_refs": [
-            15,
-            18
-          ],
+          "issue_refs": [],
           "manifest_review_status": "reviewed_packet",
-          "module": "generated.zyra",
-          "ready": false,
-          "reason": "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15.",
-          "registration": "generated_packet",
-          "review_status": "generated_packet",
+          "module": "zyra",
+          "ready": true,
+          "reason": "Full parent entry plus passive/Q/W/E/R source receipts are required by the reviewed champion module.",
+          "registration": "reviewed_module",
+          "review_status": "reviewed_module",
           "slot_coverage": [
             {
               "issue_refs": [],
@@ -79386,19 +79136,16 @@
               "status": "out_of_scope"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Deadly Spines",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "Q",
               "source": [
                 "Q",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
               "issue_refs": [],
@@ -79413,34 +79160,28 @@
               "status": "out_of_scope"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Grasping Roots",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "E",
               "source": [
                 "E",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             },
             {
-              "issue_refs": [
-                15,
-                18
-              ],
+              "issue_refs": [],
               "kind": "packet",
               "name": "Stranglethorns",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
+              "reason": "Slot is implemented by the reviewed champion module.",
               "slot": "R",
               "source": [
                 "R",
                 0
               ],
-              "status": "generated_pending"
+              "status": "modeled"
             }
           ],
           "slots": [
@@ -79451,9 +79192,9 @@
             "R"
           ],
           "source_receipts": 1,
-          "status": "review_pending"
+          "status": "ready"
         },
-        "runtime_reasoned": false
+        "runtime_reasoned": true
       },
       "has_text": true,
       "kind": "champion",
@@ -79522,7 +79263,7 @@
         }
       ],
       "source_url": "https://wiki.leagueoflegends.com/en-us/Zyra",
-      "status": "review_pending",
+      "status": "ready",
       "title": "Zyra",
       "wikitext_chars": 7935
     },
@@ -97989,825 +97730,8 @@
       "wikitext_chars": 6797
     }
   ],
-  "failures": [
-    {
-      "ability_template_refs": {
-        "E": "{{Data Zoe/E|",
-        "P": "{{Data Zoe/I|",
-        "Q": "{{Data Zoe/Q|",
-        "R": "{{Data Zoe/R|",
-        "W": "{{Data Zoe/W|"
-      },
-      "ability_templates": [
-        {
-          "content_sha256": "ea5fe184dcfd4f27e22061a91d1e3905a95fd4367f7f1b7a97fc3666588ca84b",
-          "document_sha256": "6dcee7209e354108b673954bfe6ce5ba8cb7c4268a9eef351519e09071b9e260",
-          "has_text": true,
-          "namespace": 10,
-          "page_id": 1342042,
-          "revision_id": 2864203,
-          "revision_timestamp": "2019-11-03T20:07:19Z",
-          "slot": "P",
-          "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zoe/I",
-          "template_title": "Template:Data Zoe/I",
-          "wikitext_chars": 77
-        },
-        {
-          "content_sha256": "774424c47a0a70005c610f698174d8d16cbdf0f8546d34d0cd0cdc37369fac78",
-          "document_sha256": "8f86c9191129d9f1e525386bf724b83731c20b1a5f4a551653fb6ce574e377ac",
-          "has_text": true,
-          "namespace": 10,
-          "page_id": 1342041,
-          "revision_id": 3907472,
-          "revision_timestamp": "2025-06-07T02:51:15Z",
-          "slot": "Q",
-          "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zoe/Q",
-          "template_title": "Template:Data Zoe/Q",
-          "wikitext_chars": 75
-        },
-        {
-          "content_sha256": "50b242832215dddfd75d56433284e972eb01bc88ac6e3aafbf51873312340ee4",
-          "document_sha256": "97916648f556b76deed6160a2a281f91b8431e290a193994cfe567ad7788b92a",
-          "has_text": true,
-          "namespace": 10,
-          "page_id": 1342043,
-          "revision_id": 2864350,
-          "revision_timestamp": "2019-11-03T20:11:40Z",
-          "slot": "W",
-          "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zoe/W",
-          "template_title": "Template:Data Zoe/W",
-          "wikitext_chars": 74
-        },
-        {
-          "content_sha256": "9d943b4781e927c8eec88f933a92478721f9a37ea661ec6a266bc3133471e88c",
-          "document_sha256": "b989bb04988b05c63592668a9a8f647f409438f376aa0d4e7f8624c01a0953f6",
-          "has_text": true,
-          "namespace": 10,
-          "page_id": 1342044,
-          "revision_id": 2864496,
-          "revision_timestamp": "2019-11-03T20:14:10Z",
-          "slot": "E",
-          "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zoe/E",
-          "template_title": "Template:Data Zoe/E",
-          "wikitext_chars": 84
-        },
-        {
-          "content_sha256": "a05d5e9e648252ed09cd94e067e2c53d3bc40ca07f2f9c61ebb885f69cbbc4be",
-          "document_sha256": "602a879c08cecbf0b4280609de4523962368bbab0ee429eedacfc2a12ccc410f",
-          "has_text": true,
-          "namespace": 10,
-          "page_id": 1342045,
-          "revision_id": 2864642,
-          "revision_timestamp": "2019-11-03T20:17:35Z",
-          "slot": "R",
-          "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zoe/R",
-          "template_title": "Template:Data Zoe/R",
-          "wikitext_chars": 74
-        }
-      ],
-      "content_sha256": "2b55afefff87294278610a9b57e7b64bf1c248a8411323c3fbceb2cdc823cbb2",
-      "document_sha256": "bdf1cebb39b3844bd86a9c4c2b570c848c03a0a2d21e70df7c757e4bad7da364",
-      "full_entry_review": {
-        "expected_effects": {
-          "effect_count": 5,
-          "effects": [
-            {
-              "slot": "P",
-              "variant_count": 1,
-              "variants": [
-                {
-                  "description_count": 1,
-                  "descriptions": [
-                    "Innate: After casting an ability, Zoe empowers her next basic attack or Spell Thief bolt within 5 seconds to become non-projectile and deal 16 : 150 (based on level) (+ 20% AP) bonus magic damage."
-                  ],
-                  "effect_count": 1,
-                  "name": "More Sparkles!"
-                }
-              ]
-            },
-            {
-              "slot": "Q",
-              "variant_count": 1,
-              "variants": [
-                {
-                  "description_count": 4,
-                  "descriptions": [
-                    "Active: Zoe shoots a star in the target direction that explodes upon hitting an enemy, dealing magic damage to nearby enemies hit. The total damage is increased by 0% : 150% (based on distance traveled).",
-                    "The star lingers at maximum range for 1 second, during which Paddle Star! can be recast after 0.25 seconds in the duration.",
-                    "Recast: Zoe redirects the star in the target path, empowering it with increased speed and radius, and resetting its damage modifier on cast. The redirected star can travel until it reaches 800-units outbound from Zoe.",
-                    "Paddle Star!'s recast can be used while affected by cast-inhibiting crowd control."
-                  ],
-                  "effect_count": 4,
-                  "name": "Paddle Star!"
-                }
-              ]
-            },
-            {
-              "slot": "W",
-              "variant_count": 1,
-              "variants": [
-                {
-                  "description_count": 5,
-                  "descriptions": [
-                    "Passive - Wheeeee: Whenever Zoe casts Spell Thief or a summoner spell, she gains bonus movement speed for a duration, and summons three bolts that orbit her for the next 10 seconds.",
-                    "If Zoe is not affected by complete crowd control, she shoots one bolt at a time at the nearest non- sleeping enemy in range, prioritizing her attack target, dealing magic damage with each bolt.",
-                    "Passive: Whenever an enemy champion casts a specific summoner spell or item active, regardless of distance, they drop the corresponding Spell Shard onto the ground that grants sight over a 100-radius area and remains for 40 seconds. Enemy minions have a 10% chance to spawn with…",
-                    "Zoe can collect a Spell Shard by moving directly onto it, holding it for up to 60 seconds. Collecting a new Spell Shard replaces the current one.",
-                    "Active: Zoe mimics the active effect of the collected Spell Shard."
-                  ],
-                  "effect_count": 5,
-                  "name": "Spell Thief"
-                }
-              ]
-            },
-            {
-              "slot": "E",
-              "variant_count": 1,
-              "variants": [
-                {
-                  "description_count": 4,
-                  "descriptions": [
-                    "Active: Zoe kicks a bubble in the target direction that bursts upon the first enemy hit, otherwise lingering at maximum range while slightly bouncing forward over 1 second, then becoming a trap for 5 seconds that bursts upon contact with an enemy. The bubble can move through ter…",
-                    "The burst deals magic damage to the target and inflicts them with drowsy for 1.4 seconds, which gradually slows them until they fall asleep for 2.25 seconds. While the target is asleep, they are inflicted with 30% magic resistance reduction.",
-                    "The next instance of non- persistent damage from champions, large monsters or turrets against the sleeping target consumes the debuff to deal bonus true damage equal to the post-mitigation damage dealt, capped at Sleepy Trouble Bubble's damage. This bonus damage may also be appl…",
-                    "Sleepy Trouble Bubble refunds a percentage of its cooldown if the bubble hits an enemy champion."
-                  ],
-                  "effect_count": 4,
-                  "name": "Sleepy Trouble Bubble"
-                }
-              ]
-            },
-            {
-              "slot": "R",
-              "variant_count": 1,
-              "variants": [
-                {
-                  "description_count": 2,
-                  "descriptions": [
-                    "Active: After a 0.15-second delay, Zoe blinks in the target direction and remains there for 0.95 seconds to 1.25 seconds, during which she sets her movement speed to a static 0 and has unobstructed vision. Afterwards, she blinks back to her casting position.",
-                    "Portal Jump resets Zoe's basic attack timer. Zoe briefly becomes unable to act after casting Portal Jump as well as after blinking back."
-                  ],
-                  "effect_count": 2,
-                  "name": "Portal Jump"
-                }
-              ]
-            }
-          ],
-          "required_slots": [
-            "P",
-            "Q",
-            "W",
-            "E",
-            "R"
-          ],
-          "runtime_gaps": [
-            "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15."
-          ],
-          "slot_coverage": [
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "More Sparkles!",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "P",
-              "source": [
-                "P",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Paddle Star!",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "Q",
-              "source": [
-                "Q",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Spell Thief",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "W",
-              "source": [
-                "W",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Sleepy Trouble Bubble",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "E",
-              "source": [
-                "E",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [],
-              "kind": "no_damage",
-              "name": "Portal Jump",
-              "reason": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-              "slot": "R",
-              "source": [
-                "R",
-                0
-              ],
-              "status": "out_of_scope"
-            }
-          ],
-          "source_record": "cached_champion_entry"
-        },
-        "expected_effects_sha256": "502f219ecee99b3662ffa86bd7299e1b93d581db93eae6fb6f8e172e7cc4d7df",
-        "parent_entry_read": true,
-        "required": true,
-        "runtime": {
-          "issue_refs": [
-            15,
-            18
-          ],
-          "manifest_review_status": "reviewed_packet",
-          "module": "generated.zoe",
-          "ready": false,
-          "reason": "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15.",
-          "registration": "generated_packet",
-          "review_status": "generated_packet",
-          "slot_coverage": [
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "More Sparkles!",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "P",
-              "source": [
-                "P",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Paddle Star!",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "Q",
-              "source": [
-                "Q",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Spell Thief",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "W",
-              "source": [
-                "W",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Sleepy Trouble Bubble",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "E",
-              "source": [
-                "E",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [],
-              "kind": "no_damage",
-              "name": "Portal Jump",
-              "reason": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-              "slot": "R",
-              "source": [
-                "R",
-                0
-              ],
-              "status": "out_of_scope"
-            }
-          ],
-          "slots": [
-            "P",
-            "Q",
-            "W",
-            "E",
-            "R"
-          ],
-          "source_receipts": 1,
-          "status": "review_pending"
-        },
-        "runtime_reasoned": false
-      },
-      "has_text": true,
-      "kind": "champion",
-      "missing_ability_slots": [],
-      "name": "Zoe",
-      "namespace": 0,
-      "page_id": 1338392,
-      "revision_id": 4012894,
-      "revision_timestamp": "2026-04-27T00:59:58Z",
-      "sections": [
-        {
-          "end_line": 15,
-          "heading": "Abilities",
-          "level": 2,
-          "ordinal": 0,
-          "start_line": 6
-        },
-        {
-          "end_line": 19,
-          "heading": "Champion skins",
-          "level": 2,
-          "ordinal": 1,
-          "start_line": 15
-        },
-        {
-          "end_line": 23,
-          "heading": "Patch history",
-          "level": 2,
-          "ordinal": 2,
-          "start_line": 19
-        },
-        {
-          "end_line": 38,
-          "heading": "Trivia",
-          "level": 2,
-          "ordinal": 3,
-          "start_line": 23
-        },
-        {
-          "end_line": 41,
-          "heading": "See also",
-          "level": 2,
-          "ordinal": 4,
-          "start_line": 38
-        },
-        {
-          "end_line": 51,
-          "heading": "References",
-          "level": 2,
-          "ordinal": 5,
-          "start_line": 41
-        }
-      ],
-      "source_url": "https://wiki.leagueoflegends.com/en-us/Zoe",
-      "status": "review_pending",
-      "title": "Zoe",
-      "wikitext_chars": 2614
-    },
-    {
-      "ability_template_refs": {
-        "E": "{{Data Zyra/E|",
-        "P": "{{Data Zyra/I|",
-        "Q": "{{Data Zyra/Q|",
-        "R": "{{Data Zyra/R|",
-        "W": "{{Data Zyra/W|"
-      },
-      "ability_templates": [
-        {
-          "content_sha256": "724141b46821ead1863ab3122d8fa5842bd756ebaddf1aad1c3e50bcb44ae7f9",
-          "document_sha256": "d1445bdd2ddcedfa1c6811ad2dc8413d12d09da9d2d32d8a7022522c83f88034",
-          "has_text": true,
-          "namespace": 10,
-          "page_id": 1309217,
-          "revision_id": 2864204,
-          "revision_timestamp": "2019-11-03T20:07:20Z",
-          "slot": "P",
-          "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zyra/I",
-          "template_title": "Template:Data Zyra/I",
-          "wikitext_chars": 80
-        },
-        {
-          "content_sha256": "e15da25d2b5c31a92b41bd42ba42733ce25e69d310ef5ca899c8dc13aea47fa6",
-          "document_sha256": "2c5778452b690912f7625d517c38ff0bd9479c748d927f34d5d0667cef396fc0",
-          "has_text": true,
-          "namespace": 10,
-          "page_id": 1309218,
-          "revision_id": 2864059,
-          "revision_timestamp": "2019-11-03T20:04:15Z",
-          "slot": "Q",
-          "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zyra/Q",
-          "template_title": "Template:Data Zyra/Q",
-          "wikitext_chars": 77
-        },
-        {
-          "content_sha256": "b47bb6bcb4a4864ef06f192ca9d275b6f66edbaeef8bb4150b1544042427a89a",
-          "document_sha256": "41ae39fd52861b2472698e372e7daa125ca12e38731488c4090db0e048005b40",
-          "has_text": true,
-          "namespace": 10,
-          "page_id": 1309214,
-          "revision_id": 2864351,
-          "revision_timestamp": "2019-11-03T20:11:41Z",
-          "slot": "W",
-          "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zyra/W",
-          "template_title": "Template:Data Zyra/W",
-          "wikitext_chars": 78
-        },
-        {
-          "content_sha256": "712d8e6d9910b15a72e83dc6ac82cbabf8260490d7bad95d0c587b59da3e7f49",
-          "document_sha256": "44b4fbf1a17f7622c1e6a33c75109306f6d7ed5ee907e035cf4c5e0e8a5badb3",
-          "has_text": true,
-          "namespace": 10,
-          "page_id": 1309212,
-          "revision_id": 2864497,
-          "revision_timestamp": "2019-11-03T20:14:11Z",
-          "slot": "E",
-          "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zyra/E",
-          "template_title": "Template:Data Zyra/E",
-          "wikitext_chars": 78
-        },
-        {
-          "content_sha256": "e2539292929ae7923ce55c7cb892dd5795c436dbfe8938d75580ff7fe9fcb556",
-          "document_sha256": "b213e332df9295cd7e76c6819393df450f4c35cdc5519c1e376fb9106ed31585",
-          "has_text": true,
-          "namespace": 10,
-          "page_id": 1309210,
-          "revision_id": 2864643,
-          "revision_timestamp": "2019-11-03T20:17:36Z",
-          "slot": "R",
-          "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zyra/R",
-          "template_title": "Template:Data Zyra/R",
-          "wikitext_chars": 78
-        }
-      ],
-      "content_sha256": "dd500570142643a3a12757f706fc011b4d4206a0965dec87b3671d2d2d8d1ae2",
-      "document_sha256": "329932ba2907ce2aeacc9daf67b18762abfb52776281483b8de16e0457966550",
-      "full_entry_review": {
-        "expected_effects": {
-          "effect_count": 5,
-          "effects": [
-            {
-              "slot": "P",
-              "variant_count": 1,
-              "variants": [
-                {
-                  "description_count": 3,
-                  "descriptions": [
-                    "Innate: Periodically, Zyra spawns one or two Seeds nearby that last for 30 seconds, granting sight over the surrounding area for 1 second.",
-                    "After 1 second, enemy champions can destroy Seeds by moving on top of them.",
-                    "Zyra can only have a total of 8 Seeds planted at a time, preserving Seeds spawned by Rampant Growth over Seeds spawned by Garden of Thorns."
-                  ],
-                  "effect_count": 3,
-                  "name": "Garden of Thorns"
-                }
-              ]
-            },
-            {
-              "slot": "Q",
-              "variant_count": 1,
-              "variants": [
-                {
-                  "description_count": 2,
-                  "descriptions": [
-                    "Active: Zyra sprouts thorny spines at the target location that appear after a 0.625-seconds delay, dealing magic damage to enemies hit.",
-                    "If Deadly Spine hits a Seed, it sprouts into a Thorn Spitter that lasts for 8 seconds."
-                  ],
-                  "effect_count": 2,
-                  "name": "Deadly Spines"
-                }
-              ]
-            },
-            {
-              "slot": "W",
-              "variant_count": 1,
-              "variants": [
-                {
-                  "description_count": 2,
-                  "descriptions": [
-                    "Active: Zyra plants a Seed at the target location that remains for 60 seconds and grants sight over the surrounding area, though decreasing in radius after 1 second. After 1.5 seconds, enemy champions can destroy the Seed by stepping on it, which reveals them for 2 seconds.",
-                    "Zyra periodically stocks a Seed charge, up to a maximum of 2. Killing an enemy generates 35% charge toward a Seed, increased to 100% for large enemies and whenever scoring an enemy champion takedown."
-                  ],
-                  "effect_count": 2,
-                  "name": "Rampant Growth"
-                }
-              ]
-            },
-            {
-              "slot": "E",
-              "variant_count": 1,
-              "variants": [
-                {
-                  "description_count": 2,
-                  "descriptions": [
-                    "Active: Zyra shoots a surge of vines in the target direction that deals magic damage to enemies hit and roots them for a duration.",
-                    "If Grasping Roots hits a Seed, it sprouts into a Vine Lasher that lasts for 8 seconds."
-                  ],
-                  "effect_count": 2,
-                  "name": "Grasping Roots"
-                }
-              ]
-            },
-            {
-              "slot": "R",
-              "variant_count": 1,
-              "variants": [
-                {
-                  "description_count": 3,
-                  "descriptions": [
-                    "Active: Zyra summons a monstrous thicket at the target location that deals magic damage to enemies hit as it expands.",
-                    "After 2 seconds, the thicket snaps upward to knock up enemies within for 1 second.",
-                    "Plants hit by the thicket become enraged, restoring 50% of their current health, increasing their maximum health by 50%, gaining 25% increased size and refreshing their duration while the thicket expands. Additionally they attack in a flurry, launching two shots per attack, deal…"
-                  ],
-                  "effect_count": 3,
-                  "name": "Stranglethorns"
-                }
-              ]
-            }
-          ],
-          "required_slots": [
-            "P",
-            "Q",
-            "W",
-            "E",
-            "R"
-          ],
-          "runtime_gaps": [
-            "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15."
-          ],
-          "slot_coverage": [
-            {
-              "issue_refs": [],
-              "kind": "no_damage",
-              "name": "Garden of Thorns",
-              "reason": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-              "slot": "P",
-              "source": [
-                "P",
-                0
-              ],
-              "status": "out_of_scope"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Deadly Spines",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "Q",
-              "source": [
-                "Q",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [],
-              "kind": "no_damage",
-              "name": "Rampant Growth",
-              "reason": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-              "slot": "W",
-              "source": [
-                "W",
-                0
-              ],
-              "status": "out_of_scope"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Grasping Roots",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "E",
-              "source": [
-                "E",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Stranglethorns",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "R",
-              "source": [
-                "R",
-                0
-              ],
-              "status": "generated_pending"
-            }
-          ],
-          "source_record": "cached_champion_entry"
-        },
-        "expected_effects_sha256": "791eb6baa8084ff121dbfd5589e83fa10817f6baac80c5e03fae4d8613289401",
-        "parent_entry_read": true,
-        "required": true,
-        "runtime": {
-          "issue_refs": [
-            15,
-            18
-          ],
-          "manifest_review_status": "reviewed_packet",
-          "module": "generated.zyra",
-          "ready": false,
-          "reason": "Generated packet module is intentionally not marked reviewed; complete champion-specific mechanics remain in issue #15.",
-          "registration": "generated_packet",
-          "review_status": "generated_packet",
-          "slot_coverage": [
-            {
-              "issue_refs": [],
-              "kind": "no_damage",
-              "name": "Garden of Thorns",
-              "reason": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-              "slot": "P",
-              "source": [
-                "P",
-                0
-              ],
-              "status": "out_of_scope"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Deadly Spines",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "Q",
-              "source": [
-                "Q",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [],
-              "kind": "no_damage",
-              "name": "Rampant Growth",
-              "reason": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-              "slot": "W",
-              "source": [
-                "W",
-                0
-              ],
-              "status": "out_of_scope"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Grasping Roots",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "E",
-              "source": [
-                "E",
-                0
-              ],
-              "status": "generated_pending"
-            },
-            {
-              "issue_refs": [
-                15,
-                18
-              ],
-              "kind": "packet",
-              "name": "Stranglethorns",
-              "reason": "Generated packet is runnable but the complete champion-specific Wiki mechanics, target policy, costs, timing, and state branches still require an exact module.",
-              "slot": "R",
-              "source": [
-                "R",
-                0
-              ],
-              "status": "generated_pending"
-            }
-          ],
-          "slots": [
-            "P",
-            "Q",
-            "W",
-            "E",
-            "R"
-          ],
-          "source_receipts": 1,
-          "status": "review_pending"
-        },
-        "runtime_reasoned": false
-      },
-      "has_text": true,
-      "kind": "champion",
-      "missing_ability_slots": [],
-      "name": "Zyra",
-      "namespace": 0,
-      "page_id": 588041,
-      "revision_id": 4002566,
-      "revision_timestamp": "2026-03-26T15:04:37Z",
-      "sections": [
-        {
-          "end_line": 11,
-          "heading": "Abilities",
-          "level": 2,
-          "ordinal": 0,
-          "start_line": 5
-        },
-        {
-          "end_line": 123,
-          "heading": "Pets",
-          "level": 2,
-          "ordinal": 1,
-          "start_line": 11
-        },
-        {
-          "end_line": 126,
-          "heading": "General",
-          "level": 3,
-          "ordinal": 2,
-          "start_line": 123
-        },
-        {
-          "end_line": 130,
-          "heading": "Champion skins",
-          "level": 2,
-          "ordinal": 3,
-          "start_line": 126
-        },
-        {
-          "end_line": 134,
-          "heading": "Patch history",
-          "level": 2,
-          "ordinal": 4,
-          "start_line": 130
-        },
-        {
-          "end_line": 153,
-          "heading": "Trivia",
-          "level": 2,
-          "ordinal": 5,
-          "start_line": 134
-        },
-        {
-          "end_line": 156,
-          "heading": "See also",
-          "level": 2,
-          "ordinal": 6,
-          "start_line": 153
-        },
-        {
-          "end_line": 163,
-          "heading": "References",
-          "level": 2,
-          "ordinal": 7,
-          "start_line": 156
-        }
-      ],
-      "source_url": "https://wiki.leagueoflegends.com/en-us/Zyra",
-      "status": "review_pending",
-      "title": "Zyra",
-      "wikitext_chars": 7935
-    }
-  ],
-  "passed": false,
+  "failures": [],
+  "passed": true,
   "required_champion_slots": [
     "P",
     "Q",

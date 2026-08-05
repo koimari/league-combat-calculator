@@ -170,6 +170,8 @@ _CUSTOM_CHAMPION_MODULES: dict[str, str] = {
     "Zed": "zed",
     "Zeri": "zeri",
     "Zilean": "zilean",
+    "Zoe": "zoe",
+    "Zyra": "zyra",
     "Galio": "galio",
     "Gnar": "gnar",
     "Jarvan IV": "jarvan_iv",
