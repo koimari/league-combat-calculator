@@ -1344,6 +1344,8 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
     assert "function itemOptionSpec(id)" in source
     assert "definition.stat_effects?.[key]" in source
     assert "options[item.backendName || item.name] = { [spec.key]" in source
+    assert "LEGACY_STACK_ITEM_NAMES" in source
+    assert "specs.length === 1 && LEGACY_STACK_ITEM_NAMES.has(itemName(id))" in source
     assert "crit_chance_per_stack_${suffix}" in source
 
 
