@@ -1,0 +1,1058 @@
+{
+ "aatrox": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ahri": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "akali": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "akshan": {
+  "heal_named": [],
+  "shield_named": [
+   "AkshanPassiveShield"
+  ]
+ },
+ "alistar": {
+  "heal_named": [
+   "AlistarPassiveHeal",
+   "AlistarPassiveHealMis"
+  ],
+  "shield_named": []
+ },
+ "ambessa": {
+  "heal_named": [],
+  "shield_named": [
+   "AmbessaWShield"
+  ]
+ },
+ "amumu": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "anivia": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "annie": {
+  "heal_named": [],
+  "shield_named": [
+   "MoltenShieldTibbersBuff",
+   "Molten_Shield"
+  ]
+ },
+ "aphelios": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ashe": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "aurelionsol": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "aurora": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "azir": {
+  "heal_named": [],
+  "shield_named": [
+   "AzirEShield"
+  ]
+ },
+ "bard": {
+  "heal_named": [
+   "BardWActualHealing",
+   "BardWDirectHeal",
+   "BardWHealthPack"
+  ],
+  "shield_named": []
+ },
+ "belveth": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "blitzcrank": {
+  "heal_named": [],
+  "shield_named": [
+   "ManaBarrier",
+   "ManaBarrierCooldown",
+   "ManaBarrierIcon"
+  ]
+ },
+ "brand": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "braum": {
+  "heal_named": [],
+  "shield_named": [
+   "BraumBasicAttackShieldOverride",
+   "BraumEShieldBuff"
+  ]
+ },
+ "briar": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "caitlyn": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "camille": {
+  "heal_named": [],
+  "shield_named": [
+   "CamillePassiveShieldMagic",
+   "CamillePassiveShieldPhysical"
+  ]
+ },
+ "cassiopeia": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "chogath": {
+  "heal_named": [
+   "ChogathFeastVFXMissile",
+   "Feast",
+   "Feast_Internal"
+  ],
+  "shield_named": []
+ },
+ "corki": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "darius": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "diana": {
+  "heal_named": [],
+  "shield_named": [
+   "DianaShield"
+  ]
+ },
+ "draven": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "drmundo": {
+  "heal_named": [
+   "DrMundoRHeal"
+  ],
+  "shield_named": []
+ },
+ "ekko": {
+  "heal_named": [
+   "EkkoRHeal"
+  ],
+  "shield_named": [
+   "EkkoWShield"
+  ]
+ },
+ "elise": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "evelynn": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ezreal": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "fiddlesticks": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "fiora": {
+  "heal_named": [
+   "FioraRHeal"
+  ],
+  "shield_named": []
+ },
+ "fizz": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "galio": {
+  "heal_named": [],
+  "shield_named": [
+   "GalioRShield"
+  ]
+ },
+ "gangplank": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "garen": {
+  "heal_named": [
+   "GarenPassiveHeal"
+  ],
+  "shield_named": [
+   "GarenWShield"
+  ]
+ },
+ "gnar": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "gragas": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "graves": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "gwen": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "hecarim": {
+  "heal_named": [
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": []
+ },
+ "heimerdinger": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "hwei": {
+  "heal_named": [],
+  "shield_named": [
+   "HweiWWShield"
+  ]
+ },
+ "illaoi": {
+  "heal_named": [
+   "IllaoiTentacleHeal",
+   "IllaoiTentacleHealCooldown",
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": []
+ },
+ "irelia": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ivern": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "janna": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "jarvaniv": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "jax": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "jayce": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "jhin": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "jinx": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "kaisa": {
+  "heal_named": [],
+  "shield_named": [
+   "KaisaRShield"
+  ]
+ },
+ "kalista": {
+  "heal_named": [
+   "Drain",
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": []
+ },
+ "karma": {
+  "heal_named": [],
+  "shield_named": [
+   "KarmaSolKimShield",
+   "KarmaSolKimShieldLocket",
+   "KarmaSoulShield"
+  ]
+ },
+ "karthus": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "kassadin": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "katarina": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "kayle": {
+  "heal_named": [
+   "KayleWHeal"
+  ],
+  "shield_named": []
+ },
+ "kayn": {
+  "heal_named": [
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": []
+ },
+ "kennen": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "khazix": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "kindred": {
+  "heal_named": [
+   "KindredWPassiveHealMissile"
+  ],
+  "shield_named": []
+ },
+ "kled": {
+  "heal_named": [],
+  "shield_named": [
+   "KledRShield"
+  ]
+ },
+ "kogmaw": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ksante": {
+  "heal_named": [
+   "KSanteRConversionHealth"
+  ],
+  "shield_named": [
+   "KsanteEShield"
+  ]
+ },
+ "leblanc": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "leesin": {
+  "heal_named": [],
+  "shield_named": [
+   "LeeSinWOneShield"
+  ]
+ },
+ "leona": {
+  "heal_named": [],
+  "shield_named": [
+   "LeonaShieldOfDaybreak",
+   "LeonaShieldOfDaybreakAttack",
+   "LeonaSolarBarrier",
+   "LeonaSolarBarrierAttackBuff"
+  ]
+ },
+ "lillia": {
+  "heal_named": [
+   "PerkSoulFeastVisualMissile"
+  ],
+  "shield_named": []
+ },
+ "lissandra": {
+  "heal_named": [],
+  "shield_named": [
+   "LissandraRSpellShieldCheck"
+  ]
+ },
+ "locke": {
+  "heal_named": [
+   "LockeConsumeAttack"
+  ],
+  "shield_named": []
+ },
+ "lucian": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "lulu": {
+  "heal_named": [],
+  "shield_named": [
+   "LuluEShield"
+  ]
+ },
+ "lux": {
+  "heal_named": [],
+  "shield_named": [
+   "LuxShield"
+  ]
+ },
+ "malphite": {
+  "heal_named": [],
+  "shield_named": [
+   "MalphiteShield",
+   "Malphite_Shield_Cooldown"
+  ]
+ },
+ "malzahar": {
+  "heal_named": [],
+  "shield_named": [
+   "MalzaharPassiveShield",
+   "MalzaharPassiveShieldCooldown",
+   "MalzaharPassiveShieldCooldownIndicator",
+   "MalzaharPassiveShieldWinddown",
+   "MalzaharPassiveShieldWindup"
+  ]
+ },
+ "maokai": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "masteryi": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "mel": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "milio": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "missfortune": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "monkeyking": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "mordekaiser": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "morgana": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "naafiri": {
+  "heal_named": [],
+  "shield_named": [
+   "NaafiriRShield"
+  ]
+ },
+ "nami": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "nasus": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "nautilus": {
+  "heal_named": [],
+  "shield_named": [
+   "NautilusPiercingGazeShield"
+  ]
+ },
+ "neeko": {
+  "heal_named": [],
+  "shield_named": [
+   "NeekoRShield"
+  ]
+ },
+ "nidalee": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "nilah": {
+  "heal_named": [],
+  "shield_named": [
+   "NilahPShield"
+  ]
+ },
+ "nocturne": {
+  "heal_named": [],
+  "shield_named": [
+   "NocturneShroudofDarknessShield"
+  ]
+ },
+ "nunu": {
+  "heal_named": [],
+  "shield_named": [
+   "NunuRShield"
+  ]
+ },
+ "olaf": {
+  "heal_named": [],
+  "shield_named": [
+   "OlafWShield"
+  ]
+ },
+ "orianna": {
+  "heal_named": [],
+  "shield_named": [
+   "OrianaRedactShield"
+  ]
+ },
+ "ornn": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "pantheon": {
+  "heal_named": [],
+  "shield_named": [
+   "PantheonEShieldSlam"
+  ]
+ },
+ "poppy": {
+  "heal_named": [],
+  "shield_named": [
+   "PoppyPassiveShield"
+  ]
+ },
+ "pyke": {
+  "heal_named": [
+   "PykePHealOFF",
+   "PykePHealON"
+  ],
+  "shield_named": []
+ },
+ "qiyana": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "quinn": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "rakan": {
+  "heal_named": [
+   "RakanQHeal"
+  ],
+  "shield_named": [
+   "RakanEShield",
+   "RakanPassiveShield"
+  ]
+ },
+ "rammus": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "reksai": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "rell": {
+  "heal_named": [],
+  "shield_named": [
+   "RellW_Shield"
+  ]
+ },
+ "renata": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "renekton": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "rengar": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "riven": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_amumu": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_blitzcrank": {
+  "heal_named": [],
+  "shield_named": [
+   "Ruby_Blitzcrank_ManaBarrier",
+   "Ruby_Blitzcrank_ManaBarrierCooldown",
+   "Ruby_Blitzcrank_ManaBarrierIcon"
+  ]
+ },
+ "ruby_brand": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_caitlyn": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_chogath": {
+  "heal_named": [
+   "Ruby_Chogath_Feast",
+   "Ruby_Chogath_Feast_Internal"
+  ],
+  "shield_named": []
+ },
+ "ruby_corki": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_diana": {
+  "heal_named": [],
+  "shield_named": [
+   "Ruby_DianaShield",
+   "Ruby_Diana_W_Daybreak_Shield",
+   "Ruby_Diana_W_Daybreak_Shield2"
+  ]
+ },
+ "ruby_jinx": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_leesin": {
+  "heal_named": [],
+  "shield_named": [
+   "Ruby_LeeSinWOneShield"
+  ]
+ },
+ "ruby_lux": {
+  "heal_named": [],
+  "shield_named": [
+   "Ruby_LuxPrismaticWaveShield",
+   "Ruby_LuxShield"
+  ]
+ },
+ "ruby_malzahar": {
+  "heal_named": [],
+  "shield_named": [
+   "Ruby_MalzaharPassiveShield",
+   "Ruby_MalzaharPassiveShieldCooldown",
+   "Ruby_MalzaharPassiveShieldCooldownIndicator",
+   "Ruby_MalzaharPassiveShieldWinddown",
+   "Ruby_MalzaharPassiveShieldWindup"
+  ]
+ },
+ "ruby_maokai": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_nami": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_nautilus": {
+  "heal_named": [],
+  "shield_named": [
+   "Ruby_NautilusPiercingGazeShield"
+  ]
+ },
+ "ruby_soraka": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_talon": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_tristana": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_urgot": {
+  "heal_named": [],
+  "shield_named": [
+   "Ruby_UrgotEShield"
+  ]
+ },
+ "ruby_wukong": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "ruby_xerath": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "rumble": {
+  "heal_named": [],
+  "shield_named": [
+   "RumbleShield",
+   "RumbleShieldBuff",
+   "RumbleShieldVO",
+   "RumbleShieldVODangerZone"
+  ]
+ },
+ "ryze": {
+  "heal_named": [],
+  "shield_named": [
+   "RyzeWShield"
+  ]
+ },
+ "samira": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "sejuani": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "senna": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "seraphine": {
+  "heal_named": [
+   "SeraphineW2HealMissile"
+  ],
+  "shield_named": [
+   "SeraphineWShield"
+  ]
+ },
+ "sett": {
+  "heal_named": [],
+  "shield_named": [
+   "SettWShield"
+  ]
+ },
+ "shaco": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "shen": {
+  "heal_named": [],
+  "shield_named": [
+   "ShenPassiveShield",
+   "ShenRShield"
+  ]
+ },
+ "shyvana": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "singed": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "sion": {
+  "heal_named": [],
+  "shield_named": [
+   "SionWShieldStacks",
+   "SionWSoundShield"
+  ]
+ },
+ "sivir": {
+  "heal_named": [],
+  "shield_named": [
+   "SpellShieldSpellImmunity",
+   "Spell_Shield"
+  ]
+ },
+ "skarner": {
+  "heal_named": [],
+  "shield_named": [
+   "SkarnerWShield"
+  ]
+ },
+ "smolder": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "sona": {
+  "heal_named": [],
+  "shield_named": [
+   "SonaWShield"
+  ]
+ },
+ "soraka": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "strawberry_aurora": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "strawberry_briar": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "strawberry_illaoi": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "strawberry_jinx": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "strawberry_leona": {
+  "heal_named": [],
+  "shield_named": [
+   "Strawberry_LeonaShieldOfDaybreak",
+   "Strawberry_LeonaShieldOfDaybreakAttack",
+   "Strawberry_LeonaShieldOfDaybreakAuto",
+   "Strawberry_LeonaSolarBarrier"
+  ]
+ },
+ "strawberry_riven": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "strawberry_seraphine": {
+  "heal_named": [],
+  "shield_named": [
+   "Strawberry_SeraphineWShield"
+  ]
+ },
+ "strawberry_xayah": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "strawberry_yasuo": {
+  "heal_named": [],
+  "shield_named": [
+   "Strawberry_YasuoPassiveShield"
+  ]
+ },
+ "swain": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "sylas": {
+  "heal_named": [
+   "SylasWDamageAndHeal"
+  ],
+  "shield_named": [
+   "SylasEShield"
+  ]
+ },
+ "syndra": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "tahmkench": {
+  "heal_named": [],
+  "shield_named": [
+   "TahmKenchEShield",
+   "TahmKenchRShield"
+  ]
+ },
+ "taliyah": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "talon": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "taric": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "teemo": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "tftchampion": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "thresh": {
+  "heal_named": [
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": [
+   "ThreshWShield"
+  ]
+ },
+ "tristana": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "trundle": {
+  "heal_named": [
+   "TrundlePainHeal",
+   "TrundlePainHealBig",
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": []
+ },
+ "tryndamere": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "twistedfate": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "twitch": {
+  "heal_named": [
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": []
+ },
+ "udyr": {
+  "heal_named": [
+   "UdyrWHeal"
+  ],
+  "shield_named": []
+ },
+ "urgot": {
+  "heal_named": [],
+  "shield_named": [
+   "UrgotEShield"
+  ]
+ },
+ "varus": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "vayne": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "veigar": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "velkoz": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "vex": {
+  "heal_named": [
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": []
+ },
+ "vi": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "viego": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "viktor": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "vladimir": {
+  "heal_named": [
+   "VladimirRHealMissile",
+   "VladimirTidesofBloodHeal",
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": []
+ },
+ "volibear": {
+  "heal_named": [],
+  "shield_named": [
+   "VolibearEShield"
+  ]
+ },
+ "warwick": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "xayah": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "xerath": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "xinzhao": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "yasuo": {
+  "heal_named": [],
+  "shield_named": [
+   "YasuoPassiveMSShieldOn",
+   "YasuoPassiveMovementShield",
+   "YasuoPassiveShield"
+  ]
+ },
+ "yone": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "yorick": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "yunara": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "yuumi": {
+  "heal_named": [
+   "YuumiPHealMark",
+   "YuumiPHealMis"
+  ],
+  "shield_named": [
+   "YuumiPShield",
+   "YuumiPShieldBuff",
+   "YuumiRShield"
+  ]
+ },
+ "zaahen": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "zac": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "zed": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "zeri": {
+  "heal_named": [
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": [
+   "ZeriPShieldMissile",
+   "ZeriPassiveShield"
+  ]
+ },
+ "ziggs": {
+  "heal_named": [],
+  "shield_named": []
+ },
+ "zilean": {
+  "heal_named": [
+   "VladimirTransfusionHeal"
+  ],
+  "shield_named": []
+ },
+ "zoe": {
+  "heal_named": [
+   "SummonerHeal",
+   "ZoeW_SummonerHeal"
+  ],
+  "shield_named": [
+   "ZoeW_SummonerBarrier"
+  ]
+ },
+ "zyra": {
+  "heal_named": [],
+  "shield_named": []
+ }
+}

@@ -55,6 +55,23 @@ All 13 AGENTS.md quirk champions have modules (Aurelion Sol Stardust, Bard Chime
 ### 2.8 Champion classes / archetype semantics
 Champion modules exist for all 173, but "class" behaviors (e.g., Vayne W true-damage stacks, Jinx rocket splash, Yasuo passive crit) are implemented per-module — the audit must confirm each is sourced, not estimated.
 
+
+
+**Refined binary evidence (behavior-index over all 203 CharacterRecords):**
+- 31 champions carry heal-named spell objects; ~22 are champion-specific
+  (Alistar, Bard, Cho'Gath, Ekko, Fiora, Garen, Illaoi, Kayle, Kindred,
+  K'Sante, Locke, Pyke, Rakan, Rek'Sai, Seraphine, Sett, Sylas, Trundle, Udyr,
+  Vladimir, Yuumi, Zoe) — the rest are the shared `VladimirTransfusionHeal`
+  lifesteal hook or rune references (Hecarim, Kalista, Kayn, Thresh, Twitch,
+  Vex, Zeri, Zilean, Lillia) and must not be double-counted.
+- 63 champions carry shield-named spell objects (every shield in the game is
+  inventoried in `data/bin/behavior-index.json`).
+- The champion bins contain the full spell objects inline (cooldowns, ranges,
+  `mAlternateName` behavior refs); BuffData details resolve through those refs.
+- `Scripts.wad.client` (53,778 files) holds map/AI Lua (level scripts, pets,
+  minions, Baron) — game-logic layer for Practice-Tool reproducibility, not
+  champion formulas.
+
 ## 3. The decomposition architecture (path to "nothing partial")
 
 **Principle:** every champion/item is a *composition of the game's fundamental behaviors*. Two authoritative sources feed one atomic catalog:
