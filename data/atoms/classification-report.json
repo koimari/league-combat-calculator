@@ -5942,12 +5942,12 @@
   },
   {
    "champion": "rakan",
-   "atom_count": 46,
+   "atom_count": 50,
    "family_counts": {
     "crowd-control-mobility": 12,
-    "damage": 17,
-    "heal-shield": 9,
-    "stack-transform-summon-resource": 8
+    "damage": 18,
+    "heal-shield": 11,
+    "stack-transform-summon-resource": 9
    },
    "unclassified": [
     {
@@ -5961,12 +5961,6 @@
      "object": "Characters/Rakan/Spells/RakanRunCycleManager",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
-    },
-    {
-     "name": "RakanQReturnMis",
-     "object": "Characters/Rakan/Spells/RakanQAbility/RakanQReturnMis",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
      "name": "RakanWCast",
@@ -9998,16 +9992,16 @@
  ],
  "totals": {
   "champions_processed": 173,
-  "atoms_classified": 8303,
-  "unclassified_real_mechanics": 646,
+  "atoms_classified": 8307,
+  "unclassified_real_mechanics": 645,
   "unclassified_noise_artifacts": 652,
-  "unclassified_total_objects": 1298,
+  "unclassified_total_objects": 1297,
   "family_counts": {
    "crowd-control-mobility": 1510,
-   "damage": 4256,
-   "heal-shield": 729,
+   "damage": 4257,
+   "heal-shield": 731,
    "interaction": 151,
-   "stack-transform-summon-resource": 1484,
+   "stack-transform-summon-resource": 1485,
    "vision-economy": 173
   }
  },
@@ -10232,5 +10226,20 @@
   "Curate ambiguous vocab keywords before scaling to all champions. The classifier already guards against champion-name keywords ('Aatrox', 'Aphelios'), generic words ('duration', 'ability damage', 'crit'), and substring traps ('miss' in missile, 'stance' in distance, 'wind' in window) \u2014 but residual noise remains: 'shield' in the flow/true-damage atoms fires on every shield, 'bonus health' in deep-ward fires on any bonus+health datavalue, 'TauntLength' (Thresh Q) misclassifies as a taunt, 'refund' fires on ManaRefund, and meta atoms (internal-resource-index, buff-duration-class) over-fire by design.",
   "Add a targeting-data source for target_policy: mTargetingTypeData is nearly empty in these binaries, so heal/shield target_policy defaults to 'self' and misses ally-targeted heals (Senna Q, Kayle W, Thresh W lantern). mAffectsTypeFlags is also recorded raw (no decode table available for this data version).",
   "Missiles and empowered-attack variants of an already-classified parent spell (e.g. JinxQAttack, ApheliosSeverumAttack, GnarQMissile) stay unclassified; inheriting the parent ability's atoms for '*Missile'/'*Attack'-suffixed clones would cut the unclassified-real count roughly in half."
- ]
+ ],
+ "iteration": {
+  "round": "v3-final",
+  "universe": "173 wiki champions",
+  "atom_instances": 11113,
+  "unique_atoms_per_champ_deduped": 8307,
+  "exact_duplicates": 0,
+  "sanity_checks": "19/19",
+  "remaining_unclassified_real": 645,
+  "documented_gaps": [
+   "damage_type: CharacterRecord bins carry no damage type; source is wiki ability pages (WS1) and SpellDataResource bins",
+   "Aphelios weapon/armament system is a distinct mechanic (5 weapons x Q) - WS4 champion recompose item",
+   "per-ability passive objects (*Passive) need per-ability wiki mapping",
+   "engine leftovers: Manager/Wrapper/Helper/Parent/Sequencer suffixes still slip past the noise filter"
+  ]
+ }
 }

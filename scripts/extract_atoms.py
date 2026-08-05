@@ -618,6 +618,22 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
         if parent is None and base != name:
             if base in behavior_atoms:
                 parent = base
+        # multi-level: recursively strip clone suffixes down to a classified
+        # parent (ApheliosCalibrumAttackMisMini -> ApheliosCalibrum -> falls
+        # back to the champion's base ability or basic attack).
+        if parent is None:
+            probe = base
+            for _ in range(4):
+                stripped = False
+                for suffix in clone_suffixes:
+                    if probe.endswith(suffix) and len(probe) > len(suffix) + 3:
+                        probe = probe[: -len(suffix)]
+                        stripped = True
+                        if probe in behavior_atoms:
+                            parent = probe
+                            break
+                if parent or not stripped:
+                    break
         if parent is None:
             still_unclassified.append(entry)
             continue

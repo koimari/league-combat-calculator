@@ -5123,12 +5123,6 @@
     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
    },
    {
-    "name": "RakanQReturnMis",
-    "object": "Characters/Rakan/Spells/RakanQAbility/RakanQReturnMis",
-    "looks_noise": false,
-    "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-   },
-   {
     "name": "RakanRunCycleManager",
     "object": "Characters/Rakan/Spells/RakanRunCycleManager",
     "looks_noise": true,
