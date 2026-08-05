@@ -21,10 +21,6 @@ ItemCoverageStatus = Literal[
 # These mechanics can change TDD, casts, resources, or target durability.  The
 # optimiser withholds them until the named mechanic has an explicit model.
 _BLOCKED_REASONS: dict[str, str] = {
-    "Ardent Censer": "Sanctify's conditional self buff and on-hit damage are not modelled.",
-    "Imperial Mandate": (
-        "Control's ability haste and Command's damage amplification are not modelled."
-    ),
     "Umbral Glaive": "Nightstalker's first-attack true damage is not modelled.",
     "Cull": (
         "Reap's 100-minion progression and 350 gold completion payout are not "
@@ -52,19 +48,28 @@ _CALCULATION_ALLOWED_BLOCKED = frozenset({"Cull"})
 # unrepresented sibling passive or state transition.  Keep those items
 # fail-closed until every fight-relevant child effect is covered; a name in
 # ``ITEM_EFFECTS`` is not proof that the whole item is modelled.
-_PARTIAL_BLOCKED_REASONS: dict[str, str] = {
-    "Bandlepipes": (
-        "Fanfare's conditional movement speed and nearby-ally attack-speed buff "
-        "are not modelled; only the holder's sourced attack-speed packet is "
-        "represented."
-    ),
-}
+_PARTIAL_BLOCKED_REASONS: dict[str, str] = {}
 
 # These items have explicit scenario state and a single shared receipt ledger
 # for their timed/progression branches.  They remain separate from ordinary
 # ``ITEM_EFFECTS`` so an item cannot become optimizer-eligible merely because
 # one static stat conversion was parsed.
 _STATEFUL_MODELED_ITEMS: dict[str, str] = {
+    "Ardent Censer": (
+        "Sanctify is represented by the shared participant support ledger: an "
+        "explicit heal or shield trigger schedules the sourced holder/ally "
+        "attack-speed and on-hit-magic packets."
+    ),
+    "Bandlepipes": (
+        "Fanfare is represented by the shared participant support ledger: an "
+        "authored immobilize or slow schedules the sourced movement and "
+        "holder/ally attack-speed packets."
+    ),
+    "Imperial Mandate": (
+        "Command is represented by the shared participant support ledger: an "
+        "authored crowd-control event schedules its all-source damage amplifier "
+        "for the selected target and duration."
+    ),
     "Actualizer": "Mana Made Real is represented by its bounded active window, resource multiplier, and cooldown-progress receipt.",
     "Archangel's Staff": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
     "Manamune": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",

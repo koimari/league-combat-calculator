@@ -223,7 +223,7 @@ def test_candidate_receipt_names_every_withheld_item():
     assert receipt["complete"] is False
     assert receipt["eligible_candidates"] == len(candidates)
     assert receipt["scored_candidates"] + receipt["excluded_count"] == len(candidates)
-    assert "Ardent Censer" in excluded_names
+    assert "Umbral Glaive" in excluded_names
     assert "Rod of Ages" not in excluded_names
     assert "Runaan's Hurricane" not in excluded_names
 
@@ -401,13 +401,22 @@ def test_issue_42_components_are_modeled_attacker_candidates(item_name):
     assert coverage["optimizer_eligible"] is True
 
 
-def test_bandlepipes_ally_buff_sibling_remains_fail_closed():
-    """Holder AS is sourced, but Fanfare's ally packet is not an attacker model."""
+def test_bandlepipes_ally_buff_uses_the_shared_typed_support_ledger():
+    """Fanfare's authored CC trigger is fully represented for ranking."""
     coverage = item_model_coverage(get_item_by_name("Bandlepipes"))
 
-    assert coverage["status"] == "blocked"
-    assert coverage["optimizer_eligible"] is False
-    assert "nearby-ally" in coverage["reason"]
+    assert coverage["status"] == "modeled_state"
+    assert coverage["optimizer_eligible"] is True
+    assert "shared participant support ledger" in coverage["reason"]
+
+
+@pytest.mark.parametrize("item_name", ["Ardent Censer", "Imperial Mandate"])
+def test_typed_enchanter_packets_are_optimizer_eligible(item_name):
+    coverage = item_model_coverage(get_item_by_name(item_name))
+
+    assert coverage["status"] == "modeled_state"
+    assert coverage["optimizer_eligible"] is True
+    assert "shared participant support ledger" in coverage["reason"]
 
 
 def test_warmog_is_not_hidden_by_an_unreachable_blocked_reason():
@@ -487,13 +496,9 @@ def test_every_utility_dimension_item_has_explicit_non_pending_coverage():
         assert coverage["outcome_dimensions"] == list(dimensions), item_name
 
 
-def test_partial_state_items_remain_fail_closed_in_optimizer_coverage():
-    """Registered effects with an uncovered sibling state cannot be scored."""
-    assert _PARTIAL_BLOCKED_REASONS
-    for item_name in _PARTIAL_BLOCKED_REASONS:
-        coverage = item_model_coverage(get_item_by_name(item_name))
-        assert coverage["status"] == "blocked", item_name
-        assert coverage["optimizer_eligible"] is False
+def test_no_stale_partial_state_items_remain_after_shared_ledger_reconciliation():
+    """All registered partial-state items are reconciled before ranking."""
+    assert _PARTIAL_BLOCKED_REASONS == {}
 
 
 def test_sustain_dimension_never_claims_outgoing_model_support():

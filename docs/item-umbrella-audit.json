@@ -1,7 +1,7 @@
 {
   "audit": "item_umbrella_runtime_coverage",
   "counts": {
-    "attacker_blocked": 9,
+    "attacker_blocked": 6,
     "manual_items_and_boots": 202,
     "optimizer_items_and_boots": 130,
     "ordinary_source_items": 209,
@@ -125,15 +125,13 @@
     },
     {
       "attacker": {
-        "calculation_eligible": false,
+        "calculation_eligible": true,
         "name": "Ardent Censer",
-        "optimizer_eligible": false,
+        "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Sanctify's conditional self buff and on-hit damage are not modelled.",
-        "review_issue_refs": [
-          48
-        ],
-        "status": "blocked"
+        "reason": "Sanctify is represented by the shared participant support ledger: an explicit heal or shield trigger schedules the sourced holder/ally attack-speed and on-hit-magic packets.",
+        "review_issue_refs": [],
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Ardent Censer",
@@ -265,18 +263,16 @@
     },
     {
       "attacker": {
-        "calculation_eligible": false,
+        "calculation_eligible": true,
         "name": "Bandlepipes",
-        "optimizer_eligible": false,
+        "optimizer_eligible": true,
         "outcome_dimensions": [
           "ally_support",
           "stat_buff"
         ],
-        "reason": "Fanfare's conditional movement speed and nearby-ally attack-speed buff are not modelled; only the holder's sourced attack-speed packet is represented.",
-        "review_issue_refs": [
-          48
-        ],
-        "status": "blocked"
+        "reason": "Fanfare is represented by the shared participant support ledger: an authored immobilize or slow schedules the sourced movement and holder/ally attack-speed packets.",
+        "review_issue_refs": [],
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Bandlepipes",
@@ -2185,15 +2181,13 @@
     },
     {
       "attacker": {
-        "calculation_eligible": false,
+        "calculation_eligible": true,
         "name": "Imperial Mandate",
-        "optimizer_eligible": false,
+        "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Control's ability haste and Command's damage amplification are not modelled.",
-        "review_issue_refs": [
-          48
-        ],
-        "status": "blocked"
+        "reason": "Command is represented by the shared participant support ledger: an authored crowd-control event schedules its all-source damage amplifier for the selected target and duration.",
+        "review_issue_refs": [],
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Imperial Mandate",
