@@ -616,7 +616,10 @@ function setItemOptionValue(path, key, value) {
 
 function itemOptionControls(path, id, compact = false) {
   const specs = itemOptionSpecs(id);
-  if (specs.length <= 1) return "";
+  // Legacy stack controls render the single state option for stack-backed
+  // items. Every other one-option item (for example Time Stop or Ichorshield)
+  // still needs its typed scenario control visible in the UI.
+  if (specs.length === 0 || (specs.length === 1 && stackSpec(id))) return "";
   const kind = participantKindForPath(path);
   return `<div class="item-option-controls ${compact ? "compact" : ""}" aria-label="${escapeHtml(itemName(id))} state">${specs.map((spec) => {
     const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);

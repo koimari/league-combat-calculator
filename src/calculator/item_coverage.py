@@ -293,6 +293,19 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
         "packet; the coupled survival ledger applies it once when the event "
         "falls inside the selected window."
     ),
+    "Seeker's Armguard": (
+        "Time Stop is priced only from the explicit bounded active-seconds "
+        "scenario input; item presence alone never assumes stasis."
+    ),
+    "Zhonya's Hourglass": (
+        "Time Stop is priced only from the explicit bounded active-seconds "
+        "scenario input; item presence alone never assumes stasis."
+    ),
+    "Spectre's Cowl": (
+        "The current full Wiki entry confirms that Incorporeal was removed in "
+        "V14.6; the remaining target-relevant behavior is its sourced base "
+        "health-regeneration stat, with no post-damage passive to schedule."
+    ),
 }
 
 # Lifeline defenses trigger mid-fight, so pricing them consumes the ordered
@@ -331,27 +344,25 @@ _TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
         "every damage event is event-certified; uncertified timed fights are "
         "withheld."
     ),
+    "Force of Nature": (
+        "Steadfast stacks are scheduled from exact incoming champion magic-damage "
+        "events, including expiry and the maximum-stack bonus resistance."
+    ),
+    "Jak'Sho, The Protean": (
+        "Voidborn Resilience's one-stack-per-second combat state is scheduled "
+        "from the exact event ledger and multiplies bonus resistances at max."
+    ),
 }
 
 _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Fimbulwinter": "Awe bonus health and Everlasting shields are not modelled.",
-    "Force of Nature": (
-        "Steadfast's target-side stack timing is not modelled: champion magic "
-        "damage grants at most one stack per incoming cast instance per second "
-        "(two on immobilize), stacks expire after 7s, and only 8 stacks grant "
-        "+70 bonus magic resistance."
-    ),
     "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
-    "Jak'Sho, The Protean": "Voidborn Resilience's combat resist stacks are not modelled.",
     "Knight's Vow": "Pledge damage redirection and healing are not modelled.",
     "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",
     "Mikael's Blessing": "Purify's activated heal is not modelled.",
     "Redemption": "Intervention's activated target healing is not modelled.",
-    "Seeker's Armguard": "Time Stop's stasis is not modelled.",
-    "Spectre's Cowl": "Incorporeal's post-damage regeneration is not modelled.",
     "Whispering Circlet": "Manaflow health state is not exposed for target modelling.",
     "Winter's Approach": "Awe and Manaflow health state are not modelled.",
-    "Zhonya's Hourglass": "Time Stop's stasis is not modelled.",
 }
 
 # Product-facing outcome dimensions for utility and non-TDD effects.  These
@@ -427,7 +438,12 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
             "Guardian Angel's Rebirth is modeled in the target survival ledger; "
             "it changes defense, not outgoing TDD."
             if name == "Guardian Angel"
-            else "The represented mechanic changes defense, not outgoing TDD."
+            else (
+                "Time Stop is priced only from the explicit bounded active-seconds "
+                "scenario input; item presence alone never assumes stasis."
+                if name in {"Zhonya's Hourglass", "Seeker's Armguard"}
+                else "The represented mechanic changes defense, not outgoing TDD."
+            )
         )
     elif name in _PARTIAL_BLOCKED_REASONS:
         status = "blocked"

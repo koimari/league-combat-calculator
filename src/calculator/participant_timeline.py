@@ -358,6 +358,10 @@ def _has_ordered_item_defense(items: Iterable[Mapping[str, Any]]) -> bool:
             "Celestial Opposition",
             "Bloodthirster",
             "Fimbulwinter",
+            "Force of Nature",
+            "Jak'Sho, The Protean",
+            "Zhonya's Hourglass",
+            "Seeker's Armguard",
         }
         for item in items
     )
@@ -499,6 +503,18 @@ def _pair_packet(
             "is_ability": _is_authored_ability_event(event),
             "ability_instance": _ability_instance_for_event(event, cast_timeline),
         }
+        # The engine exposes the final effective resistances for this pair.
+        # Preserve them on every packet so an ordered target state can re-price
+        # the same post-mitigation event after adding its sourced resistance
+        # delta.  A missing value is deliberately left absent: the survival
+        # walk then refuses to invent a mitigation ratio for that packet.
+        for field in ("effective_armor", "effective_mr"):
+            try:
+                baseline = float(result[field])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if math.isfinite(baseline):
+                enriched[f"_baseline_{field}"] = baseline
         enriched["_sk"] = _action_key(
             float(event.get("time", 0.0)), 0.0, defender_id, enriched
         )
@@ -881,6 +897,13 @@ def _simulate_survival(
     states: dict[str, dict[str, Any]] = {}
     for combatant in combatant_list:
         defenses = combatant.defenses
+        starting_stasis_duration = max(
+            0.0, float(getattr(defenses, "starting_stasis_duration", 0.0) or 0.0)
+        )
+        base_armor = max(0.0, float(combatant.stats.get("armor", 0.0) or 0.0))
+        base_magic_resistance = max(
+            0.0, float(combatant.stats.get("magic_resistance", 0.0) or 0.0)
+        )
         states[combatant.participant_id] = {
             "health": max(0.0, float(combatant.stats.get("health", 0.0))),
             "max_health": max(0.0, float(combatant.stats.get("health", 0.0))),
@@ -916,9 +939,9 @@ def _simulate_survival(
             # deliberately inert unless an authored event supplies the
             # corresponding duration/transition; the simulator never
             # guesses an item's trigger or timing from a name alone.
-            "stasis_until": 0.0,
-            "stasis_started_at": None,
-            "stasis_source": "",
+            "stasis_until": starting_stasis_duration,
+            "stasis_started_at": 0.0 if starting_stasis_duration > 0.0 else None,
+            "stasis_source": str(getattr(defenses, "starting_stasis_source", "") or ""),
             "invulnerable_until": 0.0,
             "untargetable_until": 0.0,
             "spell_shield_until": (
@@ -1024,6 +1047,25 @@ def _simulate_survival(
             "defy_trigger_time": None,
             "defy_heal_received": 0.0,
             "defy_triggered_damage_ids": set(),
+            # Force of Nature and Jak'Sho are target-side combat states. Their
+            # stack ledgers are kept per participant and begin at zero; the
+            # ordered walk adds only source-backed resistance deltas.
+            "force_stacks": 0,
+            "force_stacks_until": 0.0,
+            "force_last_stack_time": None,
+            "force_last_cast_key": None,
+            "force_stack_events": [],
+            "jaksho_stacks": 0,
+            "jaksho_stack_events": [],
+            "base_armor": base_armor,
+            "base_magic_resistance": base_magic_resistance,
+            "bonus_armor": max(
+                0.0, float(combatant.stats.get("bonus_armor", 0.0) or 0.0)
+            ),
+            "bonus_magic_resistance": max(
+                0.0,
+                float(combatant.stats.get("bonus_magic_resistance", 0.0) or 0.0),
+            ),
         }
 
     # Normalize stateful packets before sorting.  Pair engines remain the
@@ -1603,6 +1645,171 @@ def _simulate_survival(
         event["ichorshield_total"] = round(state["ichorshield_current"], 6)
         return converted
 
+    def _update_combat_state(
+        participant_id: str, event: MutableMapping[str, Any], event_time: float
+    ) -> None:
+        """Advance sourced combat-state item stacks before one damage packet."""
+        target_state = states[participant_id]
+        source_id = str(event.get("attacker", ""))
+        if source_id not in states or source_id == participant_id:
+            return
+        if event.get("_reactive") or event.get("_deferred"):
+            return
+        try:
+            packet_damage = max(0.0, float(event.get("damage", 0.0) or 0.0))
+        except (TypeError, ValueError):
+            packet_damage = 0.0
+        if packet_damage <= 0.0:
+            return
+
+        defenses = combatant_by_id[participant_id].defenses
+        damage_type = str(event.get("damage_type", ""))
+
+        # Jak'Sho is combat-time state: one stack per second, capped at the
+        # sourced maximum. It multiplies bonus resistances only at cap.
+        jak_interval = max(
+            0.0, float(getattr(defenses, "jaksho_stack_interval", 0.0) or 0.0)
+        )
+        jak_max = max(0, int(getattr(defenses, "jaksho_max_stacks", 0) or 0))
+        if jak_interval > 0.0 and jak_max > 0:
+            stacks = min(jak_max, max(0, int(math.floor(event_time / jak_interval))))
+            if stacks != target_state["jaksho_stacks"]:
+                target_state["jaksho_stacks"] = stacks
+                target_state["jaksho_stack_events"].append(
+                    {"time": round(event_time, 6), "stacks": stacks}
+                )
+                event["jaksho_stacks"] = stacks
+
+        # Force of Nature counts incoming champion magic-damage cast instances.
+        # The packet may carry an immobilisation marker from a reviewed module;
+        # absent that marker we do not guess the two-stack branch.
+        force_interval = max(
+            0.0, float(getattr(defenses, "force_stack_interval", 0.0) or 0.0)
+        )
+        force_duration = max(
+            0.0, float(getattr(defenses, "force_stack_duration", 0.0) or 0.0)
+        )
+        force_max = max(0, int(getattr(defenses, "force_max_stacks", 0) or 0))
+        if damage_type == "magic" and force_interval > 0.0 and force_max > 0:
+            last_time = target_state["force_last_stack_time"]
+            if (
+                last_time is not None
+                and force_duration > 0.0
+                and event_time - float(last_time) >= force_duration
+            ):
+                target_state["force_stacks"] = 0
+                target_state["force_last_stack_time"] = None
+                target_state["force_last_cast_key"] = None
+            cast_key = str(
+                event.get("ability_instance")
+                or f"{event.get('source_key', '')}:{event.get('sequence', '')}"
+            )
+            same_cast = cast_key == target_state["force_last_cast_key"]
+            elapsed = (
+                float("inf")
+                if target_state["force_last_stack_time"] is None
+                else event_time - float(target_state["force_last_stack_time"])
+            )
+            if not same_cast and elapsed + 1e-9 >= force_interval:
+                immobilized = bool(
+                    event.get("immobilized")
+                    or event.get("crowd_control")
+                    or event.get("hard_cc")
+                    or str(event.get("cc_kind", "")).lower()
+                    in {"immobilize", "stun", "root", "knockup", "suppression"}
+                )
+                increment = (
+                    max(1, int(getattr(defenses, "force_immobilize_stacks", 0) or 0))
+                    if immobilized
+                    else 1
+                )
+                target_state["force_stacks"] = min(
+                    force_max, target_state["force_stacks"] + increment
+                )
+                target_state["force_last_stack_time"] = event_time
+                target_state["force_last_cast_key"] = cast_key
+                target_state["force_stacks_until"] = event_time + force_duration
+                target_state["force_stack_events"].append(
+                    {
+                        "time": round(event_time, 6),
+                        "stacks": target_state["force_stacks"],
+                        "immobilized": immobilized,
+                        "cast": cast_key,
+                    }
+                )
+                event["force_stacks"] = target_state["force_stacks"]
+
+        target_state["dynamic_bonus_armor"] = 0.0
+        target_state["dynamic_bonus_magic_resistance"] = 0.0
+        if (
+            jak_max > 0
+            and target_state["jaksho_stacks"] >= jak_max
+            and float(
+                getattr(defenses, "jaksho_bonus_resistance_multiplier", 0.0) or 0.0
+            )
+            > 0.0
+        ):
+            multiplier = float(defenses.jaksho_bonus_resistance_multiplier)
+            target_state["dynamic_bonus_armor"] += (
+                target_state["bonus_armor"] * multiplier
+            )
+            target_state["dynamic_bonus_magic_resistance"] += (
+                target_state["bonus_magic_resistance"] * multiplier
+            )
+        if (
+            force_max > 0
+            and target_state["force_stacks"] >= force_max
+            and float(getattr(defenses, "force_bonus_magic_resistance", 0.0) or 0.0)
+            > 0.0
+        ):
+            target_state["dynamic_bonus_magic_resistance"] += float(
+                defenses.force_bonus_magic_resistance
+            )
+
+    def _reprice_dynamic_resistance(
+        participant_id: str,
+        event: MutableMapping[str, Any],
+    ) -> None:
+        """Apply an armed target resistance delta to one post-mitigation packet."""
+        target_state = states[participant_id]
+        damage_type = str(event.get("damage_type", ""))
+        if damage_type == "physical":
+            delta = float(target_state.get("dynamic_bonus_armor", 0.0) or 0.0)
+            field = "_baseline_effective_armor"
+            label = "armor"
+        elif damage_type == "magic":
+            delta = float(
+                target_state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0
+            )
+            field = "_baseline_effective_mr"
+            label = "magic_resistance"
+        else:
+            return
+        if delta <= 0.0:
+            return
+        try:
+            baseline = float(event[field])
+        except (KeyError, TypeError, ValueError):
+            # A source that did not expose an effective resistance is not
+            # silently repriced; the packet remains visible and the receipt
+            # explains why its dynamic state was unavailable.
+            event["dynamic_resistance_unavailable"] = label
+            return
+        baseline_factor = apply_resistance(1.0, baseline)
+        dynamic_factor = apply_resistance(1.0, baseline + delta)
+        if not math.isfinite(baseline_factor) or baseline_factor <= 0.0:
+            event["dynamic_resistance_unavailable"] = label
+            return
+        amount = max(0.0, float(event.get("damage", 0.0) or 0.0))
+        event["damage"] = amount * dynamic_factor / baseline_factor
+        event["dynamic_resistance"] = {
+            "type": label,
+            "baseline_effective": round(baseline, 6),
+            "delta": round(delta, 6),
+            "effective": round(baseline + delta, 6),
+            "factor": round(dynamic_factor / baseline_factor, 6),
+        }
+
     for participant_id, events in support_effects.items():
         for support_index, event in enumerate(events):
             event.setdefault("_event_id", f"{participant_id}:support:{support_index}")
@@ -1923,6 +2130,8 @@ def _simulate_survival(
             event["applied_amount"] = 0.0
             event["skipped_reason"] = "attacker_dead"
             continue
+        _update_combat_state(participant_id, event, float(event_time))
+        _reprice_dynamic_resistance(participant_id, event)
         # Celestial Opposition's Blessed reduction is a target-state modifier,
         # not a basic-attack modifier.  Apply it to authored champion damage
         # after the pair engine's resistance math and refresh the exact
@@ -2475,6 +2684,26 @@ def _simulate_survival(
                 if math.isinf(state["spell_shield_until"])
                 else round(state["spell_shield_until"], 3)
             ),
+            "force_of_nature": {
+                "stacks": int(state["force_stacks"]),
+                "stacks_until": round(state["force_stacks_until"], 3),
+                "events": list(state["force_stack_events"]),
+                "dynamic_bonus_magic_resistance": round(
+                    float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0),
+                    3,
+                ),
+            },
+            "jaksho": {
+                "stacks": int(state["jaksho_stacks"]),
+                "events": list(state["jaksho_stack_events"]),
+                "dynamic_bonus_armor": round(
+                    float(state.get("dynamic_bonus_armor", 0.0) or 0.0), 3
+                ),
+                "dynamic_bonus_magic_resistance": round(
+                    float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0),
+                    3,
+                ),
+            },
             "threshold_shield_triggered": bool(state["threshold_shield_triggered"]),
             "threshold_shield_expired_at": state["threshold_shield_expired_at"],
             "threshold_health_triggered": bool(state["threshold_health_triggered"]),
@@ -3487,6 +3716,18 @@ def _compiled_survival_walk(
                 "stasis_until": 0.0,
                 "stasis_started_at": None,
                 "stasis_source": "",
+                "force_of_nature": {
+                    "stacks": 0,
+                    "stacks_until": 0.0,
+                    "events": [],
+                    "dynamic_bonus_magic_resistance": 0.0,
+                },
+                "jaksho": {
+                    "stacks": 0,
+                    "events": [],
+                    "dynamic_bonus_armor": 0.0,
+                    "dynamic_bonus_magic_resistance": 0.0,
+                },
                 "invulnerable_until": 0.0,
                 "untargetable_until": 0.0,
                 "spell_shield_used": False,

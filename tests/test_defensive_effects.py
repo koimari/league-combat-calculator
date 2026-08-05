@@ -281,3 +281,42 @@ def test_annul_is_ready_as_an_opening_spell_shield(item_name):
         "ready": True,
         "source": f"{item_name} — Annul",
     }
+
+
+def test_force_of_nature_and_jaksho_resolve_event_state_metadata():
+    force = resolve_starting_defenses(
+        "Ahri",
+        18,
+        _stats(bonus_armor=40.0, bonus_magic_resistance=60.0),
+        [{"name": "Force of Nature"}],
+    )
+    jaksho = resolve_starting_defenses(
+        "Ahri",
+        18,
+        _stats(bonus_armor=40.0, bonus_magic_resistance=60.0),
+        [{"name": "Jak'Sho, The Protean"}],
+    )
+
+    assert force.force_max_stacks == 8
+    assert force.force_stack_duration == pytest.approx(7.0)
+    assert force.force_bonus_magic_resistance == pytest.approx(70.0)
+    assert jaksho.jaksho_max_stacks == 5
+    assert jaksho.jaksho_bonus_resistance_multiplier == pytest.approx(0.30)
+    assert force.public_summary()["combat_state"]["force_of_nature"]["max_stacks"] == 8
+
+
+def test_stasis_is_only_active_when_explicitly_supplied():
+    inactive = resolve_starting_defenses(
+        "Ahri", 18, _stats(), [{"name": "Zhonya's Hourglass"}]
+    )
+    active = resolve_starting_defenses(
+        "Ahri",
+        18,
+        _stats(),
+        [{"name": "Zhonya's Hourglass"}],
+        item_options={"Zhonya's Hourglass": {"stasis_active_seconds": 2.5}},
+    )
+
+    assert inactive.starting_stasis_duration == 0.0
+    assert active.starting_stasis_duration == pytest.approx(2.5)
+    assert active.starting_stasis_source == "Zhonya's Hourglass — Time Stop"
