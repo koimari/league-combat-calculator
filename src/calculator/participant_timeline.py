@@ -18,6 +18,7 @@ from typing import Any, Iterable, Mapping, MutableMapping
 from .pipeline import FightParams, require_fight_mode_support, run_fight
 from .scenario import ResolvedLoadout
 from .timeline_coverage import combine_timeline_coverages
+from .item_coverage import item_model_coverage
 from .support_effects import derive_ally_effects
 from .item_support_effects import (
     derive_item_support_effects,
@@ -495,6 +496,9 @@ def _pair_packet(
         cast_timeline = []
     event_ids_by_key: dict[tuple[str, float, int], str] = {}
     event_ids_by_source_time: dict[tuple[str, float], list[str]] = defaultdict(list)
+    result_breakdown = result.get("breakdown", {})
+    if not isinstance(result_breakdown, Mapping):
+        result_breakdown = {}
     for index, event in enumerate(result.get("damage_events", [])):
         if "sequence" not in event:
             # See _action_key: pair-local event ids stay order-irrelevant
@@ -512,6 +516,15 @@ def _pair_packet(
             "is_ability": _is_authored_ability_event(event),
             "ability_instance": _ability_instance_for_event(event, cast_timeline),
         }
+        # Multi-target rows are authored on the engine breakdown. Carry the
+        # same target-allocation receipt onto each ordered packet so the
+        # coupled timeline can prove which roster slot received it instead of
+        # displaying an unexplained aggregate secondary hit.
+        source_row = result_breakdown.get(str(event.get("source_key", "")), {})
+        if isinstance(source_row, Mapping) and isinstance(
+            source_row.get("targeting"), Mapping
+        ):
+            enriched["targeting"] = dict(source_row["targeting"])
         # The engine exposes the final effective resistances for this pair.
         # Preserve them on every packet so an ordered target state can re-price
         # the same post-mitigation event after adding its sourced resistance
@@ -590,8 +603,17 @@ def _pair_packet(
         # post-survival pass rebuilds source rows wholesale), so they are
         # shared across evaluations as-is.
         "source_names": {
-            source: {"name": entry.get("name", source), "total_damage": 0.0}
-            for source, entry in result.get("breakdown", {}).items()
+            source: {
+                "name": entry.get("name", source),
+                "total_damage": 0.0,
+                **(
+                    {"targeting": dict(entry["targeting"])}
+                    if isinstance(entry.get("targeting"), Mapping)
+                    else {}
+                ),
+            }
+            for source, entry in result_breakdown.items()
+            if isinstance(entry, Mapping)
         },
     }
 
@@ -751,10 +773,176 @@ def _attach_support_effects(
     result: Mapping[str, Any],
     all_actors: list[Combatant],
     support_effects: dict[str, list[dict[str, Any]]],
+    outgoing: dict[str, list[dict[str, Any]]] | None = None,
+    incoming: dict[str, list[dict[str, Any]]] | None = None,
 ) -> None:
     """Attach one actor's sourced shield/heal packets exactly once."""
     for template in _support_effect_templates(attacker, result, all_actors):
-        support_effects[template["target"]].append(dict(template))
+        packet = dict(template)
+        support_effects[template["target"]].append(packet)
+        if (
+            template.get("kind") == "damage"
+            and outgoing is not None
+            and incoming is not None
+        ):
+            outgoing[template["attacker"]].append(packet)
+            incoming[template["target"]].append(packet)
+
+
+def _utility_outcome_receipt(
+    actor: Combatant,
+    support_events: Iterable[Mapping[str, Any]],
+    outgoing_events: Iterable[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Summarise authored non-TDD outcomes without inventing a conversion.
+
+    Movement and cleanse are real event dimensions, but their units are not
+    interchangeable with healing, shielding, or damage.  Keep them as
+    separate receipts so the Utility objective can expose what was applied
+    while refusing to turn a percent/second or a cleanse count into a made-up
+    scalar score.  Item dimensions are sourced from the same full-entry
+    coverage table used by the API picker.
+    """
+    support = [
+        event
+        for event in support_events
+        if event.get("kind") != "damage"
+        if float(event.get("applied_amount", event.get("amount", 0.0)) or 0.0) > 0.0
+    ]
+    movement = [event for event in support if event.get("kind") == "movement"]
+    cleanse = [event for event in support if event.get("kind") == "cleanse"]
+    movement_speed_percent_seconds = sum(
+        abs(
+            float(
+                event.get("bonus_move_speed_percent", event.get("amount", 0.0)) or 0.0
+            )
+        )
+        * max(0.0, float(event.get("duration", 0.0) or 0.0))
+        for event in movement
+    )
+    targeting = [
+        event.get("targeting")
+        for event in outgoing_events
+        if isinstance(event.get("targeting"), Mapping)
+    ]
+    secondary = [
+        row
+        for row in targeting
+        if str(row.get("kind", ""))
+        in {
+            "active_secondary",
+            "chain_lightning",
+            "chain_lightning_copied_on_hit",
+            "cleave_secondary",
+            "hydra_cleave",
+            "runaan_bolt",
+            "runaan_bolt_copied_on_hit",
+        }
+    ]
+    coverage = [item_model_coverage(item) for item in actor.items]
+    dimensions = sorted(
+        {
+            str(dimension)
+            for entry in coverage
+            for dimension in entry.get("outcome_dimensions", [])
+        }
+    )
+    applied_dimensions = set()
+    if movement:
+        applied_dimensions.add("movement")
+    if cleanse:
+        applied_dimensions.add("cleanse")
+    if secondary:
+        applied_dimensions.add("multi_target")
+    return {
+        "contract": "utility_outcomes_v1",
+        "dimensions": dimensions,
+        "applied_dimensions": sorted(applied_dimensions),
+        "movement": {
+            "event_count": len(movement),
+            "speed_percent_seconds": round(movement_speed_percent_seconds, 6),
+        },
+        "cleanse": {"event_count": len(cleanse)},
+        "multi_target": {
+            "packet_count": len(secondary),
+            "allocated_packet_count": sum(
+                1 for row in secondary if row.get("allocated_target_index") is not None
+            ),
+        },
+        "scored_support_amount": round(
+            sum(float(event.get("applied_amount", 0.0) or 0.0) for event in support),
+            6,
+        ),
+        "item_coverage": [
+            {
+                "name": entry.get("name", ""),
+                "status": entry.get("status", ""),
+                "dimensions": list(entry.get("outcome_dimensions", [])),
+                "reason": entry.get("reason", ""),
+            }
+            for entry in coverage
+            if entry.get("outcome_dimensions")
+        ],
+        "metric_note": (
+            "Movement and cleanse remain separate units; no cross-unit utility "
+            "score is inferred. Healing, shielding, and applied support amounts "
+            "remain event-derived values."
+        ),
+    }
+
+
+def _target_allocation_receipt(
+    public_events: Iterable[Mapping[str, Any]],
+    target_count: int,
+    breakdown_rows: Iterable[Mapping[str, Any]] = (),
+) -> dict[str, Any]:
+    """Prove roster allocation for every authored secondary-target packet."""
+    rows = [
+        event.get("targeting")
+        for event in public_events
+        if isinstance(event.get("targeting"), Mapping)
+    ]
+    rows.extend(
+        row.get("targeting")
+        for row in breakdown_rows
+        if isinstance(row.get("targeting"), Mapping)
+    )
+    for row in breakdown_rows:
+        sources = row.get("sources")
+        if not isinstance(sources, list):
+            continue
+        rows.extend(
+            source.get("targeting")
+            for source in sources
+            if isinstance(source, Mapping)
+            and isinstance(source.get("targeting"), Mapping)
+        )
+    secondary = [
+        row
+        for row in rows
+        if str(row.get("kind", ""))
+        in {
+            "active_secondary",
+            "chain_lightning",
+            "chain_lightning_copied_on_hit",
+            "cleave_secondary",
+            "hydra_cleave",
+            "runaan_bolt",
+            "runaan_bolt_copied_on_hit",
+        }
+    ]
+    missing = [row for row in secondary if row.get("allocated_target_index") is None]
+    return {
+        "contract": "ordered_roster_target_allocation_v1",
+        "target_count": max(0, int(target_count)),
+        "secondary_packet_count": len(secondary),
+        "allocated_secondary_packet_count": len(secondary) - len(missing),
+        "complete": not missing,
+        "policy": "roster_index_from_engine_targeting" if secondary else "none",
+        "unallocated_reasons": (
+            ["secondary packet is missing allocated_target_index"] if missing else []
+        ),
+    }
 
 
 def _has_ordered_item_team_effects(
@@ -2056,6 +2244,11 @@ def _simulate_survival(
     for participant_id, events in support_effects.items():
         for support_index, event in enumerate(events):
             event.setdefault("_event_id", f"{participant_id}:support:{support_index}")
+            if event.get("kind") == "damage":
+                # Damage packets are mirrored into the normal incoming/outgoing
+                # ledgers below. Keep the support copy for the public receipt,
+                # but do not schedule the same object a second time here.
+                continue
             # A sourced ally shield is a pre-damage barrier.  A sourced heal
             # is a post-damage recovery event.  They must not share one
             # priority merely because both are support effects.
@@ -4940,7 +5133,17 @@ def build_participant_timeline(
             if not defenders:
                 continue
             actor_params = _actor_params(params, attacker)
-            for defender in defenders:
+            for defender_index, defender in enumerate(defenders):
+                # Secondary-target item branches are allocated against the
+                # current attacker group, not the outer request's default
+                # single-target fields.  The ordered roster index is explicit
+                # and deterministic: index 0 is the primary defender and
+                # later indices are eligible secondary recipients.
+                pair_params = replace(
+                    actor_params,
+                    roster_target_index=defender_index,
+                    roster_target_count=len(defenders),
+                )
                 # The coupled optimizer evaluates thousands of main candidates
                 # against one fixed roster, so pair fights that cannot differ
                 # between evaluations are cached.  Roster-to-roster pairs do
@@ -4976,7 +5179,7 @@ def build_participant_timeline(
                             attacker.champion_data,
                             attacker.level,
                             list(attacker.items),
-                            _target_params(actor_params, defender),
+                            _target_params(pair_params, defender),
                             precomputed_stats=reusable_stats,
                         ),
                         attacker.participant_id,
@@ -5063,9 +5266,11 @@ def build_participant_timeline(
                         )
                         packet["support"] = support_templates
                     for template in support_templates:
-                        support_effects[template["target"]].append(
-                            dict(template) if copy_templates else template
-                        )
+                        packet_template = dict(template) if copy_templates else template
+                        support_effects[template["target"]].append(packet_template)
+                        if template.get("kind") == "damage":
+                            outgoing[template["attacker"]].append(packet_template)
+                            incoming[template["target"]].append(packet_template)
                     support_attached.add(attacker.participant_id)
                 row = breakdown[attacker.participant_id]
                 row.update(
@@ -5095,7 +5300,14 @@ def build_participant_timeline(
             list(attacker.items),
             actor_params,
         )
-        _attach_support_effects(attacker, fallback, all_actors, support_effects)
+        _attach_support_effects(
+            attacker,
+            fallback,
+            all_actors,
+            support_effects,
+            outgoing,
+            incoming,
+        )
         support_attached.add(attacker.participant_id)
 
     # Knight's Vow is the one ally packet whose trigger lives on the
@@ -5148,6 +5360,14 @@ def build_participant_timeline(
             if total > 0
         }
 
+    utility_by_actor = {
+        actor.participant_id: _utility_outcome_receipt(
+            actor,
+            support_effects.get(actor.participant_id, []),
+            outgoing.get(actor.participant_id, []),
+        )
+        for actor in all_actors
+    }
     public_breakdown = []
     support_by_attacker: dict[str, float] = defaultdict(float)
     healing_by_attacker: dict[str, float] = defaultdict(float)
@@ -5155,6 +5375,8 @@ def build_participant_timeline(
         for event in events:
             attacker_id = str(event.get("attacker", ""))
             applied = float(event.get("applied_amount", 0.0))
+            if event.get("kind") == "damage":
+                continue
             support_by_attacker[attacker_id] += applied
             if event.get("kind") == "heal":
                 healing_by_attacker[attacker_id] += applied
@@ -5190,6 +5412,11 @@ def build_participant_timeline(
                 ),
                 "support_value": round(support_by_attacker[actor.participant_id], 1),
                 "healing_output": round(healing_by_attacker[actor.participant_id], 1),
+                **(
+                    {"utility_outcomes": utility_by_actor[actor.participant_id]}
+                    if include_receipt
+                    else {}
+                ),
                 "survived_window": bool(actor_survival.get("survived_window")),
                 "death_time": actor_survival.get("death_time"),
             }
@@ -5267,6 +5494,30 @@ def build_participant_timeline(
             str(event.get("_event_id", "")),
         ),
     )
+    support_by_actor = {
+        actor.participant_id: [
+            event
+            for event in public_support_events
+            if event.get("attacker") == actor.participant_id
+        ]
+        for actor in all_actors
+    }
+    outgoing_by_actor = {
+        actor.participant_id: [
+            event
+            for event in public_events
+            if event.get("attacker") == actor.participant_id
+        ]
+        for actor in all_actors
+    }
+    utility_by_actor = {
+        actor.participant_id: _utility_outcome_receipt(
+            actor,
+            support_by_actor[actor.participant_id],
+            outgoing_by_actor[actor.participant_id],
+        )
+        for actor in all_actors
+    }
     return {
         "duration": float(params.fight_duration_seconds),
         "participants": [
@@ -5401,6 +5652,11 @@ def build_participant_timeline(
                 **(
                     {"support_on_hit_magic": list(event["support_on_hit_magic"])}
                     if event.get("support_on_hit_magic")
+                    else {}
+                ),
+                **(
+                    {"targeting": dict(event["targeting"])}
+                    if isinstance(event.get("targeting"), Mapping)
                     else {}
                 ),
                 **(
@@ -5603,6 +5859,22 @@ def build_participant_timeline(
             }
             for event in public_support_events
         ],
+        "utility_outcomes": {
+            "contract": "utility_outcomes_v1",
+            "participants": {
+                actor.participant_id: utility_by_actor[actor.participant_id]
+                for actor in all_actors
+            },
+            "focus": utility_by_actor.get(focus_participant_id, {}),
+            "metric_note": (
+                "Utility dimensions are reported in their native units. The "
+                "calculator does not convert movement, cleanse, vision, or "
+                "economy into TDD or a guessed common scalar."
+            ),
+        },
+        "target_allocation": _target_allocation_receipt(
+            public_events, len(enemy_actors), public_breakdown
+        ),
         "objective": {
             "main_team_damage_before_death": round(
                 sum(
@@ -5633,6 +5905,7 @@ def build_participant_timeline(
             ),
             "focus_survival": focus_survival,
             "focus_support_value": round(focus_support, 1),
+            "focus_utility_outcomes": utility_by_actor.get(focus_participant_id, {}),
             "focus_healing": round(focus_healing, 1),
             "main_team_effective_health": round(
                 sum(

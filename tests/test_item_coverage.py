@@ -221,7 +221,7 @@ def test_candidate_receipt_names_every_withheld_item():
     assert receipt["complete"] is False
     assert receipt["eligible_candidates"] == len(candidates)
     assert receipt["scored_candidates"] + receipt["excluded_count"] == len(candidates)
-    assert "Redemption" in excluded_names
+    assert "Ardent Censer" in excluded_names
     assert "Rod of Ages" not in excluded_names
     assert "Runaan's Hurricane" not in excluded_names
 

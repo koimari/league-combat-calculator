@@ -68,6 +68,7 @@ from src.calculator.item_effects import (
     death_dance_deferral_fraction,
     death_dance_defy_heal_amount,
     eclipse_shield_amount,
+    ally_item_effect_value,
 )
 
 
@@ -84,6 +85,16 @@ def test_frozen_heart_registers_typed_attack_speed_aura() -> None:
     # Target-only effects are still valid registry entries when an item is
     # present in an ordinary attacker build; they simply contribute no damage.
     assert resolve_damage_effects(_build("Frozen Heart")).per_hits == ()
+
+
+def test_redemption_area_damage_receipt_values_are_typed() -> None:
+    assert ally_item_effect_value("Redemption", "beam_delay") == pytest.approx(2.5)
+    assert ally_item_effect_value(
+        "Redemption", "target_area_range_units"
+    ) == pytest.approx(5500.0)
+    assert ally_item_effect_value(
+        "Redemption", "enemy_max_health_true_damage_ratio"
+    ) == pytest.approx(0.10)
 
 
 def test_ordered_defense_accessors_use_typed_item_values() -> None:
