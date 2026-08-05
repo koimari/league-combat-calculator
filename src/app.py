@@ -1435,6 +1435,7 @@ def api_calculate():
         require_calculation_item_coverage(
             ([resolved_boots] if resolved_boots else []) + ordinary_items,
             participant="Attacker",
+            allow_ally_effects=True,
         )
     except LookupError as exc:
         return jsonify({"error": str(exc)}), 404
@@ -1457,7 +1458,9 @@ def api_calculate():
         for ally in allies:
             participant = f"Ally {ally.champion_data['name']}"
             require_calculation_item_coverage(
-                list(ally.item_data), participant=participant
+                list(ally.item_data),
+                participant=participant,
+                allow_ally_effects=True,
             )
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"

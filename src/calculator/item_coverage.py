@@ -7,7 +7,7 @@ this item represented by the current fight model?
 
 from typing import Any, Literal
 
-from .item_effects import ITEM_EFFECTS, ITEM_INPUT_OPTIONS
+from .item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 
 ItemCoverageStatus = Literal[
     "modeled_effect",
@@ -635,7 +635,10 @@ def require_optimizer_item_coverage(item: dict[str, Any]) -> None:
 
 
 def require_calculation_item_coverage(
-    items: list[dict[str, Any]], *, participant: str
+    items: list[dict[str, Any]],
+    *,
+    participant: str,
+    allow_ally_effects: bool = False,
 ) -> None:
     """Reject a participant loadout whose outgoing effects are incomplete.
 
@@ -646,6 +649,18 @@ def require_calculation_item_coverage(
     """
     for item in items:
         coverage = item_model_coverage(item)
+        if (
+            allow_ally_effects
+            and coverage["status"] == "blocked"
+            and coverage["name"] in ALLY_ITEM_EFFECTS
+        ):
+            # CP17's cross-participant packet layer is the authoritative
+            # calculation path for support items.  They remain withheld from
+            # ordinary BIS ranking until every holder-side sibling is
+            # modeled, but an explicitly rostered support item is safe to
+            # calculate because its item-team effects are timestamped and
+            # fail closed when their trigger is absent.
+            continue
         if coverage["calculation_eligible"]:
             continue
         raise ValueError(
