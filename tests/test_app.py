@@ -1142,6 +1142,23 @@ def test_live_builder_surfaces_backend_item_state_controls_for_all_participants(
     assert "engineItemOptions(itemIds, itemStacks)" in source
 
 
+def test_frontend_click_handlers_use_path_resolved_item_option_metadata_for_main_build_slots():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "function itemOptionIdForPath(path)" in source
+    assert "const value = Number(pathValue(path));" in source
+    assert (
+        "if (parts[0] === \"attacker\" && (parts[1] === \"buildA\" || parts[1] === \"buildB\"))" in source
+    )
+    assert "return state.attacker[parts[1]]?.[Number(parts[2])];" in source
+    assert "function itemOptionSpecsForPath(path)" in source
+    assert (
+        "const specs = itemOptionSpecsForPath(path);" in source
+    )
+    assert "itemOptionState(path)[key] = Number(value);" in source
+    assert "const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);" in source
+
+
 def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 

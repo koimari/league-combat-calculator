@@ -568,6 +568,24 @@ function itemOptionSpec(id) {
   return specs.length === 1 ? specs[0] : null;
 }
 
+function itemOptionIdForPath(path) {
+  const parts = String(path || "").split(".");
+  const value = Number(pathValue(path));
+  if (Number.isFinite(value) && value > 0) return value;
+  if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB")) {
+    return state.attacker[parts[1]]?.[Number(parts[2])];
+  }
+  if ((parts[0] === "targets" || parts[0] === "allies") && parts[2] === "items") {
+    const loadout = state[parts[0]]?.[Number(parts[1])];
+    return loadout?.items?.[Number(parts[3])];
+  }
+  return value;
+}
+
+function itemOptionSpecsForPath(path) {
+  return itemOptionSpecs(itemOptionIdForPath(path));
+}
+
 function itemOptionSpecs(id) {
   const item = getItem(id);
   const definition = item && engine.itemOptions[item.backendName || item.name];
@@ -3990,7 +4008,7 @@ document.addEventListener("click", (event) => {
   if (itemOptionButton) {
     const path = itemOptionButton.dataset.itemOptionPath;
     const key = itemOptionButton.dataset.itemOptionKey;
-    const specs = itemOptionSpecs(pathValue(path));
+    const specs = itemOptionSpecsForPath(path);
     const spec = specs.find((entry) => entry.key === key);
     if (!spec) return;
     const next = Math.max(spec.min, Math.min(spec.max, itemOptionValue(path, key) + Number(itemOptionButton.dataset.delta || 0)));
