@@ -241,6 +241,11 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         "source_url": "https://wiki.leagueoflegends.com/en-us/Winter%27s_Approach",
         "source_revision_id": 3984418,
     },
+    "Fimbulwinter": {
+        "options": {},
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Fimbulwinter",
+        "source_revision_id": 3984419,
+    },
     "Bloodthirster": {
         "options": {
             "starting_ichorshield": {
@@ -1249,6 +1254,30 @@ def item_state_receipts(
             resource_restore_status="modeled_ordered_incoming_resource_ledger",
         )
 
+    if "Fimbulwinter" in names:
+        add(
+            "Fimbulwinter",
+            "everlasting_event_driven",
+            shield_base=required_effect_value(
+                "Fimbulwinter", "everlasting_base_shield"
+            ),
+            current_mana_ratio=required_effect_value(
+                "Fimbulwinter", "everlasting_current_mana_ratio"
+            ),
+            mana_threshold_ratio=required_effect_value(
+                "Fimbulwinter", "everlasting_mana_threshold_ratio"
+            ),
+            multi_target_multiplier=required_effect_value(
+                "Fimbulwinter", "everlasting_multi_target_multiplier"
+            ),
+            duration=required_effect_value("Fimbulwinter", "everlasting_duration"),
+            cooldown=required_effect_value("Fimbulwinter", "everlasting_cooldown"),
+            trigger_kind=str(
+                required_effect_value("Fimbulwinter", "everlasting_trigger_kind")
+            ),
+            trigger_status="authored_immobilize_or_melee_slow_only",
+        )
+
     for item_name in (
         "Experimental Hexplate",
         "Fiendhunter Bolts",
@@ -2080,6 +2109,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # metadata; it never infers a slow or immobilize from an ability name.
         "everlasting_base_shield": 100.0,
         "everlasting_current_mana_ratio": 0.045,
+        "everlasting_mana_threshold_ratio": 0.20,
         "everlasting_multi_target_multiplier": 1.80,
         "everlasting_duration": 3.0,
         "everlasting_cooldown": 8.0,
@@ -2569,6 +2599,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "bonus_mana_to_health_ratio",
             "everlasting_base_shield",
             "everlasting_current_mana_ratio",
+            "everlasting_mana_threshold_ratio",
             "everlasting_multi_target_multiplier",
             "everlasting_duration",
             "everlasting_cooldown",
@@ -2853,6 +2884,15 @@ def _item_names(items: list[dict[str, Any]]) -> set[str]:
 def has_item(items: list[dict[str, Any]], item_name: str) -> bool:
     """Return whether a resolved build contains one canonical item name."""
     return item_name in _item_names(items)
+
+
+def requires_authored_control_event(items: Sequence[Mapping[str, Any]]) -> bool:
+    """Return whether a loadout has an item gated by reviewed CC metadata."""
+    return any(
+        ITEM_EFFECTS.get(str(item.get("name", "")), {}).get("everlasting_trigger_kind")
+        == "crowd_control"
+        for item in items
+    )
 
 
 def death_dance_deferral_fraction(

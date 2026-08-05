@@ -100276,39 +100276,33 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                44,
-                46
-              ],
+              "issue_refs": [],
               "name": "Awe",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's bonus-mana-to-health conversion is modeled, but Everlasting's conditional shield and cooldown state are not scheduled.",
-              "verdict": "withheld"
+              "reason": "Awe's bonus-mana-to-health conversion and Everlasting's sourced post-control shield are represented by the ordered participant ledger; unreviewed crowd-control packets remain fail-closed.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44,
-                46
-              ],
+              "issue_refs": [],
               "name": "Everlasting",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's bonus-mana-to-health conversion is modeled, but Everlasting's conditional shield and cooldown state are not scheduled.",
-              "verdict": "withheld"
+              "reason": "Awe's bonus-mana-to-health conversion and Everlasting's sourced post-control shield are represented by the ordered participant ledger; unreviewed crowd-control packets remain fail-closed.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -100339,26 +100333,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Awe's bonus-mana-to-health conversion is modeled, but Everlasting's conditional shield and cooldown state are not scheduled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "cc52a5a70a4d36c89d99279460455ba4da975f1df725f65b837faaeaa5f1c648",
+        "expected_effects_sha256": "4585e871107779d3ca769ac948b52476f86d6e1f6d4ad54e2b687ca2dc89b9ac",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Awe's bonus-mana-to-health conversion is modeled, but Everlasting's conditional shield and cooldown state are not scheduled.",
+          "reason": "Awe's bonus-mana-to-health conversion and Everlasting's sourced post-control shield are represented by the ordered participant ledger; unreviewed crowd-control packets remain fail-closed.",
           "registry_effect_type": "stat_conversion",
-          "review_issue_refs": [
-            44,
-            46
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },

@@ -313,6 +313,67 @@ class TestSpellbladeSiblingParsing:
         assert "on_hit_once_Rapid Firecannon" not in fight["breakdown"]
 
 
+class TestFimbulwinterTimelineCertification:
+    """Everlasting never guesses an unreviewed ability control state."""
+
+    def test_unreviewed_ability_control_is_coarse(self, ahri_data: dict) -> None:
+        from src.calculator.data_fetcher import get_item_by_name
+        from src.calculator.stats import calculate_total_stats
+
+        item = get_item_by_name("Fimbulwinter")
+        stats = calculate_total_stats(ahri_data, 18, [item])
+        abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
+        result = calculate_fight_damage(
+            stats,
+            {"Q": abilities["Q"]},
+            [item],
+            FightConfig(
+                target_health=5000.0,
+                target_armor=0.0,
+                target_magic_resistance=0.0,
+                fight_duration_seconds=2.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                cast_order=["Q"],
+            ),
+        )
+
+        assert result["timeline_coverage"]["complete"] is False
+        assert (
+            "fimbulwinter_everlasting" in result["timeline_coverage"]["coarse_sources"]
+        )
+
+    def test_one_unreviewed_ability_keeps_mixed_timeline_coarse(
+        self, ahri_data: dict
+    ) -> None:
+        from src.calculator.data_fetcher import get_item_by_name
+        from src.calculator.stats import calculate_total_stats
+
+        item = get_item_by_name("Fimbulwinter")
+        stats = calculate_total_stats(ahri_data, 18, [item])
+        abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
+        result = calculate_fight_damage(
+            stats,
+            {"Q": abilities["Q"], "E": abilities["E"]},
+            [item],
+            FightConfig(
+                target_health=2000.0,
+                target_armor=50.0,
+                target_magic_resistance=40.0,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=0.0,
+                one_rotation=True,
+                include_actives=True,
+                cast_order=["E", "Q"],
+            ),
+        )
+
+        assert result["timeline_coverage"]["complete"] is False
+        assert (
+            "fimbulwinter_everlasting" in result["timeline_coverage"]["coarse_sources"]
+        )
+
+
 class TestOverlordBloodmailTyranny:
     """Tests for Overlord's Bloodmail Tyranny passive parser."""
 

@@ -9,7 +9,8 @@ Why each slot is non-generic:
 - R (Spirit Rush) is three dashes per activation: one ``count=3`` part
   plus ``cast_instances=3`` (per-dash item procs), with no cooldown key
   so damage.py spaces the dashes itself.
-- E (Charm) is generic besides pinning the damage type.
+- E (Charm) is a single, event-certified magic hit whose Wiki-authored
+  charm/knockdown marker feeds conditional item triggers such as Fimbulwinter.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -67,6 +68,26 @@ def _spirit_rush(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+def _charm(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: one magic hit with the authored charm/knockdown control marker."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    damage = extract_auto(ability, rank, ctx.stats, ctx.target)[0]
+    return {
+        "name": ability.get("name", "Charm"),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "parts": (DamagePart("magic", damage, cc_kind="immobilize"),),
+        "total_raw": damage,
+        "damage_type": "magic",
+        "event_order_certified": "single_hit",
+    }
+
+
 OPTIONS: list[dict[str, Any]] = []
 
 ASSUMPTIONS: list[str] = []
@@ -74,7 +95,7 @@ ASSUMPTIONS: list[str] = []
 SLOTS = {
     "Q": simple_damage(attr="Damage Per Pass", dmg_type="mixed", casts=2),
     "W": _fox_fire,
-    "E": simple_damage(dmg_type="magic"),
+    "E": _charm,
     "R": _spirit_rush,
 }
 

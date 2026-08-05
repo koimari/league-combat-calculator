@@ -1311,6 +1311,8 @@ def _ordered_damage_events(
                 # the primary attack/on-hit packet. Area, pet, and copied
                 # target rows deliberately carry no eligibility marker.
                 event["omnivamp_effectiveness"] = 1.0
+        if source_key in cast_order:
+            event["is_ability"] = True
         if raw_damage is not None:
             event["raw_damage"] = raw_damage
         if raw_formula is not None:
@@ -1391,6 +1393,11 @@ def _ordered_damage_events(
                 event_precision = event.get("event_precision")
                 if event_precision is not None:
                     row["event_precision"] = str(event_precision)
+            if event.get("cc_kind") is not None:
+                row["cc_kind"] = str(event["cc_kind"])
+                row["cc_reviewed"] = bool(event.get("cc_reviewed", True))
+            if source_key in cast_order:
+                row["is_ability"] = True
             shield_events = entry.get("self_shield_events")
             if isinstance(shield_events, list) and ordinal - 1 < len(shield_events):
                 shield = shield_events[ordinal - 1]
@@ -1638,6 +1645,36 @@ def _event_timeline_coverage(
             "event-order certified."
         )
     return coverage
+
+
+def _fimbulwinter_event_coverage(
+    items: list[dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+) -> tuple[bool, str]:
+    """Certify the control metadata needed by Fimbulwinter's Everlasting.
+
+    Everlasting is not a generic "ability hit" proc.  The Wiki limits it to
+    an immobilize, or a slow for a melee holder, and its shield must land after
+    that authored cast.  A damage event with no reviewed ``cc_kind`` therefore
+    cannot safely prove that the passive did or did not trigger.  Pure
+    auto-attack windows are exact because they contain no candidate ability
+    control event at all.
+    """
+    if not item_effects.requires_authored_control_event(items):
+        return True, ""
+    ability_events = [
+        event
+        for event in damage_events
+        if isinstance(event, dict) and bool(event.get("is_ability"))
+    ]
+    if not ability_events:
+        return True, ""
+    if all(
+        event.get("cc_reviewed") is True or event.get("cc_kind") is not None
+        for event in ability_events
+    ):
+        return True, ""
+    return False, "fimbulwinter_everlasting"
 
 
 @dataclass
@@ -2819,6 +2856,14 @@ def _evaluate_cast_parts(
                             "raw_formula": part.hp_scaled_damage,
                             "source_missing_ratio": event_missing_ratio,
                             "event_precision": event_precision,
+                            **(
+                                {
+                                    "cc_kind": str(part.cc_kind),
+                                    "cc_reviewed": True,
+                                }
+                                if part.cc_kind is not None
+                                else {}
+                            ),
                         }
                     )
                 if on_hit is not None:
@@ -9578,6 +9623,19 @@ def calculate_fight_damage(
         num_auto_attacks=state.num_auto_attacks,
         lean=score_only,
     )
+    fimbulwinter_complete, fimbulwinter_source = _fimbulwinter_event_coverage(
+        items, damage_events
+    )
+    if not fimbulwinter_complete:
+        timeline_coverage["complete"] = False
+        timeline_coverage["certification"] = "partial_event_order"
+        timeline_coverage["coarse_sources"] = sorted(
+            set(timeline_coverage["coarse_sources"]) | {fimbulwinter_source}
+        )
+        timeline_coverage["note"] = (
+            "Fimbulwinter's Everlasting needs an authored immobilize/slow marker; "
+            "the ability packet did not certify its crowd-control state."
+        )
     if (
         config.target_threshold_health_heal > 0
         and shield_outcome["threshold_health_triggered"]

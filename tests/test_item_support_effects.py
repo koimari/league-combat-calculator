@@ -27,7 +27,7 @@ def _actor(
         team=team,
         level=level,
         items=tuple({"name": name} for name in item_names),
-        stats={"mana": 1000.0, "is_melee": False},
+        stats={"mana": 1000.0, "max_mana": 1000.0, "is_melee": False},
         request=SimpleNamespace(
             item_options=item_options or {},
             ally_effects_enabled=ally_effects_enabled,
@@ -218,6 +218,108 @@ def test_sourced_cc_packets_include_holder_movement_and_solstice_both_recipients
     assert next(p for p in solstice if p["target"] == target.participant_id)[
         "amount"
     ] == pytest.approx(50.0 + (230.0 - 50.0) * 5.0 / 11.0)
+
+
+def test_fimbulwinter_everlasting_uses_current_mana_and_nearby_enemy_multiplier():
+    holder = _actor("main:Ahri", "main", ("Fimbulwinter",))
+    holder.stats.update({"is_melee": True, "max_mana": 1000.0})
+    enemy_one = _actor("enemy:Aatrox", "enemy", ())
+    enemy_two = _actor("enemy:Galio", "enemy", ())
+    packets = derive_item_support_effects(
+        holder,
+        {
+            "cast_timeline": [{"time": 1.0, "resource_after": 900.0}],
+            "damage_events": [
+                {
+                    "time": 1.0,
+                    "target": enemy_one.participant_id,
+                    "source_key": "E",
+                    "ability_instance": "E:1",
+                    "cc_kind": "slow",
+                },
+                {
+                    "time": 5.0,
+                    "target": enemy_one.participant_id,
+                    "source_key": "E",
+                    "ability_instance": "E:2",
+                    "cc_kind": "slow",
+                },
+                {
+                    "time": 9.0,
+                    "target": enemy_one.participant_id,
+                    "source_key": "E",
+                    "ability_instance": "E:3",
+                    "cc_kind": "slow",
+                },
+            ],
+        },
+        [holder, enemy_one, enemy_two],
+    )
+
+    shields = [p for p in packets if p["source"] == "Fimbulwinter — Everlasting"]
+    assert [p["time"] for p in shields] == [pytest.approx(1.0), pytest.approx(9.0)]
+    assert shields[0]["current_mana"] == pytest.approx(900.0)
+    assert shields[0]["nearby_enemy_count"] == 2
+    assert shields[0]["multi_target_multiplier"] == pytest.approx(1.8)
+    assert shields[0]["amount"] == pytest.approx((100.0 + 0.045 * 900.0) * 1.8)
+    assert shields[0]["duration"] == pytest.approx(3.0)
+    assert shields[0]["cooldown_until"] == pytest.approx(9.0)
+
+
+def test_fimbulwinter_requires_the_correct_melee_or_immobilize_branch():
+    ranged = _actor("main:Ahri", "main", ("Fimbulwinter",))
+    enemy = _actor("enemy:Aatrox", "enemy", ())
+    slow_only = derive_item_support_effects(
+        ranged,
+        {
+            "damage_events": [
+                {
+                    "time": 1.0,
+                    "target": enemy.participant_id,
+                    "cc_kind": "slow",
+                }
+            ]
+        },
+        [ranged, enemy],
+    )
+    assert not [p for p in slow_only if p["source"] == "Fimbulwinter — Everlasting"]
+
+    immobilize = derive_item_support_effects(
+        ranged,
+        {
+            "damage_events": [
+                {
+                    "time": 1.0,
+                    "target": enemy.participant_id,
+                    "cc_kind": "immobilize",
+                }
+            ]
+        },
+        [ranged, enemy],
+    )
+    shield = next(p for p in immobilize if p["source"] == "Fimbulwinter — Everlasting")
+    assert shield["trigger_kind"] == "immobilize"
+
+
+def test_fimbulwinter_does_not_trigger_at_or_below_the_mana_gate():
+    holder = _actor("main:Ahri", "main", ("Fimbulwinter",))
+    enemy = _actor("enemy:Aatrox", "enemy", ())
+    packets = derive_item_support_effects(
+        holder,
+        {
+            "cast_timeline": [{"time": 1.0, "resource_after": 200.0}],
+            "damage_events": [
+                {
+                    "time": 1.0,
+                    "target": enemy.participant_id,
+                    "ability_instance": "Q:1",
+                    "cc_kind": "immobilize",
+                }
+            ],
+        },
+        [holder, enemy],
+    )
+    assert not [p for p in packets if p["source"] == "Fimbulwinter — Everlasting"]
 
 
 def test_cross_participant_debuffs_are_typed_and_triggered_by_holder_packets():

@@ -22,7 +22,6 @@ ItemCoverageStatus = Literal[
 # optimiser withholds them until the named mechanic has an explicit model.
 _BLOCKED_REASONS: dict[str, str] = {
     "Ardent Censer": "Sanctify's conditional self buff and on-hit damage are not modelled.",
-    "Fimbulwinter": "Awe's mana scaling and Everlasting shield state are not modelled.",
     "Imperial Mandate": (
         "Control's ability haste and Command's damage amplification are not modelled."
     ),
@@ -54,10 +53,6 @@ _CALCULATION_ALLOWED_BLOCKED = frozenset({"Cull"})
 # fail-closed until every fight-relevant child effect is covered; a name in
 # ``ITEM_EFFECTS`` is not proof that the whole item is modelled.
 _PARTIAL_BLOCKED_REASONS: dict[str, str] = {
-    "Fimbulwinter": (
-        "Awe's bonus-mana-to-health conversion is modeled, but Everlasting's "
-        "conditional shield and cooldown state are not scheduled."
-    ),
     "Bandlepipes": (
         "Fanfare's conditional movement speed and nearby-ally attack-speed buff "
         "are not modelled; only the holder's sourced attack-speed packet is "
@@ -80,6 +75,11 @@ _STATEFUL_MODELED_ITEMS: dict[str, str] = {
     "Endless Hunger": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
     "Immortal Path": "Slay stacks, above-half damage amplification, and the bounded health-state receipt are represented; below-half recovery is applied by the ordered ledger.",
     "Catalyst of Aeons": "Eternity's pre-mitigation champion-damage mana restoration and capped per-cast healing are represented by the ordered resource and participant ledgers.",
+    "Fimbulwinter": (
+        "Awe's bonus-mana-to-health conversion and Everlasting's sourced "
+        "post-control shield are represented by the ordered participant ledger; "
+        "unreviewed crowd-control packets remain fail-closed."
+    ),
 }
 
 
@@ -314,6 +314,12 @@ _TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
         "every damage event is event-certified; uncertified timed fights are "
         "withheld."
     ),
+    "Fimbulwinter": (
+        "Everlasting's 100 + 4.5% current-mana shield (1.8x with more than one "
+        "nearby enemy) is scheduled after an authored immobilize, or a slow for "
+        "a melee holder; the 20%-maximum-mana gate and eight-second cooldown "
+        "are enforced, and unreviewed control packets are withheld."
+    ),
     "Force of Nature": (
         "Steadfast stacks are scheduled from exact incoming champion magic-damage "
         "events, including expiry and the maximum-stack bonus resistance."
@@ -325,7 +331,6 @@ _TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
 }
 
 _TARGET_BLOCKED_REASONS: dict[str, str] = {
-    "Fimbulwinter": "Awe bonus health and Everlasting shields are not modelled.",
     "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
     "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",
     "Mikael's Blessing": "Purify's activated heal is not modelled.",
@@ -586,11 +591,11 @@ def require_target_item_coverage(items: list[dict[str, Any]]) -> None:
 def require_certified_target_timeline(
     items: list[dict[str, Any]], timeline_coverage: dict[str, Any]
 ) -> None:
-    """Withhold a computed timed fight that cannot price a Lifeline defense.
+    """Withhold a computed fight that cannot price a conditional defense.
 
-    Lifeline triggers are priced from the ordered damage ledger, so a coarse
-    source would mis-time the trigger.  This runs after the fight so the
-    error can name the exact uncertified sources instead of guessing.
+    Conditional defenses are priced from the ordered damage ledger, so a
+    coarse source would mis-time the trigger.  This runs after the fight so
+    the error can name the exact uncertified sources instead of guessing.
     """
     if bool(timeline_coverage.get("complete", False)):
         return
@@ -608,7 +613,7 @@ def require_certified_target_timeline(
     named = ", ".join(coarse) if coarse else "at least one damage source"
     verb = "is" if len(coarse) <= 1 else "are"
     raise ValueError(
-        f"Result withheld: enemy item {conditional}'s Lifeline needs a "
+        f"Result withheld: enemy item {conditional} needs a "
         f"certified event timeline, but {named} {verb} not event-certified."
     )
 

@@ -155,6 +155,47 @@ def test_guardian_angel_revives_target_after_first_lethal_packet():
     assert survival["terminal_phase"] == "revived"
 
 
+def test_fimbulwinter_everlasting_is_attached_after_ahri_charm():
+    """Ahri's reviewed Charm marker arms the holder's ordered self shield."""
+    main = get_champion("Ahri")
+    loadout = ChampionLoadout(
+        champion="Ahri", level=18, items=("Fimbulwinter",)
+    ).resolve()
+    enemy = ChampionLoadout(champion="Aatrox", level=18, items=()).resolve()
+    params = FightParams.from_request(
+        {
+            "fight_mode": "one_rotation",
+            "ability_ranks": {"Q": 0, "W": 0, "E": 1, "R": 0},
+            "auto_attack_uptime": 0.0,
+        },
+        deterministic=True,
+    )
+    result = build_participant_timeline(
+        main,
+        18,
+        list(loadout.item_data),
+        params,
+        main_stats=loadout.stats,
+        main_defenses=resolve_starting_defenses(
+            "Ahri", 18, loadout.stats, list(loadout.item_data)
+        ),
+        enemies=[enemy],
+        allies=[],
+    )
+
+    everlasting = next(
+        event
+        for event in result["support_events"]
+        if event["source"] == "Fimbulwinter — Everlasting"
+    )
+    assert everlasting["trigger_kind"] == "immobilize"
+    assert everlasting["current_mana"] > everlasting["mana_threshold"]
+    assert everlasting["nearby_enemy_count"] == pytest.approx(1.0)
+    assert everlasting["multi_target_multiplier"] == pytest.approx(1.0)
+    assert everlasting["source_revision_id"] == 3984419
+    assert result["participants"][0]["survival"]["support_shield_received"] > 0.0
+
+
 def test_protoplasm_reprices_delayed_target_max_health_ticks_in_coupled_walk():
     """Galio's delayed Q ticks use the target's temporary live maximum health."""
     main = get_champion("Galio")
