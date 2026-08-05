@@ -6488,6 +6488,10 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                     "damage_type": source.damage_type,
                     "damage": damage_per_proc,
                     "event_precision": "exact",
+                    "target_range_units": item_effects.required_effect_value(
+                        "Unending Despair", "range_units"
+                    ),
+                    "target_scope": "enemy_champions_within_range",
                 }
                 for index in range(procs)
             ]

@@ -80,6 +80,7 @@ def test_frozen_heart_registers_typed_attack_speed_aura() -> None:
     assert required_effect_value(
         "Frozen Heart", "attack_speed_reduction"
     ) == pytest.approx(0.20)
+    assert required_effect_value("Frozen Heart", "range_units") == pytest.approx(700.0)
     # Target-only effects are still valid registry entries when an item is
     # present in an ordinary attacker build; they simply contribute no damage.
     assert resolve_damage_effects(_build("Frozen Heart")).per_hits == ()

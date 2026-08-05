@@ -35,7 +35,11 @@ from .item_effects import (
     sustain_effect_value,
     thorns_effects,
 )
-from .resistance import apply_magic_penetration, apply_resistance
+from .resistance import (
+    apply_armor_penetration,
+    apply_magic_penetration,
+    apply_resistance,
+)
 from .stats import get_item_stats
 
 
@@ -822,6 +826,20 @@ def _schedule_thorns_events(
             for event in incoming.get(wearer.participant_id, [])
             if event.get("source_key") == "auto_attacks"
             or bool(event.get("basic_attack"))
+            if not any(
+                bool(event.get(marker))
+                for marker in (
+                    "dodged",
+                    "blocked",
+                    "missed",
+                    "blinded",
+                    "blind",
+                    "evaded",
+                    "attack_missed",
+                )
+            )
+            and str(event.get("skipped_reason", ""))
+            not in {"dodged", "blocked", "missed", "blinded", "evaded"}
         ]
         for index, strike in enumerate(strikes):
             striker = combatant_by_id.get(str(strike.get("attacker")))
@@ -1132,6 +1150,7 @@ def _simulate_survival(
     # when a mechanic has no trigger/timing contract.
     expanded_incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
     expanded_healing: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    redirect_children: dict[str, dict[str, Any]] = {}
     for participant_id, events in healing.items():
         expanded_healing[participant_id].extend(dict(event) for event in events)
 
@@ -1180,35 +1199,201 @@ def _simulate_survival(
             redirect_target = str(event.get("redirect_target", ""))
             if redirect_fraction > 0.0 and redirect_target in states:
                 original_amount = max(0.0, float(event.get("damage", 0.0)))
-                direct_amount = original_amount * (1.0 - redirect_fraction)
+                # Knight's Vow redirects pre-mitigation damage.  A pair event
+                # may only expose its post-mitigation value, so recover the
+                # authored raw amount from the event when present, otherwise
+                # from its effective resistance receipt.  If neither exists,
+                # fail closed instead of splitting a guessed post-mitigation
+                # amount between targets with different resistances.
+                raw_amount: float | None = None
+                if event.get("redirect_pre_mitigation_required"):
+                    try:
+                        candidate = float(event.get("raw_damage", 0.0) or 0.0)
+                    except (TypeError, ValueError):
+                        candidate = 0.0
+                    if candidate > 0.0 and math.isfinite(candidate):
+                        raw_amount = candidate
+                    else:
+                        damage_type = str(event.get("damage_type", ""))
+                        baseline_key = (
+                            "_baseline_effective_armor"
+                            if damage_type == "physical"
+                            else (
+                                "_baseline_effective_mr"
+                                if damage_type == "magic"
+                                else ""
+                            )
+                        )
+                        try:
+                            baseline = float(event[baseline_key])
+                            baseline_factor = apply_resistance(1.0, baseline)
+                            if baseline_factor <= 0.0 or not math.isfinite(
+                                baseline_factor
+                            ):
+                                raise ValueError("invalid baseline mitigation factor")
+                            raw_amount = original_amount / baseline_factor
+                        except (KeyError, TypeError, ValueError, ZeroDivisionError):
+                            raw_amount = None
+                    if raw_amount is None or not math.isfinite(raw_amount):
+                        event["redirect_skipped_reason"] = (
+                            "pre_mitigation_receipt_unavailable"
+                        )
+                        event["redirect_fraction"] = 0.0
+                        expanded_incoming[target_id].append(event)
+                        continue
+
+                    source = combatant_by_id.get(str(event.get("attacker", "")))
+                    protected = combatant_by_id.get(target_id)
+                    holder = combatant_by_id.get(redirect_target)
+                    damage_type = str(event.get("damage_type", ""))
+                    if source is None or protected is None or holder is None:
+                        event["redirect_skipped_reason"] = (
+                            "participant_receipt_unavailable"
+                        )
+                        event["redirect_fraction"] = 0.0
+                        expanded_incoming[target_id].append(event)
+                        continue
+
+                    def _target_factor(target: Combatant) -> float | None:
+                        if damage_type == "physical":
+                            effective = apply_armor_penetration(
+                                float(target.stats.get("armor", 0.0) or 0.0)
+                                + float(
+                                    states[target.participant_id].get(
+                                        "dynamic_bonus_armor", 0.0
+                                    )
+                                    or 0.0
+                                ),
+                                float(
+                                    source.stats.get("flat_armor_penetration", 0.0)
+                                    or 0.0
+                                ),
+                                float(
+                                    source.stats.get("armor_penetration_percent", 0.0)
+                                    or 0.0
+                                )
+                                / 100.0,
+                            )
+                        elif damage_type == "magic":
+                            effective = apply_magic_penetration(
+                                float(target.stats.get("magic_resistance", 0.0) or 0.0)
+                                + float(
+                                    states[target.participant_id].get(
+                                        "dynamic_bonus_magic_resistance", 0.0
+                                    )
+                                    or 0.0
+                                ),
+                                float(
+                                    source.stats.get("magic_penetration_flat", 0.0)
+                                    or 0.0
+                                ),
+                                float(
+                                    source.stats.get("magic_penetration_percent", 0.0)
+                                    or 0.0
+                                )
+                                / 100.0,
+                            )
+                        elif damage_type == "true":
+                            return 1.0
+                        else:
+                            return None
+                        factor = apply_resistance(1.0, effective)
+                        if not math.isfinite(factor) or factor < 0.0:
+                            return None
+                        # Basic-damage defenses are post-mitigation and belong
+                        # to the recipient of each split, not the Worthy.
+                        if event.get("basic_attack") and damage_type != "true":
+                            defenses = target.defenses
+                            factor *= max(
+                                0.0,
+                                float(
+                                    getattr(defenses, "basic_damage_multiplier", 1.0)
+                                    or 1.0
+                                ),
+                            )
+                            flat = max(
+                                0.0,
+                                float(
+                                    getattr(
+                                        defenses, "basic_damage_flat_reduction", 0.0
+                                    )
+                                    or 0.0
+                                ),
+                            )
+                            cap = max(
+                                0.0,
+                                float(
+                                    getattr(
+                                        defenses,
+                                        "basic_damage_flat_reduction_cap",
+                                        0.0,
+                                    )
+                                    or 0.0
+                                ),
+                            )
+                            if flat > 0.0 and cap > 0.0:
+                                mitigated = raw_amount * factor
+                                factor = max(
+                                    0.0,
+                                    (mitigated - min(flat, mitigated * cap))
+                                    / raw_amount,
+                                )
+                        return factor
+
+                    protected_factor = _target_factor(protected)
+                    holder_factor = _target_factor(holder)
+                    if protected_factor is None or holder_factor is None:
+                        event["redirect_skipped_reason"] = (
+                            "target_mitigation_receipt_unavailable"
+                        )
+                        event["redirect_fraction"] = 0.0
+                        expanded_incoming[target_id].append(event)
+                        continue
+                    direct_amount = (
+                        raw_amount * (1.0 - redirect_fraction) * protected_factor
+                    )
+                    redirected_amount = raw_amount * redirect_fraction * holder_factor
+                else:
+                    direct_amount = original_amount * (1.0 - redirect_fraction)
+                    redirected_amount = original_amount * redirect_fraction
                 redirected = {
                     **event,
                     "target": redirect_target,
-                    "damage": original_amount * redirect_fraction,
+                    "damage": redirected_amount,
                     "_redirected": True,
                     "_redirected_from": target_id,
                     "_redirect_fraction": redirect_fraction,
+                    "_trigger_event_id": event.get("_event_id"),
                     "_event_id": f"{event.get('_event_id', '')}:redirect",
                 }
+                if event.get("redirect_pre_mitigation_required"):
+                    redirected["raw_damage"] = raw_amount * redirect_fraction
+                    redirected["redirect_pre_mitigation"] = True
+                    redirected["redirect_attributed_to"] = str(
+                        event.get("attacker", "")
+                    )
                 redirected["_sk"] = _action_key(
                     float(redirected.get("time", 0.0)),
-                    0.0,
+                    0.5,
                     redirect_target,
                     redirected,
                 )
+                redirect_children[str(event.get("_event_id", ""))] = redirected
                 expanded_incoming[redirect_target].append(redirected)
                 _insert_receipt_clone(event, redirected)
                 # The source packet's outgoing receipt represents the direct
                 # share; the redirected clone carries the other share.  This
                 # keeps public event damage additive without double counting.
                 original["damage"] = direct_amount
-                original["_redirected_amount"] = original_amount * redirect_fraction
+                original["_redirect_original_damage"] = original_amount
+                original["_redirected_amount"] = redirected_amount
                 original["_redirect_fraction"] = redirect_fraction
                 event = {
                     **event,
                     "target": target_id,
                     "damage": direct_amount,
-                    "_redirected_amount": original_amount * redirect_fraction,
+                    "_redirect_original_damage": original_amount,
+                    "_redirected_amount": redirected_amount,
                     "_redirect_fraction": redirect_fraction,
                 }
 
@@ -2064,6 +2249,56 @@ def _simulate_survival(
                 event["damage"] = 0.0
             event["skipped_reason"] = "trigger_event_skipped"
             continue
+        if event.get("_redirect_cancelled"):
+            if phase >= 1:
+                event["applied_amount"] = 0.0
+            else:
+                if annotate:
+                    event.setdefault("pair_damage", float(event.get("damage", 0.0)))
+                    event["live_damage"] = 0.0
+                    event["overkill"] = 0.0
+                event["damage"] = 0.0
+            event["applied_amount"] = 0.0
+            event.setdefault("skipped_reason", "redirect_gate")
+            continue
+        # Knight's Vow's 30%-health condition is an ordered state gate.  The
+        # direct share is expanded above so its recipient can be repriced; if
+        # the holder is already at or below the threshold, cancel that child
+        # and restore the unredirected packet on the Worthy target.
+        if not event.get("_redirected"):
+            child = redirect_children.get(str(event.get("_event_id", "")))
+            if child is not None and not event.get("_redirect_gate_checked"):
+                holder_id = str(child.get("target", ""))
+                holder_state = states.get(holder_id)
+                try:
+                    required_ratio = float(
+                        event.get("redirect_holder_health_ratio", 0.0) or 0.0
+                    )
+                except (TypeError, ValueError):
+                    required_ratio = 0.0
+                holder_ready = bool(holder_state) and (
+                    holder_state["death_time"] is None
+                    and (
+                        required_ratio <= 0.0
+                        or holder_state["max_health"] <= 0.0
+                        or holder_state["health"]
+                        > holder_state["max_health"] * required_ratio + 1e-9
+                    )
+                )
+                event["_redirect_gate_checked"] = True
+                child["_redirect_gate_checked"] = True
+                if not holder_ready:
+                    child["_redirect_cancelled"] = True
+                    child["damage"] = 0.0
+                    child["skipped_reason"] = "holder_health_gate"
+                    restored = max(
+                        0.0,
+                        float(event.get("_redirect_original_damage", 0.0) or 0.0),
+                    )
+                    event["damage"] = restored
+                    event["_redirected_amount"] = 0.0
+                    event["_redirect_fraction"] = 0.0
+                    event["redirect_skipped_reason"] = "holder_health_gate"
         if state["death_time"] is not None:
             # Preserve the scheduled source in the receipt, but do not let
             # a dead target contribute post-death damage to TTD/BIS.
@@ -2457,6 +2692,21 @@ def _simulate_survival(
                 event["expires_at"] = round(event_time + duration_value, 3)
                 event["applied_amount"] = round(amount, 6)
             elif kind in {"heal", "regen"}:
+                try:
+                    holder_ratio_gate = float(
+                        event.get("requires_holder_health_ratio", 0.0) or 0.0
+                    )
+                except (TypeError, ValueError):
+                    holder_ratio_gate = 0.0
+                if (
+                    holder_ratio_gate > 0.0
+                    and state["max_health"] > 0.0
+                    and state["health"]
+                    <= state["max_health"] * holder_ratio_gate + 1e-9
+                ):
+                    event["applied_amount"] = 0.0
+                    event["skipped_reason"] = "holder_health_gate"
+                    continue
                 if _recovery_is_gated(state, event, event_time):
                     event["applied_amount"] = 0.0
                     event["skipped_reason"] = "damage_free_window_not_ready"
@@ -2525,6 +2775,20 @@ def _simulate_survival(
                     state["defy_heal_received"] += received
             continue
         if phase == 1:
+            try:
+                holder_ratio_gate = float(
+                    event.get("requires_holder_health_ratio", 0.0) or 0.0
+                )
+            except (TypeError, ValueError):
+                holder_ratio_gate = 0.0
+            if (
+                holder_ratio_gate > 0.0
+                and state["max_health"] > 0.0
+                and state["health"] <= state["max_health"] * holder_ratio_gate + 1e-9
+            ):
+                event["applied_amount"] = 0.0
+                event["skipped_reason"] = "holder_health_gate"
+                continue
             if _recovery_is_gated(state, event, event_time):
                 event["applied_amount"] = 0.0
                 event["skipped_reason"] = "damage_free_window_not_ready"
@@ -5085,6 +5349,26 @@ def build_participant_timeline(
                 **(
                     {"redirect_source": str(event["redirect_source"])}
                     if event.get("redirect_source")
+                    else {}
+                ),
+                **(
+                    {"redirect_pre_mitigation": True}
+                    if event.get("redirect_pre_mitigation")
+                    else {}
+                ),
+                **(
+                    {"redirect_attributed_to": str(event["redirect_attributed_to"])}
+                    if event.get("redirect_attributed_to")
+                    else {}
+                ),
+                **(
+                    {"redirect_range_units": int(event["redirect_range_units"])}
+                    if event.get("redirect_range_units") is not None
+                    else {}
+                ),
+                **(
+                    {"redirect_skipped_reason": str(event["redirect_skipped_reason"])}
+                    if event.get("redirect_skipped_reason")
                     else {}
                 ),
                 **(

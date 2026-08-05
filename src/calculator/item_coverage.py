@@ -88,10 +88,6 @@ _PARTIAL_BLOCKED_REASONS: dict[str, str] = {
         "are not modelled; only the holder's sourced attack-speed packet is "
         "represented."
     ),
-    "Thornmail": (
-        "Thornmail's Thorns is a reactive target-side packet; it is modeled "
-        "for enemy inventories but is not an outgoing attacker effect."
-    ),
     "Actualizer": (
         "Mana Made Real's active duration, doubled mana costs, basic-cooldown "
         "progress, and heal/shield amplification are not modelled."
@@ -262,7 +258,8 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
     ),
     "Unending Despair": (
         "Anguish's every-four-second magic pulse and 250% post-mitigation "
-        "self-heal are scheduled on the certified participant ledger."
+        "self-heal are scheduled on the certified participant ledger for the "
+        "selected enemy targets assumed within its 650-unit area."
     ),
     "Sundered Sky": (
         "Lightshield Strike's base-AD plus missing-health heal is replayed on "
@@ -286,7 +283,14 @@ _TARGET_MODELED_REASONS: dict[str, str] = {
     ),
     "Frozen Heart": (
         "Winter's Caress applies its sourced 20% total attack-speed cripple to "
-        "the opposing participant's authored swing schedule."
+        "the opposing participant's authored swing schedule when the selected "
+        "roster pair is assumed within the enemy-only 700-unit aura."
+    ),
+    "Knight's Vow": (
+        "Pledge redirects 14% of eligible pre-mitigation physical or magic damage "
+        "to the explicitly selected Worthy holder, and Sacrifice heals the holder "
+        "from post-mitigation Worthy damage while its sourced range and health "
+        "gates are active."
     ),
     "Guardian Angel": (
         "Rebirth restores 50% base health four seconds after the first lethal "
@@ -357,7 +361,6 @@ _TARGET_EVENT_CERTIFIED_REASONS: dict[str, str] = {
 _TARGET_BLOCKED_REASONS: dict[str, str] = {
     "Fimbulwinter": "Awe bonus health and Everlasting shields are not modelled.",
     "Guardian's Horn": "Legendary's flat incoming-damage reduction is not modelled.",
-    "Knight's Vow": "Pledge damage redirection and healing are not modelled.",
     "Locket of the Iron Solari": "Devotion's activated shield is not modelled.",
     "Mikael's Blessing": "Purify's activated heal is not modelled.",
     "Redemption": "Intervention's activated target healing is not modelled.",

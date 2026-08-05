@@ -351,7 +351,29 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
                 "min": 0,
                 "max": 4,
                 "step": 1,
-            }
+            },
+            "worthy_within_range": {
+                "type": "int",
+                "label": "Worthy ally within 1250 units",
+                # The coupled roster represents the selected Worthy ally as
+                # the scenario target.  Keep that authored assumption visible
+                # and overridable instead of silently inventing a coordinate.
+                "default": 1,
+                "min": 0,
+                "max": 1,
+                "step": 1,
+            },
+            "holder_above_30_percent": {
+                "type": "int",
+                "label": "Holder above 30% health",
+                # The survival walk re-checks this gate at every incoming
+                # packet; the input only controls whether the scenario
+                # authorizes that sourced branch at all.
+                "default": 1,
+                "min": 0,
+                "max": 1,
+                "step": 1,
+            },
         },
         "source_url": "https://wiki.leagueoflegends.com/en-us/Knight%27s_Vow",
         "source_revision_id": 4023793,
@@ -450,6 +472,8 @@ ALLY_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Knight's Vow": {
         "redirect_fraction": 0.14,
         "holder_heal_fraction": 0.12,
+        "worthy_range_units": 1250.0,
+        "holder_health_threshold_ratio": 0.30,
         "source_url": "https://wiki.leagueoflegends.com/en-us/Knight%27s_Vow",
         "source_revision_id": 4023793,
     },
@@ -1770,6 +1794,9 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "target_attack_speed_aura",
         # Winter's Caress cripples nearby champions' total attack speed by 20%.
         "attack_speed_reduction": 0.20,
+        # The roster has no coordinates; the coupled pair is explicitly
+        # treated as being inside this sourced enemy-only aura.
+        "range_units": 700.0,
     },
     "Randuin's Omen": {
         "type": "target_mitigation",
@@ -1962,6 +1989,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_type": "magic",
         # Anguish: every 4 seconds, deal 3% bonus health as magic damage
         "interval": 4.0,
+        # Anguish saps every enemy champion within this radius.
+        "range_units": 650.0,
         "bonus_hp_ratio": 0.03,
         # Anguish heals the wearer for 250% of post-mitigation damage dealt.
         "self_heal_post_mitigation_multiplier": 2.50,
@@ -2118,7 +2147,8 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Hextech Gunblade": frozenset({"base_min", "base_max", "cooldown"}),
     "Hextech Rocketbelt": frozenset({"cooldown"}),
     "Bramble Vest": frozenset({"bonus_armor_ratio"}),
-    "Frozen Heart": frozenset({"attack_speed_reduction"}),
+    "Frozen Heart": frozenset({"attack_speed_reduction", "range_units"}),
+    "Unending Despair": frozenset({"range_units"}),
     "Guardian Angel": frozenset(
         {"revive_health_ratio", "revive_delay", "revive_cooldown"}
     ),

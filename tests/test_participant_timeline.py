@@ -2522,6 +2522,118 @@ def test_survival_walk_redirects_an_authored_damage_fraction_to_holder():
     assert result["holder"]["health_damage"] == 20.0
 
 
+def test_knights_vow_redirect_reprices_pre_mitigation_damage_for_holder_resistance():
+    source = replace(
+        _dummy_combatant("source", "enemy"),
+        stats={
+            "health": 100.0,
+            "flat_armor_penetration": 0.0,
+            "armor_penetration_percent": 0.0,
+            "magic_penetration_flat": 0.0,
+            "magic_penetration_percent": 0.0,
+        },
+    )
+    protected = replace(
+        _dummy_combatant("protected", "main"),
+        stats={"health": 100.0, "armor": 0.0},
+    )
+    holder = replace(
+        _dummy_combatant("holder", "main"),
+        stats={"health": 100.0, "armor": 100.0},
+    )
+    event = {
+        "time": 0.0,
+        "damage": 100.0,
+        "damage_type": "physical",
+        "attacker": "source",
+        "target": "protected",
+        "sequence": 0,
+        "_event_id": "kv-premit",
+        "redirect_fraction": 0.14,
+        "redirect_target": "holder",
+        "redirect_pre_mitigation_required": True,
+        "redirect_holder_health_ratio": 0.30,
+        "_baseline_effective_armor": 0.0,
+    }
+    result = _simulate_survival(
+        [source, protected, holder],
+        {"protected": [event]},
+        {},
+        {},
+        10.0,
+    )
+    # 86 raw reaches the unarmoured Worthy; 14 raw is mitigated by 100 armor.
+    assert result["protected"]["health_damage"] == pytest.approx(86.0)
+    assert result["holder"]["health_damage"] == pytest.approx(7.0)
+
+
+def test_knights_vow_cancels_redirect_when_holder_falls_below_health_gate():
+    source = _dummy_combatant("source", "enemy")
+    protected = _dummy_combatant("protected", "main")
+    holder = _dummy_combatant("holder", "main")
+    incoming = {
+        "holder": [
+            {
+                "time": 0.0,
+                "damage": 90.0,
+                "damage_type": "true",
+                "attacker": "source",
+                "target": "holder",
+                "sequence": 0,
+                "_event_id": "holder-hit",
+            }
+        ],
+        "protected": [
+            {
+                "time": 1.0,
+                "damage": 40.0,
+                "damage_type": "physical",
+                "attacker": "source",
+                "target": "protected",
+                "sequence": 1,
+                "_event_id": "kv-gated",
+                "redirect_fraction": 0.14,
+                "redirect_target": "holder",
+                "redirect_pre_mitigation_required": True,
+                "redirect_holder_health_ratio": 0.30,
+                "_baseline_effective_armor": 0.0,
+            }
+        ],
+    }
+    result = _simulate_survival([source, protected, holder], incoming, {}, {}, 10.0)
+    assert result["protected"]["health_damage"] == pytest.approx(40.0)
+    assert result["holder"]["health_damage"] == pytest.approx(90.0)
+
+
+def test_thorns_does_not_fire_for_missed_or_blocked_basic_attack_receipts():
+    striker = _thorns_combatant("source", "main")
+    wearer = _thorns_combatant(
+        "target", "enemy", items=(get_item_by_name("Bramble Vest"),)
+    )
+    incoming = {
+        "target": [
+            {
+                **_auto_strike(
+                    "target", "source", time=0.0, damage=0.0, event_id="miss"
+                ),
+                "missed": True,
+            },
+            {
+                **_auto_strike(
+                    "target", "source", time=1.0, damage=0.0, event_id="block"
+                ),
+                "blocked": True,
+            },
+        ]
+    }
+    outgoing = {"source": list(incoming["target"]), "target": []}
+    _schedule_thorns_events([striker, wearer], incoming, outgoing)
+    assert not any(
+        event.get("source_key") == "thorns_Bramble Vest"
+        for event in incoming.get("source", [])
+    )
+
+
 def test_redirect_clone_is_mirrored_into_the_public_outgoing_receipt():
     source = _dummy_combatant("source", "enemy", health=100.0)
     protected = _dummy_combatant("protected", "main", health=100.0)
