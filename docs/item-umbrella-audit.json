@@ -8,7 +8,7 @@
     "path_mismatches": 0,
     "review_pending": 0,
     "runtime_items": 202,
-    "target_blocked": 3,
+    "target_blocked": 0,
     "unexplained_blocks": 0,
     "unresolved_source_conflicts": 0
   },
@@ -2444,18 +2444,15 @@
       "name": "Locket of the Iron Solari",
       "optimizer": true,
       "target": {
-        "calculation_eligible": false,
+        "calculation_eligible": true,
         "name": "Locket of the Iron Solari",
         "outcome_dimensions": [
           "ally_support",
           "shield"
         ],
-        "reason": "Devotion's activated shield is not modelled.",
-        "review_issue_refs": [
-          46,
-          48
-        ],
-        "status": "blocked"
+        "reason": "Devotion is represented by the shared participant support ledger: an explicit active_seconds input emits the sourced shield to the holder and selected teammates. Passive target calculations do not assume the active and therefore remain safe when no roster target is authored.",
+        "review_issue_refs": [],
+        "status": "modeled"
       }
     },
     {
@@ -2708,18 +2705,16 @@
       "name": "Mikael's Blessing",
       "optimizer": true,
       "target": {
-        "calculation_eligible": false,
+        "calculation_eligible": true,
         "name": "Mikael's Blessing",
         "outcome_dimensions": [
           "ally_support",
           "cleanse",
           "sustain"
         ],
-        "reason": "Purify's activated heal is not modelled.",
-        "review_issue_refs": [
-          48
-        ],
-        "status": "blocked"
+        "reason": "Purify is represented by the shared participant support ledger: an explicit active_seconds input emits the sourced cleanse/heal to the selected teammate. Passive target calculations do not invent a cast.",
+        "review_issue_refs": [],
+        "status": "modeled"
       }
     },
     {
@@ -3339,17 +3334,15 @@
       "name": "Redemption",
       "optimizer": true,
       "target": {
-        "calculation_eligible": false,
+        "calculation_eligible": true,
         "name": "Redemption",
         "outcome_dimensions": [
           "ally_support",
           "sustain"
         ],
-        "reason": "Intervention's activated target healing is not modelled.",
-        "review_issue_refs": [
-          48
-        ],
-        "status": "blocked"
+        "reason": "Intervention is represented by the shared participant support ledger: an explicit active_seconds input schedules its delayed ally heal and enemy true-damage area packet for the selected roster. Passive target calculations do not invent the active.",
+        "review_issue_refs": [],
+        "status": "modeled"
       }
     },
     {

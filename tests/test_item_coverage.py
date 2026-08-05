@@ -562,12 +562,16 @@ def test_defensive_state_coverage_names_the_authored_scenario_boundary(
     assert reason_fragment in coverage["reason"]
 
 
-@pytest.mark.parametrize("item_name", ["Locket of the Iron Solari", "Redemption"])
-def test_ally_item_packets_without_timing_remain_target_blocked(item_name):
-    """Activated ally shield/heal packets cannot invent cast timing."""
+@pytest.mark.parametrize(
+    "item_name",
+    ["Locket of the Iron Solari", "Mikael's Blessing", "Redemption"],
+)
+def test_ally_item_packets_are_coupled_and_never_assume_target_cast_timing(item_name):
+    """Target coverage admits explicit coupled packets without inventing casts."""
     coverage = target_item_model_coverage(get_item_by_name(item_name))
-    assert coverage["status"] == "blocked"
-    assert coverage["calculation_eligible"] is False
+    assert coverage["status"] == "modeled"
+    assert coverage["calculation_eligible"] is True
+    assert "explicit" in coverage["reason"]
 
 
 @pytest.mark.parametrize("item_name", ["Stridebreaker"])
