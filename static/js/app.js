@@ -568,6 +568,25 @@ function itemOptionSpec(id) {
   return specs.length === 1 ? specs[0] : null;
 }
 
+function itemOptionIdForPath(path) {
+  const parts = String(path || "").split(".");
+  if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB")) {
+    const id = Number(state.attacker[parts[1]]?.[Number(parts[2])]);
+    return Number.isFinite(id) && id > 0 ? id : 0;
+  }
+  if ((parts[0] === "targets" || parts[0] === "allies") && parts[2] === "items") {
+    const loadout = state[parts[0]]?.[Number(parts[1])];
+    const id = Number(loadout?.items?.[Number(parts[3])]);
+    return Number.isFinite(id) && id > 0 ? id : 0;
+  }
+  const value = Number(pathValue(path));
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function itemOptionSpecsForPath(path) {
+  return itemOptionSpecs(itemOptionIdForPath(path));
+}
+
 function itemOptionSpecs(id) {
   const item = getItem(id);
   const definition = item && engine.itemOptions[item.backendName || item.name];
@@ -610,7 +629,8 @@ function itemOptionState(path) {
   const parts = path.split(".");
   if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB")) {
     const key = `${parts[1]}ItemOptions`;
-    return state.attacker[key][Number(parts[2])] || (state.attacker[key][Number(parts[2])] = {});
+    const optionBuckets = state.attacker[key] || (state.attacker[key] = [{}, {}, {}, {}, {}, {}]);
+    return optionBuckets[Number(parts[2])] || (optionBuckets[Number(parts[2])] = {});
   }
   if ((parts[0] === "targets" || parts[0] === "allies") && parts[2] === "items") {
     const loadout = state[parts[0]][Number(parts[1])];
@@ -638,7 +658,7 @@ function itemOptionControls(path, id, compact = false) {
   const kind = participantKindForPath(path);
   return `<div class="item-option-controls ${compact ? "compact" : ""}" aria-label="${escapeHtml(itemName(id))} state">${specs.map((spec) => {
     const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);
-    return `<label><span>${escapeHtml(spec.label)}</span><span class="stack-control"><button type="button" ${capabilityAttributes(kind, "item_options")} data-item-option-path="${escapeHtml(path)}" data-item-option-key="${escapeHtml(spec.key)}" data-delta="-${spec.step}" aria-label="Decrease ${escapeHtml(spec.label)}">−</button><output>${value}/${spec.max}</output><button type="button" ${capabilityAttributes(kind, "item_options")} data-item-option-path="${escapeHtml(path)}" data-item-option-key="${escapeHtml(spec.key)}" data-delta="${spec.step}" aria-label="Increase ${escapeHtml(spec.label)}">+</button></span></label>`;
+    return `<label><span>${escapeHtml(spec.label)}</span><span class="stack-control"><button type="button" ${capabilityAttributes(kind, "item_options")} data-item-option-path="${escapeHtml(path)}" data-item-option-id="${escapeHtml(id)}" data-item-option-key="${escapeHtml(spec.key)}" data-delta="-${spec.step}" aria-label="Decrease ${escapeHtml(spec.label)}">−</button><output>${value}/${spec.max}</output><button type="button" ${capabilityAttributes(kind, "item_options")} data-item-option-path="${escapeHtml(path)}" data-item-option-id="${escapeHtml(id)}" data-item-option-key="${escapeHtml(spec.key)}" data-delta="${spec.step}" aria-label="Increase ${escapeHtml(spec.label)}">+</button></span></label>`;
   }).join("")}</div>`;
 }
 
@@ -988,7 +1008,7 @@ function rosterCard(loadout, index, kind) {
     <header>
       <button class="target-pick ${champion ? "" : "empty-pick"}" type="button" data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(loadout.champion)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(loadout.champion)}" alt="" />` : "+"}</button>
       <div class="target-title"><button type="button" data-picker="champion" data-path="${root}.${index}.champion">${escapeHtml(loadout.champion || "Choose champion")}</button><span>${escapeHtml(champion?.title || `${isAlly ? "Ally" : "Enemy"} slot`)}</span></div>
-      <div class="target-level"><button type="button" data-level="${root}.${index}.level" data-delta="-1" aria-label="Decrease level">−</button><output>Lv ${loadout.level}</output><button type="button" data-level="${root}.${index}.level" data-delta="1" aria-label="Increase level">+</button></div>
+      <div class="target-level"><button type="button" data-level-path="${root}.${index}.level" data-level-delta="-1" aria-label="Decrease level">−</button><output>Lv ${loadout.level}</output><button type="button" data-level-path="${root}.${index}.level" data-level-delta="1" aria-label="Increase level">+</button></div>
       <button class="remove-target" type="button" ${isAlly ? `data-remove-ally="${index}"` : `data-remove-target="${index}"`} aria-label="Remove ${escapeHtml(loadout.champion || `${label} slot`)}">×</button>
     </header>
     <div class="target-build">${loadout.items.slice(0, itemSlotCount).map((id, slot) => itemSlot(`${root}.${index}.items.${slot}`, id, true, true)).join("")}${loadout.includeBoots ? itemSlot(`${root}.${index}.boots`, loadout.boots, true, true) : ""}</div>
@@ -1201,7 +1221,7 @@ function renderBuilder() {
       <div class="hero-board">
         <div class="hero-identity">
           <button class="hero-pick ${champion ? "" : "empty-hero"}" type="button" data-picker="champion" data-path="attacker.champion">${champion ? `<img src="${championImage(attacker.champion)}" alt="" />` : `<b>+</b>`}<span>${champion ? "Change champion" : "Choose champion"}</span></button>
-          <div><p>${escapeHtml(champion?.title || "Start here")}</p><h2>${escapeHtml(attacker.champion || "Choose a champion")}</h2>${champion ? `<div class="level-control"><span>Level</span><button type="button" data-level="attacker.level" data-delta="-1">−</button><output>${attacker.level}</output><button type="button" data-level="attacker.level" data-delta="1">+</button></div>` : ""}</div>
+          <div><p>${escapeHtml(champion?.title || "Start here")}</p><h2>${escapeHtml(attacker.champion || "Choose a champion")}</h2>${champion ? `<div class="level-control"><span>Level</span><button type="button" data-level-path="attacker.level" data-level-delta="-1">−</button><output>${attacker.level}</output><button type="button" data-level-path="attacker.level" data-level-delta="1">+</button></div>` : ""}</div>
         </div>
         <div class="hero-matrix"><div class="matrix-head"><strong>Complete champion stats</strong><span>${attacker.comparisonEnabled ? "Build A / Build B" : "Build A"}</span></div>${champion ? statMatrix(statsA, attacker.comparisonEnabled ? statsB : null) : `<div class="matrix-placeholder hero-placeholder">Select the champion whose build you want to compare or optimize.</div>`}</div>
       </div>
@@ -2462,7 +2482,7 @@ function renderPrototypeChampion() {
   levelInput.disabled = levelCapability.supported === false;
   levelInput.title = capabilityTitle(levelCapability);
   levelInput.dataset.capabilityField = "level";
-  document.querySelectorAll("[data-level-delta]").forEach((button) => {
+  document.querySelectorAll('button[data-level-path="attacker.level"]').forEach((button) => {
     button.disabled = levelCapability.supported === false;
     button.title = capabilityTitle(levelCapability);
     button.dataset.capabilityField = "level";
@@ -2509,7 +2529,7 @@ function renderPrototypeRoster(kind) {
     const effectToggle = kind === "allies"
       ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" ${effectsCapability} data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
       : "";
-    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level="${root}.${index}.level" data-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level="${root}.${index}.level" data-delta="1" aria-label="Increase ${label} level">+</button></div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
+    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="1" aria-label="Increase ${label} level">+</button></div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
   }).join("") || `<p class="roster-empty">Add ${kind === "targets" ? "a target" : "an ally"} to the coupled timeline.</p>`;
   $(kind === "targets" ? "enemyCount" : "allyCount").textContent = entries.length;
 }
@@ -3809,8 +3829,15 @@ document.addEventListener("click", (event) => {
   }
   const levelButton = event.target.closest("[data-level-delta]");
   if (levelButton) {
-    state.attacker.level = Math.max(1, Math.min(attackerLevelCap(), state.attacker.level + Number(levelButton.dataset.levelDelta)));
-    syncAbilityInputsToLevel();
+    const levelPath = levelButton.dataset.levelPath || levelButton.dataset.level;
+    if (!levelPath) return;
+    const rosterMatch = levelPath.match(/^(targets|allies)\.(\d+)\.level$/);
+    const rosterLoadout = rosterMatch ? state[rosterMatch[1]]?.[Number(rosterMatch[2])] : null;
+    const cap = levelPath === "attacker.level"
+      ? attackerLevelCap()
+      : (rosterLoadout?.role === "top" && rosterLoadout.roleQuestComplete ? 20 : 18);
+    setPath(levelPath, Math.max(1, Math.min(cap, Number(pathValue(levelPath)) + Number(levelButton.dataset.levelDelta || levelButton.dataset.delta || 0))));
+    if (levelPath === "attacker.level") syncAbilityInputsToLevel();
     invalidateOptimization();
     return render();
   }
@@ -3951,17 +3978,6 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     return render();
   }
-  const rosterLevelButton = event.target.closest("[data-level]");
-  if (rosterLevelButton) {
-    const rosterLevel = rosterLevelButton.dataset.level.match(/^(targets|allies)\.(\d+)\.level$/);
-    const rosterLoadout = rosterLevel ? state[rosterLevel[1]]?.[Number(rosterLevel[2])] : null;
-    const cap = rosterLevelButton.dataset.level === "attacker.level"
-      ? attackerLevelCap()
-      : (rosterLoadout?.role === "top" && rosterLoadout.roleQuestComplete ? 20 : 18);
-    setPath(rosterLevelButton.dataset.level, Math.max(1, Math.min(cap, Number(pathValue(rosterLevelButton.dataset.level)) + Number(rosterLevelButton.dataset.delta))));
-    if (rosterLevelButton.dataset.level === "attacker.level") syncAbilityInputsToLevel();
-    return render();
-  }
   const rosterRankButton = event.target.closest("[data-roster-rank]");
   if (rosterRankButton) {
     invalidateOptimization();
@@ -3994,8 +4010,13 @@ document.addEventListener("click", (event) => {
   if (itemOptionButton) {
     const path = itemOptionButton.dataset.itemOptionPath;
     const key = itemOptionButton.dataset.itemOptionKey;
-    const specs = itemOptionSpecs(pathValue(path));
-    const spec = specs.find((entry) => entry.key === key);
+    const optionId = Number(itemOptionButton.dataset.itemOptionId);
+    let specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);
+    let spec = specs.find((entry) => entry.key === key);
+    if (!spec) {
+      specs = itemOptionSpecsForPath(path);
+      spec = specs.find((entry) => entry.key === key);
+    }
     if (!spec) return;
     const next = Math.max(spec.min, Math.min(spec.max, itemOptionValue(path, key) + Number(itemOptionButton.dataset.delta || 0)));
     setItemOptionValue(path, key, next);
@@ -4118,7 +4139,7 @@ document.addEventListener("click", (event) => {
     closeBis();
     return render();
   }
-});
+}, true);
 
 document.addEventListener("input", (event) => {
   const protoRange = event.target.closest("[data-proto-range]");

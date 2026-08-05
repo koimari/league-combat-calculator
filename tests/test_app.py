@@ -927,6 +927,120 @@ def test_frontend_uses_level_derived_ranks_for_nonstandard_kits():
     assert "ability_ranks: usesLevelDerivedRanks(target.champion)" in source
 
 
+def test_frontend_level_controls_routable_contract_uses_data_level_delta():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert 'const levelButton = event.target.closest("[data-level-delta]")' in source
+    assert (
+        "const rosterMatch = levelPath.match(/^(targets|allies)\\.(\\d+)\\.level$/)"
+        in source
+    )
+    assert 'const cap = levelPath === "attacker.level"' in source
+    assert (
+        "setPath(levelPath, Math.max(1, Math.min(cap, "
+        "Number(pathValue(levelPath)) + Number(levelButton.dataset.levelDelta || levelButton.dataset.delta || 0))));"
+        in source
+    )
+    assert (
+        "document.querySelectorAll('button[data-level-path=\"attacker.level\"]')"
+        in source
+    )
+
+
+def test_frontend_layout_keeps_main_identity_controls_hit_area():
+    source = Path("static/css/style.css").read_text(encoding="utf-8")
+    identity_block_start = source.index(".champion-identity {")
+    identity_block_end = source.index(".champion-portrait {")
+    identity_block = source[identity_block_start:identity_block_end]
+
+    assert "position: relative;" in identity_block
+    assert "z-index: 2;" in identity_block
+    assert "min-width: 0;" in identity_block
+
+    controls_block_start = source.index(".identity-controls {")
+    controls_block_end = source.index(".identity-controls label {")
+    controls_block = source[controls_block_start:controls_block_end]
+    assert "max-width: 100%;" in controls_block
+
+
+def test_frontend_layout_separates_item_option_rows():
+    source = Path("static/css/style.css").read_text(encoding="utf-8")
+    option_block_start = source.index(".item-option-controls {")
+    option_block_end = source.index(".roster-slot-wrap {")
+    option_block = source[option_block_start:option_block_end]
+
+    assert "display: grid;" in option_block
+    assert "gap: 5px;" in option_block
+    assert "min-width: 0;" in option_block
+    assert "width: 100%;" in option_block
+    label_block = source[
+        source.index(".item-option-controls label {") : source.index(
+            ".roster-slot-wrap {"
+        )
+    ]
+    assert "display: grid;" in label_block
+    assert "min-width: 0;" in label_block
+    assert "overflow-wrap: anywhere;" in label_block
+    assert "white-space: normal;" in label_block
+    assert ".slot-wrap > .item-option-controls," in source
+    assert "margin-top: 4px;" in source
+    assert "width: 100%;" in source
+
+
+def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_effect():
+    client = app_module.app.test_client()
+    zero_payload = {
+        "champion": "Ahri",
+        "level": 18,
+        "items": ["Stridebreaker"],
+        "item_options": {"Stridebreaker": {"active_seconds": 0.0}},
+        "fight_mode": "timed",
+        "fight_duration": 5,
+        "enemies": [{"champion": "Annie", "level": 18, "items": []}],
+    }
+    live_payload = {
+        **zero_payload,
+        "item_options": {"Stridebreaker": {"active_seconds": 1.0}},
+    }
+
+    baseline = client.post("/api/calculate", json=zero_payload).get_json()
+    with_effect = client.post("/api/calculate", json=live_payload).get_json()
+
+    assert (
+        baseline["combat"]["utility_outcomes"]["participants"]["main"]["slow"][
+            "event_count"
+        ]
+        == 0
+    )
+    assert (
+        with_effect["combat"]["utility_outcomes"]["participants"]["main"]["slow"][
+            "event_count"
+        ]
+        > 0
+    )
+    assert (
+        with_effect["combat"]["utility_outcomes"]["participants"]["main"]["movement"][
+            "event_count"
+        ]
+        > 0
+    )
+
+
+def test_frontend_click_handlers_handle_missing_main_build_option_buckets():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "function itemOptionState(path)" in source
+    assert (
+        "const optionBuckets = state.attacker[key] || (state.attacker[key] = [{}, {}, {}, {}, {}, {}]);"
+        in source
+    )
+    assert (
+        "return optionBuckets[Number(parts[2])] || (optionBuckets[Number(parts[2])] = {});"
+        in source
+    )
+    assert "return Number.isFinite(id) && id > 0 ? id : 0;" in source
+
+
 def test_damage_breakdown_leads_with_result_and_keeps_event_audit_disclosed():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
@@ -1081,6 +1195,54 @@ def test_live_builder_surfaces_backend_item_state_controls_for_all_participants(
     assert 'data-stack-path="${path}"' in source
     assert "function setStackValue(path, value)" in source
     assert "engineItemOptions(itemIds, itemStacks)" in source
+
+
+def test_frontend_click_handlers_use_path_resolved_item_option_metadata_for_main_build_slots():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "function itemOptionIdForPath(path)" in source
+    assert 'const parts = String(path || "").split(".");' in source
+    assert "const id = Number(state.attacker[parts[1]]?.[Number(parts[2])]);" in source
+    assert (
+        'if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB"))'
+        in source
+    )
+    assert "return Number.isFinite(id) && id > 0 ? id : 0;" in source
+    assert "function itemOptionSpecsForPath(path)" in source
+    assert "itemOptionState(path)[key] = Number(value);" in source
+    assert 'data-item-option-id="${escapeHtml(id)}"' in source
+    assert "const optionId = Number(itemOptionButton.dataset.itemOptionId);" in source
+    assert (
+        "let specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);"
+        in source
+    )
+    assert (
+        "const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);"
+        in source
+    )
+
+
+def test_frontend_click_handlers_fallback_to_path_resolved_item_options_when_rendered_id_stale():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert (
+        "let specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);"
+        in source
+    )
+    assert "let spec = specs.find((entry) => entry.key === key);" in source
+    assert "if (!spec) {" in source
+    assert "specs = itemOptionSpecsForPath(path);" in source
+    assert "spec = specs.find((entry) => entry.key === key);" in source
+
+
+def test_frontend_click_handler_runs_in_capture_phase_for_live_bootstrap_resilience():
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    start = source.find('document.addEventListener("click", (event) => {')
+    assert start != -1
+    end = source.find('document.addEventListener("input", (event) => {', start)
+    delegated_block = source[start:end]
+    assert "}, true);" in delegated_block
 
 
 def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats():

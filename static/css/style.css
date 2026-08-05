@@ -55,12 +55,14 @@ select { min-width: 132px; height: 34px; appearance: none; padding: 0 30px 0 12p
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
 .champion-card { display: grid; grid-template-columns: minmax(240px, .78fr) 1.55fr; min-height: 228px; background: rgba(255,253,244,.62); backdrop-filter: blur(16px) saturate(145%); }
 .champion-identity { display: flex; gap: 18px; align-items: center; padding: 22px; border-right: 1px solid var(--line); }
+.champion-identity { position: relative; z-index: 2; min-width: 0; }
 .champion-portrait { flex: 0 0 112px; width: 112px; height: 132px; overflow: hidden; background: var(--paper-deep); }
 .champion-portrait img { width: 100%; height: 100%; object-fit: cover; filter: saturate(1.08) contrast(1.06); }
 .champion-portrait img.image-missing { opacity: 0; }
 .champion-identity h1 { margin: 5px 0 2px; font-size: clamp(28px, 3vw, 42px); font-weight: 800; letter-spacing: -.075em; line-height: .98; }
 .champion-identity p { margin: 0; color: var(--muted); font-size: 12px; font-weight: 600; }
 .identity-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 22px; }
+.identity-controls { max-width: 100%; }
 .identity-controls label { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
 .identity-controls input { width: 41px; height: 30px; padding: 0 7px; border: 1px solid var(--line-dark); border-radius: var(--radius); background: var(--white); color: var(--ink); font-weight: 800; }
 .outline-button { min-height: 30px; padding: 0 9px; border: 1px solid var(--line-dark); border-radius: var(--radius); background: transparent; color: var(--ink-soft); font-size: 9px; font-weight: 800; text-transform: uppercase; }
@@ -292,6 +294,20 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .stack-control button { display: grid; place-items: center; width: 22px; height: 20px; padding: 0; border: 1px solid var(--line-dark); background: transparent; color: var(--ink); font-size: 13px; line-height: 1; }
 .stack-control button:hover, .stack-control button:focus-visible { border-color: var(--ink); background: var(--black); color: var(--white); }
 .stack-control output { min-width: 0; overflow: hidden; color: var(--muted); font: 700 8px/1 var(--mono); text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.item-option-controls { display: grid; gap: 5px; min-width: 0; width: 100%; }
+.slot-wrap > .item-option-controls,
+.roster-slot-wrap > .item-option-controls {
+  margin-top: 4px;
+  min-width: 0;
+  width: 100%;
+}
+.item-option-controls label {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
 .roster-slot-wrap { display: grid; min-width: 0; gap: 3px; }
 .roster-slot-label { min-height: 12px; color: var(--ink-soft); font: 8px/1 var(--mono); letter-spacing: .08em; text-align: center; text-transform: uppercase; }
 .roster-boots-wrap .roster-item-slot { border-color: var(--ink-soft); }
