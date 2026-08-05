@@ -2949,9 +2949,9 @@
     "champion_modules_ready": 173,
     "champion_modules_review_pending": 0,
     "champions_expected": 173,
-    "entries_audited": 382,
-    "items_expected": 209,
-    "ready": 382,
+    "entries_audited": 410,
+    "items_expected": 237,
+    "ready": 410,
     "review_pending": 0
   },
   "entries": [
@@ -47020,6 +47020,67 @@
       "wikitext_chars": 4403
     },
     {
+      "content_sha256": "a4dfcc50f3710aa472bed3b8f38d8f308f119ed7a7558b7ae6f222597ad3451d",
+      "document_sha256": "a9bee02742a07a2e12ea3082f488833a239bb98c65216152daa1488103e8daf0",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 2,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Reinforced Armor",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Minion Slayer",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "cab4b54e69bc4b24054d84a07d100d7f9884bcfa5fe556c9f6945b195c4f81e8",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Anti-Tower Socks",
+      "namespace": 0,
+      "page_id": 1350348,
+      "revision_id": 3604471,
+      "revision_timestamp": "2023-10-08T14:04:07Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Anti-Tower_Socks",
+      "status": "ready",
+      "title": "Anti-Tower Socks",
+      "wikitext_chars": 26
+    },
+    {
       "content_sha256": "1d4c1143bae7b289311f92792b296b406c60ac74758d348b47e449cb2808c468",
       "document_sha256": "3d824702302090bad70a9b080e6599457e2cc0e0f47f1e7deed97bdc3f0dde82",
       "full_entry_review": {
@@ -47181,8 +47242,8 @@
           "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Plating and Noxian Endurance are defensive effects.",
-          "registry_effect_type": null,
+          "reason": "The represented mechanic changes defense, not outgoing TDD.",
+          "registry_effect_type": "defensive_start",
           "status": "stats_only"
         },
         "runtime_reasoned": true
@@ -47501,6 +47562,75 @@
       "status": "ready",
       "title": "Banshee's Veil",
       "wikitext_chars": 7779
+    },
+    {
+      "content_sha256": "57c4530ed56b6b0555a759276cad6caafefcdfbfe70cbd0e2c2afda9ccab7900",
+      "document_sha256": "74ebc69899c2995ededf69c2190da01ab789944e0362613086310e69753e4945",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 3,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Reinforced",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Melee Weakness",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Regeneration",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "b69bead344810b290d87adc918ee41f84abe598c54eb56b5ec10f5df9dd9fc4b",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Base Turret Reinforced Armor (Turret Item)",
+      "namespace": 0,
+      "page_id": 1417830,
+      "revision_id": 3663194,
+      "revision_timestamp": "2023-12-28T00:20:40Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Base_Turret_Reinforced_Armor_(Turret_Item)",
+      "status": "ready",
+      "title": "Base Turret Reinforced Armor (Turret Item)",
+      "wikitext_chars": 26
     },
     {
       "content_sha256": "162b273e0011debaf96459dd274bd3a6209078edc8f8671719e10a50387fcf74",
@@ -48061,8 +48191,8 @@
           "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Ichorshield is a defensive shield.",
-          "registry_effect_type": null,
+          "reason": "The represented mechanic changes defense, not outgoing TDD.",
+          "registry_effect_type": "defensive_start",
           "status": "stats_only"
         },
         "runtime_reasoned": true
@@ -48175,6 +48305,67 @@
       "status": "ready",
       "title": "Boots of Swiftness",
       "wikitext_chars": 4831
+    },
+    {
+      "content_sha256": "c58e1dded07d0ed4e3de171cf0f97dfe6df257724f66da2e8b9eeb45466f079e",
+      "document_sha256": "16f1459adf42629e138ee929c3aad549ebfea1731d7d21170b028eb8eaeb6396",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 2,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Upgrade",
+              "stat_fields": []
+            },
+            {
+              "branch": "active",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": true,
+              "name": "Ward",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "debf2d9d53e5cfff1187d8bde681788f1f22d944e02bb8de8b9b411ca3566f07",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Bounty of Worlds",
+      "namespace": 0,
+      "page_id": 1619516,
+      "revision_id": 4028001,
+      "revision_timestamp": "2026-06-13T11:26:16Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Bounty_of_Worlds",
+      "status": "ready",
+      "title": "Bounty of Worlds",
+      "wikitext_chars": 3355
     },
     {
       "content_sha256": "6c4ed480bf0bf3c151ab38fc8ba7d77e7d29c642da65ac6d7160edd79185fffa",
@@ -48362,8 +48553,8 @@
           "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Blessing of the Mountain is defensive mitigation.",
-          "registry_effect_type": null,
+          "reason": "The represented mechanic changes defense, not outgoing TDD.",
+          "registry_effect_type": "defensive_start",
           "status": "stats_only"
         },
         "runtime_reasoned": true
@@ -48455,8 +48646,8 @@
           "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Noxian Persistence is a defensive magic shield.",
-          "registry_effect_type": null,
+          "reason": "The represented mechanic changes defense, not outgoing TDD.",
+          "registry_effect_type": "defensive_start",
           "status": "stats_only"
         },
         "runtime_reasoned": true
@@ -48859,6 +49050,59 @@
       "wikitext_chars": 1388
     },
     {
+      "content_sha256": "57c4530ed56b6b0555a759276cad6caafefcdfbfe70cbd0e2c2afda9ccab7900",
+      "document_sha256": "f9d6aae14df700157e00771911730c1145012708ab429e75c3af5609e8a2298a",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 1,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Buildup",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "7529074e4866dbc6b0639b2758c9489906775e13e4586717e691fd9da06d83c5",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Crystalline Overgrowth",
+      "namespace": 0,
+      "page_id": 1718853,
+      "revision_id": 3984712,
+      "revision_timestamp": "2026-01-16T03:28:04Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Crystalline_Overgrowth",
+      "status": "ready",
+      "title": "Crystalline Overgrowth",
+      "wikitext_chars": 26
+    },
+    {
       "content_sha256": "736c33395e9c023c80a6ee4f2a9cfef9c59acae2634beef16ecc78eedfd03077",
       "document_sha256": "f3f23f67e2398f6d8adedae4bb1683eb6283bcc46945400e5b378e19016bd8d6",
       "full_entry_review": {
@@ -49184,6 +49428,118 @@
       "wikitext_chars": 10437
     },
     {
+      "content_sha256": "2001bf4101eb21f57e74a8dafbc2ae130b8c9f3f28ac071adfda62b4bbf8f004",
+      "document_sha256": "b09d39a99225be8898b5794c57be248c270c506e089c92541e41b4884ac2e57f",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 1,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Death's Daughter",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "6500def2312c453ebc64f93ce1430be8cfbf6dd08fedfcaf533fe9414a5a075a",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Death's Daughter",
+      "namespace": 0,
+      "page_id": 1219768,
+      "revision_id": 3942298,
+      "revision_timestamp": "2025-08-06T17:40:16Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Death's_Daughter",
+      "status": "ready",
+      "title": "Death's Daughter",
+      "wikitext_chars": 38
+    },
+    {
+      "content_sha256": "9d2729871e01a4f159578fe8bc67b3f81995402bf05b7a7c147ed1659bdf5df7",
+      "document_sha256": "32ab76141c10d14b01100cecd2fa312e59cef26fe1685334f0eafc7df66d2454",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 2,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Harmony",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Consonance",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "b622707ee8a25edb593bf9e46f3d76864d5a2b061a899b6eb4a70ce925136b84",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "Harmony and Consonance change healing, not outgoing damage.",
+          "registry_effect_type": null,
+          "status": "stats_only"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Diadem of Songs",
+      "namespace": 0,
+      "page_id": 1714180,
+      "revision_id": 3993317,
+      "revision_timestamp": "2026-02-21T12:28:21Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Diadem_of_Songs",
+      "status": "ready",
+      "title": "Diadem of Songs",
+      "wikitext_chars": 2810
+    },
+    {
       "content_sha256": "ab20fcbbc3b8953e1d3b29492ec3dbd4413bd2d7574467ce1cfdfba7606fd886",
       "document_sha256": "be6ff157c11733fe9833db60f615b540c4be06baf4e0b8bbee70b85ed600b7bc",
       "full_entry_review": {
@@ -49206,9 +49562,9 @@
           "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "The item has no separate passive or active in the cached Wiki data.",
-          "registry_effect_type": null,
-          "status": "stats_only"
+          "reason": "Damage-relevant effects are represented by the fight model.",
+          "registry_effect_type": "sustain",
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -49349,22 +49705,20 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Helping Hand's 5 bonus physical damage is restricted to minions; Drain's combat resource/heal state is not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "d8aecb6d924cc8844ffc8f1ded704a3d7a5611a81c8dfd6fd08341b93ce4f894",
+        "expected_effects_sha256": "a005cf1a9e9e4b311683bc1996245a69aaf967d807ed3ffc1cb360c00b528be5",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Helping Hand's 5 bonus physical damage is restricted to minions; Drain's combat resource/heal state is not modelled.",
-          "registry_effect_type": null,
-          "status": "blocked"
+          "reason": "Damage-relevant effects are represented by the fight model.",
+          "registry_effect_type": "sustain",
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -49410,22 +49764,20 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Helping Hand's 5 bonus physical damage is restricted to minions; Enduring Focus's missing-health regeneration state is not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "83f1d7facfb87f88b82505b428a4071b7c6433e46c02ae47a408ee441f0b391b",
+        "expected_effects_sha256": "2eab91f7ff5a53bc46ce415257f10306143e64b0e75947191c72c04400ff42c8",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Helping Hand's 5 bonus physical damage is restricted to minions; Enduring Focus's missing-health regeneration state is not modelled.",
-          "registry_effect_type": null,
-          "status": "blocked"
+          "reason": "Damage-relevant effects are represented by the fight model.",
+          "registry_effect_type": "sustain",
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -49708,6 +50060,90 @@
       "wikitext_chars": 6107
     },
     {
+      "content_sha256": "d2b70938675d564452ea8297fa3315ad1cfd973339121a66617b16b758fc3e5b",
+      "document_sha256": "2e190f9e551b2e32ce04b63cb8edb774553aebb3203055eb5953d62a99d201b8",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 0,
+          "effects": [],
+          "runtime_gaps": [],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "cd69c0fc9c8b47198742aa47cf537e9bdb46c1a694d901b38bea0de18e3d3679",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "The item has no separate passive or active in the cached Wiki data.",
+          "registry_effect_type": null,
+          "status": "stats_only"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Elixir of Avarice",
+      "namespace": 0,
+      "page_id": 1620954,
+      "revision_id": 3963324,
+      "revision_timestamp": "2025-11-04T19:56:24Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Elixir_of_Avarice",
+      "status": "ready",
+      "title": "Elixir of Avarice",
+      "wikitext_chars": 934
+    },
+    {
+      "content_sha256": "646386a9925803edc3409e80a2de74530c7a0f33abacc40435b5dc623d5e567c",
+      "document_sha256": "5c10052605d2931417ddc9908fb44f593d1748a82ce3104829c16b034a8ff9c7",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 0,
+          "effects": [],
+          "runtime_gaps": [],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "cd69c0fc9c8b47198742aa47cf537e9bdb46c1a694d901b38bea0de18e3d3679",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "The item has no separate passive or active in the cached Wiki data.",
+          "registry_effect_type": null,
+          "status": "stats_only"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Elixir of Force",
+      "namespace": 0,
+      "page_id": 1620955,
+      "revision_id": 3989901,
+      "revision_timestamp": "2026-02-03T23:51:18Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Elixir_of_Force",
+      "status": "ready",
+      "title": "Elixir of Force",
+      "wikitext_chars": 1136
+    },
+    {
       "content_sha256": "1314834feb20792b1c63cd120d820f4dc7eb329d3eaaf614653e3b4091ab0955",
       "document_sha256": "da94c922f6806b7b65576b31ed61630d3ffa9773f6ad24f8684047c267dcff9e",
       "full_entry_review": {
@@ -49748,6 +50184,48 @@
       "status": "ready",
       "title": "Elixir of Iron",
       "wikitext_chars": 2845
+    },
+    {
+      "content_sha256": "a66f553bb70866c458e80664c7547970ed1e02bb8a982772b7b967a828d0d4dc",
+      "document_sha256": "af2558f2c789b4db06e637761ea035b12995a460155a84292a68ea9575beed0a",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 0,
+          "effects": [],
+          "runtime_gaps": [],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "cd69c0fc9c8b47198742aa47cf537e9bdb46c1a694d901b38bea0de18e3d3679",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "The item has no separate passive or active in the cached Wiki data.",
+          "registry_effect_type": null,
+          "status": "stats_only"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Elixir of Skill",
+      "namespace": 0,
+      "page_id": 1338509,
+      "revision_id": 3961050,
+      "revision_timestamp": "2025-10-26T01:30:41Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Elixir_of_Skill",
+      "status": "ready",
+      "title": "Elixir of Skill",
+      "wikitext_chars": 1893
     },
     {
       "content_sha256": "ae7eeb6bebf1605a37694aab0183bc4243e67d79c3c574e7c88daa8eecab327e",
@@ -50056,6 +50534,48 @@
       "wikitext_chars": 5104
     },
     {
+      "content_sha256": "81d046d550187db05bd6c51514499d6ce84364bea2a780a90296f9a7a1a85c27",
+      "document_sha256": "396766da8162d6b3b0ade40037d165ab2307ed95364185f5a36fbbf1fd6a830d",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 0,
+          "effects": [],
+          "runtime_gaps": [],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "cd69c0fc9c8b47198742aa47cf537e9bdb46c1a694d901b38bea0de18e3d3679",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "The item has no separate passive or active in the cached Wiki data.",
+          "registry_effect_type": null,
+          "status": "stats_only"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Eye of the Herald",
+      "namespace": 0,
+      "page_id": 1250051,
+      "revision_id": 3979164,
+      "revision_timestamp": "2025-12-25T13:51:39Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Eye_of_the_Herald",
+      "status": "ready",
+      "title": "Eye of the Herald",
+      "wikitext_chars": 6746
+    },
+    {
       "content_sha256": "30eca0d312aef99f185faf92d7f981f82d3977401588610e7fb00e6ee2f36722",
       "document_sha256": "1728fa2b8c9675209faef052e8116f47370c95ca032df9d9f0622288e71c5cce",
       "full_entry_review": {
@@ -50311,6 +50831,120 @@
       "wikitext_chars": 4656
     },
     {
+      "content_sha256": "ec06e310116cea0a57133ff210de5ed396c6bf90b0783e3de6aca41741fbdb9e",
+      "document_sha256": "a22d8864e62e294b2cc1a73831026cd5b8f8da0c6a8f30cae3b12a35874213c1",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 2,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Awe",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Everlasting",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "Awe's bonus-mana-to-health conversion is modeled, but Everlasting's conditional shield and cooldown state are not scheduled."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "ea2e250e30ead7bff963d3c7dcf87a019d3fba43bbfc81ff93f1293b41cd45fd",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "Awe's bonus-mana-to-health conversion is modeled, but Everlasting's conditional shield and cooldown state are not scheduled.",
+          "registry_effect_type": "stat_conversion",
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Fimbulwinter",
+      "namespace": 0,
+      "page_id": 1513920,
+      "revision_id": 3984419,
+      "revision_timestamp": "2026-01-14T22:19:05Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Fimbulwinter",
+      "status": "ready",
+      "title": "Fimbulwinter",
+      "wikitext_chars": 4109
+    },
+    {
+      "content_sha256": "2001bf4101eb21f57e74a8dafbc2ae130b8c9f3f28ac071adfda62b4bbf8f004",
+      "document_sha256": "ee7ffe54bad329e05e42f56ba6f9c99ab6ac70bc75fc17637b2f988a14245e83",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 1,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Fire at Will",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "7e459d3aedadaa7c671270a6719b82fbcbcd2ae7a9dc61188b2562b0c3559d80",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Fire at Will",
+      "namespace": 0,
+      "page_id": 1219769,
+      "revision_id": 3942300,
+      "revision_timestamp": "2025-08-06T17:40:52Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Fire_at_Will",
+      "status": "ready",
+      "title": "Fire at Will",
+      "wikitext_chars": 38
+    },
+    {
       "content_sha256": "561a92bdec1f1e299f1bde4a3afb2c04ecbcf142f26327fe6a59dc37756ad06d",
       "document_sha256": "404292e2005736300ba17ecdfd401689d58f6ca05b0d0419d49210caf3226728",
       "full_entry_review": {
@@ -50389,9 +51023,9 @@
             "defense"
           ],
           "ready": true,
-          "reason": "Steadfast grants defensive stats and movement speed.",
-          "registry_effect_type": null,
-          "status": "stats_only"
+          "reason": "Damage-relevant effects are represented by the fight model.",
+          "registry_effect_type": "target_state",
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -50801,6 +51435,67 @@
       "status": "ready",
       "title": "Gunmetal Greaves",
       "wikitext_chars": 1805
+    },
+    {
+      "content_sha256": "15cb6e187a88abd9c83a03770f5d27e578f3a659f4a02d12db5cab295245145d",
+      "document_sha256": "da103cc2e5c785de1abc47ce0eca8dc93b59fb12920b0d27d555eed2d70eb394",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 2,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Gusto",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Minion Wounder",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "6fae9b497c1a82ad7e7cc390df4e4829628626e24c3602a651c5a6ddfb92104f",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Gusto",
+      "namespace": 0,
+      "page_id": 1350343,
+      "revision_id": 2952789,
+      "revision_timestamp": "2020-03-29T05:45:08Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Gusto",
+      "status": "ready",
+      "title": "Gusto",
+      "wikitext_chars": 52
     },
     {
       "content_sha256": "1c9ea82e9a0263c04620027f373bd1770ec49ea9d75f9e7707533f055071e846",
@@ -51916,9 +52611,9 @@
           "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Voidborn Resilience changes defensive resistances.",
-          "registry_effect_type": null,
-          "status": "stats_only"
+          "reason": "Damage-relevant effects are represented by the fight model.",
+          "registry_effect_type": "target_state",
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -52068,9 +52763,9 @@
           "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Sacrifice and Pledge redirect damage and heal the holder.",
+          "reason": "The item exposes its damage-relevant state as a scenario control.",
           "registry_effect_type": null,
-          "status": "stats_only"
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -52325,9 +53020,9 @@
             "shield"
           ],
           "ready": true,
-          "reason": "Devotion shields allies.",
+          "reason": "The item exposes its damage-relevant state as a scenario control.",
           "registry_effect_type": null,
-          "status": "stats_only"
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -52909,9 +53604,9 @@
             "sustain"
           ],
           "ready": true,
-          "reason": "Purify cleanses and heals an ally.",
+          "reason": "The item exposes its damage-relevant state as a scenario control.",
           "registry_effect_type": null,
-          "status": "stats_only"
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -53147,6 +53842,65 @@
       "status": "ready",
       "title": "Mosstomper Seedling",
       "wikitext_chars": 2951
+    },
+    {
+      "content_sha256": "4b1e41def45e0c00169bbc395e142644cc81ab34e2417a4d9e37f5cbf275f53f",
+      "document_sha256": "253c09223c4bc6075523c28208e8bc96c39844e90a544179f88337c57572ddfd",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 2,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Awe",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Shock",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "883b474c6f04b01b95ada3f4ec5e06ea9420dab0e23bfc0a03d40022f0e67815",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "Damage-relevant effects are represented by the fight model.",
+          "registry_effect_type": "on_hit",
+          "status": "modeled_effect"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Muramana",
+      "namespace": 0,
+      "page_id": 747852,
+      "revision_id": 4005926,
+      "revision_timestamp": "2026-04-05T23:26:41Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Muramana",
+      "status": "ready",
+      "title": "Muramana",
+      "wikitext_chars": 9821
     },
     {
       "content_sha256": "77f5873470879396849e18de074bad69ec30f373b84d353096cc35f8b47071be",
@@ -53470,6 +54224,67 @@
       "wikitext_chars": 2988
     },
     {
+      "content_sha256": "235cfcfffb6fab89b4879833947dfac2ae759b06e6d0474ae1bf803c3e23d819",
+      "document_sha256": "8291e10c869844608b8f6df398a31e15d5b3e513fbfea01d6cc43ad6b6c1af30",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 2,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Dodge Piercing",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Warming Up",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "f51857dbcbfe89c17db465645fb37fa6b8ca5dc1069d0d8a5053983a3202165a",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Ohmwrecker (Turret Item)",
+      "namespace": 0,
+      "page_id": 1412318,
+      "revision_id": 3663191,
+      "revision_timestamp": "2023-12-28T00:19:23Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ohmwrecker_(Turret_Item)",
+      "status": "ready",
+      "title": "Ohmwrecker (Turret Item)",
+      "wikitext_chars": 52
+    },
+    {
       "content_sha256": "9baa0e1f980499c73a27ec9443471a85add741351df1ec9c544c5a508a56afaf",
       "document_sha256": "075cf899d9f4e0bdb6cc8d6a4a1f5763aa66b1645d9344d6ff6f7f1b325ec3f9",
       "full_entry_review": {
@@ -53529,6 +54344,59 @@
       "status": "ready",
       "title": "Oracle Lens",
       "wikitext_chars": 4561
+    },
+    {
+      "content_sha256": "fd4261fa6f33c13caa5a78cedc718dbb5e7dfdd837a3bf9d29ab0ca38ca5b074",
+      "document_sha256": "cbe4cf7fff62c1ab6c374d3a7d5f79a5c9558c3c4c6ced6825af6d7769ec4501",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 1,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "passives",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "c6829da670a106a95b4658e9ac6624a014fd87e789660131de201c95a6f63d01",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Overcharged",
+      "namespace": 0,
+      "page_id": 1474948,
+      "revision_id": 3917413,
+      "revision_timestamp": "2025-06-24T02:43:07Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Overcharged",
+      "status": "ready",
+      "title": "Overcharged",
+      "wikitext_chars": 354
     },
     {
       "content_sha256": "1ed905e1117b48d65fcab85678400e8d5af14c0bd1eec76175117fe70d4ecc53",
@@ -53694,6 +54562,67 @@
       "status": "ready",
       "title": "Phantom Dancer",
       "wikitext_chars": 10011
+    },
+    {
+      "content_sha256": "5d08bb49483d175268fe5da9dff066eafe87fd0a79eb3bf554b633047c59c0d0",
+      "document_sha256": "48c2601a9b891d961cdc45e179d4270954a36e616d9f71f0e895fc5160f0e5bc",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 2,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Phreakish Gusto",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Minion Damager",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "fe1a065c767a0d4ab8ea0480f8cc93bb7fb50401080d72c8a8afeb5fc6ea0e08",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Phreakish Gusto",
+      "namespace": 0,
+      "page_id": 1350344,
+      "revision_id": 2952790,
+      "revision_timestamp": "2020-03-29T05:45:11Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Phreakish_Gusto",
+      "status": "ready",
+      "title": "Phreakish Gusto",
+      "wikitext_chars": 53
     },
     {
       "content_sha256": "857938c12bf42b61075542b2584abf2dc849f577ff179e24f36d4f8dc2b1bd91",
@@ -54005,6 +54934,61 @@
       "wikitext_chars": 8545
     },
     {
+      "content_sha256": "2001bf4101eb21f57e74a8dafbc2ae130b8c9f3f28ac071adfda62b4bbf8f004",
+      "document_sha256": "1f83b6379f13da7e48c938df2fd906ebea19b1aa45c9541900432d756ae54a27",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 1,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Raise Morale",
+              "stat_fields": [
+                "movespeed"
+              ]
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "933395a0b6064ac92456821d4fbb14fc19f072ca2d10cba962ff8697f6c6ffce",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Raise Morale",
+      "namespace": 0,
+      "page_id": 740529,
+      "revision_id": 3942301,
+      "revision_timestamp": "2025-08-06T17:40:58Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Raise_Morale",
+      "status": "ready",
+      "title": "Raise Morale",
+      "wikitext_chars": 38
+    },
+    {
       "content_sha256": "ca543674d6f13dc57319a1da2eb9c1ebbf4a8f4f328df0f8961e248bf0647905",
       "document_sha256": "329b6b6c3aeb581af997d80314c68941796e09588ba71d130f91c084d5a9e82f",
       "full_entry_review": {
@@ -54304,25 +55288,23 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Intervention's target-max-health true damage is not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "0856b3a6a86be3ad8ebd695cbed841c9520cd2a28887adeaa2ceb09832defc7c",
+        "expected_effects_sha256": "ecef841861a19648052a42bf380cba51943f6f5d8162a1fad58ac95c70b88ec8",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [
             "ally_support",
             "sustain"
           ],
           "ready": true,
-          "reason": "Intervention's target-max-health true damage is not modelled.",
+          "reason": "The item exposes its damage-relevant state as a scenario control.",
           "registry_effect_type": null,
-          "status": "blocked"
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -54389,6 +55371,67 @@
       "status": "ready",
       "title": "Refillable Potion",
       "wikitext_chars": 2984
+    },
+    {
+      "content_sha256": "235cfcfffb6fab89b4879833947dfac2ae759b06e6d0474ae1bf803c3e23d819",
+      "document_sha256": "c0fd3c98655558a1bd5f05b41d7911fb2d7ba92fc53e7ed580a72845aa249b67",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 2,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Reinforced",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Melee Weakness",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "159e7b040b62a23817f67acf911c6b498b9fe3e1aa75e2fba74992b21a1aab5e",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Reinforced Armor (Turret Item)",
+      "namespace": 0,
+      "page_id": 1412319,
+      "revision_id": 3663193,
+      "revision_timestamp": "2023-12-28T00:20:22Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Reinforced_Armor_(Turret_Item)",
+      "status": "ready",
+      "title": "Reinforced Armor (Turret Item)",
+      "wikitext_chars": 52
     },
     {
       "content_sha256": "bd3b226e4e53c945786031a0ca2f30d65b4cf55de5287445142f82023731e4a9",
@@ -54653,6 +55696,75 @@
       "status": "ready",
       "title": "Runaan's Hurricane",
       "wikitext_chars": 10530
+    },
+    {
+      "content_sha256": "0c7a70fe57a5ac73fc7fb02c3cc8cb2c86196d5b75e3baccf6d04df6b53585c5",
+      "document_sha256": "d1765fe8a2f0384299be37ccf523e30678f2d6fa7052d99c418988968febf30c",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 3,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Support Quest",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Shared Riches",
+              "stat_fields": []
+            },
+            {
+              "branch": "active",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": true,
+              "name": "Ward",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active are not modelled."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "55f24fcaefdd3e334906710ce1e4b372b62aa1b3fc31c8a7fad2361caa751b96",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active are not modelled.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Runic Compass",
+      "namespace": 0,
+      "page_id": 1619518,
+      "revision_id": 4028000,
+      "revision_timestamp": "2026-06-13T11:25:51Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Runic_Compass",
+      "status": "ready",
+      "title": "Runic Compass",
+      "wikitext_chars": 4685
     },
     {
       "content_sha256": "8be873e5502a5c193f582e808295cc7c88347c8102feeaaa24faf3612ec70994",
@@ -54952,8 +56064,8 @@
           "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Time Stop is defensive stasis.",
-          "registry_effect_type": null,
+          "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+          "registry_effect_type": "defensive_start",
           "status": "stats_only"
         },
         "runtime_reasoned": true
@@ -54970,6 +56082,65 @@
       "status": "ready",
       "title": "Seeker's Armguard",
       "wikitext_chars": 5434
+    },
+    {
+      "content_sha256": "4fa58d26481f73d4e29bb17127aaaf73857b1046c7b98c7acaff7deee28f17f0",
+      "document_sha256": "e21efdef78e2720a0b1ece460f50074014d61b5b5028965bd93eff0fe80513ab",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 2,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Awe",
+              "stat_fields": []
+            },
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": true,
+              "has_range": false,
+              "name": "Lifeline",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "727715ef0f7311bb7ad46721fe6f90b1ad0259df4cbf1c3eb2c82ba45cbfb78e",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "Damage-relevant effects are represented by the fight model.",
+          "registry_effect_type": "stat_conversion",
+          "status": "modeled_effect"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Seraph's Embrace",
+      "namespace": 0,
+      "page_id": 739500,
+      "revision_id": 4025988,
+      "revision_timestamp": "2026-06-09T14:46:17Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Seraph's_Embrace",
+      "status": "ready",
+      "title": "Seraph's Embrace",
+      "wikitext_chars": 8325
     },
     {
       "content_sha256": "a41e993c2bcc8518a406744895c6412560fc9588d763ace679b316419dbafd99",
@@ -55296,9 +56467,9 @@
             "ally_support"
           ],
           "ready": true,
-          "reason": "Inspiring Speech grants movement speed.",
+          "reason": "The item exposes its damage-relevant state as a scenario control.",
           "registry_effect_type": null,
-          "status": "stats_only"
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -55314,6 +56485,61 @@
       "status": "ready",
       "title": "Shurelya's Battlesong",
       "wikitext_chars": 6560
+    },
+    {
+      "content_sha256": "4df39045c5b2824423a1db7948f9466344627eb3b744124f6fddae012a4c07f8",
+      "document_sha256": "14a6cd1d395ded69a22f5708ed2671b58ec9f5016f9c899915e7c4eae5030f94",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 1,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Slightly Quicker",
+              "stat_fields": [
+                "movespeed"
+              ]
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "e77d794eca2ffa435d5ca8b1baa2012d8518351946fbe5f907b1327848d4201b",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Slightly Magical Boots",
+      "namespace": 0,
+      "page_id": 1337765,
+      "revision_id": 3942374,
+      "revision_timestamp": "2025-08-06T18:50:49Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Slightly_Magical_Boots",
+      "status": "ready",
+      "title": "Slightly Magical Boots",
+      "wikitext_chars": 2361
     },
     {
       "content_sha256": "19ffd59ab8c7f7da7d2511266b03b685b2a12d027c8428c15503958083fc0a2d",
@@ -56193,6 +57419,112 @@
       "wikitext_chars": 8214
     },
     {
+      "content_sha256": "ee49bb2d1b369f9e5a61a54cb22cce33ef0b5f101bb05b13a9d310172de43b57",
+      "document_sha256": "6d5873ad608dc003d1fb4d2325532955eb3b49970f8eb0110f0642443008dab9",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 1,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Super Mech Armor",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "abf0f425be015bebc7973f4f26e9c8afa89868256e6cef879c5623d5c6d74fd9",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Super Mech Armor",
+      "namespace": 0,
+      "page_id": 1350345,
+      "revision_id": 2952788,
+      "revision_timestamp": "2020-03-29T05:44:10Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Super_Mech_Armor",
+      "status": "ready",
+      "title": "Super Mech Armor",
+      "wikitext_chars": 52
+    },
+    {
+      "content_sha256": "ee49bb2d1b369f9e5a61a54cb22cce33ef0b5f101bb05b13a9d310172de43b57",
+      "document_sha256": "a7c031ab45ef401f323294f2448e2765c2c4c8fe5130fc8f9d0336bb197f4a61",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 1,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Super Mech Power Field",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "c69bc26dd9248b5da3b749d2089f66fbf08d658400314ae770956be7fdf54799",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Super Mech Power Field",
+      "namespace": 0,
+      "page_id": 1350346,
+      "revision_id": 2952787,
+      "revision_timestamp": "2020-03-29T05:44:04Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Super_Mech_Power_Field",
+      "status": "ready",
+      "title": "Super Mech Power Field",
+      "wikitext_chars": 52
+    },
+    {
       "content_sha256": "fcf0e8a92b57af9e560eff81f95ddde0dd49b6d770c8f8fb0a2c389e0e7ba104",
       "document_sha256": "e8f82c3c6e85e94f78ae121afb4a629c0f0b84404e19b63780a6ae694d3efea5",
       "full_entry_review": {
@@ -56221,25 +57553,23 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Noxian Fervor's movement-speed-scaled adaptive force is not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "4910ade5e0db9ceb76e263099095dc91887e2682e5c53b6c4dd52472955836a4",
+        "expected_effects_sha256": "8bdc459cfd36b1a2ed2b358fb9cba537813571c067a856fb2afed25597cb9a0a",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [
             "movement",
             "stat_conversion"
           ],
           "ready": true,
-          "reason": "Noxian Fervor's movement-speed-scaled adaptive force is not modelled.",
+          "reason": "Damage-relevant effects are represented by the fight model.",
           "registry_effect_type": "stat_conversion",
-          "status": "blocked"
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -56501,22 +57831,20 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Thornmail's Thorns is a reactive target-side packet; it is modeled for enemy inventories but is not an outgoing attacker effect."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "557cfa16b5b5202b0e2bcd6c26e078a06fc8bdabe45eeb7a6b9c058af3b8fd88",
+        "expected_effects_sha256": "fbf41c4d6cd8ce71f1ce24d9e7a39f8e33ef7e858b95ba50a0ec46c7326b2437",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Thornmail's Thorns is a reactive target-side packet; it is modeled for enemy inventories but is not an outgoing attacker effect.",
+          "reason": "Damage-relevant effects are represented by the fight model.",
           "registry_effect_type": "thorns",
-          "status": "blocked"
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },
@@ -56654,6 +57982,48 @@
       "wikitext_chars": 10959
     },
     {
+      "content_sha256": "8c7cb7c3a4c3ae035d9f6f43b438d0fe967a4251c554bfe7948091c83a2f6e8d",
+      "document_sha256": "686ad6cd8c6044a509965e730b8fbbc9c7dfd8a76cdaf4ca3aa5a00c5ddb6d02",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 0,
+          "effects": [],
+          "runtime_gaps": [],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "cd69c0fc9c8b47198742aa47cf537e9bdb46c1a694d901b38bea0de18e3d3679",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "The item has no separate passive or active in the cached Wiki data.",
+          "registry_effect_type": null,
+          "status": "stats_only"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Total Biscuit of Everlasting Will",
+      "namespace": 0,
+      "page_id": 1338007,
+      "revision_id": 3971313,
+      "revision_timestamp": "2025-12-02T21:16:35Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Total_Biscuit_of_Everlasting_Will",
+      "status": "ready",
+      "title": "Total Biscuit of Everlasting Will",
+      "wikitext_chars": 4540
+    },
+    {
       "content_sha256": "952e4af27528e4ad43f4d86069128897272ba997302a80987fa46ff376592d13",
       "document_sha256": "67f8a736350df0eba0f1468ebc1abed0892b8ee68e02b7832ed7fdb4645a98f2",
       "full_entry_review": {
@@ -56755,6 +58125,59 @@
       "status": "ready",
       "title": "Tunneler",
       "wikitext_chars": 1001
+    },
+    {
+      "content_sha256": "235cfcfffb6fab89b4879833947dfac2ae759b06e6d0474ae1bf803c3e23d819",
+      "document_sha256": "f40c86407302a98d9d18067ac1e60d2f2a8d1c5e1af711d42fad4f3a0439c845",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 1,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "Turret Plating",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "fcd18cd238c0fa0aa4bf8888e360b5797e252e7ebe0719b0faa268e6aa08f685",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Turret Plating",
+      "namespace": 0,
+      "page_id": 1412322,
+      "revision_id": 3983015,
+      "revision_timestamp": "2026-01-10T12:15:33Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Turret_Plating",
+      "status": "ready",
+      "title": "Turret Plating",
+      "wikitext_chars": 52
     },
     {
       "content_sha256": "196d8614b41fdcc6eb28ec8e5266b80f194a6eebbe772f7148af4e932f68e4d5",
@@ -57081,6 +58504,59 @@
       "status": "ready",
       "title": "Voltaic Cyclosword",
       "wikitext_chars": 4751
+    },
+    {
+      "content_sha256": "235cfcfffb6fab89b4879833947dfac2ae759b06e6d0474ae1bf803c3e23d819",
+      "document_sha256": "0e27ee9e1893f5d38ded40b5b067be6d9fcbfb55269bd3e2f55d8af20976567d",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 1,
+          "effects": [
+            {
+              "branch": "passives",
+              "descriptions": [],
+              "has_cooldown": false,
+              "has_range": false,
+              "name": "True Sight",
+              "stat_fields": []
+            }
+          ],
+          "runtime_gaps": [
+            "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld."
+          ],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "cba83e51b221d49a2bfa41f70316df8b360576c18576bacb05622ca576dc6657",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": false,
+          "optimizer_eligible": false,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "This cached passive or active has not been reviewed for outgoing damage or state effects; calculation is withheld.",
+          "registry_effect_type": null,
+          "status": "blocked"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Warden's Eye",
+      "namespace": 0,
+      "page_id": 1412320,
+      "revision_id": 3663195,
+      "revision_timestamp": "2023-12-28T00:20:58Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Warden's_Eye",
+      "status": "ready",
+      "title": "Warden's Eye",
+      "wikitext_chars": 52
     },
     {
       "content_sha256": "52aff2f23bdf6ef3d04c6812c71b02c601eafd11d89677bc3e5ad2f0f80a65a0",
@@ -57558,6 +59034,48 @@
       "wikitext_chars": 11517
     },
     {
+      "content_sha256": "0eecce728ade37287a5b8a0b8339d3cab2234241a422373e62eb8aae776e4086",
+      "document_sha256": "3d77f04bd5d8fb8589ee7b46fe6e7d77aefb6c2061a927f37f2d9baf57642006",
+      "full_entry_review": {
+        "expected_effects": {
+          "branches_present": [
+            "passives",
+            "active",
+            "actives"
+          ],
+          "effect_count": 0,
+          "effects": [],
+          "runtime_gaps": [],
+          "source_record": "cached_item_entry"
+        },
+        "expected_effects_sha256": "cd69c0fc9c8b47198742aa47cf537e9bdb46c1a694d901b38bea0de18e3d3679",
+        "parent_entry_read": true,
+        "required": true,
+        "runtime": {
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
+          "outcome_dimensions": [],
+          "ready": true,
+          "reason": "The item has no separate passive or active in the cached Wiki data.",
+          "registry_effect_type": null,
+          "status": "stats_only"
+        },
+        "runtime_reasoned": true
+      },
+      "has_text": true,
+      "kind": "item",
+      "name": "Your Cut",
+      "namespace": 0,
+      "page_id": 1361399,
+      "revision_id": 3961236,
+      "revision_timestamp": "2025-10-26T16:57:44Z",
+      "sections": [],
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Your_Cut",
+      "status": "ready",
+      "title": "Your Cut",
+      "wikitext_chars": 1689
+    },
+    {
       "content_sha256": "b253abfc109ef75fe2e65abdd7578ebe75d4ccfbf84a215568472fffad5e424b",
       "document_sha256": "417ed80c8a740f15b3ca55d4ce7f482d4a500db4e7b0b5686c49901e8f83812a",
       "full_entry_review": {
@@ -57812,8 +59330,8 @@
             "stasis"
           ],
           "ready": true,
-          "reason": "Time Stop is defensive stasis.",
-          "registry_effect_type": null,
+          "reason": "Time Stop is priced only from the explicit bounded active-seconds scenario input; item presence alone never assumes stasis.",
+          "registry_effect_type": "defensive_start",
           "status": "stats_only"
         },
         "runtime_reasoned": true
