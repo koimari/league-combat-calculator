@@ -72,14 +72,12 @@ def test_cached_ordinary_items_have_named_fail_closed_reasons():
 
 
 def test_endless_hunger_blocker_is_feast_state_only():
-    """Famine is modeled; only Feast's takedown omnivamp remains blocked."""
+    """Famine and the bounded Feast state are receipt-backed."""
     coverage = item_model_coverage(get_item_by_name("Endless Hunger"))
 
-    assert coverage["status"] == "blocked"
-    assert "Feast" in coverage["reason"]
-    assert "takedown" in coverage["reason"]
-    assert "omnivamp" in coverage["reason"]
-    assert "Famine's bonus-AD ability haste is modeled" in coverage["reason"]
+    assert coverage["status"] == "modeled_state"
+    assert coverage["optimizer_eligible"] is True
+    assert "bounded" in coverage["reason"]
 
 
 def test_unmodeled_splash_packets_are_always_withheld():
@@ -168,7 +166,7 @@ def test_temporary_lethality_state_accepts_the_sourced_ability_cast_trigger():
     ("item_name", "expected_status"),
     [
         ("Runaan's Hurricane", "modeled_effect"),
-        ("Zeke's Convergence", "blocked"),
+        ("Zeke's Convergence", "modeled_effect"),
         ("Immortal Path", "blocked"),
         ("Mejai's Soulstealer", "modeled_state"),
         ("Rabadon's Deathcap", "modeled_effect"),
@@ -176,9 +174,9 @@ def test_temporary_lethality_state_accepts_the_sourced_ability_cast_trigger():
         ("Kaenic Rookern", "stats_only"),
         ("Void Staff", "stats_only"),
         ("Riftmaker", "modeled_effect"),
-        ("Archangel's Staff", "blocked"),
+        ("Archangel's Staff", "modeled_state"),
         ("Guinsoo's Rageblade", "modeled_effect"),
-        ("Actualizer", "blocked"),
+        ("Actualizer", "modeled_state"),
         ("Overlord's Bloodmail", "modeled_state"),
         ("Yun Tal Wildarrows", "modeled_effect"),
         ("Swiftmarch", "modeled_effect"),

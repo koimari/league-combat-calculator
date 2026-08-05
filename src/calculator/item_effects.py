@@ -112,10 +112,23 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
                 "min": 0,
                 "max": 1,
                 "step": 1,
-            }
+            },
+            "mana_made_real_active_seconds": {
+                "type": "float",
+                "label": "Mana Made Real active seconds",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 8.0,
+                "step": 0.5,
+            },
         },
         "source_url": "https://wiki.leagueoflegends.com/en-us/Actualizer",
         "source_revision_id": 3991377,
+    },
+    "Riftmaker": {
+        "options": {},
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Riftmaker",
+        "source_revision_id": 4047644,
     },
     "Hubris": {
         "options": {
@@ -918,6 +931,315 @@ def item_option_active(
     return input_option_value(items, item_options, item_name, option_name) > 0
 
 
+def actualizer_active_seconds(
+    items: Sequence[Mapping[str, Any]],
+    item_options: Mapping[str, Mapping[str, int | float]] | None,
+    *,
+    fight_duration_seconds: float,
+    item_name: str = "Actualizer",
+) -> float:
+    """Return the authored Mana Made Real window for one fight.
+
+    The active is a temporary state, not an always-on item stat.  The public
+    control accepts either the legacy boolean (which means the complete
+    sourced eight-second window) or an explicit duration.  Direct engine
+    callers that do not provide an option map retain the historical
+    ``include_actives`` assumption and receive the full window clipped to the
+    fight; API callers always have the typed option map and therefore can
+    explicitly request zero seconds.
+    """
+    if item_name not in _item_names(list(items)):
+        return 0.0
+    duration = required_effect_value(item_name, "mana_made_real_duration")
+    clipped_duration = max(0.0, min(float(fight_duration_seconds), float(duration)))
+    if item_options is None:
+        return clipped_duration
+    options = item_options.get(item_name) or {}
+    explicit_seconds = options.get("mana_made_real_active_seconds", 0.0)
+    if isinstance(explicit_seconds, bool):
+        raise ValueError(
+            f"item_options.{item_name}.mana_made_real_active_seconds must be numeric"
+        )
+    seconds = float(explicit_seconds or 0.0)
+    if seconds <= 0.0 and int(options.get("mana_made_real_active", 0) or 0) > 0:
+        seconds = float(duration)
+    return max(0.0, min(float(fight_duration_seconds), seconds))
+
+
+def item_state_receipts(
+    items: Sequence[Mapping[str, Any]],
+    item_options: Mapping[str, Mapping[str, int | float]] | None,
+    *,
+    fight_duration_seconds: float,
+    is_melee: bool,
+    bonus_health: float = 0.0,
+    bonus_mana: float = 0.0,
+    max_mana: float = 0.0,
+    total_attack_damage: float = 0.0,
+    total_move_speed: float = 0.0,
+    lethality: float = 0.0,
+) -> list[dict[str, Any]]:
+    """Build one inspectable receipt for every stateful item in a build.
+
+    This is deliberately a receipt layer rather than a second calculation
+    path.  Numeric effects still come from the typed accessors below; the
+    receipt records the supplied state, activation/expiry boundaries, and the
+    downstream conversion that the fight engine consumed.  Keeping this
+    ledger in one place prevents the API, optimizer, and roster paths from
+    silently disagreeing about whether a state was assumed or authored.
+    """
+    names = _item_names(list(items))
+    receipts: list[dict[str, Any]] = []
+
+    def add(item_name: str, state: str, **fields: Any) -> None:
+        if item_name not in names:
+            return
+        config = ITEM_INPUT_OPTIONS.get(item_name, {})
+        receipts.append(
+            {
+                "item": item_name,
+                "state": state,
+                "source_url": config.get(
+                    "source_url",
+                    "https://wiki.leagueoflegends.com/en-us/"
+                    + item_name.replace(" ", "_"),
+                ),
+                "source_revision_id": config.get("source_revision_id"),
+                **fields,
+            }
+        )
+
+    active_seconds = actualizer_active_seconds(
+        items,
+        item_options,
+        fight_duration_seconds=fight_duration_seconds,
+    )
+    if "Actualizer" in names:
+        add(
+            "Actualizer",
+            "active" if active_seconds > 0.0 else "inactive",
+            active_from=0.0 if active_seconds > 0.0 else None,
+            active_until=active_seconds if active_seconds > 0.0 else None,
+            duration=required_effect_value("Actualizer", "mana_made_real_duration"),
+            cooldown=required_effect_value("Actualizer", "mana_made_real_cooldown"),
+            mana_cost_multiplier=(
+                required_effect_value("Actualizer", "mana_cost_multiplier")
+                if active_seconds > 0.0
+                else 1.0
+            ),
+            basic_cooldown_progress_multiplier=(
+                required_effect_value(
+                    "Actualizer", "basic_cooldown_progress_multiplier"
+                )
+                if active_seconds > 0.0
+                else 1.0
+            ),
+        )
+
+    if "Riftmaker" in names:
+        per_second = required_effect_value("Riftmaker", "amp_per_second")
+        max_amp = required_effect_value("Riftmaker", "amp_max")
+        max_stack_time = max_amp / per_second if per_second > 0.0 else 0.0
+        add(
+            "Riftmaker",
+            "max_stacks" if fight_duration_seconds >= max_stack_time else "ramping",
+            bonus_health_to_ap=riftmaker_bonus_ap(
+                bonus_health=bonus_health, item_name="Riftmaker"
+            ),
+            stack_count=min(
+                int(fight_duration_seconds * per_second),
+                int(max_amp / per_second) if per_second > 0.0 else 0,
+            ),
+            max_stack_at=max_stack_time,
+            omnivamp_at=max_stack_time,
+            omnivamp_percent=riftmaker_max_stack_omnivamp(
+                fight_duration_seconds=fight_duration_seconds,
+                is_melee=is_melee,
+                item_name="Riftmaker",
+            ),
+        )
+
+    if "Overlord's Bloodmail" in names:
+        options = item_options or {}
+        missing = float(
+            (options.get("Overlord's Bloodmail") or {}).get("missing_health_percent", 0)
+        )
+        add(
+            "Overlord's Bloodmail",
+            "starting_health_state",
+            missing_health_percent=missing,
+            tyranny_bonus_ad=bloodmail_bonus_ad(
+                list(items), max(0.0, float(bonus_health))
+            ),
+            retribution_bonus_ad=input_option_retribution_bonus_ad(
+                list(items), options, total_attack_damage=total_attack_damage
+            ),
+        )
+
+    if "Heartsteel" in names:
+        option_value = float(
+            (item_options or {}).get("Heartsteel", {}).get("bonus_health", 0)
+        )
+        add(
+            "Heartsteel",
+            "permanent_stack_state",
+            bonus_health=option_value,
+            proc_cooldown=required_effect_value("Heartsteel", "cooldown"),
+            proc_count=max(
+                0,
+                1
+                + int(
+                    max(0.0, float(fight_duration_seconds))
+                    / required_effect_value("Heartsteel", "cooldown")
+                ),
+            ),
+        )
+
+    mana_items = (
+        "Archangel's Staff",
+        "Manamune",
+        "Whispering Circlet",
+        "Winter's Approach",
+    )
+    for item_name in mana_items:
+        if item_name not in names:
+            continue
+        option_value = float(
+            (item_options or {}).get(item_name, {}).get("manaflow_bonus_mana", 0)
+        )
+        effect = ITEM_EFFECTS[item_name]
+        cap = required_effect_value(item_name, "manaflow_bonus_mana_max")
+        add(
+            item_name,
+            "transformed" if option_value >= cap else "manaflow_progress",
+            manaflow_bonus_mana=min(option_value, cap),
+            manaflow_cap=cap,
+            transformed=option_value >= cap,
+            awe_conversion=(
+                float(effect.get("bonus_mana_to_ap_ratio", 0.0)) * bonus_mana
+                + float(effect.get("bonus_mana_to_health_ratio", 0.0)) * bonus_mana
+                + float(effect.get("bonus_mana_to_heal_shield_power_ratio", 0.0))
+                * bonus_mana
+            ),
+            total_mana=max_mana,
+        )
+
+    if "Rod of Ages" in names:
+        stacks = int(
+            (item_options or {}).get("Rod of Ages", {}).get("timeless_stacks", 0)
+        )
+        max_stacks = int(required_effect_value("Rod of Ages", "timeless_max_stacks"))
+        add(
+            "Rod of Ages",
+            "max_stacks" if stacks >= max_stacks else "minute_progress",
+            timeless_stacks=max(0, min(max_stacks, stacks)),
+            max_stacks=max_stacks,
+            level_gain=stacks >= max_stacks,
+            health_bonus=stacks
+            * required_effect_value("Rod of Ages", "timeless_bonus_health_per_stack"),
+            mana_bonus=stacks
+            * required_effect_value("Rod of Ages", "timeless_bonus_mana_per_stack"),
+            ap_bonus=stacks
+            * required_effect_value("Rod of Ages", "timeless_bonus_ap_per_stack"),
+        )
+
+    if "Hubris" in names:
+        options = item_options or {}
+        hubris = options.get("Hubris", {})
+        stacks = int(hubris.get("eminence_stacks", 0) or 0)
+        active = int(hubris.get("eminence_active_seconds", 0) or 0)
+        add(
+            "Hubris",
+            "eminence_active" if active > 0 else "eminence_expired",
+            stacks=max(0, stacks),
+            active_seconds=max(0, active),
+            active_until=max(0, active),
+            bonus_ad=hubris_input_bonus_ad(list(items), options),
+            duration=required_effect_value("Hubris", "eminence_duration"),
+        )
+
+    if "Axiom Arc" in names:
+        add(
+            "Axiom Arc",
+            "takedown_ready",
+            ultimate_refund_fraction=axiom_arc_ultimate_refund_fraction(
+                lethality=lethality
+            ),
+            trigger_window=required_effect_value(
+                "Axiom Arc", "ultimate_refund_trigger_window"
+            ),
+        )
+
+    if "Endless Hunger" in names:
+        options = item_options or {}
+        seconds = int(
+            options.get("Endless Hunger", {}).get("feast_active_seconds", 0) or 0
+        )
+        add(
+            "Endless Hunger",
+            "feast_active" if seconds > 0 else "famine_only",
+            feast_active_seconds=max(0, seconds),
+            feast_active_until=max(0, seconds),
+            omnivamp=endless_hunger_input_omnivamp(list(items), options),
+            ability_haste=endless_hunger_ability_haste(
+                list(items), bonus_attack_damage=total_attack_damage, is_melee=is_melee
+            ),
+        )
+
+    for item_name in (
+        "Experimental Hexplate",
+        "Fiendhunter Bolts",
+        "Zeke's Convergence",
+        "Malignance",
+    ):
+        if item_name not in names:
+            continue
+        effect = ITEM_EFFECTS[item_name]
+        add(
+            item_name,
+            "ultimate_ready",
+            ultimate_haste=float(effect.get("ultimate_haste", 0.0)),
+            active_trigger="R",
+            duration=float(effect.get("duration", 0.0)),
+            cooldown=float(effect.get("cooldown", 0.0)),
+        )
+
+    if "Swiftmarch" in names:
+        add(
+            "Swiftmarch",
+            "conversion",
+            total_move_speed=max(0.0, float(total_move_speed)),
+            adaptive_force=swiftmarch_adaptive_force(
+                list(items), total_move_speed=total_move_speed
+            ),
+        )
+
+    if "Yun Tal Wildarrows" in names:
+        options = item_options or {}
+        stacks = int(options.get("Yun Tal Wildarrows", {}).get("crit_stacks", 0) or 0)
+        add(
+            "Yun Tal Wildarrows",
+            "permanent_crit_and_flurry",
+            crit_stacks=max(0, stacks),
+            crit_chance=100.0
+            * yun_tal_permanent_crit_chance(
+                stacks=stacks, is_melee=is_melee, item_name="Yun Tal Wildarrows"
+            ),
+            flurry_duration=required_effect_value("Yun Tal Wildarrows", "duration"),
+            flurry_cooldown=required_effect_value("Yun Tal Wildarrows", "cooldown"),
+        )
+
+    if "The Collector" in names:
+        add(
+            "The Collector",
+            "terminal_execute",
+            threshold=required_effect_value("The Collector", "threshold"),
+            terminal=True,
+            feeds_takedown_state=True,
+        )
+    return receipts
+
+
 # ---------------------------------------------------------------------------
 # Complete offline item effect snapshot
 # ---------------------------------------------------------------------------
@@ -1391,6 +1713,12 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "amp_per_second": 0.02,
         "amp_max": 0.08,
         "max_stack_omnivamp": 10.0,
+        # Void Corruption's fully stacked omnivamp is 10% for melee
+        # champions and 6% for ranged champions.  The cached tooltip parser
+        # keeps the first branch of the Wiki's rd pair; retain the ranged
+        # branch as a static, revision-backed value so it cannot disappear
+        # during a parser refresh.
+        "max_stack_omnivamp_ranged": 6.0,
         # Void Infusion: 2% of bonus health as ability power.
         "bonus_health_to_ap_ratio": 0.02,
     },
@@ -2281,6 +2609,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     # The cached item packet does not carry Actualizer's active cooldown;
     # the full Wiki entry is the source receipt for this code-owned value.
     "Actualizer": frozenset({"mana_made_real_cooldown"}),
+    "Riftmaker": frozenset({"max_stack_omnivamp_ranged"}),
 }
 
 
@@ -2769,9 +3098,10 @@ class AbilityAmplifierEffect:
         self,
         champion_stats: Mapping[str, float],
         include_actives: bool,
+        active: bool = True,
     ) -> float:
         """Return the active multiplier for this champion state."""
-        if not include_actives:
+        if not include_actives or not active:
             return 1.0
         bonus_mana = champion_stats.get("bonus_mana", 0.0)
         return 1.0 + self.base_amp + self.amp_per_100_bonus_mana * (bonus_mana / 100.0)
@@ -4664,7 +4994,10 @@ def riftmaker_bonus_ap(*, bonus_health: float, item_name: str = "Riftmaker") -> 
 
 
 def riftmaker_max_stack_omnivamp(
-    *, fight_duration_seconds: float, item_name: str = "Riftmaker"
+    *,
+    fight_duration_seconds: float,
+    is_melee: bool = True,
+    item_name: str = "Riftmaker",
 ) -> float:
     """Return Void Corruption's max-stack omnivamp after its sourced ramp.
 
@@ -4676,7 +5009,10 @@ def riftmaker_max_stack_omnivamp(
         raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
     per_second = required_effect_value(item_name, "amp_per_second")
     max_amp = required_effect_value(item_name, "amp_max")
-    max_omnivamp = required_effect_value(item_name, "max_stack_omnivamp")
+    max_omnivamp = required_effect_value(
+        item_name,
+        "max_stack_omnivamp" if is_melee else "max_stack_omnivamp_ranged",
+    )
     if per_second <= 0.0 or max_amp <= 0.0:
         return 0.0
     max_stack_seconds = max_amp / per_second

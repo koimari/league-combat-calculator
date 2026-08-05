@@ -2,10 +2,12 @@
 
 from copy import deepcopy
 from dataclasses import replace
+from types import SimpleNamespace
 
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.damage import _cooldown_ready_at
 from src.calculator.pipeline import FightParams, run_fight
 
 
@@ -141,6 +143,53 @@ def test_run_fight_builds_fresh_stats_and_abilities(ahri_data):
     assert result["champion_stats"]["ability_power"] == 0.0
 
 
+def test_actualizer_window_controls_amp_resource_and_basic_cooldowns(ahri_data):
+    """The API's typed active window changes only the authored interval."""
+    item = get_item_by_name("Actualizer")
+    common = {
+        "fight_mode": "timed",
+        "fight_duration": 12,
+        "include_auto_attacks": False,
+        "auto_attack_uptime": 0.0,
+    }
+    inactive = FightParams.from_request(
+        {
+            **common,
+            "item_options": {"Actualizer": {"mana_made_real_active_seconds": 0.0}},
+        },
+        deterministic=True,
+    )
+    active = FightParams.from_request(
+        {
+            **common,
+            "item_options": {"Actualizer": {"mana_made_real_active_seconds": 8.0}},
+        },
+        deterministic=True,
+    )
+    off = run_fight(ahri_data, 18, [item], inactive)
+    on = run_fight(ahri_data, 18, [item], active)
+
+    receipt = {row["item"]: row for row in on["item_state_receipts"]}["Actualizer"]
+    assert receipt["active_until"] == pytest.approx(8.0)
+    assert on["resource_spent"] > off["resource_spent"]
+    assert on["total_damage"] > off["total_damage"]
+
+
+def test_actualizer_cooldown_progress_resumes_after_expiry() -> None:
+    state = SimpleNamespace(
+        actualizer_active_until=8.0,
+        actualizer_basic_cooldown_multiplier=1.0 / 1.30,
+    )
+
+    # A 10-second cooldown starting at t=4 consumes four seconds at 1.30x
+    # progress, then six seconds at the ordinary rate.
+    assert _cooldown_ready_at(state, 4.0, 10.0) == pytest.approx(
+        8.0 + (10.0 - 4.0 * 1.30)
+    )
+    # A cooldown that starts after the active has expired is unchanged.
+    assert _cooldown_ready_at(state, 9.0, 10.0) == pytest.approx(19.0)
+
+
 def test_run_fight_includes_auto_vs_ability_split(ahri_data):
     # Consumers (the web layer) read the attribution off the result
     # instead of importing the fight engine's split function directly.
@@ -189,9 +238,10 @@ def test_run_fight_exposes_riftmaker_max_stack_omnivamp_in_effective_stats(ahri_
         params,
     )
 
-    # Void Corruption adds the sourced 10% branch once the four-second
-    # in-combat ramp is complete; the cached item stat itself is zero.
-    assert result["champion_stats"]["omnivamp_percent"] == pytest.approx(10.0)
+    # Ahri is ranged, so Void Corruption adds the sourced 6% branch once the
+    # four-second in-combat ramp is complete; the cached item stat itself is
+    # zero.
+    assert result["champion_stats"]["omnivamp_percent"] == pytest.approx(6.0)
     assert result["breakdown"]["heal_omnivamp"]["total_amount"] > 0.0
 
 

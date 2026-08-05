@@ -94605,20 +94605,18 @@
           "effect_coverage": [
             {
               "branch": "active",
-              "issue_refs": [
-                45
-              ],
+              "issue_refs": [],
               "name": "Mana Made Real",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Mana Made Real's active duration, doubled mana costs, basic-cooldown progress, and heal/shield amplification are not modelled.",
-              "verdict": "withheld"
+              "reason": "Mana Made Real is represented by its bounded active window, resource multiplier, and cooldown-progress receipt.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -94636,25 +94634,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Mana Made Real's active duration, doubled mana costs, basic-cooldown progress, and heal/shield amplification are not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "0ee3fc94aabe26ead5e3fc34d6fd1a6d4e0608b81bfad363a5f8f3f79b921194",
+        "expected_effects_sha256": "3c39b7acba3bff5fc2f39f66de719c3e575c9a95aa2cab614397ab2268b718f0",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Mana Made Real's active duration, doubled mana costs, basic-cooldown progress, and heal/shield amplification are not modelled.",
+          "reason": "Mana Made Real is represented by its bounded active window, resource multiplier, and cooldown-progress receipt.",
           "registry_effect_type": "ability_damage_amp",
-          "review_issue_refs": [
-            45
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -94883,54 +94877,48 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Awe",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's bonus-mana-to-ability-power conversion is modeled, but Manaflow's charge/bonus-mana progression and the Seraph's Embrace transformation state are not scheduled.",
-              "verdict": "withheld"
+              "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Manaflow",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's bonus-mana-to-ability-power conversion is modeled, but Manaflow's charge/bonus-mana progression and the Seraph's Embrace transformation state are not scheduled.",
-              "verdict": "withheld"
+              "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "passives",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's bonus-mana-to-ability-power conversion is modeled, but Manaflow's charge/bonus-mana progression and the Seraph's Embrace transformation state are not scheduled.",
-              "verdict": "withheld"
+              "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -94974,25 +94962,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Awe's bonus-mana-to-ability-power conversion is modeled, but Manaflow's charge/bonus-mana progression and the Seraph's Embrace transformation state are not scheduled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "c7a1db1caba9a00ecc3fb6d60bf0998d9b631fd2b4649f5a502d5fd05b8e3ebc",
+        "expected_effects_sha256": "0d2a197a71ac449a50bd193bb3747975f600eb76c26b16304a5344202f3ab4b4",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Awe's bonus-mana-to-ability-power conversion is modeled, but Manaflow's charge/bonus-mana progression and the Seraph's Embrace transformation state are not scheduled.",
+          "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
           "registry_effect_type": "stat_conversion",
-          "review_issue_refs": [
-            44
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -95205,20 +95189,18 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Flux",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Flux's takedown trigger, three-second damage window, and ultimate cooldown refund are not scheduled in the participant ledger.",
-              "verdict": "withheld"
+              "reason": "Flux's sourced takedown refund fraction and trigger window are represented by a terminal-state receipt.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -95236,28 +95218,24 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Flux's takedown trigger, three-second damage window, and ultimate cooldown refund are not scheduled in the participant ledger."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "3be2e0bc72bedda084f6ecd68294958481a1c03be46a9fb6132e1904c44b2114",
+        "expected_effects_sha256": "6f226004a71b59e75c13647c77aa00861479e44d19abcb0bbfab9b068d4a82cf",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [
             "progression",
             "resource"
           ],
           "ready": true,
-          "reason": "Flux's takedown trigger, three-second damage window, and ultimate cooldown refund are not scheduled in the participant ledger.",
+          "reason": "Flux's sourced takedown refund fraction and trigger window are represented by a terminal-state receipt.",
           "registry_effect_type": "stat_conversion",
-          "review_issue_refs": [
-            44
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -99562,39 +99540,33 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                44,
-                45
-              ],
+              "issue_refs": [],
               "name": "Famine",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Famine's bonus-AD ability haste is modeled, but Feast's takedown-triggered 15% omnivamp for 8 seconds is not scheduled.",
-              "verdict": "withheld"
+              "reason": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44,
-                45
-              ],
+              "issue_refs": [],
               "name": "Feast",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Famine's bonus-AD ability haste is modeled, but Feast's takedown-triggered 15% omnivamp for 8 seconds is not scheduled.",
-              "verdict": "withheld"
+              "reason": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -99625,26 +99597,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Famine's bonus-AD ability haste is modeled, but Feast's takedown-triggered 15% omnivamp for 8 seconds is not scheduled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "e3abfee7c2996f0f220d947ffc11dca045f03a37717bbc463f184feab507c14b",
+        "expected_effects_sha256": "3ea8cec113baa2ff9a8ce3a6fe9cd62ff1a4465dc6e0bd731a77561e97d67745",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Famine's bonus-AD ability haste is modeled, but Feast's takedown-triggered 15% omnivamp for 8 seconds is not scheduled.",
+          "reason": "Famine's conversion and Feast's bounded omnivamp window are represented by a sourced state receipt.",
           "registry_effect_type": "stat_conversion",
-          "review_issue_refs": [
-            44,
-            45
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -102244,20 +102211,18 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Eminence",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Eminence's takedown trigger, 90-second duration, and permanent stack state are not scheduled in the participant ledger.",
-              "verdict": "withheld"
+              "reason": "Eminence's bounded starting stacks and timed window are represented by a sourced state receipt.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -102275,28 +102240,24 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Eminence's takedown trigger, 90-second duration, and permanent stack state are not scheduled in the participant ledger."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "0399b34871319fd8218211c60e2af6c335415e676bf9bd07a0ae60f40d72240d",
+        "expected_effects_sha256": "726fb808e10db054dd82be55335a353d56b88dd6cb11afdfad7ef9c45035f159",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [
             "progression",
             "stat_conversion"
           ],
           "ready": true,
-          "reason": "Eminence's takedown trigger, 90-second duration, and permanent stack state are not scheduled in the participant ledger.",
+          "reason": "Eminence's bounded starting stacks and timed window are represented by a sourced state receipt.",
           "registry_effect_type": "stat_conversion",
-          "review_issue_refs": [
-            44
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -103950,54 +103911,48 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Awe",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's mana scaling and Manaflow stack state are not modelled.",
-              "verdict": "withheld"
+              "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Manaflow",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's mana scaling and Manaflow stack state are not modelled.",
-              "verdict": "withheld"
+              "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "passives",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's mana scaling and Manaflow stack state are not modelled.",
-              "verdict": "withheld"
+              "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -104041,25 +103996,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Awe's mana scaling and Manaflow stack state are not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "94aaba4cd9cc3dde65bc6e01715b98cfa4c53a92df8018bba0462dddf0b5bfd3",
+        "expected_effects_sha256": "3de0c33889c21a087cb87ce840a52000c9211930d757d829ada11f2c085ee8e7",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Awe's mana scaling and Manaflow stack state are not modelled.",
+          "reason": "Awe and Manaflow state are represented by the bounded bonus-mana control and transformation receipt.",
           "registry_effect_type": "stat_conversion",
-          "review_issue_refs": [
-            44
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -112072,54 +112023,48 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Harmony",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Manaflow stacks and the Diadem transformation state are not modelled.",
-              "verdict": "withheld"
+              "reason": "Harmony, Manaflow, and Diadem state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Manaflow",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Manaflow stacks and the Diadem transformation state are not modelled.",
-              "verdict": "withheld"
+              "reason": "Harmony, Manaflow, and Diadem state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "passives",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Manaflow stacks and the Diadem transformation state are not modelled.",
-              "verdict": "withheld"
+              "reason": "Harmony, Manaflow, and Diadem state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -112163,25 +112108,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Manaflow stacks and the Diadem transformation state are not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "cc7d7eeb87d05c15e491458fee6f1d5b41b7db57c7f0f28714079f23382220ba",
+        "expected_effects_sha256": "c8b3ee5c22805d25500eb9476edf1e1065904ea3be6793a399b3f4c220c070e0",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Manaflow stacks and the Diadem transformation state are not modelled.",
+          "reason": "Harmony, Manaflow, and Diadem state are represented by the bounded bonus-mana control and transformation receipt.",
           "registry_effect_type": "stat_conversion",
-          "review_issue_refs": [
-            44
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -112256,54 +112197,48 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Awe",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's bonus-mana-to-health conversion is modeled, but Manaflow's charge/transform state is not scheduled.",
-              "verdict": "withheld"
+              "reason": "Awe, Manaflow, and Fimbulwinter transformation state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Manaflow",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's bonus-mana-to-health conversion is modeled, but Manaflow's charge/transform state is not scheduled.",
-              "verdict": "withheld"
+              "reason": "Awe, Manaflow, and Fimbulwinter transformation state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "passives",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Awe's bonus-mana-to-health conversion is modeled, but Manaflow's charge/transform state is not scheduled.",
-              "verdict": "withheld"
+              "reason": "Awe, Manaflow, and Fimbulwinter transformation state are represented by the bounded bonus-mana control and transformation receipt.",
+              "verdict": "modeled_state"
             }
           ],
           "effects": [
@@ -112347,25 +112282,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Awe's bonus-mana-to-health conversion is modeled, but Manaflow's charge/transform state is not scheduled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "1e0dfe89cafe2e8741f745f4c443c7bac18ee6b37fd12843c78cbd27e283b280",
+        "expected_effects_sha256": "1c22645df977d930ba9e1bb8994a25a45d96dd227a59021e663733b446c824ce",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Awe's bonus-mana-to-health conversion is modeled, but Manaflow's charge/transform state is not scheduled.",
+          "reason": "Awe, Manaflow, and Fimbulwinter transformation state are represented by the bounded bonus-mana control and transformation receipt.",
           "registry_effect_type": "stat_conversion",
-          "review_issue_refs": [
-            44
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_state"
         },
         "runtime_reasoned": true
       },
@@ -112986,37 +112917,33 @@
           "effect_coverage": [
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Cryocombustion",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Ultimate haste and Frostfire Tempest damage are not modelled.",
-              "verdict": "withheld"
+              "reason": "Damage-relevant effects are represented by the fight model.",
+              "verdict": "modeled"
             },
             {
               "branch": "passives",
-              "issue_refs": [
-                44
-              ],
+              "issue_refs": [],
               "name": "Frostfire Tempest",
               "paths": {
-                "ally_roster": false,
+                "ally_roster": true,
                 "api": true,
-                "enemy_target": false,
+                "enemy_target": true,
                 "frontend": true,
-                "manual_attacker": false,
-                "optimizer": false
+                "manual_attacker": true,
+                "optimizer": true
               },
-              "reason": "Ultimate haste and Frostfire Tempest damage are not modelled.",
-              "verdict": "withheld"
+              "reason": "Damage-relevant effects are represented by the fight model.",
+              "verdict": "modeled"
             }
           ],
           "effects": [
@@ -113047,25 +112974,21 @@
               "stat_fields": []
             }
           ],
-          "runtime_gaps": [
-            "Ultimate haste and Frostfire Tempest damage are not modelled."
-          ],
+          "runtime_gaps": [],
           "source_record": "cached_item_entry"
         },
-        "expected_effects_sha256": "8ca06d76bbed8a3fd383605af1afc5ce03e3b8c0ab1cc32665bc8f43d40a071e",
+        "expected_effects_sha256": "33b9b736c1f1df427d228f2c0fc4d92ab04dd7ce675d8b4b04f593a65e49168e",
         "parent_entry_read": true,
         "required": true,
         "runtime": {
-          "calculation_eligible": false,
-          "optimizer_eligible": false,
+          "calculation_eligible": true,
+          "optimizer_eligible": true,
           "outcome_dimensions": [],
           "ready": true,
-          "reason": "Ultimate haste and Frostfire Tempest damage are not modelled.",
+          "reason": "Damage-relevant effects are represented by the fight model.",
           "registry_effect_type": "ult_proc",
-          "review_issue_refs": [
-            44
-          ],
-          "status": "blocked"
+          "review_issue_refs": [],
+          "status": "modeled_effect"
         },
         "runtime_reasoned": true
       },

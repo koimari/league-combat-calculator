@@ -415,6 +415,9 @@ class FightState:
     target_bonus_health: float
     fight_duration_seconds: float
     auto_attack_uptime: float
+    item_options: Mapping[str, Mapping[str, int | float]] | None
+    actualizer_active_until: float
+    actualizer_basic_cooldown_multiplier: float
     ability_haste: float
     one_rotation: bool
     include_actives: bool
@@ -1975,6 +1978,7 @@ def _resolve_combat_state(
     ability_damages: dict[str, dict[str, Any]],
     items: list[dict[str, Any]],
     config: FightConfig,
+    item_options: Mapping[str, Mapping[str, int | float]] | None = None,
 ) -> FightState:
     """Resolve resistances, penetration, amplifiers and attack timing.
 
@@ -1986,9 +1990,11 @@ def _resolve_combat_state(
     """
     fight_duration_seconds = config.fight_duration_seconds
     auto_attack_uptime = config.auto_attack_uptime
+    is_melee = champion_stats.get("is_melee", True)
     if item_effects.has_item(items, "Riftmaker"):
         max_stack_omnivamp = item_effects.riftmaker_max_stack_omnivamp(
-            fight_duration_seconds=fight_duration_seconds
+            fight_duration_seconds=fight_duration_seconds,
+            is_melee=bool(is_melee),
         )
         if max_stack_omnivamp > 0.0:
             # The stat bundle carries Riftmaker's base omnivamp.  The
@@ -1999,9 +2005,25 @@ def _resolve_combat_state(
             champion_stats["omnivamp_percent"] = (
                 champion_stats.get("omnivamp_percent", 0.0) + max_stack_omnivamp
             )
-    is_melee = champion_stats.get("is_melee", True)
     level = int(champion_stats.get("level", 1))
     damage_effects = item_effects.resolve_damage_effects(items)
+    actualizer_active_until = (
+        item_effects.actualizer_active_seconds(
+            items,
+            item_options,
+            fight_duration_seconds=fight_duration_seconds,
+        )
+        if config.include_actives
+        else 0.0
+    )
+    actualizer_basic_cooldown_multiplier = (
+        1.0
+        / item_effects.required_effect_value(
+            "Actualizer", "basic_cooldown_progress_multiplier"
+        )
+        if actualizer_active_until > 0.0 and item_effects.has_item(items, "Actualizer")
+        else 1.0
+    )
 
     magic_pen_flat = champion_stats.get("magic_penetration_flat", 0.0)
     magic_pen_percent = champion_stats.get("magic_penetration_percent", 0.0) / 100.0
@@ -2153,6 +2175,9 @@ def _resolve_combat_state(
         target_bonus_health=config.target_bonus_health,
         fight_duration_seconds=fight_duration_seconds,
         auto_attack_uptime=auto_attack_uptime,
+        item_options=item_options,
+        actualizer_active_until=actualizer_active_until,
+        actualizer_basic_cooldown_multiplier=actualizer_basic_cooldown_multiplier,
         ability_haste=champion_stats.get("ability_haste", 0.0),
         one_rotation=config.one_rotation,
         include_actives=config.include_actives,
@@ -2175,7 +2200,9 @@ def _resolve_combat_state(
         magic_amp=damage_effects.magic_amp,
         ability_amp=(
             damage_effects.ability_amp.multiplier(
-                champion_stats, config.include_actives
+                champion_stats,
+                config.include_actives,
+                active=actualizer_active_until > 0.0,
             )
             if damage_effects.ability_amp is not None
             else 1.0
@@ -2895,6 +2922,30 @@ def _effective_timed_cooldown(
     return cd
 
 
+def _cooldown_ready_at(
+    state: "FightState", cooldown_start: float, cooldown: float
+) -> float:
+    """Return a cooldown's ready timestamp across an Actualizer window.
+
+    Mana Made Real accelerates basic-ability cooldown *progress* only while
+    its explicit eight-second window is active.  A single multiplied duration
+    is wrong when a cooldown straddles that boundary, so consume the active
+    portion first and continue the remainder at the ordinary rate.
+    """
+    if (
+        cooldown <= 0.0
+        or state.actualizer_active_until <= cooldown_start + _CAST_SCHEDULE_EPS
+        or state.actualizer_basic_cooldown_multiplier >= 1.0
+    ):
+        return cooldown_start + cooldown
+    progress_rate = 1.0 / state.actualizer_basic_cooldown_multiplier
+    active_seconds = state.actualizer_active_until - cooldown_start
+    active_progress = active_seconds * progress_rate
+    if active_progress >= cooldown:
+        return cooldown_start + cooldown / progress_rate
+    return state.actualizer_active_until + (cooldown - active_progress)
+
+
 _CAST_SCHEDULE_EPS = 1e-9
 
 
@@ -2968,8 +3019,11 @@ def _schedule_shared_casts(
         if key in single_cast:
             pending.remove(key)
         else:
-            next_ready[key] = (
-                now + cast_times[key] + cooldown_delays[key] + cooldowns[key]
+            cooldown_start = now + cast_times[key] + cooldown_delays[key]
+            next_ready[key] = _cooldown_ready_at(
+                state,
+                cooldown_start,
+                cooldowns[key],
             )
         now += cast_times[key]
     return times
@@ -3222,6 +3276,14 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             omitted.append(key)
             continue
         cost = float(info.get("resource_cost", 0.0))
+        if (
+            cost > 0.0
+            and state.actualizer_active_until > cast_time + _CAST_SCHEDULE_EPS
+            and item_effects.has_item(state.items, "Actualizer")
+        ):
+            cost *= item_effects.required_effect_value(
+                "Actualizer", "mana_cost_multiplier"
+            )
         if cost > remaining + _CAST_SCHEDULE_EPS:
             omitted.append(key)
             continue
@@ -3764,6 +3826,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # A ramped shred (Corki E) stacks up across this ability's own
         # hits; an unramped one lands in full after it (below).
         shred_ramp = _make_shred_ramp(resists, ability_info, ult_cast, ability_stacks)
+        cast_times = plan.times.get(ability_key, ())
         (
             ability_total,
             first_part_damage,
@@ -3777,14 +3840,46 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             mitigated_damage_dealt,
             on_hit=shred_ramp.stage if shred_ramp is not None else None,
             pricing=pricing,
-            cast_times=plan.times.get(ability_key),
+            cast_times=cast_times,
             single_hit_event_certified=(
                 ability_info.get("event_order_certified") == "single_hit"
             ),
         )
 
-        # Apply ability-specific damage amplifiers (e.g., Actualizer)
-        ability_total *= state.ability_amp
+        # Apply ability-specific damage amplifiers (e.g., Actualizer).  When
+        # the active has an authored expiry, exact hit receipts are split at
+        # that boundary instead of treating the whole rotation as active.
+        ability_amp = state.ability_amp
+        active_event_damage = 0.0
+        event_base_damage = sum(
+            float(event.get("damage", 0.0) or 0.0) for event in ability_events
+        )
+        if state.actualizer_active_until > 0.0:
+            if ability_events:
+                active_event_damage = sum(
+                    float(event.get("damage", 0.0) or 0.0)
+                    for event in ability_events
+                    if float(event.get("time", 0.0) or 0.0)
+                    < state.actualizer_active_until - _CAST_SCHEDULE_EPS
+                )
+                if event_base_damage > 0.0:
+                    ability_total += active_event_damage * (ability_amp - 1.0)
+            elif cast_times:
+                active_casts = sum(
+                    1
+                    for time in cast_times[:num_casts]
+                    if float(time) < state.actualizer_active_until - _CAST_SCHEDULE_EPS
+                )
+                ability_total *= 1.0 + (ability_amp - 1.0) * active_casts / max(
+                    1, num_casts
+                )
+            else:
+                # No authored timestamps means the direct engine path cannot
+                # split the active window; preserve its explicit active
+                # assumption rather than silently dropping the amp.
+                ability_total *= ability_amp
+        else:
+            ability_total *= ability_amp
 
         # Muramana procs once per ability cast. Multi-instance abilities
         # (e.g. Ahri R with 3 dashes) proc once per instance.
@@ -3822,7 +3917,14 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             breakdown[ability_key]["damage_events"] = [
                 {
                     **event,
-                    "damage": event["damage"] * state.ability_amp,
+                    "damage": event["damage"]
+                    * (
+                        ability_amp
+                        if state.actualizer_active_until <= 0.0
+                        or float(event.get("time", 0.0) or 0.0)
+                        < state.actualizer_active_until - _CAST_SCHEDULE_EPS
+                        else 1.0
+                    ),
                 }
                 for event in ability_events
             ]
@@ -6871,15 +6973,41 @@ def _add_item_proc_damage(
             # not inflate the result or downgrade the frontend timeline.
             continue
         raw_per_proc = source.raw_damage(_damage_inputs(state))
-        mitigated_per_proc = _mitigate(
+        base_mitigated_per_proc = _mitigate(
             raw_per_proc, source.damage_type, resists, state.magic_amp
         )
 
-        # Stormsurge and Zaz'Zak deal ability damage — amplified by Actualizer
-        if source.is_ability_damage:
-            mitigated_per_proc *= state.ability_amp
-        mitigated_per_proc *= _charged_proc_target_share(state, source)
-        proc_mitigated = mitigated_per_proc * procs
+        # Stormsurge and Zaz'Zak deal ability damage — amplified by
+        # Actualizer.  Timestamped trigger receipts split the amp at the
+        # explicit expiry boundary; an un-timestamped proc retains the
+        # direct-engine active assumption.
+        target_share = _charged_proc_target_share(state, source)
+        event_damages: list[float] = []
+        if proc_triggers:
+            for trigger in proc_triggers:
+                trigger_time = float(trigger["time"])
+                amp = (
+                    state.ability_amp
+                    if source.is_ability_damage
+                    and (
+                        state.actualizer_active_until <= 0.0
+                        or trigger_time
+                        < state.actualizer_active_until - _CAST_SCHEDULE_EPS
+                    )
+                    else 1.0
+                )
+                event_damages.append(base_mitigated_per_proc * amp * target_share)
+            proc_mitigated = sum(event_damages)
+            mitigated_per_proc = (
+                sum(event_damages) / len(event_damages) if event_damages else 0.0
+            )
+        else:
+            amp = state.ability_amp if source.is_ability_damage else 1.0
+            if threshold_time is not None and state.actualizer_active_until > 0.0:
+                if threshold_time >= state.actualizer_active_until - _CAST_SCHEDULE_EPS:
+                    amp = 1.0
+            mitigated_per_proc = base_mitigated_per_proc * amp * target_share
+            proc_mitigated = mitigated_per_proc * procs
 
         state.breakdown[source.breakdown_key] = {
             "name": source.display_name,
@@ -6891,10 +7019,10 @@ def _add_item_proc_damage(
                 {
                     "time": float(trigger["time"]),
                     "timeline_order": float(trigger["order"]) + 0.5,
-                    "damage": mitigated_per_proc,
+                    "damage": event_damages[index],
                     "damage_type": source.damage_type,
                 }
-                for trigger in proc_triggers
+                for index, trigger in enumerate(proc_triggers)
             ]
         elif threshold_time is not None:
             state.breakdown[source.breakdown_key]["damage_events"] = [
@@ -9261,6 +9389,7 @@ def calculate_fight_damage(
     config: FightConfig,
     score_only: bool = False,
     tuple_ledger: bool = False,
+    item_options: Mapping[str, Mapping[str, int | float]] | None = None,
 ) -> dict[str, Any]:
     """Calculate total damage dealt over a fight duration.
 
@@ -9286,7 +9415,13 @@ def calculate_fight_damage(
     )
 
     # ── Resolve resistances, penetration, amps, and attack timing ───────
-    state = _resolve_combat_state(champion_stats, ability_damages, items, config)
+    state = _resolve_combat_state(
+        champion_stats,
+        ability_damages,
+        items,
+        config,
+        item_options=item_options,
+    )
     state.score_only = score_only
     state.notes.extend(shield_reaver_notes)
 
@@ -9434,6 +9569,18 @@ def calculate_fight_damage(
         # double stacks to calculate ability procs more accurately.
         "phantom_hit_autos": on_hits.phantom_hit_autos,
         "phantom_hit_count": on_hits.phantom_hit_count,
+        "item_state_receipts": item_effects.item_state_receipts(
+            items,
+            item_options,
+            fight_duration_seconds=config.fight_duration_seconds,
+            is_melee=state.is_melee,
+            bonus_health=float(champion_stats.get("bonus_health", 0.0) or 0.0),
+            bonus_mana=float(champion_stats.get("bonus_mana", 0.0) or 0.0),
+            max_mana=float(champion_stats.get("max_mana", 0.0) or 0.0),
+            total_attack_damage=float(champion_stats.get("attack_damage", 0.0) or 0.0),
+            total_move_speed=float(champion_stats.get("move_speed", 0.0) or 0.0),
+            lethality=float(champion_stats.get("lethality", 0.0) or 0.0),
+        ),
     }
 
 
