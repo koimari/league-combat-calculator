@@ -947,6 +947,38 @@ def test_frontend_level_controls_routable_contract_uses_data_level_delta():
     )
 
 
+def test_frontend_layout_keeps_main_identity_controls_hit_area():
+    source = Path("static/css/style.css").read_text(encoding="utf-8")
+    identity_block_start = source.index(".champion-identity {")
+    identity_block_end = source.index(".champion-portrait {")
+    identity_block = source[identity_block_start:identity_block_end]
+
+    assert "position: relative;" in identity_block
+    assert "z-index: 2;" in identity_block
+    assert "min-width: 0;" in identity_block
+
+    controls_block_start = source.index(".identity-controls {")
+    controls_block_end = source.index(".identity-controls label {")
+    controls_block = source[controls_block_start:controls_block_end]
+    assert "max-width: 100%;" in controls_block
+
+
+def test_frontend_layout_separates_item_option_rows():
+    source = Path("static/css/style.css").read_text(encoding="utf-8")
+    option_block_start = source.index(".item-option-controls {")
+    option_block_end = source.index(".roster-slot-wrap {")
+    option_block = source[option_block_start:option_block_end]
+
+    assert "display: grid;" in option_block
+    assert "gap: 5px;" in option_block
+    label_block = source[source.index(".item-option-controls label {") : source.index(".roster-slot-wrap {")]
+    assert "display: grid;" in label_block
+    assert (
+        ".slot-wrap > .item-option-controls,\n.roster-slot-wrap > .item-option-controls {\n  margin-top: 4px;\n}"
+        in source
+    )
+
+
 def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_effect():
     client = app_module.app.test_client()
     zero_payload = {
