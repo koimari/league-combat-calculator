@@ -1748,6 +1748,16 @@ def test_bis_endpoint_scores_main_from_damage_and_effective_health():
     assert top["components"]["effective_health"] > 0
 
 
+def test_bis_utility_objective_uses_candidate_item_options():
+    payload = _bis_request("main")
+    payload["objective"] = "utility"
+    payload["candidate_item_options"] = {"Stridebreaker": {"active_seconds": 1.0}}
+    body = app.test_client().post("/api/bis", json=payload).get_json()
+
+    row = next(row for row in body["candidates"] if row["name"] == "Stridebreaker")
+    assert row["components"]["support_value"] > 0
+
+
 @pytest.mark.parametrize(
     ("objective", "direction", "metric"),
     [
