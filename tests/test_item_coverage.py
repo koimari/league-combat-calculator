@@ -330,6 +330,17 @@ def test_certified_timeline_guard_ignores_targets_without_lifeline_items():
     )
 
 
+def test_certified_timeline_guard_withholds_unreviewed_fimbulwinter_control():
+    with pytest.raises(
+        ValueError,
+        match=r"Fimbulwinter.*fimbulwinter_everlasting.*not event-certified",
+    ):
+        require_certified_target_timeline(
+            [get_item_by_name("Fimbulwinter")],
+            {"complete": False, "coarse_sources": ["fimbulwinter_everlasting"]},
+        )
+
+
 def test_target_build_coverage_and_guard_name_the_omitted_defense():
     items = [get_item_by_name("Kaenic Rookern"), get_item_by_name("Banshee's Veil")]
     coverage = target_build_coverage(items)
@@ -570,10 +581,19 @@ def test_stridebreaker_utility_scope_is_explicitly_modelled(item_name):
     assert coverage["review_issue_refs"] == []
 
 
+def test_fimbulwinter_is_event_certified_and_not_optimizer_blocked():
+    coverage = item_model_coverage(get_item_by_name("Fimbulwinter"))
+    assert coverage["status"] == "modeled_state"
+    assert coverage["optimizer_eligible"] is True
+    target = target_item_model_coverage(get_item_by_name("Fimbulwinter"))
+    assert target["status"] == "modeled_event_certified"
+    assert target["calculation_eligible"] is True
+    assert "Everlasting" in target["reason"]
+
+
 @pytest.mark.parametrize(
     ("item_name", "issue_refs"),
     [
-        ("Fimbulwinter", [44, 46]),
         ("World Atlas", [48, 50, 82]),
     ],
 )

@@ -1,14 +1,14 @@
 {
   "audit": "item_umbrella_runtime_coverage",
   "counts": {
-    "attacker_blocked": 10,
+    "attacker_blocked": 9,
     "manual_items_and_boots": 202,
     "optimizer_items_and_boots": 130,
     "ordinary_source_items": 209,
     "path_mismatches": 0,
     "review_pending": 0,
     "runtime_items": 202,
-    "target_blocked": 4,
+    "target_blocked": 3,
     "unexplained_blocks": 0,
     "unresolved_source_conflicts": 0
   },
@@ -1533,30 +1533,24 @@
     },
     {
       "attacker": {
-        "calculation_eligible": false,
+        "calculation_eligible": true,
         "name": "Fimbulwinter",
-        "optimizer_eligible": false,
+        "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Awe's bonus-mana-to-health conversion is modeled, but Everlasting's conditional shield and cooldown state are not scheduled.",
-        "review_issue_refs": [
-          44,
-          46
-        ],
-        "status": "blocked"
+        "reason": "Awe's bonus-mana-to-health conversion and Everlasting's sourced post-control shield are represented by the ordered participant ledger; unreviewed crowd-control packets remain fail-closed.",
+        "review_issue_refs": [],
+        "status": "modeled_state"
       },
       "manual": true,
       "name": "Fimbulwinter",
       "optimizer": true,
       "target": {
-        "calculation_eligible": false,
+        "calculation_eligible": true,
         "name": "Fimbulwinter",
         "outcome_dimensions": [],
-        "reason": "Awe bonus health and Everlasting shields are not modelled.",
-        "review_issue_refs": [
-          44,
-          46
-        ],
-        "status": "blocked"
+        "reason": "Everlasting's 100 + 4.5% current-mana shield (1.8x with more than one nearby enemy) is scheduled after an authored immobilize, or a slow for a melee holder; the 20%-maximum-mana gate and eight-second cooldown are enforced, and unreviewed control packets are withheld.",
+        "review_issue_refs": [],
+        "status": "modeled_event_certified"
       }
     },
     {

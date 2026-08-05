@@ -69,6 +69,11 @@ class DamagePart:
     dot_stack_scaled: bool = False
     time_offset: float | None = None
     hit_interval: float | None = None
+    # Explicit crowd-control provenance for ordered item triggers.  ``None``
+    # means the module has not reviewed this part's control effect; ``none``
+    # is an explicit reviewed no-CC result.  The engine never infers control
+    # from an ability name or description at runtime.
+    cc_kind: str | None = None
 
     def __post_init__(self) -> None:
         if self.damage_type not in _PART_DAMAGE_TYPES:
@@ -80,6 +85,8 @@ class DamagePart:
             raise ValueError("DamagePart time_offset cannot be negative")
         if self.hit_interval is not None and self.hit_interval < 0:
             raise ValueError("DamagePart hit_interval cannot be negative")
+        if self.cc_kind is not None and not isinstance(self.cc_kind, str):
+            raise ValueError("DamagePart cc_kind must be a string or None")
 
     def __repr__(self) -> str:
         # Deterministic repr: the golden snapshot serializes entries via
@@ -96,6 +103,8 @@ class DamagePart:
             extras += f", time_offset={self.time_offset}"
         if self.hit_interval is not None:
             extras += f", hit_interval={self.hit_interval}"
+        if self.cc_kind is not None:
+            extras += f", cc_kind={self.cc_kind!r}"
         return (
             f"DamagePart({self.damage_type}, amount={self.amount}, "
             f"count={self.count}, hp_scaled={hp_scaled}, "

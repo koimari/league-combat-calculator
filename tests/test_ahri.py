@@ -40,6 +40,8 @@ class TestParseAhriAbilities:
         _, abilities = parse_at(ahri_data, 6, ap=60)
         e = abilities["E"]
         assert abs(parts_raw_total(e["parts"], "magic") - 131.0) < 0.1
+        assert e["parts"][0].cc_kind == "immobilize"
+        assert e["event_order_certified"] == "single_hit"
 
     def test_r_rank1_with_60ap(self, ahri_data: dict, parse_at) -> None:
         _, abilities = parse_at(ahri_data, 6, ap=60)

@@ -6032,6 +6032,11 @@ def build_participant_timeline(
                             "armor_reduction_percent",
                             "mr_reduction_percent",
                             "stack_count",
+                            "current_mana",
+                            "mana_threshold",
+                            "nearby_enemy_count",
+                            "multi_target_multiplier",
+                            "cooldown_until",
                         )
                         if event.get(key) is not None
                     }
@@ -6057,7 +6062,13 @@ def build_participant_timeline(
                 **(
                     {
                         key: str(event[key])
-                        for key in ("resistance_type", "owner", "range_assumption")
+                        for key in (
+                            "resistance_type",
+                            "owner",
+                            "range_assumption",
+                            "trigger_kind",
+                            "source_url",
+                        )
                         if event.get(key) is not None
                     }
                 ),
@@ -6069,6 +6080,11 @@ def build_participant_timeline(
                 **(
                     {"expires_at": round(float(event["expires_at"]), 3)}
                     if event.get("expires_at") is not None
+                    else {}
+                ),
+                **(
+                    {"source_revision_id": int(event["source_revision_id"])}
+                    if event.get("source_revision_id") is not None
                     else {}
                 ),
                 **(

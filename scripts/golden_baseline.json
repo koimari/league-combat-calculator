@@ -179,9 +179,10 @@
           "cast_time": 0.25,
           "cooldown": 12.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Charm",
           "parts": [
-            "DamagePart(magic, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='immobilize')"
           ],
           "rank": 1,
           "resource_cost": 60.0,
@@ -40063,7 +40064,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "cdda7c26f7700a0819839d085a3ade0f2663c3fc",
+    "git_head": "014cade03644904a6ea9767c060614b0d9185c30",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785725170.32038,

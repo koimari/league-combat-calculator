@@ -14,6 +14,7 @@ from typing import Any
 
 from .item_effects import (
     ALLY_ITEM_EFFECTS,
+    ITEM_INPUT_OPTIONS,
     ally_item_effect_value,
     ally_item_level_value,
     required_effect_value,
@@ -111,7 +112,7 @@ def _support_triggers(
 
 
 def _cc_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    """Return only damage packets with an authored immobilize marker."""
+    """Return damage packets with an authored crowd-control marker."""
     markers = {"immobilized", "crowd_control", "hard_cc"}
     return [
         event
@@ -119,8 +120,54 @@ def _cc_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
         if isinstance(event, Mapping)
         if any(bool(event.get(marker)) for marker in markers)
         or str(event.get("cc_kind", "")).lower()
-        in {"immobilize", "stun", "root", "knockup", "suppression"}
+        in {"slow", "immobilize", "stun", "root", "knockup", "suppression"}
     ]
+
+
+def _fimbulwinter_trigger_kind(event: Mapping[str, Any]) -> str:
+    """Return the explicitly reviewed Everlasting trigger kind, if any."""
+    kind = str(event.get("cc_kind", "")).lower().strip()
+    if kind in {"immobilize", "stun", "root", "knockup", "suppression"}:
+        return "immobilize"
+    if kind == "slow" or bool(event.get("slowed")) or bool(event.get("slow")):
+        return "slow"
+    if bool(event.get("immobilized")) or bool(event.get("hard_cc")):
+        return "immobilize"
+    # A bare ``crowd_control`` flag does not distinguish Everlasting's
+    # immobilize/slow branches, so it is intentionally not enough here.
+    return ""
+
+
+def _current_mana_at(
+    result: Mapping[str, Any], event_time: float, maximum_mana: float
+) -> float:
+    """Resolve current mana from the ordered cast receipt at one timestamp."""
+    current = max(0.0, float(maximum_mana))
+    casts = result.get("cast_timeline", ())
+    if not isinstance(casts, Iterable):
+        return current
+    ordered = []
+    for cast in casts:
+        if not isinstance(cast, Mapping):
+            continue
+        try:
+            cast_time = float(cast.get("time", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(cast_time) or cast_time > event_time + 1e-9:
+            continue
+        ordered.append((cast_time, cast))
+    for _, cast in sorted(ordered, key=lambda row: row[0]):
+        raw_after = cast.get("resource_after")
+        if raw_after is None:
+            continue
+        try:
+            parsed = float(raw_after)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(parsed):
+            current = max(0.0, parsed)
+    return current
 
 
 def _takedown_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
@@ -178,6 +225,92 @@ def derive_item_support_effects(
     cc_events = _cc_triggers(result)
     takedown_events = _takedown_triggers(result)
     damage_events = _damage_triggers(result)
+
+    # Fimbulwinter's Everlasting is a self shield that fires only from an
+    # explicitly marked immobilize, or a slow for a melee holder.  Its
+    # current-mana threshold and cooldown are resolved from the same ordered
+    # cast receipt that drives resource admission; no cast or crowd-control
+    # state is inferred from a spell name.
+    if "Fimbulwinter" in names:
+        is_melee = bool(attacker.stats.get("is_melee", False))
+        champion_stats = result.get("champion_stats", attacker.stats)
+        if not isinstance(champion_stats, Mapping):
+            champion_stats = attacker.stats
+        maximum_mana = max(
+            0.0,
+            float(champion_stats.get("max_mana", attacker.stats.get("max_mana", 0.0))),
+        )
+        mana_threshold_ratio = required_effect_value(
+            "Fimbulwinter", "everlasting_mana_threshold_ratio"
+        )
+        nearby_enemy_count = sum(
+            1 for actor in all_actors if not _same_side(attacker, actor)
+        )
+        cooldown = required_effect_value("Fimbulwinter", "everlasting_cooldown")
+        last_activation = float("-inf")
+        seen_casts: set[str] = set()
+        source_meta = ITEM_INPUT_OPTIONS["Fimbulwinter"]
+        for event in cc_events:
+            trigger_kind = _fimbulwinter_trigger_kind(event)
+            if not trigger_kind or (trigger_kind == "slow" and not is_melee):
+                continue
+            time = _event_time(event)
+            cast_identity = str(
+                event.get("ability_instance")
+                or f"{event.get('source_key', '')}:{round(time, 9)}"
+            )
+            if cast_identity in seen_casts:
+                continue
+            seen_casts.add(cast_identity)
+            if time < last_activation + cooldown - 1e-9:
+                continue
+            current_mana = _current_mana_at(result, time, maximum_mana)
+            if (
+                maximum_mana <= 0.0
+                or current_mana <= maximum_mana * mana_threshold_ratio
+            ):
+                continue
+            multiplier = (
+                required_effect_value(
+                    "Fimbulwinter", "everlasting_multi_target_multiplier"
+                )
+                if nearby_enemy_count > 1
+                else 1.0
+            )
+            amount = (
+                required_effect_value("Fimbulwinter", "everlasting_base_shield")
+                + current_mana
+                * required_effect_value(
+                    "Fimbulwinter", "everlasting_current_mana_ratio"
+                )
+            ) * multiplier
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=attacker,
+                    time=time,
+                    kind="shield",
+                    source="Fimbulwinter — Everlasting",
+                    amount=amount,
+                    duration=required_effect_value(
+                        "Fimbulwinter", "everlasting_duration"
+                    ),
+                    target_scope="self",
+                    trigger=trigger_kind,
+                    _trigger_event_id=event.get("_event_id"),
+                    trigger_kind=trigger_kind,
+                    current_mana=current_mana,
+                    mana_threshold=maximum_mana * mana_threshold_ratio,
+                    nearby_enemy_count=nearby_enemy_count,
+                    multi_target_multiplier=multiplier,
+                    cooldown=cooldown,
+                    cooldown_until=time + cooldown,
+                    source_url=source_meta["source_url"],
+                    source_revision_id=source_meta["source_revision_id"],
+                    _priority=0.5,
+                )
+            )
+            last_activation = time
 
     # Shared target modifiers are emitted only from an authored trigger.  The
     # holder's own pair engine already prices its personal Black Cleaver,
