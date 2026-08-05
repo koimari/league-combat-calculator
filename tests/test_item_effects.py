@@ -144,6 +144,17 @@ def test_cp13_item_state_controls_are_bounded_and_typed() -> None:
         )
 
 
+def test_cp16_stasis_seconds_is_a_bounded_float_state() -> None:
+    parsed = validate_item_input_options(
+        {"Zhonya's Hourglass": {"stasis_active_seconds": 2.5}}
+    )
+    assert parsed == {"Zhonya's Hourglass": {"stasis_active_seconds": 2.5}}
+    with pytest.raises(ValueError, match="stasis_active_seconds"):
+        validate_item_input_options(
+            {"Zhonya's Hourglass": {"stasis_active_seconds": 3.0}}
+        )
+
+
 def test_cp13_takedown_states_read_typed_registry_values() -> None:
     assert hubris_input_bonus_ad(
         _build("Hubris"),

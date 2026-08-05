@@ -266,7 +266,11 @@ def test_optimizer_accepts_runaan_with_roster_bolt_model():
         ("Randuin's Omen", "modeled"),
         ("Frozen Heart", "modeled"),
         ("Guardian Angel", "modeled"),
-        ("Force of Nature", "blocked"),
+        ("Force of Nature", "modeled_event_certified"),
+        ("Jak'Sho, The Protean", "modeled_event_certified"),
+        ("Zhonya's Hourglass", "modeled"),
+        ("Seeker's Armguard", "modeled"),
+        ("Spectre's Cowl", "modeled"),
         ("Immortal Shieldbow", "modeled_event_certified"),
         ("Hexdrinker", "modeled_event_certified"),
         ("Maw of Malmortius", "modeled_event_certified"),
@@ -351,25 +355,15 @@ def test_armored_advance_target_diagnostic_covers_noxian_endurance():
     require_target_item_coverage([get_item_by_name("Armored Advance")])
 
 
-def test_force_of_nature_target_defense_fails_closed_with_stack_timing_diagnostic():
-    """Do not price Steadfast as permanent +70 MR in target comparisons.
-
-    The passive is conditional on an ordered stream of incoming champion
-    damage/immobilize events and has a one-second per-cast-instance throttle;
-    aggregate damage rows cannot establish when the eighth stack is reached.
-    """
+def test_force_of_nature_target_defense_is_event_certified():
+    """Steadfast is admitted only through the ordered target ledger."""
     item = get_item_by_name("Force of Nature")
     coverage = target_item_model_coverage(item)
 
-    assert coverage["status"] == "blocked"
-    assert coverage["calculation_eligible"] is False
-    assert (
-        "at most one stack per incoming cast instance per second" in coverage["reason"]
-    )
-    assert "+70 bonus magic resistance" in coverage["reason"]
-
-    with pytest.raises(ValueError, match="Force of Nature.*stack timing"):
-        require_target_item_coverage([item])
+    assert coverage["status"] == "modeled_event_certified"
+    assert coverage["calculation_eligible"] is True
+    assert "maximum-stack bonus resistance" in coverage["reason"]
+    require_target_item_coverage([item])
 
 
 @pytest.mark.parametrize(
@@ -549,9 +543,9 @@ def test_defensive_state_coverage_names_the_authored_scenario_boundary(
     item_name, reason_fragment
 ):
     coverage = target_item_model_coverage(get_item_by_name(item_name))
-    expected_status = "modeled" if item_name == "Guardian Angel" else "blocked"
+    expected_status = "modeled"
     assert coverage["status"] == expected_status
-    assert coverage["calculation_eligible"] is (item_name == "Guardian Angel")
+    assert coverage["calculation_eligible"] is True
     assert reason_fragment in coverage["reason"]
 
 

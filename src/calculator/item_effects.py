@@ -12,6 +12,7 @@ and updates ``ITEM_EFFECTS`` in place.
 """
 
 import logging
+import math
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Callable, Literal, Mapping, Sequence
@@ -254,6 +255,34 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
         "source_url": "https://wiki.leagueoflegends.com/en-us/Overlord%27s_Bloodmail",
         "source_revision_id": 4046569,
     },
+    "Zhonya's Hourglass": {
+        "options": {
+            "stasis_active_seconds": {
+                "type": "float",
+                "label": "Time Stop active seconds",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 2.5,
+                "step": 0.5,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Zhonya's_Hourglass",
+        "source_revision_id": 3902922,
+    },
+    "Seeker's Armguard": {
+        "options": {
+            "stasis_active_seconds": {
+                "type": "float",
+                "label": "Time Stop active seconds",
+                "default": 0.0,
+                "min": 0.0,
+                "max": 2.5,
+                "step": 0.5,
+            }
+        },
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Zhonya's_Hourglass",
+        "source_revision_id": 3902922,
+    },
 }
 
 
@@ -364,7 +393,7 @@ def stat_conversion_metadata(item_name: str) -> dict[str, float]:
     return metadata
 
 
-def validate_item_input_options(value: object) -> dict[str, dict[str, int]]:
+def validate_item_input_options(value: object) -> dict[str, dict[str, int | float]]:
     """Validate the nested public item-option object."""
     if value is None:
         return {}
@@ -374,7 +403,7 @@ def validate_item_input_options(value: object) -> dict[str, dict[str, int]]:
     if unknown_items:
         raise ValueError(f"Unknown item option target: {sorted(unknown_items)[0]}")
 
-    parsed: dict[str, dict[str, int]] = {}
+    parsed: dict[str, dict[str, int | float]] = {}
     for item_name, raw_options in value.items():
         if not isinstance(raw_options, Mapping):
             raise ValueError(f"item_options.{item_name} must be an object")
@@ -395,6 +424,21 @@ def validate_item_input_options(value: object) -> dict[str, dict[str, int]]:
                 raise ValueError(
                     f"item_options.{item_name}.{option_name} must be an integer"
                 )
+            if option["type"] != "int":
+                if isinstance(supplied, bool):
+                    raise ValueError(
+                        f"item_options.{item_name}.{option_name} must be numeric"
+                    )
+                try:
+                    supplied = float(supplied)
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(
+                        f"item_options.{item_name}.{option_name} must be numeric"
+                    ) from exc
+                if not math.isfinite(supplied):
+                    raise ValueError(
+                        f"item_options.{item_name}.{option_name} must be finite"
+                    )
             if not option["min"] <= supplied <= option["max"]:
                 raise ValueError(
                     f"item_options.{item_name}.{option_name} must be between "
@@ -476,6 +520,38 @@ def input_option_value(
         return 0
     options = item_options.get(item_name) or {}
     return int(options.get(option_name, 0) or 0)
+
+
+def input_option_float_value(
+    items: list[dict[str, Any]],
+    item_options: Mapping[str, Mapping[str, int | float]] | None,
+    item_name: str,
+    option_name: str,
+) -> float:
+    """Return one validated numeric item-state value without truncation."""
+    if not item_options or item_name not in _item_names(items):
+        return 0.0
+    options = item_options.get(item_name) or {}
+    value = options.get(option_name, 0.0)
+    if isinstance(value, bool):
+        raise ValueError(f"item_options.{item_name}.{option_name} must be numeric")
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"item_options.{item_name}.{option_name} must be numeric"
+        ) from exc
+    if not math.isfinite(parsed):
+        raise ValueError(f"item_options.{item_name}.{option_name} must be finite")
+    schema = _item_option_schemas(ITEM_INPUT_OPTIONS[item_name]).get(option_name)
+    if schema is None:
+        raise ValueError(f"Unknown option for {item_name}: {option_name}")
+    if not float(schema["min"]) <= parsed <= float(schema["max"]):
+        raise ValueError(
+            f"item_options.{item_name}.{option_name} must be between "
+            f"{schema['min']} and {schema['max']}"
+        )
+    return parsed
 
 
 def hubris_input_bonus_ad(
@@ -1442,6 +1518,29 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "revive_delay": 4.0,
         "revive_cooldown": 300.0,
     },
+    "Force of Nature": {
+        "type": "target_state",
+        "steadfast_stack_duration": 7.0,
+        "steadfast_max_stacks": 8,
+        "steadfast_stack_interval": 1.0,
+        "steadfast_immobilize_stacks": 2,
+        "steadfast_bonus_magic_resistance": 70.0,
+        "steadfast_bonus_move_speed_percent": 6.0,
+    },
+    "Jak'Sho, The Protean": {
+        "type": "target_state",
+        "voidborn_stack_interval": 1.0,
+        "voidborn_max_stacks": 5,
+        "voidborn_bonus_resistance_multiplier": 0.30,
+    },
+    "Zhonya's Hourglass": {
+        "type": "defensive_start",
+        "stasis_duration": 2.5,
+    },
+    "Seeker's Armguard": {
+        "type": "defensive_start",
+        "stasis_duration": 2.5,
+    },
     "Death's Dance": {
         "type": "defensive_start",
         # Ignore Pain stores post-mitigation physical and magic damage.  The
@@ -1757,6 +1856,25 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Guardian Angel": frozenset(
         {"revive_health_ratio", "revive_delay", "revive_cooldown"}
     ),
+    "Force of Nature": frozenset(
+        {
+            "steadfast_stack_duration",
+            "steadfast_max_stacks",
+            "steadfast_stack_interval",
+            "steadfast_immobilize_stacks",
+            "steadfast_bonus_magic_resistance",
+            "steadfast_bonus_move_speed_percent",
+        }
+    ),
+    "Jak'Sho, The Protean": frozenset(
+        {
+            "voidborn_stack_interval",
+            "voidborn_max_stacks",
+            "voidborn_bonus_resistance_multiplier",
+        }
+    ),
+    "Zhonya's Hourglass": frozenset({"stasis_duration"}),
+    "Seeker's Armguard": frozenset({"stasis_duration"}),
     "Malignance": frozenset({"base", "ap_ratio", "duration"}),
     "Liandry's Torment": frozenset({"tick_interval"}),
     "Hollow Radiance": frozenset({"event_interval"}),
@@ -3238,6 +3356,7 @@ _KNOWN_EFFECT_TYPES = frozenset(
         "stat_conversion",
         "sustain",
         "target_mitigation",
+        "target_state",
         "target_attack_speed_aura",
         "target_threshold_health",
         "target_threshold_shield",

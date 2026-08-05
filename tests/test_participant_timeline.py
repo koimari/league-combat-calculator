@@ -1754,8 +1754,8 @@ def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
     assert "Locket of the Iron Solari" not in top
 
 
-def test_roster_bis_filters_items_with_unsupported_target_mechanics():
-    """A roster BIS result must remain safe when reused as a passive target."""
+def test_roster_bis_includes_event_certified_target_defenses():
+    """Event-certified target defenses no longer disappear from the BIS pool."""
     app.config["TESTING"] = True
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
     assert response.status_code == 200
@@ -1765,9 +1765,9 @@ def test_roster_bis_filters_items_with_unsupported_target_mechanics():
         for candidate in [*body["candidates"], *body["partial_candidates"]]
     }
 
-    assert "Zhonya's Hourglass" not in names
-    assert body["target_coverage_filtered"] > 0
-    assert "target-side coverage filtered" in body["target_coverage_note"].lower()
+    assert "Zhonya's Hourglass" in names
+    assert body["target_coverage_filtered"] == 0
+    assert body["target_coverage_note"] == ""
 
 
 def test_roster_bis_keeps_supported_mid_boot_target_in_the_candidate_pool():
@@ -1788,8 +1788,7 @@ def test_roster_bis_keeps_supported_mid_boot_target_in_the_candidate_pool():
     body = response.get_json()
     assert body["candidates"]
     assert body["coverage"]["complete"] is False
-    assert body["target_coverage_filtered"] > 0
-    assert "target-side coverage filtered" in body["coverage"]["note"].lower()
+    assert body["target_coverage_filtered"] == 0
     assert "Armored Advance" not in body["target_coverage_note"]
 
 
@@ -3103,6 +3102,152 @@ def test_stasis_receipt_carries_authored_source_and_start_time():
     assert result["holder"]["stasis_started_at"] == 0.25
     assert result["holder"]["stasis_until"] == 2.75
     assert result["holder"]["stasis_source"] == "Tempered Fate"
+
+
+def test_force_of_nature_stacks_and_reprices_the_maximum_stack_packet():
+    stats = {
+        "health": 5000.0,
+        "armor": 30.0,
+        "magic_resistance": 40.0,
+        "bonus_armor": 0.0,
+        "bonus_magic_resistance": 0.0,
+        "is_melee": False,
+    }
+    target = Combatant(
+        participant_id="target",
+        team="enemy",
+        champion_data={"name": "Ahri"},
+        level=18,
+        items=(get_item_by_name("Force of Nature"),),
+        stats=stats,
+        defenses=resolve_starting_defenses(
+            "Ahri", 18, stats, [{"name": "Force of Nature"}]
+        ),
+    )
+    source = _dummy_combatant("source", "main")
+    events = [
+        {
+            "time": float(index),
+            "damage": 50.0,
+            "damage_type": "magic",
+            "attacker": "source",
+            "target": "target",
+            "source_key": "Q",
+            "sequence": index,
+            "_event_id": f"force-{index}",
+            "_baseline_effective_mr": 40.0,
+        }
+        for index in range(8)
+    ]
+
+    result = _simulate_survival([source, target], {"target": events}, {}, {}, 10.0)
+
+    assert result["target"]["force_of_nature"]["stacks"] == 8
+    assert result["target"]["force_of_nature"]["dynamic_bonus_magic_resistance"] == 70.0
+    assert events[-1]["dynamic_resistance"]["effective"] == 110.0
+    assert events[-1]["damage"] == pytest.approx(33.333333, rel=1e-6)
+
+
+def test_jaksho_multiplies_bonus_resistances_after_five_combat_seconds():
+    stats = {
+        "health": 5000.0,
+        "armor": 100.0,
+        "magic_resistance": 100.0,
+        "bonus_armor": 60.0,
+        "bonus_magic_resistance": 60.0,
+        "is_melee": False,
+    }
+    target = Combatant(
+        participant_id="target",
+        team="enemy",
+        champion_data={"name": "Ahri"},
+        level=18,
+        items=(get_item_by_name("Jak'Sho, The Protean"),),
+        stats=stats,
+        defenses=resolve_starting_defenses(
+            "Ahri", 18, stats, [{"name": "Jak'Sho, The Protean"}]
+        ),
+    )
+    source = _dummy_combatant("source", "main")
+    events = [
+        {
+            "time": 0.0,
+            "damage": 50.0,
+            "damage_type": "magic",
+            "attacker": "source",
+            "target": "target",
+            "source_key": "Q",
+            "sequence": 0,
+            "_event_id": "jaksho-0",
+            "_baseline_effective_mr": 100.0,
+        },
+        {
+            "time": 5.0,
+            "damage": 50.0,
+            "damage_type": "magic",
+            "attacker": "source",
+            "target": "target",
+            "source_key": "Q",
+            "sequence": 1,
+            "_event_id": "jaksho-5",
+            "_baseline_effective_mr": 100.0,
+        },
+    ]
+
+    result = _simulate_survival([source, target], {"target": events}, {}, {}, 10.0)
+
+    assert result["target"]["jaksho"]["stacks"] == 5
+    assert result["target"]["jaksho"]["dynamic_bonus_magic_resistance"] == 18.0
+    assert events[1]["dynamic_resistance"]["effective"] == 118.0
+    assert events[1]["damage"] < events[0]["damage"]
+
+
+def test_explicit_time_stop_input_starts_stasis_and_blocks_until_expiry():
+    stats = {"health": 100.0, "armor": 0.0, "magic_resistance": 0.0}
+    target = Combatant(
+        participant_id="target",
+        team="enemy",
+        champion_data={"name": "Ahri"},
+        level=18,
+        items=(get_item_by_name("Zhonya's Hourglass"),),
+        stats=stats,
+        defenses=resolve_starting_defenses(
+            "Ahri",
+            18,
+            stats,
+            [{"name": "Zhonya's Hourglass"}],
+            item_options={"Zhonya's Hourglass": {"stasis_active_seconds": 2.5}},
+        ),
+    )
+    source = _dummy_combatant("source", "main")
+    incoming = {
+        "target": [
+            {
+                "time": 1.0,
+                "damage": 30.0,
+                "damage_type": "magic",
+                "attacker": "source",
+                "target": "target",
+                "sequence": 0,
+                "_event_id": "stasis-blocked",
+            },
+            {
+                "time": 3.0,
+                "damage": 30.0,
+                "damage_type": "magic",
+                "attacker": "source",
+                "target": "target",
+                "sequence": 1,
+                "_event_id": "stasis-live",
+            },
+        ]
+    }
+
+    result = _simulate_survival([source, target], incoming, {}, {}, 5.0)
+
+    assert result["target"]["damage_taken"] == pytest.approx(30.0)
+    assert result["target"]["stasis_until"] == pytest.approx(2.5)
+    assert result["target"]["stasis_source"] == "Zhonya's Hourglass — Time Stop"
 
 
 def test_invulnerability_and_untargetability_receipts_expose_expiry_boundaries():

@@ -1322,6 +1322,8 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
         "Rod of Ages",
         "Yun Tal Wildarrows",
         "Overlord's Bloodmail",
+        "Zhonya's Hourglass",
+        "Seeker's Armguard",
     } <= set(options)
     assert (
         options["Heartsteel"]["stat_effects"]["bonus_health"]["bonus_health_per_unit"]
@@ -1335,6 +1337,9 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
     assert (
         options["Overlord's Bloodmail"]["options"]["missing_health_percent"]["max"]
         == 70
+    )
+    assert (
+        options["Zhonya's Hourglass"]["options"]["stasis_active_seconds"]["max"] == 2.5
     )
     assert "function itemOptionSpec(id)" in source
     assert "definition.stat_effects?.[key]" in source

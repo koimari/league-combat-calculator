@@ -4,7 +4,11 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 from .champions.skill_orders import get_ability_rank
-from .item_effects import ITEM_EFFECTS, required_effect_value
+from .item_effects import (
+    ITEM_EFFECTS,
+    input_option_float_value,
+    required_effect_value,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,6 +71,19 @@ class StartingDefenses:
     defy_heal_bonus_ad_ratio: float = 0.0
     defy_heal_duration: float = 0.0
     defy_heal_ticks: int = 0
+    # Combat-state item defenses.  These are metadata for the ordered ledger;
+    # no stack is assumed active at t=0.
+    force_stack_duration: float = 0.0
+    force_max_stacks: int = 0
+    force_stack_interval: float = 0.0
+    force_immobilize_stacks: int = 0
+    force_bonus_magic_resistance: float = 0.0
+    force_bonus_move_speed_percent: float = 0.0
+    jaksho_stack_interval: float = 0.0
+    jaksho_max_stacks: int = 0
+    jaksho_bonus_resistance_multiplier: float = 0.0
+    starting_stasis_duration: float = 0.0
+    starting_stasis_source: str = ""
     assumptions: tuple[str, ...] = ()
     sources: tuple[DefenseSource, ...] = ()
     coverage: str = "base_and_items_only"
@@ -146,6 +163,31 @@ class StartingDefenses:
                 "defy_heal_duration": round(self.defy_heal_duration, 1),
                 "defy_heal_ticks": int(self.defy_heal_ticks),
             },
+            "combat_state": {
+                "force_of_nature": {
+                    "stack_duration": round(self.force_stack_duration, 1),
+                    "max_stacks": int(self.force_max_stacks),
+                    "stack_interval": round(self.force_stack_interval, 1),
+                    "immobilize_stacks": int(self.force_immobilize_stacks),
+                    "bonus_magic_resistance": round(
+                        self.force_bonus_magic_resistance, 1
+                    ),
+                    "bonus_move_speed_percent": round(
+                        self.force_bonus_move_speed_percent, 1
+                    ),
+                },
+                "jaksho": {
+                    "stack_interval": round(self.jaksho_stack_interval, 1),
+                    "max_stacks": int(self.jaksho_max_stacks),
+                    "bonus_resistance_multiplier": round(
+                        self.jaksho_bonus_resistance_multiplier, 3
+                    ),
+                },
+                "starting_stasis": {
+                    "duration": round(self.starting_stasis_duration, 3),
+                    "source": self.starting_stasis_source,
+                },
+            },
             "assumptions": list(self.assumptions),
             "sources": [
                 {
@@ -219,6 +261,27 @@ _DEATHS_DANCE_SOURCE = DefenseSource(
     # this provenance as cache-backed rather than inventing a revision.
     revision_id=0,
     revision_timestamp="cached data/items.json (patch 16.15)",
+)
+
+_FORCE_OF_NATURE_SOURCE = DefenseSource(
+    label="Force of Nature — Steadfast",
+    source_url="https://wiki.leagueoflegends.com/en-us/Force_of_Nature",
+    revision_id=4016272,
+    revision_timestamp="2026-05-10T11:45:30Z",
+)
+
+_JAKSHO_SOURCE = DefenseSource(
+    label="Jak'Sho, The Protean — Voidborn Resilience",
+    source_url="https://wiki.leagueoflegends.com/en-us/Jak%27Sho,_The_Protean",
+    revision_id=3984950,
+    revision_timestamp="2026-01-17T15:12:22Z",
+)
+
+_STASIS_SOURCE = DefenseSource(
+    label="Zhonya's Hourglass / Seeker's Armguard — Time Stop",
+    source_url="https://wiki.leagueoflegends.com/en-us/Zhonya%27s_Hourglass",
+    revision_id=3902922,
+    revision_timestamp="2025-05-29T13:29:45Z",
 )
 
 _IMMORTAL_SHIELDBOW_SOURCE = DefenseSource(
@@ -430,7 +493,7 @@ def resolve_starting_defenses(
     level: int,
     stats: dict[str, float],
     items: Sequence[Mapping[str, Any]] = (),
-    item_options: Mapping[str, Mapping[str, int]] | None = None,
+    item_options: Mapping[str, Mapping[str, int | float]] | None = None,
 ) -> StartingDefenses:
     """Resolve sourced champion and item defenses ready at fight start."""
     champion_defenses = StartingDefenses()
@@ -479,6 +542,19 @@ def resolve_starting_defenses(
     defy_heal_bonus_ad_ratio = champion_defenses.defy_heal_bonus_ad_ratio
     defy_heal_duration = champion_defenses.defy_heal_duration
     defy_heal_ticks = champion_defenses.defy_heal_ticks
+    force_stack_duration = champion_defenses.force_stack_duration
+    force_max_stacks = champion_defenses.force_max_stacks
+    force_stack_interval = champion_defenses.force_stack_interval
+    force_immobilize_stacks = champion_defenses.force_immobilize_stacks
+    force_bonus_magic_resistance = champion_defenses.force_bonus_magic_resistance
+    force_bonus_move_speed_percent = champion_defenses.force_bonus_move_speed_percent
+    jaksho_stack_interval = champion_defenses.jaksho_stack_interval
+    jaksho_max_stacks = champion_defenses.jaksho_max_stacks
+    jaksho_bonus_resistance_multiplier = (
+        champion_defenses.jaksho_bonus_resistance_multiplier
+    )
+    starting_stasis_duration = champion_defenses.starting_stasis_duration
+    starting_stasis_source = champion_defenses.starting_stasis_source
     assumptions = list(champion_defenses.assumptions)
     sources = list(champion_defenses.sources)
 
@@ -683,6 +759,75 @@ def resolve_starting_defenses(
         )
         sources.append(_DEATHS_DANCE_SOURCE)
 
+    if "Force of Nature" in names:
+        force_stack_duration = float(
+            required_effect_value("Force of Nature", "steadfast_stack_duration")
+        )
+        force_max_stacks = int(
+            required_effect_value("Force of Nature", "steadfast_max_stacks")
+        )
+        force_stack_interval = float(
+            required_effect_value("Force of Nature", "steadfast_stack_interval")
+        )
+        force_immobilize_stacks = int(
+            required_effect_value("Force of Nature", "steadfast_immobilize_stacks")
+        )
+        force_bonus_magic_resistance = float(
+            required_effect_value("Force of Nature", "steadfast_bonus_magic_resistance")
+        )
+        force_bonus_move_speed_percent = float(
+            required_effect_value(
+                "Force of Nature", "steadfast_bonus_move_speed_percent"
+            )
+        )
+        assumptions.append(
+            "Force of Nature Steadfast starts at zero stacks; the ordered ledger "
+            "arms one stack per eligible magic-damage cast instance per second "
+            "and grants the sourced maximum-stack resistance bonus."
+        )
+        sources.append(_FORCE_OF_NATURE_SOURCE)
+
+    if "Jak'Sho, The Protean" in names:
+        jaksho_stack_interval = float(
+            required_effect_value("Jak'Sho, The Protean", "voidborn_stack_interval")
+        )
+        jaksho_max_stacks = int(
+            required_effect_value("Jak'Sho, The Protean", "voidborn_max_stacks")
+        )
+        jaksho_bonus_resistance_multiplier = float(
+            required_effect_value(
+                "Jak'Sho, The Protean", "voidborn_bonus_resistance_multiplier"
+            )
+        )
+        assumptions.append(
+            "Jak'Sho Voidborn Resilience starts at zero combat seconds and "
+            "multiplies bonus armor and magic resistance by 30% after five "
+            "seconds in champion combat."
+        )
+        sources.append(_JAKSHO_SOURCE)
+
+    for stasis_name in ("Zhonya's Hourglass", "Seeker's Armguard"):
+        if stasis_name not in names:
+            continue
+        active_seconds = input_option_float_value(
+            [dict(item) for item in items],
+            item_options,
+            stasis_name,
+            "stasis_active_seconds",
+        )
+        if active_seconds <= 0.0:
+            continue
+        maximum = float(required_effect_value(stasis_name, "stasis_duration"))
+        starting_stasis_duration = min(maximum, active_seconds)
+        starting_stasis_source = f"{stasis_name} — Time Stop"
+        assumptions.append(
+            f"{stasis_name} Time Stop is explicitly active for "
+            f"{starting_stasis_duration:g} seconds from the scenario input; "
+            "it is never assumed active by item presence alone."
+        )
+        sources.append(_STASIS_SOURCE)
+        break
+
     has_shield = (
         magic_shield > 0
         or physical_shield > 0
@@ -800,6 +945,17 @@ def resolve_starting_defenses(
         defy_heal_bonus_ad_ratio=defy_heal_bonus_ad_ratio,
         defy_heal_duration=defy_heal_duration,
         defy_heal_ticks=defy_heal_ticks,
+        force_stack_duration=force_stack_duration,
+        force_max_stacks=force_max_stacks,
+        force_stack_interval=force_stack_interval,
+        force_immobilize_stacks=force_immobilize_stacks,
+        force_bonus_magic_resistance=force_bonus_magic_resistance,
+        force_bonus_move_speed_percent=force_bonus_move_speed_percent,
+        jaksho_stack_interval=jaksho_stack_interval,
+        jaksho_max_stacks=jaksho_max_stacks,
+        jaksho_bonus_resistance_multiplier=jaksho_bonus_resistance_multiplier,
+        starting_stasis_duration=starting_stasis_duration,
+        starting_stasis_source=starting_stasis_source,
         assumptions=tuple(assumptions),
         sources=tuple(sources),
         coverage="modeled_starting_defenses",
