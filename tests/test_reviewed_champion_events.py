@@ -4,6 +4,7 @@ import pytest
 
 from src.calculator.champions import (
     _CUSTOM_CHAMPION_MODULES,
+    _GENERATED_CHAMPION_MODULES,
     engine_registration_kind,
     parse_champion_abilities,
     registered_champion_names,
@@ -22,7 +23,13 @@ def _stats(name: str, level: int = 6):
 
 def test_all_173_modules_parse_without_a_generic_runtime_fallback():
     for name in registered_champion_names():
-        assert engine_registration_kind(name) == "reviewed_module", name
+        assert name in _CUSTOM_CHAMPION_MODULES or name in _GENERATED_CHAMPION_MODULES
+        expected_kind = (
+            "reviewed_module"
+            if name in _CUSTOM_CHAMPION_MODULES
+            else "generated_packet"
+        )
+        assert engine_registration_kind(name) == expected_kind, name
         champion, stats = _stats(name)
         result = parse_champion_abilities(
             champion,

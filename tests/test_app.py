@@ -1034,6 +1034,18 @@ def test_config_exposes_one_authoritative_capability_contract_for_every_particip
     )
 
 
+def test_config_exposes_the_champion_review_boundary():
+    engine = (
+        app_module.app.test_client().get("/api/config").get_json()["champion_engine"]
+    )
+
+    assert engine["registered_count"] == 173
+    assert engine["reviewed_count"] == 53
+    assert engine["generated_count"] == 120
+    assert engine["unreviewed_count"] == 120
+    assert engine["module_contract"] == "full_entry_wiki_receipt"
+
+
 def test_capability_contract_has_a_frontend_control_and_serialization_for_every_supported_field():
     config = app_module.app.test_client().get("/api/config").get_json()
     contract = config["capabilities"]
@@ -1763,10 +1775,10 @@ class TestIconUrlsAreHttps:
             set(champion["abilities"]) == {"P", "Q", "W", "E", "R"}
             for champion in champions
         )
-        assert all(champion["verified"] for champion in champions)
+        assert sum(champion["verified"] for champion in champions) == 53
         by_name = {champion["name"]: champion for champion in champions}
         assert by_name["Aatrox"]["engine_registration"] == "reviewed_module"
-        assert by_name["Teemo"]["engine_registration"] == "reviewed_module"
+        assert by_name["Teemo"]["engine_registration"] == "generated_packet"
 
 
 class TestChampionVerifiedFlags:
@@ -1778,8 +1790,8 @@ class TestChampionVerifiedFlags:
 
         assert by_name["Aatrox"] is True
         assert by_name["Bel'Veth"] is True
-        assert by_name["Kled"] is True
-        assert by_name["Teemo"] is True
+        assert by_name["Kled"] is False
+        assert by_name["Teemo"] is False
 
     def test_unverified_champions_expose_specific_fail_closed_reasons(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
@@ -1790,22 +1802,21 @@ class TestChampionVerifiedFlags:
             "verification": "reviewed_module",
             "blockers": [],
         }
-        assert by_name["Teemo"]["availability"] == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
-        }
+        assert by_name["Teemo"]["availability"]["ready"] is False
+        assert by_name["Teemo"]["availability"]["verification"] == "blocked"
+        assert by_name["Teemo"]["availability"]["blockers"]
+        assert by_name["Teemo"]["engine_registration"] == "generated_packet"
         assert by_name["Teemo"]["patch_last_changed"]
 
     def test_verified_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
         flags = [c["verified"] for c in champs]
 
-        assert all(flags)
+        assert flags == sorted(flags, reverse=True)
 
     def test_each_group_is_alphabetical(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        for group in (True,):
+        for group in (True, False):
             names = [c["name"] for c in champs if c["verified"] is group]
             assert names == sorted(names)
 

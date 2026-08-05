@@ -65,15 +65,17 @@ def _champion_module_receipt(name: str) -> dict[str, Any]:
             "status": "review_pending",
             "error": "champion missing from reviewed-packets.json",
         }
+    registration_kind = None
     try:
         if str(ROOT) not in sys.path:
             sys.path.insert(0, str(ROOT))
-        from src.calculator.champions import _CHAMPION_MODULES
+        from src.calculator.champions import _CHAMPION_MODULES, engine_registration_kind
 
         module_name = _CHAMPION_MODULES.get(name)
         if not module_name:
             raise ImportError("no registered module")
         module = importlib.import_module(f"src.calculator.champions.{module_name}")
+        registration_kind = engine_registration_kind(name)
         review_status = getattr(module, "REVIEW_STATUS", None)
         if not callable(getattr(module, "parse_abilities", None)):
             raise ImportError("registered module has no parse_abilities callable")
@@ -99,8 +101,44 @@ def _champion_module_receipt(name: str) -> dict[str, Any]:
             if kind == "no_damage" and not str(spec.get("reason") or "").strip():
                 invalid.append(slot)
     sources = champion.get("sources")
+    slot_coverage = []
+    if isinstance(slots, dict):
+        for slot in REQUIRED_CHAMPION_SLOTS:
+            spec = slots.get(slot)
+            if not isinstance(spec, dict):
+                continue
+            kind = str(spec.get("kind", ""))
+            if kind == "no_damage":
+                status = "out_of_scope"
+                reason = str(
+                    spec.get(
+                        "reason",
+                        "This slot has no sourced enemy-damage formula; its state or utility branch is not part of the damage packet.",
+                    )
+                )
+            elif registration_kind == "generated_packet":
+                status = "generated_pending"
+                reason = (
+                    "Generated packet is runnable but the complete champion-specific Wiki mechanics, "
+                    "target policy, costs, timing, and state branches still require an exact module."
+                )
+            else:
+                status = "modeled"
+                reason = "Slot is implemented by the reviewed champion module."
+            slot_coverage.append(
+                {
+                    "slot": slot,
+                    "name": str(spec.get("name", slot)),
+                    "kind": kind,
+                    "status": status,
+                    "reason": reason,
+                    "source": spec.get("source"),
+                    "issue_refs": [15, 18] if status == "generated_pending" else [],
+                }
+            )
     ready = (
-        champion.get("review_status") == "reviewed_packet"
+        registration_kind == "reviewed_module"
+        and champion.get("review_status") == "reviewed_packet"
         and isinstance(sources, list)
         and bool(sources)
         and not missing
@@ -109,13 +147,25 @@ def _champion_module_receipt(name: str) -> dict[str, Any]:
     return {
         "name": name,
         "module": module_name,
+        "registration": registration_kind,
         "review_status": review_status,
         "manifest_review_status": champion.get("review_status"),
         "slots": list(slots) if isinstance(slots, dict) else [],
+        "slot_coverage": slot_coverage,
         "missing_slots": sorted(set(missing)),
         "invalid_slots": sorted(set(invalid)),
         "source_receipts": len(sources) if isinstance(sources, list) else 0,
         "status": "ready" if ready else "review_pending",
+        **(
+            {
+                "error": (
+                    "Generated packet module is intentionally not marked reviewed; "
+                    "complete champion-specific mechanics remain in issue #15."
+                )
+            }
+            if registration_kind == "generated_packet"
+            else {}
+        ),
     }
 
 
@@ -191,6 +241,7 @@ def _runtime_entry_receipt(kind: str, name: str) -> dict[str, Any]:
             "optimizer_eligible": coverage.get("optimizer_eligible"),
             "calculation_eligible": coverage.get("calculation_eligible"),
             "outcome_dimensions": coverage.get("outcome_dimensions", []),
+            "review_issue_refs": coverage.get("review_issue_refs", []),
             "reason": coverage.get("reason"),
             "registry_effect_type": ITEM_EFFECTS.get(name, {}).get("type"),
         }
@@ -199,13 +250,23 @@ def _runtime_entry_receipt(kind: str, name: str) -> dict[str, Any]:
         "ready": module.get("status") == "ready",
         "status": module.get("status"),
         "module": module.get("module"),
+        "registration": module.get("registration"),
         "review_status": module.get("review_status"),
         "manifest_review_status": module.get("manifest_review_status"),
         "source_receipts": module.get("source_receipts", 0),
         "slots": module.get("slots", []),
+        "slot_coverage": module.get("slot_coverage", []),
+        "issue_refs": [15, 18] if module.get("status") != "ready" else [],
         "reason": (
             "Full parent entry plus passive/Q/W/E/R source receipts are "
             "required by the reviewed champion module."
+            if module.get("status") == "ready"
+            else str(
+                module.get(
+                    "error",
+                    "Champion module remains generated or otherwise incomplete.",
+                )
+            )
         ),
     }
 
@@ -214,6 +275,24 @@ def _compact_text(value: Any, limit: int = 280) -> str:
     """Keep source-derived expectations readable without copying full pages."""
     text = re.sub(r"\s+", " ", str(value or "")).strip()
     return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def _text_values(entry: dict[str, Any], keys: tuple[str, ...]) -> list[str]:
+    """Collect source prose without dropping branch arrays from the cache."""
+    values: list[str] = []
+    for key in keys:
+        value = entry.get(key)
+        if isinstance(value, list):
+            for row in value:
+                if isinstance(row, dict):
+                    for nested in ("description", "text", "value"):
+                        if row.get(nested):
+                            values.append(_compact_text(row[nested]))
+                elif row:
+                    values.append(_compact_text(row))
+        elif value:
+            values.append(_compact_text(value))
+    return [value for value in values if value]
 
 
 def _expected_effects(kind: str, record: dict[str, Any] | None) -> dict[str, Any]:
@@ -244,18 +323,16 @@ def _expected_effects(kind: str, record: dict[str, Any] | None) -> dict[str, Any
             for entry in values:
                 if not isinstance(entry, dict):
                     continue
-                descriptions = []
-                for key in (
-                    "description",
-                    "shortDescription",
-                    "longDescription",
-                    "effects",
-                ):
-                    value = entry.get(key)
-                    if isinstance(value, list):
-                        descriptions.extend(_compact_text(row) for row in value)
-                    elif value:
-                        descriptions.append(_compact_text(value))
+                descriptions = _text_values(
+                    entry,
+                    (
+                        "description",
+                        "shortDescription",
+                        "longDescription",
+                        "effects",
+                        "branches",
+                    ),
+                )
 
                 def _nonzero_stat(value: Any) -> bool:
                     if not isinstance(value, dict):
@@ -285,7 +362,10 @@ def _expected_effects(kind: str, record: dict[str, Any] | None) -> dict[str, Any
                         "branch": branch,
                         "name": _compact_text(entry.get("name") or branch),
                         "descriptions": descriptions,
+                        "branch_count": len(entry.get("branches") or []),
                         "stat_fields": stat_keys,
+                        "cooldown": entry.get("cooldown"),
+                        "range": entry.get("range"),
                         "has_cooldown": entry.get("cooldown") is not None,
                         "has_range": entry.get("range") is not None,
                     }
@@ -330,6 +410,45 @@ def _expected_effects(kind: str, record: dict[str, Any] | None) -> dict[str, Any
         "effects": effects,
         "effect_count": sum(row["variant_count"] for row in effects),
     }
+
+
+def _item_effect_coverage(
+    expected: dict[str, Any], runtime: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Attach a path-aware verdict to every cached passive/active branch."""
+    status = str(runtime.get("status") or "review_pending")
+    reason = str(runtime.get("reason") or "No runtime coverage reason was recorded.")
+    issue_refs = [int(value) for value in runtime.get("review_issue_refs", [])]
+    rows: list[dict[str, Any]] = []
+    for effect in expected.get("effects", []):
+        if status == "blocked":
+            verdict = "withheld"
+        elif status == "stats_only":
+            verdict = "stats_only" if effect.get("stat_fields") else "out_of_scope"
+        elif status == "modeled_state":
+            verdict = "modeled_state"
+        elif status == "review_pending":
+            verdict = "review_pending"
+        else:
+            verdict = "modeled"
+        rows.append(
+            {
+                "branch": effect.get("branch"),
+                "name": effect.get("name"),
+                "verdict": verdict,
+                "reason": reason,
+                "issue_refs": issue_refs,
+                "paths": {
+                    "manual_attacker": bool(runtime.get("calculation_eligible")),
+                    "enemy_target": bool(runtime.get("calculation_eligible")),
+                    "ally_roster": bool(runtime.get("calculation_eligible")),
+                    "optimizer": bool(runtime.get("optimizer_eligible")),
+                    "api": True,
+                    "frontend": True,
+                },
+            }
+        )
+    return rows
 
 
 def _query(args: list[str]) -> Any:
@@ -424,12 +543,14 @@ def audit_entry(kind: str, name: str) -> dict[str, Any]:
     expected = _expected_effects(kind, _cached_record(kind, name))
     if kind == "item":
         status = str(runtime.get("status") or "")
+        expected["effect_coverage"] = _item_effect_coverage(expected, runtime)
         expected["runtime_gaps"] = (
             [str(runtime.get("reason"))]
             if status in {"blocked", "review_pending"} and runtime.get("reason")
             else []
         )
     else:
+        expected["slot_coverage"] = list(runtime.get("slot_coverage", []))
         expected["runtime_gaps"] = (
             []
             if runtime.get("ready")

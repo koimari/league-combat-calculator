@@ -66,7 +66,7 @@ from calculator.champions import (
     engine_registration_kind,
     get_comparison_curve_unavailable_reason,
     registered_engine_champion_names,
-    registered_champion_names,
+    reviewed_champion_names,
 )
 from calculator.champion_coverage import attacker_availability
 from calculator.capabilities import public_capability_contract
@@ -131,8 +131,21 @@ _RATE_LIMIT_POLICIES = {
     # the independent calculate budget keeps the ordinary UI responsive.
     "optimize": (2, 0.1),
 }
-_VERIFIED_CHAMPIONS = frozenset(registered_champion_names())
+_VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
 _ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
+_GENERATED_CHAMPIONS = _ENGINE_CHAMPIONS - _VERIFIED_CHAMPIONS
+
+
+def _public_engine_mode(champion_name: str) -> str:
+    """Expose the certification boundary used by the calculation response."""
+    registration = engine_registration_kind(champion_name)
+    if registration == "reviewed_module":
+        return "reviewed_event_order"
+    if registration == "generated_packet":
+        return "generated_packet"
+    return "unregistered"
+
+
 _ICON_HOSTS = frozenset(
     {
         "cdn.communitydragon.org",
@@ -1332,8 +1345,8 @@ def api_config():
             "champion_engine": {
                 "registered_count": len(_ENGINE_CHAMPIONS),
                 "reviewed_count": len(_VERIFIED_CHAMPIONS),
-                "generated_count": 0,
-                "unreviewed_count": 0,
+                "generated_count": len(_GENERATED_CHAMPIONS),
+                "unreviewed_count": len(_GENERATED_CHAMPIONS),
                 "module_contract": "full_entry_wiki_receipt",
                 "generic_enabled": _generic_engine_enabled(),
             },
@@ -1499,7 +1512,7 @@ def api_calculate():
         response["engine"] = {
             "registration": engine_registration_kind(champion_data["name"]),
             "certified": champion_data["name"] in _VERIFIED_CHAMPIONS,
-            "mode": "reviewed_event_order",
+            "mode": _public_engine_mode(champion_data["name"]),
         }
         if allies:
             response.update(
@@ -1635,7 +1648,7 @@ def api_calculate():
     response["engine"] = {
         "registration": engine_registration_kind(champion_data["name"]),
         "certified": champion_data["name"] in _VERIFIED_CHAMPIONS,
-        "mode": "reviewed_event_order",
+        "mode": _public_engine_mode(champion_data["name"]),
     }
     # The legacy aggregate is retained for compatibility.  ``combat`` is the
     # coupled event-ordered receipt used by the UI/BIS objective: every

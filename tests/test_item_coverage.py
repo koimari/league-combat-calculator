@@ -564,6 +564,23 @@ def test_stridebreaker_secondary_scope_is_explicitly_withheld(item_name):
     assert "multi_target" in coverage["outcome_dimensions"]
     assert coverage["status"] == "blocked"
     assert coverage["optimizer_eligible"] is False
+    assert coverage["review_issue_refs"] == [43]
+
+
+@pytest.mark.parametrize(
+    ("item_name", "issue_refs"),
+    [
+        ("Voltaic Cyclosword", [43]),
+        ("Fimbulwinter", [44, 46]),
+        ("World Atlas", [48, 50, 82]),
+    ],
+)
+def test_withheld_item_packets_are_linked_to_their_implementation_issues(
+    item_name, issue_refs
+):
+    coverage = item_model_coverage(get_item_by_name(item_name))
+    assert coverage["status"] == "blocked"
+    assert coverage["review_issue_refs"] == issue_refs
 
 
 def test_ravenous_hydra_active_scope_is_modelled_with_lifesteal():

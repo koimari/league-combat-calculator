@@ -30,7 +30,7 @@ def test_every_cached_champion_has_an_importable_engine_registration():
         for name in _CUSTOM_CHAMPION_MODULES
     )
     assert all(
-        engine_registration_kind(name) == "reviewed_module"
+        engine_registration_kind(name) == "generated_packet"
         for name in _GENERATED_CHAMPION_MODULES
     )
 
