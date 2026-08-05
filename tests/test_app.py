@@ -1169,8 +1169,13 @@ def test_frontend_click_handlers_use_path_resolved_item_option_metadata_for_main
     )
     assert "return Number.isFinite(id) && id > 0 ? id : 0;" in source
     assert "function itemOptionSpecsForPath(path)" in source
-    assert "const specs = itemOptionSpecsForPath(path);" in source
     assert "itemOptionState(path)[key] = Number(value);" in source
+    assert 'data-item-option-id="${escapeHtml(id)}"' in source
+    assert "const optionId = Number(itemOptionButton.dataset.itemOptionId);" in source
+    assert (
+        "const specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);"
+        in source
+    )
     assert (
         "const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);"
         in source

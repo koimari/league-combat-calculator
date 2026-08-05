@@ -658,7 +658,7 @@ function itemOptionControls(path, id, compact = false) {
   const kind = participantKindForPath(path);
   return `<div class="item-option-controls ${compact ? "compact" : ""}" aria-label="${escapeHtml(itemName(id))} state">${specs.map((spec) => {
     const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);
-    return `<label><span>${escapeHtml(spec.label)}</span><span class="stack-control"><button type="button" ${capabilityAttributes(kind, "item_options")} data-item-option-path="${escapeHtml(path)}" data-item-option-key="${escapeHtml(spec.key)}" data-delta="-${spec.step}" aria-label="Decrease ${escapeHtml(spec.label)}">−</button><output>${value}/${spec.max}</output><button type="button" ${capabilityAttributes(kind, "item_options")} data-item-option-path="${escapeHtml(path)}" data-item-option-key="${escapeHtml(spec.key)}" data-delta="${spec.step}" aria-label="Increase ${escapeHtml(spec.label)}">+</button></span></label>`;
+    return `<label><span>${escapeHtml(spec.label)}</span><span class="stack-control"><button type="button" ${capabilityAttributes(kind, "item_options")} data-item-option-path="${escapeHtml(path)}" data-item-option-id="${escapeHtml(id)}" data-item-option-key="${escapeHtml(spec.key)}" data-delta="-${spec.step}" aria-label="Decrease ${escapeHtml(spec.label)}">−</button><output>${value}/${spec.max}</output><button type="button" ${capabilityAttributes(kind, "item_options")} data-item-option-path="${escapeHtml(path)}" data-item-option-id="${escapeHtml(id)}" data-item-option-key="${escapeHtml(spec.key)}" data-delta="${spec.step}" aria-label="Increase ${escapeHtml(spec.label)}">+</button></span></label>`;
   }).join("")}</div>`;
 }
 
@@ -4010,7 +4010,8 @@ document.addEventListener("click", (event) => {
   if (itemOptionButton) {
     const path = itemOptionButton.dataset.itemOptionPath;
     const key = itemOptionButton.dataset.itemOptionKey;
-    const specs = itemOptionSpecsForPath(path);
+    const optionId = Number(itemOptionButton.dataset.itemOptionId);
+    const specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);
     const spec = specs.find((entry) => entry.key === key);
     if (!spec) return;
     const next = Math.max(spec.min, Math.min(spec.max, itemOptionValue(path, key) + Number(itemOptionButton.dataset.delta || 0)));
