@@ -31,8 +31,8 @@ They may remain importable so the backend can return a deterministic,
 fail-closed explanation, but `/api/champions` must expose them as
 `generated_packet` and unavailable for reviewed champion options until an exact
 module has passed this requirement. The current baseline is 237 ordinary
-items audited, 53 exact champion modules, and 120 generated champion packets;
-the release gate remains open until the latter 120 are replaced by exact
+items audited, 65 exact champion modules, and 108 generated champion packets;
+the release gate remains open until the latter 108 are replaced by exact
 modules or an explicitly sourced, tested out-of-scope classification.
 
 For every item effect, the receipt must retain the full parent-page evidence

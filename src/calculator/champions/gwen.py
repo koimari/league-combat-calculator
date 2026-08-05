@@ -1,0 +1,220 @@
+"""Gwen's max-health on-hit, center true conversion and R recasts."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from ..ability_spec import DamagePart
+from .engine import BUFF, ONHIT, SlotCtx, build_parser
+from .reviewed_batch_01 import no_damage, source_row
+from .slotlib import damage_entry, extract_cooldown, extract_named
+
+
+def _thousand_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
+    # The parent page describes the champion branch as 1% (+0.6% per 100 AP)
+    # of target maximum health. The level row in the cache is for the
+    # minion-only rider and must not replace that formula.
+    damage = target_max * (0.01 + 0.006 * ctx.stats.get("ability_power", 0.0) / 100.0)
+    if target_max <= 0.0:
+        return no_damage(
+            ctx,
+            name="A Thousand Cuts",
+            reason="Target maximum health is required before the max-health on-hit can be priced.",
+            slot="P",
+        )
+    entry = no_damage(
+        ctx,
+        name="A Thousand Cuts",
+        reason="Basic attacks carry Gwen's sourced max-health magic on-hit.",
+        slot="P",
+    )
+    if entry is not None:
+        entry["on_hit"] = {
+            "name": "A Thousand Cuts",
+            "damage_per_hit": damage,
+            "damage_type": "magic",
+        }
+        entry["detail"] = (
+            "1% + 0.6% per 100 AP of target maximum health per qualifying hit; champion heal is sustain."
+        )
+    return entry
+
+
+_thousand_cuts.phase = ONHIT
+
+
+def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    stacks = min(max(int(ctx.options.get("q_snippy_stacks", 4)), 0), 4)
+    center = bool(ctx.options.get("q_center", True))
+    if center:
+        attr = "Maximum Center Damage" if stacks >= 4 else "Minimum Center Damage"
+    else:
+        attr = "Maximum Damage" if stacks >= 4 else "Minimum Damage"
+    value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability.get("name", "Snip Snip!"),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "mixed" if center else "magic",
+    )
+    if center:
+        entry["parts"] = (
+            DamagePart("magic", value * 0.5),
+            DamagePart("true", value * 0.5),
+        )
+    else:
+        entry["parts"] = (DamagePart("magic", value),)
+    entry["target_max_health_sensitive"] = True
+    entry["detail"] = (
+        f"{stacks} Snippy stack(s), {'center' if center else 'outer'} hit; center converts 50% to true damage."
+    )
+    return entry
+
+
+def _hallowed_mist(ctx: SlotCtx) -> dict[str, Any] | None:
+    return no_damage(
+        ctx,
+        name="Hallowed Mist",
+        reason="Mist untargetability and bonus resistances are defensive state; no outgoing damage.",
+    )
+
+
+_hallowed_mist.phase = BUFF
+
+
+def _skip_n_slash(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    bonus = 15.0 + 0.20 * ctx.stats.get("ability_power", 0.0)
+    entry = damage_entry(
+        ability.get("name", "Skip 'n Slash"),
+        rank,
+        extract_cooldown(ability, rank),
+        bonus,
+        "magic",
+    )
+    entry["parts"] = (DamagePart("magic", bonus),)
+    entry["empowers_next_auto"] = True
+    entry["detail"] = (
+        "One empowered attack carries 15 + 20% AP bonus magic damage; attack speed/range are state."
+    )
+    return entry
+
+
+def _needlework(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    casts = min(max(int(ctx.options.get("r_casts", 3)), 1), 3)
+    attrs = (
+        "Damage with A Thousand Cuts",
+        "Second Cast Total Damage",
+        "Third Cast Total Damage",
+    )
+    parts: list[DamagePart] = []
+    total = 0.0
+    for index in range(casts):
+        value = extract_named(ability, attrs[index], rank, ctx.stats, ctx.target)
+        total += value
+        parts.append(DamagePart("magic", value, time_offset=0.25 + index))
+    entry = damage_entry(
+        ability.get("name", "Needlework"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "magic",
+    )
+    entry["parts"] = tuple(parts)
+    entry["detail"] = (
+        f"{casts} Needlework cast(s), with 1/3/5 needles and the sourced A Thousand Cuts rider."
+    )
+    return entry
+
+
+SLOTS = {
+    "P": _thousand_cuts,
+    "Q": _snip_snip,
+    "W": _hallowed_mist,
+    "E": _skip_n_slash,
+    "R": _needlework,
+}
+parse_abilities = build_parser(SLOTS, "Gwen")
+
+OPTIONS = [
+    {
+        "key": "q_snippy_stacks",
+        "type": "int",
+        "default": 4,
+        "min": 0,
+        "max": 4,
+        "label": "Snippy stacks consumed by Q",
+    },
+    {"key": "q_center", "type": "bool", "default": True, "label": "Q center hit"},
+    {
+        "key": "r_casts",
+        "type": "int",
+        "default": 3,
+        "min": 1,
+        "max": 3,
+        "label": "Needlework casts",
+    },
+]
+
+ASSUMPTIONS = [
+    "A Thousand Cuts is an explicit max-health magic on-hit; its champion heal and minion/monster caps are not applied to champion TDD.",
+    "Q exposes Snippy stack count and center true-damage conversion instead of treating the six-snip maximum as universal.",
+    "R's first, second and third casts remain separate ordered events, each carrying the sourced passive rider.",
+]
+
+SOURCES = [
+    source_row(
+        "Gwen parent entry",
+        "https://wiki.leagueoflegends.com/en-us/Gwen",
+        4047585,
+        "2026-07-29T22:50:16Z",
+    ),
+    source_row(
+        "Gwen Q template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gwen/Q",
+        3256220,
+        "2021-03-30T16:42:34Z",
+    ),
+    source_row(
+        "Gwen W template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gwen/W",
+        3256221,
+        "2021-03-30T16:42:50Z",
+    ),
+    source_row(
+        "Gwen E template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gwen/E",
+        3256222,
+        "2021-03-30T16:43:07Z",
+    ),
+    source_row(
+        "Gwen R template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gwen/R",
+        3256223,
+        "2021-03-30T16:43:26Z",
+    ),
+]
+MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
+REVIEW_STATUS = "reviewed_module"

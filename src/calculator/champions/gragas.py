@@ -1,0 +1,168 @@
+"""Gragas' charge-scaled barrel and empowered brew attack."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from ..ability_spec import DamagePart
+from .engine import SlotCtx, build_parser
+from .reviewed_batch_01 import no_damage, source_row
+from .slotlib import damage_entry, extract_cooldown, extract_named
+
+
+def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
+    return no_damage(
+        ctx,
+        name="Happy Hour",
+        reason="5.5% maximum-health heal after casting; no outgoing damage.",
+        slot="P",
+    )
+
+
+def _barrel_roll(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    charged = bool(ctx.options.get("q_fully_fermented", True))
+    attr = "Maximum Magic Damage" if charged else "Minimum Magic Damage"
+    value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability.get("name", "Barrel Roll"),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "magic",
+    )
+    entry["parts"] = (DamagePart("magic", value, time_offset=2.0),)
+    entry["detail"] = (
+        f"{('Fully' if charged else 'minimum')} fermented barrel; source slow scales with the same charge state."
+    )
+    return entry
+
+
+def _drunken_rage(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    value = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability.get("name", "Drunken Rage"),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "magic",
+    )
+    entry["parts"] = (DamagePart("magic", value),)
+    entry["empowers_next_auto"] = True
+    entry["detail"] = (
+        "One brew-empowered basic attack; max-health term is evaluated against the live target."
+    )
+    entry["target_max_health_sensitive"] = True
+    return entry
+
+
+def _body_slam(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability.get("name", "Body Slam"),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "magic",
+    )
+    entry["parts"] = (DamagePart("magic", value),)
+    entry["detail"] = (
+        "Collision damage plus sourced knockback/stun; cooldown refund is not assumed without a hit state."
+    )
+    return entry
+
+
+def _explosive_cask(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability.get("name", "Explosive Cask"),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "magic",
+    )
+    entry["parts"] = (DamagePart("magic", value, time_offset=0.5),)
+    return entry
+
+
+SLOTS = {
+    "P": _happy_hour,
+    "Q": _barrel_roll,
+    "W": _drunken_rage,
+    "E": _body_slam,
+    "R": _explosive_cask,
+}
+parse_abilities = build_parser(SLOTS, "Gragas")
+
+OPTIONS = [
+    {
+        "key": "q_fully_fermented",
+        "type": "bool",
+        "default": True,
+        "label": "Barrel Roll fully fermented",
+    },
+]
+
+ASSUMPTIONS = [
+    "Barrel Roll exposes the minimum and fully fermented maximum damage branches; the source charge timing is not averaged.",
+    "Drunken Rage is a single empowered attack with a target-max-health rider; the channel damage reduction is defensive state.",
+    "Body Slam's cooldown refund requires a collision state and is not applied to every cast by default.",
+]
+
+SOURCES = [
+    source_row(
+        "Gragas parent entry",
+        "https://wiki.leagueoflegends.com/en-us/Gragas",
+        4007952,
+        "2026-04-12T23:57:29Z",
+    ),
+    source_row(
+        "Gragas Q template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/Q",
+        2863945,
+        "2019-11-03T19:57:02Z",
+    ),
+    source_row(
+        "Gragas W template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/W",
+        2864240,
+        "2019-11-03T20:09:49Z",
+    ),
+    source_row(
+        "Gragas E template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/E",
+        2864386,
+        "2019-11-03T20:12:20Z",
+    ),
+    source_row(
+        "Gragas R template",
+        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/R",
+        2864532,
+        "2019-11-03T20:15:44Z",
+    ),
+]
+MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
+REVIEW_STATUS = "reviewed_module"

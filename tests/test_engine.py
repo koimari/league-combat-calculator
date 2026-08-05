@@ -151,7 +151,7 @@ class TestDedicatedDispatch:
             target_stats=target,
         )
         assert dispatched["Q"]["total_raw"] > 0
-        assert dispatched["R"]["cooldown"] == 120.0
+        assert dispatched["R"]["cooldown"] == 100.0
 
 
 # ---------------------------------------------------------------------------

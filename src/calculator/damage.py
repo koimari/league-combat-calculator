@@ -2623,14 +2623,56 @@ class _ShredRamp:
         )
 
 
+@dataclass
+class _ThresholdShred:
+    """A resistance reduction that begins only after a hit threshold.
+
+    Some abilities do not ramp their reduction one share at a time: Garen's
+    Judgment, for example, applies the full 25% armor reduction only after the
+    sixth spin.  Keeping this separate from ``_ShredRamp`` prevents a
+    percentage reduction from being approximated as six smaller reductions.
+    """
+
+    resists: Resists
+    debuff: dict[str, Any]
+    threshold_hits: int
+    fired: bool = False
+
+    def stage(self, current_mr: float) -> float:
+        """Count one authored hit and apply the full shred at the threshold."""
+        if not self.fired:
+            self._hits += 1
+            if self._hits >= self.threshold_hits:
+                self.fired = True
+                _apply_target_shred(self.resists, self.debuff)
+        return self.resists.effective_mr
+
+    def apply_remainder(self, coverage: float = 1.0) -> None:
+        """Do not apply a threshold shred that never reached its threshold."""
+
+    _hits: int = 0
+
+
 def _make_shred_ramp(
     resists: Resists,
     ability_info: dict[str, Any],
     ult_cast: bool,
     vile_decay_stacks: int,
-) -> _ShredRamp | None:
-    """Build the ramp for a ``stacks``-declaring target_debuff, else None."""
+) -> _ShredRamp | _ThresholdShred | None:
+    """Build the hit ramp/threshold for a target debuff, else None."""
     debuff = ability_info.get("target_debuff")
+    threshold_hits = int(debuff.get("threshold_hits", 0)) if debuff else 0
+    if threshold_hits > 0:
+        if debuff.get("stacks"):
+            raise ValueError(
+                f"{ability_info.get('name', '?')!r}: target_debuff cannot declare "
+                "both threshold_hits and stacks"
+            )
+        return _ThresholdShred(
+            resists=resists,
+            debuff=debuff,
+            threshold_hits=threshold_hits,
+        )
     stacks = int(debuff.get("stacks", 0)) if debuff else 0
     if stacks <= 0:
         return None
@@ -2807,16 +2849,13 @@ def _evaluate_cast_parts(
                 event_interval = part.hit_interval or 0.0
                 event_precision = (
                     "exact"
-                    if part.time_offset is not None and part.hit_interval is not None
+                    if single_hit_event_certified and hits == 1 and len(parts) == 1
                     else (
-                        "hit"
+                        "exact"
                         if part.time_offset is not None
+                        and part.hit_interval is not None
                         else (
-                            "exact"
-                            if single_hit_event_certified
-                            and hits == 1
-                            and len(parts) == 1
-                            else "cast_boundary"
+                            "hit" if part.time_offset is not None else "cast_boundary"
                         )
                     )
                 )

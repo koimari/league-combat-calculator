@@ -2890,6 +2890,34 @@ class TestRampedResistanceShred:
                 },
             )
 
+    def test_percent_reduction_can_start_after_a_hit_threshold(
+        self, fight, attacker_stats
+    ) -> None:
+        """A full percent shred can begin after a sourced hit threshold."""
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": _shred_entry(
+                    "Threshold",
+                    [DamagePart("physical", 100.0, count=6, hit_interval=1.0)],
+                    {"armor_reduction_percent": 25.0, "threshold_hits": 6},
+                ),
+                "W": {
+                    "name": "After",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "physical",
+                    "total_raw": 100.0,
+                    "parts": (DamagePart("physical", 100.0),),
+                },
+            },
+            target_armor=100.0,
+        )
+        assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(6 * 50.0)
+        assert result["breakdown"]["W"]["total_damage"] == pytest.approx(
+            57.143, abs=0.01
+        )
+
 
 class TestHealthComponentInvariant:
     """``health == base_health + bonus_health`` survives stat buffs.
