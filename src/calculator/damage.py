@@ -2710,10 +2710,20 @@ def _evaluate_cast_parts(
             # ledger does not lose a preceding flat hit (Akali R1 + R2 is
             # the important example).  Everything constant across the hits
             # is resolved here, once per part and cast.
+            # A reviewed module may explicitly certify a single static hit at
+            # the cast boundary (for example a direct spell whose cached
+            # packet has no separate travel/tick phase).  Carry that proof
+            # into the ledger so ordered item triggers such as Eclipse do not
+            # fall back to an aggregate/coarse proc merely because the
+            # ability has no sub-cast offset.
             emit_events = (
-                part.time_offset is not None
-                and (hits == 1 or part.hit_interval is not None)
-            ) or has_dynamic_part
+                (single_hit_event_certified and hits == 1 and len(parts) == 1)
+                or (
+                    part.time_offset is not None
+                    and (hits == 1 or part.hit_interval is not None)
+                )
+                or has_dynamic_part
+            )
             if emit_events:
                 cast_time = (
                     cast_times[cast_index]
@@ -3803,7 +3813,12 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             for part in parts
         )
         has_dynamic_part = any(part.hp_scaled_damage is not None for part in parts)
-        if (timing_is_authored or has_dynamic_part) and ability_events:
+        single_hit_certified = ability_info.get("event_order_certified") == "single_hit"
+        if (
+            timing_is_authored
+            or has_dynamic_part
+            or (single_hit_certified and ability_events)
+        ) and ability_events:
             breakdown[ability_key]["damage_events"] = [
                 {
                     **event,
