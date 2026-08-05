@@ -1,0 +1,98 @@
+{
+  "Xerath": [
+    {"label": "Xerath parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Xerath", "revision_id": 3960731, "revision_timestamp": "2025-10-22T22:14:49Z"},
+    {"label": "Xerath P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Xerath/I", "revision_id": 2864194, "revision_timestamp": "2019-11-03T20:07:10Z"},
+    {"label": "Xerath Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Xerath/Q", "revision_id": 2864046, "revision_timestamp": "2019-11-03T19:58:44Z"},
+    {"label": "Xerath W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Xerath/W", "revision_id": 2864341, "revision_timestamp": "2019-11-03T20:11:31Z"},
+    {"label": "Xerath E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Xerath/E", "revision_id": 2864487, "revision_timestamp": "2019-11-03T20:14:01Z"},
+    {"label": "Xerath R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Xerath/R", "revision_id": 2864633, "revision_timestamp": "2019-11-03T20:17:26Z"}
+  ],
+  "Xin Zhao": [
+    {"label": "Xin Zhao parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Xin_Zhao", "revision_id": 4016679, "revision_timestamp": "2026-05-12T03:56:32Z"},
+    {"label": "Xin Zhao P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Xin_Zhao/I", "revision_id": 2864195, "revision_timestamp": "2019-11-03T20:07:11Z"},
+    {"label": "Xin Zhao Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Xin_Zhao/Q", "revision_id": 2864058, "revision_timestamp": "2019-11-03T20:04:15Z"},
+    {"label": "Xin Zhao W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Xin_Zhao/W", "revision_id": 2864342, "revision_timestamp": "2019-11-03T20:11:32Z"},
+    {"label": "Xin Zhao E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Xin_Zhao/E", "revision_id": 2864488, "revision_timestamp": "2019-11-03T20:14:02Z"},
+    {"label": "Xin Zhao R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Xin_Zhao/R", "revision_id": 2864634, "revision_timestamp": "2019-11-03T20:17:27Z"}
+  ],
+  "Yasuo": [
+    {"label": "Yasuo parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Yasuo", "revision_id": 4007969, "revision_timestamp": "2026-04-12T23:59:37Z"},
+    {"label": "Yasuo P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yasuo/I", "revision_id": 2864196, "revision_timestamp": "2019-11-03T20:07:12Z"},
+    {"label": "Yasuo Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yasuo/Q", "revision_id": 2864047, "revision_timestamp": "2019-11-03T19:58:46Z"},
+    {"label": "Yasuo W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yasuo/W", "revision_id": 2864343, "revision_timestamp": "2019-11-03T20:11:33Z"},
+    {"label": "Yasuo E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yasuo/E", "revision_id": 2864489, "revision_timestamp": "2019-11-03T20:14:03Z"},
+    {"label": "Yasuo R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yasuo/R", "revision_id": 2864635, "revision_timestamp": "2019-11-03T20:17:28Z"}
+  ],
+  "Yone": [
+    {"label": "Yone parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Yone", "revision_id": 4011252, "revision_timestamp": "2026-04-22T05:08:52Z"},
+    {"label": "Yone P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yone/I", "revision_id": 3075315, "revision_timestamp": "2020-07-25T01:00:09Z"},
+    {"label": "Yone Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yone/Q", "revision_id": 3075322, "revision_timestamp": "2020-07-25T01:10:04Z"},
+    {"label": "Yone W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yone/W", "revision_id": 3075326, "revision_timestamp": "2020-07-25T01:13:52Z"},
+    {"label": "Yone E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yone/E", "revision_id": 3075339, "revision_timestamp": "2020-07-25T01:23:13Z"},
+    {"label": "Yone R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yone/R", "revision_id": 3075352, "revision_timestamp": "2020-07-25T01:27:50Z"}
+  ],
+  "Yorick": [
+    {"label": "Yorick parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Yorick", "revision_id": 4011713, "revision_timestamp": "2026-04-22T20:15:31Z"},
+    {"label": "Yorick P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yorick/I", "revision_id": 2864197, "revision_timestamp": "2019-11-03T20:07:13Z"},
+    {"label": "Yorick Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yorick/Q", "revision_id": 2864048, "revision_timestamp": "2019-11-03T19:58:47Z"},
+    {"label": "Yorick W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yorick/W", "revision_id": 2864344, "revision_timestamp": "2019-11-03T20:11:34Z"},
+    {"label": "Yorick E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yorick/E", "revision_id": 2864490, "revision_timestamp": "2019-11-03T20:14:04Z"},
+    {"label": "Yorick R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yorick/R", "revision_id": 2864636, "revision_timestamp": "2019-11-03T20:17:29Z"}
+  ],
+  "Yunara": [
+    {"label": "Yunara parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Yunara", "revision_id": 4038857, "revision_timestamp": "2026-06-30T17:25:05Z"},
+    {"label": "Yunara P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yunara/I", "revision_id": 3915223, "revision_timestamp": "2025-06-21T07:38:12Z"},
+    {"label": "Yunara Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yunara/Q", "revision_id": 3913325, "revision_timestamp": "2025-06-16T20:52:06Z"},
+    {"label": "Yunara W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yunara/W", "revision_id": 3913326, "revision_timestamp": "2025-06-16T20:52:37Z"},
+    {"label": "Yunara E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yunara/E", "revision_id": 3913327, "revision_timestamp": "2025-06-16T20:52:52Z"},
+    {"label": "Yunara R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yunara/R", "revision_id": 3913328, "revision_timestamp": "2025-06-16T20:53:16Z"}
+  ],
+  "Yuumi": [
+    {"label": "Yuumi parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Yuumi", "revision_id": 3956435, "revision_timestamp": "2025-09-28T02:03:09Z"},
+    {"label": "Yuumi P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yuumi/I", "revision_id": 3536127, "revision_timestamp": "2023-03-08T12:09:28Z"},
+    {"label": "Yuumi Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yuumi/Q", "revision_id": 2864049, "revision_timestamp": "2019-11-03T19:58:48Z"},
+    {"label": "Yuumi W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yuumi/W", "revision_id": 2864345, "revision_timestamp": "2019-11-03T20:11:35Z"},
+    {"label": "Yuumi E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yuumi/E", "revision_id": 2864491, "revision_timestamp": "2019-11-03T20:14:05Z"},
+    {"label": "Yuumi R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Yuumi/R", "revision_id": 2864637, "revision_timestamp": "2019-11-03T20:17:30Z"}
+  ],
+  "Zaahen": [
+    {"label": "Zaahen parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Zaahen", "revision_id": 4015016, "revision_timestamp": "2026-05-02T12:40:43Z"},
+    {"label": "Zaahen P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zaahen/I", "revision_id": 3964195, "revision_timestamp": "2025-11-09T13:08:24Z"},
+    {"label": "Zaahen Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zaahen/Q", "revision_id": 3964196, "revision_timestamp": "2025-11-09T13:08:49Z"},
+    {"label": "Zaahen W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zaahen/W", "revision_id": 3964198, "revision_timestamp": "2025-11-09T13:09:12Z"},
+    {"label": "Zaahen E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zaahen/E", "revision_id": 3964199, "revision_timestamp": "2025-11-09T13:09:31Z"},
+    {"label": "Zaahen R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zaahen/R", "revision_id": 3964201, "revision_timestamp": "2025-11-09T13:09:53Z"}
+  ],
+  "Zac": [
+    {"label": "Zac parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Zac", "revision_id": 4007970, "revision_timestamp": "2026-04-12T23:59:41Z"},
+    {"label": "Zac P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zac/I", "revision_id": 2864199, "revision_timestamp": "2019-11-03T20:07:15Z"},
+    {"label": "Zac Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zac/Q", "revision_id": 2864050, "revision_timestamp": "2019-11-03T19:58:49Z"},
+    {"label": "Zac W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zac/W", "revision_id": 2864346, "revision_timestamp": "2019-11-03T20:11:36Z"},
+    {"label": "Zac E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zac/E", "revision_id": 2864492, "revision_timestamp": "2019-11-03T20:14:06Z"},
+    {"label": "Zac R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zac/R", "revision_id": 2864638, "revision_timestamp": "2019-11-03T20:17:31Z"}
+  ],
+  "Zed": [
+    {"label": "Zed parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Zed", "revision_id": 4026038, "revision_timestamp": "2026-06-09T15:48:02Z"},
+    {"label": "Zed P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zed/I", "revision_id": 2864200, "revision_timestamp": "2019-11-03T20:07:16Z"},
+    {"label": "Zed Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zed/Q", "revision_id": 2864051, "revision_timestamp": "2019-11-03T19:58:50Z"},
+    {"label": "Zed W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zed/W", "revision_id": 2864347, "revision_timestamp": "2019-11-03T20:11:37Z"},
+    {"label": "Zed E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zed/E", "revision_id": 2864493, "revision_timestamp": "2019-11-03T20:14:07Z"},
+    {"label": "Zed R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zed/R", "revision_id": 2864639, "revision_timestamp": "2019-11-03T20:17:32Z"}
+  ],
+  "Zeri": [
+    {"label": "Zeri parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Zeri", "revision_id": 4019486, "revision_timestamp": "2026-05-17T18:52:39Z"},
+    {"label": "Zeri P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zeri/I", "revision_id": 3380499, "revision_timestamp": "2022-01-07T16:38:00Z"},
+    {"label": "Zeri Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zeri/Q", "revision_id": 3380500, "revision_timestamp": "2022-01-07T16:38:14Z"},
+    {"label": "Zeri W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zeri/W", "revision_id": 3380501, "revision_timestamp": "2022-01-07T16:38:30Z"},
+    {"label": "Zeri E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zeri/E", "revision_id": 3380502, "revision_timestamp": "2022-01-07T16:38:47Z"},
+    {"label": "Zeri R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zeri/R", "revision_id": 3380503, "revision_timestamp": "2022-01-07T16:39:02Z"}
+  ],
+  "Zilean": [
+    {"label": "Zilean parent entry", "url": "https://wiki.leagueoflegends.com/en-us/Zilean", "revision_id": 3992955, "revision_timestamp": "2026-02-20T10:16:45Z"},
+    {"label": "Zilean P ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zilean/I", "revision_id": 2864202, "revision_timestamp": "2019-11-03T20:07:18Z"},
+    {"label": "Zilean Q ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zilean/Q", "revision_id": 2864053, "revision_timestamp": "2019-11-03T19:58:52Z"},
+    {"label": "Zilean W ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zilean/W", "revision_id": 2864349, "revision_timestamp": "2019-11-03T20:11:39Z"},
+    {"label": "Zilean E ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zilean/E", "revision_id": 2864495, "revision_timestamp": "2019-11-03T20:14:09Z"},
+    {"label": "Zilean R ability entry", "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Zilean/R", "revision_id": 2864641, "revision_timestamp": "2019-11-03T20:17:34Z"}
+  ]
+}
