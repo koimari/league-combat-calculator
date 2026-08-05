@@ -20,29 +20,13 @@ ItemCoverageStatus = Literal[
 
 # These mechanics can change TDD, casts, resources, or target durability.  The
 # optimiser withholds them until the named mechanic has an explicit model.
-_BLOCKED_REASONS: dict[str, str] = {
-    "Umbral Glaive": "Nightstalker's first-attack true damage is not modelled.",
-    "Cull": (
-        "Reap's 100-minion progression and 350 gold completion payout are not "
-        "modelled."
-    ),
-    "World Atlas": (
-        "Support Quest's 400 gold Shared Riches upgrade and Runic Compass/Ward "
-        "transition are not modelled."
-    ),
-    "Phage": "Rage's conditional movement-speed state is not modelled.",
-    "Tear of the Goddess": "Manaflow stack progression is not modelled.",
-    "Runic Compass": (
-        "Support Quest's 800 gold upgrade, Shared Riches charges, and Ward active "
-        "are not modelled."
-    ),
-}
+_BLOCKED_REASONS: dict[str, str] = {}
 
 # A calculation may expose a fully sourced combat sub-effect even while the
 # optimiser must withhold the item because a separate progression/economy
 # state is not simulated.  Keep this list narrow and explicit: the API should
 # never silently turn an incomplete combat mechanic into a partial result.
-_CALCULATION_ALLOWED_BLOCKED = frozenset({"Cull"})
+_CALCULATION_ALLOWED_BLOCKED = frozenset()
 
 # Items can have a registered damage packet while still carrying an
 # unrepresented sibling passive or state transition.  Keep those items
@@ -84,6 +68,30 @@ _STATEFUL_MODELED_ITEMS: dict[str, str] = {
         "Awe's bonus-mana-to-health conversion and Everlasting's sourced "
         "post-control shield are represented by the ordered participant ledger; "
         "unreviewed crowd-control packets remain fail-closed."
+    ),
+    "Cull": (
+        "Reap's authored minion-kill progression, completion payout, and on-hit "
+        "health receipt share one explicit state/economy ledger."
+    ),
+    "Phage": (
+        "Rage is emitted once per authored basic attack with the sourced melee or "
+        "ranged movement-speed window."
+    ),
+    "Runic Compass": (
+        "Support Quest, Shared Riches, and Ward charges are explicit state/economy "
+        "and vision receipts."
+    ),
+    "Tear of the Goddess": (
+        "Manaflow's bounded bonus-mana progression and minion-only Helping Hand "
+        "boundary are explicit state receipts."
+    ),
+    "Umbral Glaive": (
+        "Nightstalker's unseen-ready state gates a typed first-auto true-damage "
+        "packet; Blackout remains a separate vision dimension."
+    ),
+    "World Atlas": (
+        "Support Quest, Shared Riches, and Ward charges are explicit state/economy "
+        "and vision receipts."
     ),
 }
 
@@ -364,6 +372,7 @@ _UTILITY_DIMENSIONS: dict[str, tuple[str, ...]] = {
     "Bandlepipes": ("ally_support", "stat_buff"),
     "Gunmetal Greaves": ("movement",),
     "Cull": ("economy", "progression", "on_hit"),
+    "Phage": ("movement",),
     "Heartsteel": ("progression", "health_state"),
     "Hubris": ("progression", "stat_conversion"),
     "Axiom Arc": ("progression", "resource"),
@@ -371,7 +380,9 @@ _UTILITY_DIMENSIONS: dict[str, tuple[str, ...]] = {
     "Rod of Ages": ("progression", "health_state", "resource"),
     "Solstice Sleigh": ("ally_support", "movement", "sustain"),
     "Swiftmarch": ("movement", "stat_conversion"),
-    "World Atlas": ("economy", "quest", "ally_support"),
+    "World Atlas": ("economy", "quest", "ally_support", "vision"),
+    "Runic Compass": ("economy", "quest", "ally_support", "vision"),
+    "Tear of the Goddess": ("progression", "resource"),
     "Banshee's Veil": ("spell_protection",),
     "Edge of Night": ("spell_protection",),
     "Zhonya's Hourglass": ("stasis",),
@@ -416,7 +427,6 @@ _REVIEW_ISSUE_REFS: dict[str, tuple[int, ...]] = {
     "Whispering Circlet": (44,),
     "Archangel's Staff": (44,),
     "Manamune": (44,),
-    "Tear of the Goddess": (44,),
     "Winter's Approach": (44,),
     "Zeke's Convergence": (44,),
     "Axiom Arc": (44,),
@@ -427,15 +437,10 @@ _REVIEW_ISSUE_REFS: dict[str, tuple[int, ...]] = {
     "Immortal Path": (45,),
     "Ardent Censer": (48,),
     "Bandlepipes": (48,),
-    "World Atlas": (48, 50, 82),
-    "Runic Compass": (48, 50, 82),
     "Imperial Mandate": (48,),
     "Redemption": (48,),
     "Mikael's Blessing": (48,),
     "Locket of the Iron Solari": (46, 48),
-    "Cull": (50,),
-    "Phage": (50,),
-    "Umbral Glaive": (50,),
 }
 
 
