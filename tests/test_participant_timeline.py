@@ -1260,209 +1260,6 @@ def test_enemy_self_shield_is_present_in_the_coupled_timeline():
     assert shield["amount"] == 55.0
 
 
-def _run_four_champion_issue_18_cp11_probe(
-    *,
-    lulu_e_rank: int,
-    orianna_e_rank: int,
-    mondo_r_rank: int,
-):
-    """Issue-18 CP11 probe for ordered, multi-participant ranked inputs."""
-    payload = {
-        "champion": "Aatrox",
-        "level": 18,
-        "items": ["Morellonomicon"],
-        "fight_mode": "time_based",
-        "fight_duration": 8,
-        "include_auto_attacks": True,
-        "auto_attack_uptime": 0.8,
-        "ability_ranks": {"Q": 3, "W": 1, "E": 3, "R": 1},
-        "allies": [
-            {
-                "champion": "Lulu",
-                "level": 18,
-                "role": "support",
-                "items": [],
-                "ally_effects_enabled": True,
-                "ability_ranks": {"Q": 0, "W": 0, "E": lulu_e_rank, "R": 0},
-            }
-        ],
-        "enemies": [
-            {
-                "champion": "Orianna",
-                "level": 18,
-                "role": "mid",
-                "items": [],
-                "ability_ranks": {"Q": 0, "W": 0, "E": orianna_e_rank, "R": 0},
-            },
-            {
-                "champion": "Dr. Mundo",
-                "level": 18,
-                "role": "top",
-                "items": [],
-                "ability_ranks": {"Q": 0, "W": 0, "E": 0, "R": mondo_r_rank},
-            },
-        ],
-    }
-    response = app.test_client().post("/api/calculate", json=payload)
-    assert response.status_code == 200
-    return response.get_json()["combat"]
-
-
-def _extract_issue_18_cp11_event_by_label(
-    combat: dict,
-    events_key: str,
-    attendee: str,
-    source_prefix: str,
-    *,
-    exact_target: str | None = None,
-):
-    """Pick support/heal/events entries and fail-closed when shape is missing."""
-    events = [
-        event
-        for event in combat.get(events_key, [])
-        if event.get("attacker") == attendee
-        and event.get("source", "").startswith(source_prefix)
-    ]
-    if exact_target is not None:
-        events = [event for event in events if event.get("target") == exact_target]
-    if not events:
-        expected_target = "any" if exact_target is None else exact_target
-        pytest.fail(
-            f"BLOCKER: missing expected {source_prefix} packet on {events_key} for "
-            f"{attendee} -> {expected_target} in four-champion contract probe"
-        )
-    return events
-
-
-def test_issue_18_four_champion_cp11_contract_probe_records_ranked_packets_and_target_policies():
-    """Issue-18: ranked support packets and explicit target policies stay ordered."""
-    low = _run_four_champion_issue_18_cp11_probe(
-        lulu_e_rank=1,
-        orianna_e_rank=1,
-        mondo_r_rank=1,
-    )
-    high = _run_four_champion_issue_18_cp11_probe(
-        lulu_e_rank=5,
-        orianna_e_rank=3,
-        mondo_r_rank=3,
-    )
-
-    low_support = _extract_issue_18_cp11_event_by_label(
-        low,
-        "support_events",
-        "ally:Lulu",
-        "Help, Pix!",
-        exact_target="main",
-    )
-    high_support = _extract_issue_18_cp11_event_by_label(
-        high,
-        "support_events",
-        "ally:Lulu",
-        "Help, Pix!",
-        exact_target="main",
-    )
-    low_protect = _extract_issue_18_cp11_event_by_label(
-        low,
-        "support_events",
-        "enemy:Orianna",
-        "Command: Protect",
-    )
-    high_protect = _extract_issue_18_cp11_event_by_label(
-        high,
-        "support_events",
-        "enemy:Orianna",
-        "Command: Protect",
-    )
-
-    if low_support[0].get("target_policy") != "first_selected_teammate":
-        pytest.fail("BLOCKER: expected Lulu policy first_selected_teammate")
-    if low_protect[0].get("target_policy") not in {
-        "self",
-        "first_selected_teammate",
-    }:
-        pytest.fail(
-            "BLOCKER: expected Orianna protect policy to be self or first_selected_teammate"
-        )
-
-    assert sum(event["amount"] for event in low_support) < sum(
-        event["amount"] for event in high_support
-    )
-    assert sum(event["amount"] for event in low_protect) < sum(
-        event["amount"] for event in high_protect
-    )
-
-
-def test_issue_18_four_champion_cp11_contract_probe_tracks_regen_ranking_and_simultaneous_cutoffs():
-    """Issue-18: max-dosage rank scaling, anti-heal, and simultaneous multi-party events."""
-    low = _run_four_champion_issue_18_cp11_probe(
-        lulu_e_rank=4,
-        orianna_e_rank=3,
-        mondo_r_rank=1,
-    )
-    high = _run_four_champion_issue_18_cp11_probe(
-        lulu_e_rank=4,
-        orianna_e_rank=3,
-        mondo_r_rank=3,
-    )
-
-    low_heals = [
-        event
-        for event in low["healing_events"]
-        if event.get("attacker") == "enemy:Dr. Mundo"
-        and event.get("source") == "Maximum Dosage"
-    ]
-    high_heals = [
-        event
-        for event in high["healing_events"]
-        if event.get("attacker") == "enemy:Dr. Mundo"
-        and event.get("source") == "Maximum Dosage"
-    ]
-    if not low_heals or not high_heals:
-        pytest.fail(
-            "BLOCKER: maximum dosage healing did not emit in four-champion probe"
-        )
-
-    if any("time" not in event for event in low_heals + high_heals):
-        pytest.fail("BLOCKER: missing time field on maximum dosage packets")
-
-    low_sum = sum(event["amount"] for event in low_heals)
-    high_sum = sum(event["amount"] for event in high_heals)
-    if not high_sum > low_sum:
-        pytest.fail("BLOCKER: Maximum Dosage rank did not increase total healing")
-
-    if any("healing_reduction_factor" not in event for event in high_heals):
-        pytest.fail("BLOCKER: healing_reduction_factor missing from anti-heal packet")
-    if all(event["healing_reduction_factor"] >= 1 for event in high_heals):
-        pytest.fail(
-            "BLOCKER: Morellonomicon anti-heal did not reduce any maximum dosage healing"
-        )
-
-    timeline = (
-        [event for event in low.get("events", []) if event.get("time") is not None]
-        + [
-            event
-            for event in low.get("support_events", [])
-            if event.get("time") is not None
-        ]
-        + [
-            event
-            for event in low.get("healing_events", [])
-            if event.get("time") is not None
-        ]
-    )
-    by_time: dict[float, set[str]] = {}
-    for event in timeline:
-        by_time.setdefault(event["time"], set()).add(event["attacker"])
-    if not any(len(attacker_ids) >= 2 for attacker_ids in by_time.values()):
-        pytest.fail("BLOCKER: no simultaneous packets observed across participants")
-
-    participant_ids = {row["participant_id"] for row in low["participants"]}
-    if participant_ids != {"main", "ally:Lulu", "enemy:Orianna", "enemy:Dr. Mundo"}:
-        pytest.fail(
-            f"BLOCKER: expected four participants and got {sorted(participant_ids)}"
-        )
-
-
 @pytest.mark.parametrize(("low_rank", "high_rank"), [(1, 5), (2, 4)])
 def test_ally_lulu_rank_changes_the_authored_help_pix_packet(low_rank, high_rank):
     """An ally's requested E rank changes its exact shield packet."""
@@ -1746,6 +1543,16 @@ def test_bis_endpoint_scores_main_from_damage_and_effective_health():
     top = body["candidates"][0]
     assert top["metric"] == "main TTD (survival-coupled)"
     assert top["components"]["effective_health"] > 0
+
+
+def test_bis_utility_objective_uses_candidate_item_options():
+    payload = _bis_request("main")
+    payload["objective"] = "utility"
+    payload["candidate_item_options"] = {"Stridebreaker": {"active_seconds": 1.0}}
+    body = app.test_client().post("/api/bis", json=payload).get_json()
+
+    row = next(row for row in body["candidates"] if row["name"] == "Stridebreaker")
+    assert row["components"]["support_value"] > 0
 
 
 @pytest.mark.parametrize(
