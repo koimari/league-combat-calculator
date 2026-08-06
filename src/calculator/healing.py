@@ -12,7 +12,7 @@ import re
 import math
 from typing import Any, Iterable
 
-from .champions.slotlib import extract_named
+from .champions.slotlib import extract_named, find_named_leveling, sum_modifiers
 
 
 def _leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float:
@@ -137,6 +137,13 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Soraka",
         "Briar",
         "Vladimir",
+        "Aphelios",
+        "Camille",
+        "Fiddlesticks",
+        "Hecarim",
+        "Swain",
+        "Trundle",
+        "Xin Zhao",
     }
 )
 
@@ -387,6 +394,191 @@ def derive_self_healing(
                             **_trigger_fields(event),
                         }
                     )
+
+    elif name == "Aphelios":
+        # Severum (main-weapon passive): its attacks heal for a per-level
+        # percent of the POST-mitigation damage dealt (wiki P[2] Severum:
+        # "2% : 7.1% (based on level) of the post-mitigation damage dealt,
+        # increased to 5% : 17.75% (based on level) for attacks from
+        # abilities").  The parser stamps the chosen main weapon on Moonlight
+        # Vigil's entry detail, so the rule is gated on that receipt rather
+        # than assuming a weapon.  The R follow-up's flat Severum heal
+        # (250/350/450) belongs to attacks the engine does not emit as
+        # events, so only the on-hit passive is modeled.
+        r_detail = str(ability_damages.get("R", {}).get("detail", ""))
+        if "Severum" in r_detail:
+            severum = next(
+                (
+                    entry
+                    for entry in champion_data.get("abilities", {}).get("P", [])
+                    if isinstance(entry, dict) and entry.get("name") == "Severum"
+                ),
+                {},
+            )
+            level = int(champion_stats.get("level", 18))
+            basic_scaling = find_named_leveling(severum, "Per-Level Scaling", 0)
+            ability_scaling = find_named_leveling(severum, "Per-Level Scaling", 1)
+            basic_ratio = (
+                sum_modifiers(basic_scaling, level, champion_stats, {}) / 100.0
+                if basic_scaling is not None
+                else 0.0
+            )
+            ability_ratio = (
+                sum_modifiers(ability_scaling, level, champion_stats, {}) / 100.0
+                if ability_scaling is not None
+                else 0.0
+            )
+            for event in damage_events:
+                source = _event_source(event)
+                if source == "auto_attacks":
+                    ratio = basic_ratio
+                elif source == "Q":
+                    # With Severum equipped the Q row is Onslaught, whose
+                    # attacks count as ability attacks for the heal.
+                    ratio = ability_ratio
+                else:
+                    continue
+                amount = max(0.0, float(event.get("damage", 0.0))) * ratio
+                _heal_from_damage(healing, event, amount, "Severum")
+
+    elif name == "Camille":
+        # Tactical Sweep's outer half deals bonus damage and heals Camille
+        # for 100% of that additional damage post-mitigation (wiki W
+        # effect[1]).  The engine prices the W row as the sourced base
+        # physical damage plus the outer-cone sweet spot, so the outer
+        # portion is the raw surplus over that base; both parts share the
+        # same armor mitigation, so the post-mit outer amount is the surplus
+        # scaled by damage/raw.  With the outer cone option off the surplus
+        # is zero and nothing heals.
+        w_ability = _ability(champion_data, "W")
+        w_rank = _rank(ability_damages, "W")
+        base_raw = extract_named(
+            w_ability, "Physical Damage", w_rank, champion_stats, {}
+        )
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "W"
+        ):
+            raw = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+            post = float(event.get("damage", 0.0) or 0.0)
+            outer_raw = max(0.0, raw - base_raw)
+            amount = outer_raw * (post / raw) if raw > 0.0 else 0.0
+            _heal_from_damage(healing, event, amount, "Tactical Sweep")
+
+    elif name == "Fiddlesticks":
+        # Bountiful Harvest drains its tether and "heals itself for a
+        # portion of the pre-mitigation damage dealt" per tick (wiki W
+        # effect[2]); the Champion Heal Portion is 25%-55% by rank.  Each
+        # drain tick the engine emits is one W damage event, so every W
+        # event heals that portion of its pre-mitigation damage.
+        w_ability = _ability(champion_data, "W")
+        w_rank = _rank(ability_damages, "W")
+        portion = (
+            extract_named(
+                w_ability, "Champion Heal Portion", w_rank, champion_stats, {}
+            )
+            / 100.0
+        )
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "W"
+        ):
+            dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+            _heal_from_damage(healing, event, portion * dealt, "Bountiful Harvest")
+
+    elif name == "Hecarim":
+        # Spirit of Dread: while active (4 seconds per W cast) Hecarim is
+        # healed for 25% of the post-mitigation damage dealt to enemies in
+        # the area from all sources (wiki W effect[1]).  The sourced cap
+        # applies only to minions and monsters, so a champion duel uses the
+        # uncapped 25%.  Window membership comes from the engine's own cast
+        # timeline, and every damaging event inside the window (including
+        # the W ticks themselves) is a valid trigger.
+        w_casts = [
+            float(cast.get("time", 0.0))
+            for cast in (cast_timeline or [])
+            if cast.get("slot") == "W"
+        ]
+        if w_casts:
+            for event in damage_events:
+                event_time = float(event.get("time", 0.0))
+                if not any(
+                    cast_time <= event_time <= cast_time + 4.0 for cast_time in w_casts
+                ):
+                    continue
+                amount = 0.25 * max(0.0, float(event.get("damage", 0.0)))
+                _heal_from_damage(healing, event, amount, "Spirit of Dread")
+
+    elif name == "Swain":
+        # Demonic Ascension drains nearby enemies, healing a flat amount per
+        # 0.5-second tick per target affected (wiki R effect[1]: Heal per
+        # Tick 7.5/15/22.5 + 2.5% AP + 0.75% of his bonus health).  The
+        # Reduced Heal per Tick entry is the 90%-reduced minion/monster
+        # variant, so a champion duel pays the full amount.  The engine's R
+        # packet prices one drain tick per cast, so each R event heals one
+        # tick's flat value.  The "% of his bonus health" unit is not a
+        # generic scaling unit, so it is resolved with an explicit override
+        # rather than silently dropped.
+        r_ability = _ability(champion_data, "R")
+        r_rank = _rank(ability_damages, "R")
+        heal_leveling = find_named_leveling(r_ability, "Heal per Tick")
+
+        def swain_bonus_health(unit: str, value: float) -> float | None:
+            if unit == "% of his bonus health":
+                return value / 100.0 * float(champion_stats.get("bonus_health", 0.0))
+            return None
+
+        heal_per_tick = (
+            sum_modifiers(
+                heal_leveling,
+                r_rank,
+                champion_stats,
+                {},
+                modifier_override=swain_bonus_health,
+            )
+            if heal_leveling is not None
+            else 0.0
+        )
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "R"
+        ):
+            _heal_from_damage(
+                healing,
+                event,
+                heal_per_tick,
+                "Demonic Ascension",
+                link_to_damage=False,
+            )
+
+    elif name == "Trundle":
+        # Subjugate drains the target, "dealing magic damage and healing
+        # himself for the same amount" (wiki R effect[0]); Total Healing and
+        # Total Magic Damage share the same % of the target's maximum health
+        # leveling values.  The engine's R event carries the drain's
+        # pre-mitigation damage, which is exactly the heal amount — the heal
+        # does not pass through magic resistance.
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "R"
+        ):
+            dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+            _heal_from_damage(healing, event, dealt, "Subjugate", link_to_damage=False)
+
+    elif name == "Xin Zhao":
+        # Wind Becomes Lightning's damage "heals Xin Zhao for 33.3% of his
+        # life steal" (wiki W effect[1]): the W damage applies his lifesteal
+        # at 33.3% effectiveness.  With no lifesteal source the heal is
+        # zero, so the rule only emits when the build actually carries
+        # lifesteal.
+        lifesteal = float(champion_stats.get("lifesteal_percent", 0.0) or 0.0)
+        if lifesteal > 0.0:
+            for event in _attributed_events(
+                damage_events, lambda source, _event: source == "W"
+            ):
+                amount = (
+                    0.333
+                    * max(0.0, float(event.get("damage", 0.0)))
+                    * lifesteal
+                    / 100.0
+                )
+                _heal_from_damage(healing, event, amount, "Wind Becomes Lightning")
 
     if name == "Vladimir":
         # Transfusion (Q): flat heal per cast, rank-scaled, + AP ratio
