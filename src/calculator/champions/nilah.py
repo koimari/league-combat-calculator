@@ -2,11 +2,76 @@
 
 E2 DoT fix: R (Apotheosis) prices 4 sourced 0.25s ticks
 (packet_module _PACKET_TICK_FIXES).
+
+E5-2 fix — Formless Blade (Q): the reviewed packet pinned the crit-MAX
+"Maximum Physical Damage" row (0-76.4 + 191% AD) as the flat damage, so
+every fight priced Nilah at 100% critical strike chance.  The wiki
+carries both endpoints: "Minimum Physical Damage" (0-40 + 100% AD at 0%
+crit) and "Maximum Physical Damage" (0-76.4 + 191% AD at 100% crit),
+"increased by 0% : 70% (+ 0% : 21%) (based on critical strike chance)".
+Both cached rows scale by exactly 1.91 (= 1 + 0.70 + 0.21) from the
+minimum at every rank, so the Q is modeled as the minimum row times
+``1 + 0.91 x crit_chance`` — exact at both sourced endpoints, linear in
+between.  The test fights (no items) sit at 0% crit and price exactly
+the minimum row.
 """
 
 from .reviewed_batch_05 import build_batch_module
+from .engine import SlotCtx, build_parser
+from .slotlib import damage_entry, extract_cooldown, extract_named
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Nilah")
+
+# Q's damage "increased by 0% : 70% (+ 0% : 21%) (based on critical
+# strike chance)": the Maximum row is the Minimum row x 1.91
+# (= 1 + 0.70 + 0.21) at every rank (40 x 1.91 == 76.4;
+# 100% AD x 1.91 == 191% AD), so the per-crit multiplier is
+# 1 + 0.91 x crit_chance.
+_Q_CRIT_MULTIPLIER_AT_MAX = 1.91
+
+
+def _formless_blade(ctx: SlotCtx):
+    """Q: minimum-row physical damage, scaled linearly by crit chance."""
+    ability = ctx.ability("Q", 0)
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    min_damage = extract_named(
+        ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
+    )
+    crit_chance = min(
+        max(float(ctx.stats.get("critical_strike_chance", 0.0)) / 100.0, 0.0), 1.0
+    )
+    multiplier = 1.0 + (_Q_CRIT_MULTIPLIER_AT_MAX - 1.0) * crit_chance
+    total = min_damage * multiplier
+    entry = damage_entry(
+        ability.get("name", "Formless Blade"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+    entry["detail"] = (
+        "Minimum Physical Damage row (0% crit) scaled by "
+        f"{multiplier:.4f} = 1 + 0.91 x {crit_chance:.2f} crit chance"
+    )
+    return entry
+
+
+SLOTS = dict(SLOTS)
+SLOTS["Q"] = _formless_blade
+parse_abilities = build_parser(SLOTS, "Nilah")
+
+ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "Q (Formless Blade) prices the wiki's 'Minimum Physical Damage' row "
+    "(0-40 + 100% AD) as the 0%-crit base. The damage 'increased by "
+    "0% : 70% (+ 0% : 21%) (based on critical strike chance)' with the "
+    "cached Maximum row (0-76.4 + 191% AD) exactly 1.91x the Minimum at "
+    "every rank; the module scales linearly with the fight's crit "
+    "chance, exact at both sourced endpoints.",
+]
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
 }
