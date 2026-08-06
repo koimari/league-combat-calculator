@@ -24405,6 +24405,7 @@
         "E": {
           "cooldown": 24.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "Flap, Flap, Flap",
           "parts": [
             "DamagePart(physical, amount=33.4, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -24419,6 +24420,7 @@
           "cooldown": 5.5,
           "damage_type": "physical",
           "dot_duration": 3.0,
+          "event_order_certified": "single_hit",
           "name": "Super Scorcher Breath",
           "parts": [
             "DamagePart(physical, amount=150.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -24428,7 +24430,7 @@
             "detail": "225 Dragon Practice stacks: 3s burn of 22.5 true damage (2.5% per 100 bonus AD + 0.5% per 100 stacks of the target's maximum health)",
             "name": "Dragon Practice \u00b7 Tier 3 Burn",
             "parts": [
-              "DamagePart(true, amount=22.5, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+              "DamagePart(true, amount=22.5, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)"
             ]
           },
           "rank": 5,
@@ -24440,6 +24442,7 @@
           "cast_time": 0.75,
           "cooldown": 120.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "MMOOOMMMM!",
           "parts": [
             "DamagePart(physical, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -24453,6 +24456,7 @@
           "cast_time": 0.35,
           "cooldown": 14.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "Achooo!",
           "parts": [
             "DamagePart(physical, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -25909,6 +25913,7 @@
         "Q": {
           "cooldown": 8.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "Noxian Diplomacy",
           "parts": [
             "DamagePart(physical, amount=145.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -25921,6 +25926,7 @@
         "R": {
           "cooldown": 100.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "Shadow Assault",
           "parts": [
             "DamagePart(physical, amount=135.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -25934,6 +25940,7 @@
           "cast_time": 0.25,
           "cooldown": 9.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "Rake",
           "parts": [
             "DamagePart(physical, amount=190.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -25945,10 +25952,19 @@
         },
         "passive": {
           "cooldown": 0.0,
+          "damage_events": [
+            {
+              "damage": 197.6,
+              "damage_type": "physical",
+              "event_precision": "phase_order",
+              "time": 0.0
+            }
+          ],
           "damage_type": "physical",
           "detail": "1 3-stack consume(s): per-tick x16 == the wiki total bleed (197.65 + 210% bonus AD at level 11) over 2s",
           "dot_duration": 2.0,
           "dot_tick_interval": 0.12,
+          "event_phase": "effect",
           "name": "Blade's End",
           "parts": [
             "DamagePart(physical, amount=12.35, count=16, hp_scaled=no, crit_effectiveness=0.0)"
@@ -27410,10 +27426,11 @@
           "cooldown": 12.0,
           "damage_type": "mixed",
           "detail": "6 Deadly Venom stack(s) consumed",
+          "event_order_certified": "single_hit",
           "name": "Contaminate",
           "parts": [
-            "DamagePart(physical, amount=204.5, count=1, hp_scaled=no, crit_effectiveness=0.0)",
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=204.5, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)",
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)"
           ],
           "rank": 1,
           "resource_cost": 50.0,
@@ -27460,10 +27477,19 @@
         },
         "passive": {
           "cooldown": 0.0,
+          "damage_events": [
+            {
+              "damage": 108.0,
+              "damage_type": "true",
+              "event_precision": "phase_order",
+              "time": 0.0
+            }
+          ],
           "damage_type": "true",
           "detail": "6 Deadly Venom stack(s) x 18.00 total true damage per stack over 6s",
           "dot_duration": 6.0,
           "dot_tick_interval": 1.0,
+          "event_phase": "effect",
           "name": "Deadly Venom",
           "parts": [
             "DamagePart(true, amount=18.0, count=6, hp_scaled=no, crit_effectiveness=0.0)"
@@ -27995,6 +28021,7 @@
           "cast_time": 0.24,
           "cooldown": 18.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "Hail of Arrows",
           "parts": [
             "DamagePart(physical, amount=60.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -28007,6 +28034,7 @@
         "Q": {
           "cooldown": 12.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "Piercing Arrow",
           "parts": [
             "DamagePart(physical, amount=360.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -28016,7 +28044,7 @@
             "detail": "3 Blight stack(s) consumed at 5 points in W",
             "name": "Blight Detonation",
             "parts": [
-              "DamagePart(magic, amount=300.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+              "DamagePart(magic, amount=300.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)"
             ]
           },
           "rank": 5,
@@ -28028,6 +28056,7 @@
           "cast_time": 0.24,
           "cooldown": 80.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Chain of Corruption",
           "parts": [
             "DamagePart(magic, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -28039,6 +28068,7 @@
         },
         "W": {
           "damage_type": "magic",
+          "event_order_certified": "auto_stack_proc",
           "name": "Blighted Quiver",
           "on_hit": {
             "damage_per_hit": 22.0,
@@ -28569,6 +28599,7 @@
           "cast_time": 0.25,
           "cooldown": 12.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Tectonic Disruption",
           "parts": [
             "DamagePart(magic, amount=70.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -28582,6 +28613,7 @@
           "cast_time": 0.25,
           "cooldown": 7.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Plasma Fission",
           "parts": [
             "DamagePart(magic, amount=240.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -28608,6 +28640,7 @@
         "W": {
           "cooldown": 1.5,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Void Rift",
           "parts": [
             "DamagePart(magic, amount=175.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -28619,8 +28652,17 @@
         },
         "passive": {
           "cooldown": 0.0,
+          "damage_events": [
+            {
+              "damage": 120.29,
+              "damage_type": "true",
+              "event_precision": "phase_order",
+              "time": 0.0
+            }
+          ],
           "damage_type": "true",
           "detail": "3 Deconstruction stacks consumed at level 11 (120.29 + 60% AP)",
+          "event_phase": "effect",
           "name": "Organic Deconstruction",
           "parts": [
             "DamagePart(true, amount=120.29, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -29159,6 +29201,7 @@
           "cooldown": 3.0,
           "damage_type": "physical",
           "detail": "active thrust 146.60 + 0 mark-consuming second strike(s); the passive %current-health on-hit rides every auto; set q_second_strike to price the mark-consuming second strike",
+          "event_order_certified": "single_hit",
           "name": "Blade of the Ruined King",
           "on_hit": {
             "current_health_percent": 6.0,
@@ -29180,8 +29223,8 @@
           "detail": "120% AD base strike (105.60) + 16.0% (+ 5.0% per 100 bonus AD) of the target's missing health, evaluated at the strike",
           "name": "Heartbreaker",
           "parts": [
-            "DamagePart(physical, amount=105.6, count=1, hp_scaled=no, crit_effectiveness=0.0)",
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=105.6, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)",
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0, time_offset=0.0)"
           ],
           "rank": 2,
           "total_raw": 105.6
@@ -29189,6 +29232,7 @@
         "W": {
           "cooldown": 8.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Spectral Maw",
           "parts": [
             "DamagePart(magic, amount=190.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -40874,7 +40918,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "958f0e2964f4b4c6e03c9ff77717edc81cd47174",
+    "git_head": "8d191c556748c05b157c9653b65ba7dd9908efa4",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785725170.32038,
@@ -66604,9 +66648,10 @@
               "W": 0.0,
               "auto_attacks": 346.67,
               "passive": 585.36,
-              "proc_Luden's Echo": 155.36
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 117.07
             },
-            "total_damage": 1966.28
+            "total_damage": 2083.35
           },
           "no_items": {
             "breakdown_totals": {
@@ -67274,9 +67319,9 @@
               "blight_detonation": 253.79,
               "on_hit_ability_W": 602.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 147.08
+              "shadowflame_Shadowflame": 96.32
             },
-            "total_damage": 2541.83
+            "total_damage": 2491.07
           },
           "no_items": {
             "breakdown_totals": {

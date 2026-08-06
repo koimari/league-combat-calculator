@@ -200,6 +200,7 @@ ASSUMPTIONS = [
     "R root/chain and Q self-slow are CC/utility only and not valued as " "damage",
 ]
 
+
 def _certified_single_hit(parser):
     """Wrap a simple one-instance parser with the event-order certification."""
 
@@ -215,7 +216,9 @@ def _certified_single_hit(parser):
 SLOTS = {
     "Q": _piercing_arrow,
     "W": _blighted_quiver,
-    "E": _certified_single_hit(simple_damage(attr="Physical Damage", dmg_type="physical")),
+    "E": _certified_single_hit(
+        simple_damage(attr="Physical Damage", dmg_type="physical")
+    ),
     "R": _certified_single_hit(simple_damage(attr="Magic Damage", dmg_type="magic")),
     "P": _living_vengeance,
 }

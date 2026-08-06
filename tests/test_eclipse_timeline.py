@@ -67,7 +67,7 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
             "time": 0.0,
             "damage": 80.0,
             "damage_type": "physical",
-            "event_precision": "cast_boundary",
+            "event_precision": "exact",
         }
     ]
 
@@ -106,9 +106,9 @@ def test_eclipse_pairing_waits_for_cooldown_before_next_pair() -> None:
     row = fight["breakdown"]["proc_Eclipse"]
     assert row["count"] == 2
     assert [event["time"] for event in row["damage_events"]] == [0.0, 7.0]
-    assert all(
-        event["event_precision"] == "cast_boundary" for event in row["damage_events"]
-    )
+    # The Q/W fixtures are certified single-hit casts (cast boundary IS the
+    # hit), so both Eclipse triggers ride exact precision.
+    assert all(event["event_precision"] == "exact" for event in row["damage_events"])
 
 
 def test_eclipse_can_pair_an_ability_with_an_authored_auto_swing() -> None:

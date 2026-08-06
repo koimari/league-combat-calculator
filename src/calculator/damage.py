@@ -4909,7 +4909,7 @@ def _shaped_charge_proc_receipts(
         if not damaging:
             continue
         trigger_time = event_time
-        precision = "cast_boundary"
+        precision = _item_proc_precision(state, slot)
         row = breakdown.get(slot) if isinstance(breakdown, Mapping) else None
         authored_events = row.get("damage_events") if isinstance(row, Mapping) else None
         if isinstance(authored_events, list):
@@ -6952,7 +6952,7 @@ def _stacked_champion_proc_times(
             return None
         if math.isfinite(float(raw_damage)) and float(raw_damage) > 0.0:
             trigger_time = event_time
-            precision = "cast_boundary"
+            precision = _item_proc_precision(state, slot)
             authored_events = row.get("damage_events")
             if isinstance(authored_events, list):
                 if row.get("basic_attack") and slot not in forced_event_slots:
@@ -7693,6 +7693,41 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
         state.total_damage += active_mitigated
 
 
+_CERTIFIED_CAST_PRECISIONS = frozenset({"single_hit", "auto_stack_proc"})
+
+
+def _item_proc_precision(state: FightState, slot: str) -> str:
+    """Return the event precision an item proc rides on one ability cast.
+
+    An ordered item trigger (Muramana Shock, Eclipse stacking, Shaped
+    Charge) lands on the ability's hit.  For an ability whose cast boundary
+    IS the authored hit — a module ``single_hit`` / ``auto_stack_proc``
+    marker, or a cast-order row with casts and no DoT, the same condition
+    the coverage classifier uses to certify it — the proc event is
+    ``exact``.  Generic/uncertified abilities and DoT casts keep
+    ``cast_boundary``, which the coverage classifier treats as coarse and
+    the BIS optimizer excludes — the fail-closed contract for abilities
+    whose hit timing is not proven.
+    """
+    info = state.ability_damages.get(slot)
+    if isinstance(info, Mapping):
+        certified = info.get("event_order_certified")
+        if isinstance(certified, str) and certified in _CERTIFIED_CAST_PRECISIONS:
+            return "exact"
+    # Unit-test states (SimpleNamespace) may omit the fight breakdown; the
+    # cast-order check is best-effort there and fails closed to boundary.
+    row = getattr(state, "breakdown", None)
+    if isinstance(row, Mapping):
+        row = row.get(slot)
+    cast_order = getattr(state, "cast_order", None)
+    if cast_order is not None and slot in cast_order and isinstance(row, Mapping):
+        casts = int(row.get("casts", 0) or 0)
+        dot = float(row.get("dot_duration", 0.0) or 0.0)
+        if casts > 0 and dot <= 0.0:
+            return "exact"
+    return "cast_boundary"
+
+
 def _muramana_proc_events(
     state: FightState, rotation: RotationResult
 ) -> list[dict[str, Any]] | None:
@@ -7760,12 +7795,13 @@ def _muramana_proc_events(
             event_cursors[slot] = cursor
             events.extend(cast_events)
             continue
+        proc_precision = _item_proc_precision(state, slot)
         for _ in range(raw_instances):
             events.append(
                 {
                     "time": event_time,
                     "damage": 0.0,
-                    "event_precision": "cast_boundary",
+                    "event_precision": proc_precision,
                 }
             )
     if len(events) != expected:
