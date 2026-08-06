@@ -164,6 +164,9 @@ ASSUMPTIONS = [
     "Q resistance shred applied before all other damage",
     "W (Bio-Arcane Barrage) assumed always active during the fight",
     "R damage scales dynamically with target's decreasing HP",
+    "R Living Artillery stacks (cap 9, +40 mana cost per stack) only "
+    "raise the spell's mana cost — no damage impact, so the stack count "
+    "is not modeled",
     "Passive (Icathian Surprise) is not modeled",
 ]
 
