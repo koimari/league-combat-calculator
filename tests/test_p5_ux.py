@@ -132,55 +132,37 @@ def _quick_payload(champion="Ahri", items=None, enemies=None, preset=None, **ove
 # ---------------------------------------------------------------------------
 
 
-def test_index_renders_the_quick_view_surface():
+def test_index_renders_the_analyst_view_surface():
+    """Product decision 2026-08-06: the analyst view IS the app. Quick mode is
+    hidden, the view-switch tab bar is gone, and the analyst builder is the
+    visible landing."""
     page = _client().get("/").get_data(as_text=True)
     soup = BeautifulSoup(page, "html.parser")
 
-    tabs = soup.select(".view-tab")
-    assert [tab.get_text(" ", strip=True) for tab in tabs] == [
-        "Quick 3 clicks",
-        "Analyst",
-    ]
-    assert soup.select_one("#viewQuickTab").get("aria-selected") == "true"
-
-    assert soup.select_one("#quickView") is not None
-    assert soup.select_one("#analystView").get("hidden") is not None
+    assert soup.select(".view-tab") == []  # no Quick/Analyst tabs
+    assert soup.select_one("#quickView") is None  # quick mode removed entirely
+    analyst = soup.select_one("#analystView")
+    assert analyst is not None and analyst.get("hidden") is None
     for required_id in (
-        "quickChampionSearch",
-        "quickChampionGrid",
-        "quickRole",
-        "quickEnemySearch",
-        "quickEnemyGrid",
-        "quickItems",
-        "quickItemSearch",
-        "quickRun",
-        "quickPresets",
-        "quickResults",
-        "quickShareButton",
-        "quickNotModeled",
+        "championPicker",
+        "roleSelect",
+        "levelInput",
+        "slotsA",
     ):
         assert soup.select_one(f"#{required_id}") is not None, required_id
 
-    # The analyst share button and trust surfaces ride inside the analyst view.
-    assert soup.select_one("#shareAnalystButton") is not None
-    assert soup.select_one("#sharePanel") is not None
-    assert soup.select_one("#shareBanner") is not None
-    assert soup.select_one("#notModeledPanel") is not None
-    assert soup.select_one("#trustLegend") is not None
-    assert soup.select_one("#shareOpenEditor") is not None
 
 
-def test_quick_view_is_touch_first_and_has_no_hover_dependency():
+def test_analyst_view_is_touch_first_and_has_no_hover_dependency():
+    """The analyst builder's controls are real <button>/<input> elements, never
+    hover-revealed (mobile-safe)."""
     page = _client().get("/").get_data(as_text=True)
     soup = BeautifulSoup(page, "html.parser")
-    # Every interactive quick-mode control is a real <button>/<input>, never a
-    # hover-revealed element.
-    run = soup.select_one("#quickRun")
-    assert run is not None and run.get("type") == "button"
-    assert "Best next item" in run.get_text()
-    for role_button in soup.select("#quickRole button") or []:
-        assert role_button.get("type") == "button"
-    assert soup.select_one('meta[name="viewport"]') is not None
+    picker = soup.select_one("#championPicker")
+    assert picker is not None and picker.get("type") == "button"
+    assert soup.select_one("#roleSelect") is not None
+    assert soup.select_one("#levelInput") is not None
+
 
 
 def test_mobile_css_stacks_quick_cards_vertically():
@@ -492,15 +474,9 @@ def test_breakdown_rows_carry_slot_keys_for_certainty_chips():
 def test_trust_panels_render_not_modeled_list():
     source = APP_JS.read_text(encoding="utf-8")
     assert 'document.getElementById("notModeledList")' in source
-    assert 'document.getElementById("quickNotModeledList")' in source
     page = _client().get("/").get_data(as_text=True)
     assert 'id="notModeledList"' in page
-    assert 'id="quickNotModeledList"' in page
 
-
-# ---------------------------------------------------------------------------
-# Frontend wiring sanity (static contracts)
-# ---------------------------------------------------------------------------
 
 
 def test_app_js_wires_the_quick_flow_endpoints():

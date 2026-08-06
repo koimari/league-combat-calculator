@@ -77,9 +77,9 @@ def _isolate_app_config():
 def test_analyst_builder_exists_exactly_once():
     """The analyst builder must not be duplicated in the template."""
     soup = _soup()
-    # The P5 analyst view is the only builder host.
+    # The analyst view is the only builder host (quick removed 2026-08-06).
     assert soup.select_one("#analystView") is not None
-    assert soup.select_one("#quickView") is not None
+    assert soup.select_one("#quickView") is None
     assert len(soup.select(".content-grid")) == 1
     for control_id in (
         "championPicker",
@@ -112,16 +112,14 @@ def test_no_duplicate_ids_in_template():
 
 
 def test_quick_view_is_the_visible_default():
-    """Quick mode is the landing; the analyst view starts hidden."""
+    """The ANALYST view is the app (product decision 2026-08-06): analyst is
+    the visible default, quick mode is removed entirely, no view-switch tabs."""
     soup = _soup()
-    quick = soup.select_one("#quickView")
+    assert soup.select_one("#quickView") is None
     analyst = soup.select_one("#analystView")
-    assert quick is not None and analyst is not None
-    assert quick.get("hidden") is None
-    assert analyst.get("hidden") is not None
-    tabs = soup.select(".view-tab")
-    assert [tab.get("data-view") for tab in tabs] == ["quick", "analyst"]
-    assert tabs[0].get("aria-selected") == "true"
+    assert analyst is not None and analyst.get("hidden") is None
+    assert soup.select(".view-tab") == []
+
 
 
 def test_hidden_attribute_is_enforced_in_css():
@@ -226,25 +224,22 @@ def test_practice_target_affordance_is_wired():
 
 
 def test_quick_to_analyst_bridge_is_wired():
+    """Quick mode and its Open-in-Analyst bridge were removed (2026-08-06);
+    share links load directly into the analyst view."""
     soup = _soup()
-    button = soup.select_one("#quickAnalystButton")
-    assert button is not None
-    assert "Open in analyst" in button.get_text()
+    assert soup.select_one("#quickAnalystButton") is None
     source = _source()
-    assert (
-        'document.getElementById("quickAnalystButton").addEventListener("click", openQuickInAnalyst)'
-        in source
-    )
-    assert "function openQuickInAnalyst" in source
+    assert "switchView(\"analyst\")" in source
+    assert "renderSharedBuild(shareToken)" in source
+
+
+
+def test_shared_link_loads_into_the_analyst_view():
+    """Share tokens render directly in the analyst view (product decision
+    2026-08-06) — no quick read-only card."""
+    source = _source()
+    assert 'renderSharedBuild(shareToken)' in source
     assert 'switchView("analyst")' in source
-
-
-def test_shared_link_read_only_mode_collapses_the_form():
-    source = _source()
-    assert 'classList.add("is-shared")' in source
-    assert 'classList.remove("is-shared")' in source
-    css = _css()
-    assert ".quick-view.is-shared .quick-steps" in css
 
 
 def test_bis_hint_when_scenario_incomplete():

@@ -268,11 +268,6 @@ def _feature_fields() -> dict[str, dict[str, Any]]:
     control.
     """
     return {
-        "view_switch": _field(
-            payload_field="view",
-            state_path="ui.view",
-            frontend_token="data-view",
-        ),
         "game_state": _field(
             payload_field="game_state",
             state_path="ui.gameState",
@@ -292,11 +287,6 @@ def _feature_fields() -> dict[str, dict[str, Any]]:
             payload_field="optimize",
             state_path="optimization.roster",
             frontend_token="data-optimize-roster",
-        ),
-        "quick_mode": _field(
-            payload_field="quick",
-            state_path="quick",
-            frontend_token="data-quick-pick",
         ),
         "share": _field(
             payload_field="share",

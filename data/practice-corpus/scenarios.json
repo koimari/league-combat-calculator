@@ -127,7 +127,7 @@
   {
    "id": "e9-e1-aatrox-umbral-dash-heal",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E1",
    "setup": {
     "champion": "Aatrox",
@@ -174,7 +174,7 @@
   {
    "id": "e9-e2-malzahar-malefic-visions",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E2",
    "setup": {
     "champion": "Malzahar",
@@ -210,7 +210,7 @@
   {
    "id": "e9-e3-varus-blight-detonation",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E3",
    "setup": {
     "champion": "Varus",
@@ -250,7 +250,7 @@
   {
    "id": "e9-e3-nasus-siphoning-stacks",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E3",
    "setup": {
     "champion": "Nasus",
@@ -289,7 +289,7 @@
   {
    "id": "e9-e4-zyra-plant-attacks",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E4",
    "setup": {
     "champion": "Zyra",
@@ -327,7 +327,7 @@
   {
    "id": "e9-e4-yorick-mist-walkers",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E4",
    "setup": {
     "champion": "Yorick",
@@ -369,7 +369,7 @@
   {
    "id": "e9-e5-zed-death-mark",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E5",
    "setup": {
     "champion": "Zed",
@@ -405,7 +405,7 @@
   {
    "id": "e9-e5-veigar-primordial-burst",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E5",
    "setup": {
     "champion": "Veigar",
@@ -441,7 +441,7 @@
   {
    "id": "e9-e5-sion-decimating-smash",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E5",
    "setup": {
     "champion": "Sion",
@@ -477,7 +477,7 @@
   {
    "id": "e9-e8-rengar-battle-roar-grey",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E8",
    "setup": {
     "champion": "Rengar",
@@ -525,7 +525,7 @@
   {
    "id": "e9-e8-annie-molten-shield",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -564,7 +564,7 @@
   {
    "id": "e9-e8-anivia-rebirth",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E8",
    "setup": {
     "champion": "Anivia",
@@ -604,7 +604,7 @@
   {
    "id": "e9-e8-morellonomicon-grievous",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E8",
    "setup": {
     "champion": "Aatrox",
@@ -671,7 +671,7 @@
   {
    "id": "e9-e8-serpents-fang-shield-cut",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -720,7 +720,7 @@
   {
    "id": "e9-item-serpents-fang-venom",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "item",
    "setup": {
     "champion": "Katarina",
@@ -769,7 +769,7 @@
   {
    "id": "e9-item-fimbulwinter-everlasting",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "item",
    "setup": {
     "champion": "Ahri",
@@ -808,7 +808,7 @@
   {
    "id": "e9-item-steraks-lifeline",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "item",
    "setup": {
     "champion": "Darius",
@@ -860,7 +860,7 @@
   {
    "id": "e9-item-bloodthirster-lifesteal",
    "tier": "local",
-   "sha": "9d33ebf125715195bc858cbb79d198f27239d463",
+   "sha": "b693e58006a243ac2ad6a9c2a216c3a3f03b367d",
    "workstream": "item",
    "setup": {
     "champion": "Ashe",

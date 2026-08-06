@@ -113,11 +113,6 @@ CONTROL_ATTRIBUTES = {
     "data-bis-value": [("controls", "best_in_slot")],
     "data-optimize-roster": [("controls", "optimize")],
     "data-optimize-roster-all": [("controls", "optimize")],
-    "data-quick-pick": [("controls", "quick_mode")],
-    "data-quick-role": [("controls", "quick_mode")],
-    "data-quick-preset": [("controls", "quick_mode")],
-    "data-quick-remove": [("controls", "quick_mode")],
-    "data-view": [("controls", "view_switch")],
     "data-game-state": [("controls", "game_state")],
     "data-objective": [("controls", "objective")],
     "data-remove-target": [("controls", "roster_membership")],
@@ -153,13 +148,17 @@ EXCLUDED_ATTRIBUTES = {
     "data-review-action",
     "data-review-field",
     "data-review-index",
+    # Removed quick mode (2026-08-06): the data-quick-* attrs survive only in
+    # dead JS retained for rollback safety; no quick control is mounted.
+    "data-quick-pick",
+    "data-quick-role",
+    "data-quick-preset",
+    "data-quick-remove",
 }
 
 # Interactive control ids in the template (buttons, selects, inputs, dialogs),
 # mapped to the capability that owns them.
 CONTROL_IDS = {
-    "viewQuickTab": ("controls", "view_switch"),
-    "viewAnalystTab": ("controls", "view_switch"),
     "championPicker": ("main", "champion"),
     "roleSelect": ("main", "role"),
     "levelInput": ("main", "level"),
@@ -179,19 +178,12 @@ CONTROL_IDS = {
     "sharePanelClose": ("controls", "share"),
     "shareCopy": ("controls", "share"),
     "shareUrl": ("controls", "share"),
-    "quickChampionSearch": ("controls", "quick_mode"),
-    "quickEnemySearch": ("controls", "quick_mode"),
-    "quickEnemyClear": ("controls", "quick_mode"),
-    "quickItemSearch": ("controls", "quick_mode"),
-    "quickRun": ("controls", "quick_mode"),
-    "quickShareButton": ("controls", "share"),
     "picker": ("controls", "picker"),
     "pickerClose": ("controls", "picker"),
     "pickerSearch": ("controls", "picker"),
     "bis": ("controls", "best_in_slot"),
     "bisClose": ("controls", "best_in_slot"),
     "addPracticeEnemy": ("controls", "roster_membership"),
-    "quickAnalystButton": ("controls", "quick_mode"),
 }
 
 

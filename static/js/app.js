@@ -4358,6 +4358,7 @@ function renderQuickPresets() {
 
 function renderQuickView() {
   if (!QUICK_VIEW_READY) return;
+  if (!document.getElementById("quickView")) return; // quick mode removed (2026-08-06)
   renderQuickRole();
   renderQuickChampionGrid(document.getElementById("quickChampionSearch")?.value || "");
   renderQuickEnemyGrid(document.getElementById("quickEnemySearch")?.value || "");
@@ -4917,8 +4918,12 @@ function switchView(view) {
 // --- Quick mode event wiring ------------------------------------------------
 
 function bindQuickEvents() {
-  document.getElementById("viewQuickTab").addEventListener("click", () => switchView("quick"));
-  document.getElementById("viewAnalystTab").addEventListener("click", () => switchView("analyst"));
+  // The Quick/Analyst tab bar was removed (product decision 2026-08-06): the
+  // analyst view is the app. Guard for templates that still carry the tabs.
+  const quickTab = document.getElementById("viewQuickTab");
+  const analystTab = document.getElementById("viewAnalystTab");
+  if (quickTab) quickTab.addEventListener("click", () => switchView("quick"));
+  if (analystTab) analystTab.addEventListener("click", () => switchView("analyst"));
 
   const championSearch = document.getElementById("quickChampionSearch");
   championSearch.addEventListener("input", () => renderQuickChampionGrid(championSearch.value));
@@ -5012,6 +5017,7 @@ function bindQuickEvents() {
 async function initQuickView() {
   if (QUICK_INIT_STARTED) return;
   QUICK_INIT_STARTED = true;
+  if (!document.getElementById("quickView")) return; // quick mode removed (2026-08-06)
   try {
     const response = await fetch("/static/quick-presets.json");
     if (!response.ok) throw new Error("presets failed to load");
@@ -5026,8 +5032,7 @@ async function initQuickView() {
   const params = new URLSearchParams(window.location.search);
   const shareToken = params.get("share");
   if (shareToken) {
-    switchView("quick");
-    document.getElementById("quickView").classList.add("is-shared");
+    switchView("analyst");
     renderSharedBuild(shareToken);
     loadTrustLabels((window.__sharedBuild || {}).champion || "");
   } else if (state.attacker.champion) {
@@ -5037,7 +5042,7 @@ async function initQuickView() {
 
 document.addEventListener("scryglass:engine-ready", () => {
   if (!QUICK_VIEW_READY) initQuickView();
-  renderQuickView();
+  if (document.getElementById("quickView")) renderQuickView();
   loadTrustLabels(state.attacker.champion || QUICK_STATE.champion || "");
 });
 

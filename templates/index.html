@@ -123,92 +123,14 @@
   </header>
 
   <main class="app-shell">
-    <nav class="view-switch" role="tablist" aria-label="Calculator mode">
-      <button class="view-tab active" id="viewQuickTab" type="button" role="tab" aria-selected="true" data-view="quick">Quick <span class="view-tab-hint">3 clicks</span></button>
-      <button class="view-tab" id="viewAnalystTab" type="button" role="tab" aria-selected="false" data-view="analyst">Analyst</button>
-    </nav>
-
-    <div id="shareBanner" class="share-banner" hidden>
+    <!-- Product decision (2026-08-06): the analyst view is the app. Quick mode removed as a landing; per-slot BIS covers "best next item". -->
+<div id="shareBanner" class="share-banner" hidden>
       <span class="share-banner-mark" aria-hidden="true">🔗</span>
       <span id="shareBannerText">Viewing a shared build.</span>
       <button id="shareOpenEditor" class="share-banner-button" type="button">Open in editor</button>
     </div>
-
-    <section id="quickView" class="quick-view" aria-label="Quick mode">
-      <div class="quick-head">
-        <div class="quick-title">
-          <p class="eyebrow">Quick mode</p>
-          <h1>What should I build next?</h1>
-          <p class="quick-sub">Pick a champion and a fight, then get your top three item picks — with the numbers to back them.</p>
-        </div>
-        <div class="quick-preset-row" id="quickPresets" role="group" aria-label="Scenario presets"></div>
-      </div>
-
-      <ol class="quick-steps">
-        <li class="quick-step">
-          <span class="quick-step-num" aria-hidden="true">1</span>
-          <div class="quick-step-body">
-            <span class="micro-label" id="quickChampionLabel">Your champion</span>
-            <input id="quickChampionSearch" class="quick-search" type="search" autocomplete="off" placeholder="Search champions…" aria-label="Search champions" />
-            <div class="quick-pick-grid" id="quickChampionGrid" aria-label="Champion choices"></div>
-            <p class="quick-step-note" id="quickChampionNote">Type to filter. Tapping a champion locks it in.</p>
-          </div>
-        </li>
-        <li class="quick-step">
-          <span class="quick-step-num" aria-hidden="true">2</span>
-          <div class="quick-step-body">
-            <span class="micro-label">Your role</span>
-            <div class="quick-segmented" id="quickRole" role="group" aria-label="Role"></div>
-          </div>
-        </li>
-        <li class="quick-step">
-          <span class="quick-step-num" aria-hidden="true">3</span>
-          <div class="quick-step-body">
-            <span class="micro-label">Enemy <span class="quick-optional">optional</span></span>
-            <input id="quickEnemySearch" class="quick-search" type="search" autocomplete="off" placeholder="Search enemies… (empty = practice target)" aria-label="Search enemies" />
-            <div class="quick-pick-grid" id="quickEnemyGrid" aria-label="Enemy choices"></div>
-            <p class="quick-step-note" id="quickEnemyNote">Leave empty to fight a default practice target.</p>
-            <button id="quickEnemyClear" class="quick-clear-button" type="button" hidden>Clear enemy</button>
-          </div>
-        </li>
-        <li class="quick-step">
-          <span class="quick-step-num" aria-hidden="true">4</span>
-          <div class="quick-step-body">
-            <span class="micro-label">Items you already own <span class="quick-optional">optional</span></span>
-            <div class="quick-items-strip" id="quickItems"></div>
-            <input id="quickItemSearch" class="quick-search" type="search" autocomplete="off" placeholder="Search items to add… (empty = fresh build)" aria-label="Search items" />
-            <div class="quick-pick-grid" id="quickItemGrid" aria-label="Item choices"></div>
-          </div>
-        </li>
-      </ol>
-
-      <button id="quickRun" class="quick-run" type="button">Best next item</button>
-      <div class="quick-spinner" id="quickSpinner" role="status" aria-live="polite" hidden>
-        <span class="spinner" aria-hidden="true"></span><span id="quickSpinnerText">Crunching the event-ordered numbers…</span>
-      </div>
-
-      <div class="quick-results" id="quickResults" hidden></div>
-
-      <div class="quick-after" id="quickAfter" hidden>
-        <div class="quick-share-row">
-          <button id="quickShareButton" class="outline-button" type="button">Share this build</button>
-          <button id="quickAnalystButton" class="outline-button" type="button">Open in analyst</button>
-          <div class="trust-legend">
-            <span class="trust-legend-title">Certainty</span>
-            <span class="certainty-chip certainty-exact" title="Fully sourced formula, no player-controlled options">EXACT</span>
-            <span class="certainty-chip certainty-estimate" title="Uses a defaulted player-controlled option">ESTIMATE</span>
-            <span class="certainty-chip certainty-boundary" title="Documented but not computed mechanic">BOUNDARY</span>
-            <span class="trust-legend-note" hidden></span>
-          </div>
-        </div>
-        <details class="quick-not-modeled" id="quickNotModeled" hidden>
-          <summary>What is not modeled for this champion</summary>
-          <ul id="quickNotModeledList"></ul>
-        </details>
-      </div>
-    </section>
-
-    <div id="analystView" hidden>
+    <!-- Quick mode removed (product decision 2026-08-06): the analyst view is the app. -->
+<div id="analystView">
       <h1>Item calculator</h1>
       <section class="scenario-rail" aria-label="Scenario controls">
         <div class="scenario-block state-block">
