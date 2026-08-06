@@ -138,6 +138,9 @@ ASSUMPTIONS = [
     "Tentacle strikes use the level-scaled parent formula and Q rank increase; the user supplies how many authored strikes land.",
     "Harsh Lesson is one item-coupled empowered attack; Test of Spirit's redirected damage remains explicit target state.",
     "Leap of Faith's slam is separate from the summoned Tentacle strikes.",
+    "Each Tentacle that hits an enemy champion heals Illaoi for 5% of her "
+    "missing health (cached P description prose); the E1 self-heal rule "
+    "authors one live missing-health heal per tentacle hit event.",
 ]
 SOURCES = [
     source_row(

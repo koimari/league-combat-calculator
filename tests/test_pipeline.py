@@ -278,9 +278,16 @@ def test_run_fight_materializes_timestamped_item_self_healing(ahri_data):
         params,
         score_only=True,
     )
-    assert [event["time"] for event in periodic["self_healing_events"]] == [4.0]
+    # Ahri's E9-2 Essence Theft passive heal (95, 0 AP) lands at her first
+    # ability hit (t=0) in the same ledger as the item receipts.
+    assert [event["time"] for event in periodic["self_healing_events"]] == [0.0, 4.0]
+    assert [event["source"] for event in periodic["self_healing_events"]] == [
+        "Essence Theft",
+        "Unending Despair (Anguish) (self-heal)",
+    ]
     assert sum(event["amount"] for event in item_events) == pytest.approx(30.0)
-    assert result["self_healing"] == pytest.approx(30.0)
+    # Dusk and Dawn's 60 AP raises Ahri's Essence Theft heal to 107.
+    assert result["self_healing"] == pytest.approx(30.0 + 107.0)
 
 
 def test_score_only_keeps_item_self_healing_for_timeline_compilers(ahri_data):

@@ -84,6 +84,41 @@ def _decimating_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+def _roar_of_the_slayer(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: magic damage + the sourced 25% armor reduction for 4 seconds.
+
+    The cached E description pins the debuff ("inflicts them with 25%
+    armor reduction for 4 seconds"); damage.py applies a target_debuff
+    AFTER this ability's own damage, so every later physical hit (autos,
+    Q, R) benefits but the E hit itself does not.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    entry = {
+        "name": ability.get("name", "Roar of the Slayer"),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "damage_type": "magic",
+        "total_raw": value,
+        "parts": (DamagePart("magic", value),),
+        "target_debuff": {
+            "armor_reduction_percent": 25.0,
+            "duration": 4.0,
+        },
+        "detail": (
+            "Magic Damage row plus the cached 25% armor reduction for 4 "
+            "seconds (wiki prose on E); the shred applies after E's own "
+            "hit."
+        ),
+    }
+    return entry
+
+
 ASSUMPTIONS = [
     "Q (Decimating Smash) interpolates the Minimum/Maximum Physical "
     "Damage rows by charge time; the default is fully charged "
@@ -91,6 +126,9 @@ ASSUMPTIONS = [
     "R (Unstoppable Onslaught) prices the maximum-charge slam (Maximum "
     "Physical Damage row).",
     "P deals no enemy damage and is an explicit no-damage slot.",
+    "E (Roar of the Slayer) inflicts the cached 25% armor reduction for "
+    "4 seconds (wiki prose on E); the target_debuff applies after E's "
+    "own damage, so all later physical damage (autos, Q, R) benefits.",
 ]
 
 SOURCES = list(_full_entry_sources("Sion"))
@@ -102,7 +140,7 @@ SLOTS = {
     ),
     "Q": _decimating_smash,
     "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": _roar_of_the_slayer,
     "R": simple_damage(attr="Maximum Physical Damage", dmg_type="physical"),
 }
 

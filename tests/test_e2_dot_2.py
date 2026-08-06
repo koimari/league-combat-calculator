@@ -154,13 +154,19 @@ def _assert_ticked_ability(
     duration: float = 10.0,
     initial_attr: str | None = None,
     ranks: dict | None = None,
+    recast_attr: str | None = None,
 ) -> None:
     """Fight one champion and pin total damage + per-tick event count.
 
     Expected per-cast damage is recomputed from the cached leveling rows:
     ``initial_attr`` (when given) plus ``per_tick_attr`` x ``count``, so
     the assertion verifies per-tick x ticks == the wiki Total independently
-    of the module.
+    of the module.  ``recast_attr`` names the recast's fresh-target row
+    (Naafiri's Minimum Bonus Physical Damage): each cast adds that row,
+    and later casts interpolate up to the Maximum row as the target's
+    missing health grows, so the row total is bounded by
+    ``(initial + ticks + minimum) x casts`` and
+    ``(initial + ticks + maximum) x casts``.
     """
     data = _fight(champion, duration=duration, ranks=ranks)
     stats = data["champion_stats"]
@@ -168,9 +174,9 @@ def _assert_ticked_ability(
     per_tick = _resolve(
         champion, slot, per_tick_attr, rank, stats, data["target_effective_max_health"]
     )
-    expected_per_cast = per_tick * count
+    fixed_per_cast = per_tick * count
     if initial_attr is not None:
-        expected_per_cast += _resolve(
+        fixed_per_cast += _resolve(
             champion,
             slot,
             initial_attr,
@@ -178,12 +184,38 @@ def _assert_ticked_ability(
             stats,
             data["target_effective_max_health"],
         )
+    recast_min = 0.0
+    recast_max = 0.0
+    if recast_attr is not None:
+        recast_min = _resolve(
+            champion,
+            slot,
+            recast_attr,
+            rank,
+            stats,
+            data["target_effective_max_health"],
+        )
+        recast_max = _resolve(
+            champion,
+            slot,
+            recast_attr.replace("Minimum", "Maximum"),
+            rank,
+            stats,
+            data["target_effective_max_health"],
+        )
     row = data["breakdown"][slot]
     casts = max(1, int(row.get("casts", 1)))
-    assert row["total_damage"] == pytest.approx(expected_per_cast * casts, rel=1e-6)
-    # One event per tick (plus the initial hit when the ability has one)
-    # for every cast the fight schedules.
-    expected_events = (count + (1 if initial_attr is not None else 0)) * casts
+    expected_min = (fixed_per_cast + recast_min) * casts
+    expected_max = (fixed_per_cast + recast_max) * casts
+    assert row["total_damage"] >= expected_min - 1e-6
+    assert row["total_damage"] <= expected_max + 1e-6
+    # One event per tick (plus the initial hit when the ability has one,
+    # plus the recast hit) for every cast the fight schedules.
+    expected_events = (
+        count
+        + (1 if initial_attr is not None else 0)
+        + (1 if recast_attr is not None else 0)
+    ) * casts
     events = [
         event
         for event in data["damage_events"]
@@ -261,8 +293,12 @@ def test_monkeyking_cyclone_prices_eight_ticks():
 def test_naafiri_darkin_daggers_prices_initial_hit_plus_ten_bleed_ticks():
     """Q rank 5: initial 55 (+ 20% bonus AD) plus "Bleed Physical Damage
     per Tick" 13.5 (+ 8% bonus AD) x10 == "Total Bleed Physical Damage"
-    135 (+ 80% bonus AD).  The fight casts Q and its free recast, so the
-    row prices two casts (2 x 11 events)."""
+    135 (+ 80% bonus AD).  The E9-2 recast bonus (Minimum/Maximum Bonus
+    Physical Damage rows interpolated by target missing health) rides the
+    same row: the first cast's recast is the fresh-target minimum (80 +
+    40% bonus AD) and later casts interpolate up to the maximum as the
+    target's health drops, so the row prices the bleed ticks and the
+    recast over every scheduled cast (2 casts x 12 events)."""
     _assert_ticked_ability(
         "Naafiri",
         "Q",
@@ -270,6 +306,7 @@ def test_naafiri_darkin_daggers_prices_initial_hit_plus_ten_bleed_ticks():
         count=10,
         initial_attr="Initial Physical Damage",
         ranks=_FULL_RANKS,
+        recast_attr="Minimum Bonus Physical Damage",
     )
 
 

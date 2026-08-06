@@ -54,10 +54,15 @@ def test_anguish_emits_exact_periodic_damage_and_self_healing_events():
         event["target_scope"] == "enemy_champions_within_range"
         for event in damage_events
     )
-    assert [event["time"] for event in healing_events] == [4.0, 8.0]
+    # Ahri's E9-2 Essence Theft passive heal (95, 0 AP) lands first in the
+    # shared ledger; the Anguish heal events follow the damage pulses.
+    item_heals = [
+        event for event in healing_events if event["source"] != "Essence Theft"
+    ]
+    assert [event["time"] for event in item_heals] == [4.0, 8.0]
     assert all(
         event["amount"] == event_damage["damage"] * multiplier
-        for event, event_damage in zip(healing_events, damage_events)
+        for event, event_damage in zip(item_heals, damage_events)
     )
     assert result["self_healing"] == sum(event["amount"] for event in healing_events)
 

@@ -11,6 +11,12 @@ Why each slot is non-generic:
   so damage.py spaces the dashes itself.
 - E (Charm) is a single, event-certified magic hit whose Wiki-authored
   charm/knockdown marker feeds conditional item triggers such as Fimbulwinter.
+- P (Essence Theft) deals no enemy damage: the module emits a zero-damage
+  receipt for the 9-fragment heal (35 : 95 by level + 20% AP, cached P
+  "Heal" row) so the E1 self-heal rule can author one heal per fight when
+  the user's fragment count has reached 9.  The champion-takedown heal
+  (75 : 165 by level + 30% AP) is a kill boundary the fight model does not
+  produce.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -21,6 +27,37 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import extract_auto, extract_cooldown, extract_named, simple_damage
+
+
+def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: zero-damage receipt for the 9-fragment self-heal.
+
+    Emitted only when the user's fragment count has reached 9 (the sourced
+    stack cap in the cached P description); the E1 heal rule in healing.py
+    gates its one-per-fight heal on this receipt.  The fragment count itself
+    is player state (fragments come from minion/monster kills, which the
+    champion duel does not simulate), so it is exposed as an option.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    fragments = max(0, int(ctx.options.get("p_essence_fragments", 9)))
+    if fragments < 9:
+        return None
+    return {
+        "name": ability.get("name", "Essence Theft"),
+        "rank": ctx.level,
+        "cooldown": 0.0,
+        "damage_type": "magic",
+        "total_raw": 0.0,
+        "parts": (),
+        "detail": (
+            f"{fragments} Essence Fragment(s): at 9 stacks the passive heals "
+            "35 : 95 (based on level) (+ 20% AP); the champion-takedown heal "
+            "(75 : 165 by level + 30% AP) is a kill boundary, not a fight "
+            "receipt."
+        ),
+    }
 
 
 def _fox_fire(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -88,15 +125,46 @@ def _charm(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-OPTIONS: list[dict[str, Any]] = []
+OPTIONS: list[dict[str, Any]] = [
+    {
+        "key": "p_essence_fragments",
+        "type": "int",
+        "default": 9,
+        "min": 0,
+        "max": 18,
+        "label": (
+            "Essence Fragment stacks (9 = the passive heal is ready and "
+            "consumes them)"
+        ),
+    },
+]
 
-ASSUMPTIONS: list[str] = []
+ASSUMPTIONS = [
+    "P (Essence Theft) consumes 9 Essence Fragments to heal 35 : 95 "
+    "(based on level) (+ 20% AP) — the cached P 'Heal' leveling row; "
+    "fragment generation comes from minion/monster kills the 1v1 model "
+    "does not simulate, so the user supplies the stack count "
+    "(p_essence_fragments, default 9) and the heal fires once per fight "
+    "on the first ability that hits the enemy champion",
+    "The champion-takedown heal (75 : 165 by level + 30% AP) is a kill "
+    "boundary — a takedown ends the fight before a heal receipt can apply",
+]
 
 SLOTS = {
+    "P": _essence_theft,
     "Q": simple_damage(attr="Damage Per Pass", dmg_type="mixed", casts=2),
     "W": _fox_fire,
     "E": _charm,
     "R": _spirit_rush,
 }
+
+MODULE_COVERAGE = {
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "modeled",
+}
+REVIEW_STATUS = "reviewed_module"
 
 parse_abilities = build_parser(SLOTS, "Ahri")

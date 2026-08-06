@@ -97,6 +97,10 @@ def champion_grievous_wound_sources(
     sources = getattr(module, "GRIEVOUS_WOUNDS_SOURCES", None)
     if not sources:
         return ()
+    # A module may pin the exact wounding ability when the slot's first
+    # cached entry is not the wounding one (Kled's Pocket Pistol is the
+    # dismounted Q entry, not the mounted Bear Trap on a Rope).
+    label_overrides = getattr(module, "GRIEVOUS_WOUNDS_SOURCE_LABELS", None) or {}
     abilities = champion_data.get("abilities") or {}
     packets: list[dict[str, Any]] = []
     for source_key in sources:
@@ -104,11 +108,13 @@ def champion_grievous_wound_sources(
         ability_name = ""
         if entries:
             ability_name = str(entries[0].get("name", "") or "")
-        label = (
-            f"{champion_name} · {ability_name}"
-            if ability_name
-            else f"{champion_name} · {source_key}"
-        )
+        override = label_overrides.get(source_key)
+        if override:
+            label = f"{champion_name} · {override}"
+        elif ability_name:
+            label = f"{champion_name} · {ability_name}"
+        else:
+            label = f"{champion_name} · {source_key}"
         packets.append(
             {
                 "source_key": str(source_key),
