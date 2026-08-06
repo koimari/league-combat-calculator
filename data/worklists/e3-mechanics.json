@@ -1,0 +1,673 @@
+{
+ "Varus": [
+  {
+   "slot": "Q",
+   "ability": "Piercing Arrow",
+   "summary": "Recast: Varus fires a piercing arrow in the target direction that deals physical damage to enemies hit. The damage of the arrow as well as any detonated Blight stacks are both increased by 0% : 50% (b",
+   "attrs": []
+  },
+  {
+   "slot": "W",
+   "ability": "Blighted Quiver",
+   "summary": "Passive: Varus' basic attacks are empowered to deal bonus magic damage and apply a stack of Blight on-hit for 6 seconds, refreshing on subsequent applications and stacking up to 3 times. Varus' abilit",
+   "attrs": []
+  },
+  {
+   "slot": "W",
+   "ability": "Blighted Quiver",
+   "summary": "Blight: For each stack consumed, the target is dealt bonus magic damage. If the stacks were consumed with Piercing Arrow, this damage is increased by 0% : 50% (based on Piercing Arrow's charge time). ",
+   "attrs": [
+    [
+     "Bonus Magic Damage per Stack",
+     [
+      3,
+      3.5,
+      4,
+      4.5,
+      5
+     ]
+    ],
+    [
+     "Bonus Magic Damage at Max Stacks",
+     [
+      9,
+      10.5,
+      12,
+      13.5,
+      15
+     ]
+    ],
+    [
+     "Maximum Bonus Magic Damage per Stack",
+     [
+      4.5,
+      5.25,
+      6,
+      6.75,
+      7.5
+     ]
+    ],
+    [
+     "Maximum Bonus Magic Damage at Max Stacks",
+     [
+      13.5,
+      15.75,
+      18,
+      20.25,
+      22.5
+     ]
+    ]
+   ]
+  },
+  {
+   "slot": "R",
+   "ability": "Chain of Corruption",
+   "summary": "Active: Varus unleashes a tendril of corruption in the target direction that infects the first enemy champion hit, dealing magic damage and rooting them for 2 seconds, during which they are revealed. ",
+   "attrs": []
+  }
+ ],
+ "Twitch": [
+  {
+   "slot": "P",
+   "ability": "Deadly Venom",
+   "summary": "Innate: Twitch's basic attacks on-hit apply a stack of Deadly Venom for 6 seconds, refreshing on subsequent applications and stacking up to 6 times.",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Deadly Venom",
+   "summary": "Deadly Venom: For each stack, the target is dealt[ 1 / 2 / 3 / 4 / 5 (based on level) (+ 3% AP) true damage per second over the duration, ][ 6 / 12 / 18 / 24 / 30 (based on level) (+ 18% AP) total tru",
+   "attrs": []
+  },
+  {
+   "slot": "W",
+   "ability": "Venom Cask",
+   "summary": "The area then becomes contaminated for 3 seconds, applying a Deadly Venom stack each second to enemies within and slowing them.",
+   "attrs": []
+  },
+  {
+   "slot": "E",
+   "ability": "Contaminate",
+   "summary": "Contaminate deals additional physical damage and 35% AP magic damage for each stack of Deadly Venom on the target.",
+   "attrs": [
+    [
+     "Physical Damage Per Stack",
+     [
+      15,
+      20,
+      25,
+      30,
+      35
+     ]
+    ]
+   ]
+  }
+ ],
+ "Velkoz": [
+  {
+   "slot": "P",
+   "ability": "Organic Deconstruction",
+   "summary": "Innate: Vel'Koz's abilities apply a stack of Deconstruction to enemies hit for 7 seconds, refreshing on basic attacks on-hit and subsequent applications and stacking up to 3 times.",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Organic Deconstruction",
+   "summary": "The third stack consumes them all to deal 35 : 197.06 (based on level) (+ 60% AP) bonus true damage.",
+   "attrs": []
+  },
+  {
+   "slot": "R",
+   "ability": "Life Form Disintegration Ray",
+   "summary": "Passive - Researched: Applying 3 Deconstruction stacks to an enemy champion marks them as Researched for 7 seconds, refreshing on basic attacks and ability hits against them.",
+   "attrs": []
+  }
+ ],
+ "Tristana": [
+  {
+   "slot": "W",
+   "ability": "Rocket Jump",
+   "summary": "Scoring an enemy champion takedown or detonating Explosive Charge at maximum stacks on a champion will reset Rocket Jump's cooldown.",
+   "attrs": []
+  },
+  {
+   "slot": "E",
+   "ability": "Explosive Charge",
+   "summary": "Tristana's basic attacks on-hit and abilities against the target increase Explosive Charge's damage by 25%, stacking up to 4 times for a maximum 100% increase, upon which the charge also detonates ins",
+   "attrs": [
+    [
+     "Bonus Damage Per Stack",
+     [
+      15,
+      21.25,
+      27.5,
+      33.75,
+      40
+     ]
+    ],
+    [
+     "Full Stack Bonus Damage",
+     [
+      60,
+      85,
+      110,
+      135,
+      160
+     ]
+    ],
+    [
+     "Full Stack Physical Damage",
+     [
+      120,
+      170,
+      220,
+      270,
+      320
+     ]
+    ]
+   ]
+  },
+  {
+   "slot": "E",
+   "ability": "Explosive Charge",
+   "summary": "If Buster Shot is used to apply the last stack, the detonation will instead be delayed until the end of the knock back or the 4 seconds expire.",
+   "attrs": []
+  }
+ ],
+ "Nasus": [
+  {
+   "slot": "Q",
+   "ability": "Siphoning Strike",
+   "summary": "If Siphoning Strike kills the target, Nasus permanently gains 3 stacks, increased to 12 if the target is a champion, large minion, or large monster.",
+   "attrs": []
+  }
+ ],
+ "Darius": [
+  {
+   "slot": "P",
+   "ability": "Hemorrhage",
+   "summary": "Innate: Darius' damaging basic attacks and abilities apply a stack of Hemorrhage to enemies for 5 seconds, refreshing on subsequent applications and stacking up to 5 times.",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Hemorrhage",
+   "summary": "Hemorrhage: For each stack, the target is dealt[ 13 : 30 (based on level) (+ 30% bonus AD) total physical damage over the duration, ][ 3.25 : 7.5 (based on level) (+ 7.5% bonus AD) physical damage eve",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Hemorrhage",
+   "summary": "When Darius kills a champion with Noxian Guillotine, or applies 5 stacks on an enemy champion, he becomes empowered with Noxian Might for 5 seconds.",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Hemorrhage",
+   "summary": "Noxian Might: Darius gains 30 : 230 (based on level) bonus attack damage and instantly applies 5 Hemorrhage stacks through his usual means.",
+   "attrs": []
+  },
+  {
+   "slot": "Q",
+   "ability": "Decimate",
+   "summary": "Against champions and large monsters hit, Darius heals for 17% : 51% (based on number of targets hit by the outer radius) of his missing health. Enemies hit by the inner radius do not refresh the dura",
+   "attrs": []
+  },
+  {
+   "slot": "R",
+   "ability": "Noxian Guillotine",
+   "summary": "Active: Darius attempts to execute the target enemy champion, leaping towards them to deal true damage, increased by 0% : 100% (based on target's Hemorrhage stacks), and granting sight of the area aro",
+   "attrs": [
+    [
+     "Bonus Damage Per Stack",
+     [
+      25,
+      50,
+      75
+     ]
+    ]
+   ]
+  }
+ ],
+ "Brand": [
+  {
+   "slot": "P",
+   "ability": "Blaze",
+   "summary": "Innate: Brand's abilities apply a stack of Ablaze to enemies hit for 4 seconds, stacking up to 3 times and refreshing the duration of all stacks with each application. Subsequent abilities used agains",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Blaze",
+   "summary": "Ablaze: While afflicted with Ablaze, the target is dealt magic damage equal to[ 2% of their maximum health over 4 seconds. ][ 0.167% of their maximum health every 0.25 seconds over 4 seconds. ]Each st",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Blaze",
+   "summary": "Upon applying 3 stacks of Ablaze to a large monster or enemy champion, the fire becomes unstable, causing it form a fiery ring around the target that grants sight within its radius and, after 2 second",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Blaze",
+   "summary": "Brand cannot stack Ablaze more than once on enemies that have had a ring explode from them in the last 4 seconds.",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Blaze",
+   "summary": "The ring will form even if the target dies to the ability applying the third stack, and will still trigger the explosion if the target dies before it.",
+   "attrs": []
+  }
+ ],
+ "Braum": [
+  {
+   "slot": "P",
+   "ability": "Concussive Blows",
+   "summary": "Innate: Braum's basic attacks and Winter's Bite each apply a stack of Concussive Blows to their target for 4 seconds, refreshing on subsequent applications and stacking up to 4 times. Once the first s",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Concussive Blows",
+   "summary": "The fourth stack against a target consumes them all to deal 26 : 196 (based on his level) magic damage and stun them for 1.25 : 1.75 (based on his level) seconds.",
+   "attrs": []
+  }
+ ],
+ "Vayne": [
+  {
+   "slot": "W",
+   "ability": "Silver Bolts",
+   "summary": "Passive: Vayne's basic attacks on-hit and Condemn apply a stack of Silver Bolts for 3.5 seconds, refreshing on subsequent applications, expiring upon attacking a new enemy, and stacking up to 3 times.",
+   "attrs": []
+  },
+  {
+   "slot": "W",
+   "ability": "Silver Bolts",
+   "summary": "The third stack consumes them all to deal bonus true damage, with a minimum threshold.",
+   "attrs": []
+  }
+ ],
+ "Kalista": [
+  {
+   "slot": "Q",
+   "ability": "Pierce",
+   "summary": "If Pierce kills the target, the spear continues onward to transfer all of the target's Rend stacks to the next enemy it hits.",
+   "attrs": []
+  },
+  {
+   "slot": "E",
+   "ability": "Rend",
+   "summary": "Passive: Kalista's basic attacks on-hit and Pierce apply a stack of Rend to enemies for 4 seconds, refreshing on subsequent hits and stacking up to 254 times per enemy.",
+   "attrs": []
+  },
+  {
+   "slot": "E",
+   "ability": "Rend",
+   "summary": "Active: Kalista rips out the lodged spears from all nearby enemies afflicted with Rend stacks, consuming the stacks on each target to deal physical damage and slow them for 2 seconds. For each stack b",
+   "attrs": [
+    [
+     "Bonus Damage per Additional Stack",
+     [
+      7,
+      14,
+      21,
+      28,
+      35
+     ]
+    ]
+   ]
+  },
+  {
+   "slot": "E",
+   "ability": "Rend",
+   "summary": "A nearby enemy with a Rend stack is required to cast this ability.",
+   "attrs": []
+  }
+ ],
+ "Leona": [],
+ "Gnar": [
+  {
+   "slot": "W",
+   "ability": "Hyper",
+   "summary": "Passive: Gnar's basic attacks on-hit and ability hits apply a stack of Hyper to enemies for 3.5 seconds, refreshing on subsequent applications and stacking up to 3 times.",
+   "attrs": []
+  },
+  {
+   "slot": "W",
+   "ability": "Hyper",
+   "summary": "The third stack against a target consumes them all to deal bonus magic damage, capped at 300 against monsters, and grant Gnar 20% / 40% / 60% / 80% (based on GNAR!'s rank) bonus movement speed that de",
+   "attrs": []
+  }
+ ],
+ "Ekko": [
+  {
+   "slot": "P",
+   "ability": "Z-Drive Resonance",
+   "summary": "Innate - Resonance: Ekko's basic attacks on-hit and damaging abilities apply a stack of Resonance to enemies hit for 4 seconds, refreshing on subsequent hits and stacking up to 3 times. The third stac",
+   "attrs": []
+  }
+ ],
+ "Ashe": [
+  {
+   "slot": "Q",
+   "ability": "Ranger's Focus",
+   "summary": "Passive: While Ranger's Focus is inactive, Ashe's basic attacks on-attack generate a stack of Focus for 4 seconds, refreshing on subsequent attacks and stacking up to 4 times. Stacks expire one by one",
+   "attrs": []
+  }
+ ],
+ "Yasuo": [
+  {
+   "slot": "P",
+   "ability": "Way of the Wanderer",
+   "summary": "Innate - Resolve: Yasuo generates a stack of Flow for every 59 / 52.5 / 46 (based on level) units he travels by any means. At[ 100 stacks ][ 5900 / 5250 / 4600 (based on level) units traveled ]and upo",
+   "attrs": []
+  },
+  {
+   "slot": "Q",
+   "ability": "Steel Tempest",
+   "summary": "Steel Wind Rising: If this hits at least one enemy, Yasuo generates a stack of Gathering Storm for 6 seconds, stacking up to 2 times and refreshing on subsequent hits. At 2 stacks, the next Steel Temp",
+   "attrs": []
+  },
+  {
+   "slot": "E",
+   "ability": "Sweeping Blade",
+   "summary": "Active: Yasuo dashes a fixed distance in the direction of the target enemy and becomes ghosted for 2 seconds, refreshing on subsequent casts. Upon impact, he deals magic damage to the target and gener",
+   "attrs": []
+  },
+  {
+   "slot": "E",
+   "ability": "Sweeping Blade",
+   "summary": "Ride the Wind: Sweeping Blade's damage is increased by 25% per stack, up to 100% at maximum stacks.",
+   "attrs": [
+    [
+     "Bonus Damage per Stack",
+     [
+      17.5,
+      21.25,
+      25,
+      28.75,
+      32.5
+     ]
+    ]
+   ]
+  },
+  {
+   "slot": "R",
+   "ability": "Last Breath",
+   "summary": "Active: Yasuo blinks to the opposite side of a visible airborne enemy champion nearest to the cursor, instantly generating maximum Flow while resetting Gathering Storm stacks.",
+   "attrs": []
+  }
+ ],
+ "Yone": [
+  {
+   "slot": "Q",
+   "ability": "Mortal Steel",
+   "summary": "If this hits at least one enemy, Yone generates a stack of Gathering Storm for 6 seconds, stacking up to 2 times and refreshing on subsequent hits. At 2 stacks, the next Mortal Steel cast consumes the",
+   "attrs": []
+  }
+ ],
+ "Rengar": [
+  {
+   "slot": "P",
+   "ability": "Unseen Predator",
+   "summary": "Innate: Upon casting a basic ability or using Savagery's first attack, Rengar generates a stack of Ferocity for 1 second, stacking up 4 times but not refreshing on subsequent triggers (unexpected). At",
+   "attrs": []
+  }
+ ],
+ "Jhin": [],
+ "Samira": [
+  {
+   "slot": "P",
+   "ability": "Daredevil Impulse",
+   "summary": "Innate: Samira's damaging basic attacks and abilities against at least one enemy champion unique from the previous damaging hit made against champions generate a stack of Style for 6 seconds, refreshi",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Daredevil Impulse",
+   "summary": "Style: For each stack, Samira gains 2.75% / 3% / 3.25% / 3.5% (based on level) bonus movement speed, up to a maximum of 16.5% / 18% / 19.5% / 21% (based on level). At maximum stacks, Samira can cast I",
+   "attrs": []
+  },
+  {
+   "slot": "R",
+   "ability": "Inferno Trigger",
+   "summary": "A nearby visible enemy is required to cast this ability, and targets do not have to be visible to be shot at. Style stacks are consumed at the end of the effect.",
+   "attrs": []
+  }
+ ],
+ "Sett": [],
+ "Caitlyn": [
+  {
+   "slot": "P",
+   "ability": "Headshot",
+   "summary": "Innate: Caitlyn's basic attacks generate a stack of Count on-attack, doubled if she is within brush. At 5 stacks, or 4 while in brush, her next basic attack consumes all stacks on-attack to become a H",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Headshot",
+   "summary": "Enemies that step over a Yordle Snap Trap or are hit by 90 Caliber Net can grant an additional Headshot against them at 1300 range within 1.8 seconds, without consuming stacks. Each method grants only",
+   "attrs": []
+  }
+ ],
+ "Draven": [
+  {
+   "slot": "P",
+   "ability": "League of Draven",
+   "summary": "Innate: When Draven catches a Spinning Axe, kills a non-champion, or destroys a turret, he gains a stack of Adoration.",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "League of Draven",
+   "summary": "When Draven kills an enemy champion, he consumes all of his Adoration stacks and gains 25 + (2 \u00d7 stacks) bonus gold.",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "League of Draven",
+   "summary": "Draven loses 50% of his Adoration stacks upon death.",
+   "attrs": []
+  },
+  {
+   "slot": "R",
+   "ability": "Whirling Death",
+   "summary": "Active: Draven hurls two massive axes in the target direction that briefly grant sight of their surroundings and deal physical damage to enemies hit. Enemy champions that are damaged to or while below",
+   "attrs": []
+  }
+ ],
+ "Kindred": [
+  {
+   "slot": "P",
+   "ability": "Mark of the Kindred",
+   "summary": "Innate: Both Lamb and Wolf mark targets to hunt. Scoring a takedown against a hunted target collects a stack of Mark of the Kindred. Mark of the Kindred: Lamb gains 75 : 250 (based on marks) bonus ran",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Mark of the Kindred",
+   "summary": "Innate - Wolf: Starting at 2:53, Wolf periodically marks a random large monster within the enemy team's jungle for 180 seconds. The hunted camp is highlighted on the mini map to both teams. Once the h",
+   "attrs": []
+  },
+  {
+   "slot": "W",
+   "ability": "Wolf's Frenzy",
+   "summary": "Passive: Lamb generates 1 stack of Hunter's Vigor for every 27 units she travels by any means and 5 stacks on-attack, up to a maximum of 100 stacks. At maximum stacks, her next basic attack heals her ",
+   "attrs": []
+  },
+  {
+   "slot": "E",
+   "ability": "Mounting Dread",
+   "summary": "Active: Lamb fires a shot at the target enemy that slows them by 30% (+ 5% per 100 AP) for 1 second and marks them for 4 seconds. Her basic attacks against the marked target each apply a stack, refres",
+   "attrs": []
+  },
+  {
+   "slot": "E",
+   "ability": "Mounting Dread",
+   "summary": "The third stack directs Wolf to pounce on the target, consuming all stacks to deal additional physical damage, increased by 0% : 50% (+ 0% : 15%) (based on critical strike chance).",
+   "attrs": []
+  }
+ ],
+ "Akshan": [
+  {
+   "slot": "P",
+   "ability": "Dirty Fighting",
+   "summary": "Innate: Akshan's basic attacks on-hit and ability hits apply a stack of Dirty Fighting to enemies for 5 seconds, refreshing on subsequent applications and stacking up to 3 times. The third stack again",
+   "attrs": []
+  },
+  {
+   "slot": "E",
+   "ability": "Heroic Swing",
+   "summary": "Avengerang and Going Rogue can be cast during the third cast's dash. Comeuppance can be cast at all points during Heroic Swing, though Akshan cannot fire during the swing while it is active. Akshan pr",
+   "attrs": []
+  }
+ ],
+ "KogMaw": [
+  {
+   "slot": "R",
+   "ability": "Living Artillery",
+   "summary": "Kog'Maw then generates a stack of Living Artillery for 8 seconds, refreshing on subsequent casts and stacking up to 9 times.",
+   "attrs": []
+  },
+  {
+   "slot": "R",
+   "ability": "Living Artillery",
+   "summary": "Living Artillery: For each stack, Living Artillery's mana cost is increased by 40.",
+   "attrs": []
+  }
+ ],
+ "Volibear": [
+  {
+   "slot": "P",
+   "ability": "The Relentless Storm",
+   "summary": "Innate: Whenever Volibear damages at least one enemy with a basic attack or ability, he generates a stack of The Relentless Storm for 6 seconds, refreshing on subsequent damage and stacking up to 5 ti",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "The Relentless Storm",
+   "summary": "The Relentless Storm: For each stack, Volibear gains 5% (+ 3% per 100 AP) bonus attack speed, up to 25% (+ 15% per 100 AP).",
+   "attrs": []
+  }
+ ],
+ "Senna": [
+  {
+   "slot": "P",
+   "ability": "Absolution",
+   "summary": "Innate - Weakened Soul: Senna's basic attacks on-hit and abilities mark enemy champions hit for 4 seconds. Subsequent attacks or ability hits against marked targets will consume the mark to grant Senn",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Absolution",
+   "summary": "Innate: Enemies that die near Senna may spawn a Mist Wraith from their corpse. A Mist Wraith lasts 8 seconds and Senna can basic attack or hit it with Piercing Darkness or Dawning Shadow to kill it in",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Absolution",
+   "summary": "Mist: For each stack of Mist, Senna gains 0.75 bonus attack damage. For every 20 stacks, she also gains 20 bonus attack range and 10% critical strike chance. Additionally, every 1% critical strike cha",
+   "attrs": []
+  }
+ ],
+ "Thresh": [
+  {
+   "slot": "P",
+   "ability": "Damnation",
+   "summary": "Soul: For each stack, Thresh gains 1 ability power and 1 bonus armor.",
+   "attrs": []
+  }
+ ],
+ "Aurora": [
+  {
+   "slot": "P",
+   "ability": "Spirit Abjuration",
+   "summary": "Innate: Aurora's damaging basic attacks and abilities apply a stack of Spirit Abjuration to enemies for 4 seconds, refreshing on subsequent applications and stacking up to 3 times. The third stack aga",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Spirit Abjuration",
+   "summary": "Upon consuming the stacks from a champion, Aurora additionally exorcises them, freeing a Spirit from the target that follows her for the same duration. For each active Spirit, Aurora is healed for 3 :",
+   "attrs": []
+  }
+ ],
+ "Katarina": [],
+ "Xayah": [
+  {
+   "slot": "P",
+   "ability": "Clean Cuts",
+   "summary": "Innate: Xayah's ability casts generate 3 stacks of Clean Cuts, lasting for 8 seconds, refreshing on subsequent casts, and stacking up to 5 times. Xayah's basic attacks are empowered to each consume a ",
+   "attrs": []
+  }
+ ],
+ "Zac": [],
+ "Syndra": [
+  {
+   "slot": "P",
+   "ability": "Transcendent",
+   "summary": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. She gains Splinters of Wrath from the following:\nDealing ",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Transcendent",
+   "summary": "Syndra can collect Splinters of Wrath from enemies even if she is at maximum stacks. These Splinters do not grant any stacks, but will still restore mana for Syndra.",
+   "attrs": []
+  }
+ ],
+ "MasterYi": [
+  {
+   "slot": "P",
+   "ability": "Double Strike",
+   "summary": "Innate: Master Yi's basic attacks on-hit generate a stack of Double Strike for 4 seconds, refreshing on subsequent hits and stacking up to 3 times. At 3 stacks, Master Yi's next basic attack on-attack",
+   "attrs": []
+  },
+  {
+   "slot": "Q",
+   "ability": "Alpha Strike",
+   "summary": "Wuju Style and Highlander can be cast during Alpha Strike. Each time Alpha Strike hits a target, the current durations of Wuju Style and Highlander are refreshed. Alpha Strike does not trigger its coo",
+   "attrs": []
+  },
+  {
+   "slot": "W",
+   "ability": "Meditate",
+   "summary": "Meditate resets Master Yi's basic attack timer, pauses Wuju Style's and Highlander's duration, and grants one stack of Double Strike per second during the channel.",
+   "attrs": []
+  }
+ ],
+ "Fiora": [],
+ "Jinx": [
+  {
+   "slot": "P",
+   "ability": "Get Excited!",
+   "summary": "Additionally, she is allowed to exceed the attack speed cap and gains a stack of Get Excited! for the same duration, stacking up to 5 times. Only takedowns against enemy champions can grant stacks bey",
+   "attrs": []
+  },
+  {
+   "slot": "P",
+   "ability": "Get Excited!",
+   "summary": "Get Excited!: For each stack, Jinx gains 25% total attack speed, up to a maximum of 125%.",
+   "attrs": []
+  },
+  {
+   "slot": "Q",
+   "ability": "Switcheroo!",
+   "summary": "Pow-Pow: Basic attacks with Pow-Pow generate a stack of Rev'd up for 2.5 seconds, refreshing on subsequent attacks with Pow-Pow and stacking up to 3 times. Each stack of Rev'd up grants bonus attack s",
+   "attrs": [
+    [
+     "Attack Speed per Subsequent Stack",
+     [
+      7.5,
+      13.75,
+      20,
+      26.25,
+      32.5
+     ]
+    ]
+   ]
+  }
+ ]
+}
