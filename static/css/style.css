@@ -290,6 +290,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .ability-variants button.active { border-color: var(--ink); background: var(--black); color: var(--white); }
 .ability-casts button:disabled { cursor: not-allowed; opacity: .45; }
 .slot-wrap { display: grid; min-width: 0; gap: 4px; }
+.bis-trigger {
+  font: 600 8px/1 var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  width: fit-content;
+}
+.bis-trigger:hover:not(:disabled) { border-color: var(--line-dark); color: var(--black); }
+.bis-trigger:disabled { opacity: .45; cursor: not-allowed; }
+.bis-trigger.compact { padding: 2px 4px; font-size: 7px; }
 .stack-control { display: grid; grid-template-columns: 22px minmax(0, 1fr) 22px; align-items: center; gap: 3px; min-width: 0; }
 .stack-control button { display: grid; place-items: center; width: 22px; height: 20px; padding: 0; border: 1px solid var(--line-dark); background: transparent; color: var(--ink); font-size: 13px; line-height: 1; }
 .stack-control button:hover, .stack-control button:focus-visible { border-color: var(--ink); background: var(--black); color: var(--white); }

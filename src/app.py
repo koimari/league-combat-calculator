@@ -763,6 +763,36 @@ def _public_event_time(event: Mapping[str, object]) -> float | None:
     return round(parsed, 3)
 
 
+def _target_effective_health(result: Mapping[str, object]) -> float:
+    """Estimate one target's effective health from a legacy engine result.
+
+    The event-ordered combat ledger reports the exact effective health per
+    participant; the standalone per-target engine only carries max health,
+    shield absorption, and healing received.  Summing those three reproduces
+    the ledger's effective-health definition (max health + shields +
+    healing) for the common case so the overkill receipt stays comparable
+    across both response shapes.
+    """
+    return (
+        float(result.get("target_effective_max_health", 0.0))
+        + float(result.get("shield_absorbed", 0.0))
+        + float(result.get("target_healing_received", 0.0))
+    )
+
+
+def _legacy_overkill(result: Mapping[str, object]) -> float:
+    """Return raw total damage beyond the target's effective health.
+
+    The standalone engine keeps applying damage after defeat, so total
+    damage can exceed every amount the target could absorb.  Overkill is
+    that excess; the coupled combat ledger carries the exact per-event
+    value in each participant's survival receipt instead.
+    """
+    return max(
+        0.0, float(result.get("total_damage", 0.0)) - _target_effective_health(result)
+    )
+
+
 def _serialize_fight_result(result: Mapping[str, object]) -> dict:
     """Translate one engine result into the stable public response shape."""
     breakdown = result.get("breakdown", {})
@@ -841,6 +871,8 @@ def _serialize_fight_result(result: Mapping[str, object]) -> dict:
         "target_effective_max_health": round(
             result.get("target_effective_max_health", 0.0), 1
         ),
+        "target_effective_health": round(_target_effective_health(result), 1),
+        "overkill": round(_legacy_overkill(result), 1),
         "ability_damage": round(result["ability_damage"], 1),
         "auto_attack_damage": round(result["auto_attack_damage"], 1),
         "damage_by_type": {
@@ -966,6 +998,10 @@ def _aggregate_public_results(results: list[dict]) -> dict:
         "target_effective_max_health": round(
             sum(result.get("target_effective_max_health", 0.0) for result in results), 1
         ),
+        "target_effective_health": round(
+            sum(_target_effective_health(result) for result in results), 1
+        ),
+        "overkill": round(sum(_legacy_overkill(result) for result in results), 1),
         "ability_damage": round(sum(result["ability_damage"] for result in results), 1),
         "auto_attack_damage": round(
             sum(result["auto_attack_damage"] for result in results), 1
@@ -2603,6 +2639,27 @@ def api_bis():
             role=role,
             role_quest_complete=subject_base.role_quest_complete,
         )
+        # Best-in-slot ranks a *replacement*: the item already occupying the
+        # ranked slot is the unchanged build, so recommending it is a no-op,
+        # not a best pick.  Exclude it from this slot's candidate pool while
+        # leaving it legal for every other slot (moving it to slot 3 makes it
+        # a candidate for slot 0 again).  The empty-slot case has no equipped
+        # item to exclude.
+        equipped_slot_item = (
+            subject_base.boots
+            if slot_kind == "boots"
+            else (
+                subject_base.items[slot_index]
+                if slot_index < len(subject_base.items)
+                else ""
+            )
+        )
+        if equipped_slot_item:
+            candidates = [
+                candidate
+                for candidate in candidates
+                if candidate.get("name") != equipped_slot_item
+            ]
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
@@ -2835,6 +2892,11 @@ def api_bis():
         "subject_index": subject_index,
         "slot_index": slot_index,
         "slot_kind": slot_kind,
+        # The item already in the ranked slot was removed from this slot's
+        # candidate pool (recommending it would be a no-op).  Keep it in the
+        # receipt so the browser can explain why the current item never
+        # appears as its own best replacement.
+        "excluded_equipped_item": equipped_slot_item or None,
         "candidate_scope": (
             f"role-tagged:{role}" if role and slot_kind != "boots" else "all-supported"
         ),

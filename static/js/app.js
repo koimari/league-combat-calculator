@@ -1458,7 +1458,8 @@ function survivalStatus(survival = {}) {
   }
   if (survival?.survived_window || survival?.death_time == null) return "alive at window end";
   const deathTime = Number(survival.death_time);
-  return Number.isFinite(deathTime) ? `defeated at ${one(deathTime)}s` : "alive at window end";
+  if (!Number.isFinite(deathTime)) return "alive at window end";
+  return `defeated at ${killTimeLabel(deathTime) || `${one(deathTime)}s`}`;
 }
 
 function breakdownOutcome(aTotal, bTotal = null) {
@@ -2138,9 +2139,19 @@ function objectiveMetric(result, fallbackDamage = 0) {
   return Number.isFinite(value) ? value : null;
 }
 
+function killTimeLabel(value) {
+  // A finite kill always shows its real time-to-defeat from the timeline.
+  // Zero (or a value that rounds to 0.0) is a defeat at the first event, not
+  // "no time elapsed" — render it as a sub-second label instead of "0 s".
+  if (value == null) return null;
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return "<1 s";
+  return seconds < 0.05 ? "<1 s" : `${one(seconds)} s`;
+}
+
 function objectiveFormat(value) {
   if (value == null) return "Unavailable";
-  if (state.ui.objective === "kill") return `${one(value)} s`;
+  if (state.ui.objective === "kill") return killTimeLabel(value) || "Unavailable";
   const unit = { overall: "TDD", survival: "eHP", damage: "TDD", utility: "value" }[state.ui.objective] || "value";
   return `${fmt(value)} ${unit}`;
 }
@@ -2175,6 +2186,18 @@ function prototypeAbilityCards(champion) {
   }).join("");
 }
 
+function bisTrigger(path, compact = false) {
+  const ready = bisReadyForPath(path);
+  const kind = participantKindForPath(path);
+  const reason = kind === "main"
+    ? "Needs a champion and at least one enemy"
+    : kind === "ally"
+      ? "Needs a champion and role on this ally"
+      : "Needs a champion and role on this enemy";
+  const title = ready ? "Rank every legal item for this slot" : reason;
+  return `<button class="bis-trigger${compact ? " compact" : ""}" type="button" data-bis-path="${path}" title="${escapeHtml(title)}" aria-label="Best item for this slot" ${ready ? "" : "disabled"}>BIS</button>`;
+}
+
 function prototypeItemSlot(id, path, side) {
   const item = getItem(id);
   const field = path.includes("questBoot") ? "boots" : "items";
@@ -2182,7 +2205,7 @@ function prototypeItemSlot(id, path, side) {
   const emptyTitle = capabilityTitle(capabilityFor(kind, field));
   const controlAttrs = capabilityAttributes(kind, field);
   const title = item ? escapeHtml(itemStatsLine(item)) : escapeHtml(emptyTitle);
-  return `<div class="slot-wrap"><button class="slot ${item ? "" : "empty-slot"}" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}"${title ? ` title="${title}"` : ""}>${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>${item && stackSpec(id) ? stackControl(path, id) : ""}${item ? itemOptionControls(path, id) : ""}</div>`;
+  return `<div class="slot-wrap"><button class="slot ${item ? "" : "empty-slot"}" type="button" ${controlAttrs} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : "Add item"}"${title ? ` title="${title}"` : ""}>${item ? `<span class="item-badge">${side}</span><img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" /><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(itemStatsLine(item))}</small>` : `<span>+</span><small>Add item</small>`}</button>${item && stackSpec(id) ? stackControl(path, id) : ""}${item ? itemOptionControls(path, id) : ""}${bisTrigger(path)}</div>`;
 }
 
 function prototypeRosterItemSlot(root, index, loadout, slot) {
@@ -2194,7 +2217,7 @@ function prototypeRosterItemSlot(root, index, loadout, slot) {
   const slotLabel = isBoots ? `<span class="roster-slot-label">Boots</span>` : "";
   const kind = root === "allies" ? "ally" : "enemy";
   const field = isBoots ? "boots" : "items";
-  return `<div class="roster-slot-wrap ${isBoots ? "roster-boots-wrap" : ""}">${slotLabel}<button class="roster-item-slot ${item ? "" : "is-empty"}" type="button" ${capabilityAttributes(kind, field)} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : emptyLabel}" title="${item ? escapeHtml(itemStatsLine(item)) : emptyLabel}">${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" />` : "+"}</button>${item && stackSpec(id) ? stackControl(path, id, true) : ""}${item && !isBoots ? itemOptionControls(path, id, true) : ""}</div>`;
+  return `<div class="roster-slot-wrap ${isBoots ? "roster-boots-wrap" : ""}">${slotLabel}<button class="roster-item-slot ${item ? "" : "is-empty"}" type="button" ${capabilityAttributes(kind, field)} data-picker="item" data-path="${path}" aria-label="${item ? `Change ${escapeHtml(item.name)}` : emptyLabel}" title="${item ? escapeHtml(itemStatsLine(item)) : emptyLabel}">${item ? `<img src="${itemImage(id)}" alt="${escapeHtml(item.name)}" />` : "+"}</button>${item && stackSpec(id) ? stackControl(path, id, true) : ""}${item && !isBoots ? itemOptionControls(path, id, true) : ""}${bisTrigger(path, true)}</div>`;
 }
 
 function prototypeBuildSlots(side) {
@@ -2366,14 +2389,52 @@ function renderPrototypeBuilder() {
   }
 }
 
-function prototypeMetricRow(label, a, b, lower = false, unit = "value") {
+function prototypeMetricRow(label, a, b, lower = false, unit = "value", aAlive = "", bAlive = "") {
   const winner = objectiveWinner(a, b).winner;
-  const format = (value) => value == null ? "—" : lower ? `${one(value)} s` : `${fmt(value)} ${unit}`;
-  return `<div class="metric-row"><span>${label}</span><strong class="metric-a">${format(a)}</strong><strong class="metric-b">${format(b)}</strong><b>${winner === "A" || winner === "B" ? winner : "—"}</b></div>`;
+  // Kill-time rows carry their own formatting: a live build shows the enemy
+  // HP it failed to remove (or "—" when the result is missing), a defeated
+  // build shows the real timeline time-to-death (never "0 s").
+  const format = (value, alive) => value == null
+    ? (alive || "—")
+    : lower
+      ? (killTimeLabel(value) || alive || "—")
+      : `${fmt(value)} ${unit}`;
+  return `<div class="metric-row"><span>${label}</span><strong class="metric-a">${format(a, aAlive)}</strong><strong class="metric-b">${format(b, bAlive)}</strong><b>${winner === "A" || winner === "B" ? winner : "—"}</b></div>`;
 }
 
 function prototypeParticipants(result) {
   return result?.combat?.participants || [];
+}
+
+function enemyParticipants(result) {
+  return (result?.combat?.participants || []).filter((row) => row.team === "enemy" || String(row.participant_id || "").startsWith("enemy:"));
+}
+
+function enemyEffectiveHealth(result) {
+  const enemies = enemyParticipants(result);
+  if (enemies.length) {
+    return enemies.reduce((sum, row) => sum + Number(row.survival?.effective_health || 0), 0);
+  }
+  // No coupled ledger (generic-path results): fall back to the serialized
+  // target receipt surfaced by /api/calculate.
+  return Number(result?.target_effective_health ?? result?.target_effective_max_health ?? 0);
+}
+
+function enemyHealthRemaining(result) {
+  const enemies = enemyParticipants(result);
+  if (!enemies.length) return "";
+  const ending = enemies.reduce((sum, row) => sum + Math.max(0, Number(row.survival?.ending_health ?? 0)), 0);
+  if (ending <= 0) return "";
+  const max = enemies.reduce((sum, row) => sum + Math.max(0, Number(row.survival?.max_health ?? row.survival?.effective_health ?? 0)), 0);
+  const pct = max > 0 ? Math.round((ending / max) * 100) : null;
+  return `alive · ${fmt(ending)} HP${pct != null ? ` (${pct}%)` : ""}`;
+}
+
+function enemyOverkill(result, totalDamage) {
+  const enemies = enemyParticipants(result);
+  const exact = enemies.reduce((sum, row) => sum + Math.max(0, Number(row.survival?.overkill || 0)), 0);
+  const formula = Math.max(0, Number(totalDamage || 0) - enemyEffectiveHealth(result));
+  return Math.max(exact, formula);
 }
 
 function renderPrototypeResult(aResult = null, bResult = null) {
@@ -2414,9 +2475,11 @@ function renderPrototypeResult(aResult = null, bResult = null) {
         : "The selected objective is unavailable for this comparison.";
   $("scoreA").textContent = objectiveFormat(aValue);
   $("scoreB").textContent = objectiveFormat(bValue);
+  const aAlive = enemyHealthRemaining(aResult);
+  const bAlive = bResult ? enemyHealthRemaining(bResult) : "";
   $("metricList").innerHTML = [
     prototypeMetricRow("Overall", aValues.overall, bValues.overall, false, "TDD"),
-    prototypeMetricRow("Kill time", aValues.kill, bValues.kill, true),
+    prototypeMetricRow("Kill time", aValues.kill, bValues.kill, true, "s", aAlive, bAlive),
     prototypeMetricRow("Survival", aValues.survival, bValues.survival, false, "eHP"),
     prototypeMetricRow("Damage", aValues.damage, bValues.damage, false, "TDD"),
     prototypeMetricRow("Utility", aValues.utility, bValues.utility, false, "value"),
@@ -2486,7 +2549,9 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   const overflow = combatEvents.length > 24 || healingEvents.length > 12 || supportEvents.length > 12
     ? `<div class="ledger-line"><span>Additional receipts</span><strong>${combatEvents.length > 24 ? combatEvents.length - 24 : 0} damage · ${healingEvents.length > 12 ? healingEvents.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
     : "";
-  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD`}</strong></div>${eventRows.join("")}${healingRows.join("")}${supportRows.join("")}${overflow}`;
+  const enemyEhp = enemyEffectiveHealth(aResult);
+  const overkill = aTotal == null ? 0 : enemyOverkill(aResult, aTotal);
+  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}`}</strong></div><div class="ledger-line"><span>Enemy effective HP</span><strong>${enemyEhp > 0 ? fmt(enemyEhp) : "—"}</strong></div>${eventRows.join("")}${healingRows.join("")}${supportRows.join("")}${overflow}`;
   // P4: the per-ability damage table carries a certainty chip next to every
   // sourced number. It re-renders on every result so chips track the loaded
   // /api/certainty contract (or its placeholder fallback).

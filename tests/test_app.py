@@ -1069,7 +1069,9 @@ def test_damage_breakdown_leads_with_result_and_keeps_event_audit_disclosed():
     assert "function survivalStatus" in source
     assert "alive at window end" in source
     assert "revived at ${one(reviveTime)}s" in source
-    assert "defeated at ${one(deathTime)}s" in source
+    # F1: defeat timing still discloses the timeline time-to-death, routed
+    # through killTimeLabel so a first-event defeat is "<1 s", never "0 s".
+    assert "defeated at ${killTimeLabel(deathTime)" in source
     assert 'class="breakdown-audit"' in source
     assert 'aria-label="Event order audit"' in source
 
