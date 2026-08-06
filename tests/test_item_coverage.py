@@ -200,10 +200,15 @@ def test_representative_item_classifications(item_name, expected_status):
 
 
 def test_gunmetal_gait_source_conflict_keeps_boot_stats_eligible():
-    """The unresolved movement branch is explicit without losing boot stats."""
+    """The unresolved movement branch is explicit without losing boot stats.
+
+    The boot's life steal is now pinned by the typed sustain receipt, so the
+    item classifies as a modeled effect; Noxian Gait remains documented as
+    out of scope and the stats stay optimizer-eligible.
+    """
     coverage = item_model_coverage(get_item_by_name("Gunmetal Greaves"))
 
-    assert coverage["status"] == "stats_only"
+    assert coverage["status"] == "modeled_effect"
     assert coverage["optimizer_eligible"] is True
     assert "Noxian Gait" in coverage["reason"]
     assert "out of scope" in coverage["reason"]

@@ -509,6 +509,15 @@ def item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     elif name in _BLOCKED_REASONS:
         status = "blocked"
         reason = _BLOCKED_REASONS[name]
+    elif name == "Gunmetal Greaves":
+        # The boot's life steal is now pinned by the typed sustain receipt,
+        # but Noxian Gait's Riot-only movement branch stays out of scope.
+        status: ItemCoverageStatus = "modeled_effect"
+        reason = (
+            "Noxian Gait's Riot-only movement branch remains explicitly out of "
+            "scope because its magnitude and spacing input are not sourced; the "
+            "boot's attack-speed and life-steal stats are still applied."
+        )
     elif name in ITEM_EFFECTS:
         status: ItemCoverageStatus = "modeled_effect"
         reason = "Damage-relevant effects are represented by the fight model."

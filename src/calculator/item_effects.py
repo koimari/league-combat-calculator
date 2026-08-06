@@ -1548,6 +1548,41 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # still supplies ordinary stats, but the current Wiki entries describe
     # the stateful heal/regen branches below and those branches are not
     # reliably represented in the Riot description cache.
+    #
+    # ── Typed lifesteal stats ──────────────────────────────────────────
+    # Life steal is a flat stat the Wiki publishes in Module:ItemData/data
+    # (the cached item JSON) and on each item page.  The typed registry
+    # pins the percent beside the item page revision so a parser refresh
+    # cannot silently change sustain; ``grouped_sustain_stat_percent()`` is
+    # fail-closed and raises when a cached lifesteal item has no entry.
+    "Vampiric Scepter": {
+        "type": "sustain",
+        "lifesteal_percent": 7.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Vampiric_Scepter",
+        "source_revision_id": 4030549,
+    },
+    "Mercurial Scimitar": {
+        "type": "sustain",
+        "lifesteal_percent": 10.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Mercurial_Scimitar",
+        "source_revision_id": 3984461,
+    },
+    # Bloodthirster, Blade of the Ruined King and Ravenous Hydra already
+    # have typed effect entries (defensive_start / on_hit / active); their
+    # lifesteal keys live on those entries so the registry keeps one record
+    # per item.
+    "Gunmetal Greaves": {
+        "type": "sustain",
+        "lifesteal_percent": 5.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Gunmetal_Greaves",
+        "source_revision_id": 4013706,
+    },
+    "Guardian's Hammer": {
+        "type": "sustain",
+        "lifesteal_percent": 5.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Guardian%27s_Hammer",
+        "source_revision_id": 3878343,
+    },
     "Doran's Blade": {
         "type": "sustain",
         "direct_heal_post_mitigation_ratio": 0.025,
@@ -1658,6 +1693,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "current_hp_ratio_melee": 0.09,
         "current_hp_ratio_ranged": 0.06,
         "min_damage": 5.0,  # Flat minimum when target HP is modeled at 0
+        # Typed sustain stat: 10% life steal (wiki Module:ItemData/data +
+        # item page revision).
+        "lifesteal_percent": 10.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Blade_of_the_Ruined_King",
+        "source_revision_id": 4044693,
     },
     "Wit's End": {
         "type": "on_hit",
@@ -2016,6 +2056,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # full effectiveness.  This value is parser-owned from the cached
         # branch text, not a call-site fallback.
         "lifesteal_effectiveness": 1.0,
+        # Typed sustain stat: 12% life steal (wiki Module:ItemData/data +
+        # item page revision).
+        "lifesteal_percent": 12.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Ravenous_Hydra",
+        "source_revision_id": 4047314,
         "cooldown": 10.0,
     },
     "Runaan's Hurricane": {
@@ -2486,6 +2531,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "ichorshield_max": 315.0,
         "ichorshield_scale_start_level": 9,
         "ichorshield_scale_end_level": 18,
+        # Typed sustain stat: 15% life steal (wiki Module:ItemData/data +
+        # item page revision).
+        "lifesteal_percent": 15.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Bloodthirster",
+        "source_revision_id": 4025103,
     },
     "Kaenic Rookern": {
         "type": "defensive_start",
@@ -2793,6 +2843,9 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "ichorshield_max",
             "ichorshield_scale_start_level",
             "ichorshield_scale_end_level",
+            "lifesteal_percent",
+            "source_url",
+            "source_revision_id",
         }
     ),
     "Doran's Blade": frozenset(
@@ -2912,7 +2965,9 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     "Banshee's Veil": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
     "Edge of Night": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
     "Verdant Barrier": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
-    "Blade of the Ruined King": frozenset({"min_damage"}),
+    "Blade of the Ruined King": frozenset(
+        {"min_damage", "lifesteal_percent", "source_url", "source_revision_id"}
+    ),
     "Blackfire Torch": frozenset({"tick_interval"}),
     "Bami's Cinder": frozenset({"event_interval"}),
     "Fated Ashes": frozenset({"tick_interval"}),
@@ -2983,7 +3038,9 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "cooldown",
         }
     ),
-    "Ravenous Hydra": frozenset({"cooldown"}),
+    "Ravenous Hydra": frozenset(
+        {"cooldown", "lifesteal_percent", "source_url", "source_revision_id"}
+    ),
     "Tiamat": frozenset({"cooldown"}),
     "Thornmail": frozenset({"bonus_armor_ratio"}),
     "Seraph's Embrace": frozenset(
@@ -3040,6 +3097,22 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
     # the full Wiki entry is the source receipt for this code-owned value.
     "Actualizer": frozenset({"mana_made_real_cooldown"}),
     "Riftmaker": frozenset({"max_stack_omnivamp_ranged"}),
+    # Typed lifesteal stats: the percent and its item-page source receipt are
+    # code-owned so a parser refresh cannot overwrite them.  Bloodthirster,
+    # Blade of the Ruined King and Ravenous Hydra merge these keys into their
+    # existing entries above so the registry keeps one record per item.
+    "Vampiric Scepter": frozenset(
+        {"lifesteal_percent", "source_url", "source_revision_id"}
+    ),
+    "Mercurial Scimitar": frozenset(
+        {"lifesteal_percent", "source_url", "source_revision_id"}
+    ),
+    "Gunmetal Greaves": frozenset(
+        {"lifesteal_percent", "source_url", "source_revision_id"}
+    ),
+    "Guardian's Hammer": frozenset(
+        {"lifesteal_percent", "source_url", "source_revision_id"}
+    ),
 }
 
 
@@ -3176,6 +3249,95 @@ def override_item_stat(item_name: str, stat_key: str, value: float) -> float:
     if key not in effect:
         return float(value)
     return sustain_effect_value(item_name, key)
+
+
+# Cache stat name + component for each grouped sustain stat.  ``None`` means
+# flat and percent both count (heal-and-shield power).
+_SUSTAIN_STAT_CACHE_KEYS: dict[str, tuple[str, str | None]] = {
+    "lifesteal_percent": ("lifesteal", "percent"),
+    "omnivamp_percent": ("omnivamp", "percent"),
+    "heal_and_shield_power_percent": ("healAndShieldPower", None),
+}
+
+
+def _cached_sustain_stat(item: dict[str, Any], stat_key: str) -> float:
+    """Return what the cached item JSON declares for one sustain stat."""
+    cache_key = _SUSTAIN_STAT_CACHE_KEYS.get(stat_key)
+    if cache_key is None:
+        return 0.0
+    stats = item.get("stats")
+    if not isinstance(stats, Mapping):
+        return 0.0
+    raw = stats.get(cache_key[0], {})
+    if not isinstance(raw, Mapping):
+        return 0.0
+    if cache_key[1] is None:
+        return float(raw.get("flat", 0.0) or 0.0) + float(
+            raw.get("percent", 0.0) or 0.0
+        )
+    return float(raw.get(cache_key[1], 0.0) or 0.0)
+
+
+def sustain_stat_receipt(item_name: str, stat_key: str) -> dict[str, Any]:
+    """Return one typed sustain stat and its wiki source receipt.
+
+    The registry entry owns the value and the item-page revision it was
+    sourced from; a missing key raises, naming the item and key, instead of
+    letting a parser break silently change sustain.
+    """
+    effect = ITEM_EFFECTS.get(item_name, {})
+    if stat_key not in effect:
+        raise KeyError(
+            f"ITEM_EFFECTS[{item_name!r}] is missing {stat_key!r} — "
+            "no typed sustain stat is pinned for this item"
+        )
+    return {
+        "item": item_name,
+        "stat_key": stat_key,
+        "value": sustain_effect_value(item_name, stat_key),
+        "source_url": str(
+            effect.get(
+                "source_url",
+                "https://wiki.leagueoflegends.com/en-us/" + item_name.replace(" ", "_"),
+            )
+        ),
+        "source_revision_id": int(effect.get("source_revision_id", 0) or 0),
+    }
+
+
+def grouped_sustain_stat_percent(items: list[dict[str, Any]], stat_key: str) -> float:
+    """Sum one sustain stat across a build from the typed effect registry.
+
+    The typed registry is authoritative for the sustain stats it pins.  An
+    override key (``stat_override_<stat_key>`` — Doran's Blade's retired
+    omnivamp is the canonical example) wins when present.
+
+    Lifesteal is fail-closed: every cached item that carries life steal must
+    have a typed entry, so a parser break cannot silently drop healing.  A
+    missing registry key raises, naming the item and key.  Sparse unit-test
+    fixtures (name-only item dicts) carry no cached stat map and therefore
+    have no claim to enforce; they read the typed entry where one exists.
+    """
+    total = 0.0
+    for item in items:
+        name = str(item.get("name") or "")
+        effect = ITEM_EFFECTS.get(name, {})
+        override_key = f"stat_override_{stat_key}"
+        if override_key in effect:
+            total += sustain_effect_value(name, override_key)
+            continue
+        if stat_key in effect:
+            total += sustain_effect_value(name, stat_key)
+            continue
+        if (
+            stat_key == "lifesteal_percent"
+            and _cached_sustain_stat(item, stat_key) > 0.0
+        ):
+            raise KeyError(
+                f"ITEM_EFFECTS[{name!r}] is missing {stat_key!r} — cached "
+                "item data carries life steal but no typed sustain entry pins it"
+            )
+    return total
 
 
 def _item_names(items: list[dict[str, Any]]) -> set[str]:
