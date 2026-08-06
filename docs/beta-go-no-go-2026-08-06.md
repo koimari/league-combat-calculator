@@ -27,6 +27,28 @@ gate remains **PENDING** and the decision is **NO-GO**.
 | Sentry DSN | **Unavailable** (billing inactive) |
 | Auth encrypted env values | **Unverified** |
 
+## Production Metrics Verification
+
+Production metrics were verified by running:
+
+```
+vercel env run -e production -- .venv/bin/python scripts/beta_metrics.py --beta-start 2026-08-06T22:29:00+00:00 --weeks 2 --json
+```
+
+This returned `sessions_observed=0`, `builds=0`, `metrics_events=0`,
+`receipts=0`, and the beta gate remained **PENDING** — the window is not yet
+complete.
+
+The canonical completed window was also checked:
+
+```
+vercel env run -e production -- .venv/bin/python scripts/beta_metrics.py --beta-start 2026-07-23 --weeks 2 --json
+```
+
+It returned receipts **FAIL** (0/week for both weeks) and an overall **FAIL**.
+
+Because the GO criteria are unmet, **no invites were distributed**.
+
 ## Go Thresholds (evidence required before GO)
 
 - Activation **>= 60%**
