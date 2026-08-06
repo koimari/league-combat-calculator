@@ -1631,7 +1631,6 @@ def derive_self_healing(
                 }
             )
 
-
     elif name == "Udyr":
         # Iron Mantle (W): the shield stance heals every 0.25 s over 4 s
         # (wiki: "Heal per Tick" x16 == "Total Healing", e2-dot-3 sourced).
