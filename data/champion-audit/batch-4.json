@@ -1,0 +1,437 @@
+{
+  "Naafiri": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 30,
+    "notable_atoms": [
+      "summon (P packmates)",
+      "execute (Q bleed executes minions/monsters; P)",
+      "damage over time (Q bleed, 10 ticks)",
+      "shield (W hunt, R hounds)",
+      "self-heal (Q recast on bleeding champion)",
+      "untargetable (R)",
+      "dash (E)",
+      "blind/slow CC"
+    ],
+    "gap_summary": "GAP: Q packet models only 'Initial Physical Damage' (35-55 + 20% bAD); wiki Q also has Total Bleed 35-135 + 80% bAD (atoms damage.dot NaafiriQ), recast bonus damage 30-160 + 40-140% bAD (atoms damage.execute NaafiriQ), and a self-heal row (Heal 45-105 + 40% bAD, effect[1]) \u2014 none modeled, Naafiri absent from HEALING_RULE_CHAMPIONS. E packet models only 'Dash Physical Damage' (15-55 + 40% bAD); the Flurry explosion (60-160 + 80% bAD, ~80% of E's Total Physical Damage 75-215 + 120% bAD) is missing. P packmate summon and W/R shields (atoms heal-shield.shield NaafiriW/NaafiriRShield) are declared out_of_scope.",
+    "verdict": "gap"
+  },
+  "Nami": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 26,
+    "notable_atoms": [
+      "heal (W Ebb and Flow)",
+      "immobilize/knock-up (Q, R)",
+      "slow (E, R)",
+      "on-hit buff (E 3 empowered hits)",
+      "sight (R)",
+      "bounce/multi-target (W)"
+    ],
+    "gap_summary": "GAP: W 'Ebb and Flow' is modeled as damage only (60-200 + 50% AP \u2014 correct row); the heal component (Heal 55-155 + 40% AP, atoms heal-shield.heal NamiW) is unmodeled and Nami is absent from HEALING_RULE_CHAMPIONS. E packet models per-hit bonus (20-80 + 20% AP) not the 3-hit Total Bonus Magic Damage (60-240 + 60% AP). CC (Q/R knock-up, E slow) is utility out of scope.",
+    "verdict": "gap"
+  },
+  "Nasus": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 22,
+    "notable_atoms": [
+      "stack (Q Siphoning Strike)",
+      "on-hit empower + attack reset (Q)",
+      "damage over time (E Spirit Fire zone)",
+      "max-health damage per tick (R Fury of the Sands)",
+      "lifesteal (P Soul Eater)"
+    ],
+    "gap_summary": "GAP: Q stack scaling is lost \u2014 wiki Q 'Bonus Physical Damage' = 40-120 + 100% of Siphoning Strike stacks, but '% of Siphoning Strike stacks' is an unrecognized unit in scaling.py (resolve_scaling returns 0.0), so Q models only the flat 40-120 with no stack input (atom stack NasusQStacks). E packet models the initial hit only (50-170 + 60% AP); the per-tick DoT (10-34 + 12% AP, atoms damage.dot NasusE) is unmodeled. P lifesteal 12-24% unmodeled (not in HEALING_RULE_CHAMPIONS).",
+    "verdict": "gap"
+  },
+  "Nautilus": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 34,
+    "notable_atoms": [
+      "shield (W Titan's Wrath)",
+      "on-hit empower + DoT (W)",
+      "root/immobilize (P, Q, R)",
+      "knock-up (R)",
+      "multi-wave AoE (E)",
+      "attack reset (W)"
+    ],
+    "gap_summary": "REVIEW: all 5 slots modeled as packets; Q/E/R damage rows match the wiki. P packet base 0.75-1.5 with no ratio looks like the %max-HP 'Bonus Damage' row read as a flat amount while the 14-128 per-level flat term is dropped (atoms only record the P root, WS4 missed P damage). W packet = per-hit magic damage (15-35 + 20% AP, count null) not the Total Magic Damage 30-70 + 40% AP; the W shield (atoms heal-shield.shield NautilusPiercingGazeShield) is unmodeled. Needs judgment on P/W numeric intent.",
+    "verdict": "review"
+  },
+  "Neeko": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 21,
+    "notable_atoms": [
+      "transform (P Inherent Glamour disguise)",
+      "clone + stealth (W Shapesplitter)",
+      "shield (R Pop Blossom)",
+      "root (E)",
+      "stun (R)",
+      "stack on-hit (W)",
+      "subsequent-burst damage (Q)"
+    ],
+    "gap_summary": "REVIEW: Q/W/E/R damage rows modeled (Q initial 60-260 + 60% AP, W on-hit bonus 30-170 + 60% AP, E 70-210 + 65% AP, R 150-550 + 120% AP). Q's 'Subsequent Magic Damage' bounces (35-135 + 25% AP) not modeled. P disguise transform, W clone/stealth (atoms stack-transform-summon-resource.transform/clone, vision-economy.stealth) and R shield (atoms heal-shield.shield NeekoRShield) are out_of_scope; W packet models only the on-hit damage of a clone/utility slot.",
+    "verdict": "review"
+  },
+  "Nidalee": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "out_of_scope"
+    },
+    "atoms_total": 29,
+    "notable_atoms": [
+      "transform (R Aspect of the Cougar, human/cougar forms)",
+      "heal (E Primal Surge)",
+      "trap + sight (W Bushwhack)",
+      "dash (W Pounce)",
+      "on-hit/execute (Q Takedown)",
+      "attack reset (Q Takedown)"
+    ],
+    "gap_summary": "GAP: E Primal Surge heal (50-300 + 35-70% AP, atoms heal-shield.heal PrimalSurge) is unmodeled and Nidalee is absent from HEALING_RULE_CHAMPIONS \u2014 the human-form E slot is not modeled at all (packet E = cougar Swipe only). Form switching is partially expressed via q_variant/w_variant options (defaults = human Javelin Toss / Bushwhack; cougar Takedown/Pounce selectable). Javelin Toss packet uses only the MAXIMUM damage row (227.5-487.5 + 162.5% AP, full range) with no min/range option; Bushwhack packet = per-tick 10-50 + 5% AP (count null) not the 4-tick Total 40-200 + 20% AP.",
+    "verdict": "gap"
+  },
+  "Nilah": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 45,
+    "notable_atoms": [
+      "heal + overheal-shield (P Joy Unending, Q Formless Blade, R Apotheosis)",
+      "crit-scaled damage (Q min 100% AD / max 191% AD)",
+      "armor penetration (Q passive 0-30% crit)",
+      "parry/magic immunity (W Jubilant Veil)",
+      "dash + attack reset (E)",
+      "multi-tick DoT (R)"
+    ],
+    "gap_summary": "GAP: the whole heal/shield family is unmodeled \u2014 P shield and Q/R heal+shield atoms (NilahPShield, NilahQ, NilahR heal-shield entries; wiki: heal 0-20% of post-mitigation damage, overheal converts to shield), and Nilah is absent from HEALING_RULE_CHAMPIONS. Q packet uses the crit-scaled MAXIMUM damage (0-76.4 + 191% AD) as a flat value with no crit input (min is 0-40 + 100% AD) and drops the passive heal/armor-pen. R packet models per-tick (15-35 + 10% bAD) not the Total 60-140 + 40% bAD plus burst. W parry (atoms interaction.parry NilahW) out_of_scope.",
+    "verdict": "gap"
+  },
+  "Nocturne": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 16,
+    "notable_atoms": [
+      "on-hit AoE (P Umbra Blades)",
+      "self-heal on P hit (wiki; not in atom file)",
+      "spell shield + CC immunity (W)",
+      "slow + channel + dash (R Paranoia)",
+      "fear DoT (E)"
+    ],
+    "gap_summary": "REVIEW: P/Q/E/R damage rows modeled (P 13-32 + 30% AP, Q 65-225 + 85% bAD, E per-tick 20-65 + 25% AP, R 150-400 + 120% bAD). P's self-heal (13-32 + 30% AP per enemy hit) exists in the wiki cache but NOT in the atom file (WS4 missed it), so no atom-level gap; E packet models per-tick damage (count null) while the wiki Total Magic Damage is 80-260 + 100% AP over 4 ticks. W spell shield + CC immunity (atoms heal-shield.shield, crowd-control-mobility.cc-immunity) declared out_of_scope.",
+    "verdict": "review"
+  },
+  "Nunu": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 32,
+    "notable_atoms": [
+      "self-heal (Q Consume, +50% below half HP, 60% vs champions)",
+      "true damage vs non-champions (Q)",
+      "magic damage vs champions (Q)",
+      "channel + knock-up + snowball (W)",
+      "snowball barrage + Snowbound detonation (E)",
+      "stack/mark (E)",
+      "channel + shield (R)"
+    ],
+    "gap_summary": "GAP: Q packet models 'Non-Champion True Damage' (400-1200) \u2014 the wrong basis for a champion-combat calculator; vs champions Consume deals 'Champion Magic Damage' 60-220 + 65% AP + 5% bHP (wiki effect[2]) which is unmodeled, and the Q self-heal (39-111 + 54% AP + 6% bHP vs champions; atoms list Q damage but the wiki heal is absent from the atom file) is unmodeled with Nunu absent from HEALING_RULE_CHAMPIONS. E packet models the Snowbound detonation row (20-60 + 80% AP) instead of the barrage (per-hit 15-45 + 12% AP x3 = Total 45-135 + 36% AP per cast). R shield (atoms heal-shield.shield NunuRShield) out_of_scope.",
+    "verdict": "gap"
+  },
+  "Olaf": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "out_of_scope"
+    },
+    "atoms_total": 22,
+    "notable_atoms": [
+      "shield (W Tough It Out)",
+      "lifesteal + attack speed (P Berserker Rage)",
+      "true damage (E Reckless Swing)",
+      "self-damage health cost (E)",
+      "CC immunity (R Ragnarok)",
+      "on-hit + attack reset (W)"
+    ],
+    "gap_summary": "REVIEW: Q (70-270 + 100% bAD) and E (70-250 + 50% AD true damage) packets match the wiki. W shield (10-130 + 17.5% missing health, atoms heal-shield.shield OlafWShield/OlafFrenziedStrikes), P lifesteal 8-27.67%, E health-cost self-damage + kill-heal, and R CC immunity are all explicitly out_of_scope; no heal atoms in the file, so the missing mechanics are defensive/utility by design.",
+    "verdict": "review"
+  },
+  "Orianna": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 24,
+    "notable_atoms": [
+      "stack-ramped on-hit (P Clockwork Windup)",
+      "shield + resistances (E Command: Protect)",
+      "ghost/speed field (W)",
+      "stun/pull (R)",
+      "ball summon state (P)"
+    ],
+    "gap_summary": "OK: custom module models all slots \u2014 P stack ramp on-hit (fail-loud stack-cap reconstruction), Q/W/R full damage, E pass-through damage with e_passes_through_target option. E shield (55-195 + 45% AP) and bonus resistances, W speed field, R stun/pull are explicitly excluded in ASSUMPTIONS (defensive/utility), matching atoms (heal-shield.shield OrianaRedactShield, crowd-control-mobility.ghost/stun). No damage-relevant atom family missing.",
+    "verdict": "ok"
+  },
+  "Ornn": {
+    "module_slots": {
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 27,
+    "notable_atoms": [
+      "summon terrain (Q pillar)",
+      "Brittle debuff (W/R)",
+      "multi-tick DoT (W 5 ticks)",
+      "dash + knock-up on terrain (E)",
+      "multi-pass damage (R 2 passes)",
+      "item forge/upgrade (P)"
+    ],
+    "gap_summary": "OK: custom module models Q (20-120 + 110% AD), W (5 sourced 0.15s ticks = Total Magic Damage 12-16% max HP), E (Physical Damage 80-260), R (2 passes default, r_passes option, Total Magic Damage 250-450 + 40% AP). P item forge (atoms damage.tag-item OrnnPGrantItem/OrnnPAllyItemGive) declared out of scope with documented assumption; Brittle state exposed in detail receipts; Q pillar terrain and E knock-up are CC/state mechanics not damage. E's bonus-armor/MR scaling (% bonus armor / % bonus magic resistance) is supported by scaling.py.",
+    "verdict": "ok"
+  },
+  "Pantheon": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 37,
+    "notable_atoms": [
+      "execute (Q increased damage vs <20% HP)",
+      "Mortal Will stack empowered Q (P)",
+      "stun (W Shield Vault)",
+      "parry/CC immunity (E)",
+      "shield slam (E)",
+      "blink + channel (R)"
+    ],
+    "gap_summary": "GAP: Q packet models only the base 'Hurl Physical Damage' (70-190 + 115% bAD + 50% AP); the execute version 'Increased Hurl Damage' (155-455 + 230% bAD + 100% AP vs <20% HP, atoms damage.execute PantheonQ) and the Mortal Will empowered-Q per-level term (20-265.88, P stack mechanic) are unmodeled. Also inconsistent: the packet contains a W (Shield Vault, %max-HP wiki_attribute) spec but MODULE_COVERAGE declares W out_of_scope. E parry/CC-immunity (atoms interaction.parry PantheonE) and E shield-slam are out_of_scope. R = center damage (300-700 + 100% AP), edge reduced damage unmodeled.",
+    "verdict": "gap"
+  },
+  "Poppy": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 31,
+    "notable_atoms": [
+      "shield (P Iron Ambassador buckler return)",
+      "double-hit zone damage (Q Hammer Shock)",
+      "anti-dash + knock-up (W Steadfast Presence)",
+      "dash + stun (E Heroic Charge)",
+      "chargeable knockback (R Keeper's Verdict)"
+    ],
+    "gap_summary": "REVIEW: all 5 slots modeled; Q double-hit is correctly handled (packet_module doubles total, 1s interval). P packet models only the %max-HP term (0.11-0.2106 ratio, base 0) and drops the flat 'Bonus Magic Damage' 20-198.82 (based on level); the P buckler shield (atoms heal-shield.shield PoppyPassiveShield) is unmodeled. R packet = uncharged damage (100-200 + 45% bAD); the charged 'Increased Damage' 200-400 + 90% bAD is not modeled. W/E rows match.",
+    "verdict": "review"
+  },
+  "Pyke": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 26,
+    "notable_atoms": [
+      "grey-health self-heal (P Gift of the Drowned Ones)",
+      "execute (R Death from Below)",
+      "stealth/camouflage (W Ghostwater Dive)",
+      "dash + stun (E)",
+      "channel + pull (Q hook)",
+      "melee/ranged reclassification (Q)"
+    ],
+    "gap_summary": "GAP: P grey-health heal (atoms heal-shield.heal PykePHealON/PykePHealOFF) is unmodeled and Pyke is absent from HEALING_RULE_CHAMPIONS. R packet is a 13-value array (375-825 = 1.5x the per-level execute threshold 250-550) with no AD/lethality scaling and rank-pinned to the first 3 values (levels 6-8) \u2014 the wiki damage is 125-275 + 40% bAD + 0.75/Lethality (50% of threshold) for non-executed targets; needs human validation. Q melee/hook variants (atom stack-transform-summon-resource.ranged-melee-reclassification PykeQMelee) and W stealth (vision-economy.stealth) are out_of_scope; Q/E damage rows match.",
+    "verdict": "gap"
+  },
+  "Qiyana": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 48,
+    "notable_atoms": [
+      "elemental Q variants (edge/brush-river/terrain)",
+      "execute (Q terrain below-50% HP increased damage; P per-target cooldown)",
+      "on-hit riders (P Royal Privilege, W Terrashape)",
+      "stealth (Q brush)",
+      "root (Q river)",
+      "wall bounce + knockback (R)"
+    ],
+    "gap_summary": "OK: custom module models P on-hit (15-91 + 25% bAD + 30% AP), Q element variants (q_variant 0-2 with q_target_below_half option covering the terrain execute), W on-hit rider (8-40 + 20% bAD + 45% AP), E (50-210 + 50% bAD), R (100-300 + 125% bAD + 10% max HP \u2014 full wiki row). Stealth/root/wall CC (atoms vision-economy.stealth, crowd-control-mobility.root, summon terrain) are utility out of scope; R's damage row is fully modeled (the atom rule:execute on R/P reflects the below-half/wall conditionals, already expressible via options).",
+    "verdict": "ok"
+  },
+  "Quinn": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 20,
+    "notable_atoms": [
+      "on-hit mark + bonus damage (P Harrier)",
+      "blind + sight reduction (Q)",
+      "vision + attack speed (W)",
+      "dash + root + attack reset (E)",
+      "transform/channel (R Behind Enemy Lines) + dive damage (Skystrike)"
+    ],
+    "gap_summary": "GAP: P Harrier on-hit bonus damage (15-132.35 + 40% bAD, atoms stack-transform-summon-resource.ammo QuinnPassiveAmmo) is declared out_of_scope while equivalent damage passives are modeled elsewhere (Nocturne P, Qiyana P, Orianna P all emit ONHIT entries) \u2014 inconsistent coverage of the on-hit family. Q/E damage rows match (Q 65-205 + 80-100% bAD + 50% AP; E 40-140 + 20% bAD). R packet = Skystrike dive damage (60-120 + 35% bAD); the R transform (Valor channel, atoms transform QuinnR) is out_of_scope.",
+    "verdict": "gap"
+  },
+  "Rakan": {
+    "module_slots": {
+      "Q": "modeled",
+      "W": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 40,
+    "notable_atoms": [
+      "shield (P Fey Feathers, E Battle Dance)",
+      "heal (Q Gleaming Quill on-hit heal)",
+      "charm (W Grand Entrance)",
+      "dash (W, E)",
+      "mark (Q)",
+      "debuff (R)"
+    ],
+    "gap_summary": "GAP: the heal/shield family is entirely unmodeled \u2014 P shield (30-247.94 + 95% AP, atoms heal-shield.shield RakanPassiveShield), Q heal (40-230 + 50% AP, atoms heal-shield.heal RakanQHeal/RakanQ) and E shield (50-150 + 70% AP, atoms RakanEShield); Rakan is absent from HEALING_RULE_CHAMPIONS. The module's assumptions explicitly exclude the Q ally heal ('its ally heal is excluded') and P/E slots are absent from SLOTS entirely; Q/W/R damage rows match the wiki. A human should confirm heal/shield exclusion policy.",
+    "verdict": "gap"
+  },
+  "Rammus": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "out_of_scope",
+      "R": "modeled"
+    },
+    "atoms_total": 22,
+    "notable_atoms": [
+      "return magic damage on-hit (W Defensive Ball Curl)",
+      "armor/MR buff (W)",
+      "channel + knock-back + stun (Q Powerball)",
+      "taunt (E Frenzying Taunt)",
+      "slow + DoT (R Soaring Slam)"
+    ],
+    "gap_summary": "GAP: W packet mis-models the damage \u2014 packet base 27-47 + 30-60% total armor matches the wiki 'Bonus Armor' row (a defensive buff), but Defensive Ball Curl's actual damage is 15 + 10% total armor + 10% total magic resistance (rank-independent, wiki effect[0]); the wiki cache has no damage leveling row for W so the packet reused the armor row as magic damage. Q (80-240 + 100% AP) and R (150-350 + 60% AP) rows match. E taunt (atoms crowd-control-mobility.taunt) and P spiked-shell are out_of_scope.",
+    "verdict": "gap"
+  },
+  "RekSai": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 57,
+    "notable_atoms": [
+      "burrow/unburrow toggle (W, q_variant)",
+      "on-hit + attack reset (Q Queen's Wrath)",
+      "burrowed Q (Prey Seeker)",
+      "true damage at max Fury (E Furious Bite 120%)",
+      "mark + dash (R Void Rush)",
+      "tunnel summon (E)",
+      "health regen (P)"
+    ],
+    "gap_summary": "REVIEW: Q variants (Queen's Wrath 30-50% AD on-hit; Prey Seeker 50-170 + 25% bAD + 70% AP), W Unburrow (30-130 + 80% AP), E Furious Bite physical (70-170 + 60% bAD) and R Void Rush (150-350 + 100% bAD + 15-25% max HP) match the wiki. The max-Fury E variant (True Damage 84-204 + 72% bAD, atoms RekSaiE true-damage note) is unmodeled (no fury state option). P regen (atoms heal-shield.health-regeneration RekSaiPRegen) and P max-HP damage, tunnel summon, and burrow CC are out_of_scope; burrow form state is only partially expressible via q_variant.",
+    "verdict": "review"
+  },
+  "Rell": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "out_of_scope",
+      "R": "modeled"
+    },
+    "atoms_total": 32,
+    "notable_atoms": [
+      "mount/dismount toggle (W, w_variant)",
+      "shield (W Crash Down)",
+      "on-hit bonus damage (P Break the Mold, E Full Tilt empowered attack)",
+      "stun (Q, E)",
+      "knock-up (W)",
+      "multi-tick DoT (R Magnet Storm)"
+    ],
+    "gap_summary": "REVIEW: Q (60-220 + 60% AP), W variants (Crash Down 60-180 + 60% AP; Mount Up 10-70 + 40% AP) and R per-tick (18.75-43.75 + 13.75% AP; total 150-350 + 110% AP not expressed) match the wiki. E Full Tilt is declared out_of_scope in MODULE_COVERAGE even though the packet contains its wiki_attribute spec (inconsistency), and P on-hit (5% armor + 5% MR, atoms RellP_Buff/Debuff), W shield (20-100 + 11% max HP, atoms RellW_Shield) and Q shield-breaking are unmodeled. Mount/dismount form is expressible via w_variant.",
+    "verdict": "review"
+  },
+  "Renata": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "out_of_scope"
+    },
+    "atoms_total": 20,
+    "notable_atoms": [
+      "on-hit mark + bonus damage (P Leverage)",
+      "root + stun (Q Handshake)",
+      "revive/bailout buff (W)",
+      "shield (E Loyalty Program)",
+      "berserk (R Hostile Takeover)"
+    ],
+    "gap_summary": "REVIEW: Q (80-260 + 80% AP) and E (65-185 + 55% AP) damage rows match. P Leverage on-hit mark damage (1-2% max HP per level, atoms stack-transform-summon-resource.debuff RenataPassiveDebuff), E shield (50-110 + 50% AP, atoms heal-shield.shield RenataE), W bailout/revive (atoms buff) and R berserk (atoms RenataRDebuff) are all declared out_of_scope \u2014 the module models only the two damaging abilities, which is defensible but leaves the kit's utility families (heal-shield, debuff, summon-free) unexpressed.",
+    "verdict": "review"
+  }
+}

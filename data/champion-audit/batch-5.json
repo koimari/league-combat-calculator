@@ -1,0 +1,610 @@
+{
+  "Renekton": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Reign of Anger, fury)",
+        "Q": "packet Cull the Meek (physical)",
+        "W": "packet Ruthless Predator (physical)",
+        "E": "packet Slice and Dice (physical)",
+        "R": "packet Dominus (magic)"
+      }
+    },
+    "atoms_total": 28,
+    "notable_atoms": [
+      "heal (Q Cull the Meek self-heal)",
+      "execute/empowered-attack (P/W binary RenektonPreExecute)",
+      "attack-reset + on-hit (W)",
+      "dot + buff (R Dominus aura)",
+      "transform (R tyrant form, fury)",
+      "dash + slow (E)",
+      "crit",
+      "aoe"
+    ],
+    "gap_summary": "Q self-heal IS modeled: Renekton is in healing.py HEALING_RULE_CHAMPIONS (Q 'Champion Healing' 12-44 + 17% bonus AD per enemy, capped). Concerns: (1) W packet sources 'Physical Damage Per Hit' (5-65 + 75% AD) and emits a single strike, but the wiki 'Total Physical Damage' (10-130 + 150% AD) covers two strikes (three when empowered) \u2014 W is understated ~2x; (2) P fury/empower system (50-fury empowered Q/W) is declared no_damage, so empowered W (shield-destroy, longer stun) and tripled Q heal are not expressed; (3) R's fury buff/transform is modeled as damage only.",
+    "verdict": "review"
+  },
+  "Rengar": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "out_of_scope",
+      "slot_kinds": {
+        "P": "no_damage (Unseen Predator, ferocity)",
+        "Q": "packet Savagery (physical)",
+        "W": "packet Battle Roar (magic)",
+        "E": "packet Bola Strike (physical)",
+        "R": "no_damage (Thrill of the Hunt)"
+      }
+    },
+    "atoms_total": 52,
+    "notable_atoms": [
+      "self-heal (W grey-health heal = 50-100% of damage taken)",
+      "stealth (R Thrill of the Hunt)",
+      "buff (ferocity/bonetooth, 12 atoms)",
+      "attack-reset + on-hit (P/Q empowered)",
+      "immobilize + slow (E)",
+      "crit",
+      "parry/stasis (W cleanse)"
+    ],
+    "gap_summary": "CLEAR GAP: W Battle Roar self-heal (passive stores 50% of post-mitigation damage taken as grey health; active consumes it to heal) is NOT modeled \u2014 Rengar is absent from healing.py HEALING_RULE_CHAMPIONS and no module heal handling exists. Ferocity-empowered Q (the 'Additional Physical Damage' row, 20-160 + 5% AD) is not modeled either (packet uses the base 'Bonus Physical Damage' 35-260 + 20% AD row). R stealth/leap and P bonetooth are declared out of scope.",
+    "verdict": "gap"
+  },
+  "Riven": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "out_of_scope",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Runic Blade)",
+        "Q": "packet Broken Wings (physical)",
+        "W": "packet Ki Burst (physical)",
+        "E": "no_damage (Valor)",
+        "R": "packet Wind Slash (physical)"
+      }
+    },
+    "atoms_total": 30,
+    "notable_atoms": [
+      "shield (E Valor)",
+      "buff (P charge stacks, R1 AD buff)",
+      "attack-reset (Q)",
+      "dash + slow (E)",
+      "aoe + immobilize (Q/W)",
+      "crit"
+    ],
+    "gap_summary": "Concern: P Runic Blade is declared no_damage with reason 'no enemy-damage formula', but the wiki DOES list a damage formula (each stack-consuming auto deals bonus physical damage = 30% : 46.76% based on level AD) \u2014 the atom file has RivenPassiveAABoost damage.basic-attack, and P's empowered-auto damage is absent from the modeled rotation. E Valor shield declared no_damage (defensive, acceptable). R1 (Blade of the Exile) AD buff not expressed \u2014 only R2 Wind Slash damage is modeled. No heal atoms.",
+    "verdict": "review"
+  },
+  "Rumble": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Junkyard Titan, heat)",
+        "Q": "packet Flamespitter (magic, 20-level total)",
+        "W": "no_damage (Scrap Shield)",
+        "E": "packet Electro Harpoon (magic)",
+        "R": "packet The Equalizer (magic)"
+      }
+    },
+    "atoms_total": 28,
+    "notable_atoms": [
+      "heat/overheat resource (P, 3 atoms incl. overheat attacks)",
+      "shield (W)",
+      "danger-zone buff (50% damage/shield bonus)",
+      "dot (Q/E/R)",
+      "slow",
+      "ammo charges (E)"
+    ],
+    "gap_summary": "The heat/overheat system (stack-transform-summon-resource.heat) and Danger Zone 50% bonus damage/shield are declared out of scope (P no_damage) \u2014 heat directly gates Rumble's damage output (danger-zone Q/E/R are +50%) and overheat disables abilities, so rotation numbers assume no heat state. W Scrap Shield (shield atoms) declared no_damage; E ammo charges not expressed. Q packet models the full-channel total (65-336.84 per level) as one hit, which is fine numerically but ignores the 3s burn timeline.",
+    "verdict": "review"
+  },
+  "Ryze": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Arcane Mastery)",
+        "Q": "wiki_attribute Overload (magic)",
+        "W": "wiki_attribute Rune Prison (magic)",
+        "E": "wiki_attribute Spell Flux (magic)",
+        "R": "wiki_attribute Realm Warp 'Bonus Overload Damage' (magic)"
+      }
+    },
+    "atoms_total": 20,
+    "notable_atoms": [
+      "root + immobilize (W)",
+      "blink + channel (R Realm Warp)",
+      "aoe (E Spell Flux)",
+      "shield atom (RyzeWShield - stale binary)",
+      "crit",
+      "stacking flux"
+    ],
+    "gap_summary": "All four damaging slots (Q Overload 75-155 + 55% AP + 2% bonus mana, W Rune Prison, E Spell Flux, R's Overload-boosting 'Bonus Overload Damage') are modeled via wiki_attribute. W root and R channel/blink are utility (consistent with declared scope); P Arcane Mastery flux (E spread amplification) declared out of scope. The lone heal-shield atom (RyzeWShield) traces to binary 'RyzeWShield' with generic wiki 'Shield' evidence and matches no current wiki W shield \u2014 stale binary artifact, not a real gap.",
+    "verdict": "ok"
+  },
+  "Samira": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Daredevil Impulse, style)",
+        "Q": "packet Flair (physical)",
+        "W": "packet Blade Whirl (physical)",
+        "E": "packet Wild Rush (magic)",
+        "R": "packet Inferno Trigger (physical)"
+      }
+    },
+    "atoms_total": 33,
+    "notable_atoms": [
+      "dot (R 10-shot barrage)",
+      "attack-reset (E)",
+      "projectile-destruction (W)",
+      "ranged-melee reclassification (P, 3 atoms)",
+      "crit",
+      "slow (E passive)",
+      "taunt (SamiraTauntMissile atom)"
+    ],
+    "gap_summary": "Concern: R Inferno Trigger packet uses 'Physical Damage Per Shot' (20-60 + 30% AD) as a single hit, but the wiki 'Total Physical Damage' is 200-600 + 300% AD across 10 shots \u2014 R is understated ~10x unless the caller manually multiplies. P style/combo system and ranged-melee reclassification declared out of scope (P no_damage); W projectile-destruction utility unmodeled (its damage is modeled). No heal/shield/transform atoms.",
+    "verdict": "review"
+  },
+  "Sejuani": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "packet Fury of the North (magic, per-level Frozen bonus 12-5.29)",
+        "Q": "packet Arctic Assault (magic)",
+        "W": "wiki_attribute Winter's Wrath (physical)",
+        "E": "packet Permafrost (magic)",
+        "R": "packet Glacial Prison (magic)"
+      }
+    },
+    "atoms_total": 27,
+    "notable_atoms": [
+      "mark (P Frozen / E Permafrost stacks, 2 atoms)",
+      "immobilize (Q/E/R)",
+      "dash (Q)",
+      "slow",
+      "buff",
+      "crit"
+    ],
+    "gap_summary": "All damage slots modeled: P Icebreaker Frozen bonus magic damage (12-5.29/level packet), Q dash damage, E Permafrost burst, R Glacial Prison, and W via wiki_attribute (5-45 + 30% AP + 4% max HP \u2014 note W is marked out_of_scope in MODULE_COVERAGE even though a parser exists, i.e. uncertified generic parse). Mark-stack requirement (3 stacks) and CC are state/utility. No heal/shield/transform atoms. Note: W's second swing is not accounted for if the wiki_attribute is per-swing.",
+    "verdict": "ok"
+  },
+  "Senna": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "out_of_scope",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "packet Absolution (magic, 1-10% current HP)",
+        "Q": "packet Piercing Darkness (physical)",
+        "W": "packet Last Embrace (physical)",
+        "E": "no_damage (Curse of the Black Mist)",
+        "R": "packet Dawning Shadow (physical)"
+      }
+    },
+    "atoms_total": 36,
+    "notable_atoms": [
+      "self/ally heal (Q Piercing Darkness)",
+      "shield (R Dawning Shadow)",
+      "stealth + wraith-form transform (E, 3 atoms)",
+      "soul/stack economy (P, 2 atoms)",
+      "root (W)",
+      "execute (P mist wraith kill)",
+      "gold-income quest (2 atoms)"
+    ],
+    "gap_summary": "CLEAR GAP: Q 'Healing' (40-120 + 40% bonus AD) heals Senna herself and allies \u2014 not modeled (Senna absent from HEALING_RULE_CHAMPIONS; module only emits Q damage). R's ally/self shield unmodeled (R packet is damage-only). E stealth/camouflage and wraith-form transform declared out of scope; P soul-stack AD economy declared (P packet models only the 1-10% current-HP damage).",
+    "verdict": "gap"
+  },
+  "Seraphine": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Stage Presence, notes)",
+        "Q": "packet High Note (magic)",
+        "W": "no_damage (Surround Sound)",
+        "E": "packet Beat Drop (magic)",
+        "R": "packet Encore (magic)"
+      }
+    },
+    "atoms_total": 30,
+    "notable_atoms": [
+      "heal + shield (W Surround Sound, 4 atoms)",
+      "execute (Q up to +75% missing health)",
+      "root/slow/stun escalation (E, 3 atoms)",
+      "immobilize (R)",
+      "stack (P notes)",
+      "buff"
+    ],
+    "gap_summary": "W heal+shield family (2 heal + 2 shield atoms) declared no_damage \u2014 Surround Sound's self/ally heal and shield are unmodeled but explicitly declared out of scope (consistent with the calculator's ally-heal posture). Q packet models only the flat 60-160 + 40% AP row; the wiki 'Maximum Enhanced Damage' (105-280 + 70% AP, +0-75% based on target's missing health \u2014 damage.execute atom) is not modeled. P note echo (double-cast) declared out of scope.",
+    "verdict": "review"
+  },
+  "Sett": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "out_of_scope",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "out_of_scope",
+      "slot_kinds": {
+        "P": "no_damage (Pit Grit)",
+        "Q": "wiki_attribute Knuckle Down (physical)",
+        "W": "wiki_attribute Haymaker (magic)",
+        "E": "packet Facebreaker (physical)",
+        "R": "wiki_attribute The Show Stopper (physical)"
+      }
+    },
+    "atoms_total": 42,
+    "notable_atoms": [
+      "health regen (P Pit Grit)",
+      "shield (W grit shield, 2 atoms)",
+      "fury/grit resource (2 atoms)",
+      "attack-reset (Q/E, 4 atoms)",
+      "slow + immobilize (E/R)",
+      "crit",
+      "aoe",
+      "stack-consumption"
+    ],
+    "gap_summary": "MODULE_COVERAGE certifies ONLY E (packet); Q/W/R are wiki_attribute parsers marked out_of_scope (uncertified generic parses). Specific concerns: (1) W Haymaker is typed damage_type 'magic' but its center-line damage is TRUE damage (wiki OTHER_DAMAGE; 'dealt true damage instead') \u2014 resistances applied wrongly; (2) W's grit term unit '% (+ 25% per 100 bonus AD) of expended Grit' is unrecognized by resolve_scaling (returns 0), so only the flat 80-160 remains; (3) W grit shield unmodeled; (4) Q 'Bonus Physical Damage' (10-50 + 1-3% max HP) is per-hit but Q empowers TWO attacks (wiki 'Total Bonus Physical Damage' = 2x) \u2014 Q understated; (5) P regen (heal-shield.health-regeneration) declared out of scope.",
+    "verdict": "review"
+  },
+  "Shaco": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Backstab)",
+        "Q": "packet Deceive (physical)",
+        "W": "packet Jack in the Box (magic)",
+        "E": "packet Two-Shiv Poison (magic)",
+        "R": "packet Hallucinate (magic)"
+      }
+    },
+    "atoms_total": 32,
+    "notable_atoms": [
+      "stealth + blink (Q Deceive)",
+      "trap (W Jack in the Box, 4 atoms)",
+      "execute (E +50% below 30% HP; P Backstab)",
+      "clone/summon (R Hallucinate, 3 atoms)",
+      "fear/immobilize (W/R)",
+      "crit (Q bonus)",
+      "dot (E poison)",
+      "projectile-destruction (R)"
+    ],
+    "gap_summary": "E packet models the base 'Magic Damage' row (70-170 + 80% bonus AD + 60% AP) only; the wiki 'Increased Damage' execute row (105-255 + 120% bonus AD, +50% when target below 30% max HP) is not modeled (damage.execute atom). P Backstab bonus damage declared no_damage. R clone summon/pet mechanic not expressed \u2014 the packet models the clone's death explosion damage (150-300 + 70% AP) but not the controllable clone (summon/clone atoms). Q stealth/blink declared utility (damage modeled).",
+    "verdict": "review"
+  },
+  "Shen": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "out_of_scope",
+      "slot_kinds": {
+        "P": "no_damage (Ki Barrier)",
+        "Q": "hand-written Twilight Assault (empowered 3-hit magic, max-HP term, q_attacks_landed option)",
+        "W": "no_damage (Spirit's Refuge)",
+        "E": "hand-written Shadow Dash (physical, dash distance + energy restore)",
+        "R": "no_damage (Stand United)"
+      }
+    },
+    "atoms_total": 32,
+    "notable_atoms": [
+      "shields (P Ki Barrier, R Stand United, 3 atoms)",
+      "empowered attacks (Q 3 hits + target-max-HP magic damage)",
+      "dash + taunt (E)",
+      "pet/clone (spirit blade, 2 atoms)",
+      "energy restore (E passive)",
+      "slow (Q)",
+      "blink + channel (R)"
+    ],
+    "gap_summary": "Damage slots are modeled in detail: Q emits the three empowered-attack hits (incl. the level/rank/max-HP-scaled magic bonus via _named_level_rank_damage) with an explicit q_attacks_landed option and auto-timeline coupling note; E emits dash physical damage with travel-time cooldown and energy restore. P Ki Barrier shield, W Spirit's Refuge auto-block, and R Stand United shield/teleport are declared no_damage (defensive/utility \u2014 consistent scope; the module's ASSUMPTIONS state this explicitly). No heal/vamp atoms. Strong coverage.",
+    "verdict": "ok"
+  },
+  "Shyvana": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "hand-written Scalemail (stat buff, stacks option)",
+        "Q": "hand-written Emberstrike (human 2-cast / dragon 3-cast, true-damage bite)",
+        "W": "hand-written Inferno Aegis recast (magic, w_recast option)",
+        "E": "hand-written Molten Burst (human/dragon, e_second_explosion option)",
+        "R": "simple_damage Dragon's Descent (magic)"
+      }
+    },
+    "atoms_total": 41,
+    "notable_atoms": [
+      "transform (R Dragon Form \u2014 expressed via dragon_form option, 2 atoms)",
+      "on-hit + attack-reset (Q, 5 atoms)",
+      "shield (W Inferno Aegis)",
+      "self-heal (W dragon-form recast heal)",
+      "slow (E)",
+      "aoe",
+      "crit"
+    ],
+    "gap_summary": "Best-in-batch transform handling: dragon_form option gates dragon Q (3rd-cast true-damage bite), dragon E explosion, and the module models W recast damage and P Scalemail armor/MR buff. Residual gaps: W shield strength (60-140 + 12% bonus health) unmodeled; W dragon-form self-heal (60-104.71 + 4-8.47% missing health when the explosion hits a champion \u2014 heal-shield.heal atom) unmodeled \u2014 Shyvana absent from HEALING_RULE_CHAMPIONS; R bonus-health/attack-range buff not expressed (damage only).",
+    "verdict": "review"
+  },
+  "Singed": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "out_of_scope",
+      "slot_kinds": {
+        "P": "no_damage (Noxious Slipstream)",
+        "Q": "packet Poison Trail (magic)",
+        "W": "no_damage (Mega Adhesive)",
+        "E": "packet Fling (magic)",
+        "R": "no_damage (Insanity Potion)"
+      }
+    },
+    "atoms_total": 14,
+    "notable_atoms": [
+      "dot (Q Poison Trail)",
+      "immobilize + knockback (E Fling)",
+      "slow (W Mega Adhesive)",
+      "heal/regen (R Insanity Potion, 125-425 HP over 25s)",
+      "movement-speed buff (P)",
+      "execute atom (MegaAdhesive - binary naming artifact)"
+    ],
+    "gap_summary": "Poison Trail (magic dot) and Fling damage are modeled. W Mega Adhesive (slow/root ground) and R Insanity Potion (AP/armor/MR/MS + HP&mana regen buff, 125-425 HP over the duration) are declared no_damage \u2014 the R regen-heal atom (InsanityPotion) is unmodeled but is a 25s regen buff, minor and consistent with declared scope. The damage.execute atom on Mega Adhesive is a binary naming artifact, not a real execute.",
+    "verdict": "ok"
+  },
+  "Sion": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "out_of_scope",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Glory in Death)",
+        "Q": "wiki_attribute 'Maximum Base Damage Increase' (physical)",
+        "W": "packet Soul Furnace (magic)",
+        "E": "packet Roar of the Slayer (magic)",
+        "R": "packet Unstoppable Onslaught (physical)"
+      }
+    },
+    "atoms_total": 44,
+    "notable_atoms": [
+      "shield (W Soul Furnace, 2 atoms)",
+      "armor shred / penetration (E, 1 atom)",
+      "channel + knockup/stun (Q/R, 6 atoms)",
+      "death-form reanimation (P, zombie)",
+      "slow",
+      "stack (W)",
+      "execute atom (R - binary artifact)"
+    ],
+    "gap_summary": "Q is modeled via wiki_attribute 'Maximum Base Damage Increase' (200-289%, a percentage multiplier) and marked out_of_scope in MODULE_COVERAGE \u2014 the generic extractor treats '%' units as flat values, so Q emits ~200-289 flat 'damage' instead of the wiki 'Minimum Physical Damage' (30-90 + 40-80% AD) / 'Maximum Physical Damage' (90-350 + 120-240% AD) rows; Q's charge/channel mechanic is unmodeled. E armor shred (damage.penetration atom, 20% armor reduction) unmodeled. W shield unmodeled (damage modeled). P Glory-in-Death (zombie form with on-hit bonus damage + 100% lifesteal) declared out of scope.",
+    "verdict": "review"
+  },
+  "Sivir": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "out_of_scope",
+      "R": "out_of_scope",
+      "slot_kinds": {
+        "P": "no_damage (Fleet of Foot)",
+        "Q": "packet Boomerang Blade (physical)",
+        "W": "packet Ricochet (physical)",
+        "E": "no_damage (Spell Shield)",
+        "R": "no_damage (On the Hunt)"
+      }
+    },
+    "atoms_total": 34,
+    "notable_atoms": [
+      "cc-immunity + spell shield (E, 3 atoms incl. damage.true)",
+      "aoe bounce (W)",
+      "attack-reset (W)",
+      "buff/AS (R, 4 atoms)",
+      "mark (W)",
+      "crit",
+      "stack (P pizza)"
+    ],
+    "gap_summary": "Damage slots modeled: Q two-way Boomerang Blade (60-160 + 70% bonus AD + 60% AP) and W Ricochet bounce (0 + 20-40% AD). E Spell Shield (blocks a hostile effect, heals self on block \u2014 heal-shield.shield/cc-immunity atoms) and R On the Hunt (team MS/AS buff) are declared no_damage (defensive/utility \u2014 consistent scope; the E 'shield' is a spell shield, not an HP shield). No real gaps.",
+    "verdict": "ok"
+  },
+  "Skarner": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "out_of_scope",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "packet Threads of Vibration (magic, max-HP DoT)",
+        "Q": "variants Shattered Earth / Upheaval (q_variant option)",
+        "W": "packet Seismic Bastion (magic)",
+        "E": "wiki_attribute Ixtal's Impact (physical)",
+        "R": "packet Impale (magic)"
+      }
+    },
+    "atoms_total": 21,
+    "notable_atoms": [
+      "dot (P Quaking, 3 atoms)",
+      "on-hit + attack-reset (Q)",
+      "shield (W, 2 atoms)",
+      "immobilize/stun (E/R)",
+      "slow",
+      "crit"
+    ],
+    "gap_summary": "All damage slots have parsers: P max-HP DoT (5% + 0.625%/stack), Q variant selector (Shattered Earth/Upheaval), W shockwave, R Impale. Concerns: (1) Q 'Bonus Physical Damage per Hit' (10-50 + 90% bonus AD) is per-hit while the wiki 'Total Bonus Physical Damage' (30-150 + 270% bonus AD) covers 3 hits \u2014 Q understated ~3x; (2) W shield (8% max HP, 2 shield atoms) unmodeled; (3) E is a wiki_attribute slot marked out_of_scope (uncertified generic parse); E stun/R suppress CC unmodeled (state).",
+    "verdict": "review"
+  },
+  "Smolder": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Dragon Practice stacks)",
+        "Q": "packet Super Scorcher Breath (physical)",
+        "W": "packet Achooo! (physical)",
+        "E": "packet Flap, Flap, Flap (physical)",
+        "R": "packet MMOOOMMMM! (physical)"
+      }
+    },
+    "atoms_total": 25,
+    "notable_atoms": [
+      "self-heal (R MMOOOMMMM! 'Self Heal' 100-170 + 50% bonus AD)",
+      "execute (Q tier-3 225-stack burn true damage; damage.execute atom)",
+      "dot (Q burn)",
+      "slow (W/R)",
+      "channel + flight (E)",
+      "crit"
+    ],
+    "gap_summary": "CLEAR GAP: R 'Self Heal' (100-170 + 50% bonus AD) is unmodeled \u2014 Smolder absent from HEALING_RULE_CHAMPIONS; the R packet emits damage only. Secondary: Q is modeled at flat base + AD (90-150 + 195% bonus AD = the two wiki rows summed), but the wiki adds a 0-75% (+0-22.5%) crit-chance-based increase and the tier-3 225-stack true-damage burn (damage.execute atom) \u2014 stack tiers depend on P (Dragon Practice, declared out of scope). E flight channel utility unmodeled (damage modeled).",
+    "verdict": "gap"
+  },
+  "Sona": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "out_of_scope",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Power Chord)",
+        "Q": "packet Hymn of Valor (magic)",
+        "W": "no_damage (Aria of Perseverance)",
+        "E": "no_damage (Song of Celerity)",
+        "R": "packet Crescendo (magic)"
+      }
+    },
+    "atoms_total": 26,
+    "notable_atoms": [
+      "heal + shield (W Aria of Perseverance, 3 atoms; self + ally)",
+      "on-hit empowered auto (P Power Chord)",
+      "buff/debuff auras (Q/W/E, 7 atoms)",
+      "immobilize (R)",
+      "crit"
+    ],
+    "gap_summary": "Q and R damage modeled. W heal (30-90 + 30% AP, self + ally) and shield (25-105 + 25% AP) declared no_damage \u2014 the heal-shield family (the kit's core identity) is unmodeled but explicitly declared out of scope (ally-support posture; Sona absent from HEALING_RULE_CHAMPIONS). P Power Chord on-hit damage and E MS buff declared out of scope. Human judgment: whether ally/self support heals should be added to the TDD model.",
+    "verdict": "review"
+  },
+  "Soraka": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "out_of_scope",
+      "slot_kinds": {
+        "P": "no_damage (Salvation)",
+        "Q": "simple_damage Starcall (magic)",
+        "W": "no_damage (Astral Infusion)",
+        "E": "hand-written Equinox (magic, e_second_hit option)",
+        "R": "no_damage (Wish)"
+      }
+    },
+    "atoms_total": 28,
+    "notable_atoms": [
+      "self-heal (Q Rejuvenation ticks, 5 heal atoms incl. W/R)",
+      "ally heals (W Astral Infusion, R Wish)",
+      "root (E Equinox snare)",
+      "buff (Q movespeed)",
+      "health regen",
+      "crit"
+    ],
+    "gap_summary": "Q self-heal (Rejuvenation, 'Heal per Tick' 5-10 + 2.5% AP every 0.2s, 'Total Heal' 60-120 + 30% AP) IS modeled via healing.py HEALING_RULE_CHAMPIONS. Damage: Q Starcall single hit and E Equinox initial + optional 1.5s eruption (e_second_hit option) modeled. W Astral Infusion and R Wish heal allies (R heals self too) but are declared no_damage \u2014 consistent with the calculator's ally-heal scope. E root CC unmodeled (state). No real gaps.",
+    "verdict": "ok"
+  },
+  "Swain": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "slot_kinds": {
+        "P": "no_damage (Ravenous Flock)",
+        "Q": "packet Death's Hand (magic)",
+        "W": "packet Vision of Empire (magic)",
+        "E": "packet Nevermove (magic)",
+        "R": "variants Demonic Ascension / Demonflare (r_variant option)"
+      }
+    },
+    "atoms_total": 29,
+    "notable_atoms": [
+      "drain self-heal (R 'Heal per Tick' 7.5-22.5 + 2.5% AP per target)",
+      "soul economy (P Ravenous Flock, 4 atoms)",
+      "dot (R)",
+      "root (E)",
+      "airborne (P pull)",
+      "slow (R nova)",
+      "buff"
+    ],
+    "gap_summary": "CLEAR GAP: R Demonic Ascension's drain self-heal ('Heal per Tick' 7.5-22.5 + 2.5% AP per target, -90% vs minions) is unmodeled \u2014 Swain absent from HEALING_RULE_CHAMPIONS; the R variants emit damage only (per-tick drain 7.5-17.5 + 2% AP and Demonflare burst). P soul-fragment economy (max HP per soul) declared out of scope; E root and P pull CC unmodeled (state).",
+    "verdict": "gap"
+  },
+  "Sylas": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "out_of_scope",
+      "slot_kinds": {
+        "P": "no_damage (Petricite Burst)",
+        "Q": "packet Chain Lash (magic)",
+        "W": "packet Kingslayer (magic)",
+        "E": "packet Abduct (magic)",
+        "R": "no_damage (Hijack)"
+      }
+    },
+    "atoms_total": 25,
+    "notable_atoms": [
+      "self-heal + vamp (W Kingslayer, 'Minimum/Maximum Heal' 20-100+30% AP / 40-200+60% AP)",
+      "shield (E2 Abduct, 1 atom)",
+      "execute (P minion execute)",
+      "attack-reset (P/W/E2, 3 atoms)",
+      "dash (E)",
+      "slow/immobilize (E/W)",
+      "buff (R)"
+    ],
+    "gap_summary": "CLEAR GAP: W Kingslayer self-heal (heals for damage dealt to champions, 20-100 + 30% AP minimum / 40-200 + 60% AP maximum, +0-100% based on missing health \u2014 heal + vamp atoms) is unmodeled \u2014 Sylas absent from HEALING_RULE_CHAMPIONS; the W packet emits damage only. E2 shield (SylasEShield atom) unmodeled. P Petricite Burst (attack-reset empowered auto) and R Hijack (ultimate steal \u2014 his defining mechanic) declared no_damage/out of scope.",
+    "verdict": "gap"
+  }
+}

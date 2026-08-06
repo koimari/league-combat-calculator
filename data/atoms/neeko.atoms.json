@@ -1,118 +1,25 @@
 [
  {
-  "atom_id": "stack-transform-summon-resource.stack",
+  "atom_id": "stack-transform-summon-resource.buff",
   "family": "stack-transform-summon-resource",
-  "behavior": "NeekoWPassiveCounter",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Stack",
-    "Stacking",
-    "Buff",
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoWAbility/NeekoWPassiveCounter"
-   ]
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "NeekoW2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoWAbility/NeekoW2"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.clone",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NeekoW2",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Pets",
-    "Champion summoned units"
-   ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoWAbility/NeekoW2"
-   ]
-  }
- },
- {
-  "atom_id": "vision-economy.stealth",
-  "family": "vision-economy",
-  "behavior": "NeekoW2",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Stealth",
-    "Ward",
-    "Vision Ward"
-   ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoWAbility/NeekoW2"
-   ]
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
   "behavior": "NeekoW",
   "trigger": "on_cast",
-  "target_policy": "enemy",
+  "target_policy": "self",
   "parameters": {
    "cooldown_rank1": 16.0,
    "cooldown_rank_max": 12.0,
    "range": 900.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": null
   },
   "provenance": {
    "wiki": [
-    "Damage"
+    "Buff"
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoWAbility/NeekoW"
-   ]
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
   }
  },
  {
@@ -125,7 +32,7 @@
    "cooldown_rank1": 16.0,
    "cooldown_rank_max": 12.0,
    "range": 900.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": null
   },
   "provenance": {
@@ -135,30 +42,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoWAbility/NeekoW"
-   ]
-  }
- },
- {
-  "atom_id": "vision-economy.invisibility",
-  "family": "vision-economy",
-  "behavior": "NeekoW",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 12.0,
-   "range": 900.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Stealth",
-    "Vision Ward"
    ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoWAbility/NeekoW"
-   ]
+   "evidence": "tag:Trait_CreateClone"
   }
  },
  {
@@ -171,7 +56,7 @@
    "cooldown_rank1": 16.0,
    "cooldown_rank_max": 12.0,
    "range": 900.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": null
   },
   "provenance": {
@@ -182,7 +67,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoWAbility/NeekoW"
-   ]
+   ],
+   "evidence": "tag:Trait_Invisibility"
   }
  },
  {
@@ -195,7 +81,7 @@
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
    "range": null,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": null
   },
   "provenance": {
@@ -207,7 +93,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoRAbility/NeekoRShield"
-   ]
+   ],
+   "evidence": "name:shield"
   }
  },
  {
@@ -220,7 +107,7 @@
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
    "range": null,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": null
   },
   "provenance": {
@@ -233,7 +120,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoRAbility/NeekoRStun"
-   ]
+   ],
+   "evidence": "name:stun"
   }
  },
  {
@@ -246,7 +134,7 @@
    "cooldown_rank1": 120.0,
    "cooldown_rank_max": 90.0,
    "range": 600.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": 6154
   },
   "provenance": {
@@ -257,61 +145,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoRAbility/NeekoR"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "NeekoR",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 90.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
    ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoRAbility/NeekoR"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.stun",
-  "family": "crowd-control-mobility",
-  "behavior": "NeekoR",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 90.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Cleanse",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoRAbility/NeekoR"
-   ]
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
   }
  },
  {
@@ -324,7 +159,7 @@
    "cooldown_rank1": 120.0,
    "cooldown_rank_max": 90.0,
    "range": 600.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": 6154
   },
   "provenance": {
@@ -333,54 +168,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoRAbility/NeekoR"
-   ]
-  }
- },
- {
-  "atom_id": "heal-shield.on-shield-effect",
-  "family": "heal-shield",
-  "behavior": "NeekoR",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 90.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Shield"
    ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoRAbility/NeekoR"
-   ]
-  }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "NeekoR",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 90.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Shield",
-    "Heal and shield power",
-    "Grievous Wounds",
-    "Overheal"
-   ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoRAbility/NeekoR"
-   ]
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -402,7 +191,8 @@
    ],
    "binary": [
     "{ffc8ba96}"
-   ]
+   ],
+   "evidence": "name:debuff"
   }
  },
  {
@@ -426,7 +216,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoBasicAttack"
-   ]
+   ],
+   "evidence": "name:basicattack"
   }
  },
  {
@@ -449,35 +240,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoBasicAttack"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "NeekoQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 7.0,
-   "range": 800.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
    ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoQAbility/NeekoQ"
-   ]
+   "evidence": "name:basicattack"
   }
  },
  {
@@ -490,111 +254,17 @@
    "cooldown_rank1": 9.0,
    "cooldown_rank_max": 7.0,
    "range": 800.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoQAbility/NeekoQ"
-   ]
-  }
- },
- {
-  "atom_id": "damage.on-damage",
-  "family": "damage",
-  "behavior": "NeekoQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 7.0,
-   "range": 800.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "On-damage effects",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoQAbility/NeekoQ"
-   ]
-  }
- },
- {
-  "atom_id": "damage.spell-effects",
-  "family": "damage",
-  "behavior": "NeekoQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 7.0,
-   "range": 800.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Ability damage",
-    "Damage over time",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoQAbility/NeekoQ"
-   ]
-  }
- },
- {
-  "atom_id": "damage.tag-activespell",
-  "family": "damage",
-  "behavior": "NeekoPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
    "damage_type": "magic",
-   "affects_type_flags": null
+   "affects_type_flags": 6154
   },
   "provenance": {
    "wiki": [
-    "Damage",
-    "Ability damage"
+    "Damage"
    ],
    "binary": [
-    "Characters/Neeko/Spells/NeekoPassiveAbility/NeekoPassive"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NeekoPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Stack",
-    "Stacking",
-    "Buff",
-    "Debuff"
+    "Characters/Neeko/Spells/NeekoQAbility/NeekoQ"
    ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoPassiveAbility/NeekoPassive"
-   ]
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -616,7 +286,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoPassiveAbility/NeekoPassiveBuff"
-   ]
+   ],
+   "evidence": "name:buff"
   }
  },
  {
@@ -639,7 +310,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoCritAttack"
-   ]
+   ],
+   "evidence": "rule:crit"
   }
  },
  {
@@ -652,7 +324,7 @@
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
    "range": null,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": null
   },
   "provenance": {
@@ -666,7 +338,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoEAbility/NeekoERoot"
-   ]
+   ],
+   "evidence": "name:root"
   }
  },
  {
@@ -679,7 +352,7 @@
    "cooldown_rank1": 12.0,
    "cooldown_rank_max": 10.0,
    "range": 1000.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": 6154
   },
   "provenance": {
@@ -690,34 +363,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoEAbility/NeekoE"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.root",
-  "family": "crowd-control-mobility",
-  "behavior": "NeekoE",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 12.0,
-   "cooldown_rank_max": 10.0,
-   "range": 1000.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Dash",
-    "Blink",
-    "Cleanse"
    ],
-   "binary": [
-    "Characters/Neeko/Spells/NeekoEAbility/NeekoE"
-   ]
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
   }
  },
  {
@@ -730,7 +377,7 @@
    "cooldown_rank1": 12.0,
    "cooldown_rank_max": 10.0,
    "range": 1000.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": 6154
   },
   "provenance": {
@@ -739,7 +386,8 @@
    ],
    "binary": [
     "Characters/Neeko/Spells/NeekoEAbility/NeekoE"
-   ]
+   ],
+   "evidence": "tag:Trait_Low_Damage"
   }
  },
  {
@@ -759,7 +407,101 @@
     "Inherent Glamour"
    ],
    "binary": [],
-   "source": "wiki-passive-map"
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "neeko Passive (Shapesplitter)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units",
+    "Shapesplitter"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NeekoW2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 12.0,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Neeko/Spells/NeekoWAbility/NeekoW2"
+   ],
+   "inherited_from": "NeekoW",
+   "evidence": "inherited:NeekoW"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NeekoW2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 12.0,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Neeko/Spells/NeekoWAbility/NeekoW2"
+   ],
+   "inherited_from": "NeekoW",
+   "evidence": "inherited:NeekoW"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "NeekoW2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 12.0,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Neeko/Spells/NeekoWAbility/NeekoW2"
+   ],
+   "inherited_from": "NeekoW",
+   "evidence": "inherited:NeekoW"
   }
  }
 ]

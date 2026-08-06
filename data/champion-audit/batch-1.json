@@ -1,0 +1,430 @@
+{
+  "Cassiopeia": {
+    "module_slots": {
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "P": "out_of_scope"
+    },
+    "atoms_total": 24,
+    "notable_atoms": [
+      "damage.aoe + damage.dot — Q Noxious Blast 3s poison (7 ticks), W Miasma 5s zone (19 ticks)",
+      "damage.damage-instance — E Twin Fang (per-level base + poisoned rank bonus)",
+      "heal-shield.heal — E Twin Fang self-heal vs poisoned targets (atom CassiopeiaE, wiki 'heals Cassiopeia')",
+      "crowd-control-mobility — R facing stun + slow, W ground/slow (immobilize/stun/slow atoms)",
+      "stack-transform-summon-resource — poison debuff + damage-over-time (CassPoisonDebuffListener)",
+      "damage.basic-attack / critical-strike — generic autos"
+    ],
+    "gap_summary": "All damage slots (Q/W/E/R) are modeled with sourced tick-level DoT parts (7-tick Q, 19-tick W, poisoned-E option). P (Serpentine Grace movement speed) is documented out-of-scope with no damage. The one notable unmodeled atom family is E's self-heal (heal-shield.heal on CassiopeiaE; wiki: 'Against a poisoned target, Twin Fang deals bonus magic damage and heals Cassiopeia') — Cassiopeia is NOT in HEALING_RULE_CHAMPIONS and the module explicitly documents 'E's healing against poisoned targets is not modeled (damage calculator)'. No damage-relevant mechanic is missing.",
+    "verdict": "ok"
+  },
+  "Chogath": {
+    "module_slots": {
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "P": "out_of_scope"
+    },
+    "atoms_total": 36,
+    "notable_atoms": [
+      "damage.damage-instance + damage.aoe — Q Rupture, W Feral Scream, E Vorpal Spikes, R Feast (true damage)",
+      "interaction.attack-reset — E Vorpal Spikes (8 attack-reset atoms across E/missiles)",
+      "stack-transform-summon-resource.debuff — Vorpal Spikes slow debuff",
+      "crowd-control-mobility.immobilize — Q knockup",
+      "stack mechanic — Feast stacks (bonus health/size growth; wiki prose, module constant)"
+    ],
+    "gap_summary": "All damage slots modeled: Q/W plain magic reads, E as 3 empowered attacks per cast with Feast-stack %maxHP rider (modifier-override from units string), R true damage with feast_stacks option feeding a retroactive bonus-health stat_buff (BUFF phase). P (Carnivore heal + mana restore on kill) is documented out-of-scope — no damage to enemies, Cho'Gath not in HEALING_RULE_CHAMPIONS. E's attack-reset and Q knockup are expressed inside the empowered-attack model / documented utility. No damage gap.",
+    "verdict": "ok"
+  },
+  "Corki": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 28,
+    "notable_atoms": [
+      "damage.aoe + damage.dot — W Valkyrie blazing patches (5 ticks), E Gatling Gun (16 ticks)",
+      "stack-transform-summon-resource.ammo — R Missile Barrage charge/ammo system (3 ammo atoms, 4 charges)",
+      "stack-transform-summon-resource.buff — E Gatling Gun armor/MR shred stacks (cap 4)",
+      "crowd-control-mobility.dash — W Valkyrie dash",
+      "damage.critical-strike — P Hextech Munitions crit-multiplied true damage (20% total AD, hardcoded constant)"
+    ],
+    "gap_summary": "All five slots modeled, including the two the generic parser cannot read: P 20% total-AD true damage on autos (spellblade rider; wiki leveling empty — tested constant), W/E tick cadences with dot_duration for item-burn refresh, E flat armor+MR shred (one stack per tick, cap 4), R charge cadence with every-3rd Big One and auto-accelerated recharge. No missing damage families.",
+    "verdict": "ok"
+  },
+  "Darius": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 28,
+    "notable_atoms": [
+      "damage.on-hit + damage.damage-instance — P Hemorrhage stacking bleed; W Crippling Strike empowered auto",
+      "damage.execute — R Noxian Guillotine (DariusExecute + DariusExecuteMulticast atoms)",
+      "heal-shield.heal — Q Decimate self-heal (DariusCleave atom)",
+      "interaction.attack-reset — W (2 attack-reset atoms)",
+      "stack-transform-summon-resource.mark — Hemorrhage stack marker",
+      "crowd-control-mobility — W 90% slow, E pull (immobilize), Q slow"
+    ],
+    "gap_summary": "All slots modeled: P full-rate bleed stacks + Noxian Might AD steroid, Q outer-blade damage + 0.75s cast lockout, W empowered crit auto, E zero-damage pull + always-on armor-pen stat_buff, R true damage growing per Hemorrhage stack on target (option-forced count). Healing IS modeled: Darius is in HEALING_RULE_CHAMPIONS and healing.py emits Decimate's 17–51% missing-health heal. W kill CDR/mana refund and CC remain documented utility. No gap.",
+    "verdict": "ok"
+  },
+  "Diana": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "auto_attacks_moonsilver_cleave": "modeled"
+    },
+    "atoms_total": 23,
+    "notable_atoms": [
+      "damage.aoe + damage.damage-instance — Q Crescent Strike, W Pale Cascade orbs, R Moonfall beam",
+      "heal-shield.shield — W Pale Cascade shield (3 shield atoms: DianaOrbs/Missile/DianaShield)",
+      "stack-transform-summon-resource.moonlight + mark — E Lunar Rush cooldown reset (Moonlight consumption)",
+      "stack-transform-summon-resource.buff — P Moonsilver Blade tripled attack speed",
+      "damage.basic-attack — P cleave every 3rd basic attack (DianaPassiveMarker mark)"
+    ],
+    "gap_summary": "All damage slots modeled: P AS steroid + floor(autos/3) cleave procs, Q, W total orb damage, E double-dash with moonlight_reset, R beam with per-champion-pulled bonus (cap 5). The only notable unmodeled atom family is the W shield (3 heal-shield.shield atoms) — module documents 'shield ... is pure mitigation and deliberately not modeled' (defensive, outside TDD scope). No damage gap.",
+    "verdict": "ok"
+  },
+  "DrMundo": {
+    "module_slots": {
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled",
+      "P": "out_of_scope"
+    },
+    "atoms_total": 30,
+    "notable_atoms": [
+      "damage.on-hit + interaction.attack-reset — E Blunt Force Trauma empowered attack (DrMundoE/EAttack atoms)",
+      "damage.dot + damage.aoe — W Heart Zapper charge DoT (12 ticks) + detonation",
+      "heal-shield.heal — Q health refund, W grey-health heal, R Maximum Dosage regen (4 heal atoms)",
+      "stack-transform-summon-resource.buff — R enhanced state (2 buff atoms)",
+      "damage.damage-instance — Q Infected Bonesaw %current-health with floor"
+    ],
+    "gap_summary": "Damage slots modeled: Q %current-health + flat minimum floor, W 12-tick charge rebuilt from per-tick (wiki 'Total Magic Damage' stale — 16-tick pre-V12.23 value) + detonation, E missing-health amp (0–40% at 70% threshold from game files) + %maxHP→bonus-AD passive, R base-health buff feeding E in BUFF order. Healing partially modeled: Dr. Mundo IS in HEALING_RULE_CHAMPIONS and healing.py emits R's regeneration stream. P (regen/cleanse/canister heal) and W grey-health heal are documented self-sustain, not modeled. No damage gap.",
+    "verdict": "ok"
+  },
+  "Draven": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 26,
+    "notable_atoms": [
+      "damage.damage-instance — Q Spinning Axe empowered crit auto (DravenSpinning* atoms), E Stand Aside, R Whirling Death two-pass",
+      "damage.critical-strike — Q/auto crit variants (3 crit atoms)",
+      "stack-transform-summon-resource.buff + fury-rage-resource — W Blood Rush attack-speed buff",
+      "stack-transform-summon-resource.stack — P Adoration stacks (DravenPassiveStacks)",
+      "crowd-control-mobility.knockback + immobilize — E knock-aside"
+    ],
+    "gap_summary": "All five slots modeled: P Adoration as an explicit no-damage state row (gold cash-in, not damage), Q empowered auto with full crit effectiveness + axe-catch detail, W AS stat_buff, E line hit with knock-aside/slow utility, R with r_passes option for the two-pass recast. No damage gap.",
+    "verdict": "ok"
+  },
+  "Ekko": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 52,
+    "notable_atoms": [
+      "stack-transform-summon-resource.stack + mark — P Z-Drive Resonance 3-hit proc; W stun marker (EkkoStunMarker)",
+      "damage.aoe + damage.damage-instance — Q Timewinder two-pass, R Chronobreak",
+      "heal-shield.heal — R Chronobreak self-heal (EkkoR/EkkoRHeal atoms)",
+      "heal-shield.shield — W Parallel Convergence shield (3 shield atoms)",
+      "crowd-control-mobility — W stun zone (stun/immobilize), R blink + untargetable, E dash + slow",
+      "interaction.attack-reset — E Phase Dive empowered auto"
+    ],
+    "gap_summary": "All damage slots modeled: P resonance proc (p_procs option, count_option), Q initial+return parts, W active as no-damage stun/afterimage zone with opt-in <30%-HP passive on-hit, E empowered auto (blink state-only), R damage. Two notable atom families are unmodeled but documented: R Chronobreak heal (2 heal atoms; Ekko not in HEALING_RULE_CHAMPIONS) and W shield (3 shield atoms) — both sustain/defense, outside TDD. No damage gap.",
+    "verdict": "ok"
+  },
+  "Elise": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 45,
+    "notable_atoms": [
+      "stack-transform-summon-resource.transform + toggle-form — R Spider/Human form swap (3 transform atoms incl. BuffEliseSpiderForm)",
+      "damage.execute — spider-form Q Venomous Bite missing-health damage (EliseR/EliseRSpider atoms, rule:execute)",
+      "damage.on-hit — P Spider Queen spider-form basic-attack bonus magic damage",
+      "stack-transform-summon-resource.buff — spiderling/skitter/rappel buffs (12 buff atoms)",
+      "crowd-control-mobility — E Cocoon stun (immobilize), E Rappel untargetable, spider Q slow",
+      "damage.aoe + damage.damage-instance — W Volatile Spiderling explosion",
+      "vision-economy.sight — P brush sight"
+    ],
+    "gap_summary": "All slots modeled with form dispatch: P spider-form on-hit (+ heal recorded as non-TDD sustain), Q form-aware Neurotoxin/Venomous Bite (current vs missing health), W spiderling explosion, E Cocoon no-damage, R form toggle no-damage. Transform and execute families are expressed via spider_form/q_form options. Spiderling summons/attacks and Rappel are documented state/utility — note the atom file itself carries no pet/summon atom for Elise, so the decomposition does not flag them either. No damage gap.",
+    "verdict": "ok"
+  },
+  "Evelynn": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 26,
+    "notable_atoms": [
+      "vision-economy.stealth — P Demon Shade camouflage (EvelynnStealthRing)",
+      "stack-transform-summon-resource.mark — Q Hate Spike mark, W Allure mark (EvelynnWApplyMark)",
+      "damage.aoe + damage.damage-instance — Q dart + 3 recast spikes, E Whiplash, R Last Caress",
+      "damage.basic-attack — E empowered on-hit variant (EvelynnE/E2)",
+      "crowd-control-mobility — W charm (immobilize), R blink + untargetable, E2 dash"
+    ],
+    "gap_summary": "All slots modeled: P Demon Shade as no-damage stealth/regen row, Q dart + up to 3 recasts with mark bonus, W charm + 4s magic-resistance shred debuff (target_debuff), E normal/empowered Whiplash branches, R 240% execute branch opt-in below 30% HP. The atoms' stealth/mark/execute families all map to modeled options. No damage gap.",
+    "verdict": "ok"
+  },
+  "Ezreal": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 15,
+    "notable_atoms": [
+      "stack-transform-summon-resource.stack — P Rising Spell Force attack-speed stacks (5 stacks x 10%)",
+      "damage.damage-instance — Q Mystic Shot (on-hit + on-attack), W Essence Flux mark detonation, E Arcane Shift, R Trueshot Barrage",
+      "crowd-control-mobility.blink + dash — E blink (2 blink + 2 dash atoms)",
+      "damage.aoe — R full-width read ('Modified Damage' minion entry deliberately avoided)"
+    ],
+    "gap_summary": "All five slots modeled: P AS-stack stat_buff (no JSON leveling — hardcoded 10%/stack), Q on-hit/on-attack + kit-wide 1.5s cooldown refund applied as adjusted entry cooldowns, W detonation damage, E/R with Q-refund haste math. No missing damage families.",
+    "verdict": "ok"
+  },
+  "Fiddlesticks": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 28,
+    "notable_atoms": [
+      "damage.aoe + damage.dot — W Bountiful Harvest channel ticks + final tick, R Crowstorm (20 ticks over 5s)",
+      "damage.damage-instance — Q Terrify current-health damage with minimum threshold, E Reap",
+      "heal-shield.heal — W self-heal from pre-mitigation damage dealt",
+      "crowd-control-mobility — Q fear (flee x2), W/R channel, R blink",
+      "stack-transform-summon-resource.ranged-melee-reclassification — P Scarecrow Effigy (2 atoms)"
+    ],
+    "gap_summary": "All slots modeled: P effigy as no-damage row, Q feared/not-feared doubled-current-health branches with minimum, W per-instance ticks + missing-health final tick (heal documented 'non-TDD'), E, R tick-based zone. The W heal is the only notable unmodeled atom family (documented; Fiddlesticks absent from HEALING_RULE_CHAMPIONS). No damage gap.",
+    "verdict": "ok"
+  },
+  "Fiora": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 44,
+    "notable_atoms": [
+      "damage.damage-instance — P Duelist's Dance vital true damage, Q Lunge, W Riposte, E Bladework (many atoms)",
+      "damage.critical-strike — E second attack modified crit",
+      "heal-shield.heal — R Victory Zone heal + P vital heal (FioraR/FioraRHeal atoms)",
+      "interaction.parry — W Riposte parry (3 parry atoms)",
+      "interaction.attack-reset — E (4 attack-reset atoms)",
+      "stack-transform-summon-resource.mark — R Grand Challenge vitals",
+      "crowd-control-mobility.cc-immunity — W stance"
+    ],
+    "gap_summary": "All damage slots modeled: P vital true-damage procs (p_vitals option), Q on-hit Lunge (applies_item_on_hits), W parry magic damage (stun branch state), E two empowered attacks with first-cannot-crit/second-crits rules, R challenge no-damage row. R Victory Zone and P vital heals are not modeled — documented ('not TDD'); Fiora absent from HEALING_RULE_CHAMPIONS. No damage gap.",
+    "verdict": "ok"
+  },
+  "Fizz": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 39,
+    "notable_atoms": [
+      "damage.on-hit + damage.dot — W Seastone Trident PASSIVE rend (3 on-hit + 2 dot atoms on FizzW/FizzWAttack)",
+      "damage.damage-instance — Q Urchin Strike (magic + 100% AD attack component), E Playful/Trickster, R Chum the Waters (3 lure sizes)",
+      "interaction.attack-reset — W (2 attack-reset atoms)",
+      "crowd-control-mobility — E untargetable/dash, R immobilize, Q slow",
+      "stack-transform-summon-resource.buff — W on-hit buff, E buffer"
+    ],
+    "gap_summary": "Module prices W's ACTIVE empower only ('Active trident damage rides the next basic attack; passive bleed and post-kill refund remain explicit state'). The W PASSIVE rend — wiki: 'Fizz's basic attacks rend enemies on-hit, dealing magic damage every 0.5 seconds over 3 seconds, refreshing on subsequent hits' (FizzW/FizzWAttack damage.on-hit + damage.dot atoms) — is real champion-target on-hit damage that the module does not price, so Fizz's auto stream understates sustained damage. The exclusion is documented ('not silently applied to champions') but it is a damage-relevant mechanic, not pure sustain/utility, so a human should decide whether the passive rend belongs in scope.",
+    "verdict": "review"
+  },
+  "Galio": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 36,
+    "notable_atoms": [
+      "damage.aoe + damage.dot — Q Winds of War gust + 4 max-health tornado ticks (GalioQ/QMissile)",
+      "damage.damage-instance — W Shield of Durand charge-scaled, E Justice Punch, R Hero's Entrance, P Colossal Smash",
+      "heal-shield.shield — W Anti-Magic Bulwark + R shields (4 shield atoms: GalioR/GalioRShield/GalioW*)",
+      "interaction.parry — W damage reduction (2 parry atoms)",
+      "crowd-control-mobility — R channel, E knockup (immobilize), Q/E slow"
+    ],
+    "gap_summary": "All damage slots modeled: P auto_attack_conversion of N auto swings, Q gust + 4 max-health tornado ticks, W charge-scaled damage in 25% steps, E dash-distance-dependent hit timing, R 2.75s channel landing. W/R shields are the notable unmodeled atom family (4 shield atoms) — defensive, documented out of TDD scope. No damage gap.",
+    "verdict": "ok"
+  },
+  "Gangplank": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 20,
+    "notable_atoms": [
+      "damage.dot + tag-periodic — P Trial by Fire true-damage burn (10 ticks x 0.25s over 2.5s)",
+      "damage.proc — Q Parrrley attack-like on-hit/on-attack proc (GangplankQProceed/QProceedCrit)",
+      "damage.aoe + damage.damage-instance — E Powder Keg explosion, R Cannon Barrage (12/18 waves)",
+      "stack-transform-summon-resource.ammo — E keg charge system",
+      "heal-shield.heal — W Remove Scurvy heal",
+      "crowd-control-mobility — keg slow, W cleanse (stasis)"
+    ],
+    "gap_summary": "All slots modeled: P burn procs (p_procs option), Q crit-able ranged-attack on-hit, W no-damage heal/cleanse row, E keg champion branch + ammo state, R wave cadence with Death's Daughter / Fire at Will options. W heal is the only unmodeled atom family (documented; Gangplank absent from HEALING_RULE_CHAMPIONS). No damage gap.",
+    "verdict": "ok"
+  },
+  "Garen": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 29,
+    "notable_atoms": [
+      "damage.execute — R Demacian Justice missing-health true damage (GarenR atom)",
+      "damage.on-hit — Q Decisive Strike empowered silencing auto (2 on-hit atoms)",
+      "damage.dot + damage.aoe — E Judgment spins (7 + 1/25% bonus AS, 25% armor shred at 6 hits)",
+      "heal-shield.heal — P Perseverance regen (GarenPassiveHeal)",
+      "heal-shield.shield — W Courage shield (2 shield atoms)",
+      "interaction.attack-reset — Q; stack-transform-summon-resource.stack — W Courage stacks"
+    ],
+    "gap_summary": "All slots modeled: P regen no-damage row, Q empowered auto, W defensive no-damage row, E spin count + nearest-target 25% branch + ordered armor reduction after 6 hits, R execute. P heal and W shield are documented sustain/defense, not modeled (Garen absent from HEALING_RULE_CHAMPIONS). No damage gap.",
+    "verdict": "ok"
+  },
+  "Gnar": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 48,
+    "notable_atoms": [
+      "stack-transform-summon-resource.transform + fury-rage-resource — Rage Gene Mini↔Mega (4 transform atoms incl. 'gnar Passive (Rage Gene)', 2 fury atoms)",
+      "damage.aoe + damage.damage-instance — Q Boomerang/Boulder, W Hyper proc + Wallop, E Hop/Crunch, R GNAR!",
+      "damage.proc — W Hyper every-3rd-hit proc (GnarWProc)",
+      "crowd-control-mobility — R wall-crash airborne/knockback, Mega W stun, E 80% slow",
+      "damage.critical-strike — autos (2 crit atoms)"
+    ],
+    "gap_summary": "All five slots modeled with per-form JSON dispatch (mega option): P Mega stat buffs from game files (wiki leveling empty — known-degraded parse), Q pickup cooldown refund, W Hyper on-hit proc / Wallop, E Hop AS buff + Crunch %maxHP shockwave, R wall-crash 50% increased-damage branch. Transform/fury families expressed via options; Mega-only R emits nothing in Mini form. No damage gap.",
+    "verdict": "ok"
+  },
+  "Gragas": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 31,
+    "notable_atoms": [
+      "damage.aoe + damage.damage-instance — Q Barrel Roll min/max ferment, W Drunken Rage empowered attack, E Body Slam, R Explosive Cask",
+      "damage.on-hit — W brew-empowered attack (2 on-hit atoms on GragasW/WAttack)",
+      "interaction.parry — W channel damage reduction (2 parry atoms)",
+      "stack-transform-summon-resource.toggle-form — Q ferment toggle (GragasQToggle)",
+      "crowd-control-mobility — E stun + knockback, R displacement, Q slow"
+    ],
+    "gap_summary": "All damage slots modeled: Q fully-fermented/maximum vs minimum branches, W single empowered attack with target-max-health rider, E collision damage (40% CD refund explicitly not assumed without hit state), R explosion. P Happy Hour heal (5.5% max health after casting) is documented as a no-damage row — and notably the atom file has NO heal atom for Gragas either, so the decomposition itself misses it; Gragas absent from HEALING_RULE_CHAMPIONS. No damage gap.",
+    "verdict": "ok"
+  },
+  "Graves": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 28,
+    "notable_atoms": [
+      "damage.basic-attack + damage.aoe — P New Destiny pellet-cone autos (4 pellets, crit = 6 pellets)",
+      "stack-transform-summon-resource.ammo — P 2-shell reload system (2 ammo atoms)",
+      "stack-transform-summon-resource.stack + fury-rage-resource — E True Grit stacks (up to 8)",
+      "damage.aoe + damage.damage-instance — Q End of the Line + powder-trail detonation, W Smoke Screen, R Collateral Damage",
+      "crowd-control-mobility.dash — E Quickdraw"
+    ],
+    "gap_summary": "All slots modeled: P auto_attack_override with pellet damage ratio (critical pellet branch option), Q round + delayed detonation parts, W impact damage (nearsight utility), E True Grit armor/MR stat_buff, R primary vs reduced secondary-cone branch. Reload/ammo is exposed as state. No damage gap.",
+    "verdict": "ok"
+  },
+  "Gwen": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 25,
+    "notable_atoms": [
+      "damage.on-hit — P A Thousand Cuts max-health magic on-hit (1% + 0.6%/100 AP)",
+      "damage.execute — Q center 50% true-damage conversion (GwenQ/GwenP rule:execute atoms)",
+      "damage.aoe + damage.damage-instance — Q Snip Snip! (4 Snippy stacks), R Needlework (3 casts)",
+      "stack-transform-summon-resource.stack — Q Snippy stacker; debuff — R slow",
+      "interaction.attack-reset — E Skip 'n Slash",
+      "crowd-control-mobility — W Hallowed Mist cc-immunity + untargetable"
+    ],
+    "gap_summary": "All damage slots modeled: P max-health on-hit (champion heal noted as sustain), Q stack-count center/outer branches with 50% true conversion, W no-damage mist row, E empowered attack (15 + 20% AP constant), R 3-cast needle barrage with per-cast attributes. No damage gap.",
+    "verdict": "ok"
+  },
+  "Hecarim": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 38,
+    "notable_atoms": [
+      "stack-transform-summon-resource.stack — Q Rampage stacks (3% + 3%/100 bonus AD each), E charge (3 stack atoms)",
+      "damage.aoe + damage.damage-instance — Q Rampage, W Spirit of Dread ticks, E Devastating Charge, R Onslaught of Shadows",
+      "damage.dot — W zone ticks (HecarimW)",
+      "heal-shield.heal — W Spirit of Dread heal (25% post-mitigation damage)",
+      "crowd-control-mobility — R fear (immobilize) + slow, E knockback, W channel tag"
+    ],
+    "gap_summary": "All slots modeled: P movement-speed→bonus-AD (Warpath), Q Rampage stack multiplier + per-stack CDR, W per-second ticks (heal documented as ledger state; Hecarim absent from HEALING_RULE_CHAMPIONS), E charge-distance min/max damage as an empowered auto, R fear/damage. No damage gap.",
+    "verdict": "ok"
+  }
+}

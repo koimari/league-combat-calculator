@@ -1,0 +1,374 @@
+{
+  "Vladimir": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 36,
+    "notable_atoms": [
+      "heal: Q Transfusion flat heal, W Sanguine Pool 30%-of-damage heal, R Hemoplague flat heal (6 heal atoms)",
+      "damage: Q/W/E/R all modeled as packets",
+      "damage-modification-debuff: R Hemoplague increases damage taken 10% (3 atoms)",
+      "health-as-resource: E costs health (Crimson Pact)",
+      "channel/untargetable: E charge-up and W pool untargetability (utility)",
+      "slow + DoT on W pool"
+    ],
+    "gap_summary": "All four damaging slots (Q/W/E/R) are modeled and the Q/W/R self-heals are in healing.py HEALING_RULE_CHAMPIONS (Vladimir present), so the heal family is covered. The one uncovered mechanic: R Hemoplague's 10%-increased-damage-taken debuff (3 damage-modification-debuff atoms; wiki: 'increasing the damage they take from all sources by 10%') is not expressed by the R packet, which emits only the burst damage + heal. E's health cost and W's untargetability are utility. Needs judgment on whether the 10% amp matters for the burst model.",
+    "verdict": "review"
+  },
+  "Volibear": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "out_of_scope",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 29,
+    "notable_atoms": [
+      "heal: W Frenzied Maul self-heal on Wounded bite (1 heal atom)",
+      "shield: E Sky Splitter self-shield 14% max HP + 75% AP (2 shield atoms)",
+      "damage: Q empowered auto, W bite, E bolt, R leap all have damage atoms",
+      "attack-reset: Q (2 atoms)",
+      "immobilize/slow: Q stun, R slow",
+      "ward-disabling: R disables towers (utility)"
+    ],
+    "gap_summary": "W self-heal is unmodeled \u2014 Volibear is absent from healing.py HEALING_RULE_CHAMPIONS despite wiki W 'healing himself' on the Wounded bite (heal atom VolibearW). E's self-shield (14% max HP + 75% AP) is not modeled (E packet emits damage only). Note MODULE_COVERAGE declares Q/W out_of_scope, but the batch builder actually parses Q (10-50 + 1.6 bAD) and W (wiki 'Physical Damage') into SLOTS, so Q/W damage is emitted while their heal/stun/attack-reset mechanics are dropped.",
+    "verdict": "gap"
+  },
+  "Warwick": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "out_of_scope",
+      "R": "out_of_scope"
+    },
+    "atoms_total": 39,
+    "notable_atoms": [
+      "heal: Q Jaws of the Beast heal % of post-mitigation damage; R Infinite Duress 100% heal (2 heal atoms)",
+      "parry: E Primal Howl damage reduction (2 atoms)",
+      "buff: W Blood Hunt attack speed (3 atoms)",
+      "suppress/blink/dash: R (4 channel atoms + blink + dash)",
+      "blind: W active sight denial",
+      "slow/immobilize on R and E fear"
+    ],
+    "gap_summary": "Only Q is modeled. Warwick is in HEALING_RULE_CHAMPIONS with BOTH Q (25-75% post-mitigation heal) and R (100% heal) rules in healing.py, but the module's R slot is no_damage/out_of_scope, so no R damage events are emitted and the R heal rule can never fire. E's damage reduction (interaction.parry) and W's attack-speed buff are unmodeled; R's suppress/damage is entirely out of scope.",
+    "verdict": "gap"
+  },
+  "Xayah": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 25,
+    "notable_atoms": [
+      "damage: Q feather volley, W on-hit feather damage (35-55% AD packet), E feather recall, R blade storm \u2014 all modeled",
+      "buff + attack-reset: W (3 atoms)",
+      "immobilize: E root (2 atoms)",
+      "untargetable + blind: R (utility)"
+    ],
+    "gap_summary": "The atom file decomposes only Q/W/E/R and basic attacks \u2014 all four damaging slots are modeled (Q/E/R packets + W on-hit AD-ratio packet). No P atoms exist (the passive Clean Cuts feather-auto enhancement is not decomposed by the atom file), and the R untargetable/blind utility is non-damaging. No clear missing mechanic in the atom families.",
+    "verdict": "ok"
+  },
+  "Xerath": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 24,
+    "notable_atoms": [
+      "damage: Q Arcanopulse, W Eye of Destruction, E Shocking Orb, R Arcane Barrage \u2014 all modeled",
+      "channel: Q charge-up and R Locus of Power form (utility; Q packet uses max-charge values)",
+      "transform/toggle-form: R ascended form (2 atoms) \u2014 modeled as R damage packet",
+      "stack: Q charge scaling",
+      "immobilize/slow: E stun, W slow",
+      "on-hit: P Mana Surge mana restore (no damage)"
+    ],
+    "gap_summary": "All four damaging slots are modeled as packets. P (mana restore) is the only out-of-scope slot and carries no damage atom. Q's charge-up channel and R's form toggle are utility/timing mechanics; the Q packet represents the max-charge damage, which is the only rank row the wiki publishes. No missing damage mechanic found.",
+    "verdict": "ok"
+  },
+  "XinZhao": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 30,
+    "notable_atoms": [
+      "heal: W Wind Becomes Lightning heals 33.3% of life steal (2 heal atoms)",
+      "damage: Q empowered autos, W slash+thrust, E dash, R sweep \u2014 modeled as packets",
+      "attack-reset: Q (1 atom)",
+      "airborne/knockback/immobilize: Q3 knockup, R knockback + disarm",
+      "ranged-melee-reclassification: R immunity to ranged attacks outside circle",
+      "slow: E"
+    ],
+    "gap_summary": "W self-heal is unmodeled \u2014 Xin Zhao absent from healing.py HEALING_RULE_CHAMPIONS; wiki W: 'Wind Becomes Lightning's damage heals Xin Zhao for 33.3% of his life steal' (heal-shield.heal on XinZhaoW/XinZhaoWMissile). Additionally the W packet only models ONE slash (base 7.5-17.5 + 7.5% AD, verified 28.75 raw at rank 5) while the wiki W is 4 slashes + a thrust ('Slash Total Physical Damage' row exists in cache), so W is under-modeled ~4x. R's ranged-immunity reclassification is utility. Q/E damage are modeled.",
+    "verdict": "gap"
+  },
+  "Yasuo": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 59,
+    "notable_atoms": [
+      "crit: P Way of the Wanderer \u2014 crit chance doubled, excess crit -> AD (6 crit-strike atoms + YasuoCritMod)",
+      "shield: P Flow Shield (3 shield atoms + on-shield-effect)",
+      "summoned-terrain-structure: W Wind Wall (10 atoms) + projectile-destruction (3 atoms)",
+      "dash: E Sweeping Blade (4 atoms) + ghost",
+      "airborne: Q3 Steel Wind Rising knockup + R (3 atoms)",
+      "stack: P Flow charge; clone: R VFX"
+    ],
+    "gap_summary": "P is out_of_scope, so the two biggest passive mechanics are unmodeled: (1) crit conversion \u2014 wiki P: 'total critical strike chance is doubled' \u2014 no champion-specific crit doubling exists anywhere in the calculator (stats.py folds only item crit), so Q/auto crit math is wrong; (2) Flow shield (heal-shield.shield x3). W (wind wall projectile destruction + summoned terrain, 10 atoms) is out_of_scope. Q packet has no Q3 (Steel Wind Rising) variant so the knockup and its crit-converted damage are not expressed.",
+    "verdict": "gap"
+  },
+  "Yone": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 34,
+    "notable_atoms": [
+      "mark/deathmark: E Soul Unbound stores damage dealt and reapplies as true damage (YoneEDeathmark)",
+      "shield: W Spirit Cleave self-shield (1 shield atom)",
+      "crit: P Way of the Hunter \u2014 crit chance doubled (4 crit-strike atoms)",
+      "dash: E and R (2 atoms)",
+      "immobilize/knockback/stun: Q3, R"
+    ],
+    "gap_summary": "E Soul Unbound is declared modeled but its 'Damage Stored' wiki attribute is a percentage of damage dealt (25-35%); the static attribute read emits 0.0 true damage at every rank (verified: E total_raw 0.0 at ranks 1-5), so the death-mark reapplication \u2014 Yone's signature burst \u2014 contributes nothing. P crit conversion (crit chance doubled) is out_of_scope and unmodeled anywhere. W's self-shield is not expressed (W packet is damage-only). R damage is modeled.",
+    "verdict": "gap"
+  },
+  "Yorick": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "out_of_scope"
+    },
+    "atoms_total": 29,
+    "notable_atoms": [
+      "summon: P Mist Walkers + R Maiden of the Mist (1 summon atom + marks)",
+      "heal: Q Last Rites self-heal (3 heal atoms)",
+      "damage: Q empowered auto, E Mourning Mist, R Maiden attacks",
+      "attack-reset: Q (3 atoms)",
+      "mark: E and R (2 atoms)",
+      "buff: Q"
+    ],
+    "gap_summary": "Q self-heal is unmodeled \u2014 Yorick absent from healing.py HEALING_RULE_CHAMPIONS; wiki Q: 'deal bonus physical damage, and heal him' (heal-shield.heal on YorickQ). The summon family (P Mist Walkers + R Maiden) is entirely out_of_scope: R is no_damage so the Maiden's attack damage (damage.damage-instance on YorickR/YorickR2) is not modeled, and W's wall terrain is out_of_scope. E damage and Q damage are modeled.",
+    "verdict": "gap"
+  },
+  "Yunara": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 45,
+    "notable_atoms": [
+      "execute: Q spread attacks vs low-health minions (5 atoms), W minion execute (2 atoms)",
+      "on-hit: Q passive+active bonus magic damage (3 atoms) \u2014 modeled as Q packet base",
+      "dot: W lingering bead ticks 15% of impact damage per 0.25s (2 dot atoms)",
+      "crit: spread attacks crit (7 crit atoms)",
+      "dash: E2 (empowered E), slow, buff, attack-reset"
+    ],
+    "gap_summary": "All five slots are declared modeled, but the W packet models only the initial impact (55-215 + 0.85 bAD + 0.5 AP); the lingering-bead DoT (15% of impact every 0.25s \u2014 'Linger Magic Damage per Tick' and 'Total Expanded Damage' rows exist in the cache) is not expressed. R is modeled as the empowered Arc of Ruin base damage (160/320/480, no ratio) rather than a buff. Execute atoms are minion-only (Q spread 250% vs minions <30% HP, W minion execute) so mostly irrelevant to champion fights. E is a movement buff (no damage; its no_damage packet is fine).",
+    "verdict": "review"
+  },
+  "Yuumi": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "out_of_scope",
+      "R": "modeled"
+    },
+    "atoms_total": 40,
+    "notable_atoms": [
+      "heal: P Feline Friendship self/ally heal (4 heal atoms), R Final Chapter ally heal (2)",
+      "shield: P and E shields (7 shield atoms), R shield conversion",
+      "pet: P Best Friend companion buff (1 atom)",
+      "channel: W attach (5 atoms) \u2014 the attach mechanic",
+      "slow: R waves (3 atoms)",
+      "buff: Q/W/E/R buffs (11 atoms)"
+    ],
+    "gap_summary": "The heal-shield family is the largest atom family in the file (11 of 40 atoms) and is entirely unmodeled: P (self+ally heal 20-120 + 30% AP), E (shield + AS buff), and R (ally heal converting to shield) are not expressed \u2014 the R packet emits only the wave magic damage, and P/E/W are out_of_scope. Yuumi is absent from HEALING_RULE_CHAMPIONS. Q and R enemy damage are modeled.",
+    "verdict": "gap"
+  },
+  "Zaahen": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 40,
+    "notable_atoms": [
+      "revive: P Cultivation of War resurrection at max Determination (2 revive atoms)",
+      "resource-gated-transform: P Determination stacks -> bonus AD (1 atom)",
+      "heal: Q empowered auto self-heal (3 atoms), R heal per champion hit (2 atoms)",
+      "parry: R 50% damage reduction during cast (1 atom)",
+      "on-hit: Q strikes (4 atoms), attack-reset: Q (4 atoms)",
+      "airborne: Q recast knockup; dash: E/R; slow; immobilize: W"
+    ],
+    "gap_summary": "Self-heal is unmodeled \u2014 Zaahen absent from healing.py HEALING_RULE_CHAMPIONS despite wiki Q ('he also heals himself' on the empowered strike) and R ('heals him for each champion hit'); heal-shield.heal atoms on ZaahenQ/ZaahenQAttack and ZaahenR. P's revive + Determination stack mechanic (heal-shield.revive x2, resource-gated-transform) is out_of_scope. R's parry/50% damage reduction is unmodeled. Q/W/E/R damage packets are modeled.",
+    "verdict": "gap"
+  },
+  "Zac": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 34,
+    "notable_atoms": [
+      "revive: P Cell Division blob pickup heal/revive (4 revive atoms)",
+      "damage: Q Stretching Strikes, W Unstable Matter, E Elastic Slingshot, R Let's Bounce!",
+      "on-hit + attack-reset: Q (3 atoms each)",
+      "immobilize/knockback/stun: Q, E, R crowd control",
+      "channel: R"
+    ],
+    "gap_summary": "P Cell Division (blob self-heal/revive, heal-shield.revive x4) is declared out_of_scope and Zac is absent from HEALING_RULE_CHAMPIONS \u2014 but the batch builder actually emits a P 'packet' that treats the blob pickup as 4%-8.5% max-HP MAGIC DAMAGE against the enemy (total_raw 0, hp_scaled 4%+ per level, cd 300), i.e. the self-heal is mis-modeled as enemy damage rather than unmodeled. Also Q reads the per-hit 'Magic Damage' row (60-180) instead of 'Total Magic Damage' (120-360), under-modeling the two-hit Q. W/E/R are modeled.",
+    "verdict": "gap"
+  },
+  "Zed": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 40,
+    "notable_atoms": [
+      "execute: R Death Mark detonates stored damage (2 execute atoms + 2 mark atoms)",
+      "clone/pet: W and R shadows (3 pet atoms + 1 clone atom) mimic Q/E",
+      "blink: W recast + R recast (4 blink atoms)",
+      "untargetable: R (2 atoms)",
+      "projectile-destruction: R (2 atoms)",
+      "dash: W shadow cast"
+    ],
+    "gap_summary": "R Death Mark is declared modeled but parsed via wiki attribute 'Physical Damage', which is a percentage row (100% / 25-40-55% of damage stored); the static read emits a flat ~100-120 damage (verified 120 at rank 2) that does not scale with damage dealt during the mark, so the stored-damage execute mechanic (damage.execute x2, mark x2) is effectively unmodeled. W (shadow pet + blink, out_of_scope) and the shadow-mimic double-hit on Q/E are not expressed. Q and E packets are modeled.",
+    "verdict": "review"
+  },
+  "Zeri": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "out_of_scope",
+      "R": "modeled"
+    },
+    "atoms_total": 27,
+    "notable_atoms": [
+      "shield: P shield-related atoms (2 shield atoms; binary artifacts \u2014 no shield in current wiki text)",
+      "execute: Q basic-attack minion execute below 70-170 HP (2 execute atoms)",
+      "damage: P charged zap, Q Burst Fire rounds, W laser, R surge",
+      "stack: R ramping attack speed (1 atom)",
+      "dash: E Spark Surge + attack-reset (2 atoms)",
+      "slow: Q slow"
+    ],
+    "gap_summary": "E Spark Surge is out_of_scope even though the packet spec gives it a damage formula (Lightning Rounds bonus magic damage 22-30 + 20% AP on piercing Qs, cd 24) \u2014 the E dash + pierce damage + attack-reset are unmodeled. R's stack/attack-speed buff is not expressed (R packet is damage-only). Q's execute is minion-only (below 70-170 HP, based on level) so irrelevant to champion fights. P/Q/W/R damage is modeled (P as hp_scaled max-HP packet).",
+    "verdict": "review"
+  },
+  "Ziggs": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "modeled"
+    },
+    "atoms_total": 22,
+    "notable_atoms": [
+      "damage: P Short Fuse empowered auto, Q Bouncing Bomb, W Satchel Charge, E Hexplosive Minefield, R Mega Inferno Bomb",
+      "slow: E mine slow; knockback + immobilize: W",
+      "toggle-form: W (Demolition); buff: P Short Fuse",
+      "crit: empowered autos can crit"
+    ],
+    "gap_summary": "Custom module models all five slots: P Short Fuse with sourced cooldown + 4/5/6s cast refund and passive_procs option, E multi-mine with 'Reduced Damage per Mine' + cap, R epicenter sweet-spot toggle, Q/W plain packets. No notable atom family is missing from modeled scope (W's turret-execute Demolition is explicitly assumed out \u2014 turret-only).",
+    "verdict": "ok"
+  },
+  "Zilean": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "out_of_scope",
+      "R": "out_of_scope"
+    },
+    "atoms_total": 22,
+    "notable_atoms": [
+      "revive: R Chronoshift resurrection (1 revive atom)",
+      "heal: R Chronoshift heal on revive (1 heal atom)",
+      "damage: Q Time Bomb (only damaging slot)",
+      "buff: P XP grant, E Time Warp, W Time Walk (5 buff atoms)",
+      "stun/ground: Q double-bomb stun + ground",
+      "ammo: P"
+    ],
+    "gap_summary": "Only Q is modeled. R Chronoshift (heal-shield.revive + heal-shield.heal atoms) is out_of_scope and Zilean is absent from HEALING_RULE_CHAMPIONS \u2014 the heal-on-revive mechanic is unmodeled. W (cooldown refund) and E (slow/haste) are utility with no enemy damage. Q's double-bomb stun is not expressed (utility). All enemy damage (Q) is modeled.",
+    "verdict": "gap"
+  },
+  "Zoe": {
+    "module_slots": {
+      "P": "modeled",
+      "Q": "modeled",
+      "W": "modeled",
+      "E": "modeled",
+      "R": "out_of_scope"
+    },
+    "atoms_total": 64,
+    "notable_atoms": [
+      "summon: W Spell Thief stolen summoner spells (10 summon atoms: Barrier/Heal/Teleport/Smite/Ignite/Exhaust/Boost/Haste)",
+      "heal/shield: W Barrier shield + Heal summon (2 atoms)",
+      "true damage: W Smite variants (3 atoms)",
+      "dot: W Ignite (2 atoms)",
+      "sleep: E drowsy->sleep (4 atoms)",
+      "blink: R Portal Jump + W Teleport (2 atoms); on-hit: P Spell Thief"
+    ],
+    "gap_summary": "W is declared modeled but the packet is a single flat bolt (15-55 + 10% AP, verified 70 raw at rank 5) \u2014 the Spell Thief summon family (10 summon atoms) covering stolen Heal/Barrier/Smite-true-damage/Ignite-DoT is collapsed and unmodeled, and the 3-bolt volley is emitted as one bolt. E sleep is utility (E packet models the damage). R Portal Jump is out_of_scope but carries no damage (blink only). P on-hit and Q/E damage are modeled.",
+    "verdict": "review"
+  },
+  "Zyra": {
+    "module_slots": {
+      "P": "out_of_scope",
+      "Q": "modeled",
+      "W": "out_of_scope",
+      "E": "out_of_scope",
+      "R": "modeled"
+    },
+    "atoms_total": 29,
+    "notable_atoms": [
+      "summoned-minion: plant attacks (7 atoms \u2014 Thorn Spitter/Vine Lasher from Q/E seeds) + summon (2 atoms: passive Plant + Seed)",
+      "trap: W Rampant Growth seeds (1 atom); vision: seed sight; stealth",
+      "damage: Q Deadly Spines, E Grasping Roots, R Stranglethorns",
+      "immobilize: E root (2 atoms); airborne: R knockup",
+      "reactive: P Queen of Thorns"
+    ],
+    "gap_summary": "The plant-summon mechanic \u2014 Zyra's core sustained DPS \u2014 is unmodeled: P (Garden of Thorns seeds) and W (Rampant Growth) are no_damage/out_of_scope, and the Q/E packets model only the spells' direct damage, not the Thorn Spitter/Vine Lasher attacks (7 summoned-minion atoms). Coverage mismatch: MODULE_COVERAGE declares E out_of_scope, but the batch builder emits E damage (verified 290 raw at rank 5, Grasping Roots packet). R damage is modeled.",
+    "verdict": "gap"
+  }
+}

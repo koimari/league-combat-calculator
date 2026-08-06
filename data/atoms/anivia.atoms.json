@@ -1,55 +1,5 @@
 [
  {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ChilledAniviaUlt",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Anivia/Spells/GlacialStormAbility/ChilledAniviaUlt"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "GlacialStorm",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 2.0,
-   "range": 750.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "Characters/Anivia/Spells/GlacialStormAbility/GlacialStorm"
-   ]
-  }
- },
- {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "GlacialStorm",
@@ -59,7 +9,7 @@
    "cooldown_rank1": 4.0,
    "cooldown_rank_max": 2.0,
    "range": 750.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": 6154
   },
   "provenance": {
@@ -69,7 +19,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/GlacialStormAbility/GlacialStorm"
-   ]
+   ],
+   "evidence": "tag:Trait_AoE"
   }
  },
  {
@@ -82,7 +33,7 @@
    "cooldown_rank1": 4.0,
    "cooldown_rank_max": 2.0,
    "range": 750.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": 6154
   },
   "provenance": {
@@ -91,7 +42,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/GlacialStormAbility/GlacialStorm"
-   ]
+   ],
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -104,7 +56,7 @@
    "cooldown_rank1": 4.0,
    "cooldown_rank_max": 2.0,
    "range": 750.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": 6154
   },
   "provenance": {
@@ -114,7 +66,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/GlacialStormAbility/GlacialStorm"
-   ]
+   ],
+   "evidence": "tag:Trait_DoT"
   }
  },
  {
@@ -127,7 +80,7 @@
    "cooldown_rank1": 4.0,
    "cooldown_rank_max": 2.0,
    "range": 750.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": 6154
   },
   "provenance": {
@@ -136,7 +89,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/GlacialStormAbility/GlacialStorm"
-   ]
+   ],
+   "evidence": "tag:Trait_Toggle"
   }
  },
  {
@@ -159,7 +113,31 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/RebirthMarkerAbility/RebirthMarker"
-   ]
+   ],
+   "evidence": "name:rebirth"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RebirthMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Anivia/Spells/RebirthMarkerAbility/RebirthMarker"
+   ],
+   "evidence": "name:mark"
   }
  },
  {
@@ -182,7 +160,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/RebirthMarkerAbility/RebirthCooldown"
-   ]
+   ],
+   "evidence": "name:cooldown"
   }
  },
  {
@@ -205,7 +184,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/RebirthMarkerAbility/RebirthCooldown"
-   ]
+   ],
+   "evidence": "name:rebirth"
   }
  },
  {
@@ -228,29 +208,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/RebirthMarkerAbility/Rebirth"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AniviaIced",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Buff"
    ],
-   "binary": [
-    "Characters/Anivia/Spells/AniviaIced"
-   ]
+   "evidence": "name:rebirth"
   }
  },
  {
@@ -274,7 +233,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/AniviaBasicAttack"
-   ]
+   ],
+   "evidence": "name:basicattack"
   }
  },
  {
@@ -297,54 +257,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/AniviaBasicAttack"
-   ]
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "AniviaBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 650.0,
-   "damage_type": null,
-   "affects_type_flags": 8143
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
    ],
-   "binary": [
-    "Characters/Anivia/Spells/AniviaBasicAttack2"
-   ]
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "AniviaBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 650.0,
-   "damage_type": null,
-   "affects_type_flags": 8143
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Anivia/Spells/AniviaBasicAttack2"
-   ]
+   "evidence": "name:basicattack"
   }
  },
  {
@@ -366,7 +280,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/FrostbiteAbility/Frostbite"
-   ]
+   ],
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -389,29 +304,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/AniviaCritAttack"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.knockback",
-  "family": "crowd-control-mobility",
-  "behavior": "Crystallize",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 17.0,
-   "cooldown_rank_max": 17.0,
-   "range": 1000.0,
-   "damage_type": null,
-   "affects_type_flags": 15567
-  },
-  "provenance": {
-   "wiki": [
-    "Types of Crowd Control"
    ],
-   "binary": [
-    "Characters/Anivia/Spells/CrystallizeAbility/Crystallize"
-   ]
+   "evidence": "rule:crit"
   }
  },
  {
@@ -434,7 +328,8 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/CrystallizeAbility/Crystallize"
-   ]
+   ],
+   "evidence": "tag:Trait_CreateTerrain"
   }
  },
  {
@@ -456,7 +351,59 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/CrystallizeAbility/Crystallize"
-   ]
+   ],
+   "evidence": "name:crystallize"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AniviaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Anivia/Spells/AniviaBasicAttack2"
+   ],
+   "inherited_from": "AniviaBasicAttack",
+   "evidence": "inherited:AniviaBasicAttack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AniviaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Anivia/Spells/AniviaBasicAttack2"
+   ],
+   "inherited_from": "AniviaBasicAttack",
+   "evidence": "inherited:AniviaBasicAttack"
   }
  }
 ]

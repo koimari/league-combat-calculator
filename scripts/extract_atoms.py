@@ -16,6 +16,13 @@ keep the vocab honest against this corpus: champion-name prefixes are stripped
 from script names, and vocab keywords made entirely of corpus-generic tokens
 (e.g. "duration", "ability damage") or champion names are ignored.
 
+Damage-family atoms carry parameters.damage_type resolved from the wiki
+champion cache (data/champions.json per-ability damageType) — the parsed
+CharacterRecord binaries carry no damage-type field — by matching each
+SpellObject to an ability via its script-name prefix (champion name + slot
+letter) or ability-name tokens; token inference from calc/datavalue naming is
+the fallback.
+
 Outputs (under data/atoms/):
   <champ>.atoms.json          per-champion atom list
   atom-summary.json           family -> champions
@@ -40,6 +47,29 @@ ROOT = Path(__file__).resolve().parent.parent
 BIN_DIR = ROOT / "data" / "bin" / "characters"
 VOCAB_DIR = ROOT / "data" / "wiki-atoms"
 DEFAULT_OUT = ROOT / "data" / "atoms"
+
+# Wiki champion cache: per-ability damageType. The parsed CharacterRecord
+# binaries carry no damage-type field, so data/champions.json is the
+# authoritative source for parameters.damage_type.
+CHAMPIONS_FILE = ROOT / "data" / "champions.json"
+
+# Wiki damageType values -> atom vocabulary damage_type values.
+_WIKI_DAMAGE_TYPE_MAP = {
+    "MAGIC_DAMAGE": "magic",
+    "PHYSICAL_DAMAGE": "physical",
+    "TRUE_DAMAGE": "true",
+    "OTHER_DAMAGE": "other",
+}
+
+# Ability-name tokens too generic to attribute a SpellObject to an ability.
+_STOP_TOKENS = {
+    "the", "and", "for", "with", "to", "of", "a", "an", "in", "on", "at",
+    "by", "from", "up", "down", "out", "or", "as", "is", "are",
+}
+
+# Pre-bridge baseline: before the wiki damage-type bridge, token inference
+# alone typed only 41 of 2999 damage atoms (1.37%).
+DAMAGE_TYPE_COVERAGE_BEFORE = 0.0137
 
 # --------------------------------------------------------------------------
 # Text normalization
@@ -450,6 +480,128 @@ def infer_damage_type(feat: dict) -> str | None:
 
 
 # --------------------------------------------------------------------------
+# Wiki damage-type bridge (data-driven; data/champions.json)
+# --------------------------------------------------------------------------
+def load_wiki_damage_types() -> dict[str, list[tuple[str, str, str | None]]]:
+    """champion_key -> [(slot, ability_name, damage_type), ...].
+
+    Each ability entry's damageType from the wiki champion cache
+    ("MAGIC_DAMAGE" / "PHYSICAL_DAMAGE" / "TRUE_DAMAGE" / "OTHER_DAMAGE" or
+    null) is normalized to the atom vocabulary's lower-case values.
+    """
+    data = json.loads(CHAMPIONS_FILE.read_text())
+    out: dict[str, list[tuple[str, str, str | None]]] = {}
+    for champ, info in data.items():
+        entries = []
+        for slot, abilities in (info.get("abilities") or {}).items():
+            if len(slot) != 1 or slot not in "PQWER":
+                continue
+            for ab in abilities:
+                raw = ab.get("damageType")
+                dt = _WIKI_DAMAGE_TYPE_MAP.get(raw) if raw else None
+                entries.append((slot, ab.get("name") or "", dt))
+        out[champion_key(champ)] = entries
+    return out
+
+
+def _entry_name_tokens(name: str, champ_norm: str = "") -> set[str]:
+    """Distinctive tokens of an ability name.
+
+    Stopwords, slot letters and tokens that overlap the champion name are
+    dropped: the champion-name token sits in every script name of that
+    champion (e.g. Gnar's R "GNAR!" must not match every Gnar object), so it
+    carries no ability-discriminating signal."""
+    toks = {t for t in tokens(name) if len(t) > 3 and t not in _STOP_TOKENS}
+    if champ_norm:
+        toks = {t for t in toks
+                if not (champ_norm in t or (len(t) >= 4 and t in champ_norm))}
+    return toks
+
+
+def _entry_token_hits(entry_toks: set[str], obj_toks: set[str]) -> int:
+    """Entry-name tokens present in the object name.
+
+    Exact tokens always count; tokens of >= 5 chars also count as prefix or
+    suffix of an object token ("slash" inside "RivenWindslash"), so glued
+    script names still match their wiki ability name."""
+    hits = entry_toks & obj_toks
+    long = {t for t in entry_toks - hits if len(t) >= 5}
+    for ot in obj_toks:
+        for t in long:
+            if ot.startswith(t) or ot.endswith(t):
+                hits.add(t)
+    return len(hits)
+
+
+def _best_entry_match(entries, obj_toks: set[str], champ_norm: str = "") -> list | None:
+    """Best ability entry by name-token overlap with the object's name.
+
+    Returns None when nothing matches or the best match is tied (ambiguous),
+    so a type is never guessed."""
+    best_score = 0
+    best = []
+    for slot, name, dt in entries:
+        score = _entry_token_hits(_entry_name_tokens(name, champ_norm), obj_toks)
+        if score > best_score:
+            best_score, best = score, [(slot, name, dt)]
+        elif score == best_score and score > 0:
+            best.append((slot, name, dt))
+    if best_score == 0 or len(best) != 1:
+        return None
+    return best[0]
+
+
+def _slot_damage_type(entries, slot: str, obj_toks: set[str], champ_norm: str = "") -> str | None:
+    """Wiki damage type for one ability slot.
+
+    Slots whose entries agree (or have a single non-null type) resolve
+    directly; slots whose entries disagree on the type (e.g. Gnar W: Hyper
+    vs Wallop) fall back to ability-name tokens and stay None when the object
+    name cannot disambiguate them."""
+    slot_entries = [e for e in entries if e[0] == slot]
+    types = {dt for _, _, dt in slot_entries if dt is not None}
+    if len(types) == 1:
+        return next(iter(types))
+    if len(types) > 1:
+        best = _best_entry_match(slot_entries, obj_toks, champ_norm)
+        return best[2] if best else None
+    return None
+
+
+def wiki_damage_type(entries, champ_norm: str, name: str, alt: str) -> str | None:
+    """Best wiki damage type for a SpellObject, or None (never a guess).
+
+    Matching order, all driven by data/champions.json (no champion names
+    hardcoded):
+      1. script-name prefix (champion name + slot letter: "VladimirQ" -> Q,
+         "AatroxPassive" -> P) — the letter must sit at the end or be followed
+         by an uppercase letter / digit, so "RivenWindslash" is not read as W;
+      2. a standalone slot-letter token in the object name ("GnarBigQ" -> Q);
+      3. ability-name tokens in the object name ("VladimirHemoplague" -> R,
+         "JayceShockBlast" -> Q, "Glory_in_Death" -> P).
+    """
+    stripped = strip_champ_prefix(name, champ_norm)
+    if stripped != name and stripped:
+        first, rest = stripped[0], stripped[1:]
+        if first in "PQWER" and (not rest or rest[0].isupper() or rest[0].isdigit()
+                                 or stripped.startswith("Passive")):
+            return _slot_damage_type(entries, first,
+                                     set(tokens(name)) | set(tokens(alt)), champ_norm)
+    obj_toks = set(tokens(name)) | set(tokens(alt))
+    slot_toks = [t.upper() for t in obj_toks if t in "pqwer"]
+    if len(slot_toks) == 1:
+        return _slot_damage_type(entries, slot_toks[0], obj_toks, champ_norm)
+    best = _best_entry_match(entries, obj_toks, champ_norm)
+    if best is None:
+        return None
+    if best[2] is not None:
+        return best[2]
+    # The matched ability entry itself carries no type, but its slot may have
+    # a single unambiguous type (e.g. Riven "Izuna Blade" -> R Wind Slash).
+    return _slot_damage_type(entries, best[0], obj_toks, champ_norm)
+
+
+# --------------------------------------------------------------------------
 # Classification
 # --------------------------------------------------------------------------
 def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, str]]:
@@ -520,7 +672,7 @@ def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, 
     return sorted(hits.items())
 
 
-def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, passive_map=None, tag_map=None) -> dict:
+def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, passive_map=None, tag_map=None, wiki_types=None) -> dict:
     ser = json.loads(bin_path.read_text())
     atoms: dict[tuple[str, str], dict] = {}   # (atom_id, behavior) -> atom
     unclassified: list[dict] = []
@@ -548,6 +700,14 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
 
         trigger = infer_trigger(feat)
         dmg_type = infer_damage_type(feat)
+        # Wiki damage-type bridge: the cache's per-ability damageType is
+        # authoritative when an ability match is found; token inference
+        # remains the fallback (and the only source for unmatched objects).
+        if wiki_types is not None:
+            wiki_type = wiki_damage_type(
+                wiki_types.get(champ_norm, []), champ_norm, feat["name"], feat["alt"])
+            if wiki_type is not None:
+                dmg_type = wiki_type
         params = {
             "cooldown_rank1": feat["cooldown"][0] if feat["cooldown"] else None,
             "cooldown_rank_max": feat["cooldown"][-1] if feat["cooldown"] else None,
@@ -691,6 +851,31 @@ def build_summary(results: list[dict]) -> dict:
     return {fam: sorted(champs) for fam, champs in sorted(summary.items())}
 
 
+def compute_damage_type_stats(results: list[dict]) -> dict:
+    """Coverage of parameters.damage_type across damage-family atoms."""
+    total = typed = 0
+    by_type: dict[str, int] = {}
+    for r in results:
+        for a in r["atoms"]:
+            if a["family"] != "damage":
+                continue
+            total += 1
+            dt = (a.get("parameters") or {}).get("damage_type")
+            if dt:
+                typed += 1
+                by_type[dt] = by_type.get(dt, 0) + 1
+    return {
+        "damage_atoms": total,
+        "typed": typed,
+        "by_type": dict(sorted(by_type.items())),
+        "coverage": round(typed / total, 4) if total else 0.0,
+        "coverage_before_bridge": DAMAGE_TYPE_COVERAGE_BEFORE,
+        "source": "data/champions.json per-ability damageType, bridged by "
+                  "script-name prefix (champion+slot letter) and ability-name "
+                  "tokens; token inference is the fallback",
+    }
+
+
 def build_report(results: list[dict], vocab, sanity: list[dict], suggestions: list[str]) -> dict:
     total_atoms = 0
     total_unclassified = 0
@@ -716,7 +901,7 @@ def build_report(results: list[dict], vocab, sanity: list[dict], suggestions: li
         for fam, c in r["family_counts"].items():
             totals[fam] = totals.get(fam, 0) + c
     return {
-        "classifier": "scripts/extract_atoms.py (v2 data-driven, wiki-atoms vocab)",
+        "classifier": "scripts/extract_atoms.py (v2.1 data-driven: wiki-atoms vocab + wiki damage-type bridge)",
         "vocab": {"atom_count": len(vocab), "families": sorted({a["family"] for a in vocab.values()})},
         "champions": champions,
         "totals": {
@@ -726,6 +911,8 @@ def build_report(results: list[dict], vocab, sanity: list[dict], suggestions: li
             "unclassified_noise_artifacts": total_noise,
             "unclassified_total_objects": total_unclassified + total_noise,
             "family_counts": totals,
+            "damage_type": compute_damage_type_stats(results),
+            "weak_evidence_atoms": 0,
         },
         "sanity_checks": sanity,
         "improvement_suggestions": suggestions,
@@ -764,11 +951,12 @@ def main(argv=None) -> int:
     keyword_index = build_keyword_index(vocab, generic_tokens, champ_tokens)
     passive_map = load_passive_map()
     tag_map = load_tag_map()
+    wiki_types = load_wiki_damage_types()
 
     results = []
     for f in bin_files:
         champ = f.name[:-len(".bin.json")]
-        results.append(extract_champion(champ, f, keyword_index, vocab, passive_map, tag_map))
+        results.append(extract_champion(champ, f, keyword_index, vocab, passive_map, tag_map, wiki_types))
         (out / f"{champ}.atoms.json").write_text(
             json.dumps(results[-1]["atoms"], indent=1))
 
@@ -779,8 +967,19 @@ def main(argv=None) -> int:
     # sanity checks + suggestions are produced by the caller for a curated set;
     # default run emits the generic report without them.
     sanity, suggestions = build_sanity_and_suggestions(results, vocab)
-    (out / "classification-report.json").write_text(
-        json.dumps(build_report(results, vocab, sanity, suggestions), indent=1))
+    report = build_report(results, vocab, sanity, suggestions)
+    # Carry over externally-added report sections (e.g. the autoresearch
+    # weak-evidence experiment log) so a regeneration never clobbers them.
+    old_report = out / "classification-report.json"
+    if old_report.exists():
+        try:
+            old_data = json.loads(old_report.read_text())
+        except json.JSONDecodeError:
+            old_data = {}
+        for extra_key in ("autoresearch",):
+            if extra_key in old_data and extra_key not in report:
+                report[extra_key] = old_data[extra_key]
+    (out / "classification-report.json").write_text(json.dumps(report, indent=1))
 
     fam_totals = {}
     for r in results:
@@ -875,9 +1074,12 @@ def build_sanity_and_suggestions(results, vocab):
         "Add a 'soul'/'stack currency' keyword family: Senna souls, Thresh souls and Nasus Q stacks appear as "
         "'Soul*'/'Stacks' datavalues, and only 'stack' currently matches — soul-gated scaling is invisible, and "
         "objects like ThreshPassiveSouls / SennaBasicAttackSouls stay unclassified.",
-        "mDamageType is absent from all 203 parsed binaries; damage type must come from calc/datavalue naming "
-        "('APDamage', 'PhysicalDamage', 'TrueDamage') or a future parser field — today only magic/physical/true "
-        "tokens are detected, so most damage atoms carry damage_type=null.",
+        "Damage types are now bridged from the wiki champion cache (data/champions.json per-ability damageType) "
+        "via script-name prefix (champion+slot letter) and ability-name token matching, with token inference as the "
+        "fallback. Remaining damage_type=null atoms are: basic-attack objects (the cache types abilities, not "
+        "autos), slots the wiki marks without a type, and multi-form slots whose entries disagree on the type "
+        "(e.g. Gnar W Hyper vs Wallop, Rek'Sai Q Queen's Wrath vs Prey Seeker) when the object name cannot "
+        "disambiguate the form.",
         "Curate ambiguous vocab keywords before scaling to all champions. The classifier already guards against "
         "champion-name keywords ('Aatrox', 'Aphelios'), generic words ('duration', 'ability damage', 'crit'), and "
         "substring traps ('miss' in missile, 'stance' in distance, 'wind' in window) — but residual noise remains: "
@@ -890,6 +1092,10 @@ def build_sanity_and_suggestions(results, vocab):
         "Missiles and empowered-attack variants of an already-classified parent spell (e.g. JinxQAttack, "
         "ApheliosSeverumAttack, GnarQMissile) stay unclassified; inheriting the parent ability's atoms for "
         "'*Missile'/'*Attack'-suffixed clones would cut the unclassified-real count roughly in half.",
+        "The wiki cache marks 25 abilities OTHER_DAMAGE (Ahri Q, Camille Q, Pyke R, Sett W, Urgot R, Vel'Koz R, "
+        "Yone P/W/R, ...); these are recorded verbatim as damage_type='other'. Several are true damage in game "
+        "(e.g. Pyke R, Camille Q2, Sett W, Urgot R) — verify against the game files if 'true' matters, and only "
+        "then special-case them (ideally as data, not code).",
     ]
     return sanity, suggestions
 

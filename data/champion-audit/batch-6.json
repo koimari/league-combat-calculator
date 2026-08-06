@@ -1,0 +1,556 @@
+{
+ "Syndra": {
+  "module_slots": {
+   "modeled": [
+    "P",
+    "Q",
+    "Q2",
+    "W",
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "E/W CC (stun, knockback, slow - utility only)",
+    "R 100-splinter execute (documented not modeled)"
+   ],
+   "note": "No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF."
+  },
+  "atoms_total": 41,
+  "notable_atoms": [
+   "damage (Q/W/E nukes, R multi-sphere, 19 atoms)",
+   "cc (E stun/knockback, W slow, 11 atoms)",
+   "stack (Splinters of Wrath upgrades for P/Q/W/E/R, 11 atoms)",
+   "ammo (Q 2nd charge at 40 splinters)",
+   "buff (120-splinter +15% total AP capstone)",
+   "execute (R at 100 splinters - not modeled)"
+  ],
+  "gap_summary": "All damage and splinter atom families covered: splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count. The one damage.execute atom (R at 100 splinters, kills below 15% max HP) is explicitly documented as not modeled ('the fight target never dies') in ASSUMPTIONS. E/W CC are documented utility-only. No heal atoms.",
+  "verdict": "ok"
+ },
+ "TahmKench": {
+  "module_slots": {
+   "modeled": [
+    "P",
+    "Q",
+    "W",
+    "R"
+   ],
+   "out_of_scope": [
+    "E (Thick Skin - grey-health/shield state, omitted from SLOTS)"
+   ],
+   "note": "No MODULE_COVERAGE dict; hand-written module. E deliberately omitted: 'Thick Skin is grey-health/shield state, not damage'."
+  },
+  "atoms_total": 23,
+  "notable_atoms": [
+   "damage (Q/W/R nukes, P on-hit, 9 atoms)",
+   "cc (Q slow/stun, W knockup/immobilize, R suppress, 9 atoms)",
+   "heal (Q Tongue Lash heal, 1 atom)",
+   "shield (E grey-health shield x2, R ally Devour shield, 4 heal-shield atoms)",
+   "stack (P An Acquired Taste on-hit stacks)"
+  ],
+  "gap_summary": "Heal/shield atom family unmodeled: Q Tongue Lash self-heal (wiki Q 'Heal'), E Thick Skin grey-health heal + shield (wiki 'Max Health Damage' 60-100% is the grey-health->health conversion - a heal, not damage; the reviewed-packet asset mis-models it as a targetMaxHp damage ratio), R Devour ally shield (wiki 'Shield Strength'). Tahm Kench is NOT in healing.py HEALING_RULE_CHAMPIONS, so no self-heal is derived. Module models only P/Q/W/R damage.",
+  "verdict": "gap"
+ },
+ "Taliyah": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "W",
+    "E"
+   ],
+   "out_of_scope": [
+    "P (Rock Surfing - movespeed, no enemy damage)",
+    "R (Weaver's Wall - summon/terrain, no enemy damage)"
+   ],
+   "note": "No MODULE_COVERAGE dict; hand-written certified E->W->Q one-rotation module with sourced hit timings."
+  },
+  "atoms_total": 38,
+  "notable_atoms": [
+   "damage (Q 5-shard volley/boulder, E mines + detonations, 16 atoms)",
+   "cc (W knockback, E slow/stun, R knock-aside, 15 atoms)",
+   "stack/mark (E mine markers, P movespeed stacks, 7 atoms)",
+   "summon (R Weaver's Wall terrain)",
+   "execute (Q monster execute / R structure - not champion-target damage)"
+  ],
+  "gap_summary": "All champion-target damage atoms covered: Q modeled with normal (5 shards, 40% reduced) and Worked Ground (boulder) variants incl. projectile travel times, W as no-damage knockback that triggers E detonations (100/75/50/25% multipliers), E initial eruption + user-set detonation count. P (movespeed stacks) and R (Weaver's Wall summon) are excluded because they deal no enemy damage - explicitly documented in ASSUMPTIONS ('Passive and R are excluded because they deal no enemy damage'). The atom 'execute' tags on Q/R are monster/structure executes, irrelevant to champion-target fights. No heal/shield atoms.",
+  "verdict": "ok"
+ },
+ "Talon": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "W",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Blade's End - 3-stack Wound bleed)",
+    "E (Assassin's Path - wall-hop, no damage)",
+    "Q heal",
+    "R stealth/untargetable"
+   ],
+   "note": "MODULE_COVERAGE: P/E out_of_scope; Q/W/R modeled. Packet spec marks P no_damage."
+  },
+  "atoms_total": 29,
+  "notable_atoms": [
+   "damage (Q/W two-hit/R nukes, 14 atoms)",
+   "cc (E slows, 5 atoms)",
+   "stack + damage-over-time (P Blade's End 3-stack Wound bleed, 4 atoms)",
+   "heal (Q Noxian Diplomacy, 2 atoms)",
+   "stealth/untargetable (R Shadow Assault, 2 atoms)",
+   "interaction (Q attack-reset)",
+   "pet/summon (R shadow)"
+  ],
+  "gap_summary": "P Blade's End 3-stack bleed is unmodeled: wiki P 'Per-Level Scaling' 80-303.53 (+210% bonus AD) is Talon's main burst finisher, but MODULE_COVERAGE marks P out_of_scope and the packet spec classifies it no_damage. Q heal (wiki Q 'Heal') unmodeled - Talon not in healing.py HEALING_RULE_CHAMPIONS. Q attack-reset and R stealth are utility (no damage impact). W two-hit packet (0.4 bAD out + 0.9 bAD return) modeled.",
+  "verdict": "gap"
+ },
+ "Taric": {
+  "module_slots": {
+   "modeled": [
+    "E"
+   ],
+   "out_of_scope": [
+    "P (Bravado - AS buff)",
+    "Q (Starlight's Touch - heal + charges)",
+    "W (Bastion - ally/self shield)",
+    "R (Cosmic Radiance - invulnerability buff)"
+   ],
+   "note": "MODULE_COVERAGE: only E modeled."
+  },
+  "atoms_total": 22,
+  "notable_atoms": [
+   "damage (E Dazzle, 10 atoms)",
+   "heal (Q Starlight's Touch per-charge heal, 1 atom)",
+   "shield (W Bastion self+ally, 3 atoms)",
+   "buff (R Cosmic Radiance invulnerability, P Bravado, 9 stack-transform atoms)",
+   "ammo (Q charge stacking)",
+   "cc (E stun)"
+  ],
+  "gap_summary": "Support kit almost entirely unmodeled: Q Starlight's Touch heal (25 + 15% AP + 1% max HP per charge, up to 5 charges / 125 + 75% AP + 5% max HP), W Bastion shield (wiki 'Shield Strength' 7-11) and R Cosmic Radiance invulnerability buff are all out_of_scope. Taric not in healing.py HEALING_RULE_CHAMPIONS. Only E (Dazzle magic damage) is modeled.",
+  "verdict": "gap"
+ },
+ "Teemo": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Guerrilla Warfare - stealth, utility)",
+    "W (Move Quick - movespeed, utility)",
+    "E poison DoT (only on-hit modeled)"
+   ],
+   "note": "MODULE_COVERAGE: Q/E/R modeled; P/W out_of_scope."
+  },
+  "atoms_total": 29,
+  "notable_atoms": [
+   "damage (Q blind dart, E on-hit, R trap, 17 atoms)",
+   "damage-over-time (E poison 4 ticks, R mushroom poison, 5 dot atoms)",
+   "stack/trap (R Noxious Trap ammo/trap, 10 atoms)",
+   "stealth (P Guerrilla Warfare)",
+   "buff (W Move Quick - utility)"
+  ],
+  "gap_summary": "E Toxic Shot poison DoT unmodeled: the E packet carries only the on-hit ('Magic Damage On-Hit' 9-65 + 5% bAD + 30% AP); wiki 'Magic Damage per Tick' 6-30 (+10% AP, 24-120 total) - a dedicated damage.dot atom (TeemoEDot) - is not expressed, so the poison half of Toxic Shot is missing. R Noxious Trap DoT is modeled (packet = per-tick 50-112.5 + 12.5% AP). P stealth / W movespeed are documented utility.",
+  "verdict": "gap"
+ },
+ "Thresh": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Damnation - souls grant 1 AP + 1 armor each)",
+    "W (Dark Passage - ally shield)"
+   ],
+   "note": "MODULE_COVERAGE: Q/E/R modeled; P/W out_of_scope."
+  },
+  "atoms_total": 28,
+  "notable_atoms": [
+   "damage (Q hook, E flay, R The Box, 11 atoms)",
+   "cc (Q hook/pull/self-root, E stun/knockback, R slow, 10 atoms)",
+   "shield (W Dark Passage lantern, 2 atoms)",
+   "stack/soul (P Damnation souls - permanent AP + armor, 3 atoms)",
+   "aoe (R The Box penta-wall)"
+  ],
+  "gap_summary": "Two unmodeled atom families: (1) W Dark Passage shield (2 heal-shield.shield atoms; wiki W 'Shield Strength') is no_damage in the packet spec; (2) P Damnation souls (3 soul atoms) grant 1 AP + 1 bonus armor per soul - the AP directly scales Q/E/R damage, so the module computes Thresh damage at 0 souls with no soul-stack option. Q/E/R damage packets modeled.",
+  "verdict": "gap"
+ },
+ "Tristana": {
+  "module_slots": {
+   "modeled": [
+    "W",
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Draw a Bead - range, utility)",
+    "Q (Rapid Fire - AS buff)",
+    "E active charge/detonation (stack mechanic)"
+   ],
+   "note": "MODULE_COVERAGE: W/E/R modeled; P/Q out_of_scope."
+  },
+  "atoms_total": 18,
+  "notable_atoms": [
+   "damage (W rocket jump, E explosion, R buster shot, 10 atoms)",
+   "cc (R knockback, W slow, 5 atoms)",
+   "stack (E Explosive Charge 4-hit stacking debuff, 3 atoms)",
+   "buff (Q Rapid Fire attack speed)",
+   "dash (W Rocket Jump)"
+  ],
+  "gap_summary": "E Explosive Charge's active stack/detonation mechanic is unmodeled: the E packet emits the PASSIVE kill-explosion numbers ('Magic Damage' 45-105 + 25% AP) with the active's 16s cooldown, while the actual active detonation (wiki 'Minimum Physical Damage' 60-160, +25% per stack x4 = 'Full Stack Physical Damage' 120-320) and the TristanaECharge/EDebuff atoms are absent. Q Rapid Fire AS buff out_of_scope. W and R packets modeled.",
+  "verdict": "gap"
+ },
+ "Trundle": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (King's Tribute - heal on nearby deaths)",
+    "W (Frozen Domain - AS/MS buff)",
+    "E (Pillar of Ice - terrain summon + slow)",
+    "R DoT + R heal (only Initial Magic Damage modeled)"
+   ],
+   "note": "MODULE_COVERAGE: Q/R modeled; P/W/E out_of_scope. R is wiki_attribute 'Initial Magic Damage' only."
+  },
+  "atoms_total": 27,
+  "notable_atoms": [
+   "damage (Q chomp, R drain, 13 atoms)",
+   "heal (R Subjugate drain heal x4, P King's Tribute heal, 4 atoms)",
+   "cc (E pillar slow/knockback, 3 atoms)",
+   "summon (E Pillar of Ice terrain)",
+   "stack/buff (W Frozen Domain, Q AD-steal debuff, 6 atoms)",
+   "interaction (Q attack-reset), on-hit (Q)"
+  ],
+  "gap_summary": "R Subjugate is modeled only as its initial hit (wiki_attribute 'Initial Magic Damage' 10-15): the drain DoT ('Magic Damage Per Second' 2.5-3.75) and the drain self-heal ('Initial Healing' + 'Healing Per Second' + 'Total Healing' - 4 heal-shield.heal atoms) are unmodeled, and Trundle is not in healing.py HEALING_RULE_CHAMPIONS. P King's Tribute heal, W buff and E Pillar summon are out_of_scope. Q chomp packet (on-hit + AD steal debuff) modeled.",
+  "verdict": "gap"
+ },
+ "Tryndamere": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "E"
+   ],
+   "out_of_scope": [
+    "P (Battle Fury - crit from fury)",
+    "W (Mocking Shout - slow + AD shred)",
+    "R (Undying Rage - stasis/invulnerability)",
+    "Q heal (mis-modeled as damage)"
+   ],
+   "note": "MODULE_COVERAGE: Q/E modeled; P/W/R out_of_scope."
+  },
+  "atoms_total": 13,
+  "notable_atoms": [
+   "damage (E Spinning Slash, 7 atoms)",
+   "cc (W slow, E slow, 4 atoms)",
+   "heal (Q Bloodlust fury heal, 1 atom)",
+   "stasis (R Undying Rage, 2 atoms)",
+   "buff (P Battle Fury crit)"
+  ],
+  "gap_summary": "Q Bloodlust is mis-modeled: the packet emits base 5-25 as MAGIC DAMAGE, but Q deals no damage - it is a fury heal (wiki 'Minimum Heal' 30-70, 'Maximum Heal' 80-300) plus a missing-health AD buff. The heal-shield.heal atom (TryndamereQ) is unmodeled (not in healing.py HEALING_RULE_CHAMPIONS) and the packet fabricates a small damage entry instead. R Undying Rage stasis (UndyingRage atom) and P fury crit / W slow are out_of_scope. E spin packet modeled.",
+  "verdict": "gap"
+ },
+ "TwistedFate": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "W",
+    "E"
+   ],
+   "out_of_scope": [
+    "P (Loaded Dice - bonus gold, utility)",
+    "R (Destiny - global blink + vision)"
+   ],
+   "note": "MODULE_COVERAGE: Q/W/E modeled; P/R out_of_scope."
+  },
+  "atoms_total": 16,
+  "notable_atoms": [
+   "damage (Q Wild Cards, W Pick a Card, E Stacked Deck on-hit, 13 atoms)",
+   "stack (E Stacked Deck every-4th-hit bonus, 1 atom)",
+   "blink (R Destiny)",
+   "vision (P Second Sight)",
+   "critical-strike (basic attacks)"
+  ],
+  "gap_summary": "W Pick a Card packet is a single packet summing all THREE card scalings - ratios are 1.0 AD + 1.0 AP (gold), 1.0 AD + 0.7 AP (red), 1.0 AD + 0.5 AP (blue) merged, i.e. 3.0x AD + 2.2x AP computed at once - so W appears to triple-count the AD component instead of selecting one card. Q Wild Cards and E Stacked Deck (cd=0 on-hit) packets modeled; R blink + P gold/vision are documented utility. Atom file itself carries no Pick-a-Card atoms to compare against.",
+  "verdict": "review"
+ },
+ "Twitch": {
+  "module_slots": {
+   "modeled": [
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Deadly Venom - stack + DoT, the core mechanic)",
+    "Q (Ambush - stealth + AS)",
+    "W (Venom Cask - aoe slow + DoT)"
+   ],
+   "note": "MODULE_COVERAGE: E/R modeled; P/Q/W out_of_scope."
+  },
+  "atoms_total": 27,
+  "notable_atoms": [
+   "stack + damage-over-time (P Deadly Venom, 14 atoms - largest family)",
+   "damage (E Contaminate expunge, R Spray and Pray, 12 atoms)",
+   "stealth (Q Ambush)",
+   "aoe + DoT (W Venom Cask)",
+   "debuff (W Venom Cask slow/poison)"
+  ],
+  "gap_summary": "The poison stack system that drives E is unmodeled: P Deadly Venom (stacks/DoT) and W Venom Cask (aoe + DoT + slow) are no_damage, and the E Contaminate packet is base-only ('Base Physical Damage' 20-60 at 0 stacks) - wiki 'Physical Damage Per Stack' 15-35 (+35% AP) and 'Minimum/Maximum Mixed Damage' (35-270) are absent, so E is computed against zero stacks. R packet emits Spray and Pray's bonus AD (30-60) as a damage nuke shape. The 14 stack/dot atoms are entirely uncovered.",
+  "verdict": "gap"
+ },
+ "Udyr": {
+  "module_slots": {
+   "modeled": [
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Bridge Between - stance system)",
+    "Q (Wilding Claw - empowered %maxHP attacks + Awaken heal)",
+    "W (Iron Mantle - heal + shield stance)",
+    "E (Blazing Stampede - stun stance)"
+   ],
+   "note": "MODULE_COVERAGE: only R modeled. Packet spec has Q as wiki_attribute 'Max Health Damage' but MODULE_COVERAGE still marks Q out_of_scope."
+  },
+  "atoms_total": 29,
+  "notable_atoms": [
+   "damage (R Wingborne Storm blizzard, 19 atoms)",
+   "heal + shield (W Iron Mantle on-hit heal/shield x7 atoms - largest heal-shield family in batch)",
+   "cc (E Blazing Stampede stun, 3 atoms)",
+   "on-hit (Q/W/R empowered basic attacks, %maxHP terms)",
+   "buff (P stance, Q AS buff)"
+  ],
+  "gap_summary": "Only R (Wingborne Storm) is modeled. W Iron Mantle's heal+shield stance (7 heal-shield atoms; wiki W 'Shield Strength', 'Life Steal', 'Heal per Tick' - Udyr not in healing.py HEALING_RULE_CHAMPIONS), Q Wilding Claw's %maxHP empowered attacks (+ Awaken self-heal 40-75), E Blazing Stampede stun, and the P stance system are all out_of_scope. The packet spec contains a Q wiki_attribute ('Max Health Damage') but MODULE_COVERAGE explicitly marks Q out_of_scope, so only the R packet is emitted.",
+  "verdict": "gap"
+ },
+ "Urgot": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "W",
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Echoing Flames - leg on-hit maxHP damage)",
+    "E shield (Disdain)",
+    "R execute/fear (Fear Beyond Death)",
+    "W shot count (only 1 of ~12 shots)"
+   ],
+   "note": "MODULE_COVERAGE: Q/W/E/R modeled; P out_of_scope."
+  },
+  "atoms_total": 32,
+  "notable_atoms": [
+   "damage (Q/W/E/R, 18 atoms)",
+   "cc (E dash/stun, R suppress/recast, fear, 12 atoms)",
+   "shield (E Disdain, 2 atoms)",
+   "execute (R Fear Beyond Death below 25% HP + recast)",
+   "on-hit (P Echoing Flames legs, %maxHP)",
+   "channel (R recast)"
+  ],
+  "gap_summary": "Several damage-affecting mechanics unmodeled: (1) P Echoing Flames leg on-hit (max-health % damage, out_of_scope) is a real DPS source; (2) W Purge packet models ONE shot (12 + 20-34% AD) though Purge fires ~12 shots over 4s at fixed 3.0 AS - a large understatement of his core damage; (3) E Disdain shield (2 shield atoms) and R Fear Beyond Death execute/fear (below 25% HP) unmodeled. Q/W/E/R base damage packets modeled.",
+  "verdict": "gap"
+ },
+ "Varus": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "W",
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Living Vengeance - AS on takedown, utility)",
+    "W Blight stack/detonation system",
+    "W active charged shot"
+   ],
+   "note": "MODULE_COVERAGE: Q/W/E/R modeled; P out_of_scope."
+  },
+  "atoms_total": 28,
+  "notable_atoms": [
+   "damage (Q piercing arrow, W on-hit, E hail, R chain, 21 atoms)",
+   "cc (E slow, R root, 6 atoms)",
+   "stack/debuff (W Blight stacks + Q/E/R detonation, 1 atom)",
+   "channel (Q charge)",
+   "on-hit (W blight application)"
+  ],
+  "gap_summary": "The Blight stack/detonation system - Varus' core burst - is unmodeled: the W packet emits only the flat passive on-hit 'Bonus Magic Damage' (4-40 + 15% bAD + 25% AP) as a standalone cd=40 ability; the detonation (wiki 'Bonus Magic Damage per Stack' 3-5% max HP, 15% at 3 stacks, consumed by Q/E/R) and the W active charged shot (6-21% of target's MISSING HP) are absent. The VarusWDebuff atom is not covered. Q/E/R base damage packets modeled.",
+  "verdict": "gap"
+ },
+ "Vayne": {
+  "module_slots": {
+   "modeled": [
+    "R",
+    "Q",
+    "W",
+    "E"
+   ],
+   "out_of_scope": [
+    "P (Night Hunter - movespeed toward enemies, utility)"
+   ],
+   "note": "No MODULE_COVERAGE dict; hand-written module. R is a BUFF-phase stat_buff that also publishes Q's CDR."
+  },
+  "atoms_total": 37,
+  "notable_atoms": [
+   "damage (Q empowered auto, E condemn, 18 atoms)",
+   "cc (E knockback + wall stun, 9 atoms)",
+   "stack (W Silver Bolts 3-hit mark + debuff, 5 atoms)",
+   "stealth (Q/R - utility)",
+   "interaction (Q Tumble attack-reset, 2 atoms)",
+   "buff (R Final Hour bonus AD + Q CDR)"
+  ],
+  "gap_summary": "All damage atom families covered: W Silver Bolts true damage modeled as every-3rd-hit on-hit (%maxHP, floor via 'Minimum Bonus Damage'), Q Tumble empowered-auto damage with R-scaled cooldown (empowers_next_auto), E Condemn with wall option (Total vs base Physical Damage), R Final Hour as a BUFF-phase AD stat_buff. P Night Hunter movespeed is documented utility-only ('not modeled'). No heal/shield atoms in the file.",
+  "verdict": "ok"
+ },
+ "Veigar": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "W",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Phenomenal Evil Power - permanent AP stacking)",
+    "E (Event Horizon - stun cage, cc only)"
+   ],
+   "note": "MODULE_COVERAGE: Q/W/R modeled; P/E out_of_scope."
+  },
+  "atoms_total": 18,
+  "notable_atoms": [
+   "damage (Q baleful strike, W dark matter, R primordial burst, 14 atoms)",
+   "cc (E stun cage, 4 atoms)",
+   "execute (R missing-health scaling up to +100%)",
+   "lockout (W cast delay)"
+  ],
+  "gap_summary": "R Primordial Burst is modeled at its MAXIMUM execute values: the packet base 350-650 + 130-150% AP matches wiki 'Maximum Magic Damage' (350-650), while 'Minimum Magic Damage' is 175-325 - so R is always treated as fully executed (damage.execute atom), overstating damage against healthy targets. P Phenomenal Evil Power AP-stack scaling is out_of_scope (wiki P has no leveling rows, so the atom file has no stack atom for it) yet it multiplies all his damage. E stun cage is documented cc-only.",
+  "verdict": "review"
+ },
+ "Velkoz": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "W",
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Organic Deconstruction - 3-stack true damage proc)",
+    "W 2-charge ammo (damage modeled, charges not exposed)"
+   ],
+   "note": "MODULE_COVERAGE: Q/W/E/R modeled; P out_of_scope (packet marks P no_damage)."
+  },
+  "atoms_total": 34,
+  "notable_atoms": [
+   "damage (Q/W/E/R, 23 atoms)",
+   "cc (Q slow, E knockup, 7 atoms)",
+   "stack (P Research stacks, 3 atoms)",
+   "proc (P true damage on 3rd stack - 35-197.06 + 60% AP)",
+   "ammo (W Void Rift 2 charges)"
+  ],
+  "gap_summary": "P Organic Deconstruction is unmodeled: the 3-stack research system (3 stack atoms + damage.proc atom) consumes all stacks for 35-197.06 (+60% AP) TRUE damage on the 3rd unique hit - a real damage mechanic (wiki P 'Per-Level Scaling') - but the packet spec marks P no_damage and MODULE_COVERAGE marks it out_of_scope. W's 2-charge ammo (ammo atoms) is modeled as a 1.5s recharge without exposing a charge count. Q/W/E/R damage packets modeled.",
+  "verdict": "gap"
+ },
+ "Vex": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "W",
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Doom 'n Gloom - empowered auto bonus damage + fear)",
+    "W shield (Personal Space)",
+    "R cc-immunity"
+   ],
+   "note": "MODULE_COVERAGE: Q/W/E/R modeled; P out_of_scope."
+  },
+  "atoms_total": 21,
+  "notable_atoms": [
+   "damage (Q/W/E/R, 14 atoms)",
+   "cc (P fear, R, 6 atoms)",
+   "shield (W Personal Space, 1 atom)",
+   "buff (P Doom/Gloom empowered auto, cc-immunity)"
+  ],
+  "gap_summary": "Secondary mechanics unmodeled: W Personal Space shield (heal-shield.shield atom; wiki 'Shield Strength' 50-150) is absent from the W packet (damage-only), and P Doom 'n Gloom's empowered-auto bonus magic damage (wiki 'Bonus Magic Damage' 40-162.94 + 25% AP) plus fear are out_of_scope. Q/W/E/R damage packets all modeled. Needs judgment on whether the periodic P auto-damage and W shield are in scope for a damage-only calculator.",
+  "verdict": "review"
+ },
+ "Vi": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "W",
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Blast Shield - defensive shield, does not change outgoing TDD)"
+   ],
+   "note": "No MODULE_COVERAGE dict; hand-written certified Q->E->R module. W (Denting Blows) is modeled as post_hit_proc on Q/E with armor-shred ordering."
+  },
+  "atoms_total": 32,
+  "notable_atoms": [
+   "damage (Q charge, E empowered attack, R, 15 atoms)",
+   "cc (Q knockback, R suppress/slow, 12 atoms)",
+   "stack (W Denting Blows 3-hit mark, 4 atoms)",
+   "proc (W %maxHP + 20% armor shred debuff)",
+   "interaction (E attack-reset)",
+   "shield (P Blast Shield - defensive)"
+  ],
+  "gap_summary": "All damage atom families covered: Q Vault Breaker with charge-time geometry (50-150% bonus scaling), E Relentless Force as the empowered attack (attack reset, item on-hits, primary vs cone targets), R Cease and Desist with grab timing, and W Denting Blows modeled as a post_hit_proc on Q/E - 3-stack %maxHP damage priced at pre-shred armor with a 20% armor-reduction debuff applied to later hits. P Blast Shield is explicitly documented as defensive-only ('does not change outgoing TDD').",
+  "verdict": "ok"
+ },
+ "Viego": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "W",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Sovereign's Domination - Possession/transform)",
+    "E (Harrowed Path - mist/stealth/AS buff)",
+    "Q mark second strike + Q heal"
+   ],
+   "note": "MODULE_COVERAGE: Q/W/R modeled; P/E out_of_scope. Q mark rider documented in _PACKET_ASSUMPTION_OVERRIDES."
+  },
+  "atoms_total": 48,
+  "notable_atoms": [
+   "damage (Q on-hit, W spectral maw, R heartbreaker, 15 atoms)",
+   "cc (W stun, R, 13 atoms)",
+   "transform/possession (P Sovereign's Domination - souls, revive special cases, 9 atoms)",
+   "heal (Q heal, 3 atoms)",
+   "stealth/mist (E Harrowed Path, 4 atoms)",
+   "interaction (Q/W attack-resets, projectile-destruction, 4 atoms)"
+  ],
+  "gap_summary": "The defining P Possession/transform mechanic (9 transform/soul/revive atoms) is inherently out of scope for a single-target damage module (needs the possessed champion's kit), and E Harrowed Path mist/stealth/AS is utility. Q's mark-consuming second strike (20% AD + 15% AP) and its heal (heal-shield.heal atom; Viego not in healing.py HEALING_RULE_CHAMPIONS) are unmodeled - the packet models only the passive %current-HP on-hit, and the stateful rider is documented in the packet assumption override. W and R damage modeled. Needs judgment on possession scope.",
+  "verdict": "review"
+ },
+ "Viktor": {
+  "module_slots": {
+   "modeled": [
+    "Q",
+    "E",
+    "R"
+   ],
+   "out_of_scope": [
+    "P (Glorious Evolution - Hex Core augments)",
+    "W (Gravity Field - stun/slow, cc only)",
+    "Q Discharge empowered auto + Q shield"
+   ],
+   "note": "MODULE_COVERAGE: Q/E/R modeled; P/W out_of_scope."
+  },
+  "atoms_total": 25,
+  "notable_atoms": [
+   "damage (Q siphon, E hextech ray 2-hit, R storm DoT, 19 atoms)",
+   "cc (W stun, 2 atoms)",
+   "shield (Q Siphon Power, 2 atoms)",
+   "on-hit (Q Discharge empowered auto - Modified/Total Magic Damage 80-240)",
+   "buff (P Glorious Evolution augments)"
+  ],
+  "gap_summary": "Q Siphon Power is modeled as projectile damage only (60-120 + 40% AP): the Discharge empowered auto (on-hit damage atoms; wiki 'Modified Magic Damage' 20-120 / 'Total Magic Damage' 80-240 + AP) and the shield (2 heal-shield.shield atoms; 'Shield Strength' 40-140 + 25% AP) are absent, roughly halving Q's real damage contribution. W Gravity Field cc and P Glorious Evolution augments (which buff the shield/W slow/R ticks) are out_of_scope. E (2-hit ray packet) and R (DoT packet) modeled. Needs judgment on whether Q's auto rider belongs in the damage module.",
+  "verdict": "review"
+ }
+}

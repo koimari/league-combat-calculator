@@ -1,0 +1,426 @@
+{
+ "Kindred": {
+  "module_slots": {
+   "P": "no_damage (Mark of the Kindred: hunt marks + bonus range = state, exposed as 'marks' option to Q/E)",
+   "Q": "modeled (Dance of Arrows physical damage; bonus AS stated)",
+   "W": "modeled (Wolf's Frenzy magic damage, w_attacks option)",
+   "E": "modeled (Mounting Dread 3rd-hit proc, target_max_health_sensitive, e_stacks option)",
+   "R": "no_damage (Lamb's Respite: minimum-health zone + end heal = defensive/utility state)"
+  },
+  "atoms_total": 49,
+  "notable_atoms": [
+   "damage (Q/W/E + basic-attack/crit family)",
+   "summon (Wolf: 'kindred Passive (Wolf)' + KindredW)",
+   "heal (W passive Hunter's Vigor heal, R Lamb's Respite end heal)",
+   "mark (P Mark of the Kindred, E Mounting Dread stacks)",
+   "attack-reset (Q)",
+   "CC/mobility (Q dash, E slow)",
+   "stack (W charge passive)"
+  ],
+  "gap_summary": "Self-heal atoms are unmodeled: KindredWPassiveHealMissile (W passive Hunter's Vigor heal at 100 stacks) and heal-shield.heal on KindredR (Lamb's Respite end heal) have no module or healing.py rule (Kindred not in HEALING_RULE_CHAMPIONS; deep-audit-2026-08 §2.2 lists Kindred W passive heal as missing). R is explicitly declared no_damage/utility state, but the W passive heal is not mentioned in any assumption. Q/W/E damage, mark stacks and Wolf summon damage are modeled.",
+  "verdict": "gap"
+ },
+ "Kled": {
+  "module_slots": {
+   "P": "no_damage (Skaarl the Cowardly Lizard: mounted/dismounted health pool, remount, damage cutoff = participant state)",
+   "Q": "modeled (Bear Trap on a Rope physical damage; q_pull option selects Total vs base damage)",
+   "W": "modeled (Violent Tendencies 4th-attack bonus damage; note: rank read as ctx.level, not W rank — always max-rank values)",
+   "E": "modeled (Jousting Total Physical Damage)",
+   "R": "modeled (Chaaaaaaaarge!!! min/max magic damage interpolated by charge_fraction; shield = utility state)"
+  },
+  "atoms_total": 65,
+  "notable_atoms": [
+   "damage (Q/W/E/R + basic-attack/crit family, damage.execute on KledR, damage.on-hit on W)",
+   "transform (mount/dismount: KledRFormswapper, dismount/remount dashes)",
+   "shield (KledRShield + heal-shield.shield on KledR: initial+ramping charge shield, ally draft shield)",
+   "mark (Q tether)",
+   "CC/mobility (E dash, R charge, Q slow)",
+   "stack (R charge ally speed)"
+  ],
+  "gap_summary": "R charge shield (heal-shield.shield on KledRShield/KledR) is not modeled — module R detail says 'shield and team movement are utility state' (documented). P mount transform (Skaarl HP pool, remount) is documented state. The damage.execute label on KledR is a classifier artifact (Kled R has no execute; it is min/max magic damage, both modeled). Modeling quirk: _kled_w reads W at ctx.level (11/18) which clamps to the 5-value rank array's max rank, so the 4th-attack bonus is always max-rank regardless of W level.",
+  "verdict": "review"
+ },
+ "KogMaw": {
+  "module_slots": {
+   "P": "not modeled (Icathian Surprise death passive — documented in ASSUMPTIONS; absent from SLOTS)",
+   "Q": "modeled (Caustic Spittle magic damage + bonus AS stat_buff + armor/MR shred target_debuff, q_shred option)",
+   "W": "modeled (Bio-Arcane Barrage on-hit %maxHP magic damage, w_active option)",
+   "E": "modeled (Void Ooze simple magic damage)",
+   "R": "modeled (Living Artillery minimum magic damage with missing-HP execute curve)"
+  },
+  "atoms_total": 23,
+  "notable_atoms": [
+   "damage (Q/W/E/R + basic-attack/crit family)",
+   "on-hit (W Bio-Arcane Barrage %maxHP)",
+   "execute (R Living Artillery missing-HP scaling, damage.execute)",
+   "buff (Q bonus AS, W ranged-AA buff)",
+   "vision (R sight)",
+   "stack (Q charged spittle)"
+  ],
+  "gap_summary": "Module covers all combat atoms: W on-hit %maxHP, R missing-HP execute curve (damage.execute), Q resist shred (damage.py target_debuff). The only unmodeled atom is P Icathian Surprise (death-passive true damage explosion), explicitly documented in ASSUMPTIONS ('Passive (Icathian Surprise) is not modeled') and consistent with the calculator's no-death assumption. No heal/shield/summon atoms exist. No gap found.",
+  "verdict": "ok"
+ },
+ "Leblanc": {
+  "module_slots": {
+   "P": "no_damage (Mirror Image: clone spawn + invisibility + pet movement = state; clone basics deal no damage)",
+   "Q": "modeled (Sigil of Malice; q_consume option selects Total Magic Damage incl. mark consumption)",
+   "W": "modeled (Distortion magic damage)",
+   "E": "modeled (Ethereal Chains; e_chain_complete option selects Total Damage incl. fracture)",
+   "R": "modeled (Mimic; r_mimic option selects Q/W/E variant)"
+  },
+  "atoms_total": 47,
+  "notable_atoms": [
+   "damage (Q/W/E/R + basic-attack/crit family, damage.proc on P mark)",
+   "clone (P Mirror Image passive)",
+   "stealth (P invisibility: vision-economy.stealth on LeblancRStealth)",
+   "mark (P Sigil mark + proc, Q mark)",
+   "upgrade/mimic (R Mimic: LeblancRQ/RW/RE upgrade atoms)",
+   "CC/mobility (W dash+return, E root)"
+  ],
+  "gap_summary": "All damage atoms are covered: Q mark consumption, E chain fracture, and R mimic variants are explicit options reading the wiki Total damage rows. P clone + invisibility are documented no_damage state (correct — the clone's basics deal no damage per wiki). No heal/shield atoms. No gap found.",
+  "verdict": "ok"
+ },
+ "LeeSin": {
+  "module_slots": {
+   "P": "no_damage (Flurry: two-attack haste + energy restore = attack-timeline state)",
+   "Q": "modeled (Sonic Wave 'Physical Damage' — first stage only; Resonating Strike recast damage has no leveling row in the wiki cache)",
+   "W": "no_damage (Safeguard: ally dash + shield = defensive/team state)",
+   "E": "modeled (Tempest magic damage)",
+   "R": "modeled (Dragon's Rage 'Physical Damage' — primary kick only; Collision Physical Damage not modeled)"
+  },
+  "atoms_total": 25,
+  "notable_atoms": [
+   "damage (Q first+second stage, E, R + basic-attack/crit family)",
+   "shield (W Safeguard: LeeSinWOneShield, heal-shield.shield on LeeSinWOne — self + ally)",
+   "CC/mobility (Q2 dash, R knockback)",
+   "buff (P Flurry, W)",
+   "debuff (E Cripple slow/AS)"
+  ],
+  "gap_summary": "W shield atoms (LeeSinWOneShield ×2) are unmodeled (documented no_damage: 'ally dash and shield are defensive/team state'). Q two-stage and R collision are partial: atoms carry LeeSinQTwo/QTwoDash and R collision damage, but the wiki cache has no leveling row for Resonating Strike's damage, and the module's R reads only 'Physical Damage', skipping 'Collision Physical Damage' (multi-target kick splash). Q recast damage and R collision are real damage mechanics the module cannot currently source — needs a data or module decision.",
+  "verdict": "review"
+ },
+ "Leona": {
+  "module_slots": {
+   "P": "modeled (Sunlight ally detonation, p_marks option)",
+   "Q": "modeled (Shield of Daybreak empowered auto, on-hit bonus magic damage)",
+   "W": "modeled (Eclipse 'Magic Damage' only — the flat damage reduction + bonus armor/MR are not emitted as defenses)",
+   "E": "modeled (Zenith Blade magic damage)",
+   "R": "modeled (Solar Flare magic damage)"
+  },
+  "atoms_total": 33,
+  "notable_atoms": [
+   "damage (P/Q/W/E/R + basic-attack/crit family, damage.on-hit on Q)",
+   "shield-ish defensive atoms (LeonaSolarBarrier labeled heal-shield.shield + interaction.parry — Eclipse is actually flat damage reduction + resistances, not a shield)",
+   "attack-reset (Q Shield of Daybreak)",
+   "CC (Q stun, E root, R stun+slow, W guard)",
+   "buff (W resistances)"
+  ],
+  "gap_summary": "All damage atoms (P detonation, Q on-hit, W/E/R magic damage) are modeled. The notable unmodeled family is Eclipse's defensive core: the atoms classify LeonaSolarBarrier as heal-shield.shield + interaction.parry (the wiki/classifier call it a shield, but in-game it is flat pre-mitigation damage reduction + bonus armor/MR) and the module emits only its damage, with no defensive_effects entry. Whether W's damage reduction belongs in the survival ledger is a scope decision (the 'shield' atom label itself looks like a classifier artifact from the ability name).",
+  "verdict": "review"
+ },
+ "Lillia": {
+  "module_slots": {
+   "P": "modeled (Dream-Laden Bough %maxHP DoT, p_ticks option)",
+   "Q": "modeled (Blooming Blows magic + outer-edge true damage, q_outer_edge option)",
+   "W": "modeled (Watch Out! Eep! epicenter Increased Damage, w_epicenter option)",
+   "E": "modeled (Swirlseed magic damage)",
+   "R": "modeled (Lilting Lullaby wake damage, r_wake option)"
+  },
+  "atoms_total": 21,
+  "notable_atoms": [
+   "damage (P DoT, Q, W, E, R + crit family, damage.dot on P)",
+   "dot (P Dream Dust %maxHP over 3s)",
+   "stack (Prance move-speed stacks)",
+   "CC (E slow, R sleep/drowsy, W dash)"
+  ],
+  "gap_summary": "All notable atoms are modeled: P DoT (damage.dot on LilliaPDoT) with tick option, Q outer-edge true damage, W epicenter branch, R wake damage. No heal/shield/summon atoms exist. Prance stacks and CC (sleep/slow/dash) are documented state. No gap found.",
+  "verdict": "ok"
+ },
+ "Lissandra": {
+  "module_slots": {
+   "P": "not modeled (Iceborn Subjugation Frozen Thrall — excluded because it requires a champion death; documented in ASSUMPTIONS)",
+   "Q": "modeled (Ice Shard magic damage)",
+   "W": "modeled (Ring of Frost magic damage)",
+   "E": "modeled (Glacial Path outward hit magic damage; recast = movement only)",
+   "R": "modeled (Frozen Tomb one ice-field magic damage instance)"
+  },
+  "atoms_total": 34,
+  "notable_atoms": [
+   "damage (Q/W/E/R + basic-attack/crit family, damage.true on R)",
+   "heal (R self-cast per-tick heal: heal-shield.heal on LissandraR)",
+   "CC (Q slow, W root, E blink, R stun)",
+   "summon-adjacent (P Frozen Thrall buff)",
+   "spell-shield-check (R)"
+  ],
+  "gap_summary": "R self-cast healing is unmodeled: the wiki lists 'Minimum/Maximum Heal per Tick' + 'Minimum/Maximum Total Heal' on Frozen Tomb and the atom file carries heal-shield.heal on LissandraR, but Lissandra is not in HEALING_RULE_CHAMPIONS and the module models R as damage only (assumption: 'Frozen Tomb counts one ice-field hit'). P Frozen Thrall is a documented exclusion (needs a champion death). Q/W/E/R damage is fully modeled.",
+  "verdict": "gap"
+ },
+ "Locke": {
+  "module_slots": {
+   "P": "modeled (Silver Stake on-hit magic damage doubling with target missing health)",
+   "Q": "modeled (Ritual Nails 3 casts + Soul Nails stack bonus, q_casts/soul_nails options)",
+   "W": "no_damage (Soul Ignition: grey health, AS/MS, recast healing = self-state)",
+   "E": "modeled (Ashen Pursuit blink + empowered dash attack, e_dash option)",
+   "R": "modeled (Purgatory totem magic damage; execute threshold = explicit target state)"
+  },
+  "atoms_total": 31,
+  "notable_atoms": [
+   "damage (P/Q/E/R + basic-attack/crit family)",
+   "on-hit (P Silver Stake, Q nails)",
+   "execute (R Purgatory execute threshold: damage.execute on LockeR)",
+   "heal (W Soul Ignition recast heal: heal-shield.heal on LockeW)",
+   "ammo (Q Ritual Nails 3-cast charges)",
+   "CC (Q slow, E dash, R slow)"
+  ],
+  "gap_summary": "W recast healing is unmodeled: the wiki W carries a 'Heal' attribute and the atom file has heal-shield.heal on LockeW, but Locke is not in HEALING_RULE_CHAMPIONS and the module declares W no_damage ('recast healing are self-state') — deep-audit-2026-08 §2.2 lists Locke among the 22 missing self-heal mechanics. R execute threshold (damage.execute atom; wiki 'Execute Threshold' 10-12%) is documented as explicit target state, not modeled. P on-hit, Q ammo+stack bonus, and E dash damage are modeled.",
+  "verdict": "gap"
+ },
+ "Lucian": {
+  "module_slots": {
+   "P": "out_of_scope (Lightslinger double-shot passive — second shot 50-60% AD after each ability is not modeled)",
+   "Q": "modeled (Piercing Light packet: 80-220 + 100% bonus AD)",
+   "W": "modeled (Ardent Blaze packet: 75-215 + 90% AP)",
+   "E": "out_of_scope (Relentless Pursuit dash + attack reset)",
+   "R": "modeled but single-shot (The Culling packet: 15-45 + 25% AD + 15% AP per shot, count=None → one shot of the up-to-22-shot channel)"
+  },
+  "atoms_total": 28,
+  "notable_atoms": [
+   "damage (Q/W/R + basic-attack/crit family, damage.dot label on R channel)",
+   "on-attack passive (P Lightslinger: LucianPassiveDamageBuff + second-shot damage)",
+   "attack-reset (E: interaction.attack-reset on LucianE)",
+   "buff (W mark + move speed, P)",
+   "CC/mobility (E dash)"
+  ],
+  "gap_summary": "The Culling is modeled as ONE shot: the packet base (15/30/45 + ratios) is 'Physical Damage Per Shot' and count is unset, so a 3-second channel of up to 22 shots contributes a single hit (golden baseline R ≈ 34-78). P Lightslinger (second shot on every ability, 50-60% AD) is out_of_scope even though it is the kit's defining on-attack damage atom. E attack-reset/dash is out_of_scope (documented). Q/W packets are correct single-instance reads.",
+  "verdict": "gap"
+ },
+ "Lulu": {
+  "module_slots": {
+   "P": "out_of_scope (Pix, Faerie Companion: 3-bolt on-attack magic damage 15-117 + 15% AP not modeled)",
+   "Q": "modeled (Glitterlance packet: 60-200 + 50% AP)",
+   "W": "out_of_scope (Whimsy polymorph / ally buff — utility)",
+   "E": "modeled for damage (Help, Pix! packet: 70-230 + 50% AP enemy cast); ally shield branch covered by support_effects ledger ('Shield Strength')",
+   "R": "out_of_scope (Wild Growth knockup + bonus health — utility)"
+  },
+  "atoms_total": 22,
+  "notable_atoms": [
+   "damage (Q/E + basic-attack/crit family)",
+   "shield (E Help, Pix!: heal-shield.shield on LuluE/LuluEShield)",
+   "buff (W ally haste, E Pix attachment, R bonus health)",
+   "debuff (W polymorph slow)",
+   "CC (Q slow, R knockup)"
+  ],
+  "gap_summary": "P Pix damage atoms (3 bolts per auto, per-level 5-39 + 5% AP each) are not modeled anywhere — P is out_of_scope and the auto-attack policy adds no Pix bolts. E shield is emitted by support_effects.derive_ally_effects when E is cast (verified in deep-audit-2026-08 §2.3: 'Help, Pix! · Shield Strength' 230 → main). W polymorph and R utility are documented out_of_scope. Q/E damage modeled. Main open question is the unmodeled P on-attack damage.",
+  "verdict": "review"
+ },
+ "Lux": {
+  "module_slots": {
+   "P": "out_of_scope (Illumination mark proc: 30-200 + 35% AP bonus magic damage on basic attacks / Final Spark is not modeled)",
+   "Q": "modeled (Light Binding packet: 80-240 + 75% AP)",
+   "W": "out_of_scope (Prismatic Barrier shield — shield atoms present; may be emitted by support_effects ledger if W is cast)",
+   "E": "modeled (Lucent Singularity packet: 65-265 + 80% AP)",
+   "R": "modeled (Final Spark packet: 300-500 + 120% AP)"
+  },
+  "atoms_total": 29,
+  "notable_atoms": [
+   "damage (Q/E/R + basic-attack/crit family)",
+   "shield (W Prismatic Barrier: heal-shield.shield ×4 on LuxPrismaticWave/LuxShield — self + ally, stacks twice)",
+   "mark/proc (P Illumination consume on basic attacks)",
+   "CC (Q root, E slow)"
+  ],
+  "gap_summary": "P Illumination proc damage (30-200 + 35% AP on every post-ability basic attack) is not modeled — P out_of_scope with no compensating auto-attack hook. W Prismatic Barrier shield atoms (self + allies, up to 2 stacks) are out_of_scope in the module; support_effects can emit the 'Shield Strength' packet only when W is in the cast timeline. Q/E/R damage packets are correct. Needs a decision on whether P proc damage and W shield belong in the rotation.",
+  "verdict": "review"
+ },
+ "Malphite": {
+  "module_slots": {
+   "P": "modeled as no_damage packet (Granite Shield 10% max-HP shield + size bonus — shield atoms present but no defensive_effects entry)",
+   "Q": "modeled (Seismic Shard packet: 70-270 + 60% AP)",
+   "W": "modeled (Thunderclap packet: on-hit bonus 15-55 + 30% AP + 15% armor; the on-hit cone splash and P-tripled bonus armor are not modeled)",
+   "E": "modeled (Ground Slam packet: 60-200 + 60% AP + 40% armor)",
+   "R": "modeled (Unstoppable Force packet: 200-400 + 90% AP)"
+  },
+  "atoms_total": 34,
+  "notable_atoms": [
+   "damage (Q/W/E/R + basic-attack/crit family)",
+   "shield (P Granite Shield: heal-shield.shield on MalphiteShield ×2 — 10% max HP)",
+   "attack-reset (W Obduracy: interaction.attack-reset ×2)",
+   "buff (W bonus armor, Q move speed, P size)",
+   "CC (Q slow, E cripple, R knockup)"
+  ],
+  "gap_summary": "P Granite Shield atoms (heal-shield.shield ×2, 10% max HP) are unmodeled — the packet declares P no_damage and defensive_effects.py has no Malphite entry. W's on-hit bonus is modeled but the empowered-attack cone splash and the P-tripled bonus armor are not. Attack-reset atoms (Obduracy) are implied by the empowered-auto packet. Q/E/R are correct single-instance damage reads. Main judgment: whether the P shield (a real 10%-maxHP shield) belongs in the survival ledger.",
+  "verdict": "review"
+ },
+ "Malzahar": {
+  "module_slots": {
+   "P": "out_of_scope (Void Shift spell shield: crowd-control immunity + 90% damage reduction — shield atoms present)",
+   "Q": "modeled (Call of the Void packet: 70-210 + 55% AP)",
+   "W": "modeled (Void Swarm packet: Voidling attack damage 17-64.5 + 40% bonus AD + 20% AP, single instance; summon/stacks not modeled)",
+   "E": "modeled but single-tick (Malefic Visions packet: 'Magic Damage Per Tick' 5-13.75 + 5% AP × 1 tick; wiki Total Magic Damage is 80-220 over 16 ticks)",
+   "R": "modeled but single-tick (Nether Grasp 'Magic Damage Per Tick' × 1 tick; wiki Total Magic Damage is 125-275 over 10 ticks)"
+  },
+  "atoms_total": 29,
+  "notable_atoms": [
+   "damage (Q/W/E/R + basic-attack/crit family, damage.dot on E and R, damage.execute on E/R minion execute)",
+   "summon (W Void Swarm Voidlings: MalzaharW + 'malzahar Passive (Voidling)')",
+   "spell shield (P Void Shift: heal-shield.shield ×4)",
+   "dot (E Malefic Visions, R Nether Grasp channel)",
+   "execute (E minion execute, R)",
+   "CC (Q silence, R suppress)"
+  ],
+  "gap_summary": "E and R DoTs are modeled as a single tick each: the E packet reads 'Magic Damage Per Tick' (5-13.75) with no count even though the wiki cache carries 'Total Magic Damage' (80-220, 16 ticks over 4s), and R reads 'Magic Damage Per Tick' (12.5-27.5) vs wiki total 125-275 (10 ticks) — a ~16×/~10× undercount of the damage.dot atoms (cf. Cassiopeia module which explicitly reads Total Magic Damage for its poison, and Amumu/Karthus which multiply per-tick values by tick counts). P Void Shift spell-shield atoms are out_of_scope (documented). W Voidling summon is priced as a direct damage packet; the summon itself is not modeled.",
+  "verdict": "gap"
+ },
+ "Maokai": {
+  "module_slots": {
+   "P": "modeled as no_damage packet (Sap Magic empowered-auto heal is not modeled — P heal atom is also absent from the atom file)",
+   "Q": "modeled (Bramble Smash 'Magic Damage' wiki read)",
+   "W": "modeled (Twisted Advance packet: 60-160 + 40% AP)",
+   "E": "modeled but partial (Sapling Toss packet: initial explosion 50-150 + 5% bonus HP + 25% AP; the attached-sapling burn/DoT — wiki 'Total Magic Damage' 100-300, 'Total Attached Sapling Damage' 66.67-200 — is not modeled)",
+   "R": "modeled (Nature's Grasp packet: 150-300 + 75% AP)"
+  },
+  "atoms_total": 45,
+  "notable_atoms": [
+   "damage (Q/W/E/R + basic-attack/crit family, damage.dot on E sapling burn)",
+   "summon+trap (E Sapling: summon/trap atoms, vision)",
+   "CC (Q knockback, W root, R root, E slow)",
+   "heal (P Sap Magic empowered auto heals %max health — wiki only; NOT in the atom file)",
+   "vision (E sapling sight)"
+  ],
+  "gap_summary": "E's attached-sapling burn is unmodeled: the packet prices only the initial explosion (50-150), while the wiki 'Total Magic Damage' (100-300) and the damage.dot atoms on MaokaiE/MaokaiEMissile represent the burn — roughly half the ability's damage is missing. P Sap Magic heal (4-12.8% max HP per empowered auto) is unmodeled and, notably, also missing from the atom file (no heal atom for Maokai at all), so the decomposition itself under-reports it. Q/W/R are correct single-instance reads.",
+  "verdict": "gap"
+ },
+ "MasterYi": {
+  "module_slots": {
+   "P": "out_of_scope (Double Strike 3-stack double-hit passive — stack atoms present, not modeled)",
+   "Q": "modeled but partial (Alpha Strike packet: 'Primary Physical Damage' 20-100 + 70% AD = one hit; the wiki 'Maximum Single-Target Damage' 35-175 + 122.5% bonus AD for repeat bounces on the same target is not used)",
+   "W": "out_of_scope (Meditate channel self-heal + damage reduction — heal atoms present)",
+   "E": "modeled (Wuju Style packet: bonus true damage 20-40 + 35% bonus AD on-hit)",
+   "R": "out_of_scope (Highlander AS/MS + 70% cooldown reset on takedown — buff atom present)"
+  },
+  "atoms_total": 25,
+  "notable_atoms": [
+   "damage (Q/E + basic-attack/crit family, damage.on-hit on E)",
+   "heal (W Meditate: heal-shield.heal on Meditate)",
+   "stack (P Double Strike, E Wuju Style stacks)",
+   "attack-reset + parry (W Meditate)",
+   "buff (R Highlander, W damage reduction)"
+  ],
+  "gap_summary": "W Meditate self-heal atoms (heal-shield.heal on Meditate) are unmodeled — Master Yi is not in HEALING_RULE_CHAMPIONS and W is out_of_scope (it is a defensive channel, so severity is lower than a combat heal). Q models only the primary hit of Alpha Strike, ignoring the wiki 'Maximum Single-Target Damage' (35-175 + 122.5% bonus AD) that represents the full single-target 4-bounce sequence — a ~1.75× undercount in 1v1. P Double Strike and R Highlander reset are documented out_of_scope. E on-hit true damage is modeled.",
+  "verdict": "gap"
+ },
+ "Mel": {
+  "module_slots": {
+   "P": "out_of_scope (Searing Brilliance Overwhelm stacks store 50-80 + 10% AP per instance — stack/mark/upgrade atoms present, stored-damage detonation not modeled)",
+   "Q": "modeled (Radiant Volley packet: 60-160 + 55% AP initial explosion; subsequent-bolt reduced damage not modeled)",
+   "W": "modeled as wiki_attribute (Rebuttal: reads 'Replicated Projectile Magic Damage Modifier' 40-60% as a flat damage value; the W shield 80-200 and projectile-destruction interaction are not modeled)",
+   "E": "modeled but partial (Solar Snare packet: orb damage 60-240 + 70% AP; the field DoT 'Field Magic Damage per Second' 16-64 for 3s — damage.dot atoms — is not modeled)",
+   "R": "modeled (Golden Eclipse 'Magic Damage' read; the stored Overwhelm damage (P) it detonates is not modeled)"
+  },
+  "atoms_total": 41,
+  "notable_atoms": [
+   "damage (Q/W/E/R + basic-attack/crit family, damage.dot on E field)",
+   "stack/mark (P Overwhelm: MelRStackWatcher stack, MelPassiveUltKillMark, MelBasicAttackEnhanced upgrade)",
+   "shield (W Rebuttal: heal-shield.shield on MelW)",
+   "projectile-destruction (W: interaction.projectile-destruction)",
+   "CC (E root+slow, Q zone)"
+  ],
+  "gap_summary": "Mel's signature P→R loop (Overwhelm stores damage per hit, R detonates it) is not modeled: P is out_of_scope and R reads only its own flat 'Magic Damage', so the stored-damage component (the main R damage source) is missing. E models the orb but not the solar-field DoT (16-64/sec, damage.dot atoms). W's reflected projectile is read as the 40-60% modifier value treated as flat damage (a sourced approximation), and W's shield + projectile destruction are unmodeled. Q is a single-instance read.",
+  "verdict": "review"
+ },
+ "Milio": {
+  "module_slots": {
+   "P": "out_of_scope (Fired Up! enchant + on-hit/burn bonus damage — buff atom only)",
+   "Q": "modeled (Ultra Mega Fire Kick packet: 80-320 + 120% AP)",
+   "W": "out_of_scope (Cozy Campfire: fuemigo summon + per-tick ally heal — heal atoms present)",
+   "E": "out_of_scope (Warm Hugs shield + move speed, 2 charges — shield + ammo atoms present)",
+   "R": "out_of_scope (Breath of Life ally heal + cleanse — heal atom present)"
+  },
+  "atoms_total": 23,
+  "notable_atoms": [
+   "damage (Q + basic-attack/crit family)",
+   "heal (W Cozy Campfire heal per tick, R Breath of Life: heal-shield.heal on MilioW/MilioR)",
+   "shield (E Warm Hugs: heal-shield.shield on MilioE + ammo charges)",
+   "summon (W fuemigo)",
+   "buff (P Fired Up! enchant, E move speed)"
+  ],
+  "gap_summary": "Milio is modeled as a Q-only damage dealer: W/R heal atoms (heal-shield.heal on MilioW and MilioR), the E shield (heal-shield.shield + ammo on MilioE), and the P enchant are all out_of_scope and Milio is not in HEALING_RULE_CHAMPIONS. The champion's defining heal/shield family is entirely absent from the module's modeled scope (support_effects can only emit E 'Shield Strength' / W-R heals if those slots appear in a cast timeline).",
+  "verdict": "gap"
+ },
+ "MissFortune": {
+  "module_slots": {
+   "P": "out_of_scope (Love Tap: 50-100% AD bonus physical damage on new-target attacks — stack/on-attack atoms present, not modeled)",
+   "Q": "modeled (Double Up packet: 20-120 + 100% AD + 35% AP primary shot; bounce damage not modeled)",
+   "W": "out_of_scope (Strut move speed + attack speed buff — stack atoms present)",
+   "E": "modeled but single-tick (Make It Rain packet: 'Magic Damage Per Tick' 8.75-23.75 + 15% AP × 1 tick; wiki 'Total Magic Damage' is 70-190 over 8 ticks)",
+   "R": "modeled but single-wave (Bullet Time packet: 'Physical Damage per Wave' 20-40 + 60% AD + 25% AP × 1 wave; the channel fires ~12-16 waves — damage.dot atoms)"
+  },
+  "atoms_total": 21,
+  "notable_atoms": [
+   "damage (Q/E/R + basic-attack/crit family, damage.dot on E storm and R channel)",
+   "on-attack passive (P Love Tap: MissFortunePassiveStack + AttackCrit)",
+   "dot (E Make It Rain, R Bullet Time channel)",
+   "buff (W Strut AS/MS)",
+   "CC (E slow)"
+  ],
+  "gap_summary": "E and R multi-instance damage is modeled as a single tick/wave: E packet reads 'Magic Damage Per Tick' (8.75-23.75) with no count vs wiki 'Total Magic Damage' (70-190, 8 ticks over 2s), and R reads 'Physical Damage per Wave' (20-40) with no count vs wiki 'Total Waves' 14/16/18 and 'Maximum Total Physical Damage' 280-720 — roughly an 8×/14-18× undercount of the damage.dot atoms. P Love Tap on-attack bonus (50-100% AD) is out_of_scope. Q models the primary shot only (bounce is a second-target mechanic).",
+  "verdict": "gap"
+ },
+ "MonkeyKing": {
+  "module_slots": {
+   "P": "modeled (Stone Skin bonus armor stat_buff, stone_skin_stacks option; the 0.35%-max-HP-per-5s regen is documented as a separate survival effect)",
+   "Q": "modeled but partial (Crushing Blow bonus physical damage + empowers_next_auto; the 3s armor reduction debuff is not emitted as a target_debuff)",
+   "W": "not modeled (Warrior Trickster clone + stealth — intentionally omitted: 'clone attacks are a separate pet timeline'; clone/stealth atoms present)",
+   "E": "modeled (Nimbus Strike magic damage; the bonus-AS buff is not modeled)",
+   "R": "modeled (Cyclone 8×0.25s ticks per cast, r_casts option)"
+  },
+  "atoms_total": 22,
+  "notable_atoms": [
+   "damage (P/Q/E/R + basic-attack/crit family, damage.on-hit on Q)",
+   "clone (W Decoy + Nimbus clones: MonkeyKingDecoy/Nimbus/NimbusKickClone)",
+   "stealth (W: vision-economy.stealth on MonkeyKingDecoyStealth)",
+   "debuff (Q armor reduction: stack-transform-summon-resource.debuff on MonkeyKingDoubleAttackDebuff)",
+   "attack-reset (Q)",
+   "stack (P Strength of Stone)"
+  ],
+  "gap_summary": "Q's armor reduction debuff (3s; atom MonkeyKingDoubleAttackDebuff) is not modeled even though the infrastructure exists — KogMaw's Caustic Spittle shred is emitted as a target_debuff by the same engine, and Wukong's wiki Q explicitly lists 'Armor Reduction'. W clone + stealth are documented exclusions (pet timeline). E's bonus attack speed and P's regen are documented state. R tick model and P armor are correct.",
+  "verdict": "gap"
+ },
+ "Mordekaiser": {
+  "module_slots": {
+   "P": "modeled (Darkness Rise packet: 40-entry per-level %max-HP aura damage)",
+   "Q": "modeled (Obliterate packet: 80-232.9 + 120% bonus AD + 70% AP; isolated-target increase not modeled)",
+   "W": "out_of_scope (Indestructible: Potential Shield + heal — heal+shield atoms present)",
+   "E": "modeled (Death's Grasp packet: 60-140 + 45% AP; passive magic penetration not modeled)",
+   "R": "out_of_scope (Realm of Death: 10%-max-HP self-heal + stat steal + banish — heal atom present)"
+  },
+  "atoms_total": 21,
+  "notable_atoms": [
+   "damage (P/Q/E + basic-attack/crit family)",
+   "heal (W Indestructible heal, R 10%-max-HP heal: heal-shield.heal on MordekaiserW and MordekaiserR)",
+   "shield (W Potential Shield: heal-shield.shield on MordekaiserW)",
+   "soul/stack (W potential shield resource, P stacks)",
+   "CC (E pull, R banish)"
+  ],
+  "gap_summary": "Both self-heal/shield atoms are unmodeled: MordekaiserW carries heal-shield.heal + heal-shield.shield (Indestructible's Potential Shield converts to heal) and MordekaiserR carries heal-shield.heal (10% of target's max health), but W/R are out_of_scope and Mordekaiser is not in HEALING_RULE_CHAMPIONS (deep-audit-2026-08 §2.2 places him in the heal field-audit bucket). Q's isolated-target increase and E's magic-penetration passive are not modeled. P aura damage is modeled.",
+  "verdict": "gap"
+ },
+ "Morgana": {
+  "module_slots": {
+   "P": "out_of_scope (Soul Siphon: 18% of post-mitigation damage dealt healed to self — heal mechanic in wiki; NOT in the atom file either)",
+   "Q": "modeled (Dark Binding packet: 80-300 + 90% AP)",
+   "W": "modeled but single-tick (Tormented Shadow packet: 'Maximum Damage Per Tick' 18-70 + 20% AP × 1 tick; wiki 'Maximum Total Damage' is 180-700 over 10 ticks)",
+   "E": "out_of_scope (Black Shield: magic-absorption shield + CC immunity — shield atoms present)",
+   "R": "modeled but partial (Soul Shackles packet: 200-350 + 80% AP initial tether hit; the second proc after the 3s tether — wiki 'Total Magic Damage' — is not modeled)"
+  },
+  "atoms_total": 19,
+  "notable_atoms": [
+   "damage (Q/W/R + basic-attack/crit family, damage.dot on W)",
+   "heal (P Soul Siphon — wiki only, missing from atoms)",
+   "spell shield (E Black Shield: heal-shield.shield on MorganaE)",
+   "dot (W Tormented Shadow)",
+   "CC (Q root, R slow+stun)"
+  ],
+  "gap_summary": "W DoT is modeled as one tick: the packet reads 'Maximum Damage Per Tick' (18-70) with no count while the wiki 'Maximum Total Damage' is 180-700 over the 5s/10-tick storm — a ~10× undercount of the damage.dot atoms. R models only the initial tether hit; the second equal hit on tether completion (wiki 'Total Magic Damage') is missing. P Soul Siphon self-heal is unmodeled (Morgana not in HEALING_RULE_CHAMPIONS) — and notably the atom file itself has no heal atom for it, so the decomposition under-reports the mechanic. E Black Shield is out_of_scope (documented).",
+  "verdict": "gap"
+ }
+}

@@ -1,0 +1,451 @@
+{
+  "Heimerdinger": {
+    "module_slots": {
+      "P": "modeled (no_damage row: Hextech Affinity move speed)",
+      "Q": "modeled (turret shots/beam, Evolution + Apex variants)",
+      "W": "modeled (rockets, first/subsequent rows)",
+      "E": "modeled (grenade + upgraded variant)",
+      "R": "modeled (no_damage toggle; upgrade variants carried by Q/W/E options)"
+    },
+    "atoms_total": 22,
+    "notable_atoms": [
+      "damage (Q turret shots+beam, W rockets, E grenade)",
+      "summon (Q H-28G turrets, P H-28G Evolution Turret)",
+      "transform+upgrade (R UPGRADE!!!)",
+      "ammo (turret kit charges)",
+      "CC (E immobilize/stun)",
+      "basic-attack/crit family"
+    ],
+    "gap_summary": "All outgoing-damage atoms are covered: turret summon damage is modeled via explicit options (q_turrets, q_turret_attacks, q_beams), R upgrade variants are expressed through q_variant/e_upgrade, and W/E are direct typed reads. P (Hextech Affinity) and R (UPGRADE!!! toggle) are no_damage rows; ammo charges, stun/slow and turret vision are documented state. No missing damage, heal, shield or execute atom.",
+    "verdict": "ok"
+  },
+  "Hwei": {
+    "module_slots": {
+      "P": "modeled (Signature detonations via p_triggers)",
+      "Q": "modeled (QQ/QW/QE variants)",
+      "W": "modeled (WQ movespeed, WW shield row, WE on-hit)",
+      "E": "modeled (EQ/EW/EE variants)",
+      "R": "modeled (12-tick DoT + terminal explosion)"
+    },
+    "atoms_total": 19,
+    "notable_atoms": [
+      "damage (Q/W/E subject variants, R DoT + explosion)",
+      "shield (WW Pool of Reflection)",
+      "CC (slow/flee/airborne/root/immobilize per subject)",
+      "buff (WQ movespeed path, WW pool)",
+      "on-hit empowered attacks (WE Stirring Lights)",
+      "mark (P Signature of the Visionary)",
+      "vision/sight (Wash Brush)"
+    ],
+    "gap_summary": "All three subject variants per slot are modeled (q_variant/w_variant/e_variant selectors), P Signature marks detonate as explicit proc counts, and R's twelve 0.25s ticks plus terminal explosion are exact. WW shield is surfaced in a no_damage row with the sourced shield value (defensive/ally state); CC and sight are documented utility. No missing damage atom.",
+    "verdict": "ok"
+  },
+  "Illaoi": {
+    "module_slots": {
+      "P": "modeled (tentacle strike damage via p_tentacles)",
+      "Q": "modeled (no_damage row: commands a Tentacle; damage via P count)",
+      "W": "modeled (empowered attack, %maxHP + AD, item on-hits)",
+      "E": "modeled (no_damage row: Test of Spirit redirection state)",
+      "R": "modeled (Leap of Faith slam)"
+    },
+    "atoms_total": 31,
+    "notable_atoms": [
+      "damage (P tentacle strikes, W empowered attack, R slam)",
+      "summon/pet (tentacles, IllaoiTentacleHeal/TentacleSlow)",
+      "heal (tentacle hits heal Illaoi)",
+      "attack-reset (W)",
+      "CC (slow)",
+      "on-hit (W empower attack)"
+    ],
+    "gap_summary": "Tentacle SELF-HEAL is unmodeled: atoms heal-shield.heal on IllaoiTentacleHeal / IllaoiTentacleHealCooldown (evidence name:heal) and the wiki cache P description state each Tentacle 'heals Illaoi for 5% of her missing health' when it hits a champion, but Illaoi is absent from src/calculator/healing.py HEALING_RULE_CHAMPIONS and the module models only tentacle damage. E Test of Spirit damage transmission (OTHER_DAMAGE) is also out of scope (documented target-state branch).",
+    "verdict": "gap"
+  },
+  "Irelia": {
+    "module_slots": {
+      "P": "modeled (Fervor stacks -> AS buff + max-stack on-hit)",
+      "Q": "modeled (Bladesurge dash attack + item on-hits)",
+      "W": "modeled (Defiant Dance charge-scaled damage)",
+      "E": "modeled (Flawless Duet magic damage)",
+      "R": "modeled (Vanguard's Edge barrage + pass)"
+    },
+    "atoms_total": 32,
+    "notable_atoms": [
+      "damage (Q dash, W charge, E blades, R barrage+pass)",
+      "heal (Q Bladesurge heal)",
+      "stack (P Ionian Fervor, max-stack on-hit)",
+      "mark (E Unsteady)",
+      "parry (W damage reduction)",
+      "CC (immobilize/slow/disarm)",
+      "attack-reset (Q)"
+    ],
+    "gap_summary": "All damage atoms covered: P stacks + max-stack on-hit, Q, W charge interpolation, E, R two-pass barrage. The Q heal (heal-shield.heal, evidence tag:Trait_ActiveHeal) IS modeled — Irelia is in HEALING_RULE_CHAMPIONS and healing.py derives Bladesurge heals from Q damage events (extract_named 'Heal'). Marks/stun/parry/attack-reset are documented state.",
+    "verdict": "ok"
+  },
+  "Ivern": {
+    "module_slots": {
+      "P": "modeled (no_damage row: Friend of the Forest grove)",
+      "Q": "modeled (Rootcaller magic damage)",
+      "W": "modeled (Brushmaker on-hit, brush-gated)",
+      "E": "modeled (Triggerseed explosion; shield is state)",
+      "R": "modeled (no_damage row: Daisy pet explicitly NOT modeled)"
+    },
+    "atoms_total": 34,
+    "notable_atoms": [
+      "damage (Q, W brush on-hit, E explosion, R Daisy slam)",
+      "summon (R Daisy pet — damage.aoe + damage.damage-instance + Trait_Pet)",
+      "shield (E Triggerseed)",
+      "ammo (W brush charges)",
+      "CC (root/immobilize)",
+      "ranged-melee reclassification"
+    ],
+    "gap_summary": "Daisy pet DAMAGE is unmodeled: atoms for IvernR carry damage.aoe + damage.damage-instance + summon (tag:Trait_Pet) + immobilize (Daisy's slam/punch), but the module R slot is an explicit no_damage boundary ('Daisy is a controllable pet; pet attacks are not silently inferred from a champion ability packet'). E shield and W brush ammo are documented state. Daisy's damage is the clear missing mechanic.",
+    "verdict": "gap"
+  },
+  "Janna": {
+    "module_slots": {
+      "P": "modeled (Tailwind 30%-MS on-hit)",
+      "Q": "modeled (Howling Gale charge min/max interpolation)",
+      "W": "modeled (Zephyr magic damage)",
+      "E": "modeled (no_damage row: Eye of the Storm shield)",
+      "R": "modeled (no_damage row: Monsoon knockback/heal)"
+    },
+    "atoms_total": 18,
+    "notable_atoms": [
+      "damage (Q charge-scaled, W Zephyr, P Tailwind on-hit)",
+      "heal (R Monsoon — Heal Per Tick / Total Heal attrs)",
+      "shield (E Eye of the Storm)",
+      "CC (immobilize/knockback/channel)",
+      "buff (Tailwind/Eye of the Storm boons)"
+    ],
+    "gap_summary": "All enemy-damage atoms are covered (Q min/max charge, W, P). Monsoon self/ally heal (heal-shield.heal, tag:Trait_ActiveHeal; cache attrs Heal Per Tick/Total Heal) and E shield are no_damage utility rows, and Janna is absent from HEALING_RULE_CHAMPIONS — whether the support ledger should carry Monsoon/Eye of the Storm is a product decision (docs/deep-audit-2026-08.md routes Janna to the ally-support audit).",
+    "verdict": "review"
+  },
+  "JarvanIV": {
+    "module_slots": {
+      "P": "modeled (Martial Cadence current-HP on-hit, fight-scheduled proc cooldown)",
+      "Q": "modeled (Dragon Strike damage + armor shred debuff)",
+      "W": "out_of_scope (no SLOTS entry; shield/slow only, documented)",
+      "E": "modeled (Demacian Standard magic damage + AS buff)",
+      "R": "modeled (Cataclysm physical damage)"
+    },
+    "atoms_total": 22,
+    "notable_atoms": [
+      "damage (P current-HP on-hit, Q, E flag, R)",
+      "debuff (Q armor reduction)",
+      "shield (W Golden Aegis)",
+      "summoned terrain (E flag, R cataclysm)",
+      "buff (E bonus attack speed)",
+      "CC (slow, immobilize)"
+    ],
+    "gap_summary": "Modeled slots match the damage atoms: P current-HP% proc (module constants + per-target cooldown, since P has no JSON leveling), Q damage + armor reduction debuff, E magic damage + doubled AS aura, R damage. W is correctly absent — the wiki cache lists Golden Aegis with zero damage attrs (only Slow/Shield Strength; the damage.aoe atom on JarvanIVGoldenAegis is an AoE-trait false positive). Terrain (flag/cataclysm) is utility. No missing damage or heal atom.",
+    "verdict": "ok"
+  },
+  "Jax": {
+    "module_slots": {
+      "P": "modeled (Relentless Assault AS stack buff)",
+      "Q": "modeled (Leap Strike physical damage)",
+      "W": "modeled (Empower on-hit rider, attack reset as state)",
+      "E": "modeled (Counter Strike dodge-range damage)",
+      "R": "modeled (Grandmaster swing + resist buff + opt-in passive on-hit)"
+    },
+    "atoms_total": 28,
+    "notable_atoms": [
+      "damage (Q, W empower on-hit, E dodge-scaled, R swing + passive on-hit)",
+      "buff (P AS stacks, E, R resistances)",
+      "parry (E evasion)",
+      "attack-reset (W)",
+      "CC (immobilize/slow)",
+      "passive gold generation (fishing — utility)"
+    ],
+    "gap_summary": "All damage atoms covered: P AS stack buff, Q, W empower (one next-attack magic rider), E sourced 0-100% dodge-damage interpolation, R active swing + resistances + opt-in passive proc (r_passive_ready). Parry/stun and fishing-passive gold are documented state. No missing damage, heal, shield or execute atom.",
+    "verdict": "ok"
+  },
+  "Jayce": {
+    "module_slots": {
+      "Q": "modeled (Hammer To the Skies / Cannon Shock Blast + gate total)",
+      "W": "modeled (Hammer Lightning Field DoT / Cannon Hyper Charge 3-autos)",
+      "E": "modeled (Hammer Thundering Blow; Cannon gate emits nothing)",
+      "R": "modeled (Transform, level-tiered constants, hammer buff / cannon shred)",
+      "P": "out_of_scope (no SLOTS entry; Hextech Capacitor move speed/ghosting, documented)"
+    },
+    "atoms_total": 39,
+    "notable_atoms": [
+      "damage (Q both stances, W hammer DoT / cannon empowered autos, E hammer %maxHP magic, R empowered auto)",
+      "transform / toggle-form (R stance swap; 7 ranged-melee reclassification atoms)",
+      "buff/debuff (R hammer armor/MR, cannon armor+MR shred)",
+      "CC (knockback/root/slow)",
+      "attack-reset (Hyper Charge)",
+      "summoned terrain (Acceleration Gate)"
+    ],
+    "gap_summary": "The two-form decomposition is fully expressed: hammer_stance swaps every slot's source, R values are game-file-sourced module constants (both JSON leveling arrays are empty), cannon Q gate total (accelerated_q), Hyper Charge models the delta on 3 empowered autos at the AS cap, and cannon R shred is a target_debuff applied after its own attack. P (Hextech Capacitor) is documented as not modeled and matches its atoms (movement speed/ghosting only, no damage). No missing damage atom.",
+    "verdict": "ok"
+  },
+  "Jhin": {
+    "module_slots": {
+      "P": "modeled (Whisper AD buff + opt-in fourth-shot execute)",
+      "Q": "modeled (Dancing Grenade bounces + death bonus)",
+      "W": "modeled (Deadly Flourish physical damage)",
+      "E": "modeled (Lotus Trap magic damage)",
+      "R": "modeled (Curtain Call 4-bullet missing-health interpolation)"
+    },
+    "atoms_total": 33,
+    "notable_atoms": [
+      "damage (P 4th-shot, Q bounces, W, E traps, R bullets)",
+      "execute (P fourth round missing-health; rule:execute)",
+      "trap (E Captive Audience / passive Blooming Lotus)",
+      "ammo (4-round clip)",
+      "CC (slow, root)",
+      "channel (R)",
+      "vision/sight (R reveal)"
+    ],
+    "gap_summary": "All damage atoms covered: P bonus AD (crit/AS-scaled) + opt-in fourth-shot missing-health execute, Q bounce/death scaling, W, E per-activation magic, R with separate fourth-shot critical packet. Traps/ammo/slow/root are documented state (E uses its typed source damage once per activation). No missing damage or heal atom.",
+    "verdict": "ok"
+  },
+  "Jinx": {
+    "module_slots": {
+      "P": "modeled (Get Excited! AS, opt-in takedown stacks)",
+      "Q": "modeled (Switcheroo weapon modes: Fishbones 110% AD / Pow-Pow AS)",
+      "W": "modeled (packet: Zap!)",
+      "E": "modeled (packet: Flame Chompers!)",
+      "R": "modeled (packet: Super Mega Death Rocket!, missing-health execute)"
+    },
+    "atoms_total": 44,
+    "notable_atoms": [
+      "damage (Q weapon modes, W, E, R)",
+      "execute (R missing-health rocket; rule:execute)",
+      "toggle-form (Q Fishbones/Pow-Pow)",
+      "mark (P Get Excited! takedown marker)",
+      "CC (E snare/root)",
+      "critical-strike family (rocket splash crits)",
+      "vision/sight (W/E reveal)"
+    ],
+    "gap_summary": "Modeled slots cover all damage atoms: Q weapon modes (Fishbones auto_attack_override 110% AD / Pow-Pow Rev'd Up AS), P Get Excited! total-AS buff (opt-in), and W/E/R from the reviewed packet with R's sourced targetMissingHp execute term (0.25/0.30/0.35). Toggle-form and mark atoms are expressed as options/state. No missing damage atom.",
+    "verdict": "ok"
+  },
+  "KSante": {
+    "module_slots": {
+      "P": "modeled (Dauntless Instinct marked attacks, All Out bonus)",
+      "Q": "modeled (Ntofo Strikes)",
+      "W": "modeled (Path Maker charge + All Out true-damage branch)",
+      "E": "modeled (no_damage row: Footwork dash + shield)",
+      "R": "modeled (All Out damage + terrain strike + AS/armor-pen buff)"
+    },
+    "atoms_total": 61,
+    "notable_atoms": [
+      "damage (P marked attacks, Q, W charge + true damage, R + terrain strike)",
+      "transform (R All Out, W AllOut state)",
+      "heal (R conversion heal — KSanteRConversionHealth)",
+      "shield (E Footwork)",
+      "CC-heavy (root/airborne/knockback/stun/slow/dash, 32 atoms)",
+      "parry (W), attack-reset (Q3)",
+      "mark (P)"
+    ],
+    "gap_summary": "All Out conversion SELF-HEAL is unmodeled: atom heal-shield.heal on KSanteRConversionHealth (evidence name:heal), K'Sante absent from HEALING_RULE_CHAMPIONS, and the module R row leaves 'omnivamp and resist conversion' as state (docs/deep-audit-2026-08.md lists K'Sante among missing self-heals). E shield and the large CC suite are documented state/utility; all damage atoms (P marks, Q, W charge + true, R) are covered.",
+    "verdict": "gap"
+  },
+  "Kaisa": {
+    "module_slots": {
+      "W": "modeled (Void Seeker + Plasma stack/rupture)",
+      "Q": "modeled (Icathian Rain volley, evolved/base)",
+      "P": "modeled (Second Skin Plasma via W's post_hit_proc)",
+      "E": "out_of_scope (no enemy damage; Supercharge AS/stealth window withheld — documented)",
+      "R": "out_of_scope (no enemy damage; Killer Instinct shield/dash — documented)"
+    },
+    "atoms_total": 42,
+    "notable_atoms": [
+      "damage (Q volley, W, Plasma rupture)",
+      "execute (P 5-stack rupture, missing-health; rule:execute)",
+      "mark (P Plasma stacks)",
+      "upgrade/evolution (Q/W/E evolutions, threshold 100)",
+      "stealth (E Supercharge)",
+      "shield (R Killer Instinct)",
+      "attack-reset (R)"
+    ],
+    "gap_summary": "All outgoing-damage atoms are covered in the certified W->Q one-rotation model: Q volley (evolved 12 vs 6 missiles), W with Plasma stack applications and 5-stack rupture execute (15% missing health + 0.06%/100 AP), evolution state resolved automatically from item stats (auto/base/evolved options). E stealth/AS and R shield are explicitly withheld with documented reasons (SUPPORTED_FIGHT_MODES/UNSUPPORTED_FIGHT_MODE_REASON) and have no enemy-damage atoms. No missing damage atom.",
+    "verdict": "ok"
+  },
+  "Kalista": {
+    "module_slots": {
+      "Q": "modeled (Pierce physical damage)",
+      "W": "modeled (Soul-Marked proc, gated on soul_mark_proc)",
+      "E": "modeled (Rend, 1-254 stacks)",
+      "P": "out_of_scope (no enemy damage; Martial Poise dash/bond — documented)",
+      "R": "out_of_scope (no enemy damage; Fate's Call — documented)"
+    },
+    "atoms_total": 48,
+    "notable_atoms": [
+      "damage (Q Pierce, W Soul-Marked proc, E Rend stacks)",
+      "mark (Soul-Mark, Rend stacks)",
+      "proc (CoopStrikeProc)",
+      "CC (slow; R stun/knockup — ally-facing)",
+      "dash (P hop, R)",
+      "channel (P, R)",
+      "blind/miss (basic attack interaction)"
+    ],
+    "gap_summary": "All damage atoms covered: Q, W Soul-Marked (explicit Oathsworn gate), E Rend with sourced per-stack bonus and explicit stack count (capped at 254). P Martial Poise (dash/channel/buff) and R Fate's Call (stun/dash — ally-facing) are documented utility with no direct enemy damage, matching their atoms. No missing damage or heal atom (Kalista's binary heal-named spell is a shared lifesteal hook per docs/deep-audit-2026-08.md).",
+    "verdict": "ok"
+  },
+  "Karma": {
+    "module_slots": {
+      "P": "modeled (no_damage row: Gathering Fire cooldown refunds)",
+      "Q": "modeled (Inner Flame + Mantra Soulflare variant)",
+      "W": "modeled (Focused Resolve + Renewal variants, tether recast)",
+      "E": "modeled (no_damage row: Inspire/Defiance shield)",
+      "R": "modeled (no_damage row: Mantra empower toggle)"
+    },
+    "atoms_total": 21,
+    "notable_atoms": [
+      "damage (Q Soulflare, W Focused Resolve/Renewal, tether double-hit)",
+      "heal (W Mantra Renewal self-heal)",
+      "shield (E Inspire/Defiance, KarmaSolKimShield)",
+      "transform+upgrade (R Mantra)",
+      "CC (slow, root)",
+      "buff (shield boons)"
+    ],
+    "gap_summary": "All damage atoms covered: Mantra Q/W variants are option-gated (q_mantra/w_renewal) with Mantra-rank reads, and the W tether recast is modeled via w_tether_holds. Renewal's SELF-HEAL is unmodeled — atom heal-shield.heal on KarmaSpiritBind (tag:Trait_ActiveHeal) and the cache prose state Karma 'heals for 17% (+1% per 100 AP) of her missing health' twice per tether, but Karma is absent from HEALING_RULE_CHAMPIONS and the module W row leaves 'Healing/root duration' as state. E ally shield / Mantra state are documented utility.",
+    "verdict": "gap"
+  },
+  "Karthus": {
+    "module_slots": {
+      "W": "modeled (Wall of Pain MR reduction debuff, option-gated)",
+      "Q": "modeled (Lay Waste isolated/shared)",
+      "E": "modeled (Defile exact tick count + mana drain)",
+      "R": "modeled (Requiem 3s channel)",
+      "P": "out_of_scope (Death Defied — documented alive-state boundary)"
+    },
+    "atoms_total": 32,
+    "notable_atoms": [
+      "damage (Q isolated/shared, E ticks, R global)",
+      "DoT (E Defile)",
+      "debuff (W MR reduction)",
+      "toggle-form (E Defile)",
+      "summoned terrain (W wall)",
+      "channel (R; post-death Fallen One)",
+      "post-death state (P Death Defied buff)"
+    ],
+    "gap_summary": "Alive-state damage atoms are all covered: W MR reduction applied before damage, Q isolated-vs-shared formula, E exact tick count with mana cost, R after the complete 3s channel. Death Defied (P) is the only excluded family — atoms KarthusDeathDefiedBuff/Death_Defied_Buff and KarthusFallenOne (post-death channel + AoE damage) exist, but the module is a certified alive-state one-rotation package that documents the boundary ('Death Defied is deliberately outside this certified alive-state package'). Whether post-death casting belongs in scope is a human/product decision. (W's damage.aoe atom is an AoE-trait false positive — the wiki cache lists no W damage.)",
+    "verdict": "review"
+  },
+  "Kassadin": {
+    "module_slots": {
+      "P": "modeled (no_damage row: Void Stone damage reduction)",
+      "Q": "modeled (Null Sphere + magic shield value in detail)",
+      "W": "modeled (Nether Blade passive on-hit + empowered attack)",
+      "E": "modeled (Force Pulse magic damage)",
+      "R": "modeled (Riftwalk 0-4 stack bonus)"
+    },
+    "atoms_total": 20,
+    "notable_atoms": [
+      "damage (Q, W passive+active, E, R)",
+      "shield (Q magic shield)",
+      "on-hit (W Nether Blade)",
+      "attack-reset (W)",
+      "blink/dash (R)",
+      "buff (W)"
+    ],
+    "gap_summary": "All damage atoms covered: Q (magic shield surfaced as defensive state with its sourced value), W passive on-hit + active empowered attack, E, R with explicit 0-4 Riftwalk stacks. Blink/dash, W reset and the P magic-damage reduction are documented state. No missing damage or heal atom.",
+    "verdict": "ok"
+  },
+  "Katarina": {
+    "module_slots": {
+      "P": "modeled (Voracity dagger retrieval procs via p_daggers)",
+      "Q": "modeled (Bouncing Blade magic damage)",
+      "W": "no_damage (dagger toss/movespeed utility)",
+      "E": "modeled (Shunpo magic damage)",
+      "R": "modeled (Death Lotus daggers, mixed phys/magic)"
+    },
+    "atoms_total": 22,
+    "notable_atoms": [
+      "damage (P dagger procs, Q, E, R daggers)",
+      "mark (Q dagger)",
+      "blink (E)",
+      "attack-reset (E)",
+      "channel (R)",
+      "DoT (R multi-dagger)"
+    ],
+    "gap_summary": "All damage atoms covered: P dagger retrieval procs, Q, E, and R with 1-15 daggers at the sourced 0.166s cadence (explicit mixed physical/magic rows). W is a no_damage row (dagger toss utility); marks, blink, channel and attack-resets are documented state. No missing damage, heal, shield or transform atom.",
+    "verdict": "ok"
+  },
+  "Kayle": {
+    "module_slots": {
+      "P": "modeled (Divine Ascent Aflame wave, level 11+, p_exalted)",
+      "Q": "modeled (Radiant Blast magic damage)",
+      "W": "modeled (no_damage row: Celestial Blessing heal/speed)",
+      "E": "modeled (Starfire Spellblade passive on-hit + empowered missing-health execute)",
+      "R": "modeled (Divine Judgment damage after invuln window)"
+    },
+    "atoms_total": 38,
+    "notable_atoms": [
+      "damage (P Aflame wave, Q, E passive+active, R)",
+      "execute (E missing-health; rule:execute)",
+      "heal (W Celestial Blessing)",
+      "transform (P Divine Ascent forms, wiki-map)",
+      "ranged-melee reclassification (P)",
+      "cc-immunity (R)",
+      "attack-reset (E)",
+      "on-hit (P/E)"
+    ],
+    "gap_summary": "W SELF/ALLY HEAL is unmodeled: atom heal-shield.heal on KayleW/KayleWHeal (tag:Trait_ActiveHeal; cache attr 'Heal') and docs/deep-audit-2026-08.md explicitly list 'Kayle (W heal)' among the missing self-heal mechanics — Kayle is absent from HEALING_RULE_CHAMPIONS and the module W row is a no_damage row. P's four-form transform (levels 1/6/11/16) is only partially expressed: the module keys the Aflame wave off level >= 11 with an Exalted toggle; earlier-form range/Zeal bonuses are state. Damage atoms (Q/E/R) are covered.",
+    "verdict": "gap"
+  },
+  "Kayn": {
+    "module_slots": {
+      "P": "no_damage (The Darkin Scythe form transformation state)",
+      "Q": "modeled (Reaping Slash two hits + Darkin max-HP rider)",
+      "W": "modeled (Blade's Reach physical damage)",
+      "E": "no_damage (Shadow Step terrain phase + heal state)",
+      "R": "modeled (Umbral Trespass recast damage)"
+    },
+    "atoms_total": 30,
+    "notable_atoms": [
+      "damage (Q two hits + darkin max-HP rider, W, R)",
+      "transform (P/R form choice; KaynTransforming/KaynR)",
+      "heal (E terrain-entry, R Darkin — Trait_ActiveHeal)",
+      "mark (R body mark)",
+      "CC (slow, dash, blink)",
+      "terrain phase (E)"
+    ],
+    "gap_summary": "Damage atoms covered: Q two hits with the Darkin max-health rider (form option), W, R recast; P transform state and E terrain phase are no_damage rows. Kayn E/R heals (heal-shield.heal, tag:Trait_ActiveHeal; cache E attr 'Heal') are unmodeled and Kayn is absent from HEALING_RULE_CHAMPIONS — BUT docs/deep-audit-2026-08.md flags Kayn's binary heal-named spell as a shared lifesteal hook 'must not be double-counted', so the wiki atoms and binary evidence conflict; needs human judgment.",
+    "verdict": "review"
+  },
+  "Kennen": {
+    "module_slots": {
+      "P": "no_damage (Mark of the Storm stacks/stun state)",
+      "Q": "modeled (Thundering Shuriken)",
+      "W": "modeled (Electrical Surge active + 4-stack empowered on-hit)",
+      "E": "modeled (Lightning Rush magic damage)",
+      "R": "modeled (Slicing Maelstrom 1-6 bolts)"
+    },
+    "atoms_total": 19,
+    "notable_atoms": [
+      "damage (Q, W, E, R bolts)",
+      "mark (P Mark of the Storm + stun)",
+      "proc (double-strike on-hit)",
+      "buff (E Lightning Rush)",
+      "CC (immobilize/stun)"
+    ],
+    "gap_summary": "All damage atoms covered: Q, W with the explicit 4-stack empowered on-hit branch (w_empowered), E, R with 1-6 escalating bolts (r_bolts). P marks/stun are a no_damage row (ordered control state). No missing damage, heal, shield or transform atom.",
+    "verdict": "ok"
+  },
+  "Khazix": {
+    "module_slots": {
+      "P": "modeled (Unseen Threat empowered on-hit, p_ready)",
+      "Q": "modeled (Taste Their Fear isolated branch)",
+      "W": "modeled (Void Spike physical damage — heal NOT modeled)",
+      "E": "modeled (Leap physical damage)",
+      "R": "no_damage (Void Assault stealth/evolution state)"
+    },
+    "atoms_total": 27,
+    "notable_atoms": [
+      "damage (P Unseen Threat, Q isolated, W, E)",
+      "heal (W Void Spike self-heal)",
+      "stealth (R/P)",
+      "dash (E)",
+      "CC (slow)",
+      "vision/sight (W reveal)",
+      "evolution (R state)"
+    ],
+    "gap_summary": "W SELF-HEAL is unmodeled: atom heal-shield.heal on KhazixW/KhazixWMissile (tag:Trait_ActiveHeal) and the cache W leveling carries an explicit 'Heal' row (55/75/95/115/135 + 50% AP) for the explosion self-heal, but the module W slot is a plain simple_damage read and Kha'Zix is absent from HEALING_RULE_CHAMPIONS. Damage atoms (P/Q/E) and R stealth/evolution state are otherwise covered.",
+    "verdict": "gap"
+  }
+}

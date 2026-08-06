@@ -1,0 +1,603 @@
+{
+  "Aatrox": {
+    "module_slots": {
+      "modeled": [
+        "R",
+        "Q",
+        "W",
+        "P"
+      ],
+      "out_of_scope": [
+        "E (Umbral Dash: dash + heal amp, no damage)",
+        "R revive (passive utility)",
+        "CC (Q/W knockups, W slow)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 25,
+    "notable_atoms": [
+      "damage (Q 3-cast sweep, W two-hit chains, P %maxHP on-hit)",
+      "stat buff (R %total-AD, BUFF phase)",
+      "self-heal (passive + E + R amp — via healing.py HEALING_RULE_CHAMPIONS)",
+      "revive (R World Ender)",
+      "dash (E)",
+      "attack-reset (E)",
+      "slow/immobilize (Q/W)"
+    ],
+    "gap_summary": "Self-heal is modeled: healing.py HEALING_RULE_CHAMPIONS includes Aatrox (Deathbringer Stance passive heal, Umbral Dash 16%+1.1%/100 bonus HP heal, World Ender healing amp). Atom heal-shield.revive (AatroxRRevive/AatroxRevive) is the R revive — a defensive/out-of-combat utility not modeled by the damage module (module R slot models the AD buff only); consistent with codebase policy for defensive passives. E dash/attack-reset are utility (E is explicitly absent: 'a dash with healing amp only — no damage'). No clear missing damage/heal mechanic.",
+    "verdict": "ok"
+  },
+  "Ahri": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "out_of_scope": [
+        "P (Essence Theft: takedown heal — not in atom file either)",
+        "CC charm/slow (utility, cc_kind marker on E)",
+        "W speed buff"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 27,
+    "notable_atoms": [
+      "damage (Q two-pass magic+true, W 3 flames, E charm hit, R 3 dashes)",
+      "immobilize/slow (E charm, R dashes)",
+      "ammo (R 3 charges — cast_instances=3)",
+      "buff (W Fox-Fire speed)"
+    ],
+    "gap_summary": "No heal-shield atoms exist for Ahri (atom decomposition omits Essence Theft's takedown heal — a WS3 gap, not a module gap). Module models all damaging slots Q/W/E/R; P passive heal is absent from both module and atoms. No notable atom family is missing from the module's modeled scope.",
+    "verdict": "ok"
+  },
+  "Akali": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "W",
+        "E",
+        "R",
+        "P"
+      ],
+      "out_of_scope": [
+        "W stealth/untargetable (utility — W slot emits energy restore only)",
+        "P zone ground (shroud circle)",
+        "ranged/melee weapon reclassification (minion modifiers)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 50,
+    "notable_atoms": [
+      "damage (Q cone, E two-hit, R1 dash + R2 execute with missing-HP scaling)",
+      "execute (R2 — modeled as hp_scaled_damage closure)",
+      "stealth/untargetable (W shroud — utility)",
+      "resource (W energy restore + max-energy bonus, modeled)",
+      "dash (E/R)",
+      "ground (P circle)"
+    ],
+    "gap_summary": "Execute atom (damage.execute AkaliR) IS modeled (R2 min→max missing-HP closure). W stealth/untargetable atoms are utility-only (module models W as the energy-restore resource event, which is the only calc-relevant part). No heal/shield/transform atoms. No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "Akshan": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "E",
+        "R",
+        "passive_double_shot",
+        "P"
+      ],
+      "out_of_scope": [
+        "W (Going Rogue: stealth + Scoundrel revive — explicitly 'stealth/revive utility — not modeled')",
+        "R channel (utility; damage modeled)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 31,
+    "notable_atoms": [
+      "damage (Q two-pass, E swing shots, R barrage with missing-HP + crit scaling, P 3-stack proc + double shot)",
+      "shield (P 3-stack proc: 40-280 +35% bAD — atom AkshanPassiveShield)",
+      "stealth (W)",
+      "mark (W Scoundrel), debuff (P stacks), ammo (R bullets), summoned-terrain (W wall)",
+      "slow/channel (E, R)",
+      "execute (R vs minions — minion-only)"
+    ],
+    "gap_summary": "The passive's 3-stack proc shield is unmodeled: the module parses the same Dirty Fighting effect (description text) for proc damage but only notes the JSON 'contains shield values (labelled Bonus Damage)' without emitting them; the wiki cache confirms the 3rd stack 'will also gain a 40 : 280 (+ 35% bonus AD) shield for 2 seconds'. Defensive shields are out-of-scope by codebase convention (cf. Blitzcrank/Azir/Annie), but this shield rides the exact proc the module DOES model, so whether it belongs is a human judgment. W stealth/revive is documented utility.",
+    "verdict": "review"
+  },
+  "Alistar": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "W",
+        "E"
+      ],
+      "out_of_scope": [
+        "P (Triumphant Roar heal — 'Passive (Triumphant Roar) healing is ignored')",
+        "R (Unbreakable Will damage reduction — 'ignored')",
+        "CC (Q knockup, W knockback, E stun/slow)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 27,
+    "notable_atoms": [
+      "damage (Q Pulverize, W Headbutt, E Trample 10-tick DoT + empowered auto)",
+      "self-heal (P Triumphant Roar — atom heal-shield.heal AlistarPassiveHeal)",
+      "knockback/immobilize/stasis (Q/W/E/R)",
+      "stacks (P 7-stack charge, atom stack-transform AlistarPassiveStacks)",
+      "parry (R FerociousHowl — damage reduction)"
+    ],
+    "gap_summary": "Clear missing mechanic: passive self-heal. Atom heal-shield.heal (AlistarPassiveHeal/AlistarPassiveHealMis) exists; wiki cache P: 'heal himself for 5% of his maximum health' at 7 stacks; healing.py HEALING_RULE_CHAMPIONS does NOT include Alistar and the module's ASSUMPTIONS state 'Passive (Triumphant Roar) healing is ignored'. R damage reduction (interaction.parry) also unmodeled but that is defensive utility.",
+    "verdict": "gap"
+  },
+  "Ambessa": {
+    "module_slots": {
+      "modeled": [
+        "R",
+        "Q",
+        "Q2",
+        "W",
+        "E",
+        "P"
+      ],
+      "out_of_scope": [
+        "W shield (Repudiation 50-320 +150% bAD — defensive, convention)",
+        "R suppression/CC-immunity (utility)",
+        "dash (passive, E)",
+        "R buffs/debuffs (lore/lockout — non-mechanical)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 36,
+    "notable_atoms": [
+      "damage (Q1/Q2 sweetspot, W empowered hit, E two passes, P proc, R active)",
+      "armor pen (R stat_buff)",
+      "self-heal (R Public Execution — via healing.py HEALING_RULE_CHAMPIONS)",
+      "shield (W Repudiation — atom heal-shield.shield AmbessaW)",
+      "dash/CC-immunity/suppression (R)",
+      "parry (W)",
+      "energy restore (P, per proc)"
+    ],
+    "gap_summary": "Self-heal IS modeled: healing.py HEALING_RULE_CHAMPIONS includes Ambessa (R 'Public Execution heals from post-mitigation active ability damage' — note: the R heal has no heal atom in the atom file, a WS3 omission). The W shield atom (AmbessaW) is unmodeled but that is the codebase-wide defensive-shield exclusion (module W models damage only). No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "Amumu": {
+    "module_slots": {
+      "modeled": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R",
+        "curse"
+      ],
+      "out_of_scope": [
+        "E passive damage reduction (defensive — 'not modeled — defensive only')",
+        "CC (Q stun, R stun, W slow — utility)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 18,
+    "notable_atoms": [
+      "damage (Q Bandage Toss, W Despair toggle DoT, E Tantrum, R Curse of the Sad Mummy)",
+      "curse amplifier (P: +10% bonus true damage on magic — AMP pseudo-slot)",
+      "ammo (Q 2 charges — cooldown='recharge')",
+      "debuff (P Cursed Touch)",
+      "immobilize/slow (Q/R/W)"
+    ],
+    "gap_summary": "All damage atoms modeled (Q/W/E/R + P curse amplification as true-damage AMP). Q ammo (2 charges) modeled via recharge cooldown. E's defensive damage reduction unmodeled but documented as defensive-only. No heal/shield atoms. No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "Anivia": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "E",
+        "R"
+      ],
+      "out_of_scope": [
+        "W (Crystallize wall — 'utility wall ... deliberately absent')",
+        "P (Rebirth egg — 'resurrection only, no damage ... skipped')",
+        "CC (Q stun, R slow)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 17,
+    "notable_atoms": [
+      "damage (Q two-pass total, E Chilled-empowered, R two-phase toggle DoT)",
+      "revive (P Rebirth — atom heal-shield.revive)",
+      "summon/terrain (W Crystallize)",
+      "toggle-form (R Glacial Storm), mark (E chill)"
+    ],
+    "gap_summary": "Revive atom (heal-shield.revive Rebirth) unmodeled — documented as out of scope ('resurrection only, no damage'), consistent with the codebase's defensive-utility policy (cf. Aatrox R revive). W summon/terrain is utility. All damaging slots modeled. No clear missing damage/heal mechanic.",
+    "verdict": "ok"
+  },
+  "Annie": {
+    "module_slots": {
+      "modeled": [
+        "R",
+        "P",
+        "Q",
+        "W",
+        "E"
+      ],
+      "out_of_scope": [
+        "E shield (Molten Shield — zero-damage display row only; 'shield/retaliation only')",
+        "E retaliation damage (requires enemy hits — documented)",
+        "Tibbers auto-attacks (positioning-dependent — documented)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 26,
+    "notable_atoms": [
+      "damage (Q/W, R initial burst + Tibbers aura DoT)",
+      "summon (R Tibbers — modeled incl. aura; atom stack-transform summon AnnieR + 'annie Passive (Tibbers)')",
+      "shield (E — atom heal-shield.shield AnnieE/MoltenShieldTibbersBuff)",
+      "stun (P Pyromania — immobilize atom, zero-damage display row)",
+      "stacks (P Pyromania), buff (E speed), upgrade (Tibbers enrage)"
+    ],
+    "gap_summary": "The summon atom family IS modeled: R emits Tibbers burst + aura (wiki constants, pet stats not in JSON). E shield atoms unmodeled but that is the codebase-wide defensive-shield exclusion, and the E slot preserves a zero-damage display row with real cooldown. P stun modeled as display row. No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "Aphelios": {
+    "module_slots": {
+      "modeled": [
+        "P",
+        "W",
+        "Q",
+        "R"
+      ],
+      "out_of_scope": [
+        "E (Weapon Queue System — state-only, packet 'no_damage')",
+        "Severum lifesteal heal + overheal shield (P/Q packets damage-only)",
+        "Crescendum off-hand auto follow-ups (R detail; weapon-specific follow-ups listed as coverage boundary)",
+        "Gravitum root/immobilize (utility — atom crowd-control ApheliosGravitumRoot)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 26,
+    "notable_atoms": [
+      "damage (Q 5 weapon variants incl. Onslaught attack-count model, R initial blast, P Weapon Master AD/AS/lethality)",
+      "heal (Severum lifesteal — atom heal-shield.heal ApheliosSeverumQ)",
+      "shield (Severum overheal — atom heal-shield.shield ApheliosSeverumQ)",
+      "toggle-form (W Phase weapon swap, atom stack-transform ApheliosW)",
+      "buff/debuff (off-hand weapon buffs, Gravitum mark, Calibrum range)",
+      "root (Gravitum Q)"
+    ],
+    "gap_summary": "Clear missing mechanic: Severum self-heal (and its overheal shield). Atom heal-shield.heal + heal-shield.shield both on ApheliosSeverumQ; wiki cache P: 'Severum's attacks heal Aphelios for 2% : 7.1% (based on level) of the post-mitigation damage dealt, increased to 5% : 17.75% ... excess ... converted into a shield'. healing.py HEALING_RULE_CHAMPIONS does NOT include Aphelios and the module/packets emit Severum Q as damage-only. Severum lifesteal is a signature sustain mechanic of the weapon system.",
+    "verdict": "gap"
+  },
+  "Ashe": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "P",
+        "W",
+        "R"
+      ],
+      "out_of_scope": [
+        "E (Hawkshot — 'vision utility only and is absent from the slot map')",
+        "P slow (CC, applied via auto override context)",
+        "R stun (utility)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 30,
+    "notable_atoms": [
+      "damage (W Volley, R Enchanted Crystal Arrow, Q flurry, P crit-as-bonus auto override)",
+      "on-hit/on-attack (Q flurry — atom damage.on-hit AsheQAttack)",
+      "crit-chance conversion (P — atom damage.critical-chance AsheCritChance)",
+      "attack-reset (Q — atom interaction.attack-reset)",
+      "slow (P Frost Shot, R)",
+      "sight/vision (E Hawkshot — atom vision-economy.sight AsheEVisionMarker)",
+      "buff/debuff/mark (Q stacks, P slow debuff, E vision marker)"
+    ],
+    "gap_summary": "The kit's defining atoms are modeled: P crit-as-bonus auto override, Q flurry with attack-reset, W/R damage. E vision (vision-economy.sight) is utility and documented absent. No heal/shield/execute/transform atoms. No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "AurelionSol": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "E",
+        "R"
+      ],
+      "out_of_scope": [
+        "W (Astral Flight — 'damage-less dash, deliberately absent'; only its Q beam modifier is used via w_active option)",
+        "R2 empowered shockwave (excluded by design: target hit by star is immune)",
+        "CC (Q slow, R knockback/airborne)",
+        "P Cosmic Creator (Stardust — modeled as option feeding Q/E)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 26,
+    "notable_atoms": [
+      "damage (Q channel beam+bursts, E Singularity zone, R Falling Star / The Skies Descend)",
+      "execute (E — atom damage.execute; threshold display line 5%+2.6%/100 Stardust)",
+      "stacks (P Stardust — modeled as option driving Q burst/E execute)",
+      "DoT (Q beam), toggle-form (W/E/R), debuff (E)",
+      "airborne/knockback/slow (R2, Q)"
+    ],
+    "gap_summary": "Execute atom (damage.execute on AurelionSolE) IS modeled as the execute-threshold display line; Stardust stack mechanic is modeled as an option scaling Q bursts and E's threshold. R2 shockwave (airborne/knockback atoms) excluded with a documented in-game reason (immune if star hit). No heal/shield atoms. No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "Aurora": {
+    "module_slots": {
+      "modeled": [
+        "P",
+        "Q",
+        "E",
+        "R"
+      ],
+      "out_of_scope": [
+        "W (Across the Veil — 'dash/invisibility/MS utility with zero damage ... not modeled')",
+        "Q recast secondary bolts to other marked enemies (single-target — documented exclusion)",
+        "P healing/Spirits ('deals no enemy damage and is skipped')",
+        "R rift zone/slow (utility)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 17,
+    "notable_atoms": [
+      "damage (P %maxHP 3-stack proc with AP-scaled percent, Q first cast + auto-recast expunge, E, R)",
+      "stealth (W — atom vision-economy.stealth AuroraW)",
+      "dash (W)",
+      "execute-adjacent missing-HP scaling (Q recast — hp_scaled_damage closure)"
+    ],
+    "gap_summary": "W stealth/dash atoms are utility-only and documented absent (no damage, applies no stack). Q recast missing-HP scaling and P stack-cadence (counts ability hits) are modeled. P's Spirit healing is explicitly skipped ('deals no enemy damage') and no heal atom exists. No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "Azir": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "out_of_scope": [
+        "P (Shurima's Legacy Sun Disc turret — 'out of scope for a target-dummy fight; JSON has zero leveling data'),",
+        "E shield (70-230 +60% AP — 'the shield is not modeled')",
+        "W soldier spear-line reduced damage (single-target — documented)",
+        "CC (Q slow, R knockback)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 23,
+    "notable_atoms": [
+      "damage (Q, W Sand Soldier auto replacement with 25%/soldier + 50% on-hit effectiveness, E, R)",
+      "summon (W soldiers — atom stack-transform summon AzirW + 'azir Passive (Sand Soldier)')",
+      "shield (E Shifting Sands — atom heal-shield.shield AzirEShield)",
+      "channel (E dash, tower click), proc (W soldier auto), buff (W proc buff), slow/immobilize (Q/R)"
+    ],
+    "gap_summary": "The summon atom family IS modeled (W Sand Soldier auto_attack_override with on-hit effectiveness). E shield atom unmodeled but documented and consistent with the codebase-wide defensive-shield exclusion. P Sun Disc summon (summon atom 'azir Passive (Sand Soldier)') is documented out of scope (requires destroyed tower). No clear missing damage/heal mechanic.",
+    "verdict": "ok"
+  },
+  "Bard": {
+    "module_slots": {
+      "modeled": [
+        "P",
+        "Q"
+      ],
+      "out_of_scope": [
+        "W (Caretaker's Shrine heal/MS — 'W (heal), E (portal), R (stasis) deal no damage and are excluded from the breakdown')",
+        "E (Magical Journey portal — utility)",
+        "R (Tempered Fate stasis — zero damage)",
+        "Q slow/stun (CC only)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 29,
+    "notable_atoms": [
+      "damage (P meep on-hit with chime-scaled formula, Q Cosmic Binding)",
+      "self/ally heal (W Caretaker's Shrine — atom heal-shield.heal BardW/BardWActualHealing/BardWHealthPack/BardWDirectHeal)",
+      "stasis (R — atom crowd-control.stasis BardR)",
+      "stacks (P chime meeps — stock + recharge model)",
+      "ammo (P meep stock), mark/debuff (Q shackles)",
+      "slow (Q/P meeps), immobilize (Q)"
+    ],
+    "gap_summary": "W heal atoms are unmodeled: heal-shield.heal on BardW (incl. self-targeted BardWHealthPack/BardWDirectHeal) and wiki cache W: 'If the champion is an ally or Bard himself, they are healed ...'. healing.py HEALING_RULE_CHAMPIONS does NOT include Bard and the module excludes W as zero-damage utility. The shrine is primarily an ally-support heal (Bard self-heal requires walking to the shrine), so whether the self-heal belongs in a single-target sim is a human judgment call. R stasis is zero-damage utility (documented).",
+    "verdict": "review"
+  },
+  "Belveth": {
+    "module_slots": {
+      "modeled": [
+        "P",
+        "Q",
+        "W",
+        "E",
+        "R",
+        "R_onhit"
+      ],
+      "out_of_scope": [
+        "R heal (Consuming Void Coral — 'R heal ... skipped')",
+        "E damage reduction + lifesteal heal ('E damage reduction/lifesteal ... skipped')",
+        "Void Remora pets (minion-stat summons — skipped)",
+        "W knockup/slow (utility)",
+        "Q per-direction dash cooldown haste conversion (documented)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 23,
+    "notable_atoms": [
+      "damage (P auto override, Q dashes, W, E slash count from bonus AS + missing-HP interpolation, R explosion true damage + missing-HP, R ramping true-damage on-hit)",
+      "execute (R — 25% missing health, modeled via option)",
+      "self-heal (E lifesteal — atom heal-shield.heal BelvethE)",
+      "stack (P Lavender AS stacks — modeled as option)",
+      "attack-reset (E, Q — modeled via applies_item_on_hits/auto coupling)",
+      "dash (Q), immobilize (W), channel (E)",
+      "toggle-form/transform (R True Form stat buff — modeled)"
+    ],
+    "gap_summary": "Clear missing mechanic: self-heal. Atom heal-shield.heal on BelvethE (Royal Maelstrom lifesteal; wiki cache: 'gains damage reduction and life steal' / 'applies life steal'); wiki cache R also 'Consuming a Void Coral ... heals Bel'Veth'. healing.py HEALING_RULE_CHAMPIONS does NOT include Bel'Veth and the module's ASSUMPTIONS explicitly skip 'R heal, E damage reduction/lifesteal'. R True Form transform and the ramping on-hit execute-style damage ARE modeled, so the gap is specifically the sustain.",
+    "verdict": "gap"
+  },
+  "Blitzcrank": {
+    "module_slots": {
+      "modeled": [
+        "W",
+        "Q",
+        "E",
+        "R"
+      ],
+      "out_of_scope": [
+        "P (Mana Barrier shield — 'Passive (Mana Barrier) not modeled — defensive shield only')",
+        "R passive lightning (skipped by design — R active disables it)",
+        "W post-buff slow/MS (utility)",
+        "Q/E CC (grab, knockup, slow)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 28,
+    "notable_atoms": [
+      "damage (Q Rocket Grab, E Power Fist empowered auto, R Static Field active burst)",
+      "on-hit (E — empowers_next_auto with crit effectiveness)",
+      "shield (P Mana Barrier — atom heal-shield.shield ManaBarrier)",
+      "mana (P — atom stack-transform.mana)",
+      "attack-reset (E — atom interaction.attack-reset)",
+      "buff (W Overdrive timed AS — time-averaged BUFF)",
+      "immobilize/slow (Q/E)"
+    ],
+    "gap_summary": "Mana Barrier shield atom unmodeled but documented as defensive-shield-only exclusion (codebase convention). R passive lightning excluded with in-game rationale. W timed AS buff IS modeled (time-averaged over fight window). No heal atoms. No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "Brand": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "W",
+        "E",
+        "R",
+        "P"
+      ],
+      "out_of_scope": [
+        "CC (Q stun, R slow — 'utility-only and excluded from damage')",
+        "E spread doubling (multi-target — single-target calc)",
+        "P mana refund on takedown (effect[0] Per-Level Scaling — must contribute zero)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 23,
+    "notable_atoms": [
+      "damage (Q, W Ablaze-empowered, E, R per-bounce with 0.15s hit interval)",
+      "DoT (P Blaze 2% maxHP/stack over 4s — modeled with dot_stack_count)",
+      "mark/detonate (P 3-stack ring detonation — modeled)",
+      "immobilize (Q stun)"
+    ],
+    "gap_summary": "The DoT + detonation atom family (stack-transform.damage-over-time/mark BrandBlaze, BrandAblazeDetonateMarker) IS modeled: P emits Ablaze DoT per stack + 3-stack detonation with level/AP scaling, timed to the rotation's stack applications. No heal/shield atoms. No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "Braum": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "W",
+        "R",
+        "P"
+      ],
+      "out_of_scope": [
+        "E (Unbreakable — 'pure directional damage MITIGATION (35-55%, first hit blocked) + 10% MS ... Deliberately absent')",
+        "CC (P stun, Q slow, R knockup/slow — not valued as damage)",
+        "P allied-attack stacking (solo — documented)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 33,
+    "notable_atoms": [
+      "damage (Q with own-maxHP scaling, R Glacial Fissure, P Concussive Blows stack-cycle: 4-stack proc + immunity-window 40% bonus autos)",
+      "shield/parry (E — atom heal-shield.shield BraumEShieldBuff, interaction.parry BraumE)",
+      "stun (P — atom crowd-control.stun BraumPassive/BraumStunDebuff)",
+      "stack/mark (P — atom stack-transform.mark BraumMark)",
+      "toggle-form (W), buff (E shield buff, W self-resist BUFF — modeled)",
+      "airborne (R)"
+    ],
+    "gap_summary": "E shield/parry atoms unmodeled but E is explicitly documented as pure incoming-damage mitigation with no damage output (codebase convention, cf. Braum ASSUMPTIONS 'E (Unbreakable) is skipped: pure damage mitigation, no damage or stats to model'). The stack-cycle passive (P) IS modeled in depth (timed auto/Q timeline through proc and immunity windows). No heal atoms. No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "Briar": {
+    "module_slots": {
+      "modeled": [
+        "W_frenzy",
+        "R",
+        "Q",
+        "W",
+        "E",
+        "P"
+      ],
+      "out_of_scope": [
+        "P bleed heal (25% of damage dealt; 125% of remaining bleed on kill) — skipped",
+        "W Snack Attack heal + frenzy lifesteal — skipped (R's life steal STAT granted, HP restore not)",
+        "E charge-time heal — skipped by module BUT covered by healing.py",
+        "W cleave (never hits primary target), E damage reduction, Q attack-timer reset (documented)",
+        "CC (Q stun, R fear, E knockback — utility)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 68,
+    "notable_atoms": [
+      "damage (P stacking bleed 5-stack, Q on-hit attack, W Snack Attack missing-HP, E fully-charged, R explosion)",
+      "self-heal (P bleed heal, W Snack Attack/frenzy lifesteal, E charge heal — atoms heal-shield.heal BriarE/BriarW/BriarWAttack)",
+      "stacking DoT (P — modeled via stacking_dot + applies_dot_stack)",
+      "attack-reset/parry (Q, E), dash (R, W), airborne/knockback (E), channel (E)",
+      "buff (W frenzy AS/MS, R resist/lifesteal/MS stat buffs)"
+    ],
+    "gap_summary": "Partial healing coverage. healing.py HEALING_RULE_CHAMPIONS includes Briar and models E's Chilling Scream per-tick heal (Heal Per Tick/Maximum Heal). But the module's own ASSUMPTIONS state 'All healing skipped: passive bleed heal (25% of damage dealt...), healing amplification (0-40% by missing HP), Snack Attack's heal, E's charge heal, and R's life steal healing (the life steal STAT is granted; HP restored isn't modeled)' — so W frenzy lifesteal (atom heal-shield.heal BriarW/BriarWAttack) and P bleed heal are unmodeled, while E is covered at the healing layer. The bleed-heal-on-damage is a core Briar identity mechanic; whether it must join the participant sim is a human judgment.",
+    "verdict": "review"
+  },
+  "Caitlyn": {
+    "module_slots": {
+      "modeled": [
+        "Q",
+        "E",
+        "R",
+        "P"
+      ],
+      "out_of_scope": [
+        "W (Yordle Snap Trap — 'deals no damage itself ... slot deliberately absent'; only its Headshot increase feeds P's single trap headshot)",
+        "R channel/body-block (assumed hit)",
+        "Q secondary-target reduced damage (single-target)",
+        "W root/slow, E slow (CC utility)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 23,
+    "notable_atoms": [
+      "damage (Q Peacemaker, E 90 Caliber Net, R Ace in the Hole with 0.3 crit effectiveness, P Headshot every-6th-auto + E-granted + trap headshot)",
+      "trap (W — atom stack-transform.trap 'caitlyn Passive (Yordle Snap Trap)'; modeled through P)",
+      "root (W snare), channel (R), slow (E)",
+      "ammo (P range marker), mark (P), sight (W — vision-economy.sight)"
+    ],
+    "gap_summary": "W trap atom family is handled through P: exactly one trap headshot per fight with W's Headshot Damage Increase (the trap's only damage contribution; the trap itself is a utility/root). Vision (W sight) and root are utility. No heal/shield atoms. No clear missing mechanic.",
+    "verdict": "ok"
+  },
+  "Camille": {
+    "module_slots": {
+      "modeled": [
+        "E",
+        "Q",
+        "Q2",
+        "W",
+        "R"
+      ],
+      "out_of_scope": [
+        "P (Adaptive Defenses shield — 'a defensive shield — absent from the map')",
+        "W self-heal ('W's self-heal and slow are not modeled')",
+        "E stun (utility)",
+        "R zone (immobilize/dash-lockout — utility)"
+      ],
+      "note": "No MODULE_COVERAGE dict in this module; modeled = SLOTS keys, out_of_scope from ASSUMPTIONS/docstring"
+    },
+    "atoms_total": 50,
+    "notable_atoms": [
+      "damage (Q1/Q2 empowered autos with true-damage conversion, W outer-cone %maxHP sweet spot, E Wall Dive, R current-health on-hit rider)",
+      "self-heal (W Tactical Sweep — atom heal-shield.heal CamilleW)",
+      "shield (P Adaptive Defenses — atoms heal-shield.shield-magic/shield-physical)",
+      "attack-reset (Q — atom interaction.attack-reset; empowers_next_auto with swing parts)",
+      "stun/knockback/untargetable (E), airborne (E), slow (W)",
+      "summoned-terrain (E wall), stack (W charge), buff (E AS)"
+    ],
+    "gap_summary": "Clear missing mechanic: W self-heal. Atom heal-shield.heal (CamilleW); wiki cache W: 'Camille is healed for 100% of this additional damage post-mitigation against enemy champions in the outer half' — the module models the outer-cone damage that generates the heal but not the heal itself; healing.py HEALING_RULE_CHAMPIONS does NOT include Camille. P shield atoms (shield-magic/shield-physical) are the codebase-wide defensive-shield exclusion (documented absent).",
+    "verdict": "gap"
+  }
+}

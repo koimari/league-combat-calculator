@@ -1,5 +1,5 @@
 {
- "classifier": "scripts/extract_atoms.py (v2 data-driven, wiki-atoms vocab)",
+ "classifier": "scripts/extract_atoms.py (v2.1 data-driven: wiki-atoms vocab + wiki damage-type bridge)",
  "vocab": {
   "atom_count": 185,
   "families": [
@@ -13692,7 +13692,21 @@
    "interaction": 156,
    "stack-transform-summon-resource": 807,
    "vision-economy": 74
-  }
+  },
+  "damage_type": {
+   "damage_atoms": 2999,
+   "typed": 1616,
+   "by_type": {
+    "magic": 939,
+    "other": 88,
+    "physical": 571,
+    "true": 18
+   },
+   "coverage": 0.5388,
+   "coverage_before_bridge": 0.0137,
+   "source": "data/champions.json per-ability damageType, bridged by script-name prefix (champion+slot letter) and ability-name tokens; token inference is the fallback"
+  },
+  "weak_evidence_atoms": 0
  },
  "sanity_checks": [
   {
@@ -13909,10 +13923,11 @@
  "improvement_suggestions": [
   "Extend the transform atom (or add a 'disguise / level-gated form' atom) with keywords for level-gated passive ranks and 'disguise' \u2014 NeekoPassive and KaylePassive both fail today because their binaries never contain 'transform'/'form' tokens (Kayle's ranks are only visible as LevelForPassiveRank* datavalues).",
   "Add a 'soul'/'stack currency' keyword family: Senna souls, Thresh souls and Nasus Q stacks appear as 'Soul*'/'Stacks' datavalues, and only 'stack' currently matches \u2014 soul-gated scaling is invisible, and objects like ThreshPassiveSouls / SennaBasicAttackSouls stay unclassified.",
-  "mDamageType is absent from all 203 parsed binaries; damage type must come from calc/datavalue naming ('APDamage', 'PhysicalDamage', 'TrueDamage') or a future parser field \u2014 today only magic/physical/true tokens are detected, so most damage atoms carry damage_type=null.",
+  "Damage types are now bridged from the wiki champion cache (data/champions.json per-ability damageType) via script-name prefix (champion+slot letter) and ability-name token matching, with token inference as the fallback. Remaining damage_type=null atoms are: basic-attack objects (the cache types abilities, not autos), slots the wiki marks without a type, and multi-form slots whose entries disagree on the type (e.g. Gnar W Hyper vs Wallop, Rek'Sai Q Queen's Wrath vs Prey Seeker) when the object name cannot disambiguate the form.",
   "Curate ambiguous vocab keywords before scaling to all champions. The classifier already guards against champion-name keywords ('Aatrox', 'Aphelios'), generic words ('duration', 'ability damage', 'crit'), and substring traps ('miss' in missile, 'stance' in distance, 'wind' in window) \u2014 but residual noise remains: 'shield' in the flow/true-damage atoms fires on every shield, 'bonus health' in deep-ward fires on any bonus+health datavalue, 'TauntLength' (Thresh Q) misclassifies as a taunt, 'refund' fires on ManaRefund, and meta atoms (internal-resource-index, buff-duration-class) over-fire by design.",
   "Add a targeting-data source for target_policy: mTargetingTypeData is nearly empty in these binaries, so heal/shield target_policy defaults to 'self' and misses ally-targeted heals (Senna Q, Kayle W, Thresh W lantern). mAffectsTypeFlags is also recorded raw (no decode table available for this data version).",
-  "Missiles and empowered-attack variants of an already-classified parent spell (e.g. JinxQAttack, ApheliosSeverumAttack, GnarQMissile) stay unclassified; inheriting the parent ability's atoms for '*Missile'/'*Attack'-suffixed clones would cut the unclassified-real count roughly in half."
+  "Missiles and empowered-attack variants of an already-classified parent spell (e.g. JinxQAttack, ApheliosSeverumAttack, GnarQMissile) stay unclassified; inheriting the parent ability's atoms for '*Missile'/'*Attack'-suffixed clones would cut the unclassified-real count roughly in half.",
+  "The wiki cache marks 25 abilities OTHER_DAMAGE (Ahri Q, Camille Q, Pyke R, Sett W, Urgot R, Vel'Koz R, Yone P/W/R, ...); these are recorded verbatim as damage_type='other'. Several are true damage in game (e.g. Pyke R, Camille Q2, Sett W, Urgot R) \u2014 verify against the game files if 'true' matters, and only then special-case them (ideally as data, not code)."
  ],
  "autoresearch": {
   "round": "v4-no-overclassification",
