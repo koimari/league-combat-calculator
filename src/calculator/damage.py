@@ -1288,6 +1288,8 @@ def _ordered_damage_events(
                 "sequence": sequence,
                 "_lk": (time, order_value, _EVENT_PHASE_ORDER[phase], sequence),
             }
+            if raw_damage is not None:
+                event["raw_damage"] = raw_damage
         else:
             event = {
                 "source_key": source_key,
@@ -1300,6 +1302,8 @@ def _ordered_damage_events(
                 "order": order_value,
                 "_lk": (time, order_value, _EVENT_PHASE_ORDER[phase], sequence),
             }
+            if raw_damage is not None:
+                event["raw_damage"] = raw_damage
             if source_missing_ratio is not None:
                 event["source_missing_ratio"] = source_missing_ratio
             if event_precision is not None:
@@ -1375,6 +1379,8 @@ def _ordered_damage_events(
                     "sequence": sequence,
                     "_lk": (time, order_value, phase_rank, sequence),
                 }
+                if event.get("raw_damage") is not None:
+                    row["raw_damage"] = event["raw_damage"]
             else:
                 row = {
                     "source_key": source_key,
@@ -1387,6 +1393,8 @@ def _ordered_damage_events(
                     "order": order_value,
                     "_lk": (time, order_value, phase_rank, sequence),
                 }
+                if event.get("raw_damage") is not None:
+                    row["raw_damage"] = event["raw_damage"]
                 source_missing_ratio = event.get("source_missing_ratio")
                 if source_missing_ratio is not None:
                     row["source_missing_ratio"] = float(source_missing_ratio)
@@ -1454,6 +1462,10 @@ def _ordered_damage_events(
                 else 0.0
             )
             last_ability_time = max(last_ability_time, cast_time)
+            raw_total = float(entry.get("total_raw", 0.0) or 0.0)
+            raw_per_instance = (
+                raw_total / (casts * instances) if raw_total > 0.0 else None
+            )
             for dtype, amount in _row_damage_parts(entry):
                 per_instance = amount / (casts * instances)
                 for instance_index in range(instances):
@@ -1465,6 +1477,7 @@ def _ordered_damage_events(
                         ordinal=cast_index * instances + instance_index + 1,
                         phase="ability",
                         basic_attack=bool(entry.get("basic_attack")),
+                        raw_damage=raw_per_instance,
                     )
 
     auto = breakdown.get("auto_attacks")
@@ -4024,6 +4037,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             "casts": num_casts,
             "total_damage": ability_total,
             "damage_type": damage_type,
+            "total_raw": sum(
+                float(part.amount) * max(1, int(part.count)) for part in parts
+            ),
         }
         timing_is_authored = bool(parts) and all(
             part.time_offset is not None

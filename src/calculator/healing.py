@@ -88,6 +88,7 @@ def _heal_from_damage(
     source: str,
     *,
     later_target_amount: float | None = None,
+    link_to_damage: bool = True,
 ) -> None:
     """Append one sourced self-heal tied to a damage event.
 
@@ -97,9 +98,15 @@ def _heal_from_damage(
     for every defender past the roster's first target, so each target keeps
     its own event instead of the engine re-authoring the full amount per
     pair fight.
+
+    ``link_to_damage=False`` marks flat heals that trigger at cast/detonation
+    regardless of whether the paired damage event landed (Vladimir Q/R); the
+    trigger fields still link the receipt to the cast for audit.
     """
     amount = max(0.0, float(amount))
-    if amount <= 0.0 or float(event.get("damage", 0.0)) <= 0.0:
+    if amount <= 0.0:
+        return
+    if link_to_damage and float(event.get("damage", 0.0)) <= 0.0:
         return
     heal: dict[str, Any] = {
         "time": float(event.get("time", 0.0)),
@@ -391,19 +398,19 @@ def derive_self_healing(
         for event in _attributed_events(
             damage_events, lambda source, _event: source == "Q"
         ):
-            _heal_from_damage(healing, event, q_heal, "Transfusion")
+            _heal_from_damage(
+                healing, event, q_heal, "Transfusion", link_to_damage=False
+            )
         # Sanguine Pool (W): heals for 30% of pre-mitigation damage dealt
         # (patch 12.13: "Healing increased to 30% of damage dealt from 15%";
         # 18% against minions — champion targets assumed here).
         for event in _attributed_events(
             damage_events, lambda source, _event: source == "W"
         ):
-            _heal_from_damage(
-                healing,
-                event,
-                0.30 * float(event.get("damage", 0.0)),
-                "Sanguine Pool",
-            )
+            # Pre-mitigation damage per the wiki ("30% of the pre-mitigation
+            # damage dealt"); the engine exposes it as event["raw_damage"].
+            dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+            _heal_from_damage(healing, event, 0.30 * dealt, "Sanguine Pool")
         # Hemoplague (R): flat heal per infected champion, reduced for later
         # targets (wiki: "Heal: 150 / 250 / 350 (+ 70% AP)" and
         # "Reduced Heal: 60 / 100 / 140 (+ 28% AP)").  Each pair fight sees
@@ -428,6 +435,7 @@ def derive_self_healing(
                 r_heal,
                 "Hemoplague",
                 later_target_amount=r_reduced,
+                link_to_damage=False,
             )
 
     return sorted(healing, key=lambda event: (event["time"], event["source"]))

@@ -5845,6 +5845,9 @@ def build_participant_timeline(
                 "source": event.get("source_key", ""),
                 "damage_type": event.get("damage_type", ""),
                 "damage": round(float(event.get("damage", 0.0)), 1),
+                "raw_damage": round(
+                    float(event.get("raw_damage", event.get("damage", 0.0))), 1
+                ),
                 "pair_damage": round(
                     float(event.get("pair_damage", event.get("damage", 0.0))), 1
                 ),

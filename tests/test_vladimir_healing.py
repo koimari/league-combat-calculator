@@ -67,7 +67,10 @@ def test_vladimir_transfusion_heal_scales_with_ap():
     assert q_heals[0]["amount"] > 40.0
 
 
-def test_vladimir_sanguine_pool_heals_thirty_percent_of_damage():
+def test_vladimir_sanguine_pool_heals_thirty_percent_of_pre_mitigation_damage():
+    # The wiki says 30% of PRE-mitigation damage dealt; the engine exposes
+    # pre-mitigation as event["raw_damage"]. The heal must be larger than
+    # 30% of the post-mitigation damage (which would under-heal).
     combat = _vladimir_fight(ranks={"Q": 1, "W": 5, "E": 1, "R": 1})
     w_damage = [
         e
@@ -76,7 +79,11 @@ def test_vladimir_sanguine_pool_heals_thirty_percent_of_damage():
     ]
     w_heals = [e for e in _main_heals(combat) if e["source"] == "Sanguine Pool"]
     assert w_damage and w_heals
-    assert w_heals[0]["amount"] == pytest.approx(0.30 * w_damage[0]["damage"], rel=0.01)
+    event = w_damage[0]
+    assert "raw_damage" in event, "engine must expose pre-mitigation raw_damage"
+    assert event["raw_damage"] > event["damage"], "raw must exceed mitigated"
+    assert w_heals[0]["amount"] == pytest.approx(0.30 * event["raw_damage"], rel=0.01)
+    assert w_heals[0]["amount"] > 0.30 * event["damage"]
 
 
 def test_vladimir_hemoplague_heals_flat_per_champion():
