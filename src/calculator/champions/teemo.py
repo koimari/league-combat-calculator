@@ -1,5 +1,12 @@
 """Teemo — CP10.8 full-entry-reviewed packet module.
 
+E9-1 closes the last audit gap: E (Toxic Shot) now prices the on-hit
+PLUS the full 4-second poison DoT.  The packet priced only the
+"Magic Damage On-Hit" row; the cached JSON's "Magic Damage per Tick"
+(6-30 + 2.5% bonus AD + 10% AP) and "Total Poison Damage"
+(24-120 + 10% bonus AD + 40% AP) rows are now expressed as 4 ticks at
+1-second intervals (packet_module _PACKET_TICK_FIXES).
+
 E4 summon: R (Noxious Trap) is a summoned trap.  The E2-3 tick fix
 already prices one shroom detonation as the full 4-second poison (4
 ticks of "Magic Damage per Tick" == the wiki Total Magic Damage row at
@@ -90,6 +97,10 @@ ASSUMPTIONS.extend(
         "full 4-second poison DoT (E2-3 ticks); r_shrooms prices "
         "sequential detonations, because multiple shrooms only refresh "
         "the poison duration and never stack.",
+        "E (Toxic Shot) prices the on-hit PLUS the full 4-second poison: "
+        "4 ticks of Magic Damage per Tick (== Total Poison Damage) at "
+        "1-second intervals (packet_module _PACKET_TICK_FIXES); the "
+        "poison refreshes rather than stacks (wiki note).",
         "The shroom slow (30/40/50% by R rank for 4 seconds) and reveal "
         "are crowd-control/vision utility the fight model does not price.",
         "Trap placement, arm time, trigger radius and the shroom's 6-HP "
