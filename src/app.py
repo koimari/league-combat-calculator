@@ -2700,7 +2700,10 @@ def api_staleness_regenerate():
     if not _local_dev_request() or not hmac.compare_digest(
         supplied_token, _DEV_UPDATE_TOKEN
     ):
-        return jsonify({"error": "Staleness regeneration is disabled on this server"}), 404
+        return (
+            jsonify({"error": "Staleness regeneration is disabled on this server"}),
+            404,
+        )
 
     repo_root = Path(__file__).resolve().parent.parent
     script = repo_root / "scripts" / "patch_regression.py"

@@ -36,3 +36,6 @@ docs/receipts/items/*.json
 
 # P3 patch-regression game-file cache (cdtb raw exports)
 data/gamefiles/
+
+# cdtb patcher storage (recreated under data/gamefiles/.cdtb)
+cdn/
