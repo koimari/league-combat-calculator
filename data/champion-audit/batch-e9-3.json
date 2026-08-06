@@ -1,0 +1,686 @@
+{
+ "Akali": {
+  "verdict": "ok",
+  "module": "akali.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "no_damage",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E1-E8 changed nothing needed: Akali's custom slot map already modeled every damaging slot (P Assassin's Mark proc with passive_procs, Q cone, E two-hit, R1 dash + R2 missing-HP execute) and W is a sourced zero-damage energy-restore event. E3 worklist entries (W shroud mark, E shuriken mark) are utility with no damage. Verified via /api/calculate probe at level 18, no items: passive_procs=4 resolves (total_damage 1085.9). No CP-era gaps to close; verdict ok."
+ },
+ "Ambessa": {
+  "verdict": "ok",
+  "module": "ambessa.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E8c implemented Ambessa W (Repudiation) as a sourced self-shield (per-level base 50-320 + 150% bAD, 1.5s) riding the W damage event — verified via /api/calculate probe at level 18, no items: shield event Repudiation 320.0 emitted and absorbed. E1 included Ambessa in HEALING_RULE_CHAMPIONS (R heal from post-mitigation active damage). E3 P Medarda Maxim stack mechanic is informational (passive_procs option). All damaging slots modeled with sourced numbers; no gaps remain."
+ },
+ "Annie": {
+  "verdict": "ok",
+  "module": "annie.py",
+  "slots": {
+   "P": "no_damage",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "no_damage",
+   "R": "modeled"
+  },
+  "gap_summary": "E4-1 implemented the Tibbers summon damage (burst + aura + pet auto cadence, tibbers_attacks/tibbers_aura_seconds options) and E8c implemented the Molten Shield self-shield (Shield Strength 60-200 + 40% AP emitted at cast). Verified via /api/calculate probe at level 18, no items: tibbers_attacks=5 resolves (total_damage 705.6). P Pyromania is a stun-only display row; E retaliation damage is a documented boundary. No CP-era gaps remain; verdict ok."
+ },
+ "AurelionSol": {
+  "verdict": "ok",
+  "module": "aurelion_sol.py",
+  "slots": {
+   "P": "no_damage",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E2-1 priced the full Q beam channel (26 per-second ticks per 3.25s cast) and E Singularity's full 20-tick zone; the Stardust stack mechanic is an option (stardust_stacks feeding Q bursts and E execute threshold) per the E3 worklist. Verified via /api/calculate probe at level 18, no items: stardust_stacks=25 + w_active resolves (total_damage 602.7). Documented boundaries: secondary-target Q beam (50%), R shockwave (star-hit immunity), W dash utility. No CP-era gaps remain; verdict ok."
+ },
+ "Bard": {
+  "verdict": "ok",
+  "module": "bard.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "out_of_scope",
+   "R": "out_of_scope"
+  },
+  "gap_summary": "The CP-era gap (W Caretaker's Shrine heal unmodeled) is closed: E1-b5 documents why the 1v1 self-heal has no trigger (heal requires walking to the shrine; module does not declare W), and the E8-followup added a per-champion heal-attribute hook so the support scanner emits the fully-charged Maximum Heal row for ally rosters (test_e8_followup_hooks.py pins 200.0 at rank 5). Meep P damage is wiki-sourced module constants with a chimes option — verified via /api/calculate probe at level 18, no items: chimes=35 resolves. W/E/R remain documented zero-damage utility (heal/portal/stasis)."
+ },
+ "Brand": {
+  "verdict": "ok",
+  "module": "brand.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E3-1 implemented the Blaze stack system: P now prices the per-stack 2% max-HP DoT plus the 3-stack detonation (per-level Max Health Damage row), and R's r_bounces option drives stack applications (test_blaze_prices_dot_plus_three_stack). Q/W/E are explicit damage reads, W always the Ablaze-empowered Increased Damage row. Verified via /api/calculate probe at level 18, no items: r_bounces=3 resolves (total_damage 796.9). No CP-era gaps; verdict ok."
+ },
+ "Caitlyn": {
+  "verdict": "ok",
+  "module": "caitlyn.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "no_damage",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E3-2 implemented the Headshot Count stack system (p_pre_stacks advances the 5-stack cadence; the 6th-attack Headshot rider with crit scaling is wiki-sourced) and E4-3 implemented the Yordle Snap Trap summon as the trap Headshot (w_traps option, capped by W's maximum traps at rank; test_w_traps_option_counts_trap). Verified via /api/calculate probe at level 18, no items: p_pre_stacks=2 + w_traps=1 resolves (total_damage 1061.7). Brush doubling and R's non-champion Headshot are documented boundaries. No CP-era gaps; verdict ok."
+ },
+ "Chogath": {
+  "verdict": "ok",
+  "module": "chogath.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "No E-series change was needed for damage: Q/W are plain reads, E prices 3 empowered attacks per cast with the Feast-stack %max-HP rider (modifier override from the units string), and R couples the feast_stacks bonus-health buff with its Champion True Damage (BUFF phase). Verified via /api/calculate probe at level 18, no items: feast_stacks=6 resolves (total_damage 1499.5). P Carnivore kill-heal is a documented boundary (E1-b3: the 1v1 model has no minion kills or kill receipt); Feast's non-champion 1200 branch and monster variants are documented. No CP-era gaps; verdict ok."
+ },
+ "Diana": {
+  "verdict": "ok",
+  "module": "diana.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "No E-series worklist item needed implementation beyond the existing custom slot map: P tripled-AS steroid plus floor(autos/3) Moonsilver cleave procs, Q, W Total Magic Damage (3 orbs), E double dash with moonlight_reset, and R beam with champions_pulled bonus. Verified via /api/calculate probe at level 18, no items: moonlight_reset + champions_pulled=1 resolve (total_damage 537.0). W shield is a documented defensive exclusion; R pull itself deals no damage. No CP-era gaps; verdict ok."
+ },
+ "Ekko": {
+  "verdict": "ok",
+  "module": "ekko.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E3-2 implemented the Z-Drive Resonance 3-stack detonation (p_procs option; test_ekko_resonance_prices_three_stack) and E1-b3 added the Chronobreak heal rule to HEALING_RULE_CHAMPIONS (sourced minimum heal + AP scaling). Q's return pass and W's opt-in sub-30% passive are authored events; Chronobreak heal/stasis are documented non-TDD state. Verified via /api/calculate probe at level 18, no items: p_procs=2 resolves (total_damage 659.5). No CP-era gaps; verdict ok."
+ },
+ "Ezreal": {
+  "verdict": "ok",
+  "module": "ezreal.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "All five slots were already modeled with sourced numbers: P Rising Spell Force stat buff (passive_stacks option), Q with the sourced 1.5s kit-wide cooldown refund applied as adjusted entry cooldowns, W mark detonation, E/R with the refund math. Verified via /api/calculate probe at level 18, no items: passive_stacks=5 resolves (total_damage 805.6). Documented boundaries: Q cannot crit, spellblade-in-burst is not double-priced, mana costs/refund and lifesteal are out of scope. No CP-era gaps; verdict ok."
+ },
+ "Fizz": {
+  "verdict": "ok",
+  "module": "fizz.py",
+  "slots": {
+   "P": "no_damage",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era review item (W passive rend unmodeled) is closed by E2-1: Seastone Trident now prices the sourced 6-tick passive burn (per-tick x6 == Total Passive Magic Damage, verified by test_fizz_seastone_trident_prices_the_six_tick_passive) alongside the active empower, Q carries its 100% AD attack component, E exposes Playful/Trickster variants, and R exposes all three lure-size damage branches (r_size). Verified via /api/calculate probe at level 18, no items: r_size=2 resolves (total_damage 719.0). Post-kill refund remains documented state; verdict ok."
+ },
+ "Garen": {
+  "verdict": "ok",
+  "module": "garen.py",
+  "slots": {
+   "P": "no_damage",
+   "Q": "modeled",
+   "W": "no_damage",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "No E-series change needed: the reviewed module prices Q empowered auto, E Judgment with the sourced 7+1/25% bAS spin count and nearest-target 25% branch plus ordered 6-hit armor reduction, and R true-damage execute. E1-b3 pins Perseverance regen as authored-then-suppressed by the combat gate (sourced reason: lost for 8s on champion damage) and W Courage is documented defensive state. Verified via /api/calculate probe at level 18, no items: e_nearest_target=True resolves (total_damage 1001.2). No CP-era gaps; verdict ok."
+ },
+ "Graves": {
+  "verdict": "ok",
+  "module": "graves.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "Reviewed module unchanged by E-series and already complete: P auto_attack_override with pellet ratio (critical branch option), Q pass + delayed detonation as separate physical events, W impact damage, E True Grit armor/MR stat buff (e_true_grit_stacks), R primary vs reduced cone branch. Verified via /api/calculate probe at level 18, no items: e_true_grit_stacks=4 resolves (total_damage 567.5). Reload timing and terrain collision are documented state. No CP-era gaps; verdict ok."
+ },
+ "Heimerdinger": {
+  "verdict": "ok",
+  "module": "heimerdinger.py",
+  "slots": {
+   "P": "no_damage",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "no_damage"
+  },
+  "gap_summary": "E4-1 implemented the turret summon damage: Q is a charge ability priced per 20s recharge with q_turrets/q_turret_attacks/q_beams options, the R upgrade switches to the H-28Q Apex Turret rows, W prices first/subsequent rocket rows, and E the grenade (e_upgrade variant). Verified via /api/calculate probe at level 18, no items: q_turrets=3 + q_turret_attacks=3 + q_beams=1 resolve (total_damage 408.5). Pet stats are sourced from the wiki Pets entry (documented constants); stuns/slows/targeting are utility. No CP-era gaps; verdict ok."
+ },
+ "Irelia": {
+  "verdict": "ok",
+  "module": "irelia.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E3-2 implemented the Ionian Fervor stack system (p_stacks option: per-stack attack speed applied before damage, max-stack on-hit explicit) and Irelia is in HEALING_RULE_CHAMPIONS (Bladesurge heal derived from Q damage events, per the CP-era baseline). W exposes the sourced charge interval, E is a plain read, R prices the initial barrage plus one perimeter pass (r_passes). Verified via /api/calculate probe at level 18, no items: p_stacks=4 resolves (total_damage 625.3). Marks/stun/parry are documented state. No CP-era gaps; verdict ok."
+ },
+ "JarvanIV": {
+  "verdict": "ok",
+  "module": "jarvan_iv.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "No E-series change needed: P Martial Cadence is a fight-scheduled current-HP% on-hit on the sourced per-target cooldown (6/5/4/3s by level, min 20), Q applies its armor shred after its own damage (q_armor_shred), E prices the flag's magic damage plus doubled near-flag AS aura (near_flag), and R is a plain read. Verified via /api/calculate probe at level 18, no items: q_armor_shred + near_flag resolve (total_damage 503.6). W Golden Aegis is documented zero-damage (shield/slow); E ally aura and terrain are out of scope. No CP-era gaps; verdict ok."
+ },
+ "Jhin": {
+  "verdict": "ok",
+  "module": "jhin.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E3-2 implemented the Whisper fourth-shot missing-health execute (p_shot_number/p_final_shot/p_missing_health; test_jhin_fourth_shot_prices_missing_health) and E4-3 implemented the Lotus Trap summon with the 65% reduced second-trap row (e_traps; test_e_traps_option_prices_the_reduced_second). Q exposes bounce/death state, W is a plain read, R interpolates all four Curtain Call bullets with the fourth-shot crit packet. Verified via /api/calculate probe at level 18, no items: p_shot_number=3 + p_missing_health=0.4 + e_traps=2 resolve (total_damage 2474.3). No CP-era gaps; verdict ok."
+ },
+ "Kaisa": {
+  "verdict": "ok",
+  "module": "kaisa.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "out_of_scope",
+   "R": "out_of_scope"
+  },
+  "gap_summary": "The certified one-rotation W->Q model was already complete: Q volley (6 or evolved 12 missiles, isolated-target), W applying successive Plasma stacks with the 5-stack missing-health rupture (plasma_starting_stacks option), evolution auto-resolved from item stats (q_evolved/w_evolved). Verified via /api/calculate probe at level 18, no items: plasma_starting_stacks=2 resolves (total_damage 294.4). E and R deal no enemy damage and are documented exclusions (E AS/stealth, R shield). No CP-era gaps; verdict ok."
+ },
+ "Karthus": {
+  "verdict": "review",
+  "module": "karthus.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "Alive-state damage was already fully modeled (W MR shred applied before damage, Q isolated-vs-shared formula, E exact tick count with mana cost, R after the 3s channel) and remains correct; the E-series added nothing for Karthus. The only excluded family is Death Defied (P) — post-death channel + AoE — which remains explicitly unmodeled but DOCUMENTED as a deliberate boundary in ASSUMPTIONS and the module docstring ('certified alive-state one-rotation package'); whether post-death casting belongs in scope is a human/product decision, so the verdict stays review. Verified via /api/calculate probe at level 18, no items: e_ticks=5 resolves (total_damage 496.9)."
+ },
+ "Kayle": {
+  "verdict": "ok",
+  "module": "kayle.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era gap (W Celestial Blessing heal unmodeled) is closed on both axes: E1-b2 added Kayle to HEALING_RULE_CHAMPIONS (W self-heal 55-155 + 25% AP, test_kayle_celestial_blessing_heals_flat_per) and E8d wired the W ally-heal through the support scanner (verified via /api/calculate roster probe: Celestial Blessing heal 155.0 emitted to the ally). P/E damage keep the reviewed packets (p_exalted/e_empowered options); earlier-form range/Zeal bonuses are documented state. All CP-era gap items closed; verdict ok."
+ },
+ "Khazix": {
+  "verdict": "ok",
+  "module": "khazix.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "no_damage"
+  },
+  "gap_summary": "The CP-era gap (W Void Spike self-heal unmodeled) is closed by E1-b2: Kha'Zix is in HEALING_RULE_CHAMPIONS and the W explosion self-heal (55-135 + 50% AP) is derived (test_khazix_void_spike_heals_flat_per). P (p_ready), Q isolated branch (q_isolated), E, and W damage keep the reviewed packets — verified via /api/calculate probe at level 18, no items: p_ready + q_isolated resolve (total_damage 389.0). R stealth/evolution is a documented no_damage slot. All CP-era gap items closed; verdict ok."
+ },
+ "KogMaw": {
+  "verdict": "ok",
+  "module": "kogmaw.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "No E-series change was needed for the damage model: Q resistance shred (q_shred) applied before all damage, W on-hit %max-HP (w_active), E plain read, and R with the sourced missing-HP curve. E3-3 addressed the R Living Artillery stack worklist entry — the stacks (cap 9) only raise mana cost and are explicitly documented as having no damage impact (test_r_stacks_are_mana_only_no_damage). Verified via /api/calculate probe at level 18, no items: q_shred + w_active resolve (total_damage 397.9). P Icathian Surprise death passive is a documented exclusion. No CP-era gaps; verdict ok."
+ },
+ "Leona": {
+  "verdict": "ok",
+  "module": "leona.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era review item (W Eclipse defense) is closed as a documented boundary: E8c pins Eclipse as mitigation state with sourced constants (flat damage reduction 8-24 capped at 50% of the instance, bonus armor/MR 20-50 + 20% of bonus for 3s) in the module ASSUMPTIONS and tests — the ledger's shield events cannot express pre-mitigation reduction, so no flat shield is invented. E3-1 implemented the P Sunlight detonation (p_marks option). Verified via /api/calculate probe at level 18, no items: p_marks=1 resolves (total_damage 473.5). All CP-era gap items closed; verdict ok."
+ },
+ "Locke": {
+  "verdict": "review",
+  "module": "locke.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "no_damage",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The reviewed batch models P on-hit, Q with soul_nails stack bonus (q_casts/soul_nails options), E dash, and R totem damage (execute threshold documented as explicit target state). The W recast heal remains unmodeled but is now DOCUMENTED as a boundary: E1-b6 pins the absence with a sourced reason (the grey-health heal needs post-mitigation damage TAKEN from enemy champions, which the 1v1 pair ledger does not author; the W row states 'grey health storage ... and recast healing are self-state') — note the E8a grey-health primitive covers Pyke/Rengar/TahmKench/Mordekaiser but not Locke, so extending it here is a human-scope decision. Verdict stays review: core damage modeled, W heal a documented boundary."
+ },
+ "Lux": {
+  "verdict": "review",
+  "module": "lux.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "No E-series workstream touched Lux: Q/E/R damage packets remain correct, while P Illumination proc damage (30-200 + 35% AP on post-ability autos) and W Prismatic Barrier shields stay declared out_of_scope in MODULE_COVERAGE with no compensating auto hook. The E3 stack worklist lists Lux P/W but the stack implementation batches did not include her, so the CP-era review items remain open: whether the P proc and W shield belong in the single-target rotation is a documented-but-undecided scope question. Verdict unchanged: review."
+ },
+ "Maokai": {
+  "verdict": "ok",
+  "module": "maokai.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era gap (E attached-sapling burn unmodeled) is closed by E4-2: Sapling Toss now prices the brush-empowered explosion plus the 2-tick attached-Sapling burn (per-instance x3 == Total Magic Damage row; sapling_empowered option; test_maokai_empowered_sapling_prices_explosion_and). P Sap Magic heal is a documented boundary (E1-b3: no empowered-auto/kill receipt in the 1v1; the reviewed packet's P row is non-damaging state). Q/W/R keep the reviewed packets. Verified via /api/calculate probe at level 18, no items: sapling_empowered resolves (E total 300.0). All CP-era gap items closed; verdict ok."
+ },
+ "Milio": {
+  "verdict": "ok",
+  "module": "milio.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "out_of_scope",
+   "R": "out_of_scope"
+  },
+  "gap_summary": "The CP-era gap (heal/shield family entirely absent) is closed on all axes: E1-b5 put Milio in HEALING_RULE_CHAMPIONS (R Breath of Life self-heal), E2-2 fixed the W Cozy Campfire 25-tick heal total, and E8d wired the ally-support path so W heals, E shields (Warm Hugs) and R heals emit from cached leveling at cast time (verified via /api/calculate roster probe: Cozy Campfire 150.0, Warm Hugs shield 165.0, Breath of Life 350.0). Q remains the only enemy-damage slot (modeled). P enchant is out_of_scope documented. All CP-era gap items closed; verdict ok."
+ },
+ "Mordekaiser": {
+  "verdict": "ok",
+  "module": "mordekaiser.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "out_of_scope"
+  },
+  "gap_summary": "The CP-era gap (W Indestructible shield/heal unmodeled) is closed by the E8a grey-health primitive: the participant ledger stores 45% of post-mitigation damage dealt + 7.5% of pre-mitigation damage taken as Potential Shield (capped at 30% max HP) and pays the recast Shield-to-Healing % (35-45% by W rank) at the earliest recast — verified via /api/calculate probe at level 18, no items: Indestructible (grey health) heal 93.3 emitted, grey_health_stored 569.3 tracked. P aura and Q/E damage keep the reviewed packets; the R 10%-of-target-max-HP heal is a documented boundary (E1-b6: stays out of the self-heal rule set). All CP-era gap items closed; verdict ok."
+ },
+ "Nami": {
+  "verdict": "ok",
+  "module": "nami.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "All three CP-era gap items are closed: E1-b6 added the W Ebb-and-Flow first-bounce self-heal (HEALING_RULE_CHAMPIONS; test_nami_ebb_and_flow_heals_first_bounce), E8d wired the W ally-heal through the support scanner (verified via /api/calculate roster probe: Ebb and Flow heal 155.0 emitted), and E2-2 fixed E Tidecaller's Blessing to price all 3 empowered hits (per-hit x3 == Total Bonus Magic Damage; test_nami_tidecallers_blessing_prices_three_empowered). Q/R damage packets remain correct. All CP-era gap items closed; verdict ok."
+ },
+ "Neeko": {
+  "verdict": "review",
+  "module": "neeko.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "No E-series workstream touched Neeko (E4 lists her W clone but the summon implementation batches did not include her; E3 lists Shapesplitter informatively). Q/W/E/R damage packets remain modeled (Q initial hit only — the 35-135 + 25% AP subsequent bounces are not priced), and P disguise, W clone/stealth, and the R shield stay out_of_scope per MODULE_COVERAGE, which is documentation but leaves the CP-era review items open (Q bounce damage and R shield are damage/defense-relevant, undecided scope). Verdict unchanged: review."
+ },
+ "Nocturne": {
+  "verdict": "ok",
+  "module": "nocturne.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era review item (E priced per-tick with a null count) is closed by E2-2: Unspeakable Horror now prices 4 sourced 0.5s tether ticks (per-tick x4 == Total Magic Damage; verified in parse: E total 260.0 at rank 5). P Umbra Blades damage is modeled in the reviewed packet (per-level 13-32 + 30% AP), Q/R damage packets are correct, and W spell shield + CC immunity are documented out_of_scope. The P self-heal (on-hit vs champions) was noted in the CP-era audit as an atom-decomposition miss rather than a module gap and remains a sustain-only residual, not a worklist item. CP-era gap items closed; verdict ok."
+ },
+ "Orianna": {
+  "verdict": "ok",
+  "module": "orianna.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "No E-series change needed: the custom module models all slots — P Clockwork Windup stack-ramped on-hit (fail-loud stack-cap reconstruction from the JSON rows), Q/W/R full damage reads, and E pass-through damage gated by e_passes_through_target. Verified via /api/calculate probe at level 18, no items: e_passes_through_target=True resolves (total_damage 532.5). E shield + bonus resistances, W speed field/slow, and R stun/pull are explicitly excluded in ASSUMPTIONS as defensive/utility. No CP-era gaps; verdict ok."
+ },
+ "Poppy": {
+  "verdict": "review",
+  "module": "poppy.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E5-2 closed the main CP-era item: P Iron Ambassador now prices the flat per-level Bonus Magic Damage (20-198.82 on the empowered buckler auto) instead of the misread %max-HP shield row, with the buckler-retrieval shield documented as non-damage in ASSUMPTIONS (test_poppy_p_prices_the_flat_bonus_magic). Q double-hit, W, and E keep the reviewed packets. One reviewed-packet pricing issue remains: R Keeper's Verdict is priced at the uncharged 100-200 + 45% bAD row while the charged 200-400 + 90% bAD branch (a charge-state variant the E3 worklist flags) is not modeled and has no boundary note — per the rules a reviewed packet still pricing an ability incorrectly stays review."
+ },
+ "Quinn": {
+  "verdict": "ok",
+  "module": "quinn.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era gap (P Harrier on-hit unmodeled) is closed by E5-2: Harrier is now an on-hit entry priced at the wiki's per-level Bonus Physical Damage row (15-132.35 + 40% bAD per marked-target auto; test_quinn_p_prices_the_harrier_on), consistent with Nautilus/Poppy passive treatment. Q/E/R damage packets remain correct, W Heightened Senses is documented out_of_scope (AS/MS utility), and the R Valor transform is a documented boundary. All CP-era gap items closed; verdict ok."
+ },
+ "RekSai": {
+  "verdict": "review",
+  "module": "reksai.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "No E-series workstream implemented Rek'Sai mechanics (E4 lists her tunnel summon but the summon batches excluded her; the tunnel is zero-damage utility anyway). Q variants (q_variant option), W Unburrow, E Furious Bite, and R Void Rush damage packets remain correct. The max-Fury E true-damage variant (84-204 + 72% bAD) remains unmodeled with no fury-state option or boundary note, and P Fury of the Xeric'Kai regen / P max-HP damage and burrow CC are documented out_of_scope — the fury-E variant keeps this at review (documented packet scope, undecided fury state). Verdict unchanged."
+ },
+ "Renekton": {
+  "verdict": "ok",
+  "module": "renekton.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era review items are closed by E2-2: W Ruthless Predator now prices both strikes (per-hit x2 == Total Physical Damage; verified in parse: W 355.0 at rank 5) and R Dominus prices all 30 sourced 0.5s ticks (per-tick x30; verified: R 3675.0), fixing the ~2x W understatement. Q self-heal was already modeled (HEALING_RULE_CHAMPIONS, champion healing 12-44 + 17% bAD capped). P fury/empower state is documented no_damage, and R's fury buff is documented as damage-only. All CP-era gap items closed; verdict ok."
+ },
+ "Rumble": {
+  "verdict": "gap",
+  "module": "rumble.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The heat/Danger Zone system remains documented out_of_scope (P/W no_damage rows; the CP-era review already noted rotation numbers assume no heat state), but a NEW unmodeled-and-undocumented pricing issue fails the audit: R The Equalizer is priced as ONE tick of the Burning DoT (packet base 30/50/70 + 8.75% AP per 0.25s tick) while the cached wiki rows give Maximum Magic Damage 600/1000/1400 (20 ticks up to 5s) — the E3-stacks worklist entry for Rumble R flags this field DoT and the module has no tick count and no boundary note, so R is understated ~20x. Q/E damage packets are correct. Verdict downgraded to gap until the R DoT pricing is fixed or documented."
+ },
+ "Sejuani": {
+  "verdict": "review",
+  "module": "sejuani.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era audit rated Sejuani ok but noted W's second swing uncertainty ('not accounted for if the wiki_attribute is per-swing'); this re-audit confirms the misprice: W Winter's Wrath is read via wiki_attribute 'Physical Damage' which resolves ONLY the first swing row (5-45 + 30% AP + 4% max HP — and even the %max-HP term does not resolve), while the cached JSON also carries the second swing (5-85 + 60% AP + 8% max HP) and the Total Physical Damage row (10-130 + 90% AP + 12% max HP). Parse shows W total 45 at rank 5 vs a 130+ total in-game — the reviewed packet prices the ability incorrectly, so the verdict moves to review. P/E/Q/R damage packets remain correct; mark-stack and CC are documented state."
+ },
+ "Sett": {
+  "verdict": "review",
+  "module": "sett.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E3-2 implemented the Pit Grit combo (p_right_punches option prices the Right Punch bonus 5-100 by level + 55% bAD; verified via /api/calculate probe at level 18, no items: p_right_punches=6 → P 705.0). The CP-era reviewed-packet pricing issues remain: W Haymaker is typed magic when its center-line damage is true damage and its grit term (25% per 100 bAD of expended Grit) does not resolve (W total 160 flat only), Q prices one of the two empowered attacks (Bonus Physical Damage read once), and the W grit shield is unmodeled — none have boundary notes. Per the rules a reviewed packet still pricing abilities incorrectly stays review."
+ },
+ "Shyvana": {
+  "verdict": "gap",
+  "module": "shyvana.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era review flagged W's shield strength (60-140 + 12% bonus health) and dragon-form self-heal (60-104.71 by level + 4-8.47% missing health when the recast hits a champion) as unmodeled; neither E-series workstream addressed them (Shyvana is absent from HEALING_RULE_CHAMPIONS and from the E8c shield set) and the module's ASSUMPTIONS only loosely cover 'the shield and movement utility' — the dragon-form W heal has NO boundary note at all, while the cached JSON carries an explicit Heal row. The damage model (Scalemail stacks, dragon Q/E options, W recast) is verified working via /api/calculate probe (scalemail_stacks=10 + dragon_form=True resolves, total_damage 506.5), but the unmodeled, undocumented W heal/shield family keeps this at gap."
+ },
+ "Sivir": {
+  "verdict": "review",
+  "module": "sivir.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "out_of_scope",
+   "R": "out_of_scope"
+  },
+  "gap_summary": "The CP-era audit rated Sivir ok ('Q two-way Boomerang Blade'), but this re-audit finds the reviewed packet prices Q incorrectly: the packet reads the single-pass 'Physical Damage' row (60-160 + 70% bAD + 60% AP at rank 5 → 160), while the cached JSON's Total Maximum Champion Damage row (120-320 + 140% bAD + 120% AP) and the in-game two-way boomerang both confirm the blade hits out AND back for 2x — parse shows Q total 160 vs 320 in-game, a ~2x understatement with no boundary note. W Ricochet bounce is modeled; P/E/R are documented out_of_scope (E spell shield, R team buff). Verdict moves to review for the reviewed-packet Q misprice."
+ },
+ "Sona": {
+  "verdict": "ok",
+  "module": "sona.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "out_of_scope",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era review item (W heal/shield family unmodeled) is closed: E1-b5 added Sona to HEALING_RULE_CHAMPIONS (W self-heal 30-90 + 30% AP on cast) and E8d wired the W ally-support heal + shield through the scanner (verified via /api/calculate roster probe: Aria of Perseverance shield 105.0 + heal 90.0 emitted). Q and R damage packets remain correct; P Power Chord and E buff are documented out_of_scope. All CP-era gap items closed; verdict ok."
+ },
+ "Sylas": {
+  "verdict": "review",
+  "module": "sylas.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "out_of_scope"
+  },
+  "gap_summary": "The primary CP-era gap (W Kingslayer self-heal) is closed by E1-b2: Sylas is in HEALING_RULE_CHAMPIONS with the missing-health-scaled heal (test_sylas_kingslayer_heals_scaled_by_missing), and Q/W/E damage packets remain correct. The secondary CP-era item — the E2 shield (SylasEShield atom) — remains unmodeled with no module boundary note (E8c's shield set did not include Sylas), and P Petricite Burst + R Hijack stay documented out_of_scope/no_damage. The CP-era 'clear gap' was heal-driven and is fixed, but the unmodeled E2 shield (defensive) keeps this at review."
+ },
+ "Taliyah": {
+  "verdict": "ok",
+  "module": "taliyah.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "out_of_scope"
+  },
+  "gap_summary": "No E-series change needed: the certified E->W->Q one-rotation model already priced every damaging hit with authored times — E stone detonations with the 100/75/50/25% displacement multipliers (e_detonations), W displacement (no damage), and Q Threaded Volley with the 5-shard normal vs Worked-Ground boulder branches (q_ground, q_target_distance). Verified via /api/calculate probe at level 18, no items: q_ground=normal + e_detonations=4 resolve (total_damage 388.8). P and R are documented exclusions (no enemy damage). No CP-era gaps; verdict ok."
+ },
+ "Teemo": {
+  "verdict": "gap",
+  "module": "teemo.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E2-3/E4 fixed R: Noxious Trap now prices the full 4-tick poison DoT (per-tick x4 == Total Magic Damage) with the r_shrooms trap-count option (verified via /api/calculate probe at level 18, no items: r_shrooms=2 → R 612.5 total) and trap placement/arm time documented as state. The CP-era gap item for E remains UNCLOSED: Toxic Shot's packet prices only the on-hit (9-65 + 5% bAD + 30% AP; parse E 65.0 at rank 5) while the cached JSON's Magic Damage per Tick (6-30 + 2.5% bAD + 10% AP) and Total Poison Damage (24-120 + 10% bAD + 40% AP) rows are not expressed and the module has no boundary note for the poison half of the ability — verdict stays gap."
+ },
+ "Trundle": {
+  "verdict": "ok",
+  "module": "trundle.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "out_of_scope",
+   "R": "modeled"
+  },
+  "gap_summary": "Both CP-era R gap items are closed: E2-3 prices the full Subjugate drain DoT (8 half-second ticks of Magic Damage Per Second; parse R 600.0 at rank 5) and E1-b1 added Trundle to HEALING_RULE_CHAMPIONS so the R drain heals the same sourced amount as the pre-mitigation drain damage (test_trundle_subjugate_heals_same_amount_as_pre_mitigation). P King's Tribute death-triggered heal is a documented boundary (E1-b1: no death occurs inside the 1v1 fight model), W buff and E Pillar are documented out_of_scope, and Q chomp is modeled. All CP-era gap items closed; verdict ok."
+ },
+ "Twitch": {
+  "verdict": "ok",
+  "module": "twitch.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "out_of_scope",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era gap (poison stack system that drives E entirely unmodeled) is closed by E3-1: P Deadly Venom now prices the full 6-second level-scaled DoT from the poison_stacks option (default 6 = max), E Contaminate detonates base + per-stack physical + per-stack 35% AP magic, and R Spray and Pray is a BUFF-phase bonus-AD stat_buff (tests: poison_stacks_option_controls_the, e_prices_base_plus_per_stack). Verified via /api/calculate probe at level 18, no items: poison_stacks=6 resolves (total_damage 378.0). Q stealth AS buff is documented as not applied to the auto count; W slow utility. All CP-era gap items closed; verdict ok."
+ },
+ "Varus": {
+  "verdict": "review",
+  "module": "varus.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E3-1 closed the core CP-era gap: the Blight stack/detonation system is implemented — W is an on-hit passive applying stacks, Q prices the fully-charged arrow plus one detonation of the blight_stacks option (per-stack %max-HP row; test_blight_stacks_option_seeds_the), and E is correctly typed physical with its Grievous Wounds window (E8b). Verified via /api/calculate probe at level 18, no items: blight_stacks=3 resolves (total_damage 520.0). Two documented/undocumented residuals keep it at review: Q's 0-50% charge scaling is documented as priced at Maximum, but the W active charged-shot empower (bonus magic damage equal to 6-21% of target's MISSING health on the next Q) remains unmodeled with no boundary note; E/R also detonate in-game but are conservatively not double-priced (documented)."
+ },
+ "Velkoz": {
+  "verdict": "review",
+  "module": "velkoz.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "E3-1 closed the primary CP-era gap: P Organic Deconstruction now prices the 3-stack consume (per-level 35-197.06 + 60% AP; parse P 180.0 at level 18, test_three_stack_consume_is_level_scaled_true). Q/W/E damage packets are correct. Two documented boundaries keep it at review: R Life Form Disintegration Ray keeps the reviewed packet's SINGLE-tick pricing (base 34.62-71.15 = per-tick row) with the full 13-tick channel (Maximum Damage 450-925) and the Researched true-damage conversion explicitly documented as not modeled in ASSUMPTIONS — a reviewed packet that still prices the channel at one tick; W's 2-charge ammo is modeled as a recharge without a charge-count option. CP-era gap closed, documented residuals remain."
+ },
+ "Viego": {
+  "verdict": "review",
+  "module": "viego.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "out_of_scope",
+   "R": "modeled"
+  },
+  "gap_summary": "No E-series workstream changed Viego (E8d's possession note is the only touch). This re-audit confirms and extends the CP-era review: the reviewed packet prices Q and R as health-ratio terms ONLY — Q resolves just the passive %current-HP on-hit (the active 25-85 + 70% AD physical damage row and the mark-consuming second strike are dropped; parse Q 0.0) and R resolves only the %missing-health bonus 12-20% + 5%/100 bAD (the 120% AD crit-scaled base strike is dropped; parse R 202.5 at 50% missing vs ~382.5 in-game), so both abilities are understated with no boundary notes. W damage is correct, E/P are documented out_of_scope, and the possession/transform mechanic is documented as inherently out of scope. Reviewed packet still prices abilities incorrectly — verdict review."
+ },
+ "Volibear": {
+  "verdict": "ok",
+  "module": "volibear.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "All three CP-era gap items are closed: E1-b4 added Volibear to HEALING_RULE_CHAMPIONS (W Frenzied Maul heals only the Wounded bite, missing-health scaled; test_volibear_frenzied_maul_heals_only_the_wounded), E3-3 implemented The Relentless Storm stacks (relentless_storm_stacks option: per-stack AS + Lightning Claws on-hit at 5; test_fight_w_prices_the_wounded), and E8c added the Sky Splitter self-shield (14% max HP + 75% AP for 3s — verified via /api/calculate probe at level 18, no items: Sky Splitter shield 338.5 emitted and absorbed). W's Wounded 2nd-bite +50% increase is the w_wounded option. All CP-era gap items closed; verdict ok."
+ },
+ "Xerath": {
+  "verdict": "review",
+  "module": "xerath.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era audit rated Xerath ok, but this re-audit finds the reviewed packet prices R incorrectly: Rite of the Arcane's packet reads the per-shot Magic Damage row (170/220/270 + 45% AP) and prices ONE shot, while the cached JSON carries Number of Recasts 4/5/6 and Total Magic Damage 680/1100/1620 (+180/225/270% AP) — parse R 270.0 at rank 3 vs 1620.0 in-game, a ~6x understatement with no boundary note, and the E3-stacks worklist entry (Maximum Stacks / Increased Damage per Stack) is unaddressed. Q (max-charge, documented), W and E packets are correct; P mana restore is out_of_scope. Reviewed packet prices R incorrectly — verdict review."
+ },
+ "Yone": {
+  "verdict": "review",
+  "module": "yone.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "out_of_scope",
+   "R": "out_of_scope"
+  },
+  "gap_summary": "E3-2 implemented the Q Gathering Storm stack system (q_gathering_storm option: Q3 at 2 stacks keeps the sourced damage with the knock-up as CC state; test_yone_q3_gathering_storm_keeps_sourced). The core CP-era gap remains OPEN: E Soul Unbound's Damage Stored wiki_attribute still emits 0.0 true damage at every rank (verified: E total_raw 0.0; the 25-35% of-damage-dealt row has no damage context in the static read), so Yone's signature death-mark reapplication contributes nothing — the module only states it 'keeps the reviewed packet's Damage Stored row', with no boundary note explaining the 0 contribution. P crit conversion and W self-shield remain unmodeled without boundary notes. Reviewed packet still prices E incorrectly — verdict review."
+ },
+ "Yuumi": {
+  "verdict": "ok",
+  "module": "yuumi.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "out_of_scope",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era gap (heal-shield family entirely unmodeled) is closed: E8d + E8-followup wired E Zoomies as a shield targeting the attached anchor (one_teammate; verified via /api/calculate roster probe: Zoomies shield 165.0) and R Final Chapter as an ally heal (Total Heal per wave; verified: 350.0 emitted), E1-b5 documented the P Feline Friendship self-heal boundary (empowerment consumption has no sourced 1v1 trigger; test pins the absence), and the E1-followup added the Yuumi R heal-stream totals. Q and R enemy damage keep the reviewed packets. All CP-era gap items closed; verdict ok."
+ },
+ "Zed": {
+  "verdict": "ok",
+  "module": "zed.py",
+  "slots": {
+   "P": "no_damage",
+   "Q": "modeled",
+   "W": "no_damage",
+   "E": "modeled",
+   "R": "modeled"
+  },
+  "gap_summary": "The CP-era review item is closed by E5-1: R Death Mark now reads BOTH modifiers of the Physical Damage row — 100% AD plus 25/40/55% of the stored pre-mitigation spell damage (Q+E raw totals from ctx.results) detonating 3s after the mark (verified in parse: R 416.75 at rank 3 = 150 AD + 55% of 266.75 stored; test_zed_death_mark_fight_damage_matches_stored). Q and E are plain sourced reads, P and W are explicit no_damage slots with documented reasons (Contempt for the Weak %max-HP rider, Living Shadow utility). All CP-era gap items closed; verdict ok."
+ },
+ "Zilean": {
+  "verdict": "ok",
+  "module": "zilean.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "out_of_scope",
+   "R": "out_of_scope"
+  },
+  "gap_summary": "The CP-era gap (R Chronoshift revive unmodeled) is closed by E8d: the module now sources the revive contract via starting_revive_defense — cached R Heal row 600/850/1100 + 200% AP restored after a 3s resurrection on a 120/90/60s cooldown — and resolve_starting_defenses feeds it into the participant ledger (verified via probe: revive 1100.0 / 3.0s / 60.0s at level 18, source 'Chronoshift'; test_zilean_chronoshift_starting_defense). Q is the only enemy-damage slot and is modeled; W (cooldown refund) and E (slow/haste) are documented out_of_scope utility. All CP-era gap items closed; verdict ok."
+ }
+}
