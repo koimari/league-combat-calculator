@@ -190,10 +190,8 @@ CONTROL_IDS = {
     "pickerSearch": ("controls", "picker"),
     "bis": ("controls", "best_in_slot"),
     "bisClose": ("controls", "best_in_slot"),
-    "baseDamage": ("controls", "damage_package"),
-    "apRatio": ("controls", "damage_package"),
-    "physicalDamage": ("controls", "damage_package"),
-    "adRatio": ("controls", "damage_package"),
+    "addPracticeEnemy": ("controls", "roster_membership"),
+    "quickAnalystButton": ("controls", "quick_mode"),
 }
 
 

@@ -59,7 +59,7 @@ select { min-width: 132px; height: 34px; appearance: none; padding: 0 30px 0 12p
 .champion-portrait { flex: 0 0 112px; width: 112px; height: 132px; overflow: hidden; background: var(--paper-deep); }
 .champion-portrait img { width: 100%; height: 100%; object-fit: cover; filter: saturate(1.08) contrast(1.06); }
 .champion-portrait img.image-missing { opacity: 0; }
-.champion-identity h1 { margin: 5px 0 2px; font-size: clamp(28px, 3vw, 42px); font-weight: 800; letter-spacing: -.075em; line-height: .98; }
+.champion-identity h1, .champion-identity h2 { margin: 5px 0 2px; font-size: clamp(28px, 3vw, 42px); font-weight: 800; letter-spacing: -.075em; line-height: .98; }
 .champion-identity p { margin: 0; color: var(--muted); font-size: 12px; font-weight: 600; }
 .identity-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 22px; }
 .identity-controls { max-width: 100%; }
@@ -1332,4 +1332,126 @@ select { font-size: 13px; }
 .site-footer-note { margin-left: auto; color: var(--muted); font-size: 12.5px; }
 @media (max-width: 720px) {
   .site-footer-note { margin-left: 0; width: 100%; }
+/* --- F0: honor the hidden attribute regardless of display helpers ---------- */
+[hidden] {
+  display: none !important;
+}
+
+/* --- F0: engine error surface ---------------------------------------------- */
+.engine-error {
+  margin: 12px 2px 0;
+  padding: 12px 14px;
+  border: 1px solid #c9402e;
+  border-radius: 12px;
+  background: rgba(201, 64, 46, 0.08);
+  color: #c9402e;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+/* --- F0: damage breakdown panel inside the result column -------------------- */
+.breakdown-panel {
+  margin-top: 16px;
+}
+.breakdown-panel .breakdown-outcome {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.breakdown-panel .damage-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+.breakdown-panel .damage-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.breakdown-panel .damage-table th,
+.breakdown-panel .damage-table td {
+  padding: 7px 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.breakdown-panel .damage-table th:first-child,
+.breakdown-panel .damage-table td:first-child {
+  text-align: left;
+}
+.breakdown-panel .damage-table td small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 2px;
+}
+.breakdown-panel .damage-table tr.damage-total td {
+  border-top: 2px solid var(--line-dark);
+  border-bottom: 0;
+  font-weight: 800;
+}
+.breakdown-panel .breakdown-audit {
+  margin: 12px 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.breakdown-panel .breakdown-audit summary {
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* --- F0: practice-target affordance ---------------------------------------- */
+.practice-target-button {
+  color: var(--muted) !important;
+  border: 1px dashed var(--line-dark);
+  border-radius: 999px;
+  padding: 3px 10px;
+  margin-left: 8px;
+  min-height: 28px;
+}
+.practice-target-button:hover {
+  color: var(--ink) !important;
+  border-color: var(--ink);
+}
+
+/* --- F0: result status chip states ----------------------------------------- */
+.result-status[data-status="calculating"],
+#resultStatus.calculating {
+  color: var(--ink);
+  animation: f0-pulse 1.1s ease-in-out infinite;
+}
+@keyframes f0-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #resultStatus.calculating {
+    animation: none;
+  }
+  .map-wash,
+  .champion-portrait img,
+  .quick-run {
+    animation: none !important;
+    transition: none !important;
+  }
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- F0: shared-link read-only mode ---------------------------------------- */
+/* Recipients of a ?share= link see the shared build card first; the
+   interactive quick form collapses to keep the card above the fold. */
+.quick-view.is-shared .quick-head,
+.quick-view.is-shared .quick-steps,
+.quick-view.is-shared .quick-run,
+.quick-view.is-shared .quick-spinner {
+  display: none;
+}
+.quick-view.is-shared .quick-after {
+  display: none;
 }

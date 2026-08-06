@@ -1208,60 +1208,6 @@ function renderBuildStrip(side) {
   </div>`;
 }
 
-function renderBuilder() {
-  const attacker = state.attacker;
-  const statsA = attackerChampionStats(buildAIds(), buildAStacks(), attacker, buildOptionsForSide("A"));
-  const statsB = attackerChampionStats(buildBIds(), buildBStacks(), attacker, buildOptionsForSide("B"));
-  const champion = getChampion(attacker.champion);
-  const optimizePackageReady = optimizerDamagePackageReady();
-  const optimizeReady = Boolean(attacker.champion && optimizePackageReady && state.targets.length && state.targets.every((target) => target.champion));
-  const optimizerSummary = state.optimizer.summary
-    ? `<div class="optimizer-summary ${state.optimizer.summary.withheld ? "withheld" : ""}" role="status" aria-live="polite"><strong>${state.optimizer.summary.tested.toLocaleString("en-US")} builds · ${one(state.optimizer.summary.elapsedMs)} ms${state.optimizer.summary.withheld ? " · NO BUILD APPLIED" : ""}</strong><span>${escapeHtml(state.optimizer.summary.label || "Build A now shows the complete highest-damage build.")}</span></div>`
-    : "";
-  $("builder").innerHTML = `
-    <section class="board-section hero-section">
-      <div class="section-bar"><h2>Champion to optimize</h2><small><i class="legend-a"></i>A <i class="legend-b"></i>B values in the matrix</small></div>
-      <div class="hero-board">
-        <div class="hero-identity">
-          <button class="hero-pick ${champion ? "" : "empty-hero"}" type="button" data-picker="champion" data-path="attacker.champion">${champion ? `<img src="${championImage(attacker.champion)}" alt="" />` : `<b>+</b>`}<span>${champion ? "Change champion" : "Choose champion"}</span></button>
-          <div><p>${escapeHtml(champion?.title || "Start here")}</p><h2>${escapeHtml(attacker.champion || "Choose a champion")}</h2>${champion ? `<div class="level-control"><span>Level</span><button type="button" data-level-path="attacker.level" data-level-delta="-1">−</button><output>${attacker.level}</output><button type="button" data-level-path="attacker.level" data-level-delta="1">+</button></div>` : ""}</div>
-        </div>
-        <div class="hero-matrix"><div class="matrix-head"><strong>Complete champion stats</strong><span>${attacker.comparisonEnabled ? "Build A / Build B" : "Build A"}</span></div>${champion ? statMatrix(statsA, attacker.comparisonEnabled ? statsB : null) : `<div class="matrix-placeholder hero-placeholder">Select the champion whose build you want to compare or optimize.</div>`}</div>
-      </div>
-      ${champion ? renderAbilityPackage(champion) : ""}
-      ${champion ? renderChampionOptions() : ""}
-      <div class="hero-build">
-        ${renderRoleControls()}
-        <div class="build-label"><div><strong>Complete builds</strong><span>${optimizePackageReady ? "Every occupied slot is scored into the full enemy roster" : "Add a sourced skill rotation or manual damage package to optimize"}</span></div><button class="optimize-build" type="button" data-optimize-build title="${optimizePackageReady ? "Search the strongest complete Build A" : "No sourced damage package for this champion yet"}" ${optimizeReady && !state.optimizer.running ? "" : "disabled"}>${state.optimizer.running ? "Optimizing…" : "Optimize Build A"}</button></div>
-        ${optimizerSummary}
-        <div class="build-comparison">
-          ${renderBuildStrip("A")}
-          ${attacker.comparisonEnabled ? renderBuildStrip("B") : ""}
-        </div>
-        <button class="compare-toggle" type="button" data-toggle-compare>${attacker.comparisonEnabled ? "Hide Build B" : "+ Compare another full build"}</button>
-      </div>
-    </section>
-    <div class="roster-pair">
-    <section class="board-section">
-      <div class="section-bar"><h2>Enemy roster</h2><div class="section-actions"><small>${state.targets.length}/5 · every card includes full stats</small><button class="text-button" type="button" data-optimize-roster-all="targets" ${state.targets.some((target) => target.champion) && !state.optimizer.running ? "" : "disabled"}>Optimize all enemies</button><button class="text-button" type="button" data-add-target ${state.targets.length >= 5 ? "disabled" : ""}>+ Add enemy</button></div></div>
-      <div class="target-grid">${state.targets.length ? state.targets.map(targetCard).join("") : `<div class="empty-roster">Add an enemy champion to begin.</div>`}</div>
-    </section>
-    <section class="board-section">
-      <div class="section-bar"><h2>Allied context</h2><div class="section-actions"><small>${state.allies.length}/4 · buffs are opt-in and sourced</small><button class="text-button" type="button" data-optimize-roster-all="allies" ${state.allies.some((ally) => ally.champion) && !state.optimizer.running ? "" : "disabled"}>Optimize all allies</button><button class="text-button" type="button" data-add-ally ${state.allies.length >= 4 ? "disabled" : ""}>+ Add ally</button></div></div>
-      <div class="target-grid">${state.allies.length ? state.allies.map(allyCard).join("") : `<div class="empty-roster">Add an ally to include their build and any explicitly modeled outgoing effect.</div>`}</div>
-    </section>
-    </div>
-    <section class="board-section">
-      <div class="section-bar"><h2>Time window</h2><small>Applied to every target</small></div>
-      <div class="fight-controls">
-        ${segmented("Rotations", [[1,"1"],[2,"2"],[3,"3"],[4,"4"],[5,"5"],[6,"6"]], state.fight.rotations, "rotations")}
-        ${windowControl()}
-        <div class="control-group"><span>Auto-attack uptime</span><label class="uptime-control"><input type="range" min="0" max="100" step="5" value="${Math.round(state.fight.aaUptime * 100)}" data-fight-range="aaUptime" /><output>${Math.round(state.fight.aaUptime * 100)}%</output></label></div>
-        <div class="auto-count"><span>Expected autos per rotation</span><strong><i class="legend-a"></i>A ${autoAttacksForStats(statsA)}${attacker.comparisonEnabled ? ` <i class="legend-b"></i>B ${autoAttacksForStats(statsB)}` : ""}</strong><small>attack speed × time × 0.92 × uptime</small></div>
-      </div>
-    </section>`;
-}
-
 function ludenDamage(ap, targetCount, targetIndex, hasLuden) {
   if (!hasLuden || targetIndex >= Math.min(6, targetCount)) return 0;
   const proc = 75 + 0.05 * ap;
@@ -1524,58 +1470,6 @@ function breakdownOutcome(aTotal, bTotal = null) {
   return `${winner} wins this window: ${fmt(winnerTotal)} damage vs ${fmt(loserTotal)}.`;
 }
 
-function renderResistanceOutput(aBuild, bBuild) {
-  const host = $("resistanceOutput");
-  if (!aBuild || !state.targets.length) {
-    host.innerHTML = "";
-    return;
-  }
-  const rows = state.targets.map((target) => {
-    const stats = championStats(target.champion, target.level, target.items, target.itemStacks);
-    const armor = `${one(effectivePhysicalArmor(stats.armor, aBuild))}${bBuild ? ` / ${one(effectivePhysicalArmor(stats.armor, bBuild))}` : ""}`;
-    const mr = `${one(effectiveMagicResistance(stats.mr, aBuild))}${bBuild ? ` / ${one(effectiveMagicResistance(stats.mr, bBuild))}` : ""}`;
-    return `<tr><td>${escapeHtml(target.champion)}</td><td>${one(stats.armor)} → ${armor}</td><td>${one(stats.mr)} → ${mr}</td></tr>`;
-  }).join("");
-  host.innerHTML = `<div class="resistance-head"><span>Effective defenses</span><b>% pen → flat pen</b></div><div class="resistance-table-wrap"><table><thead><tr><th>Enemy</th><th>Armor → A${bBuild ? " / B" : ""}</th><th>MR → A${bBuild ? " / B" : ""}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-
-function renderDamageBreakdown(aResult, bResult) {
-  const host = $("damageBreakdown");
-  if (!aResult) {
-    host.innerHTML = "";
-    host.hidden = true;
-    return;
-  }
-  host.hidden = false;
-  const rows = new Map();
-  const ingest = (result, side) => result.breakdown.forEach((entry) => {
-    const key = `${entry.source}:${entry.detail}`;
-    const row = rows.get(key) || { source: entry.source, detail: entry.detail, a: 0, b: 0, kind: entry.kind };
-    row[side] += entry.damage;
-    rows.set(key, row);
-  });
-  ingest(aResult, "a");
-  if (bResult) ingest(bResult, "b");
-
-  const lowA = buildAIds().includes(4645) ? calculateBuild(buildAIds(), state.fight.rotations, buildAStacks(), { lowHealth: true }) : null;
-  const lowB = bResult && buildBIds().includes(4645) ? calculateBuild(buildBIds(), state.fight.rotations, buildBStacks(), { lowHealth: true }) : null;
-  const conditionalA = lowA?.breakdown.find((row) => row.source.includes("Cinderbloom"))?.damage || 0;
-  const conditionalB = lowB?.breakdown.find((row) => row.source.includes("Cinderbloom"))?.damage || 0;
-  if (conditionalA || conditionalB) rows.set("conditional:cinderbloom", { source: "Shadowflame · Cinderbloom", detail: "Conditional bonus below 40% HP · not included in TDD above", a: conditionalA, b: conditionalB, kind: "conditional" });
-
-  const body = [...rows.values()].map((row) => {
-    const delta = row.a - row.b;
-    const value = (amount) => row.kind === "conditional" && amount > 0 ? `+${fmt(amount)}` : fmt(amount);
-    const comparison = bResult ? `<td>${value(row.b)}</td><td class="${delta > .5 ? "delta-a" : delta < -.5 ? "delta-b" : ""}">${Math.abs(delta) < .5 ? "—" : `${delta > 0 ? "+" : ""}${fmt(delta)}`}</td>` : "";
-    return `<tr class="${row.kind === "item" || row.kind === "conditional" ? "item-damage-row" : ""}"><td><strong>${escapeHtml(row.source)}</strong><small>${escapeHtml(row.detail)}</small></td><td>${value(row.a)}</td>${comparison}</tr>`;
-  }).join("");
-  const comparisonHead = bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : "";
-  const comparisonTotal = bResult ? `<td>${fmt(bResult.cumulative)}</td><td>${Math.abs(aResult.cumulative - bResult.cumulative) < .5 ? "—" : `${aResult.cumulative > bResult.cumulative ? "+" : ""}${fmt(aResult.cumulative - bResult.cumulative)}`}</td>` : "";
-  const outcome = `<p class="breakdown-outcome" role="status">${escapeHtml(breakdownOutcome(aResult.cumulative, bResult?.cumulative))}</p>`;
-  host.innerHTML = `${outcome}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header>
-    <div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${comparisonHead}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Total damage dealt</strong><small>After selected enemy resistances</small></td><td>${fmt(aResult.cumulative)}</td>${comparisonTotal}</tr></tbody></table></div>`;
-}
-
 function engineItemOptions(ids, stacks = [], optionValues = []) {
   const options = {};
   ids.forEach((id, index) => {
@@ -1776,20 +1670,6 @@ function exactStatMatrix(result) {
   };
 }
 
-function renderEngineUnavailable() {
-  const availability = engine.availability.get(state.attacker.champion) || {};
-  const reason = availability.blockers?.[0] || "This champion has no reviewed event-ordered combat model yet.";
-  $("resultContext").textContent = "Engine unavailable";
-  $("winnerVisual").innerHTML = `<div class="result-empty-mark">—</div><div><span>Calculation withheld</span><strong>${escapeHtml(state.attacker.champion)}</strong><b>Reviewed model required</b></div>`;
-  $("scoreGrid").innerHTML = `<div class="empty-score single-score">${escapeHtml(reason)}</div>`;
-  $("why").textContent = "The calculator does not substitute a stat-only estimate for an unreviewed mechanic.";
-  $("threshold").innerHTML = "<span>Crossover</span><strong>Unavailable until the attacker is reviewed</strong>";
-  $("resistanceOutput").innerHTML = "";
-  $("mechanicsOutput").innerHTML = "";
-  $("rotationTable").innerHTML = "";
-  $("damageBreakdown").innerHTML = "";
-}
-
 function exactPoint(result) {
   const curve = Array.isArray(result?.comparison_curve) ? result.comparison_curve : [];
   const selected = curve.find((row) => Number(row.rotation) === Number(state.fight.rotations));
@@ -1853,15 +1733,9 @@ function healingEventsForResult(result) {
   }));
 }
 
-function renderExactStatMatrix(aResult, bResult) {
-  const host = document.querySelector(".hero-matrix");
+function renderDefenseReceipts(aResult, bResult) {
+  const host = document.getElementById("defenseReceipts");
   if (!host) return;
-  const aStats = exactStatMatrix(aResult);
-  if (!aStats) return;
-  host.innerHTML = `<div class="matrix-head"><strong>Complete champion stats</strong><span>${bResult ? "Build A / Build B" : "Build A"}</span></div>${statMatrix(aStats, bResult ? exactStatMatrix(bResult) : null)}`;
-}
-
-function renderExactResistance(aResult, bResult) {
   const startingDefenseSummary = (defenses = {}) => {
     const rows = [];
     const magicShield = Number(defenses.magic_shield || 0);
@@ -1883,7 +1757,7 @@ function renderExactResistance(aResult, bResult) {
     if (critMultiplier < 0.999) rows.push(`${one((1 - critMultiplier) * 100)}% critical damage reduction`);
     return rows.length ? rows.join(" · ") : "—";
   };
-  const rows = (aResult?.targets || []).map((entry, index) => {
+  const targetRows = (aResult?.targets || []).map((entry, index) => {
     const target = entry.target || {};
     const result = entry.result || {};
     const other = bResult?.targets?.[index]?.result;
@@ -1892,7 +1766,43 @@ function renderExactResistance(aResult, bResult) {
     const defenses = startingDefenseSummary(target.starting_defenses);
     return `<tr><td>${escapeHtml(target.champion || "Target")}</td><td>${armor}</td><td>${mr}</td><td>${escapeHtml(defenses)}</td></tr>`;
   }).join("");
-  $("resistanceOutput").innerHTML = rows ? `<div class="resistance-head"><span>Effective defenses</span><b>After build penetration</b></div><div class="resistance-table-wrap"><table><thead><tr><th>Enemy</th><th>Armor${bResult ? " · A / B" : ""}</th><th>MR${bResult ? " · A / B" : ""}</th><th>Starting defenses</th></tr></thead><tbody>${rows}</tbody></table></div>` : "";
+  const shieldParts = [
+    ["magic", aResult?.magic_shield_absorbed],
+    ["physical", aResult?.physical_shield_absorbed],
+    ["general", aResult?.general_shield_absorbed],
+    ["threshold", aResult?.threshold_shield_absorbed],
+  ].filter(([, amount]) => Number(amount || 0) > 0).map(([label, amount]) => `${fmt(amount)} ${label}`);
+  const receiptLines = [];
+  const shieldTotal = Number(aResult?.shield_absorbed || 0);
+  if (shieldTotal > 0) receiptLines.push(`${fmt(shieldTotal)} shield damage absorbed${shieldParts.length ? ` (${escapeHtml(shieldParts.join(" · "))})` : ""}`);
+  const selfHealing = Number(aResult?.self_healing || 0);
+  if (selfHealing > 0) receiptLines.push(`${fmt(selfHealing)} self-healing`);
+  const targetHealing = Number(aResult?.target_healing_received || 0);
+  if (targetHealing > 0) receiptLines.push(`${fmt(targetHealing)} target healing received`);
+  if (aResult?.threshold_health_triggered) receiptLines.push("threshold-health transition triggered");
+  const thresholdBonus = Number(aResult?.threshold_health_bonus_gained || 0);
+  if (thresholdBonus > 0) receiptLines.push(`${fmt(thresholdBonus)} threshold health gained`);
+  const damageTypeOutputs = Object.entries(aResult?.damage_by_type || {})
+    .filter(([, amount]) => Number(amount || 0) > 0)
+    .map(([type, amount]) => `${fmt(amount)} ${type}`);
+  if (damageTypeOutputs.length) receiptLines.push(`${escapeHtml(damageTypeOutputs.join(" · "))} output`);
+  if (state.targets.length === 1 && Number.isFinite(Number(aResult?.target_ending_health)) && Number.isFinite(Number(aResult?.target_effective_max_health))) {
+    receiptLines.push(`target endpoint ${fmt(aResult.target_ending_health)} / ${fmt(aResult.target_effective_max_health)} health`);
+  }
+  const mainParticipant = (aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main");
+  const mainSurvival = mainParticipant?.survival;
+  if (mainSurvival) {
+    const note = `${fmt(mainSurvival.effective_health || 0)} eHP${Number(mainSurvival.support_shield_received || 0) > 0 ? ` · ${fmt(mainSurvival.support_shield_received)} support shield received` : ""}${mainSurvival.revived && mainSurvival.terminal_phase === "revived" ? ` · revived at ${one(mainSurvival.revive_time)}s` : mainSurvival.survived_window ? " · alive through the window" : ` · defeated at ${one(mainSurvival.death_time)}s`}`;
+    receiptLines.push(`main ${note}`);
+  }
+  const defenseRows = targetRows
+    ? `<header><div><p class="eyebrow">Defense receipts</p><h2>Starting defenses</h2></div><span>After build penetration</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Enemy</th><th>Armor${bResult ? " · A / B" : ""}</th><th>MR${bResult ? " · A / B" : ""}</th><th>Starting defenses</th></tr></thead><tbody>${targetRows}</tbody></table></div>`
+    : "";
+  const receiptSummary = receiptLines.length
+    ? `<p class="breakdown-outcome" role="status">${escapeHtml(receiptLines.join(" · "))}</p>`
+    : "";
+  host.hidden = !(defenseRows || receiptSummary);
+  host.innerHTML = defenseRows + receiptSummary;
 }
 
 function renderExactBreakdown(aResult, bResult) {
@@ -2013,76 +1923,20 @@ function fightOrderTimeline(result) {
   return `<div class="fight-timeline" style="--lane-count:${laneEnds.length}"><div class="fight-lanes">${chips}</div><div class="fight-axis">${axis}</div></div><small class="fight-caption">One rotation · ${one(duration)}s window</small>`;
 }
 
-function renderExactMechanics(aResult, bResult) {
-  const result = aResult;
-  const coverage = result?.timeline_coverage || {};
-  const timeline = fightOrderTimeline(result);
-  const notes = [...(result?.notes || []), coverage.note].filter(Boolean);
-  $("mechanicsOutput").innerHTML = `<div class="mechanics-head"><span>Reviewed engine output</span><b>${escapeHtml(coverage.certification || "event ordered")}</b></div><article class="mechanic-row"><div><strong>Fight order</strong>${timeline || "<p>No cast timeline returned</p>"}</div><span class="modelled">Calculated</span></article>${notes.map((note) => `<article class="mechanic-row"><div><strong>Model note</strong><p>${escapeHtml(note)}</p></div><span class="text-only">Boundary</span></article>`).join("")}`;
+function engineErrorBox() {
+  return document.getElementById("engineError");
 }
 
-function renderExactResults(aResult, bResult) {
-  const aPoint = exactPoint(aResult);
-  const bPoint = bResult ? exactPoint(bResult) : null;
-  const participantTotal = (result, fallback) => Number(result?.combat?.breakdown?.find((entry) => entry.participant_id === "main")?.total_damage ?? fallback);
-  const aTotal = participantTotal(aResult, Number(aPoint.total_damage || 0));
-  const bTotal = bPoint ? participantTotal(bResult, Number(bPoint.total_damage || 0)) : 0;
-  const aObjective = objectiveMetric(aResult, aTotal);
-  const bObjective = bResult ? objectiveMetric(bResult, bTotal) : null;
-  const outcome = objectiveWinner(aObjective, bObjective);
-  const tied = bResult && outcome.winner === "tie";
-  const aWins = !bResult || outcome.winner === "A";
-  const winner = bResult ? (outcome.winner === "A" ? "Build A" : outcome.winner === "B" ? "Build B" : "Tie") : "Build A";
-  const outputLabel = "Reviewed engine output";
-  const edge = bResult && aObjective != null && bObjective != null && Math.min(aObjective, bObjective) > 0 ? Math.abs(aObjective / bObjective - 1) * 100 : 0;
-  $("resultContext").textContent = `${state.targets.length} ${plural(state.targets.length, "enemy")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
-  $("winnerVisual").innerHTML = tied ? `<div></div><div><span>${outputLabel}</span><strong>Tie</strong><b>No meaningful ${escapeHtml(OBJECTIVES[state.ui.objective].label.toLowerCase())} difference</b></div>` : `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${bResult ? "Better here" : outputLabel}</span><strong>${winner}</strong><b>${bResult && outcome.delta != null ? `${percent(edge)} objective edge` : "Event-ordered result"}</b></div>`;
-  $("scoreGrid").innerHTML = [{ name: "Build A", total: aObjective, damage: aTotal, point: aPoint, winner: aWins && !tied }, ...(bResult ? [{ name: "Build B", total: bObjective, damage: bTotal, point: bPoint, winner: !aWins && !tied }] : [])].map((entry) => `<div class="score ${entry.winner ? "winner" : ""} ${bResult ? "" : "single-score"}"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>${entry.name}</span></header><strong>${objectiveFormat(entry.total)}</strong><small>${escapeHtml(OBJECTIVES[state.ui.objective].label)} · ${fmt(entry.damage)} TDD</small></div>`).join("");
-  renderExactStatMatrix(aResult, bResult);
-  renderExactResistance(aResult, bResult);
-  const certification = aResult.timeline_coverage?.certification || "event ordered";
-  const shield = Number(aResult.shield_absorbed || 0);
-  const shieldParts = [
-    ["magic", aResult.magic_shield_absorbed],
-    ["physical", aResult.physical_shield_absorbed],
-    ["general", aResult.general_shield_absorbed],
-    ["threshold", aResult.threshold_shield_absorbed],
-  ].filter(([, amount]) => Number(amount || 0) > 0).map(([label, amount]) => `${fmt(amount)} ${label}`);
-  const targetHealing = Number(aResult.target_healing_received || 0);
-  const selfHealing = Number(aResult.self_healing || 0);
-  const thresholdBonus = Number(aResult.threshold_health_bonus_gained || 0);
-  const supportOutputs = exactSupportOutputs(aResult);
-  const damageTypeOutputs = Object.entries(aResult.damage_by_type || {})
-    .filter(([, amount]) => Number(amount || 0) > 0)
-    .map(([type, amount]) => `${fmt(amount)} ${type}`);
-  const abilityOutput = Number(aResult.ability_damage || 0);
-  const autoOutput = Number(aResult.auto_attack_damage || 0);
-  const thresholdTriggered = Boolean(aResult.threshold_health_triggered);
-  const targetEndpoint = state.targets.length === 1
-    && Number.isFinite(Number(aResult.target_ending_health))
-    && Number.isFinite(Number(aResult.target_effective_max_health))
-    ? ` · target endpoint ${fmt(aResult.target_ending_health)} / ${fmt(aResult.target_effective_max_health)} health`
-    : "";
-  const resource = Number(aResult.resource_remaining || 0);
-  const mainParticipant = (aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main");
-  const mainSurvival = mainParticipant?.survival;
-  const combatNote = mainSurvival ? ` · ${fmt(mainSurvival.effective_health || 0)} eHP${Number(mainSurvival.support_shield_received || 0) > 0 ? ` · ${fmt(mainSurvival.support_shield_received)} support shield received` : ""} · ${mainSurvival.revived && mainSurvival.terminal_phase === "revived" ? `revived at ${one(mainSurvival.revive_time)}s · alive through the window` : mainSurvival.survived_window ? "alive through the window" : `defeated at ${one(mainSurvival.death_time)}s`}` : "";
-  const outputMix = abilityOutput > 0 || autoOutput > 0
-    ? ` · ${fmt(abilityOutput)} abilities + ${fmt(autoOutput)} autos`
-    : "";
-  $("why").innerHTML = `<strong>${escapeHtml(certification)}</strong> · ${fmt(shield)} shield damage absorbed${shieldParts.length ? ` (${escapeHtml(shieldParts.join(" · "))})` : ""}${damageTypeOutputs.length ? ` · ${escapeHtml(damageTypeOutputs.join(" · "))} output` : ""}${outputMix}${selfHealing > 0 ? ` · ${fmt(selfHealing)} self-healing` : ""}${targetHealing > 0 ? ` · ${fmt(targetHealing)} target healing received` : ""}${thresholdTriggered ? " · threshold-health transition triggered" : ""}${thresholdBonus > 0 ? ` · ${fmt(thresholdBonus)} threshold-health bonus` : ""}${supportOutputs.length ? ` · ${supportOutputs.join(" · ")}` : ""}${targetEndpoint} · ${fmt(resource)} resource remaining${combatNote}.`;
-  $("threshold").innerHTML = `<span>${escapeHtml(OBJECTIVES[state.ui.objective].label)}</span><strong>${bResult ? (tied ? "No meaningful difference at this window" : `${escapeHtml(winner)} leads at the selected window`) : `${objectiveFormat(aObjective)} event-ordered output`}</strong>`;
-  const aCurve = aResult.comparison_curve || [{ rotation: state.fight.rotations, total_damage: aTotal }];
-  const bCurve = bResult?.comparison_curve || [];
-  $("tableA").textContent = "Build A";
-  $("tableB").textContent = bResult ? "Build B" : "—";
-  $("rotationTable").innerHTML = aCurve.map((row, index) => {
-    const other = bCurve[index];
-    const lead = other ? (Math.abs(row.total_damage - other.total_damage) < .5 ? "Tie" : row.total_damage > other.total_damage ? "Build A" : "Build B") : "Build A";
-    return `<tr><td>${row.rotation}</td><td>${fmt(row.total_damage)}</td><td>${other ? fmt(other.total_damage) : "—"}</td><td>${lead}</td></tr>`;
-  }).join("");
-  renderExactMechanics(aResult, bResult);
-  renderExactBreakdown(aResult, bResult);
+function showEngineError(message) {
+  const box = engineErrorBox();
+  if (!box) return;
+  box.textContent = String(message || "The engine could not compute this scenario.");
+  box.hidden = false;
+}
+
+function hideEngineError() {
+  const box = engineErrorBox();
+  if (box) box.hidden = true;
 }
 
 function scheduleEngineCalculation() {
@@ -2092,6 +1946,12 @@ function scheduleEngineCalculation() {
   engine.pendingTimer = setTimeout(() => {
     const requestId = ++engine.requestId;
     engine.pending = true;
+    const status = document.getElementById("resultStatus");
+    if (status) {
+      status.textContent = "calculating";
+      status.classList.add("calculating");
+    }
+    hideEngineError();
     const builds = state.attacker.comparisonEnabled ? ["A", "B"] : ["A"];
     Promise.all(builds.map((side) => fetch("/api/calculate", {
       method: "POST",
@@ -2102,108 +1962,31 @@ function scheduleEngineCalculation() {
         if (requestId !== engine.requestId) return;
         const failure = results.find((result) => result.error);
         if (failure) {
-          $("resultContext").textContent = "Engine boundary";
-          $("why").textContent = failure.error;
+          if (status) {
+            status.textContent = "error";
+            status.classList.remove("calculating");
+          }
+          showEngineError(failure.error);
           return;
         }
+        if (status) status.classList.remove("calculating");
+        hideEngineError();
         engine.responses = { a: results[0], b: results[1] || null };
         renderPrototypeBuilder();
         renderPrototypeResult(engine.responses.a, engine.responses.b);
         renderScenarioRail();
       })
       .catch((error) => {
-        if (requestId === engine.requestId) $("why").textContent = `Engine request failed: ${error.message}`;
+        if (requestId === engine.requestId) {
+          if (status) {
+            status.textContent = "error";
+            status.classList.remove("calculating");
+          }
+          showEngineError(`Engine request failed: ${error.message}`);
+        }
       })
       .finally(() => { if (requestId === engine.requestId) engine.pending = false; });
   }, 40);
-}
-
-function renderResults() {
-  $("resultFootnote").textContent = `DPS uses ${one(state.fight.duration)}s per rotation · autos use ${Math.round(state.fight.aaUptime * 100)}% uptime · TDD sums selected targets.`;
-  const scenarioReady = state.attacker.champion && state.targets.length && state.targets.every((target) => target.champion);
-  const hasA = buildAIds().some(Boolean);
-  const hasB = state.attacker.comparisonEnabled && buildBIds().some(Boolean);
-  if (!scenarioReady || !hasA) {
-    $("resultContext").textContent = "Waiting for scenario";
-    $("winnerVisual").innerHTML = `<div class="result-empty-mark">+</div><div><span>Nothing calculated</span><strong>Build a scenario</strong><b>Champion · builds · enemies</b></div>`;
-    $("scoreGrid").innerHTML = `<div class="empty-score">Build A</div><div class="empty-score">${state.attacker.comparisonEnabled ? "Build B" : "Comparison optional"}</div>`;
-    $("why").textContent = "Choose a champion, add Build A and select at least one enemy.";
-    $("threshold").innerHTML = `<span>Crossover</span><strong>Waiting for complete inputs</strong>`;
-    renderResistanceOutput(null, null);
-    renderMechanicsOutput(0, 0);
-    renderDamageBreakdown(null, null);
-    $("rotationTable").innerHTML = "";
-    return;
-  }
-  const reviewedAttacker = engine.reviewed.has(state.attacker.champion);
-  const aCurrent = calculateBuild(buildAIds(), state.fight.rotations, buildAStacks());
-  const aAll = state.fight.rotations === 6 ? aCurrent : calculateBuild(buildAIds(), 6, buildAStacks());
-  const aTotal = aCurrent.cumulative;
-  const fallbackObjective = ["overall", "damage"].includes(state.ui.objective) ? aTotal : null;
-  const seconds = state.fight.rotations * state.fight.duration;
-  $("resultContext").textContent = `${state.targets.length} ${plural(state.targets.length, "enemy")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}`;
-
-  if (!hasB) {
-    $("winnerVisual").innerHTML = `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>${reviewedAttacker ? "Modeled output" : "Wiki-derived estimate"}</span><strong>Build A</strong><b>${buildAIds().filter(Boolean).length} items scored</b></div>`;
-    $("scoreGrid").innerHTML = `<div class="score winner single-score"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>Build A</span></header><strong>${objectiveFormat(fallbackObjective)}</strong><small>${escapeHtml(OBJECTIVES[state.ui.objective].label)} · ${fmt(aTotal)} TDD</small></div>`;
-    renderResistanceOutput(aCurrent.build, null);
-    $("why").innerHTML = reviewedAttacker
-      ? `<strong>Build A</strong> is scored as one complete build. Enable Build B only for a full-build comparison.`
-      : `<strong>Build A</strong> is scored with the Wiki-derived champion packets and item event catalogue. The exact registry has not yet certified this champion.`;
-    $("threshold").innerHTML = `<span>${escapeHtml(OBJECTIVES[state.ui.objective].label)}</span><strong>${fallbackObjective == null ? "Unavailable until the reviewed engine responds" : `${fmt(aAll.cumulative)} modeled damage`}</strong>`;
-    $("tableA").textContent = "Build A";
-    $("tableB").textContent = "—";
-    $("rotationTable").innerHTML = aAll.ledger.map((row) => `<tr><td>${row.rotation}</td><td>${fmt(row.cumulative)}</td><td>—</td><td>Build A</td></tr>`).join("");
-    renderMechanicsOutput(aTotal, 0);
-    renderDamageBreakdown(aCurrent, null);
-    return;
-  }
-
-  const bCurrent = calculateBuild(buildBIds(), state.fight.rotations, buildBStacks());
-  const bAll = state.fight.rotations === 6 ? bCurrent : calculateBuild(buildBIds(), 6, buildBStacks());
-  const bTotal = bCurrent.cumulative;
-  const bFallbackObjective = ["overall", "damage"].includes(state.ui.objective) ? bTotal : null;
-  const fallbackOutcome = objectiveWinner(fallbackObjective, bFallbackObjective);
-  const tied = fallbackOutcome.winner === "tie";
-  const aWins = fallbackOutcome.winner === "A";
-  const winner = aWins ? { ...aAll, cumulative: aTotal } : { ...bAll, cumulative: bTotal };
-  const loser = aWins ? { ...bAll, cumulative: bTotal } : { ...aAll, cumulative: aTotal };
-  const winnerIds = aWins ? buildAIds() : buildBIds();
-  const edge = loser.cumulative > 0 ? Math.abs(winner.cumulative / loser.cumulative - 1) * 100 : 0;
-  const aName = "Build A";
-  const bName = "Build B";
-
-  $("winnerVisual").innerHTML = !fallbackOutcome.winner
-    ? `<div></div><div><span>Calculation boundary</span><strong>Unavailable</strong><b>Reviewed engine output required</b></div>`
-    : tied
-      ? `<div></div><div><span>Dead even</span><strong>Tie</strong><b>Less than 1 damage apart</b></div>`
-    : `<img src="${championImage(state.attacker.champion)}" alt="" /><div><span>Better here</span><strong>${aWins ? "Build A" : "Build B"}</strong><b>${percent(edge)} more total damage</b></div>`;
-  $("scoreGrid").innerHTML = [
-    { total: fallbackObjective, damage: aTotal, name: aName, winner: aWins && !tied },
-    { total: bFallbackObjective, damage: bTotal, name: bName, winner: !aWins && !tied && Boolean(fallbackOutcome.winner) },
-  ].map((entry) => `<div class="score ${entry.winner ? "winner" : ""}"><header><img src="${championImage(state.attacker.champion)}" alt="" /><span>${entry.name}</span></header><strong>${objectiveFormat(entry.total)}</strong><small>${escapeHtml(OBJECTIVES[state.ui.objective].label)} · ${fmt(entry.damage)} TDD</small></div>`).join("");
-  renderResistanceOutput(aCurrent.build, bCurrent.build);
-  $("why").innerHTML = !fallbackOutcome.winner ? `<strong>${escapeHtml(OBJECTIVES[state.ui.objective].label)}</strong> is unavailable on the local estimate; reviewed engine output is required.` : tied ? "Both builds deal effectively the same damage in this setup." : resultReason(aWins ? "Build A" : "Build B", winnerIds, winner, loser);
-
-  const leads = aAll.ledger.map((row, rowIndex) => Math.sign(row.cumulative - bAll.ledger[rowIndex].cumulative));
-  const firstLead = leads[0];
-  const crossoverIndex = leads.findIndex((lead, rowIndex) => rowIndex > 0 && lead !== 0 && lead !== firstLead);
-  let thresholdText;
-  if (crossoverIndex >= 0) {
-    thresholdText = `${escapeHtml(leads[crossoverIndex] > 0 ? aName : bName)} takes over at rotation ${crossoverIndex + 1}`;
-  } else {
-    thresholdText = firstLead === 0 ? "No meaningful difference through 6 rotations" : `${escapeHtml(firstLead > 0 ? aName : bName)} stays ahead through 6 rotations`;
-  }
-  $("threshold").innerHTML = `<span>Crossover</span><strong>${thresholdText}</strong>`;
-  $("tableA").textContent = aName;
-  $("tableB").textContent = bName;
-  $("rotationTable").innerHTML = aAll.ledger.map((row, rowIndex) => {
-    const bRow = bAll.ledger[rowIndex];
-    const lead = Math.abs(row.cumulative - bRow.cumulative) < .5 ? "Tie" : row.cumulative > bRow.cumulative ? aName : bName;
-    return `<tr><td>${row.rotation}</td><td>${fmt(row.cumulative)}</td><td>${fmt(bRow.cumulative)}</td><td>${escapeHtml(lead)}</td></tr>`;
-  }).join("");
-  renderMechanicsOutput(aTotal, bTotal);
-  renderDamageBreakdown(aCurrent, bCurrent);
 }
 
 function itemOccurrence(id) {
@@ -2243,21 +2026,6 @@ function mechanicDetail(id, occurrence, aTotal, bTotal) {
     return "Cinderbloom’s 20% damage increase is conditional on the enemy already being below 40% health.";
   }
   return getItem(id)?.passiveText || "No conditional item effect in the patch data.";
-}
-
-function renderMechanicsOutput(aTotal, bTotal) {
-  const ids = [...new Set([...buildAIds(), ...(state.attacker.comparisonEnabled ? buildBIds() : [])].filter(Boolean))];
-  const modeled = new Set([1082, 3041, 3089, 6653, 6655, 4645]);
-  $("mechanicsOutput").innerHTML = ids.length ? `<div class="mechanics-head"><span>Item-specific output</span><b>${ids.length} selected</b></div>${ids.map((id) => {
-    const item = getItem(id);
-    const occurrence = itemOccurrence(id);
-    const coverageStatus = item?.modelCoverage?.status;
-    const calculationEligible = item?.modelCoverage?.calculation_eligible
-      ?? (coverageStatus && !["blocked", "review_pending"].includes(coverageStatus));
-    const backendCalculated = Boolean(item?.backendAvailable && calculationEligible);
-    const calculated = modeled.has(id) || backendCalculated;
-    return `<article class="mechanic-row"><img src="${itemImage(id)}" alt="" /><div><strong>${escapeHtml(item.name)}</strong><p>${escapeHtml(mechanicDetail(id, occurrence, aTotal, bTotal))}</p></div><span class="${calculated ? "modelled" : "text-only"}">${calculated ? "Calculated" : "Patch text"}</span></article>`;
-  }).join("")}` : "";
 }
 
 function scenarioSentence() {
@@ -2723,6 +2491,9 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   // sourced number. It re-renders on every result so chips track the loaded
   // /api/certainty contract (or its placeholder fallback).
   renderExactBreakdown(aResult, bResult);
+  // F0: the starting-defense and shield/healing receipts ride the same
+  // result pass, now in the visible result column.
+  renderDefenseReceipts(aResult, bResult);
 }
 
 function render() {
@@ -2856,14 +2627,6 @@ function idsForBis(path, candidateId) {
   if (path.match(/^attacker\.build[AB]\./)) ids[Number(path.split(".").at(-1))] = candidateId;
   if (usesQuestBootSlot()) ids.push(path.includes("questBoot") ? candidateId : state.attacker[`questBoot${side}`]);
   return ids;
-}
-
-function stacksForBis(path, candidateId) {
-  const side = path.includes("buildB") || path.includes("questBootB") ? "B" : "A";
-  const paths = Array.from({ length: ordinarySlotCount(side) }, (_, index) => `attacker.build${side}.${index}`);
-  const stacks = paths.map((itemPath) => itemPath === path && Number(pathValue(path)) !== Number(candidateId) ? 0 : stackValue(itemPath));
-  if (usesQuestBootSlot()) stacks.push(0);
-  return stacks;
 }
 
 function bisProfile() {
@@ -3212,26 +2975,6 @@ function rosterBisIds(path, candidateId) {
   return ids;
 }
 
-function rosterBisStacks(path, candidateId) {
-  const context = rosterBisContext(path);
-  if (!context) return [];
-  const ids = [...context.combatant.items];
-  const stacks = [...(context.combatant.itemStacks || [])];
-  const slot = Number(String(path).split(".").at(-1));
-  if (Number(ids[slot]) !== Number(candidateId)) stacks[slot] = 0;
-  return stacks;
-}
-
-function rosterBisCandidates(path, profile) {
-  const currentIds = rosterBisIds(path, 0).filter(Boolean);
-  const role = bisRole(profile);
-  return DATA.items.filter((item) => {
-    if (!backendItemReady(item)) return false;
-    const completed = item.price >= 2200 && item.into.length === 0;
-    return completed && bisItemMatchesRole(item, role, path) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
-  });
-}
-
 function bisItemMatchesRole(item, role, path = "") {
   const categories = new Set(item.categories || []);
   const effect = bisItemEffects(item);
@@ -3377,10 +3120,6 @@ async function openBackendBis(path) {
   }
 }
 
-function openRosterBis(path) {
-  return openBackendBis(path);
-}
-
 function optimizerDamagePackageReady() {
   const champion = getChampion(state.attacker.champion);
   const completeSourcedKit = activeAbilityKit().filter((ability) => ["Q", "W", "E", "R"].includes(ability.slot)).length === 4;
@@ -3393,24 +3132,6 @@ function optimizerDamagePackageReady() {
   // authority for the final score.
   const reviewedBackend = Boolean(champion && (engine.reviewed.has(champion.name) || engine.backend.has(champion.name)));
   return reviewedBackend && (selectedAbilities || manualPackage || Boolean(bisChampionProfile(state.attacker)));
-}
-
-function bisCandidates(path, profile) {
-  const wikiMode = Boolean(profile?.wiki) || String(profile?.label || "").startsWith("Wiki-derived");
-  const selectedTypes = profile.useAbilities ? activeAbilityKit().flatMap((ability) => ability.variants.flatMap((variant) => variant.packets?.map((packet) => typeof packet === "string" ? packet : packet.type) || [variant.type])) : [];
-  const physical = profile.physicalDamage > 0 || profile.adRatio > 0 || selectedTypes.includes("physical");
-  const magical = profile.baseDamage > 0 || profile.apRatio > 0 || selectedTypes.includes("magical");
-  const currentIds = idsForBis(path, 0).filter(Boolean);
-  if (path.includes("questBoot")) return DATA.items.filter((item) => backendItemReady(item) && questBootIds().includes(item.id) && !currentIds.includes(item.id));
-  if (wikiMode && state.attacker.champion) {
-    return DATA.items.filter((item) => backendItemReady(item) && item.price >= 2200 && item.into.length === 0 && bisItemMatchesRole(item, bisRole(bisChampionProfile(state.attacker))) && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id));
-  }
-  return DATA.items.filter((item) => {
-    if (!backendItemReady(item)) return false;
-    const completed = item.price >= 2200 && item.into.length === 0;
-    const relevant = (magical && (item.ap || item.pen || item.percentPen || [6653, 6655].includes(item.id))) || (physical && (item.ad || item.lethality || item.percentArmorPen));
-    return completed && relevant && !ALL_ROLE_BOOTS.has(item.id) && !currentIds.includes(item.id);
-  });
 }
 
 function optimizerExclusiveGroups() {
@@ -3594,65 +3315,6 @@ function rosterOptimizerCandidatePool(path) {
   return selected.slice(0, 12);
 }
 
-function optimizeRosterBuild(path) {
-  const started = performance.now();
-  const context = rosterBisContext(path);
-  const pool = rosterOptimizerCandidatePool(path);
-  if (!context || pool.length < 6) throw new Error("Not enough completed role-compatible items for this roster build.");
-  const evaluated = [];
-  const selected = [];
-  const ids = pool.map((item) => item.id);
-  function search(from) {
-    if (selected.length === 6) {
-      if (!legalOptimizerBuild(selected)) return;
-      const build = [...selected];
-      evaluated.push({ build, total: bisBuildScore(build, context.combatant, context.opponents, path).score });
-      return;
-    }
-    const needed = 6 - selected.length;
-    for (let index = from; index <= ids.length - needed; index += 1) {
-      selected.push(ids[index]);
-      if (legalOptimizerBuild(selected)) search(index + 1);
-      selected.pop();
-    }
-  }
-  search(0);
-  evaluated.sort((a, b) => b.total - a.total);
-  const best = evaluated[0];
-  if (!best) throw new Error("No legal complete roster build matched this champion.");
-  return {
-    build: best.build,
-    tested: evaluated.length,
-    elapsedMs: performance.now() - started,
-    total: best.total,
-    candidateCount: pool.length,
-    metric: bisBuildScore(best.build, context.combatant, context.opponents, path).metric,
-  };
-}
-
-function applyRosterBuild(path, result) {
-  const [root, indexText] = String(path).split(".");
-  const loadout = state[root]?.[Number(indexText)];
-  if (!loadout) return;
-  loadout.items = [...result.build, ...Array(Math.max(0, 6 - result.build.length)).fill(0)].slice(0, 6);
-  loadout.itemStacks = [0, 0, 0, 0, 0, 0];
-  loadout.itemOptions = [{}, {}, {}, {}, {}, {}];
-}
-
-function reoptimizeAttackerAfterRosterChange() {
-  if (!state.attacker.champion || !optimizerDamagePackageReady() || !state.targets.length || !state.targets.every((target) => target.champion)) return null;
-  try {
-    const result = optimizeFullBuild();
-    state.attacker.buildA = [...result.build, ...Array(Math.max(0, 6 - result.build.length)).fill(0)].slice(0, 6);
-    state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
-    state.attacker.buildAItemOptions = [{}, {}, {}, {}, {}, {}];
-    state.attacker.questBootA = result.questBoot || 0;
-    return result;
-  } catch {
-    return null;
-  }
-}
-
 function rosterOptimizationPaths(rootOrPath) {
   if (String(rootOrPath).includes(".")) return bisReadyForPath(rootOrPath) ? [rootOrPath] : [];
   return (state[rootOrPath] || []).map((loadout, index) => `${rootOrPath}.${index}`).filter((path) => bisReadyForPath(path));
@@ -3817,10 +3479,14 @@ function closeBis() {
 
 function updateDamagePackage() {
   invalidateOptimization();
-  state.attacker.baseDamage = Math.max(0, Number($("baseDamage").value) || 0);
-  state.attacker.apRatio = Math.max(0, Number($("apRatio").value) || 0);
-  state.attacker.physicalDamage = Math.max(0, Number($("physicalDamage").value) || 0);
-  state.attacker.adRatio = Math.max(0, Number($("adRatio").value) || 0);
+  const baseDamage = $("baseDamage");
+  const apRatio = $("apRatio");
+  const physicalDamage = $("physicalDamage");
+  const adRatio = $("adRatio");
+  state.attacker.baseDamage = baseDamage ? Math.max(0, Number(baseDamage.value) || 0) : 0;
+  state.attacker.apRatio = apRatio ? Math.max(0, Number(apRatio.value) || 0) : 0;
+  state.attacker.physicalDamage = physicalDamage ? Math.max(0, Number(physicalDamage.value) || 0) : 0;
+  state.attacker.adRatio = adRatio ? Math.max(0, Number(adRatio.value) || 0) : 0;
   render();
 }
 
@@ -3903,6 +3569,14 @@ document.addEventListener("click", (event) => {
     render();
     return openPicker("champion", `targets.${index}.champion`);
   }
+  if (event.target.closest("#addPracticeEnemy")) {
+    if (state.targets.length >= 5) return;
+    const present = new Set(state.targets.map((target) => target.champion));
+    const practice = PRACTICE_TARGETS.find((candidate) => !present.has(candidate.champion)) || PRACTICE_TARGETS[0];
+    state.targets.push({ champion: practice.champion, level: practice.level, role: practice.role, roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {} });
+    invalidateOptimization();
+    return render();
+  }
   if (event.target.closest("#addAlly")) {
     if (state.allies.length >= 4) return;
     const index = state.allies.length;
@@ -3910,7 +3584,18 @@ document.addEventListener("click", (event) => {
     render();
     return openPicker("champion", `allies.${index}.champion`);
   }
-  if (event.target.closest("#bisButton")) return openBis("attacker.buildA.0");
+  if (event.target.closest("#bisButton")) {
+    if (!bisReadyForPath("attacker.buildA.0")) {
+      const summary = $("resultSummary");
+      if (summary) {
+        summary.textContent = state.attacker.champion
+          ? "Best-in-slot needs an enemy roster — add an enemy or use “vs practice target” first."
+          : "Choose a champion before ranking items.";
+      }
+      return;
+    }
+    return openBis("attacker.buildA.0");
+  }
   const rosterOptimizeAll = event.target.closest("[data-optimize-roster-all]");
   if (rosterOptimizeAll) return startRosterOptimization(rosterOptimizeAll.dataset.optimizeRosterAll);
   const rosterOptimize = event.target.closest("[data-optimize-roster]");
@@ -4264,7 +3949,10 @@ $("pickerClose").addEventListener("click", closePicker);
 $("picker").addEventListener("click", (event) => { if (event.target === $("picker")) closePicker(); });
 $("bisClose").addEventListener("click", closeBis);
 $("bis").addEventListener("click", (event) => { if (event.target === $("bis")) closeBis(); });
-for (const id of ["baseDamage", "apRatio", "physicalDamage", "adRatio"]) $(id).addEventListener("input", updateDamagePackage);
+for (const id of ["baseDamage", "apRatio", "physicalDamage", "adRatio"]) {
+    const element = $(id);
+    if (element) element.addEventListener("input", updateDamagePackage);
+  }
 
 Promise.all([
   fetch("/static/data.json").then((response) => { if (!response.ok) throw new Error("Patch snapshot failed to load"); return response.json(); }),
@@ -4316,7 +4004,14 @@ Promise.all([
     engine.ready = true;
     render();
   })
-  .catch(() => { $("builder").innerHTML = `<p class="empty-roster">The patch snapshot could not load. Refresh to try again.</p>`; });
+  .catch(() => {
+    const status = document.getElementById("resultStatus");
+    if (status) {
+      status.textContent = "error";
+      status.classList.remove("calculating");
+    }
+    showEngineError("The patch snapshot could not load. Refresh to try again.");
+  });
 
 // ============================================================================
 // P5 · Casual quick mode + presets + build sharing + trust labels (P4)
@@ -4332,6 +4027,15 @@ const QUICK_ROLES = ["top", "jungle", "mid", "bottom", "support"];
 const ROLE_LABELS = { top: "Top", jungle: "Jungle", mid: "Mid", bottom: "Bottom", support: "Support" };
 // Implicit practice target used when the casual user skips enemy selection.
 const QUICK_PRACTICE_ENEMY = { champion: "Jhin", level: 18, role: "bottom", items: [] };
+// Practice dummies for the analyst roster's "vs practice target" affordance:
+// a squishy, a tank, and a bruiser. Each click adds the next dummy that is
+// not already in the roster so the engine's no-duplicate-champions rule
+// never fires.
+const PRACTICE_TARGETS = [
+  QUICK_PRACTICE_ENEMY,
+  { champion: "Ornn", level: 18, role: "top", items: [] },
+  { champion: "Garen", level: 18, role: "top", items: [] },
+];
 const QUICK_MAX_ITEMS = 5;
 const QUICK_LEVEL = 18;
 
@@ -4797,6 +4501,57 @@ function renderQuickResults(results) {
     <p class="quick-baseline-line">Baseline (your current build): ${fmt(results.baseline.tdd)} TDD · ${fmt(results.baseline.ehp)} eHP before adding an item.</p>`;
 }
 
+// --- Quick → analyst bridge -------------------------------------------------
+
+function openQuickInAnalyst() {
+  if (!QUICK_STATE.champion) {
+    document.getElementById("quickChampionSearch").focus();
+    return;
+  }
+  const payload = QUICK_STATE.results?.payload || quickCalculatePayload();
+  state.attacker.champion = QUICK_STATE.champion;
+  state.attacker.level = QUICK_LEVEL;
+  state.attacker.role = QUICK_STATE.role || "mid";
+  state.attacker.roleQuestComplete = false;
+  state.attacker.buildA = [0, 0, 0, 0, 0, 0];
+  state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
+  state.attacker.buildAItemOptions = [{}, {}, {}, {}, {}, {}];
+  state.attacker.questBootA = 0;
+  state.attacker.includeBootsA = true;
+  state.attacker.keystoneA = "";
+  state.attacker.comparisonEnabled = false;
+  (payload.items || []).forEach((name, index) => {
+    if (index >= 6) return;
+    const item = findItemByBackendName(name);
+    if (item) state.attacker.buildA[index] = item.id;
+  });
+  const loadoutFrom = (loadout) => ({
+    champion: loadout.champion,
+    level: loadout.level || 18,
+    role: loadout.role || "",
+    roleQuestComplete: false,
+    items: [0, 0, 0, 0, 0, 0],
+    itemStacks: [0, 0, 0, 0, 0, 0],
+    itemOptions: [{}, {}, {}, {}, {}, {}],
+    boots: 0,
+    includeBoots: true,
+    abilityRanks: {},
+    championOptions: {},
+    allyEffectsEnabled: false,
+  });
+  state.targets = (payload.enemies || []).filter((enemy) => enemy.champion).map(loadoutFrom);
+  state.allies = (payload.allies || []).filter((ally) => ally.champion).map(loadoutFrom);
+  state.fight.rotations = Number(payload.rotations) || 1;
+  state.fight.duration = Number(payload.fight_duration) || 10;
+  state.fight.aaUptimeMode = payload.auto_attack_uptime_mode || "calculated";
+  state.ui.objective = "overall";
+  state.ui.gameState = "theory";
+  QUICK_STATE.results = null;
+  switchView("analyst");
+  loadTrustLabels(QUICK_STATE.champion);
+  render();
+}
+
 // --- Best next item ---------------------------------------------------------
 
 async function runQuickBestNextItem() {
@@ -4953,6 +4708,8 @@ function openSharedBuildInEditor() {
   const payload = window.__sharedBuild;
   if (!payload) return;
   try {
+    const quickView = document.getElementById("quickView");
+    if (quickView) quickView.classList.remove("is-shared");
     loadSharedBuildIntoAnalyst(payload);
     switchView("analyst");
   } catch (error) {
@@ -5140,6 +4897,7 @@ function bindQuickEvents() {
 
   document.getElementById("quickRun").addEventListener("click", runQuickBestNextItem);
   document.getElementById("quickShareButton").addEventListener("click", shareQuickBuild);
+  document.getElementById("quickAnalystButton").addEventListener("click", openQuickInAnalyst);
   document.getElementById("shareAnalystButton").addEventListener("click", shareAnalystBuild);
   document.getElementById("sharePanelClose").addEventListener("click", () => { document.getElementById("sharePanel").hidden = true; });
   document.getElementById("shareCopy").addEventListener("click", async () => {
@@ -5176,6 +4934,7 @@ async function initQuickView() {
   const shareToken = params.get("share");
   if (shareToken) {
     switchView("quick");
+    document.getElementById("quickView").classList.add("is-shared");
     renderSharedBuild(shareToken);
     loadTrustLabels((window.__sharedBuild || {}).champion || "");
   } else if (state.attacker.champion) {
