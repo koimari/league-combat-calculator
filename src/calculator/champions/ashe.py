@@ -27,8 +27,18 @@ from .slotlib import extract_cooldown, extract_value, simple_damage
 
 
 def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: attack-speed stat buff + flurry auto_attack_override."""
+    """Q: attack-speed stat buff + flurry auto_attack_override.
+
+    Ranger's Focus is a 4-stack system: basic attacks on-attack build a
+    Focus stack (cap 4) while the ability is inactive, and the ability
+    can only be activated at 4 stacks.  ``q_focus_stacks`` is the
+    explicit pre-stack state (0-4); ``q_active`` remains the legacy
+    activation override (default True).  The active window is
+    conditional on BOTH: the pre-stacked Focus must be full.
+    """
     if not bool(ctx.options.get("q_active", True)):
+        return None
+    if int(ctx.options.get("q_focus_stacks", 4)) < 4:
         return None
     ability = ctx.ability()
     if ability is None:
@@ -95,10 +105,21 @@ OPTIONS = [
         "default": True,
         "label": "Ranger's Focus active",
     },
+    {
+        "key": "q_focus_stacks",
+        "type": "int",
+        "default": 4,
+        "min": 0,
+        "max": 4,
+        "label": "Focus stacks (4 = Ranger's Focus ready)",
+    },
 ]
 
 ASSUMPTIONS = [
-    "Q (Ranger's Focus) assumed active by default",
+    "Q (Ranger's Focus) is a 4-stack system: basic attacks build Focus "
+    "(cap 4, 4-second expiry not modeled) and the ability activates only "
+    "at 4 stacks; q_focus_stacks is the explicit pre-stack state",
+    "Q assumed active by default (4 pre-stacked Focus)",
     "Passive bonus damage from crit chance applied to all auto attacks",
     "W hits a single target (one arrow per enemy)",
     "E (Hawkshot) is utility only and deals no damage",

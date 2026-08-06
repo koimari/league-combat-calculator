@@ -11,6 +11,9 @@ from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
 
 
 def _resonance(ctx: SlotCtx, ability: dict[str, Any]) -> float:
+    """One Z-Drive Resonance detonation: the third stack consumes all
+    three to deal the sourced bonus magic damage (30 : 150 by level,
+    + 80% AP).  The detonation is priced per completed 3-stack cycle."""
     return extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )
@@ -155,7 +158,7 @@ OPTIONS = [
         "default": 0,
         "min": 0,
         "max": 10,
-        "label": "Z-Drive Resonance procs",
+        "label": "Z-Drive Resonance detonations (3 stacks each)",
     },
     {
         "key": "w_passive_ready",
@@ -175,7 +178,8 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Resonance is a third-application proc; p_procs is explicit because a rotation does not imply three prior applications.",
+    "Resonance stacks up to 3 (cap) and the third stack consumes all three to detonate; each p_procs entry is one completed 3-stack detonation (30 : 150 by level + 80% AP), priced because the rotation does not imply three prior applications.",
+    "Resonance's per-target 4-second stack window and monster 270% multiplier are boundary state; the detonation value is the champion-target sourced value.",
     "Q's return is a separate authored event and W's passive is disabled unless the target-health gate is selected.",
     "Chronobreak's heal, stasis and movement are recorded as non-TDD state; only the arrival explosion enters damage.",
 ]

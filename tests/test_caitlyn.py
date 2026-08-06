@@ -598,11 +598,14 @@ class TestFightIntegration:
 
 
 class TestOptionsMeta:
-    """All decisions are fixed: no options, but assumptions are shown."""
+    """The single E3 headshot pre-stack option, plus assumptions."""
 
-    def test_no_options_declared(self) -> None:
+    def test_pre_stacks_option_declared(self) -> None:
         meta = get_champion_options_meta("Caitlyn")
-        assert meta["options"] == []
+        assert [option["key"] for option in meta["options"]] == ["p_pre_stacks"]
+        assert meta["options"][0]["min"] == 0
+        assert meta["options"][0]["max"] == 5
+        assert meta["options"][0]["default"] == 0
 
     def test_assumptions_documented(self) -> None:
         meta = get_champion_options_meta("Caitlyn")

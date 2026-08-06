@@ -1,14 +1,122 @@
-"""Samira — CP10.7 full-entry-reviewed packet module.
+"""Samira — Style (6-stack) S-rank unlock system.
 
-E2 DoT fix: W (Blade Whirl) prices 2 slashes; R (Inferno Trigger) prices
-10 sourced 0.2s shots (packet_module _PACKET_TICK_FIXES).
+Stack mechanics modeled (E3):
+- P (Daredevil Impulse): damaging basic attacks and abilities against
+  unique champions build Style (cap 6). Each stack grants 2.75 / 3 /
+  3.25 / 3.5% (levels 1 / 6 / 11 / 16) bonus movement speed, up to
+  16.5 / 18 / 19.5 / 21% at 6 stacks.  At maximum stacks (S rank),
+  Samira can cast Inferno Trigger; Style stacks are consumed at the end
+  of the effect.  ``p_style_stacks`` is the explicit pre-stack state.
+- R (Inferno Trigger) keeps the reviewed CP10.7 packet pricing (10
+  sourced 0.2s shots, E2 fix); its detail notes the S-rank requirement
+  when Style is maxed.
+
+Q (Flair), W (Blade Whirl) and E (Wild Rush) keep the reviewed CP10.7
+packet pricing. All numeric values are read from the champion JSON data.
 """
 
-from .reviewed_batch_07 import build_batch_module
+from __future__ import annotations
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Samira")
+from typing import Any
+
+from .engine import SlotCtx, build_parser
+from .reviewed_batch_01 import no_damage
+from .reviewed_batch_07 import _full_entry_sources, build_batch_module
+
+_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
+    build_batch_module("Samira")
+)
+_STYLE_MAX = 6
+# Style bonus movement speed per stack by level bracket (wiki prose:
+# 2.75% / 3% / 3.25% / 3.5% at levels 1 / 6 / 11 / 16).
+_STYLE_MS_BRACKETS = ((16, 3.5), (11, 3.25), (6, 3.0), (1, 2.75))
+
+
+def _style_ms_per_stack(level: int) -> float:
+    for min_level, percent in _STYLE_MS_BRACKETS:
+        if level >= min_level:
+            return percent
+    return _STYLE_MS_BRACKETS[-1][1]
+
+
+def _style_stacks(ctx: SlotCtx) -> int:
+    return min(max(int(ctx.options.get("p_style_stacks", 0)), 0), _STYLE_MAX)
+
+
+def _daredevil_impulse(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: Style stack state row (movement speed; R unlock at 6)."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    stacks = _style_stacks(ctx)
+    per_stack = _style_ms_per_stack(ctx.level)
+    if stacks >= _STYLE_MAX:
+        state = (
+            f"{stacks}/6 Style stacks (S rank): Inferno Trigger is "
+            "available and consumes all stacks at the end of the effect"
+        )
+    else:
+        state = (
+            f"{stacks}/6 Style stacks; Inferno Trigger requires S rank "
+            f"({_STYLE_MAX} stacks)"
+        )
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Daredevil Impulse"),
+        reason=(
+            f"Style: {state}.  Each stack grants {per_stack:.2f}% bonus "
+            f"movement speed (up to {per_stack * _STYLE_MAX:.1f}% at "
+            "maximum stacks); the melee blade-zone bonus magic damage is "
+            "state."
+        ),
+    )
+
+
+def _inferno_trigger(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: reviewed packet pricing + the S-rank requirement note."""
+    entry = _BATCH_SLOTS["R"](ctx)
+    if entry is not None and _style_stacks(ctx) >= _STYLE_MAX:
+        entry["detail"] = (
+            f"{entry.get('detail', '')} Requires S rank ({_STYLE_MAX} "
+            "Style stacks); Style stacks are consumed at the end of the "
+            "effect."
+        )
+    return entry
+
+
+SLOTS = {
+    "P": _daredevil_impulse,
+    "Q": _BATCH_SLOTS["Q"],
+    "W": _BATCH_SLOTS["W"],
+    "E": _BATCH_SLOTS["E"],
+    "R": _inferno_trigger,
+}
+parse_abilities = build_parser(SLOTS, "Samira")
+
+OPTIONS = [
+    {
+        "key": "p_style_stacks",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 6,
+        "label": "Style stacks (6 = S rank, R ready)",
+    },
+]
+
+ASSUMPTIONS = [
+    "Style caps at 6 stacks (6-second expiry and unique-hit generation "
+    "not modeled); p_style_stacks is the explicit pre-stack state",
+    "At 6 stacks (S rank) Inferno Trigger is available and consumes all "
+    "stacks at the end of the effect",
+    "Style's bonus movement speed (2.75/3/3.25/3.5% per stack by level) "
+    "is state, not damage",
+    "Q/W/E and R damage keep the reviewed CP10.7 packet pricing (R: 10 "
+    "sourced 0.2s shots)",
+]
+
+SOURCES = _full_entry_sources("Samira")
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
+    slot: ("modeled" if slot in {"P", "R"} else "out_of_scope") for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

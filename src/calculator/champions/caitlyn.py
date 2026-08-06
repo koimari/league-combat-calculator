@@ -100,7 +100,12 @@ def _headshot_counts(ctx: SlotCtx, trap_grants: int) -> tuple[int, int, int, int
     No auto stream (one-rotation mode, or a timed fight at zero auto
     uptime): each granted headshot is a forced basic attack — ``swings``
     counts them (the engine's empowers_next_auto rule).
+
+    ``p_pre_stacks`` (0-5, default 0) is the explicit pre-stacked Count:
+    a headshot is on the auto that would land the 5th stack, so pre-stacked
+    stacks advance the cadence — heads = (pre_stacks + autos) // 6.
     """
+    pre_stacks = min(max(int(ctx.options.get("p_pre_stacks", 0)), 0), 5)
     duration = ctx.options.get("fight_duration_seconds")
     if duration is not None:
         uptime = float(ctx.options.get("auto_attack_uptime", 0.0))
@@ -111,7 +116,7 @@ def _headshot_counts(ctx: SlotCtx, trap_grants: int) -> tuple[int, int, int, int
             remaining -= trap_used
             e_used = min(_e_cast_count(ctx, float(duration)), remaining)
             remaining -= e_used
-            cadence_used = min(num_autos // _HEADSHOT_CADENCE, remaining)
+            cadence_used = min((pre_stacks + num_autos) // _HEADSHOT_CADENCE, remaining)
             detail = (
                 f"{trap_used + e_used + cadence_used} headshot(s) over "
                 f"{float(duration):g}s: {cadence_used} cadence + {e_used} "
@@ -206,11 +211,23 @@ def _ace_in_the_hole(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-OPTIONS: list[dict[str, Any]] = []
+OPTIONS: list[dict[str, Any]] = [
+    {
+        "key": "p_pre_stacks",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": "Pre-stacked Headshot Count stacks",
+    },
+]
 
 ASSUMPTIONS = [
-    "Headshot fires every 6th basic attack (out-of-brush stacking; brush "
-    "doubling not modeled)",
+    "Headshot is a 5-stack Count system: attacks generate Count stacks "
+    "(cap 5, doubled in brush) and the auto that would land the 5th "
+    "stack consumes them all to become a Headshot — every 6th attack "
+    "out of brush; p_pre_stacks advances that cadence",
+    "Brush doubling is not modeled (out-of-brush stacking)",
     "Exactly one W trap headshot per fight, with W's damage increase; "
     "with W unranked there is no trap headshot",
     "Each E cast grants one additional Headshot (no W bonus); granted "

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -14,6 +15,47 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+
+# HARDCODED: verify on patch updates — wiki prose, not in the JSON.
+# Whisper's final round "always critically strikes ... and deals bonus
+# physical damage equal to 15% / 20% / 25% (based on level) of the
+# target's missing health" (level brackets 1 / 6 / 11, the wiki's
+# standard three-breakpoint pattern).
+_FOURTH_SHOT_MISSING_RATIOS = ((11, 0.25), (6, 0.20), (1, 0.15))
+
+
+def _fourth_shot_missing_ratio(level: int) -> float:
+    """The final round's missing-health ratio: 15/20/25% at levels 1/6/11."""
+    for min_level, ratio in _FOURTH_SHOT_MISSING_RATIOS:
+        if level >= min_level:
+            return ratio
+    return _FOURTH_SHOT_MISSING_RATIOS[-1][1]
+
+
+def _final_round_active(ctx: SlotCtx) -> bool:
+    """The next auto is Whisper's final round (4th shot of the clip)."""
+    if bool(ctx.options.get("p_final_shot", False)):
+        return True
+    return int(ctx.options.get("p_shot_number", 1)) >= 4
+
+
+def _final_round_count(ctx: SlotCtx) -> int:
+    """Final rounds in the fight window (auto stream determines stack rate).
+
+    Timed fights with an auto stream: the pre-stacked clip state
+    (``p_shot_number``) plus the fight's auto count determines how many
+    final rounds land — autos at positions congruent to
+    ``(5 - p_shot_number) mod 4``.  One-rotation / no-auto-stream
+    fights price exactly the one pre-stacked final round.
+    """
+    duration = ctx.options.get("fight_duration_seconds")
+    if duration is not None:
+        uptime = float(ctx.options.get("auto_attack_uptime", 0.0))
+        num_autos = math.floor(ctx.stats.get("attack_speed", 0.0) * uptime * duration)
+        if num_autos > 0:
+            pre = min(max(int(ctx.options.get("p_shot_number", 1)), 1), 4) - 1
+            return (pre + num_autos) // 4 - pre // 4
+    return 1
 
 
 def _whisper(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -28,12 +70,15 @@ def _whisper(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = no_damage(
         ctx,
         name=ability.get("name", "Whisper"),
-        reason=f"Every Moment Matters adds {percent:.2f}% AD; the fourth-shot missing-health branch is opt-in.",
+        reason=(
+            f"Every Moment Matters adds {percent:.2f}% AD; the fourth-shot "
+            "missing-health branch is priced by the final_round row."
+        ),
     )
     if entry is not None:
         entry["stat_buff"] = {"bonus_attack_damage": bonus_ad}
-        if bool(ctx.options.get("p_final_shot", False)):
-            missing = extract_value(ability, "Per-Level Scaling", ctx.level, 0) / 100.0
+        if _final_round_active(ctx):
+            missing = _fourth_shot_missing_ratio(ctx.level)
             entry["parts"] = (
                 DamagePart(
                     "physical",
@@ -45,13 +90,50 @@ def _whisper(ctx: SlotCtx) -> dict[str, Any] | None:
                 ),
             )
             entry["total_raw"] = 0.0
-            entry[
-                "detail"
-            ] += f" Final round adds {missing:.2%} of target missing health."
+            entry["detail"] += (
+                f" Final round (always crits) adds {missing:.0%} of target "
+                "missing health per 4th shot."
+            )
     return entry
 
 
 _whisper.phase = BUFF
+
+
+def _final_round(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: Whisper's final round — the 4th shot of the 4-round clip.
+
+    The final round always critically strikes and adds the sourced
+    missing-health bonus.  The fight engine cannot price a per-auto
+    guaranteed-crit swing, so this row prices the sourced bonus at the
+    user-declared missing-health ratio (``p_missing_health``): the
+    expected contribution of the pre-stacked completion(s).
+    """
+    if not _final_round_active(ctx):
+        return None
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
+    missing_ratio = min(max(float(ctx.options.get("p_missing_health", 0.0)), 0.0), 1.0)
+    per_round = _fourth_shot_missing_ratio(ctx.level) * target_max * missing_ratio
+    if per_round <= 0.0:
+        return None
+    count = _final_round_count(ctx)
+    if count <= 0:
+        return None
+    return {
+        "name": "Whisper (Final Round)",
+        "damage_type": "physical",
+        "total_raw": per_round * count,
+        "parts": (DamagePart("physical", per_round),),
+        "proc_count": count,
+        "detail": (
+            f"{count} final round(s) x {per_round:.2f} bonus physical damage "
+            f"({_fourth_shot_missing_ratio(ctx.level):.0%} of target missing "
+            "health at the declared missing-health ratio)."
+        ),
+    }
 
 
 def _dancing_grenade(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -142,6 +224,7 @@ def _curtain_call(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = {
     "P": _whisper,
+    "final_round": _final_round,
     "Q": _dancing_grenade,
     "W": simple_damage(attr="Physical Damage", dmg_type="physical"),
     "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
@@ -154,6 +237,23 @@ OPTIONS = [
         "type": "bool",
         "default": False,
         "label": "Whisper fourth shot",
+    },
+    {
+        "key": "p_shot_number",
+        "type": "int",
+        "default": 1,
+        "min": 1,
+        "max": 4,
+        "label": "Shots into the 4-round clip",
+    },
+    {
+        "key": "p_missing_health",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.05,
+        "label": "Target missing-health ratio on the final round",
     },
     {
         "key": "q_bounces",
@@ -182,6 +282,12 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     "Every Moment Matters uses the cached level scaling plus explicit crit/bonus-AS inputs; its AD grant is applied before later damage.",
+    "Whisper's final round is the 4th shot of the 4-round clip: always a "
+    "crit, adding 15/20/25% (levels 1/6/11) of target missing health. "
+    "p_shot_number is the explicit pre-stack (shots into the clip); "
+    "p_missing_health prices the bonus at the fight engine's static "
+    "target context (the per-auto dynamic missing-health curve is beyond "
+    "the engine's proc model — the expected contribution is priced flat).",
     "Dancing Grenade exposes bounce/death state, while Deadly Flourish and Lotus Trap use their typed source damage once.",
     "Curtain Call interpolates each bullet's missing-health range and keeps the fourth bullet's sourced critical packet separate.",
 ]
