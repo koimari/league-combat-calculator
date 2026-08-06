@@ -226,7 +226,8 @@
     "fight": "one_rotation",
     "auto": false,
     "champion_options": {
-     "blight_stacks": 3
+     "blight_stacks": 3,
+     "w_active_empower": false
     },
     "enemies": [
      {
