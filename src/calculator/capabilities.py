@@ -313,11 +313,6 @@ def _feature_fields() -> dict[str, dict[str, Any]]:
             state_path="targets|allies",
             frontend_token="data-remove-target",
         ),
-        "damage_package": _field(
-            payload_field="damage_package",
-            state_path="attacker.damagePackage",
-            frontend_token='id="baseDamage"',
-        ),
     }
 
 

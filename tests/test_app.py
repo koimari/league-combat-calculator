@@ -7,6 +7,7 @@ import hashlib
 import sqlite3
 
 import pytest
+from bs4 import BeautifulSoup
 
 import src.app as app_module
 from src.rate_limit import TokenBucketStore
@@ -24,20 +25,39 @@ def _disable_rate_limits_between_route_tests():
 def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contract():
     response = app_module.app.test_client().get("/")
     page = response.get_data(as_text=True)
+    soup = BeautifulSoup(page, "html.parser")
 
     assert response.status_code == 200
     assert "Scryglass — Item calculator" in page
     assert 'class="brand" href="https://scryglass.xyz/"' in page
     assert "<h1>Item calculator</h1>" in page
-    for required_id in (
+    # F0: the analyst builder exists exactly once and its proof surfaces ride
+    # in the visible result column — the legacy hidden DOM is gone.
+    assert len(soup.select(".content-grid")) == 1
+    assert len(soup.select("#slotsA")) == 1
+    assert (
+        soup.select_one("#damageBreakdown").find_parent(class_="result-column")
+        is not None
+    )
+    assert (
+        soup.select_one("#defenseReceipts").find_parent(class_="result-column")
+        is not None
+    )
+    assert (
+        soup.select_one("#feedbackWidget").find_parent(class_="result-column")
+        is not None
+    )
+    for removed_id in (
         "builder",
         "winnerVisual",
         "scoreGrid",
         "resistanceOutput",
-        "damageBreakdown",
         "rotationTable",
+        "tableA",
+        "tableB",
+        "baseDamage",
     ):
-        assert f'id="{required_id}"' in page
+        assert f'id="{removed_id}"' not in page, removed_id
 
 
 def _test_password_hash(password="secret"):
@@ -1096,9 +1116,12 @@ def test_item_picker_uses_backend_coverage_and_locks_unsupported_items():
 def test_item_mechanics_label_uses_backend_coverage_status():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
-    assert "item?.modelCoverage?.status" in source
-    assert '["blocked", "review_pending"].includes(coverageStatus)' in source
-    assert "const backendCalculated = Boolean" in source
+    # The item picker surfaces the backend's model-coverage status and
+    # eligibility on every catalogue row (live path, F0).
+    assert "itemCoverage?.status" in source
+    assert "itemCoverage?.calculation_eligible" in source
+    assert "itemCoverage?.optimizer_eligible" in source
+    assert "status.replaceAll" in source
 
 
 def test_frontend_round_trips_all_backend_champion_options():
@@ -1386,7 +1409,13 @@ def test_support_quest_transition_clears_stale_item_state_and_backend_gate_match
 
 def test_resistance_table_surfaces_all_backend_starting_defense_receipts():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
+    template = Path("templates/index.html").read_text(encoding="utf-8")
 
+    # F0: the receipts renderer lives in the visible result column
+    # (renderDefenseReceipts -> #defenseReceipts) instead of the legacy
+    # hidden #resistanceOutput container.
+    assert "function renderDefenseReceipts(" in source
+    assert 'id="defenseReceipts"' in template
     assert "physical_shield" in source
     assert "general_shield" in source
     assert "threshold_shield?.amount" in source
@@ -1400,9 +1429,9 @@ def test_resistance_table_surfaces_all_backend_starting_defense_receipts():
     assert "const hasHealingReceipt" in source
     assert "main.survival?.support_shield_received" in source
     assert "support shield received" in source
-    assert "aResult.damage_by_type" in source
-    assert "aResult.self_healing" in source
-    assert "aResult.threshold_health_triggered" in source
+    assert "aResult?.damage_by_type" in source
+    assert "aResult?.self_healing" in source
+    assert "aResult?.threshold_health_triggered" in source
     assert "aResult.target_ending_health" in source
     assert "aResult.target_effective_max_health" in source
     assert "threshold_health_bonus_gained" in source
