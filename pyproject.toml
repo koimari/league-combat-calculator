@@ -27,6 +27,7 @@ dependencies = [
   "gunicorn==26.0.0",
   "SQLAlchemy==2.0.51",
   "psycopg[binary]==3.3.4",
+  "redis==7.4.1",
 ]
 
 [tool.black]

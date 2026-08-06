@@ -4,7 +4,6 @@ import hmac
 import base64
 import binascii
 import hashlib
-import html
 import ipaddress
 import json
 import math
@@ -119,7 +118,9 @@ from calculator.pipeline import (
 from rate_limit import TokenBucketStore
 from sqlalchemy.exc import SQLAlchemyError
 from db import (
+    CacheUnavailable,
     add_feedback,
+    cache_backend,
     cache_delete_all,
     cache_get,
     cache_set,
@@ -130,6 +131,7 @@ from db import (
     is_configured,
     is_postgres,
     list_feedback,
+    redis_configured,
     save_build,
     stable_cache_key,
     validation_summary,
@@ -307,6 +309,22 @@ def _auth_users() -> dict[str, str]:
     return {username: password_hash for username, password_hash in users.items()}
 
 
+def _invite_codes() -> tuple[str, ...]:
+    """Return the configured invite codes (comma-separated env), deduplicated.
+
+    Codes are matched exactly (after trimming surrounding whitespace), so
+    ``BETA-2026`` and ``beta-2026`` are distinct.  An unset or empty
+    ``SCRYGLASS_INVITE_CODES`` keeps the deployment in password-only mode.
+    """
+    raw = os.environ.get("SCRYGLASS_INVITE_CODES", "")
+    return tuple(dict.fromkeys(code.strip() for code in raw.split(",") if code.strip()))
+
+
+def _invite_mode() -> bool:
+    """Invite gating is active only when the auth gate is on AND codes exist."""
+    return _auth_enabled() and bool(_invite_codes())
+
+
 def _verify_password(password: str, encoded: str) -> bool:
     """Verify an encoded scrypt password without exposing password material."""
     try:
@@ -338,26 +356,40 @@ def _auth_error(message: str, status: int = 503):
 
 
 def _login_page(message: str = "", status: int = 200, next_path: str = "/"):
-    """Render the tiny access gate without depending on protected assets."""
-    notice = (
-        f'<p style="color:#c5120b" role="alert">{html.escape(message)}</p>'
-        if message
-        else ""
+    """Render the invite-gated closed-beta landing page.
+
+    Served pre-auth, so it deliberately carries no dependency on protected
+    assets: the template embeds its own CSS and the form posts back to
+    ``/auth/login``.  The invite-code field appears only when
+    ``SCRYGLASS_INVITE_CODES`` is configured on top of the auth gate.
+    """
+    return (
+        render_template(
+            "beta_landing.html",
+            message=message,
+            next_path=next_path,
+            invite_required=_invite_mode(),
+        ),
+        status,
     )
-    page = f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Scryglass · Private calculator</title>
-<style>body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#121212;color:#f1f1f1;font:16px/1.5 Georgia,serif}}main{{width:min(420px,calc(100% - 40px));padding:32px;background:#181818;border:1px solid #2d2d2d;box-shadow:0 16px 50px #00000066}}h1{{margin:0 0 8px;font-size:28px}}p{{margin:8px 0 22px;color:#a4a4a4}}label{{display:grid;gap:6px;margin:14px 0;color:#a4a4a4;font:12px/1.2 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}}input{{box-sizing:border-box;width:100%;padding:12px;border:1px solid #464646;background:#202020;color:#f1f1f1;font:16px Georgia,serif}}button{{margin-top:8px;width:100%;padding:12px;border:0;background:#c5120b;color:#f1f1f1;font:12px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;cursor:pointer}}</style></head>
-<body><main><p style="font:11px ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#c5120b">Private calculator</p><h1>Sign in to Scryglass</h1><p>This page is restricted to approved research accounts.</p>{notice}<form method="post" action="/auth/login"><input type="hidden" name="next" value="{html.escape(next_path, quote=True)}"><label>Username<input name="username" autocomplete="username" required autofocus></label><label>Password<input type="password" name="password" autocomplete="current-password" required></label><button type="submit">Enter calculator</button></form></main></body></html>"""
-    return Response(page, status=status, mimetype="text/html")
 
 
 @app.before_request
 def _enforce_authentication():
-    """Gate the UI, assets, and APIs when the deployment enables X auth."""
+    """Gate the UI, assets, and APIs when the deployment enables auth.
+
+    The pre-auth surface stays reachable without a session: the health
+    probe, the auth endpoints (login/logout/status), the invite-code
+    validation API, and the public privacy page.
+    """
     if not _auth_enabled():
         return None
-    if request.path == "/healthz" or request.path.startswith("/auth/"):
+    if (
+        request.path == "/healthz"
+        or request.path == "/privacy"
+        or request.path == "/api/auth/invite"
+        or request.path.startswith("/auth/")
+    ):
         return None
     if _current_session():
         return None
@@ -366,13 +398,14 @@ def _enforce_authentication():
 
 
 def _result_cache_enabled() -> bool:
-    """Result caching is an explicit-DATABASE_URL feature, bypassed in tests.
+    """Result caching is an explicit-backend feature, bypassed in tests.
 
-    /api/calculate and /api/bis consult CachedResult only when the operator
-    configured a database; the local SQLite fallback and the test suite keep
+    /api/calculate and /api/bis consult the result cache only when the
+    operator configured a database (``DATABASE_URL``) or Redis
+    (``REDIS_URL``); the local SQLite fallback and the test suite keep
     computing fresh results so a misconfigured cache can never hide a bug.
     """
-    return not app.config.get("TESTING") and is_configured()
+    return not app.config.get("TESTING") and (is_configured() or redis_configured())
 
 
 def _spend_rate_limit(scope: str):
@@ -1067,7 +1100,13 @@ def _run_data_update():
 
 @app.route("/auth/login", methods=["GET", "POST"])
 def auth_login():
-    """Authenticate one of the explicitly configured private accounts."""
+    """Authenticate one of the explicitly configured private accounts.
+
+    In invite-gated deployments (``SCRYGLASS_INVITE_CODES`` set on top of
+    the auth gate) the landing form requires an invite code alongside the
+    research-account password; the validated code is recorded in the signed
+    session so every later request carries its invite source.
+    """
     try:
         _auth_secret()
         users = _auth_users()
@@ -1080,13 +1119,22 @@ def auth_login():
     )
     if request.method == "GET":
         return _login_page(next_path=next_path)
+    invite = None
+    if _invite_mode():
+        invite = request.form.get("invite_code", "").strip()
+        if not invite or invite not in _invite_codes():
+            return _login_page("Enter a valid invite code.", 401, next_path)
     username = request.form.get("username", "").strip()
     password = request.form.get("password", "")
     encoded = users.get(username)
     if not encoded or not _verify_password(password, encoded):
         return _login_page("Username or password was not recognised.", 401, next_path)
     session = _pack_signed(
-        {"username": username, "exp": time.time() + _AUTH_TTL_SECONDS}
+        {
+            "username": username,
+            "exp": time.time() + _AUTH_TTL_SECONDS,
+            "invite": invite,
+        }
     )
     response = redirect(next_path)
     response.set_cookie(
@@ -1111,15 +1159,57 @@ def auth_logout():
 
 @app.route("/auth/status")
 def auth_status():
-    """Expose only the current local identity."""
+    """Expose the current local identity and gate configuration."""
     session = _current_session()
     return jsonify(
         {
             "required": _auth_enabled(),
             "authenticated": bool(session),
             "user": session or None,
+            "invite_required": _invite_mode(),
         }
     )
+
+
+@app.route("/api/auth/invite", methods=["GET", "POST"])
+def api_auth_invite():
+    """Validate one invite code without logging in.
+
+    ``GET`` reports whether the deployment is invite-gated; ``POST`` with a
+    JSON ``{"code": ...}`` body returns 200 + the normalized code when it is
+    configured and valid, 401 for an unknown code, 400 for a missing code,
+    and 503 when no codes are configured.  The route is exempt from the auth
+    gate so the pre-login landing page can call it.
+    """
+    if request.method == "GET":
+        return jsonify(
+            {
+                "invite_required": _invite_mode(),
+                "configured": bool(_invite_codes()),
+            }
+        )
+    try:
+        data = _json_object()
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    code = data.get("code")
+    if not isinstance(code, str) or not code.strip():
+        return jsonify({"error": "code is required"}), 400
+    if not _invite_codes():
+        return (
+            jsonify({"error": "Invite codes are not configured on this deployment"}),
+            503,
+        )
+    normalized = code.strip()
+    if normalized not in _invite_codes():
+        return jsonify({"error": "Invalid invite code"}), 401
+    return jsonify({"valid": True, "invite": normalized})
+
+
+@app.route("/privacy")
+def privacy():
+    """Public privacy summary for the closed beta."""
+    return render_template("privacy.html")
 
 
 @app.route("/")
@@ -3555,14 +3645,16 @@ def api_cache_status():
     """Cache hit/miss counters plus live entry count."""
     try:
         stats = cache_stats()
-    except SQLAlchemyError as exc:  # surface DB failure to the client
+    except (SQLAlchemyError, CacheUnavailable) as exc:
+        # surface backend failure (database or Redis) to the client
         app.logger.exception("Failed to read cache status")
-        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+        return jsonify({"error": f"Cache backend unavailable: {exc}"}), 503
     return jsonify(
         {
             "cache_enabled": _result_cache_enabled(),
             "database_configured": is_configured(),
             "database": "postgresql" if is_postgres() else "sqlite",
+            "cache_backend": cache_backend(),
             **stats,
         }
     )

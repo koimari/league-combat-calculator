@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Scryglass — Privacy</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: #121212; color: #f1f1f1;
+    font: 16px/1.6 "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  a { color: #d8b14c; }
+  .shell { max-width: 760px; margin: 0 auto; padding: 56px 24px 80px; }
+  .eyebrow {
+    margin: 0 0 12px; font: 600 12px/1.2 ui-monospace, monospace;
+    letter-spacing: .16em; text-transform: uppercase; color: #c5120b;
+  }
+  h1 { margin: 0 0 24px; font-size: 34px; letter-spacing: -.02em; }
+  h2 { margin: 28px 0 8px; font-size: 19px; }
+  p { margin: 0 0 14px; color: #b8b8b8; }
+  ul { margin: 0 0 14px; padding-left: 20px; color: #b8b8b8; }
+  li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <p class="eyebrow">Scryglass</p>
+    <h1>Privacy during the closed beta</h1>
+    <p>
+      Scryglass is a research tool in closed beta. This page describes what the
+      beta stores and why. It is intentionally short; if something is missing,
+      ask the Scryglass team directly.
+    </p>
+
+    <h2>What we store</h2>
+    <ul>
+      <li><strong>A signed session cookie</strong> after you sign in, holding your research-account name, the invite code you used, and a seven-day expiry. It is signed, not encrypted: it contains no password.</li>
+      <li><strong>Builds and share links you explicitly save</strong>, in the managed database, so a share link can restore a scenario.</li>
+      <li><strong>Validation feedback you submit</strong> through the calculator's feedback flow, used to drive the champion-module validation backlog.</li>
+      <li><strong>Anonymous cache and rate-limit bookkeeping</strong> (hit/miss counters, request budgets) needed to keep the calculator responsive.</li>
+    </ul>
+
+    <h2>What we do not do</h2>
+    <ul>
+      <li>No ads, no analytics beacons, no third-party trackers.</li>
+      <li>No Riot account login — your Riot account is never touched.</li>
+      <li>No selling or sharing of personal data.</li>
+      <li>Calculation requests are never stored unless you save a build or submit feedback.</li>
+    </ul>
+
+    <h2>Retention and deletion</h2>
+    <p>
+      Session cookies expire after seven days. Saved builds and feedback are
+      kept for the duration of the beta and can be deleted on request by
+      contacting the Scryglass team. Invite codes are rotated between beta
+      batches and do not identify individuals.
+    </p>
+
+    <p><a href="/auth/login">← Back to the calculator</a></p>
+  </div>
+</body>
+</html>

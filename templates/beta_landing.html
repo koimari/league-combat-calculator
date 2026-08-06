@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<meta name="description" content="Scryglass is a research-grade League of Legends build calculator in closed beta." />
+<title>Scryglass — Closed beta</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #121212;
+    color: #f1f1f1;
+    font: 16px/1.6 "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  a { color: #d8b14c; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .shell { max-width: 1080px; margin: 0 auto; padding: 48px 24px 64px; }
+  .topline {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 64px;
+  }
+  .brand { display: inline-flex; align-items: center; gap: 10px; color: #f1f1f1; font-weight: 800; letter-spacing: .02em; }
+  .brand-mark { color: #c5120b; font-size: 20px; }
+  .eyebrow {
+    margin: 0 0 12px;
+    font: 600 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .16em; text-transform: uppercase; color: #c5120b;
+  }
+  .hero { max-width: 720px; }
+  h1 { margin: 0 0 16px; font-size: clamp(34px, 5.5vw, 56px); line-height: 1.05; letter-spacing: -.02em; }
+  .lede { margin: 0 0 40px; font-size: 19px; color: #b8b8b8; max-width: 60ch; }
+  h2 { margin: 0 0 16px; font-size: 22px; letter-spacing: -.01em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 0 0 48px; }
+  .step {
+    padding: 22px; background: #181818; border: 1px solid #2d2d2d; border-radius: 10px;
+  }
+  .step-num {
+    display: inline-grid; place-items: center; width: 28px; height: 28px; margin-bottom: 12px;
+    border-radius: 50%; background: #c5120b; color: #fff; font: 700 13px/1 ui-monospace, monospace;
+  }
+  .step h3 { margin: 0 0 6px; font-size: 17px; }
+  .step p { margin: 0; color: #a4a4a4; font-size: 14.5px; }
+  .split { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; align-items: start; }
+  .card { padding: 28px; background: #181818; border: 1px solid #2d2d2d; border-radius: 10px; }
+  form { display: grid; gap: 14px; margin-top: 4px; }
+  label { display: grid; gap: 6px; color: #a4a4a4; font: 600 11.5px/1.2 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .09em; }
+  input {
+    width: 100%; padding: 12px 13px; border: 1px solid #464646; border-radius: 6px;
+    background: #202020; color: #f1f1f1; font: 15px ui-sans-serif, system-ui, sans-serif;
+  }
+  input:focus { outline: 2px solid #d8b14c; outline-offset: 1px; border-color: #d8b14c; }
+  button {
+    margin-top: 6px; padding: 13px 16px; border: 0; border-radius: 6px;
+    background: #c5120b; color: #fff; font: 700 13px/1 ui-monospace, monospace;
+    letter-spacing: .08em; text-transform: uppercase; cursor: pointer;
+  }
+  button:hover { background: #a80e08; }
+  .error {
+    margin: 0 0 14px; padding: 10px 12px; border: 1px solid #7a1d18; border-radius: 6px;
+    background: #2a1412; color: #ff9d95; font-size: 14px;
+  }
+  .hint { margin: 12px 0 0; color: #7f7f7f; font-size: 12.5px; }
+  .legal { margin: 40px 0 0; color: #7f7f7f; font-size: 12.5px; max-width: 88ch; }
+  .legal a { color: #a4a4a4; text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topline">
+      <span class="brand"><span class="brand-mark" aria-hidden="true">◈</span>Scryglass</span>
+      <span class="eyebrow">Closed beta</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">Scryglass</p>
+      <h1>See exactly what a build does before you click it.</h1>
+      <p class="lede">
+        Scryglass is a research-grade League of Legends build calculator: full
+        fight simulations with event-ordered damage, healing, shields, and
+        cooldowns — every number sourced, labelled, and ready to compare.
+      </p>
+    </header>
+
+    <section aria-labelledby="how-heading">
+      <h2 id="how-heading">How it works</h2>
+      <div class="grid">
+        <div class="step">
+          <span class="step-num" aria-hidden="true">1</span>
+          <h3>Pick your champion and build</h3>
+          <p>Choose items, boots, role quest state, and any champion options — with full item and ability sources behind every choice.</p>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">2</span>
+          <h3>Set the fight</h3>
+          <p>Add enemies and allies, pick a level and role, then choose the fight window: duration, rotations, and auto-attack uptime.</p>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">3</span>
+          <h3>Compare builds</h3>
+          <p>Score builds by total damage dealt, read the per-ability breakdown, and see exactly which mechanics are modelled vs estimated.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="split" aria-label="Beta access">
+      <div class="card">
+        <h2>Enter with your invite code</h2>
+        <p style="margin:0 0 18px;color:#a4a4a4;font-size:14.5px;">
+          Access is limited to invited research accounts. Enter the invite code
+          you received, then sign in with your research-account password.
+        </p>
+        {% if message %}
+        <p class="error" role="alert">{{ message }}</p>
+        {% endif %}
+        <form method="post" action="/auth/login">
+          <input type="hidden" name="next" value="{{ next_path }}" />
+          {% if invite_required %}
+          <label for="invite-code">Invite code
+            <input id="invite-code" name="invite_code" autocomplete="off" spellcheck="false" required autofocus placeholder="e.g. BETA-2026" />
+          </label>
+          {% endif %}
+          <label for="username">Research account
+            <input id="username" name="username" autocomplete="username" required {% if not invite_required %}autofocus{% endif %} />
+          </label>
+          <label for="password">Password
+            <input id="password" type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <button type="submit">Enter the calculator</button>
+        </form>
+        <p class="hint">
+          {% if invite_required %}
+          Don't have an invite code yet? The beta is invite-only while the
+          calculator is under review.
+          {% else %}
+          This deployment is restricted to approved research accounts.
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>What you can check</h2>
+        <p style="margin:0 0 10px;color:#a4a4a4;font-size:14.5px;">
+          Every result carries trust labels: which abilities are sourced
+          formulas, which use a player-controlled assumption, and which
+          mechanics are deliberately not priced. The model fails closed —
+          unmodelled mechanics are named, never silently zeroed.
+        </p>
+        <p style="margin:0;color:#a4a4a4;font-size:14.5px;">
+          <a href="/privacy">Privacy</a> — what the beta stores and why.
+        </p>
+      </div>
+    </section>
+
+    <p class="legal">
+      Scryglass isn't endorsed by Riot Games and doesn't reflect the views or
+      opinions of Riot Games or anyone officially involved in producing or
+      managing Riot Games properties. Riot Games and all associated properties
+      are trademarks or registered trademarks of Riot Games, Inc.
+    </p>
+  </div>
+</body>
+</html>

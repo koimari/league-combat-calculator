@@ -5,6 +5,17 @@ Flask API.  SQLAlchemy 2.x declarative models, psycopg3 driver for
 PostgreSQL, and a SQLite fallback that is used only for local development
 and tests (set ``DATABASE_URL=sqlite:///...`` explicitly in tests).
 
+Result caching (P0a)
+--------------------
+The result cache uses Redis when ``REDIS_URL`` is set (managed deployments,
+e.g. Upstash), otherwise the SQLAlchemy ``CachedResult`` table (Postgres in
+production, SQLite in dev/tests).  The cache helpers ``cache_get``,
+``cache_set``, ``cache_delete_all`` and ``cache_stats`` dispatch to the
+configured backend behind one interface; the ``redis`` package is imported
+lazily so SQLite-only installs and the test suite never need it.  Persistent
+records (builds, share links, feedback, staleness) always live in the
+SQLAlchemy database named by ``DATABASE_URL``.
+
 Connection strategy
 -------------------
 * ``DATABASE_URL`` is read from the environment at first use (lazy engine
@@ -236,14 +247,16 @@ def reset() -> None:
     """Drop cached engine/session state so the next use re-reads the env.
 
     Tests call this after pointing ``DATABASE_URL`` at a fresh SQLite file;
-    it also releases the previous engine's connection pool.
+    it also releases the previous engine's connection pool and drops any
+    cached Redis client so a changed ``REDIS_URL`` takes effect.
     """
-    global _engine, _session_factory
+    global _engine, _session_factory, _redis_state
     with _engine_lock:
         if _engine is not None:
             _engine.dispose()
         _engine = None
         _session_factory = None
+        _redis_state = {"client": None, "error_type": None}
 
 
 def is_configured() -> bool:
@@ -261,6 +274,85 @@ def session() -> Any:
     get_engine()
     assert _session_factory is not None
     return _session_factory()
+
+
+# ---------------------------------------------------------------------------
+# Redis result cache
+# ---------------------------------------------------------------------------
+
+# Result-cache entries live under this prefix; the hit/miss counter hash sits
+# outside it so ``cache_delete_all`` never wipes the counters.
+_REDIS_ENTRY_PREFIX = "scryglass:cache:entry:"
+_REDIS_COUNTER_KEY = "scryglass:cache:counters"
+
+# Lazy singleton state: the redis package is imported only when REDIS_URL is
+# actually configured, so SQLite-only installs and the test suite (which
+# mocks the client) never need it installed.
+_redis_state: dict[str, Any] = {"client": None, "error_type": None}
+
+
+class CacheUnavailable(RuntimeError):
+    """Raised when the configured result-cache backend cannot be reached."""
+
+
+def redis_url() -> str | None:
+    """Return the configured ``REDIS_URL``, or None when unset."""
+    url = os.environ.get("REDIS_URL", "").strip()
+    return url or None
+
+
+def redis_configured() -> bool:
+    """True when ``REDIS_URL`` is explicitly configured."""
+    return redis_url() is not None
+
+
+def cache_backend() -> str:
+    """Name of the active result-cache backend: redis, postgresql, sqlite."""
+    if redis_configured():
+        return "redis"
+    return "postgresql" if is_postgres() else "sqlite"
+
+
+def _redis_client() -> Any:
+    """Return the lazily created Redis client for ``REDIS_URL``."""
+    if _redis_state["client"] is None:
+        try:
+            # pylint: disable-next=import-outside-toplevel  # deliberate, see docstring
+            import redis as redis_lib
+        except ImportError as exc:
+            raise RuntimeError(
+                "REDIS_URL is set but the redis package is not installed"
+            ) from exc
+        _redis_state["error_type"] = redis_lib.exceptions.RedisError
+        _redis_state["client"] = redis_lib.Redis.from_url(
+            redis_url(), decode_responses=True
+        )
+    return _redis_state["client"]
+
+
+def _redis_call(method: str, *args: Any, **kwargs: Any) -> Any:
+    """Run one Redis command, normalizing backend failures to a clean error.
+
+    The cache is an availability optimization, but it must never silently
+    serve stale data: any backend failure surfaces as ``CacheUnavailable``
+    so the caller can fail closed instead of guessing.
+    """
+    client = _redis_client()
+    try:
+        return getattr(client, method)(*args, **kwargs)
+    # pylint: disable-next=broad-exception-caught
+    except Exception as exc:
+        raise CacheUnavailable(f"Redis cache unavailable: {exc}") from exc
+
+
+def _redis_entry_key(cache_key: str) -> str:
+    """Full Redis key for one cache entry."""
+    return _REDIS_ENTRY_PREFIX + cache_key
+
+
+def _redis_record_counter(*, hits: bool) -> None:
+    """Atomically bump the shared hit/miss counter hash."""
+    _redis_call("hincrby", _REDIS_COUNTER_KEY, "hits" if hits else "misses", 1)
 
 
 def _serialize_datetime(value: datetime | None) -> str | None:
@@ -608,7 +700,18 @@ def _record_cache_counter(db_session: Any, *, hits: bool) -> None:
 
 
 def cache_get(cache_key: str) -> dict[str, Any] | None:
-    """Return a non-expired cached payload, or None (recording the miss)."""
+    """Return a non-expired cached payload, or None (recording the miss).
+
+    Dispatches to Redis when ``REDIS_URL`` is configured; expiry is enforced
+    by the Redis TTL, so a missing key is simply a miss.
+    """
+    if redis_configured():
+        raw = _redis_call("get", _redis_entry_key(cache_key))
+        if raw is None:
+            _redis_record_counter(hits=False)
+            return None
+        _redis_record_counter(hits=True)
+        return json.loads(raw)
     now = _utcnow()
     with session() as db_session:
         row = db_session.execute(
@@ -635,6 +738,9 @@ def cache_set(
     ttl = int(ttl_seconds) if ttl_seconds is not None else cache_ttl_seconds()
     if ttl <= 0:
         return
+    if redis_configured():
+        _redis_call("set", _redis_entry_key(cache_key), json.dumps(payload), ex=ttl)
+        return
     now = _utcnow()
     with session() as db_session:
         row = db_session.execute(
@@ -658,6 +764,11 @@ def cache_set(
 
 def cache_delete_all() -> int:
     """Drop every cached result (used on data updates); returns row count."""
+    if redis_configured():
+        keys = list(_redis_call("scan_iter", match=_REDIS_ENTRY_PREFIX + "*"))
+        if keys:
+            _redis_call("delete", *keys)
+        return len(keys)
     with session() as db_session:
         rows = db_session.execute(select(CachedResult.id)).scalars().all()
         count = len(rows)
@@ -671,6 +782,12 @@ def cache_delete_all() -> int:
 
 def cache_stats() -> dict[str, Any]:
     """Hit/miss counters plus live (non-expired) entry count."""
+    if redis_configured():
+        counters = _redis_call("hgetall", _REDIS_COUNTER_KEY) or {}
+        hits = int(counters.get("hits") or 0)
+        misses = int(counters.get("misses") or 0)
+        live = sum(1 for _ in _redis_call("scan_iter", match=_REDIS_ENTRY_PREFIX + "*"))
+        return {"hits": hits, "misses": misses, "cached_entries": live}
     now = _utcnow()
     with session() as db_session:
         row = db_session.get(CacheCounter, 1)
