@@ -152,7 +152,6 @@ def test_index_renders_the_analyst_view_surface():
         assert soup.select_one(f"#{required_id}") is not None, required_id
 
 
-
 def test_analyst_view_is_touch_first_and_has_no_hover_dependency():
     """The analyst builder's controls are real <button>/<input> elements, never
     hover-revealed (mobile-safe)."""
@@ -162,7 +161,6 @@ def test_analyst_view_is_touch_first_and_has_no_hover_dependency():
     assert picker is not None and picker.get("type") == "button"
     assert soup.select_one("#roleSelect") is not None
     assert soup.select_one("#levelInput") is not None
-
 
 
 def test_mobile_css_stacks_quick_cards_vertically():
@@ -476,7 +474,6 @@ def test_trust_panels_render_not_modeled_list():
     assert 'document.getElementById("notModeledList")' in source
     page = _client().get("/").get_data(as_text=True)
     assert 'id="notModeledList"' in page
-
 
 
 def test_app_js_wires_the_quick_flow_endpoints():

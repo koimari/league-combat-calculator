@@ -121,7 +121,6 @@ def test_quick_view_is_the_visible_default():
     assert soup.select(".view-tab") == []
 
 
-
 def test_hidden_attribute_is_enforced_in_css():
     """Class display rules (e.g. .quick-view) must not override [hidden]."""
     css = _css()
@@ -229,16 +228,15 @@ def test_quick_to_analyst_bridge_is_wired():
     soup = _soup()
     assert soup.select_one("#quickAnalystButton") is None
     source = _source()
-    assert "switchView(\"analyst\")" in source
+    assert 'switchView("analyst")' in source
     assert "renderSharedBuild(shareToken)" in source
-
 
 
 def test_shared_link_loads_into_the_analyst_view():
     """Share tokens render directly in the analyst view (product decision
     2026-08-06) — no quick read-only card."""
     source = _source()
-    assert 'renderSharedBuild(shareToken)' in source
+    assert "renderSharedBuild(shareToken)" in source
     assert 'switchView("analyst")' in source
 
 
