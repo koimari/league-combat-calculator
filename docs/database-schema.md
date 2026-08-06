@@ -73,8 +73,15 @@ data refresh.
 | `actual` | JSON | |
 | `source` | varchar(20) | `manual` \| `combat_log` \| `practice_tool` |
 | `matched` | boolean | |
+| `delta` | float null | signed observed-minus-predicted total damage; NULL for manual P6-style rows without an engine prediction, always populated by the P7 receipt endpoints |
 | `note` | text null | |
 | `created_at` | timestamp | |
+
+P7 receipt rows store the engine prediction in `expected` (`{"tdd": …,
+"sources": {…}}`) and the user's observation in `actual` (same shape), so
+`delta` can be re-derived and the signed percentage bias
+(`delta / expected.tdd * 100`, see `db.validation_summary`) aggregated per
+champion.
 
 ### `staleness_state` — per-patch staleness bookkeeping
 

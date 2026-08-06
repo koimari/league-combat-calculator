@@ -462,6 +462,48 @@ def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
     return result
 
 
+def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
+    """Return the module-level trust metadata used by the validation layer.
+
+    Extends :func:`get_champion_options_meta` with the structural facts a
+    trust label needs: the slot map keys, the module's own coverage
+    declaration, and its review status.  ``coverage`` values are the
+    module's ``MODULE_COVERAGE`` dict (``"modeled"`` / ``"no_damage"`` /
+    ``"out_of_scope"`` per slot) when declared, else an empty dict;
+    ``slots`` is the ordered list of SLOTS-map keys the module actually
+    implements.  Unknown champions return an empty metadata dict.
+
+    Returns:
+        ``{"options": [...], "assumptions": [...], "sources": [...],
+        "slots": [...], "coverage": {...}, "review_status": str,
+        "registration": str}`` — all JSON-safe.
+    """
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return {
+            "options": [],
+            "assumptions": [],
+            "sources": [],
+            "slots": [],
+            "coverage": {},
+            "review_status": "unregistered",
+            "registration": "unregistered",
+        }
+    module = importlib.import_module(f".{module_name}", package=__name__)
+    coverage = getattr(module, "MODULE_COVERAGE", None)
+    result = get_champion_options_meta(champion_name)
+    result["slots"] = list(getattr(module, "SLOTS", {}))
+    result["coverage"] = dict(coverage) if isinstance(coverage, dict) else {}
+    review_status = str(getattr(module, "REVIEW_STATUS", "")).strip() or "unregistered"
+    result["review_status"] = review_status
+    result["registration"] = (
+        "reviewed_module"
+        if champion_name in _CUSTOM_CHAMPION_MODULES
+        else "generated_packet"
+    )
+    return result
+
+
 def get_comparison_curve_unavailable_reason(champion_name: str) -> str | None:
     """Why timed crossover windows are withheld for a champion, if at all."""
     module_name = _CHAMPION_MODULES.get(champion_name)

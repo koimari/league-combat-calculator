@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import secrets
 import threading
@@ -38,6 +39,7 @@ from sqlalchemy import (
     JSON,
     Boolean,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -162,6 +164,10 @@ class ValidationFeedback(Base):
     actual: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     source: Mapped[str] = mapped_column(String(20), nullable=False, default="manual")
     matched: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # Signed observed-minus-predicted total damage delta.  NULL for manual
+    # P6-style feedback rows that carry no engine prediction; the receipt
+    # endpoints always populate it so systematic bias can be aggregated.
+    delta: Mapped[float | None] = mapped_column(Float, nullable=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), nullable=False, default=_utcnow
@@ -443,11 +449,16 @@ def add_feedback(
     actual: Mapping[str, Any] | None = None,
     source: str = "manual",
     matched: bool = False,
+    delta: float | None = None,
     note: str | None = None,
 ) -> int:
     """Persist one validation observation, returning its id."""
     if source not in _VALID_FEEDBACK_SOURCES:
         raise ValueError(f"source must be one of {sorted(_VALID_FEEDBACK_SOURCES)}")
+    if delta is not None:
+        delta = float(delta)
+        if not math.isfinite(delta):
+            raise ValueError("delta must be finite")
     with session() as db_session:
         feedback = ValidationFeedback(
             champion=champion,
@@ -456,6 +467,7 @@ def add_feedback(
             actual=dict(actual or {}),
             source=source,
             matched=bool(matched),
+            delta=delta,
             note=note,
         )
         db_session.add(feedback)
@@ -488,11 +500,69 @@ def list_feedback(
                 "actual": row.actual or {},
                 "source": row.source,
                 "matched": row.matched,
+                "delta": row.delta,
                 "note": row.note,
                 "created_at": _serialize_datetime(row.created_at),
             }
             for row in rows
         ]
+
+
+def validation_summary(
+    champion: str | None = None,
+    limit: int = 200,
+) -> list[dict[str, Any]]:
+    """Aggregate validation receipts into per-champion bias statistics.
+
+    Bias is the signed mean percentage error of the receipt deltas
+    (``(observed - predicted) / predicted * 100``); only rows that carry a
+    delta AND a numeric predicted total in ``expected["tdd"]`` contribute.
+    A champion is flagged when at least 5 receipts show a bias beyond
+    +-15%.  The counts include every feedback row for the champion, so the
+    flag never depends on the API page size.
+    """
+    statement = select(ValidationFeedback)
+    if champion:
+        statement = statement.where(ValidationFeedback.champion == champion)
+    with session() as db_session:
+        rows = db_session.execute(statement).scalars().all()
+
+    by_champion: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        entry = by_champion.setdefault(
+            row.champion,
+            {
+                "champion": row.champion,
+                "count": 0,
+                "receipts": 0,
+                "bias": None,
+                "n": 0,
+                "flagged": False,
+            },
+        )
+        entry["count"] += 1
+        if row.delta is None:
+            continue
+        entry["receipts"] += 1
+        expected_tdd = None
+        if isinstance(row.expected, dict):
+            raw = row.expected.get("tdd")
+            if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+                expected_tdd = float(raw)
+        if expected_tdd is None or expected_tdd <= 0:
+            continue
+        entry["n"] += 1
+        entry.setdefault("_bias_sum", 0.0)
+        entry["_bias_sum"] += row.delta / expected_tdd * 100.0
+
+    summary: list[dict[str, Any]] = []
+    for entry in by_champion.values():
+        if entry["n"]:
+            entry["bias"] = round(entry.pop("_bias_sum") / entry["n"], 2)
+            entry["flagged"] = entry["n"] >= 5 and abs(entry["bias"]) > 15.0
+        summary.append(entry)
+    summary.sort(key=lambda entry: (-entry["flagged"], entry["champion"]))
+    return summary[: max(1, min(int(limit), 500))]
 
 
 # ---------------------------------------------------------------------------

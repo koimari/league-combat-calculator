@@ -9,6 +9,7 @@ import ipaddress
 import json
 import math
 import os
+import re
 import secrets
 import sqlite3
 import subprocess
@@ -65,6 +66,7 @@ from calculator.participant_timeline import (
 from calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
+    get_champion_module_meta,
     get_comparison_curve_unavailable_reason,
     registered_engine_champion_names,
     reviewed_champion_names,
@@ -126,6 +128,7 @@ from db import (
     list_feedback,
     save_build,
     stable_cache_key,
+    validation_summary,
 )
 
 app = Flask(
@@ -1438,6 +1441,20 @@ def api_calculate():
     """Run the damage calculation and return results."""
     try:
         data = _json_object()
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return _calculate_response(data)
+
+
+def _calculate_response(data: Mapping[str, object]) -> tuple[Any, int]:
+    """Run the full calculate pipeline for one request payload.
+
+    Shared by /api/calculate and the validation receipts endpoint so a
+    receipt's model prediction is exactly the number the UI displayed.
+    Returns the Flask ``(payload, status)`` pair; caching and rate
+    limiting behave identically to the original route.
+    """
+    try:
         champion_name = _request_string(data, "champion", required=True)
         level = _request_int(data, "level", 1, 1, MAX_LEVEL)
         item_names = _request_string_list(data, "items", maximum=6)
@@ -2859,6 +2876,664 @@ def api_list_feedback():
         app.logger.exception("Failed to list feedback")
         return jsonify({"error": f"Database unavailable: {exc}"}), 503
     return jsonify({"feedback": rows, "count": len(rows)})
+
+
+# ---------------------------------------------------------------------------
+# P7 — validation loop: game receipts, systematic errors, trust labels
+# ---------------------------------------------------------------------------
+
+_VALIDATION_SOURCES = frozenset({"manual", "combat_log", "practice_tool"})
+# Receipt match rule: relative 10% of the model's prediction, or an
+# absolute 20 damage, whichever is LARGER.  The absolute floor keeps a tiny
+# prediction (e.g. a 40-damage one-rotation burst) from being judged by a
+# 10% band of +-4 that no real combat log can hit.
+_VALIDATION_RELATIVE_TOLERANCE = 0.10
+_VALIDATION_ABSOLUTE_TOLERANCE = 20.0
+# Systematic-bias flag: signed mean percentage error beyond +-15% with at
+# least 5 receipts.
+_VALIDATION_BIAS_FLAG_PERCENT = 15.0
+_VALIDATION_BIAS_MIN_RECEIPTS = 5
+
+_SLOT_LETTERS = ("P", "Q", "W", "E", "R")
+
+_CERTAINTY_EXACT = "exact"
+_CERTAINTY_ESTIMATE = "estimate"
+_CERTAINTY_BOUNDARY = "boundary"
+
+# Assumption-line classifiers for the trust label.  A line is BOUNDARY when
+# it documents a mechanic the module deliberately does not compute; a line
+# is ESTIMATE when it documents a defaulted or approximated input.  Lines
+# with neither marker contribute no certainty signal.
+_BOUNDARY_MARKERS = (
+    "not modeled",
+    "not modelled",
+    "not priced",
+    "not entered",
+    "not simulated",
+    "not produced",
+    "not computed",
+    "does not simulate",
+    "does not model",
+    "out of scope",
+    "out-of-scope",
+    "utility only",
+    "utility-only",
+    "stays state",
+    "remains state",
+    "boundary",
+    "unavailable",
+    "deals no enemy damage",
+)
+_ESTIMATE_MARKERS = (
+    "approximat",
+    "assum",
+    "estimated",
+    "conservative",
+    "slightly",
+    "player-controlled",
+    "default",
+    "uptime",
+    "on-hit model",
+    "sourced upper",
+)
+
+# Curated option-key -> slot overrides for keys whose label carries no slot
+# letter and whose mechanic is not the champion's ability name (pet summons,
+# passives, form-adjacent toggles).  Without these the option would degrade
+# the whole kit to estimate; with them the trust label stays per-ability.
+_OPTION_SLOT_OVERRIDES = {
+    "adoration_cash_in": "P",
+    "adoration_stacks": "P",
+    "daisy_attacks": "R",
+    "marks": "P",
+    "plant_attacks": "W",
+    "plant_count": "W",
+    "sapling_empowered": "E",
+    "scalemail_stacks": "P",
+    "soul_mark_proc": "W",
+    "stone_skin_stacks": "P",
+    "target_cursed": "P",
+    "tibbers_attacks": "R",
+    "tibbers_aura_seconds": "R",
+    "voidling_attacks": "W",
+    "voidling_count": "W",
+}
+
+# P1 audit entries (data/champion-audit/batch-p1-*.json) are the certified
+# slot-coverage receipts for the 30 reviewed champions; the trust label
+# consults them before module prose.
+_AUDIT_GLOB = "batch-p1-*.json"
+# Mutable holder so the lazy load needs no ``global`` statement.
+_AUDIT_CACHE: dict[str, object] = {"loaded": False, "entries": {}}
+
+
+def _audit_entries() -> dict[str, dict]:
+    """Lazily load the P1 champion-audit slot-coverage receipts."""
+    if _AUDIT_CACHE["loaded"]:
+        return _AUDIT_CACHE["entries"]  # type: ignore[return-value]
+    entries: dict[str, dict] = {}
+    audit_dir = Path(__file__).resolve().parent.parent / "data" / "champion-audit"
+    try:
+        for path in sorted(audit_dir.glob(_AUDIT_GLOB)):
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(payload, dict):
+                continue
+            for name, entry in payload.items():
+                if isinstance(name, str) and isinstance(entry, dict):
+                    entries[name] = entry
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        entries = {}
+    _AUDIT_CACHE["loaded"] = True
+    _AUDIT_CACHE["entries"] = entries
+    return entries
+
+
+def _receipt_tolerance(predicted_tdd: float) -> float:
+    """Tolerance = max(10% of prediction, absolute 20)."""
+    return max(
+        _VALIDATION_RELATIVE_TOLERANCE * abs(predicted_tdd),
+        _VALIDATION_ABSOLUTE_TOLERANCE,
+    )
+
+
+def _validate_observed_number(value: Any, label: str) -> float:
+    """One non-negative finite damage number from a receipt payload."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{label} must be a number")
+    number = float(value)
+    if not math.isfinite(number) or number < 0 or number > 1e12:
+        raise ValueError(f"{label} must be a finite non-negative number")
+    return number
+
+
+def _normalize_observed_payload(
+    payload: Mapping[str, Any], predicted_tdd: float | None = None
+) -> dict[str, Any]:
+    """Validate a structured observed payload and return the normalized
+    ``{"tdd": float, "sources": {key: float}}`` shape.
+
+    Two shapes are accepted:
+
+    * ``{"tdd": number, "sources": {...}}`` (or ``total_damage`` as an
+      alias) — an explicit observed total;
+    * ``{"off_by_percent": number, "direction": "higher"|"lower"}`` — the
+      widget's "Off by X%" answer, resolved against the engine prediction
+      (``observed = predicted * (1 +- X/100)``) so the stored receipt stays
+      numeric and bias aggregation remains exact.
+    """
+    off_by = payload.get("off_by_percent")
+    if off_by is not None:
+        if predicted_tdd is None:
+            raise ValueError("off_by_percent requires a model prediction")
+        percent = _validate_observed_number(off_by, "observed.off_by_percent")
+        if percent > 1000:
+            raise ValueError("observed.off_by_percent must be at most 1000")
+        direction = str(payload.get("direction", "higher")).strip().lower()
+        if direction not in {"higher", "lower"}:
+            raise ValueError("observed.direction must be higher or lower")
+        factor = (
+            1.0 + percent / 100.0 if direction == "higher" else 1.0 - percent / 100.0
+        )
+        tdd = predicted_tdd * factor
+        if tdd < 0:
+            raise ValueError("observed.off_by_percent implies a negative total")
+        return {"tdd": round(tdd, 2), "sources": {}}
+
+    raw_tdd = payload.get("tdd")
+    if raw_tdd is None:
+        raw_tdd = payload.get("total_damage")  # friendly alias
+    if raw_tdd is None:
+        raise ValueError("observed.tdd is required")
+    tdd = _validate_observed_number(raw_tdd, "observed.tdd")
+    raw_sources = payload.get("sources")
+    if raw_sources is None:
+        raw_sources = {}
+    if not isinstance(raw_sources, Mapping):
+        raise ValueError("observed.sources must be an object")
+    sources: dict[str, float] = {}
+    for key, value in raw_sources.items():
+        if not isinstance(key, str) or not key.strip():
+            raise ValueError("observed.sources keys must be non-empty strings")
+        sources[key.strip()] = _validate_observed_number(value, "observed.sources")
+    return {"tdd": tdd, "sources": sources}
+
+
+def _parse_observed_paste(text: str) -> dict[str, Any]:
+    """Tolerantly parse a pasted combat-log fragment into observed values.
+
+    Accepted shapes, in order of preference:
+
+    * a JSON object with ``tdd`` (or ``total_damage``) and optional
+      ``sources``;
+    * lines of the form ``Q 347.2`` / ``Q: 347.2`` / ``Orb of Deception
+      347.2``, where a leading slot letter or ability name precedes a
+      number;
+    * a bare number line, treated as the observed total.
+
+    The total is the explicit total line when present, else the sum of the
+    slot entries, else the last bare number.  A single unrecognizable line
+    is ignored; a paste with no numbers at all is rejected.
+    """
+    text = text.strip()
+    if not text:
+        raise ValueError("observed paste is empty")
+    if text.startswith("{") or text.startswith("["):
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise ValueError("observed JSON paste is not valid JSON") from exc
+        if not isinstance(parsed, dict):
+            raise ValueError("observed JSON paste must be an object")
+        return _normalize_observed_payload(parsed)
+
+    total: float | None = None
+    sources: dict[str, float] = {}
+    slot_seen: set[str] = set()
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        number_match = re.search(r"\d+(?:[.,]\d+)?", line)
+        if number_match is None:
+            continue
+        number = float(number_match.group(0).replace(",", ""))
+        head = line[: number_match.start()].strip(" \t:=-\u2013\u2014>|")
+        head_upper = head.upper()
+        slot = None
+        for letter in _SLOT_LETTERS:
+            if head_upper == letter or head_upper.startswith(letter + " "):
+                slot = letter
+                break
+        if slot is not None:
+            if slot in slot_seen:
+                raise ValueError(f"duplicate slot {slot} in paste")
+            slot_seen.add(slot)
+            sources[slot] = number
+        elif "TOTAL" in head_upper or head_upper in {"TDD", "SUM", "DAMAGE"}:
+            total = number
+        else:
+            sources.setdefault(head or "damage", number)
+    if total is None and sources:
+        total = sum(sources.values())
+    if total is None:
+        raise ValueError("no damage numbers found in paste")
+    return {"tdd": total, "sources": sources}
+
+
+def _run_calculate_payload(data: Mapping[str, object]) -> tuple[dict, int]:
+    """Run the calculate pipeline and return the plain JSON payload + status."""
+    response = _calculate_response(data)
+    if isinstance(response, tuple):
+        response, status = response
+    else:
+        status = 200
+    return response.get_json(), status
+
+
+@app.route("/api/receipts", methods=["POST"])
+# pylint: disable=too-many-branches,too-many-locals,too-many-statements
+def api_receipts():
+    """Record one game-receipt validation observation.
+
+    Body: ``{"champion", "loadout" (mirror of the /api/calculate payload),
+    "observed" ({"tdd", "sources"} | {"off_by_percent", "direction"} | a
+    raw combat-log paste string), "source" (manual|combat_log|practice_tool),
+    "note" (optional)}``.
+
+    The engine prediction is computed for the same loadout through the same
+    pipeline as /api/calculate, so ``predicted`` is exactly the total the UI
+    displayed.  ``matched`` compares observed vs predicted with
+    ``max(10% relative, absolute 20)`` tolerance; ``delta`` is signed
+    observed-minus-predicted.  The ``off_by_percent`` shape (the widget's
+    "Off by X% higher/lower" answer) is resolved against the prediction so
+    the stored receipt stays numeric.  When ``observed`` is omitted the
+    receipt is a positive confirmation (observed := predicted).
+    """
+    try:
+        data = _json_object()
+        champion = _request_string(data, "champion", required=True)
+        source = _request_string(data, "source", "manual")
+        if source not in _VALIDATION_SOURCES:
+            raise ValueError("source must be manual, combat_log, or practice_tool")
+        loadout = data.get("loadout")
+        if loadout is None:
+            loadout = {}
+        if not isinstance(loadout, Mapping):
+            raise ValueError("loadout must be an object")
+        note = data.get("note")
+        if note is not None:
+            if not isinstance(note, str):
+                raise ValueError("note must be a string")
+            note = note.strip()
+            if len(note) > 2000:
+                raise ValueError("note must be at most 2000 characters")
+        observed_raw = data.get("observed")
+        if observed_raw is None:
+            observed = None  # confirmation receipt
+        elif isinstance(observed_raw, str):
+            observed = {"_paste": observed_raw}
+        elif isinstance(observed_raw, Mapping):
+            observed = {"_payload": dict(observed_raw)}
+        else:
+            raise ValueError("observed must be an object, a paste string, or omitted")
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    rate_limit_response = _spend_rate_limit("calculate")
+    if rate_limit_response is not None:
+        return rate_limit_response
+
+    calculate_data = dict(loadout)
+    calculate_data["champion"] = champion
+    predicted_payload, status = _run_calculate_payload(calculate_data)
+    if status != 200:
+        return jsonify(predicted_payload), status
+
+    predicted_tdd = _validate_observed_number(
+        predicted_payload.get("total_damage", 0.0), "predicted total_damage"
+    )
+    predicted_sources: dict[str, float] = {}
+    for key, row in predicted_payload.get("breakdown", {}).items():
+        if isinstance(row, Mapping) and row.get("total_damage"):
+            predicted_sources[str(key)] = _validate_observed_number(
+                row["total_damage"], f"predicted breakdown.{key}"
+            )
+    if observed is None:
+        observed = {"tdd": predicted_tdd, "sources": predicted_sources}
+    else:
+        try:
+            if "_paste" in observed:
+                observed = _parse_observed_paste(observed["_paste"])
+            else:
+                observed = _normalize_observed_payload(
+                    observed["_payload"], predicted_tdd=predicted_tdd
+                )
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+    tolerance = _receipt_tolerance(predicted_tdd)
+    delta = observed["tdd"] - predicted_tdd
+    # Compare the same rounded values the response reports so an exact
+    # boundary hit (10% of a large prediction) is not lost to float noise.
+    matched = abs(round(delta, 2)) <= round(tolerance, 2)
+
+    try:
+        feedback_id = add_feedback(
+            champion=champion,
+            loadout=dict(loadout),
+            expected={"tdd": predicted_tdd, "sources": predicted_sources},
+            actual={"tdd": observed["tdd"], "sources": observed["sources"]},
+            source=source,
+            matched=matched,
+            delta=delta,
+            note=note,
+        )
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to record receipt")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    return (
+        jsonify(
+            {
+                "feedback_id": feedback_id,
+                "matched": matched,
+                "predicted": {"tdd": predicted_tdd, "sources": predicted_sources},
+                "observed": observed,
+                "delta": round(delta, 2),
+                "tolerance": round(tolerance, 2),
+            }
+        ),
+        201,
+    )
+
+
+@app.route("/api/validation")
+def api_validation():
+    """Recent receipts plus the systematic-bias summary.
+
+    ``?champion=`` narrows both halves; ``?limit=`` pages the recent
+    feedback list.  ``systematic`` is computed over ALL stored receipts for
+    the champion (not just the returned page) so the +-15% / n>=5 flag is
+    stable.
+    """
+    champion = request.args.get("champion", "").strip() or None
+    try:
+        limit = int(request.args.get("limit", "50"))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    try:
+        rows = list_feedback(champion=champion, limit=limit)
+        systematic = validation_summary(champion=champion)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to read validation summary")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    return jsonify({"feedback": rows, "count": len(rows), "systematic": systematic})
+
+
+@app.route("/api/validation/champions")
+def api_validation_champions():
+    """Champions with feedback counts and bias, for a future dashboard."""
+    try:
+        summary = validation_summary()
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to read validation champions")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    return jsonify({"champions": summary})
+
+
+def _option_affects_slot(
+    option: Mapping[str, Any], slot: str, ability_names: dict[str, list[str]]
+) -> bool:
+    """Whether one OPTIONS entry is a player-controlled input for ``slot``."""
+    key = str(option.get("key", "")).lower()
+    label = str(option.get("label", ""))
+    if key in _OPTION_SLOT_OVERRIDES:
+        return _OPTION_SLOT_OVERRIDES[key] == slot
+    prefix = key.split("_", 1)[0]
+    if prefix in {"p", "q", "w", "e", "r"}:
+        return prefix.upper() == slot
+    if key.startswith("passive"):
+        return slot == "P"
+    if re.search(rf"\b{slot}\b", label):
+        return True
+    for name in ability_names.get(slot, ()):
+        if name and name.lower() in label.lower():
+            return True
+    return False
+
+
+def _classify_assumption(text: str) -> str | None:
+    """Classify one ASSUMPTIONS line as estimate/boundary, or None."""
+    lowered = text.lower()
+    is_estimate = any(marker in lowered for marker in _ESTIMATE_MARKERS)
+    if is_estimate:
+        return _CERTAINTY_ESTIMATE
+    if any(marker in lowered for marker in _BOUNDARY_MARKERS):
+        return _CERTAINTY_BOUNDARY
+    return None
+
+
+def _line_mentions_slot(
+    line: str, slot: str, ability_names: dict[str, list[str]]
+) -> bool:
+    """Whether an assumption line talks about ``slot`` (letter, name, or
+    the passive keyword)."""
+    if re.search(rf"\b{slot}\b", line):
+        return True
+    if slot == "P" and re.search(r"\bpassive\b", line, re.IGNORECASE):
+        return True
+    for name in ability_names.get(slot, ()):
+        if name and name in line:
+            return True
+    return False
+
+
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-return-statements
+def _slot_certainty(
+    slot: str,
+    options: list[Mapping[str, Any]],
+    assumptions: list[str],
+    coverage: Mapping[str, str],
+    module_slots: list[str],
+    ability_names: dict[str, list[str]],
+    audit: Mapping[str, Any] | None,
+    registration: str,
+) -> tuple[str, str]:
+    """Derive one slot's certainty level and its human-readable reason."""
+    # 1. Certified slot state from the P1 audit / module coverage.
+    audit_state = None
+    if audit and isinstance(audit.get("slots"), dict):
+        audit_state = audit["slots"].get(slot)
+    cov_state = coverage.get(slot)
+    if audit_state == "out_of_scope" or cov_state == "out_of_scope":
+        return _CERTAINTY_BOUNDARY, (
+            f"{slot} is documented out of scope: the module deliberately does "
+            f"not compute it (no damage row is priced)."
+        )
+    if audit_state == "no_damage" or cov_state == "no_damage":
+        return _CERTAINTY_BOUNDARY, (
+            f"{slot} is documented as dealing no enemy damage in the model; "
+            f"only a zero-damage/utility receipt exists."
+        )
+    if slot not in module_slots and slot in ability_names:
+        return _CERTAINTY_BOUNDARY, (
+            f"{slot} is not modeled: the champion module has no slot entry "
+            f"for it, so no damage row is priced."
+        )
+
+    # 2. Player-controlled defaulted options on this slot.
+    slot_options = [
+        option
+        for option in options
+        if _option_affects_slot(option, slot, ability_names)
+    ]
+    if slot_options:
+        labels = ", ".join(
+            f"'{option.get('key')}' (default {option.get('default')})"
+            for option in slot_options
+        )
+        return _CERTAINTY_ESTIMATE, (
+            f"Uses player-controlled defaulted option(s): {labels}; the "
+            f"damage row depends on the supplied value."
+        )
+
+    # 3. Documented assumptions mentioning this slot.
+    slot_lines = [
+        line for line in assumptions if _line_mentions_slot(line, slot, ability_names)
+    ]
+    for line in slot_lines:
+        classified = _classify_assumption(line)
+        if classified == _CERTAINTY_BOUNDARY:
+            return _CERTAINTY_BOUNDARY, f"Documented non-computed mechanic: {line}"
+    for line in slot_lines:
+        classified = _classify_assumption(line)
+        if classified == _CERTAINTY_ESTIMATE:
+            return _CERTAINTY_ESTIMATE, f"Documented approximation/assumption: {line}"
+
+    # 4. Global defaulted options (form toggles, pet counts, AD/AS points)
+    #    downgrade every damaging slot: the kit depends on them.
+    global_options = [
+        option
+        for option in options
+        if not any(
+            _option_affects_slot(option, other, ability_names)
+            for other in ability_names
+        )
+    ]
+    if global_options:
+        labels = ", ".join(
+            f"'{option.get('key')}' (default {option.get('default')})"
+            for option in global_options
+        )
+        return _CERTAINTY_ESTIMATE, (
+            f"Kit-wide player-controlled option(s) {labels} can change the "
+            f"damage rows; {slot} inherits the estimate."
+        )
+
+    # 5. Generated packets are deterministic wiki parses, not reviewed
+    #    modules; their numbers stay estimates until the exact review gate.
+    if registration != "reviewed_module":
+        return _CERTAINTY_ESTIMATE, (
+            f"No player-controlled defaults or documented boundaries for "
+            f"{slot}, but the module is a generated packet (wiki parse "
+            f"without exact review) — treat numbers as estimates."
+        )
+
+    return _CERTAINTY_EXACT, (
+        f"Every damaging/heal row for {slot} is a sourced formula with no "
+        f"player-controlled default."
+    )
+
+
+def _derive_certainty(
+    champion: str, champion_data: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Per-slot certainty for one champion, from module + audit evidence."""
+    meta = get_champion_module_meta(champion)
+    options = meta.get("options") or []
+    assumptions = meta.get("assumptions") or []
+    coverage = meta.get("coverage") or {}
+    module_slots = meta.get("slots") or []
+    registration = meta.get("registration") or "unregistered"
+    audit = _audit_entries().get(champion)
+
+    ability_names: dict[str, list[str]] = {}
+    for slot, entries in (champion_data.get("abilities") or {}).items():
+        if isinstance(entries, list):
+            names = [
+                str(entry.get("name", "")).strip()
+                for entry in entries
+                if isinstance(entry, dict) and entry.get("name")
+            ]
+            ability_names[str(slot)] = [name for name in names if name]
+
+    existing_slots = [
+        slot for slot in _SLOT_LETTERS if slot in ability_names or slot in module_slots
+    ]
+    slots = {
+        slot: {
+            "certainty": certainty,
+            "reason": reason,
+        }
+        for slot in existing_slots
+        for certainty, reason in [
+            _slot_certainty(
+                slot,
+                options,
+                assumptions,
+                coverage,
+                module_slots,
+                ability_names,
+                audit,
+                registration,
+            )
+        ]
+    }
+    return {
+        "champion": champion,
+        "slots": slots,
+        "certified": registration == "reviewed_module",
+        "registration": registration,
+    }
+
+
+@app.route("/api/certainty")
+def api_certainty():
+    """Trust-label data: per-ability certainty for one champion.
+
+    ``?champion=`` is required.  Certainty levels:
+
+    * ``exact`` — every damaging/heal row is a sourced formula with no
+      player-controlled default;
+    * ``estimate`` — the module uses a defaulted option (stacks/procs/
+      uptime), a documented approximation, or is an unreviewed generated
+      packet;
+    * ``boundary`` — a documented non-computed mechanic exists (utility-
+      only slot, death-only trigger, out-of-scope row).
+    """
+    champion = request.args.get("champion", "").strip()
+    if not champion:
+        return jsonify({"error": "champion is required"}), 400
+    try:
+        champion_data = _load_public_champion(champion)
+    except LookupError as exc:
+        return jsonify({"error": str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 422
+    try:
+        return jsonify(_derive_certainty(champion, champion_data))
+    except (ImportError, KeyError, ValueError) as exc:
+        app.logger.exception("Failed to derive certainty for %s", champion)
+        return jsonify({"error": f"Certainty unavailable: {exc}"}), 500
+
+
+@app.route("/api/not-modeled")
+def api_not_modeled():
+    """Documented non-computed mechanics for one champion.
+
+    Collects the module's ASSUMPTIONS lines that describe mechanics the
+    model deliberately does not price (``not modeled``, ``not priced``,
+    ``documented``, ``boundary``, ``out of scope``, ``utility only``,
+    ``stays state``).  Computed approximations (ESTIMATE) are deliberately
+    excluded — they belong in /api/certainty, not here.
+    """
+    champion = request.args.get("champion", "").strip()
+    if not champion:
+        return jsonify({"error": "champion is required"}), 400
+    try:
+        _champion_data = _load_public_champion(champion)  # existence + mode gate
+    except LookupError as exc:
+        return jsonify({"error": str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 422
+    meta = get_champion_module_meta(champion)
+    assumptions = meta.get("assumptions") or []
+    items = [
+        line
+        for line in assumptions
+        if _classify_assumption(line) == _CERTAINTY_BOUNDARY
+    ]
+    return jsonify({"champion": champion, "items": items})
 
 
 @app.route("/api/cache-status")
