@@ -1,904 +1,904 @@
 {
- "schema_version": 1,
- "purpose": "Practice-Tool reproducible verification corpus: every scenario is a concrete input tuple with expected outputs a player can verify in-game (custom game / Practice Tool combat log).",
- "verified_tiers": {
-  "production": "confirmed on scryglass-item-calculator.vercel.app",
-  "local": "confirmed on local server at the pinned SHA",
-  "pending": "awaiting verification"
- },
- "scenarios": [
-  {
-   "id": "cp21-ziggs-outer-blast",
-   "tier": "local",
-   "sha": "820acbc3",
-   "setup": {
-    "champion": "Ziggs",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "enemies": [
-     {
-      "champion": "Dr. Mundo",
-      "level": 18
-     }
-    ],
-    "allies": [
-     {
-      "champion": "Lulu",
-      "level": 18,
-      "role": "support"
-     }
-    ],
-    "fight": "one_rotation",
-    "auto": "calculated"
-   },
-   "expected": {
-    "tdd": 203,
-    "auto_readout": "95% calculated \u00b7 3 autos/rotation"
-   },
-   "practice_tool_steps": "Load Ziggs with no items; add practice dummy; one full rotation; compare damage dealt."
+  "schema_version": 1,
+  "purpose": "Practice-Tool reproducible verification corpus: every scenario is a concrete input tuple with expected outputs a player can verify in-game (custom game / Practice Tool combat log).",
+  "verified_tiers": {
+    "production": "confirmed on scryglass-item-calculator.vercel.app",
+    "local": "confirmed on local server at the pinned SHA",
+    "pending": "awaiting verification"
   },
-  {
-   "id": "cp21-bis-utility-ahri",
-   "tier": "local",
-   "sha": "820acbc3",
-   "setup": {
-    "champion": "Ahri",
-    "level": 18,
-    "role": "mid",
-    "enemies": [
-     {
-      "champion": "Annie",
-      "level": 18
-     }
-    ],
-    "objective": "utility",
-    "bis_slot": "buildA.0"
-   },
-   "expected": {
-    "certified": "95 certified of 96 mid role-compatible candidates",
-    "withheld_before_timeline": [],
-    "partial": [
-     "Fimbulwinter"
-    ]
-   }
-  },
-  {
-   "id": "e0-vladimir-sanguine-pool-heal",
-   "tier": "local",
-   "sha": "9217dfc",
-   "setup": {
-    "champion": "Vladimir",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "ranks": {
-     "Q": 1,
-     "W": 5,
-     "E": 1,
-     "R": 1
+  "scenarios": [
+    {
+      "id": "cp21-ziggs-outer-blast",
+      "tier": "local",
+      "sha": "820acbc3",
+      "setup": {
+        "champion": "Ziggs",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "enemies": [
+          {
+            "champion": "Dr. Mundo",
+            "level": 18
+          }
+        ],
+        "allies": [
+          {
+            "champion": "Lulu",
+            "level": 18,
+            "role": "support"
+          }
+        ],
+        "fight": "one_rotation",
+        "auto": "calculated"
+      },
+      "expected": {
+        "tdd": 203,
+        "auto_readout": "95% calculated \u00b7 3 autos/rotation"
+      },
+      "practice_tool_steps": "Load Ziggs with no items; add practice dummy; one full rotation; compare damage dealt."
     },
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18
-     }
-    ],
-    "fight": "time_based_10s"
-   },
-   "expected": {
-    "w_heal": "30% of PRE-mitigation damage (raw 75.0 -> heal 22.5 vs 14.8 post-mitigation)",
-    "q_heal_rank5": 40.0,
-    "r_heal_rank3": 350.0
-   },
-   "practice_tool_steps": "Vladimir W on dummy; read heal in combat log; compare vs 30% of pre-mitigation pool damage."
-  },
-  {
-   "id": "vladimir-hemoplague-multitarget",
-   "tier": "local",
-   "sha": "a963d58",
-   "setup": {
-    "champion": "Vladimir",
-    "level": 18,
-    "role": "mid",
-    "ranks": {
-     "Q": 1,
-     "W": 1,
-     "E": 1,
-     "R": 3
-    },
-    "enemies": [
-     {
-      "champion": "Ahri"
-     },
-     {
-      "champion": "Annie"
-     }
-    ]
-   },
-   "expected": {
-    "r_heals": [
-     350.0,
-     140.0
-    ],
-    "events_preserved": 2
-   }
-  },
-  {
-   "id": "e9-e1-aatrox-umbral-dash-heal",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E1",
-   "setup": {
-    "champion": "Aatrox",
-    "level": 18,
-    "role": "top",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "one_rotation",
-    "auto": true,
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "self_healing_events",
-    "self_healing": 326.8,
-    "healing_events": [
-     {
-      "source": "Umbral Dash",
-      "time": 0.0,
-      "amount": 276.4,
-      "trigger_source": "Q"
-     },
-     {
-      "source": "Umbral Dash",
-      "time": 0.0,
-      "amount": 50.4,
-      "trigger_source": "W"
-     }
-    ],
-    "formula": "E passive heals 16% of post-mitigation ability damage (no bonus health), x2.0 while R (World Ender, rank 3 = +100% increased healing) is active: Q 863.7 x 0.16 x 2.0 = 276.4; W 157.5 x 0.16 x 2.0 = 50.4"
-   },
-   "practice_tool_steps": "Load Aatrox, buy nothing. Level 18, max Q/W/E and rank 3 R. Practice Tool: cast World Ender, then Q (sweetspot) and W on a practice dummy. Combat log: Umbral Dash passive heals 276.4 on the Q hit and 50.4 on the W hit (16% of post-mitigation damage, doubled by World Ender)."
-  },
-  {
-   "id": "e9-e2-malzahar-malefic-visions",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E2",
-   "setup": {
-    "champion": "Malzahar",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "one_rotation",
-    "auto": false,
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "dot_ticks",
-    "source": "E",
-    "ticks": 16,
-    "per_tick_raw": 13.75,
-    "total_raw": 220.0,
-    "formula": "Malefic Visions rank 5: Total Magic Damage 220 = 16 ticks of 13.75 (every 0.25s over 4s); one rotation emits exactly one cast"
-   },
-   "practice_tool_steps": "Load Malzahar, buy nothing. Level 18, rank 5 E. Practice Tool: cast E (Malefic Visions) on a practice dummy; the combat log lists 16 magic damage ticks of 13.75 each = 220 total (before the dummy's magic resistance)."
-  },
-  {
-   "id": "e9-e3-varus-blight-detonation",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E3",
-   "setup": {
-    "champion": "Varus",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "one_rotation",
-    "auto": false,
-    "champion_options": {
-     "blight_stacks": 3
-    },
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "breakdown_source",
-    "source": "Blight Detonation",
-    "total_damage": 232.7,
-    "raw_damage": 353.7,
-    "formula": "3 stacks x 5% maxHP per stack (W rank 5, 0 AP) of Ahri's 2358 max HP = 3 x 117.9 = 353.7 raw magic; post-mitigation vs 52 MR = 232.7",
-    "damage_type": "magic"
-   },
-   "practice_tool_steps": "Load Varus, buy nothing. Level 18, rank 5 W. Practice Tool: apply 3 Blight stacks to a practice dummy (3 basic attacks), then detonate with Q; combat log shows the Blight Detonation magic hit for 5% max HP per stack (3 x 117.9 raw)."
-  },
-  {
-   "id": "e9-e3-nasus-siphoning-stacks",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E3",
-   "setup": {
-    "champion": "Nasus",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "one_rotation",
-    "auto": false,
-    "champion_options": {
-     "q_stacks": 100
-    },
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "ability_event",
-    "source": "Q",
-    "raw_damage": 355.0,
-    "damage": 184.9,
-    "time": 0.0,
-    "formula": "Siphoning Strike with 100 permanent stacks: 135 auto AD + 120 flat (rank 5) + 100 stacks = 355 raw physical; post-mitigation vs 92 armor = 184.9"
-   },
-   "practice_tool_steps": "Load Nasus, buy nothing. Level 18, rank 5 Q. Practice Tool: farm to 100 Siphoning Strike stacks (or set stacks via practice tool if available), then Q a practice dummy; combat log shows the empowered hit for 135 + 120 + 100 = 355 raw physical damage."
-  },
-  {
-   "id": "e9-e4-zyra-plant-attacks",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E4",
-   "setup": {
-    "champion": "Zyra",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "one_rotation",
-    "auto": false,
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "breakdown_source",
-    "source": "Garden of Thorns (Plants)",
-    "total_damage": 197.4,
-    "raw_damage": 300.0,
-    "attack_count": 4,
-    "per_attack_raw": 75.0,
-    "formula": "4 plant attacks of 75 raw magic each (level-18 plant damage, 20% AP = 0) = 300 raw; post-mitigation 49.3 each vs 52 MR = 197.2..197.4",
-    "damage_type": "magic"
-   },
-   "practice_tool_steps": "Load Zyra, buy nothing. Level 18. Practice Tool: place a seed and sprout one plant with Q/E next to a practice dummy; the plant attacks 4 times for 75 magic damage each (combat log), before the dummy's magic resistance."
-  },
-  {
-   "id": "e9-e4-yorick-mist-walkers",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E4",
-   "setup": {
-    "champion": "Yorick",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "one_rotation",
-    "auto": false,
-    "champion_options": {
-     "mist_walkers": 4,
-     "mist_walker_attacks": 5
-    },
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "breakdown_source",
-    "source": "Mist Walkers",
-    "total_damage": 1348.0,
-    "raw_damage": 2588.0,
-    "attack_count": 20,
-    "per_attack_raw": 129.4,
-    "formula": "4 Mist Walkers x 5 attacks = 20 attacks of 129.4 raw physical each = 2588 raw; post-mitigation 67.4 each vs 92 armor = 1348",
-    "damage_type": "physical"
-   },
-   "practice_tool_steps": "Load Yorick, buy nothing. Level 18. Practice Tool: raise 4 Mist Walkers and send them at a practice dummy; over a 5s window they land 20 attacks of 129.4 physical damage each (combat log), before the dummy's armor."
-  },
-  {
-   "id": "e9-e5-zed-death-mark",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E5",
-   "setup": {
-    "champion": "Zed",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "one_rotation",
-    "auto": false,
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "ability_event",
-    "source": "R",
-    "raw_damage": 341.0,
-    "damage": 177.6,
-    "time": 3.0,
-    "formula": "Death Mark detonates after 3s: 100% AD (121) + 55% (rank 3) of the 400 pre-mitigation damage stored (Q 240 + E 160) = 121 + 220 = 341 raw physical; post-mitigation vs 92 armor = 177.6"
-   },
-   "practice_tool_steps": "Load Zed, buy nothing. Level 18, rank 3 R. Practice Tool: Q+E a practice dummy, then R it; after 3s the Death Mark pops for 121 AD + 55% of the damage stored during the mark = 341 raw physical (combat log)."
-  },
-  {
-   "id": "e9-e5-veigar-primordial-burst",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E5",
-   "setup": {
-    "champion": "Veigar",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "one_rotation",
-    "auto": false,
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "ability_event",
-    "source": "R",
-    "raw_damage": 325.0,
-    "damage": 213.8,
-    "time": 0.0,
-    "formula": "Primordial Burst rank 3 minimum: 325 + 75% AP (0 AP) = 325 raw magic at full target HP; post-mitigation vs 52 MR = 213.8"
-   },
-   "practice_tool_steps": "Load Veigar, buy nothing. Level 18, rank 3 R. Practice Tool: R a full-health practice dummy; combat log shows the minimum Primordial Burst of 325 magic damage (before the dummy's magic resistance)."
-  },
-  {
-   "id": "e9-e5-sion-decimating-smash",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E5",
-   "setup": {
-    "champion": "Sion",
-    "level": 18,
-    "role": "top",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "one_rotation",
-    "auto": false,
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "ability_event",
-    "source": "Q",
-    "raw_damage": 676.4,
-    "damage": 352.3,
-    "time": 0.0,
-    "formula": "Decimating Smash fully charged (q_charge_fraction 1.0): 350 + 240% AD (136) = 676.4 raw physical; post-mitigation vs 92 armor = 352.3"
-   },
-   "practice_tool_steps": "Load Sion, buy nothing. Level 18, rank 5 Q. Practice Tool: fully charge Q on a practice dummy (2s charge); combat log shows the maximum Decimating Smash of 676.4 physical damage (before the dummy's armor)."
-  },
-  {
-   "id": "e9-e8-rengar-battle-roar-grey",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E8",
-   "setup": {
-    "champion": "Rengar",
-    "level": 18,
-    "role": "top",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "time_based",
-    "fight_duration": 16,
-    "auto": true,
-    "auto_attack_uptime": 0.8,
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "grey_health",
-    "healing_events": [
-     {
-      "source": "Battle Roar (grey health)",
-      "time": 0.0,
-      "amount": 133.3
-     },
-     {
-      "source": "Battle Roar (grey health)",
-      "time": 10.0,
-      "amount": 25.4
-     }
-    ],
-    "grey_health_stored": 1162.363,
-    "grey_health_consumed": 158.651,
-    "formula": "W stores 50% of post-mitigation damage taken in the last 1.5s: t=0 cast heals 0.5 x 266.5 opening burst = 133.3; t=10 cast heals 0.5 x 50.7 (taken at 9.703) = 25.4"
-   },
-   "practice_tool_steps": "Load Rengar, buy nothing. Level 18, max W. Practice Tool: let Ahri damage you, then cast W twice (t=0 and again ~10s later); the Battle Roar grey-health heal returns 50% of the damage stored in the previous 1.5s (combat log: 133.3 and 25.4 in this pattern)."
-  },
-  {
-   "id": "e9-e8-annie-molten-shield",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E8",
-   "setup": {
-    "champion": "Annie",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "time_based",
-    "fight_duration": 6,
-    "auto": true,
-    "auto_attack_uptime": 1.0,
-    "enemies": [
-     {
-      "champion": "Aatrox",
-      "level": 18,
-      "role": "top"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "support_shield",
-    "source": "Molten Shield",
-    "shield": 200.0,
-    "applied": 200.0,
-    "received": 200.0,
-    "absorbed": 200.0,
-    "formula": "Molten Shield rank 5: 200 flat + 40% AP (0 AP) = 200 shield; fully absorbed by the enemy's opening damage"
-   },
-   "practice_tool_steps": "Load Annie, buy nothing. Level 18, rank 5 E. Practice Tool: cast E (Molten Shield) before Aatrox hits you; combat log shows a 200 shield that absorbs 200 incoming damage."
-  },
-  {
-   "id": "e9-e8-anivia-rebirth",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E8",
-   "setup": {
-    "champion": "Anivia",
-    "level": 18,
-    "role": "top",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "time_based",
-    "fight_duration": 20,
-    "auto": true,
-    "auto_attack_uptime": 1.0,
-    "enemies": [
-     {
-      "champion": "Aatrox",
-      "level": 18,
-      "role": "top"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "revive",
-    "first_death_time": 4.312,
-    "revive_time": 6.0,
-    "revive_health_restored": 2114.0,
-    "revive_source": "Rebirth",
-    "death_time": 11.858,
-    "revived": true,
-    "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive lands at 6.0 in this fight; she is killed again at 11.858"
-   },
-   "practice_tool_steps": "Load Anivia, buy nothing. Level 18. Practice Tool: let Aatrox kill you; Rebirth turns you into an egg and you revive with 100% of max HP (2114) \u2014 read the death/revive events in the combat log."
-  },
-  {
-   "id": "e9-e8-morellonomicon-grievous",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E8",
-   "setup": {
-    "champion": "Aatrox",
-    "level": 18,
-    "role": "top",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
-    },
-    "fight": "time_based",
-    "fight_duration": 8,
-    "auto": false,
-    "enemies": [
-     {
-      "champion": "Annie",
-      "level": 18,
-      "role": "mid",
-      "items": [
-       "Morellonomicon"
-      ],
-      "ranks": {
-       "Q": 5,
-       "W": 5,
-       "E": 5,
-       "R": 3
+    {
+      "id": "cp21-bis-utility-ahri",
+      "tier": "local",
+      "sha": "820acbc3",
+      "setup": {
+        "champion": "Ahri",
+        "level": 18,
+        "role": "mid",
+        "enemies": [
+          {
+            "champion": "Annie",
+            "level": 18
+          }
+        ],
+        "objective": "utility",
+        "bis_slot": "buildA.0"
+      },
+      "expected": {
+        "certified": "95 certified of 96 mid role-compatible candidates",
+        "withheld_before_timeline": [],
+        "partial": [
+          "Fimbulwinter"
+        ]
       }
-     }
-    ]
-   },
-   "expected": {
-    "kind": "grievous",
-    "healing_events": [
-     {
-      "time": 0.0,
-      "raw": 277.8,
-      "applied": 166.7,
-      "factor": 0.6
-     },
-     {
-      "time": 0.6,
-      "raw": 50.7,
-      "applied": 30.4,
-      "factor": 0.6
-     },
-     {
-      "time": 6.6,
-      "raw": 277.8,
-      "applied": 166.7,
-      "factor": 0.6
-     }
-    ],
-    "healing_received": 363.8,
-    "healing_reduced": 242.5,
-    "reduction_sources": [
-     "Morellonomicon \u00b7 Grievous Wounds"
-    ],
-    "formula": "Annie's Morellonomicon wounds Aatrox for 3s per hit: every Umbral Dash heal inside the window keeps 60% (40% cut). Sum of cuts = 242.5"
-   },
-   "practice_tool_steps": "Practice Tool: Annie buys Morellonomicon. Aatrox casts spells to heal (Umbral Dash passive) while wounded; combat log heals show the 40% reduction (raw 277.8 -> 166.7, etc.) for 3 seconds after each of Annie's hits."
-  },
-  {
-   "id": "e9-e8-serpents-fang-shield-cut",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "E8",
-   "setup": {
-    "champion": "Annie",
-    "level": 18,
-    "role": "mid",
-    "items": [],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
     },
-    "fight": "time_based",
-    "fight_duration": 6,
-    "auto": true,
-    "auto_attack_uptime": 1.0,
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid",
-      "items": [
-       "Serpent's Fang"
-      ],
-      "ranks": {
-       "Q": 5,
-       "W": 5,
-       "E": 5,
-       "R": 3
+    {
+      "id": "e0-vladimir-sanguine-pool-heal",
+      "tier": "local",
+      "sha": "9217dfc",
+      "setup": {
+        "champion": "Vladimir",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "ranks": {
+          "Q": 1,
+          "W": 5,
+          "E": 1,
+          "R": 1
+        },
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18
+          }
+        ],
+        "fight": "time_based_10s"
+      },
+      "expected": {
+        "w_heal": "30% of PRE-mitigation damage (raw 75.0 -> heal 22.5 vs 14.8 post-mitigation)",
+        "q_heal_rank5": 40.0,
+        "r_heal_rank3": 350.0
+      },
+      "practice_tool_steps": "Vladimir W on dummy; read heal in combat log; compare vs 30% of pre-mitigation pool damage."
+    },
+    {
+      "id": "vladimir-hemoplague-multitarget",
+      "tier": "local",
+      "sha": "a963d58",
+      "setup": {
+        "champion": "Vladimir",
+        "level": 18,
+        "role": "mid",
+        "ranks": {
+          "Q": 1,
+          "W": 1,
+          "E": 1,
+          "R": 3
+        },
+        "enemies": [
+          {
+            "champion": "Ahri"
+          },
+          {
+            "champion": "Annie"
+          }
+        ]
+      },
+      "expected": {
+        "r_heals": [
+          350.0,
+          140.0
+        ],
+        "events_preserved": 2
       }
-     }
-    ]
-   },
-   "expected": {
-    "kind": "support_shield",
-    "source": "Molten Shield",
-    "shield": 200.0,
-    "applied": 130.0,
-    "received": 130.0,
-    "venom_factor": 0.65,
-    "formula": "Ahri's ranged Serpent's Fang venom cuts shields granted inside the 3s window by the sourced 35% (keep 65%): 200 x 0.65 = 130"
-   },
-   "practice_tool_steps": "Practice Tool: Ahri buys Serpent's Fang (ranged -> 35% cut). Annie casts E (Molten Shield 200) while the venom window is active; the shield lands at 130 (combat log)."
-  },
-  {
-   "id": "e9-item-serpents-fang-venom",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "item",
-   "setup": {
-    "champion": "Katarina",
-    "level": 18,
-    "role": "mid",
-    "items": [
-     "Serpent's Fang"
-    ],
-    "ranks": {
-     "Q": 1,
-     "W": 1,
-     "E": 1,
-     "R": 1
     },
-    "fight": "time_based",
-    "fight_duration": 6,
-    "auto": false,
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid",
-      "items": [
-       "Fimbulwinter"
-      ],
-      "ranks": {
-       "Q": 5,
-       "W": 5,
-       "E": 5,
-       "R": 3
-      }
-     }
-    ]
-   },
-   "expected": {
-    "kind": "venom_shield",
-    "shield": 174.6586,
-    "applied": 87.3293,
-    "venom_factor": 0.5,
-    "venom_until": 5.899,
-    "received": 87.3,
-    "formula": "Katarina (melee) Serpent's Fang: Ahri's Fimbulwinter Everlasting shield (174.66, charm-triggered) is cut by the melee 50% while venom is active -> 87.33 applied"
-   },
-   "practice_tool_steps": "Practice Tool: Katarina buys Serpent's Fang (melee -> 50% cut); Ahri buys Fimbulwinter. Ahri charms (immobilize triggers Everlasting); the shield 174.66 lands at 87.33 while Katarina's venom window is active (combat log)."
-  },
-  {
-   "id": "e9-item-fimbulwinter-everlasting",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "item",
-   "setup": {
-    "champion": "Ahri",
-    "level": 18,
-    "role": "mid",
-    "items": [
-     "Fimbulwinter"
-    ],
-    "ranks": {
-     "Q": 0,
-     "W": 0,
-     "E": 1,
-     "R": 0
+    {
+      "id": "e9-e1-aatrox-umbral-dash-heal",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E1",
+      "setup": {
+        "champion": "Aatrox",
+        "level": 18,
+        "role": "top",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "one_rotation",
+        "auto": true,
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "self_healing_events",
+        "self_healing": 326.8,
+        "healing_events": [
+          {
+            "source": "Umbral Dash",
+            "time": 0.0,
+            "amount": 276.4,
+            "trigger_source": "Q"
+          },
+          {
+            "source": "Umbral Dash",
+            "time": 0.0,
+            "amount": 50.4,
+            "trigger_source": "W"
+          }
+        ],
+        "formula": "E passive heals 16% of post-mitigation ability damage (no bonus health), x2.0 while R (World Ender, rank 3 = +100% increased healing) is active: Q 863.7 x 0.16 x 2.0 = 276.4; W 157.5 x 0.16 x 2.0 = 50.4"
+      },
+      "practice_tool_steps": "Load Aatrox, buy nothing. Level 18, max Q/W/E and rank 3 R. Practice Tool: cast World Ender, then Q (sweetspot) and W on a practice dummy. Combat log: Umbral Dash passive heals 276.4 on the Q hit and 50.4 on the W hit (16% of post-mitigation damage, doubled by World Ender)."
     },
-    "fight": "one_rotation",
-    "auto": false,
-    "enemies": [
-     {
-      "champion": "Aatrox",
-      "level": 18,
-      "role": "top"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "support_shield",
-    "source": "Fimbulwinter",
-    "shield": 180.235,
-    "applied": 180.235,
-    "received": 180.2,
-    "cooldown": 8.0,
-    "formula": "Everlasting: 100 base + 4.5% of current mana (1783) = 180.235, triggered by the E charm immobilize (8s cooldown)"
-   },
-   "practice_tool_steps": "Practice Tool: Ahri buys Fimbulwinter. Charm an enemy (E immobilizes -> Everlasting triggers); combat log shows the 180.235 shield from Fimbulwinter \u2014 Everlasting."
-  },
-  {
-   "id": "e9-item-steraks-lifeline",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "item",
-   "setup": {
-    "champion": "Darius",
-    "level": 18,
-    "role": "top",
-    "items": [
-     "Sterak's Gage"
-    ],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
+    {
+      "id": "e9-e2-malzahar-malefic-visions",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E2",
+      "setup": {
+        "champion": "Malzahar",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "one_rotation",
+        "auto": false,
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "dot_ticks",
+        "source": "E",
+        "ticks": 16,
+        "per_tick_raw": 13.75,
+        "total_raw": 220.0,
+        "formula": "Malefic Visions rank 5: Total Magic Damage 220 = 16 ticks of 13.75 (every 0.25s over 4s); one rotation emits exactly one cast"
+      },
+      "practice_tool_steps": "Load Malzahar, buy nothing. Level 18, rank 5 E. Practice Tool: cast E (Malefic Visions) on a practice dummy; the combat log lists 16 magic damage ticks of 13.75 each = 220 total (before the dummy's magic resistance)."
     },
-    "fight": "time_based",
-    "fight_duration": 30,
-    "auto": true,
-    "auto_attack_uptime": 1.0,
-    "enemies": [
-     {
-      "champion": "Aatrox",
-      "level": 18,
-      "role": "mid"
-     },
-     {
-      "champion": "Zed",
-      "level": 18,
-      "role": "mid"
-     },
-     {
-      "champion": "Katarina",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "threshold_shield",
-    "shield": 240.0,
-    "absorbed": 240.0,
-    "bonus_health": 400,
-    "max_health": 2990.0,
-    "triggered": true,
-    "death_time": 10.78,
-    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 10.78"
-   },
-   "practice_tool_steps": "Practice Tool: Darius buys Sterak's Gage (400 bonus HP). Take heavy burst from 3 enemies; when HP crosses below 30%, the Lifeline shield of 240 appears (combat log) and absorbs 240 damage."
-  },
-  {
-   "id": "e9-item-bloodthirster-lifesteal",
-   "tier": "local",
-   "sha": "a7972d2dba6e8155b0d39619e7ad20ae2280f672",
-   "workstream": "item",
-   "setup": {
-    "champion": "Ashe",
-    "level": 18,
-    "role": "mid",
-    "items": [
-     "Bloodthirster"
-    ],
-    "ranks": {
-     "Q": 5,
-     "W": 5,
-     "E": 5,
-     "R": 3
+    {
+      "id": "e9-e3-varus-blight-detonation",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E3",
+      "setup": {
+        "champion": "Varus",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "one_rotation",
+        "auto": false,
+        "champion_options": {
+          "blight_stacks": 3
+        },
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "breakdown_source",
+        "source": "Blight Detonation",
+        "total_damage": 232.7,
+        "raw_damage": 353.7,
+        "formula": "3 stacks x 5% maxHP per stack (W rank 5, 0 AP) of Ahri's 2358 max HP = 3 x 117.9 = 353.7 raw magic; post-mitigation vs 52 MR = 232.7",
+        "damage_type": "magic"
+      },
+      "practice_tool_steps": "Load Varus, buy nothing. Level 18, rank 5 W. Practice Tool: apply 3 Blight stacks to a practice dummy (3 basic attacks), then detonate with Q; combat log shows the Blight Detonation magic hit for 5% max HP per stack (3 x 117.9 raw)."
     },
-    "fight": "time_based",
-    "fight_duration": 6,
-    "auto": true,
-    "auto_attack_uptime": 1.0,
-    "enemies": [
-     {
-      "champion": "Ahri",
-      "level": 18,
-      "role": "mid"
-     }
-    ]
-   },
-   "expected": {
-    "kind": "lifesteal",
-    "source": "Life steal (basic attacks and on-hit)",
-    "heal_per_auto": 20.1,
-    "heal_count": 8,
-    "healing_total": 160.8,
-    "formula": "Bloodthirster 15% lifesteal: 8 autos of 134.1 post-mitigation damage -> 8 heals of 20.1 (15% of 134.1)"
-   },
-   "practice_tool_steps": "Practice Tool: Ashe buys Bloodthirster (15% lifesteal). Auto-attack a practice dummy 8 times; the combat log shows 8 Life steal heals of 20.1 each (15% of the 134.1 post-mitigation auto damage)."
+    {
+      "id": "e9-e3-nasus-siphoning-stacks",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E3",
+      "setup": {
+        "champion": "Nasus",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "one_rotation",
+        "auto": false,
+        "champion_options": {
+          "q_stacks": 100
+        },
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "ability_event",
+        "source": "Q",
+        "raw_damage": 355.0,
+        "damage": 184.9,
+        "time": 0.0,
+        "formula": "Siphoning Strike with 100 permanent stacks: 135 auto AD + 120 flat (rank 5) + 100 stacks = 355 raw physical; post-mitigation vs 92 armor = 184.9"
+      },
+      "practice_tool_steps": "Load Nasus, buy nothing. Level 18, rank 5 Q. Practice Tool: farm to 100 Siphoning Strike stacks (or set stacks via practice tool if available), then Q a practice dummy; combat log shows the empowered hit for 135 + 120 + 100 = 355 raw physical damage."
+    },
+    {
+      "id": "e9-e4-zyra-plant-attacks",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E4",
+      "setup": {
+        "champion": "Zyra",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "one_rotation",
+        "auto": false,
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "breakdown_source",
+        "source": "Garden of Thorns (Plants)",
+        "total_damage": 197.4,
+        "raw_damage": 300.0,
+        "attack_count": 4,
+        "per_attack_raw": 75.0,
+        "formula": "4 plant attacks of 75 raw magic each (level-18 plant damage, 20% AP = 0) = 300 raw; post-mitigation 49.3 each vs 52 MR = 197.2..197.4",
+        "damage_type": "magic"
+      },
+      "practice_tool_steps": "Load Zyra, buy nothing. Level 18. Practice Tool: place a seed and sprout one plant with Q/E next to a practice dummy; the plant attacks 4 times for 75 magic damage each (combat log), before the dummy's magic resistance."
+    },
+    {
+      "id": "e9-e4-yorick-mist-walkers",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E4",
+      "setup": {
+        "champion": "Yorick",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "one_rotation",
+        "auto": false,
+        "champion_options": {
+          "mist_walkers": 4,
+          "mist_walker_attacks": 5
+        },
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "breakdown_source",
+        "source": "Mist Walkers",
+        "total_damage": 1348.0,
+        "raw_damage": 2588.0,
+        "attack_count": 20,
+        "per_attack_raw": 129.4,
+        "formula": "4 Mist Walkers x 5 attacks = 20 attacks of 129.4 raw physical each = 2588 raw; post-mitigation 67.4 each vs 92 armor = 1348",
+        "damage_type": "physical"
+      },
+      "practice_tool_steps": "Load Yorick, buy nothing. Level 18. Practice Tool: raise 4 Mist Walkers and send them at a practice dummy; over a 5s window they land 20 attacks of 129.4 physical damage each (combat log), before the dummy's armor."
+    },
+    {
+      "id": "e9-e5-zed-death-mark",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E5",
+      "setup": {
+        "champion": "Zed",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "one_rotation",
+        "auto": false,
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "ability_event",
+        "source": "R",
+        "raw_damage": 341.0,
+        "damage": 177.6,
+        "time": 3.0,
+        "formula": "Death Mark detonates after 3s: 100% AD (121) + 55% (rank 3) of the 400 pre-mitigation damage stored (Q 240 + E 160) = 121 + 220 = 341 raw physical; post-mitigation vs 92 armor = 177.6"
+      },
+      "practice_tool_steps": "Load Zed, buy nothing. Level 18, rank 3 R. Practice Tool: Q+E a practice dummy, then R it; after 3s the Death Mark pops for 121 AD + 55% of the damage stored during the mark = 341 raw physical (combat log)."
+    },
+    {
+      "id": "e9-e5-veigar-primordial-burst",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E5",
+      "setup": {
+        "champion": "Veigar",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "one_rotation",
+        "auto": false,
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "ability_event",
+        "source": "R",
+        "raw_damage": 325.0,
+        "damage": 213.8,
+        "time": 0.0,
+        "formula": "Primordial Burst rank 3 minimum: 325 + 75% AP (0 AP) = 325 raw magic at full target HP; post-mitigation vs 52 MR = 213.8"
+      },
+      "practice_tool_steps": "Load Veigar, buy nothing. Level 18, rank 3 R. Practice Tool: R a full-health practice dummy; combat log shows the minimum Primordial Burst of 325 magic damage (before the dummy's magic resistance)."
+    },
+    {
+      "id": "e9-e5-sion-decimating-smash",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E5",
+      "setup": {
+        "champion": "Sion",
+        "level": 18,
+        "role": "top",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "one_rotation",
+        "auto": false,
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "ability_event",
+        "source": "Q",
+        "raw_damage": 676.4,
+        "damage": 352.3,
+        "time": 0.0,
+        "formula": "Decimating Smash fully charged (q_charge_fraction 1.0): 350 + 240% AD (136) = 676.4 raw physical; post-mitigation vs 92 armor = 352.3"
+      },
+      "practice_tool_steps": "Load Sion, buy nothing. Level 18, rank 5 Q. Practice Tool: fully charge Q on a practice dummy (2s charge); combat log shows the maximum Decimating Smash of 676.4 physical damage (before the dummy's armor)."
+    },
+    {
+      "id": "e9-e8-rengar-battle-roar-grey",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E8",
+      "setup": {
+        "champion": "Rengar",
+        "level": 18,
+        "role": "top",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "time_based",
+        "fight_duration": 16,
+        "auto": true,
+        "auto_attack_uptime": 0.8,
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "grey_health",
+        "healing_events": [
+          {
+            "source": "Battle Roar (grey health)",
+            "time": 0.0,
+            "amount": 133.3
+          },
+          {
+            "source": "Battle Roar (grey health)",
+            "time": 10.0,
+            "amount": 25.4
+          }
+        ],
+        "grey_health_stored": 1162.363,
+        "grey_health_consumed": 158.651,
+        "formula": "W stores 50% of post-mitigation damage taken in the last 1.5s: t=0 cast heals 0.5 x 266.5 opening burst = 133.3; t=10 cast heals 0.5 x 50.7 (taken at 9.703) = 25.4"
+      },
+      "practice_tool_steps": "Load Rengar, buy nothing. Level 18, max W. Practice Tool: let Ahri damage you, then cast W twice (t=0 and again ~10s later); the Battle Roar grey-health heal returns 50% of the damage stored in the previous 1.5s (combat log: 133.3 and 25.4 in this pattern)."
+    },
+    {
+      "id": "e9-e8-annie-molten-shield",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E8",
+      "setup": {
+        "champion": "Annie",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "time_based",
+        "fight_duration": 6,
+        "auto": true,
+        "auto_attack_uptime": 1.0,
+        "enemies": [
+          {
+            "champion": "Aatrox",
+            "level": 18,
+            "role": "top"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "support_shield",
+        "source": "Molten Shield",
+        "shield": 200.0,
+        "applied": 200.0,
+        "received": 200.0,
+        "absorbed": 200.0,
+        "formula": "Molten Shield rank 5: 200 flat + 40% AP (0 AP) = 200 shield; fully absorbed by the enemy's opening damage"
+      },
+      "practice_tool_steps": "Load Annie, buy nothing. Level 18, rank 5 E. Practice Tool: cast E (Molten Shield) before Aatrox hits you; combat log shows a 200 shield that absorbs 200 incoming damage."
+    },
+    {
+      "id": "e9-e8-anivia-rebirth",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E8",
+      "setup": {
+        "champion": "Anivia",
+        "level": 18,
+        "role": "top",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "time_based",
+        "fight_duration": 20,
+        "auto": true,
+        "auto_attack_uptime": 1.0,
+        "enemies": [
+          {
+            "champion": "Aatrox",
+            "level": 18,
+            "role": "top"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "revive",
+        "first_death_time": 4.312,
+        "revive_time": 6.0,
+        "revive_health_restored": 2114.0,
+        "revive_source": "Rebirth",
+        "death_time": 11.858,
+        "revived": true,
+        "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive lands at 6.0 in this fight; she is killed again at 11.858"
+      },
+      "practice_tool_steps": "Load Anivia, buy nothing. Level 18. Practice Tool: let Aatrox kill you; Rebirth turns you into an egg and you revive with 100% of max HP (2114) \u2014 read the death/revive events in the combat log."
+    },
+    {
+      "id": "e9-e8-morellonomicon-grievous",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E8",
+      "setup": {
+        "champion": "Aatrox",
+        "level": 18,
+        "role": "top",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "time_based",
+        "fight_duration": 8,
+        "auto": false,
+        "enemies": [
+          {
+            "champion": "Annie",
+            "level": 18,
+            "role": "mid",
+            "items": [
+              "Morellonomicon"
+            ],
+            "ranks": {
+              "Q": 5,
+              "W": 5,
+              "E": 5,
+              "R": 3
+            }
+          }
+        ]
+      },
+      "expected": {
+        "kind": "grievous",
+        "healing_events": [
+          {
+            "time": 0.0,
+            "raw": 277.8,
+            "applied": 166.7,
+            "factor": 0.6
+          },
+          {
+            "time": 0.6,
+            "raw": 50.7,
+            "applied": 30.4,
+            "factor": 0.6
+          },
+          {
+            "time": 6.6,
+            "raw": 277.8,
+            "applied": 166.7,
+            "factor": 0.6
+          }
+        ],
+        "healing_received": 363.8,
+        "healing_reduced": 242.5,
+        "reduction_sources": [
+          "Morellonomicon \u00b7 Grievous Wounds"
+        ],
+        "formula": "Annie's Morellonomicon wounds Aatrox for 3s per hit: every Umbral Dash heal inside the window keeps 60% (40% cut). Sum of cuts = 242.5"
+      },
+      "practice_tool_steps": "Practice Tool: Annie buys Morellonomicon. Aatrox casts spells to heal (Umbral Dash passive) while wounded; combat log heals show the 40% reduction (raw 277.8 -> 166.7, etc.) for 3 seconds after each of Annie's hits."
+    },
+    {
+      "id": "e9-e8-serpents-fang-shield-cut",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "E8",
+      "setup": {
+        "champion": "Annie",
+        "level": 18,
+        "role": "mid",
+        "items": [],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "time_based",
+        "fight_duration": 6,
+        "auto": true,
+        "auto_attack_uptime": 1.0,
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid",
+            "items": [
+              "Serpent's Fang"
+            ],
+            "ranks": {
+              "Q": 5,
+              "W": 5,
+              "E": 5,
+              "R": 3
+            }
+          }
+        ]
+      },
+      "expected": {
+        "kind": "support_shield",
+        "source": "Molten Shield",
+        "shield": 200.0,
+        "applied": 130.0,
+        "received": 130.0,
+        "venom_factor": 0.65,
+        "formula": "Ahri's ranged Serpent's Fang venom cuts shields granted inside the 3s window by the sourced 35% (keep 65%): 200 x 0.65 = 130"
+      },
+      "practice_tool_steps": "Practice Tool: Ahri buys Serpent's Fang (ranged -> 35% cut). Annie casts E (Molten Shield 200) while the venom window is active; the shield lands at 130 (combat log)."
+    },
+    {
+      "id": "e9-item-serpents-fang-venom",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "item",
+      "setup": {
+        "champion": "Katarina",
+        "level": 18,
+        "role": "mid",
+        "items": [
+          "Serpent's Fang"
+        ],
+        "ranks": {
+          "Q": 1,
+          "W": 1,
+          "E": 1,
+          "R": 1
+        },
+        "fight": "time_based",
+        "fight_duration": 6,
+        "auto": false,
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid",
+            "items": [
+              "Fimbulwinter"
+            ],
+            "ranks": {
+              "Q": 5,
+              "W": 5,
+              "E": 5,
+              "R": 3
+            }
+          }
+        ]
+      },
+      "expected": {
+        "kind": "venom_shield",
+        "shield": 174.6586,
+        "applied": 87.3293,
+        "venom_factor": 0.5,
+        "venom_until": 5.899,
+        "received": 87.3,
+        "formula": "Katarina (melee) Serpent's Fang: Ahri's Fimbulwinter Everlasting shield (174.66, charm-triggered) is cut by the melee 50% while venom is active -> 87.33 applied"
+      },
+      "practice_tool_steps": "Practice Tool: Katarina buys Serpent's Fang (melee -> 50% cut); Ahri buys Fimbulwinter. Ahri charms (immobilize triggers Everlasting); the shield 174.66 lands at 87.33 while Katarina's venom window is active (combat log)."
+    },
+    {
+      "id": "e9-item-fimbulwinter-everlasting",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "item",
+      "setup": {
+        "champion": "Ahri",
+        "level": 18,
+        "role": "mid",
+        "items": [
+          "Fimbulwinter"
+        ],
+        "ranks": {
+          "Q": 0,
+          "W": 0,
+          "E": 1,
+          "R": 0
+        },
+        "fight": "one_rotation",
+        "auto": false,
+        "enemies": [
+          {
+            "champion": "Aatrox",
+            "level": 18,
+            "role": "top"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "support_shield",
+        "source": "Fimbulwinter",
+        "shield": 180.235,
+        "applied": 180.235,
+        "received": 180.2,
+        "cooldown": 8.0,
+        "formula": "Everlasting: 100 base + 4.5% of current mana (1783) = 180.235, triggered by the E charm immobilize (8s cooldown)"
+      },
+      "practice_tool_steps": "Practice Tool: Ahri buys Fimbulwinter. Charm an enemy (E immobilizes -> Everlasting triggers); combat log shows the 180.235 shield from Fimbulwinter \u2014 Everlasting."
+    },
+    {
+      "id": "e9-item-steraks-lifeline",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "item",
+      "setup": {
+        "champion": "Darius",
+        "level": 18,
+        "role": "top",
+        "items": [
+          "Sterak's Gage"
+        ],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "time_based",
+        "fight_duration": 30,
+        "auto": true,
+        "auto_attack_uptime": 1.0,
+        "enemies": [
+          {
+            "champion": "Aatrox",
+            "level": 18,
+            "role": "mid"
+          },
+          {
+            "champion": "Zed",
+            "level": 18,
+            "role": "mid"
+          },
+          {
+            "champion": "Katarina",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "threshold_shield",
+        "shield": 240.0,
+        "absorbed": 240.0,
+        "bonus_health": 400,
+        "max_health": 2990.0,
+        "triggered": true,
+        "death_time": 10.78,
+        "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 10.78"
+      },
+      "practice_tool_steps": "Practice Tool: Darius buys Sterak's Gage (400 bonus HP). Take heavy burst from 3 enemies; when HP crosses below 30%, the Lifeline shield of 240 appears (combat log) and absorbs 240 damage."
+    },
+    {
+      "id": "e9-item-bloodthirster-lifesteal",
+      "tier": "local",
+      "sha": "86a28bbe0d99c1fa7ad384195bc2bcc7befc8e60",
+      "workstream": "item",
+      "setup": {
+        "champion": "Ashe",
+        "level": 18,
+        "role": "mid",
+        "items": [
+          "Bloodthirster"
+        ],
+        "ranks": {
+          "Q": 5,
+          "W": 5,
+          "E": 5,
+          "R": 3
+        },
+        "fight": "time_based",
+        "fight_duration": 6,
+        "auto": true,
+        "auto_attack_uptime": 1.0,
+        "enemies": [
+          {
+            "champion": "Ahri",
+            "level": 18,
+            "role": "mid"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "lifesteal",
+        "source": "Life steal (basic attacks and on-hit)",
+        "heal_per_auto": 20.1,
+        "heal_count": 8,
+        "healing_total": 160.8,
+        "formula": "Bloodthirster 15% lifesteal: 8 autos of 134.1 post-mitigation damage -> 8 heals of 20.1 (15% of 134.1)"
+      },
+      "practice_tool_steps": "Practice Tool: Ashe buys Bloodthirster (15% lifesteal). Auto-attack a practice dummy 8 times; the combat log shows 8 Life steal heals of 20.1 each (15% of the 134.1 post-mitigation auto damage)."
+    }
+  ],
+  "receipts": {
+    "champion_matrix": "173/173 certified on 820acbc3",
+    "full_entry": "410/410 ready on 820acbc3",
+    "item_umbrella": "209 items, 0 blocked on 820acbc3"
   }
- ],
- "receipts": {
-  "champion_matrix": "173/173 certified on 820acbc3",
-  "full_entry": "410/410 ready on 820acbc3",
-  "item_umbrella": "209 items, 0 blocked on 820acbc3"
- }
 }
