@@ -3576,7 +3576,20 @@ class ArmorReductionEffect:
     max_stacks: int
 
     def average_reduction(self, num_auto_attacks: int) -> float:
-        """Preserve the engine's established Black Cleaver ramp model."""
+        """Preserve the engine's established Black Cleaver ramp model.
+
+        APPROXIMATION (documented, not exact): under the engine's ordering
+        convention (4 leading ability hits apply stacks before the auto
+        stream) the exact Cesaro mean of the capped ramp min(k, C) over
+        ``hits`` applications is C - C(C-1)/(2*hits) for hits >= C and
+        (hits+1)/2 below; the constant 0.8*C equals that mean at ~10 autos
+        and deviates up to ~20% at the extremes (long fights understate,
+        short fights overstate). Stack expiry (6 s) cannot rescue the
+        constant because the engine's inter-swing interval is below 6 s for
+        any realistic AS*uptime > 1/6. Kept as-is: it is tuned across the
+        corpus and re-tuning it is a balance change, not a P2 foundation
+        fix (see docs/math-foundations.md section 2.3).
+        """
         hits = num_auto_attacks + 4
         if hits >= self.max_stacks:
             average_stacks = self.max_stacks * 0.8

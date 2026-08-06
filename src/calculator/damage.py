@@ -154,6 +154,12 @@ def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
 
     Formula: base_cd * 100 / (100 + ability_haste)
 
+    Dual identity (renewal counting): for a solo ability the cast epochs are
+    0, cd', 2*cd', ... and the cast rate 1/cd' = (100 + AH)/(100 * base_cd) is
+    affine in ability haste — each point of AH adds a constant
+    1/(100 * base_cd) casts/second. The total casts in [0, T] is the renewal
+    counting function floor(T/cd') + 1 (counting the t=0 cast).
+
     Args:
         base_cooldown: Base cooldown in seconds.
         ability_haste: Total ability haste.
@@ -881,6 +887,15 @@ def _calculate_stacking_procs(
     Returns:
         Tuple of (0-indexed ability-hit indices where procs fire,
         0-indexed auto indices where procs fire).
+
+    Theorem (modular counting): for a pure auto stream with no phantom or
+    double-on-hit applications, the counter fires on exactly the attacks
+    with 1-based index N, 2N, 3N, ... — i.e. 0-indexed procs at
+    N-1, 2N-1, ... and a total of floor(num_attacks/N) procs (expected
+    count of a deterministic every-Nth proc chain; see
+    docs/math-foundations.md section 1.2). Phantom and double-on-hit
+    applications add one extra counter step on their own attacks, which is
+    exactly the in-game shared-counter semantics.
     """
     stacks = 0
     ability_procs: list[int] = []

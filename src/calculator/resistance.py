@@ -10,6 +10,15 @@ def apply_resistance(raw_damage: float, resistance: float) -> float:
     """Apply armor or magic resistance to reduce damage.
 
     Formula: damage * 100 / (100 + resistance)
+
+    Theorem (effective-health identity): for resistance R >= 0 the multiplier
+    m(R) = 100/(100+R) satisfies the round-trip
+        post = raw * m(R)  <=>  raw = post * (1 + R/100),
+    so a target with H0 health and R resists survives exactly H0*(1 + R/100)
+    raw damage; m is the sigmoid family m(R) = 1/(1 + R/100)
+    (see arXiv:1409.6896). For R < 0 the game extends m piecewise as
+    m(R) = 2 - 100/(100-R): continuous at 0, saturating at 2x as R -> -inf.
+
     If resistance is negative, damage is amplified.
 
     Args:
