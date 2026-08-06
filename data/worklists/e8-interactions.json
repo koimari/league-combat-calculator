@@ -1,0 +1,195 @@
+{
+ "champion_shields_unmodeled": [
+  {
+   "champion": "Annie",
+   "slot": "E",
+   "mechanic": "Molten Shield",
+   "atom": "heal-shield.shield"
+  },
+  {
+   "champion": "Azir",
+   "slot": "E",
+   "mechanic": "Shifting Sands shield"
+  },
+  {
+   "champion": "Ambessa",
+   "slot": "W",
+   "mechanic": "shield"
+  },
+  {
+   "champion": "Blitzcrank",
+   "slot": "P",
+   "mechanic": "Mana Barrier"
+  },
+  {
+   "champion": "Braum",
+   "slot": "E",
+   "mechanic": "Unbreakable shield"
+  },
+  {
+   "champion": "Camille",
+   "slot": "P",
+   "mechanic": "Adaptive Defenses"
+  },
+  {
+   "champion": "Malphite",
+   "slot": "P",
+   "mechanic": "Granite Shield (10% max HP)"
+  },
+  {
+   "champion": "Mordekaiser",
+   "slot": "W",
+   "mechanic": "Indestructible Potential Shield"
+  },
+  {
+   "champion": "Rakan",
+   "slot": "P",
+   "mechanic": "Fancy Footwork shield"
+  },
+  {
+   "champion": "Senna",
+   "slot": "R",
+   "mechanic": "Dawning Shadow ally shield"
+  },
+  {
+   "champion": "Taric",
+   "slot": "W",
+   "mechanic": "Bastion shield"
+  },
+  {
+   "champion": "Thresh",
+   "slot": "W",
+   "mechanic": "Dark Passage shield"
+  },
+  {
+   "champion": "Volibear",
+   "slot": "E",
+   "mechanic": "self shield (14% max HP + 75% AP)"
+  },
+  {
+   "champion": "Vex",
+   "slot": "W",
+   "mechanic": "Personal Space shield"
+  },
+  {
+   "champion": "Leona",
+   "slot": "W",
+   "mechanic": "Eclipse defense"
+  },
+  {
+   "champion": "Olaf",
+   "slot": "W",
+   "mechanic": "Tough It Out shield"
+  },
+  {
+   "champion": "Kled",
+   "slot": "R",
+   "mechanic": "charge shield"
+  },
+  {
+   "champion": "Nilah",
+   "slot": "P",
+   "mechanic": "heal-to-shield conversion"
+  }
+ ],
+ "champion_revives_unmodeled": [
+  {
+   "champion": "Anivia",
+   "mechanic": "Rebirth (P)",
+   "atom": "heal-shield.revive"
+  },
+  {
+   "champion": "Zac",
+   "mechanic": "Cell Division blobs (P)",
+   "atom": "heal-shield.revive"
+  },
+  {
+   "champion": "Zilean",
+   "mechanic": "Chronoshift (R)",
+   "atom": "heal-shield.revive"
+  },
+  {
+   "champion": "Kled",
+   "mechanic": "Skaarl remount"
+  },
+  {
+   "champion": "Aatrox",
+   "mechanic": "ghost atoms \u2014 pre-rework revive, do NOT implement"
+  }
+ ],
+ "ally_support_abilities_unmodeled": [
+  {
+   "champion": "Sona",
+   "slot": "W",
+   "mechanic": "Aria of Perseverance ally heal/shield"
+  },
+  {
+   "champion": "Nami",
+   "slot": "W",
+   "mechanic": "Ebb and Flow ally heal"
+  },
+  {
+   "champion": "Yuumi",
+   "slot": "E",
+   "mechanic": "Zoomies ally heal + shield"
+  },
+  {
+   "champion": "Milio",
+   "slot": "W/R",
+   "mechanic": "ally heals"
+  },
+  {
+   "champion": "Taric",
+   "slot": "Q/R",
+   "mechanic": "Starlight's Touch heal / Cosmic Radiance invuln"
+  },
+  {
+   "champion": "Rakan",
+   "slot": "Q",
+   "mechanic": "Gleaming Quill ally heal"
+  },
+  {
+   "champion": "Kayle",
+   "slot": "W",
+   "mechanic": "Celestial Blessing ally heal (self modeled in E1)"
+  },
+  {
+   "champion": "Seraphine",
+   "slot": "W",
+   "mechanic": "Surround Sound ally heal/shield"
+  },
+  {
+   "champion": "Janna",
+   "slot": "R",
+   "mechanic": "Monsoon ally heal"
+  },
+  {
+   "champion": "Bard",
+   "slot": "W",
+   "mechanic": "Caretaker's Shrine ally heal"
+  },
+  {
+   "champion": "Soraka",
+   "slot": "W",
+   "mechanic": "Astral Infusion ally heal"
+  }
+ ],
+ "champion_grievous_wounds_unmodeled": [
+  {
+   "champion": "Katarina",
+   "slot": "R",
+   "mechanic": "Death Lotus GW"
+  },
+  {
+   "champion": "Kled",
+   "slot": "Q",
+   "mechanic": "Pocket Pistol GW"
+  },
+  {
+   "champion": "Varus",
+   "slot": "E",
+   "mechanic": "Hail of Arrows GW"
+  }
+ ],
+ "grey_health_primitive": "shared grey-health primitive needed (Pyke P, Tahm Kench E, Rengar W, Tryndamere Q, Kled) \u2014 E1-b4 scope"
+}
