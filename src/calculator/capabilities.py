@@ -6,6 +6,15 @@ same contract to the browser so a control can be rendered only when the
 backend can consume the value, or disabled with an honest reason when it
 cannot.  The strings in ``frontend_token`` are intentionally stable: contract
 tests use them to ensure a supported field has a mounted browser control.
+
+The contract is the single source of truth for the mounted control surface:
+participant loadout fields, scenario fields, feature-level controls (view
+switch, game-state lens, objective, best-in-slot, optimizer, quick mode,
+share, picker dialog, roster membership, manual damage package), and the
+catalogs that feed them (champion options, item options, role quest, keystone,
+and ability metadata).  test_issues_78.py proves every control attribute and
+id the frontend renders maps to a declared ``frontend_token`` and that the
+API responses behind those controls expose exactly the declared fields.
 """
 
 from __future__ import annotations
@@ -246,6 +255,72 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
     return fields
 
 
+def _feature_fields() -> dict[str, dict[str, Any]]:
+    """Return the public contract for the app-level control families.
+
+    Participant and scenario sections describe loadout inputs; these describe
+    the remaining families the frontend mounts: the quick/analyst view switch,
+    the snapshot-lens game state, the comparison objective, the best-in-slot
+    and roster optimizer flows, quick mode, build sharing, the shared picker
+    dialog, roster add/remove actions, and the manual damage package.  Each
+    carries the same stable ``frontend_token`` discipline as participant
+    fields so the coverage test can prove one contract owns every mounted
+    control.
+    """
+    return {
+        "view_switch": _field(
+            payload_field="view",
+            state_path="ui.view",
+            frontend_token="data-view",
+        ),
+        "game_state": _field(
+            payload_field="game_state",
+            state_path="ui.gameState",
+            frontend_token="data-game-state",
+        ),
+        "objective": _field(
+            payload_field="objective",
+            state_path="ui.objective",
+            frontend_token="data-objective",
+        ),
+        "best_in_slot": _field(
+            payload_field="best_in_slot",
+            state_path="optimization.bis",
+            frontend_token="data-bis-path",
+        ),
+        "optimize": _field(
+            payload_field="optimize",
+            state_path="optimization.roster",
+            frontend_token="data-optimize-roster",
+        ),
+        "quick_mode": _field(
+            payload_field="quick",
+            state_path="quick",
+            frontend_token="data-quick-pick",
+        ),
+        "share": _field(
+            payload_field="share",
+            state_path="share",
+            frontend_token='id="sharePanel"',
+        ),
+        "picker": _field(
+            payload_field="picker",
+            state_path="ui.picker",
+            frontend_token='id="picker"',
+        ),
+        "roster_membership": _field(
+            payload_field="roster_membership",
+            state_path="targets|allies",
+            frontend_token="data-remove-target",
+        ),
+        "damage_package": _field(
+            payload_field="damage_package",
+            state_path="attacker.damagePackage",
+            frontend_token='id="baseDamage"',
+        ),
+    }
+
+
 def public_capability_contract(
     *,
     input_limits: Mapping[str, tuple[float, float]],
@@ -294,10 +369,15 @@ def public_capability_contract(
             "limits": {key: list(value) for key, value in input_limits.items()},
             "rotations": {"min": 1, "max": max_rotations},
         },
+        "controls": {
+            "supported": True,
+            "fields": _feature_fields(),
+        },
         "catalogs": {
             "champion_options": {
                 "supported": champion_option_count > 0,
                 "count": champion_option_count,
+                "keys": ["options", "assumptions", "sources"],
                 "reason": (
                     None
                     if champion_option_count > 0
@@ -307,11 +387,41 @@ def public_capability_contract(
             "item_options": {
                 "supported": item_option_count > 0,
                 "count": item_option_count,
+                "keys": [
+                    "options",
+                    "stat_effects",
+                    "source_url",
+                    "source_revision_id",
+                ],
                 "reason": (
                     None
                     if item_option_count > 0
                     else "No stateful item options are available in the pinned item catalog."
                 ),
+            },
+            "role_quest": {
+                "supported": True,
+                "keys": ["support_item", "boot_upgrades"],
+                "reason": None,
+            },
+            "keystones": {
+                "supported": True,
+                "reason": None,
+            },
+            "abilities": {
+                "supported": True,
+                "slots": ["P", "Q", "W", "E", "R"],
+                "keys": [
+                    "slot",
+                    "name",
+                    "icon",
+                    "blurb",
+                    "description",
+                    "damage_type",
+                    "targeting",
+                    "ingested",
+                ],
+                "reason": None,
             },
         },
     }
