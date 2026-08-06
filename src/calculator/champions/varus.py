@@ -91,6 +91,7 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", arrow),)
+    entry["event_order_certified"] = "single_hit"
 
     detonation = _blight_detonation(ctx, rank)
     if detonation > 0:
@@ -101,7 +102,7 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
         entry["post_hit_proc"] = {
             "name": "Blight Detonation",
             "breakdown_key": "blight_detonation",
-            "parts": (DamagePart("magic", detonation),),
+            "parts": (DamagePart("magic", detonation, time_offset=0.0),),
             "detail": (f"{stacks} Blight stack(s) consumed at {rank} points in W"),
         }
         entry["total_raw"] = arrow + detonation
@@ -125,7 +126,7 @@ def _blighted_quiver(ctx: SlotCtx) -> dict[str, Any] | None:
         )
     per_hit = sum_modifiers(leveling, rank, ctx.stats, ctx.target)
     name = ability.get("name", "Blighted Quiver")
-    return ability_on_hit_entry(
+    entry = ability_on_hit_entry(
         name,
         rank,
         "magic",
@@ -135,6 +136,8 @@ def _blighted_quiver(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "magic",
         },
     )
+    entry["event_order_certified"] = "auto_stack_proc"
+    return entry
 
 
 def _living_vengeance(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -197,11 +200,23 @@ ASSUMPTIONS = [
     "R root/chain and Q self-slow are CC/utility only and not valued as " "damage",
 ]
 
+def _certified_single_hit(parser):
+    """Wrap a simple one-instance parser with the event-order certification."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
+            entry["event_order_certified"] = "single_hit"
+        return entry
+
+    return parse
+
+
 SLOTS = {
     "Q": _piercing_arrow,
     "W": _blighted_quiver,
-    "E": simple_damage(attr="Physical Damage", dmg_type="physical"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": _certified_single_hit(simple_damage(attr="Physical Damage", dmg_type="physical")),
+    "R": _certified_single_hit(simple_damage(attr="Magic Damage", dmg_type="magic")),
     "P": _living_vengeance,
 }
 
