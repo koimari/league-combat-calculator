@@ -1,0 +1,136 @@
+{
+ "schema_version": 1,
+ "purpose": "Practice-Tool reproducible verification corpus: every scenario is a concrete input tuple with expected outputs a player can verify in-game (custom game / Practice Tool combat log).",
+ "verified_tiers": {
+  "production": "confirmed on scryglass-item-calculator.vercel.app",
+  "local": "confirmed on local server at the pinned SHA",
+  "pending": "awaiting verification"
+ },
+ "scenarios": [
+  {
+   "id": "cp21-ziggs-outer-blast",
+   "tier": "local",
+   "sha": "820acbc3",
+   "setup": {
+    "champion": "Ziggs",
+    "level": 18,
+    "role": "mid",
+    "items": [],
+    "enemies": [
+     {
+      "champion": "Dr. Mundo",
+      "level": 18
+     }
+    ],
+    "allies": [
+     {
+      "champion": "Lulu",
+      "level": 18,
+      "role": "support"
+     }
+    ],
+    "fight": "one_rotation",
+    "auto": "calculated"
+   },
+   "expected": {
+    "tdd": 203,
+    "auto_readout": "95% calculated \u00b7 3 autos/rotation"
+   },
+   "practice_tool_steps": "Load Ziggs with no items; add practice dummy; one full rotation; compare damage dealt."
+  },
+  {
+   "id": "cp21-bis-utility-ahri",
+   "tier": "local",
+   "sha": "820acbc3",
+   "setup": {
+    "champion": "Ahri",
+    "level": 18,
+    "role": "mid",
+    "enemies": [
+     {
+      "champion": "Annie",
+      "level": 18
+     }
+    ],
+    "objective": "utility",
+    "bis_slot": "buildA.0"
+   },
+   "expected": {
+    "certified": "93 certified of 96 mid role-compatible candidates",
+    "withheld_before_timeline": [
+     "Bastionbreaker",
+     "Muramana"
+    ],
+    "partial": [
+     "Fimbulwinter"
+    ]
+   }
+  },
+  {
+   "id": "e0-vladimir-sanguine-pool-heal",
+   "tier": "local",
+   "sha": "9217dfc",
+   "setup": {
+    "champion": "Vladimir",
+    "level": 18,
+    "role": "mid",
+    "items": [],
+    "ranks": {
+     "Q": 1,
+     "W": 5,
+     "E": 1,
+     "R": 1
+    },
+    "enemies": [
+     {
+      "champion": "Ahri",
+      "level": 18
+     }
+    ],
+    "fight": "time_based_10s"
+   },
+   "expected": {
+    "w_heal": "30% of PRE-mitigation damage (raw 75.0 -> heal 22.5 vs 14.8 post-mitigation)",
+    "q_heal_rank5": 40.0,
+    "r_heal_rank3": 350.0
+   },
+   "practice_tool_steps": "Vladimir W on dummy; read heal in combat log; compare vs 30% of pre-mitigation pool damage."
+  },
+  {
+   "id": "vladimir-hemoplague-multitarget",
+   "tier": "local",
+   "sha": "a963d58",
+   "setup": {
+    "champion": "Vladimir",
+    "level": 18,
+    "role": "mid",
+    "ranks": {
+     "Q": 1,
+     "W": 1,
+     "E": 1,
+     "R": 3
+    },
+    "enemies": [
+     {
+      "champion": "Ahri"
+     },
+     {
+      "champion": "Annie"
+     }
+    ]
+   },
+   "expected": {
+    "r_heals": [
+     350.0,
+     140.0
+    ],
+    "events_preserved": 2
+   }
+  }
+ ],
+ "receipts": {
+  "champion_matrix": "173/173 certified on 820acbc3",
+  "full_entry": "410/410 ready on 820acbc3",
+  "item_umbrella": "209 items, 0 blocked on 820acbc3"
+ }
+}
