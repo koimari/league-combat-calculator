@@ -207,6 +207,11 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Tryndamere",
         "Volibear",
         "Zac",
+        "Rakan",
+        "Sona",
+        "Janna",
+        "Milio",
+        "Taric",
     }
 )
 
@@ -747,6 +752,172 @@ def derive_self_healing(
                     **_trigger_fields(event),
                 }
             )
+    elif name == "Rakan":
+        # Gleaming Quill marks a radius around Rakan on a champion hit;
+        # after 3 seconds (or when an ally enters it) he heals himself and
+        # nearby allies for a flat per-level amount + AP (wiki: "Heal: 40 :
+        # 230 (based on level) (+ 55% AP)").  The heal is once per Q cast,
+        # so the pair copies are deduplicated as an actor-wide receipt.
+        level = max(1, int(champion_stats.get("level", 18) or 18))
+        heal = extract_named(
+            _ability(champion_data, "Q"), "Heal", level, champion_stats
+        )
+        if heal > 0.0:
+            for event in _attributed_events(
+                damage_events, lambda source, _event: source == "Q"
+            ):
+                healing.append(
+                    {
+                        "time": float(event.get("time", 0.0)) + 3.0,
+                        "amount": heal,
+                        "source": "Gleaming Quill",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                    }
+                )
+
+    elif name == "Sona":
+        # Aria of Perseverance heals Sona herself on every W cast (wiki:
+        # "Heal: 30 / 45 / 60 / 75 / 90 (+ 30% AP)"); the tone's ally half
+        # is authored by the support layer.  W has no enemy damage, so the
+        # cast timeline is the sourced trigger.
+        w_rank = _rank(ability_damages, "W")
+        heal = extract_named(
+            _ability(champion_data, "W"), "Heal", w_rank, champion_stats
+        )
+        if heal > 0.0:
+            for cast in cast_timeline or []:
+                if cast.get("slot") != "W":
+                    continue
+                healing.append(
+                    {
+                        "time": float(cast.get("time", 0.0)),
+                        "amount": heal,
+                        "source": "Aria of Perseverance",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                    }
+                )
+
+    elif name == "Janna":
+        # Monsoon channels for up to 3 seconds, healing Janna herself and
+        # nearby allies every 0.25 seconds (wiki: "Heal Per Tick: 25 / 37.5
+        # / 50 (+ 12.5% AP)"; "Total Heal: 300 / 450 / 600 (+ 150% AP)").
+        # The tick count is sourced from the total/per-tick ratio so the
+        # authored sum stays exact at every rank.
+        r_rank = _rank(ability_damages, "R")
+        ability = _ability(champion_data, "R")
+        per_tick = extract_named(ability, "Heal Per Tick", r_rank, champion_stats)
+        total = extract_named(ability, "Total Heal", r_rank, champion_stats)
+        tick_count = (
+            max(1, min(100, int(round(total / per_tick))))
+            if per_tick > 0.0 and total > 0.0
+            else 12
+        )
+        if per_tick > 0.0:
+            for cast in cast_timeline or []:
+                if cast.get("slot") != "R":
+                    continue
+                start = float(cast.get("time", 0.0))
+                for index in range(1, tick_count + 1):
+                    healing.append(
+                        {
+                            "time": start + index * 0.25,
+                            "amount": float(per_tick),
+                            "source": "Monsoon",
+                            "kind": "champion_ability",
+                            "actor_wide": True,
+                        }
+                    )
+
+    elif name == "Milio":
+        # Breath of Life heals Milio himself and nearby allied champions
+        # on cast (wiki: "Heal: 150 / 250 / 350 (+ 50% AP)").  R deals no
+        # enemy damage, so the R cast timeline is the sourced trigger.
+        r_rank = _rank(ability_damages, "R")
+        heal = extract_named(
+            _ability(champion_data, "R"), "Heal", r_rank, champion_stats
+        )
+        if heal > 0.0:
+            for cast in cast_timeline or []:
+                if cast.get("slot") != "R":
+                    continue
+                healing.append(
+                    {
+                        "time": float(cast.get("time", 0.0)),
+                        "amount": heal,
+                        "source": "Breath of Life",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                    }
+                )
+
+    elif name == "Taric":
+        # Starlight's Touch heals Taric himself and nearby allies per
+        # charge, capped at the maximum charge heal (wiki prose: "heals
+        # himself and nearby allied champions for 25 (+ 15% AP) (+ 1% of
+        # his maximum health) per charge" and "up to a maximum of 125
+        # (+ 75% AP) (+ 5% of his maximum health) at 5 charges").  The
+        # stock is the rank-scaled "Maximum Charges" leveling attribute.
+        q = _ability(champion_data, "Q")
+        q_rank = _rank(ability_damages, "Q")
+        charges = extract_named(q, "Maximum Charges", q_rank, champion_stats)
+        descriptions = [
+            effect.get("description", "") for effect in q.get("effects", [])
+        ]
+        per_charge_match = re.search(
+            r"for\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
+            r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)\s*per charge",
+            " ".join(descriptions),
+            flags=re.IGNORECASE,
+        )
+        maximum_match = re.search(
+            r"maximum of\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
+            r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)",
+            " ".join(descriptions),
+            flags=re.IGNORECASE,
+        )
+        if per_charge_match is not None and charges > 0.0:
+            maximum_health = float(champion_stats.get("health", 0.0) or 0.0)
+            ability_power = float(champion_stats.get("ability_power", 0.0) or 0.0)
+
+            def _charge_heal(
+                flat: float, ap_percent: float, hp_percent: float
+            ) -> float:
+                return (
+                    flat
+                    + ability_power * ap_percent / 100.0
+                    + maximum_health * hp_percent / 100.0
+                )
+
+            per_charge = _charge_heal(
+                float(per_charge_match.group(1)),
+                float(per_charge_match.group(2)),
+                float(per_charge_match.group(3)),
+            )
+            heal = charges * per_charge
+            if maximum_match is not None:
+                heal = min(
+                    heal,
+                    _charge_heal(
+                        float(maximum_match.group(1)),
+                        float(maximum_match.group(2)),
+                        float(maximum_match.group(3)),
+                    ),
+                )
+            if heal > 0.0:
+                for cast in cast_timeline or []:
+                    if cast.get("slot") != "Q":
+                        continue
+                    healing.append(
+                        {
+                            "time": float(cast.get("time", 0.0)),
+                            "amount": heal,
+                            "source": "Starlight's Touch",
+                            "kind": "champion_ability",
+                            "actor_wide": True,
+                        }
+                    )
 
     if name == "Vladimir":
         # Transfusion (Q): flat heal per cast, rank-scaled, + AP ratio
