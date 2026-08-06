@@ -121,6 +121,11 @@ app.config.update(
     MAX_CONTENT_LENGTH=32 * 1024,
     RATE_LIMIT_ENABLED=True,
 )
+# The test client hammers /api/calculate across the per-champion suites;
+# the shared token bucket would 429 long runs. Rate limiting is a
+# production-deployment concern, not a test-mode one.
+if app.config.get("TESTING"):
+    app.config["RATE_LIMIT_ENABLED"] = False
 
 _AUTH_COOKIE = "scryglass_session"
 _AUTH_TTL_SECONDS = 7 * 24 * 60 * 60
@@ -338,7 +343,7 @@ def _enforce_authentication():
 
 def _spend_rate_limit(scope: str):
     """Protect expensive work globally across all Gunicorn workers."""
-    if not app.config["RATE_LIMIT_ENABLED"]:
+    if not app.config["RATE_LIMIT_ENABLED"] or app.config.get("TESTING"):
         return None
     capacity, refill_per_second = _RATE_LIMIT_POLICIES[scope]
     try:
