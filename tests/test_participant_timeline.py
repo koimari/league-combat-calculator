@@ -303,6 +303,66 @@ def test_darius_decimate_self_heal_coalesces_targets_in_both_walks():
     assert fast["breakdown"] == legacy["breakdown"]
 
 
+def test_vladimir_hemoplague_keeps_one_heal_per_target_in_both_walks():
+    """Hemoplague heals per infected champion: full for the first, reduced
+    for later targets, each preserved with its own trigger receipt."""
+    champion = get_champion("Vladimir")
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 0.3,
+            "ability_ranks": {"Q": 1, "W": 1, "E": 1, "R": 3},
+        },
+        deterministic=True,
+    )
+    stats = calculate_total_stats(champion, 18, [])
+    defenses = resolve_starting_defenses("Vladimir", 18, stats, [])
+    enemies = []
+    for name in ("Annie", "Ahri"):
+        loadout = ChampionLoadout(champion=name, level=18, items=()).resolve()
+        enemy_stats = dict(loadout.stats)
+        enemy_stats.update(health=5000.0, armor=0.0, magic_resistance=0.0)
+        enemies.append(replace(loadout, stats=enemy_stats))
+
+    def timeline(**kwargs):
+        return build_participant_timeline(
+            champion,
+            18,
+            [],
+            params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=enemies,
+            allies=[],
+            **kwargs,
+        )
+
+    receipt = timeline()
+    legacy = timeline(include_receipt=False)
+    fast = timeline(
+        include_receipt=False,
+        pair_result_cache={},
+        search_context=CoupledSearchContext(),
+    )
+    heals = [
+        event for event in receipt["healing_events"] if event["source"] == "Hemoplague"
+    ]
+    assert len(heals) == 2
+    assert sorted(event["amount"] for event in heals) == pytest.approx([140.0, 350.0])
+    # Simultaneous same-source heals from different trigger targets must not
+    # collapse: each keeps its own event id, trigger receipt, and target.
+    assert len({event["event_id"] for event in heals}) == 2
+    assert len({event["trigger_event_id"] for event in heals}) == 2
+    assert {event["trigger_target"] for event in heals} == {
+        "enemy:Annie",
+        "enemy:Ahri",
+    }
+    assert fast["participants"] == legacy["participants"]
+    assert fast["breakdown"] == legacy["breakdown"]
+
+
 def test_sundered_sky_heal_uses_live_missing_health_in_both_walks():
     """Lightshield Strike resolves its missing-health component once."""
     champion = get_champion("Ahri")

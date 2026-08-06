@@ -86,19 +86,31 @@ def _heal_from_damage(
     event: dict[str, Any],
     amount: float,
     source: str,
+    *,
+    later_target_amount: float | None = None,
 ) -> None:
+    """Append one sourced self-heal tied to a damage event.
+
+    ``later_target_amount`` is the explicit receipt for a per-champion flat
+    heal that pays a reduced amount to targets after the first (Vladimir's
+    Hemoplague).  The participant ledger re-prices the heal to that amount
+    for every defender past the roster's first target, so each target keeps
+    its own event instead of the engine re-authoring the full amount per
+    pair fight.
+    """
     amount = max(0.0, float(amount))
     if amount <= 0.0 or float(event.get("damage", 0.0)) <= 0.0:
         return
-    healing.append(
-        {
-            "time": float(event.get("time", 0.0)),
-            "amount": amount,
-            "source": source,
-            "kind": "champion_ability",
-            **_trigger_fields(event),
-        }
-    )
+    heal: dict[str, Any] = {
+        "time": float(event.get("time", 0.0)),
+        "amount": amount,
+        "source": source,
+        "kind": "champion_ability",
+        **_trigger_fields(event),
+    }
+    if later_target_amount is not None:
+        heal["_later_target_amount"] = max(0.0, float(later_target_amount))
+    healing.append(heal)
 
 
 # Every champion with a sourced self-heal rule in ``derive_self_healing``'s
@@ -117,6 +129,7 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Renekton",
         "Soraka",
         "Briar",
+        "Vladimir",
     }
 )
 
@@ -367,5 +380,54 @@ def derive_self_healing(
                             **_trigger_fields(event),
                         }
                     )
+
+    if name == "Vladimir":
+        # Transfusion (Q): flat heal per cast, rank-scaled, + AP ratio
+        # (wiki: "Heal: 20 / 25 / 30 / 35 / 40 (+ 35% AP)").
+        q_rank = _rank(ability_damages, "Q")
+        q_heal = extract_named(
+            _ability(champion_data, "Q"), "Heal", q_rank, champion_stats
+        )
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "Q"
+        ):
+            _heal_from_damage(healing, event, q_heal, "Transfusion")
+        # Sanguine Pool (W): heals for 30% of pre-mitigation damage dealt
+        # (patch 12.13: "Healing increased to 30% of damage dealt from 15%";
+        # 18% against minions — champion targets assumed here).
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "W"
+        ):
+            _heal_from_damage(
+                healing,
+                event,
+                0.30 * float(event.get("damage", 0.0)),
+                "Sanguine Pool",
+            )
+        # Hemoplague (R): flat heal per infected champion, reduced for later
+        # targets (wiki: "Heal: 150 / 250 / 350 (+ 70% AP)" and
+        # "Reduced Heal: 60 / 100 / 140 (+ 28% AP)").  Each pair fight sees
+        # only its own R packet, so every copy is authored at the full value
+        # with the reduced amount attached as an explicit receipt; the
+        # coupled participant ledger re-prices later roster targets so the
+        # first infected champion pays the full heal and each additional
+        # champion pays the reduced heal.
+        r_rank = _rank(ability_damages, "R")
+        r_heal = extract_named(
+            _ability(champion_data, "R"), "Heal", r_rank, champion_stats
+        )
+        r_reduced = extract_named(
+            _ability(champion_data, "R"), "Reduced Heal", r_rank, champion_stats
+        )
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "R"
+        ):
+            _heal_from_damage(
+                healing,
+                event,
+                r_heal,
+                "Hemoplague",
+                later_target_amount=r_reduced,
+            )
 
     return sorted(healing, key=lambda event: (event["time"], event["source"]))

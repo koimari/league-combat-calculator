@@ -551,6 +551,7 @@ def _pair_packet(
     result: Mapping[str, Any],
     attacker_id: str,
     defender_id: str,
+    defender_index: int = 0,
 ) -> dict[str, Any]:
     """Enrich one pair fight's events exactly once.
 
@@ -560,6 +561,13 @@ def _pair_packet(
     walk's precomputed sort key — lives on templates here.  Applying a packet
     to one evaluation only shallow-copies each template, because the walk
     mutates its copy's top-level fields.
+
+    ``defender_index`` is the defender's position in the attacker's ordered
+    roster (the same slot the engine sees as ``roster_target_index``).  A
+    sourced flat heal that pays a reduced amount to later targets (Vladimir's
+    Hemoplague) carries that amount as an explicit receipt, and every
+    defender past the first is re-priced here so each target keeps its own
+    heal event instead of collapsing into one identical copy.
     """
     events: list[dict[str, Any]] = []
     cast_timeline = result.get("cast_timeline", [])
@@ -635,6 +643,14 @@ def _pair_packet(
             "attacker": attacker_id,
             "_event_id": f"{original_event_id}:{defender_id}",
         }
+        # Per-champion flat heals (Hemoplague) pay the reduced amount to
+        # every infected champion after the first.  The engine authors each
+        # pair copy at the full value because a pair fight cannot see the
+        # roster; re-price the copy whose defender is a later target here so
+        # the public receipt shows one full and one reduced event.
+        later_amount = event.get("_later_target_amount")
+        if defender_index > 0 and later_amount is not None:
+            enriched_heal["amount"] = max(0.0, float(later_amount))
         trigger_id = event_ids_by_key.get(
             (
                 str(event.get("_trigger_source", "")),
@@ -3913,6 +3929,7 @@ class _WalkCompiler:
         duration: float,
         heal_dedup: dict[tuple[str, float], float],
         id_strings: list[str],
+        defender_index: int = 0,
     ) -> None:
         """Compile a fresh one-pair fight straight from the engine rows.
 
@@ -3921,6 +3938,10 @@ class _WalkCompiler:
         enrichment nothing in score mode ever reads.  The sort-key layout is
         ``_action_key``'s; both must change together.  ``id_strings`` is the
         search-lifetime cache of this pair's positional event-id strings.
+
+        ``defender_index`` mirrors ``_pair_packet``'s: later roster targets
+        are re-priced to a sourced reduced heal amount when the engine
+        authored one, so the compiled walk matches the ordered receipt.
         """
         actions_append = self.actions.append
         order_append = self.damage_order[attacker_i].append
@@ -4101,6 +4122,14 @@ class _WalkCompiler:
             aidx = self.next_aidx
             self.next_aidx += 1
             time_value = float(event.get("time", 0.0))
+            # Same later-target re-price as _pair_packet: the engine authors
+            # per-champion flat heals at the full value because a pair fight
+            # cannot see the roster; a defender past the first uses the
+            # sourced reduced amount so score mode matches the ordered walk.
+            amount = max(0.0, float(event.get("amount", 0.0)))
+            later_amount = event.get("_later_target_amount")
+            if defender_index > 0 and later_amount is not None:
+                amount = max(0.0, float(later_amount))
             actions_append(
                 (
                     (
@@ -4117,7 +4146,7 @@ class _WalkCompiler:
                     attacker_i,
                     trigger,
                     aidx,
-                    max(0.0, float(event.get("amount", 0.0))),
+                    amount,
                     2,
                     event.get("amount_formula"),
                     0.0,
@@ -4783,8 +4812,22 @@ def _context_setup(
     base_pairs = [
         (attacker, defender) for attacker in ally_actors for defender in enemy_actors
     ] + [(attacker, defender) for attacker in enemy_actors for defender in ally_actors]
+    # Roster position mirrors the legacy attack groups: enemies are indexed
+    # from 0 for allied attackers, while an enemy attacker's ordered
+    # defenders are [main, *allies], so the first ally sits at index 1.
+    enemy_index = {
+        defender.participant_id: index for index, defender in enumerate(enemy_actors)
+    }
+    ally_index = {
+        defender.participant_id: index for index, defender in enumerate(ally_actors)
+    }
     for attacker, defender in base_pairs:
         cache_key = (attacker.participant_id, defender.participant_id)
+        defender_index = (
+            enemy_index.get(defender.participant_id, 0)
+            if attacker.team == "ally"
+            else 1 + ally_index.get(defender.participant_id, -1)
+        )
         packet = pair_result_cache.get(cache_key)
         if packet is None:
             packet = _pair_packet(
@@ -4797,6 +4840,7 @@ def _context_setup(
                 ),
                 attacker.participant_id,
                 defender.participant_id,
+                defender_index,
             )
             pair_result_cache[cache_key] = packet
         attacker_i = context.index_of[attacker.participant_id]
@@ -4995,7 +5039,7 @@ def _score_with_search_context(
     heal_dedup: dict[tuple[str, float], float] = {}
     first_result = None
     enemy_actors = [actor for actor in roster if actor.team == "enemy"]
-    for defender, pair_params in context.main_pair_params:
+    for defender_index, (defender, pair_params) in enumerate(context.main_pair_params):
         result = run_fight(
             main.champion_data,
             main.level,
@@ -5017,6 +5061,7 @@ def _score_with_search_context(
             duration,
             heal_dedup,
             context.pair_id_strings[defender.participant_id],
+            defender_index,
         )
     if first_result is not None:
         fresh.add_support_templates(
@@ -5401,6 +5446,7 @@ def build_participant_timeline(
                         ),
                         attacker.participant_id,
                         defender.participant_id,
+                        defender_index,
                     )
                     if cacheable and pair_result_cache is not None:
                         pair_result_cache[cache_key] = packet
