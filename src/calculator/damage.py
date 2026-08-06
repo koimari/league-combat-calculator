@@ -3052,6 +3052,16 @@ def _cooldown_ready_at(
 
 _CAST_SCHEDULE_EPS = 1e-9
 
+# Ability-triggered item procs (Eclipse, Muramana, Shaped Charge) match an
+# ability's authored hit packet to the rotation cast that armed it.  The
+# shared cast scheduler and the per-ability hit ledger are computed by
+# separate passes, so the same cast can drift by a few hundred microseconds
+# (observed 7.457 vs 7.4565217... for a Ziggs Q recast).  The match window
+# must absorb that jitter without ever swallowing a distinct cast: real
+# casts are separated by at least the ability's sourced cast time (0.1s+),
+# so 5ms is a safe middle ground.
+_PROC_HIT_MATCH_EPS = 5e-3
+
 
 def _schedule_shared_casts(
     state: "FightState",
@@ -4875,69 +4885,44 @@ def _shaped_charge_proc_receipts(
 ) -> list[dict[str, Any]] | None:
     """Return Shaped Charge trigger times with their timing precision.
 
-    Exact ability hit packets are preferred when the champion module authors
-    them. Otherwise, the existing cast-boundary fallback is retained and
-    explicitly marked coarse. A per-slot cursor prevents repeated casts from
-    reusing one authored packet.
+    Shaped Charge triggers on the next damaging ability hit.  The ordered
+    ledger is the certified receipt: module-authored hit packets keep their
+    timestamps, aggregate casts keep their sourced cast-instance boundary,
+    and the cooldown gate prevents same-cast multi-part hits from
+    double-triggering.  A malformed or incomplete ledger withholds the
+    receipt list while preserving the aggregate damage row; no timestamp is
+    invented.
     """
     if not math.isfinite(cooldown) or cooldown <= 0.0:
         return None
+    cast_order = getattr(state, "cast_order", None)
+    breakdown = getattr(state, "breakdown", None)
+    ability_damages = getattr(state, "ability_damages", None)
+    if (
+        not cast_order
+        or not isinstance(breakdown, Mapping)
+        or not isinstance(ability_damages, Mapping)
+    ):
+        return None
+    for cast_event in rotation.cast_events:
+        if (
+            not isinstance(cast_event, Mapping)
+            or _finite_numeric_receipt(cast_event.get("time")) is None
+        ):
+            return None
     receipts: list[dict[str, Any]] = []
     ready_at = 0.0
-    event_cursors: dict[str, int] = {}
-    breakdown = getattr(state, "breakdown", {})
-    for cast_event in rotation.cast_events:
-        if not isinstance(cast_event, Mapping):
-            return None
-        slot = cast_event.get("slot")
-        if not isinstance(slot, str):
-            return None
-        event_time = _finite_numeric_receipt(cast_event.get("time"))
-        if event_time is None or event_time < 0.0:
-            return None
-        ability = state.ability_damages.get(slot)
-        if not isinstance(ability, Mapping):
-            return None
-        parts = ability.get("parts", ())
-        if not isinstance(parts, (tuple, list)):
-            return None
-        damaging = any(
-            getattr(part, "amount", 0.0) > 0.0
-            or getattr(part, "hp_scaled_damage", None) is not None
-            for part in parts
+    for hit in _unique_ledger_hits(state, rotation, set(cast_order)):
+        hit_time = float(hit["time"])
+        if hit_time + 1e-9 < ready_at:
+            continue
+        receipts.append(
+            {
+                "time": hit_time,
+                "event_precision": str(hit.get("event_precision") or "exact"),
+            }
         )
-        if not damaging:
-            continue
-        trigger_time = event_time
-        precision = "cast_boundary"
-        row = breakdown.get(slot) if isinstance(breakdown, Mapping) else None
-        authored_events = row.get("damage_events") if isinstance(row, Mapping) else None
-        if isinstance(authored_events, list):
-            cursor = event_cursors.get(slot, 0)
-            while cursor < len(authored_events):
-                candidate = authored_events[cursor]
-                if not isinstance(candidate, Mapping):
-                    return None
-                candidate_time = _finite_numeric_receipt(candidate.get("time"))
-                candidate_damage = _finite_numeric_receipt(candidate.get("damage"))
-                if candidate_time is None or candidate_damage is None:
-                    return None
-                if candidate_time + 1e-9 < event_time:
-                    cursor += 1
-                    continue
-                if candidate_damage > 0.0:
-                    trigger_time = candidate_time
-                    precision = str(candidate.get("event_precision", "exact"))
-                    cursor += 1
-                    event_cursors[slot] = cursor
-                    break
-                cursor += 1
-            else:
-                event_cursors[slot] = cursor
-        if trigger_time < ready_at:
-            continue
-        receipts.append({"time": trigger_time, "event_precision": precision})
-        ready_at = trigger_time + cooldown
+        ready_at = hit_time + cooldown
     return receipts
 
 

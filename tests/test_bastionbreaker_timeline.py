@@ -11,10 +11,25 @@ from src.calculator.damage import (
 
 def _state() -> SimpleNamespace:
     return SimpleNamespace(
+        cast_order=["Q", "W"],
         ability_damages={
             "Q": {"parts": (DamagePart("magic", 100.0),)},
             "W": {"parts": (DamagePart("magic", 0.0),)},
-        }
+        },
+        breakdown={
+            "Q": {
+                "casts": 3,
+                "total_damage": 300.0,
+                "damage_type": "magic",
+                "total_raw": 300.0,
+            },
+            "W": {
+                "casts": 1,
+                "total_damage": 0.0,
+                "damage_type": "magic",
+                "total_raw": 0.0,
+            },
+        },
     )
 
 
@@ -39,15 +54,41 @@ def test_shaped_charge_withholds_malformed_cast_receipt() -> None:
     assert _shaped_charge_proc_times(_state(), rotation, 20.0) is None
 
 
+def test_shaped_charge_withholds_missing_ledger() -> None:
+    """A state without an ordered ledger has no certified trigger times."""
+    rotation = RotationResult(cast_events=[{"slot": "Q", "time": 0.0}])
+    state = SimpleNamespace(
+        ability_damages={
+            "Q": {"parts": (DamagePart("magic", 100.0),)},
+        }
+    )
+
+    assert _shaped_charge_proc_times(state, rotation, 20.0) is None
+
+
 def test_shaped_charge_prefers_authored_ability_hit_time() -> None:
     """A sourced ability packet replaces the cast-boundary fallback."""
     state = _state()
     state.breakdown = {
         "Q": {
+            "casts": 1,
+            "total_damage": 100.0,
+            "damage_type": "magic",
             "damage_events": [
-                {"time": 0.25, "damage": 100.0, "event_precision": "exact"}
-            ]
-        }
+                {
+                    "time": 0.25,
+                    "damage": 100.0,
+                    "damage_type": "magic",
+                    "event_precision": "exact",
+                }
+            ],
+        },
+        "W": {
+            "casts": 1,
+            "total_damage": 0.0,
+            "damage_type": "magic",
+            "total_raw": 0.0,
+        },
     }
     rotation = RotationResult(cast_events=[{"slot": "Q", "time": 0.0}])
 
