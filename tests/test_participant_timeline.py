@@ -293,9 +293,20 @@ def test_darius_decimate_self_heal_coalesces_targets_in_both_walks():
     heals = receipt["healing_events"]
     assert len(heals) == 1
     assert heals[0]["source"] == "Decimate"
-    assert heals[0]["raw_amount"] == pytest.approx(
-        main_survival["damage_taken"] * 0.34, abs=0.1
+    # The heal fires at Decimate's cast (t=0), so its missing-health
+    # basis is the damage Darius has taken up to that cast — not the
+    # whole window.  Annie's E4 Tibbers-attacks row carries authored
+    # 0.58s+ pet timestamps, so it lands after the heal and must be
+    # excluded from the basis (it still raises window damage_taken).
+    tibbers = next(
+        source["total_damage"]
+        for item in receipt["breakdown"]
+        if isinstance(item, dict) and item.get("participant_id") == "enemy:Annie"
+        for source in item.get("sources", [])
+        if source.get("name") == "Tibbers Attacks"
     )
+    heal_basis = main_survival["damage_taken"] - tibbers
+    assert heals[0]["raw_amount"] == pytest.approx(heal_basis * 0.34, abs=0.1)
     assert main_survival["healing_received"] == pytest.approx(
         heals[0]["applied_amount"]
     )

@@ -444,6 +444,42 @@ def on_hit_entry(
     }
 
 
+def fixed_count_pet_row(
+    name: str,
+    damage_type: str,
+    damage_per_hit: float,
+    attack_times: list[float],
+    detail: str,
+) -> dict[str, Any]:
+    """Build a fixed-count pet-attack proc row (E4 summoned units).
+
+    The fight engine prices ``proc_count`` independent procs for entries
+    outside the cast rotation (Tibbers attacks, Voidling attacks, ...):
+    one ``DamagePart`` per hit, the authored attack timestamps as an
+    exact event ledger, and the row's own display detail.  ``total_raw``
+    is the producer-side diagnostic (per-hit x count); the engine reads
+    only ``parts``.
+    """
+    return {
+        "name": name,
+        "damage_type": damage_type,
+        "total_raw": damage_per_hit * len(attack_times),
+        "parts": (DamagePart(damage_type, damage_per_hit),),
+        "proc_count": len(attack_times),
+        "damage_events": [
+            {
+                "time": round(time, 3),
+                "damage_type": damage_type,
+                "damage": damage_per_hit,
+                "event_precision": "exact",
+            }
+            for time in attack_times
+        ],
+        "event_phase": "effect",
+        "detail": detail,
+    }
+
+
 def ability_on_hit_entry(
     name: str,
     rank: int,

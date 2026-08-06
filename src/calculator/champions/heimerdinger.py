@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .reviewed_batch_01 import no_damage, source_row
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, extract_recharge
 
 
 def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -50,10 +50,15 @@ def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
                 "magic", beam, count=beam_count, time_offset=2.0, hit_interval=1.0
             )
         )
+    # Q is a charge ability: the JSON cooldown field holds only the 1s
+    # inter-cast timer, and the limiter for sustained use is the 20s
+    # rechargeRate.  Without it the engine scheduled 9 deploys in a 10s
+    # window — each cast re-priced the full turret swarm.
+    cooldown = extract_recharge(ctx.ability("Q", 0), rank)
     entry = damage_entry(
         name,
         rank,
-        extract_cooldown(ctx.ability("Q", 0), rank),
+        cooldown,
         sum(p.amount * p.count for p in parts),
         "magic",
     )
@@ -201,6 +206,12 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     "Turret shot/beam values and cadences are copied from the full Wiki Pets entry because the champion slot template intentionally contains no pet formula rows.",
+    "Q is a charge ability: its cooldown is the 20s rechargeRate (the "
+    "JSON cooldown field is only the 1s inter-cast timer), so one deploy "
+    "is priced per 20s window; the q_turrets/q_turret_attacks options set "
+    "how many turrets and shots one deploy contributes.",
+    "The R upgrade is the q_variant option: the H-28Q Apex Turret rows "
+    "scale by R rank (shots 80-120 +35% AP, beams 100-180 +70% AP).",
     "Rocket multi-hit reduction uses the explicit first/subsequent rows; only one champion hit is counted for the upgraded grenade.",
     "UPGRADE!!!, stuns, slows, turret targeting and vision are state/utility, not extra direct champion damage.",
 ]
