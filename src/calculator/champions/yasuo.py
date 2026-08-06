@@ -25,29 +25,57 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .reviewed_batch_01 import no_damage
 from .reviewed_batch_10 import _full_entry_sources, build_batch_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
     build_batch_module("Yasuo")
 )
 
 
+# P prose-sourced constants (data/champions.json, Yasuo P): "Yasuo's total
+# critical strike chance is doubled from all other sources. Additionally,
+# every 1% critical strike chance in excess of 100% is converted into 0.5
+# bonus attack damage. Yasuo's critical strikes deal only 90% of the
+# critical damage champions usually have."  The 0.9 crit-damage factor is
+# also the champion's game stat ``criticalStrikeDamageModifier`` (verified
+# in data/champions.json stats).  The engine applies the payload once in
+# ``_apply_stat_buff_ultimates`` so auto attacks AND ability parts with
+# ``crit_effectiveness`` (Steel Tempest's AD-ratio portion) share the
+# converted crit chance/multiplier.
+_CRIT_CHANCE_MULTIPLIER = 2.0
+_CRIT_DAMAGE_MULTIPLIER_FACTOR = 0.9
+_EXCESS_CRIT_BONUS_AD_PER_PERCENT = 0.5
+
+
 def _way_of_the_wanderer(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: Flow shield state row (no enemy damage)."""
+    """P: Flow shield state row carrying the crit-conversion payload."""
     ability = ctx.ability()
     if ability is None:
         return None
     shield = extract_named(ability, "Bonus Damage", ctx.level, ctx.stats, ctx.target)
-    return no_damage(
+    entry = no_damage(
         ctx,
         name=ability.get("name", "Way of the Wanderer"),
         reason=(
             f"Flow reaches 100 stacks (5900/5250/4600 units by level) to "
-            f"grant a {shield:.2f} magic-damage shield for 1s; crit "
-            "conversion and reduced crit damage are passive stats, not "
-            "enemy damage."
+            f"grant a {shield:.2f} magic-damage shield for 1s.  Intent: "
+            "total crit chance doubled (capped at 100%), crits deal 90% of "
+            "the normal crit damage, and excess crit chance converts to "
+            "bonus AD (0.5 per 1%) — applied by the fight engine to autos "
+            "and Steel Tempest's crit-eligible AD portion."
         ),
     )
+    entry["crit_modifier"] = {
+        "crit_chance_multiplier": _CRIT_CHANCE_MULTIPLIER,
+        "crit_damage_multiplier_factor": _CRIT_DAMAGE_MULTIPLIER_FACTOR,
+        "excess_crit_bonus_ad_per_percent": _EXCESS_CRIT_BONUS_AD_PER_PERCENT,
+    }
+    return entry
 
 
 def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -67,7 +95,18 @@ def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
         damage,
         "physical",
     )
-    entry["parts"] = (DamagePart("physical", damage),)
+    # "Steel Tempest's damage based on its AD ratio can critically strike"
+    # (cached Q description): the flat 20-120 base never crits, so it is a
+    # plain part; the 105% AD portion is a separate crit-eligible part that
+    # uses the crit chance/multiplier the engine resolves from P's
+    # crit_modifier (which already multiplies the multiplier by 0.9).
+    flat = extract_value(ability, "Physical Damage", rank, 0)
+    ad_ratio = extract_value(ability, "Physical Damage", rank, 1) / 100.0
+    ad_part = ctx.stats.get("attack_damage", 0.0) * ad_ratio
+    entry["parts"] = (
+        DamagePart("physical", flat),
+        DamagePart("physical", ad_part, crit_effectiveness=1.0),
+    )
     if stacks >= 2:
         entry["detail"] = (
             "Gathering Storm at 2 stacks: this cast is the Q3 whirlwind — "
@@ -165,8 +204,14 @@ ASSUMPTIONS = [
     "state, so q_gathering_storm only changes the Q row's detail",
     "E (Sweeping Blade) prices Ride the Wind stacks: base + N x "
     "per-stack bonus, capped at 4 stacks (the wiki Total Combined Damage)",
-    "P (Way of the Wanderer) Flow shield is state (no enemy damage); crit "
-    "conversion and reduced crit damage are passive stats",
+    "P (Way of the Wanderer) Intent is now priced: total crit chance is "
+    "doubled (capped at 100%), crits deal 90% of the normal crit damage, "
+    "and excess crit chance converts to 0.5 bonus AD per 1% — applied by "
+    "the fight engine to autos and Steel Tempest's crit-eligible AD part. "
+    "The Flow shield stays state (no enemy damage)",
+    "Q (Steel Tempest) splits the flat 20-120 base (never crits) from the "
+    "105% AD portion (crits at the converted crit stats, per the cached "
+    "description 'damage based on its AD ratio can critically strike')",
     "W (Wind Wall) is utility only; R (Last Breath) keeps the reviewed "
     "CP10.10 packet pricing",
 ]

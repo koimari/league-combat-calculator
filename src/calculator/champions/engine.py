@@ -107,6 +107,12 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # participant ledger turns into a timed self-shield event at that
         # event's timestamp (the Eclipse item authors the same payload shape).
         "self_shield_events",
+        # Champion-owned critical-strike conversion (Yasuo/Yone P): total
+        # crit chance doubled, crit damage scaled by a factor, and excess
+        # crit chance converted to bonus AD.  The fight engine resolves it
+        # once in ``_apply_stat_buff_ultimates`` so ability crit scaling and
+        # the auto-attack simulation share the converted values.
+        "crit_modifier",
     }
 )
 

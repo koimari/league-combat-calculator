@@ -151,7 +151,7 @@ def _fury_of_the_sands(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _soul_eater(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: innate lifesteal — no enemy damage."""
+    """P: innate lifesteal — no enemy damage, self-heal via healing.py."""
     ability = ctx.ability()
     if ability is None:
         return None
@@ -162,7 +162,12 @@ def _soul_eater(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "physical",
         "total_raw": 0.0,
         "parts": (),
-        "detail": "Innate lifesteal: self-sustain only, no enemy damage.",
+        "detail": (
+            "Innate lifesteal: heals for 12% / 18% / 24% (based on level; "
+            "game-file breakpoints 7/13) of the post-mitigation physical "
+            "basic-attack/on-hit damage dealt — authored by the Soul Eater "
+            "heal rule (HEALING_RULE_CHAMPIONS), no enemy damage."
+        ),
     }
 
 
@@ -210,7 +215,10 @@ ASSUMPTIONS = [
     "R (Fury of the Sands) prices all 30 sourced 0.5s ticks (E2 fix, "
     "unchanged); its bonus health/resistances are self-stats and the "
     "Q-cooldown halving is not modeled",
-    "P (Soul Eater) lifesteal and W (Wither) slow/cripple are " "zero-damage rows",
+    "P (Soul Eater) lifesteal is a self-heal rule (HEALING_RULE_CHAMPIONS): "
+    "12% / 18% / 24% (based on level; game-file breakpoints at 7/13) of the "
+    "post-mitigation physical basic-attack/on-hit damage dealt; W (Wither) "
+    "slow/cripple is a zero-damage row",
 ]
 
 SLOTS = {
@@ -224,7 +232,8 @@ SLOTS = {
 parse_abilities = build_parser(SLOTS, "Nasus")
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
+    for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
 

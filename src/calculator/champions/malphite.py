@@ -1,4 +1,5 @@
-"""Malphite — CP10.4 full-entry-reviewed packet module, plus the E8c P shield.
+"""Malphite — CP10.4 full-entry-reviewed packet module, plus the E8c P shield
+and the P1 W/armor closure.
 
 E8c addition over the reviewed packet:
 - P (Granite Shield) is a 10%-of-max-HP barrier that "lasts until it is
@@ -10,13 +11,37 @@ E8c addition over the reviewed packet:
   out-of-combat regeneration ("replenishes to full strength after a few
   seconds of not taking damage") is a documented boundary — the model
   grants the full shield once at fight start.
+
+P1 addition over the reviewed packet:
+- W (Thunderclap) now prices BOTH sourced parts of the empowered
+  attack: the "Additional Physical Damage" on-hit bonus (30-70 + 20% AP
+  + 15% armor) and the cone's "Physical Damage" (15-55 + 30% AP + 15%
+  armor) as a single-target hit — in a 1v1 the target stands inside the
+  melee cone, so both rows land on it (the reviewed packet priced only
+  the cone row; the per-auto cone cadence over the 5s window is a
+  documented boundary).
+- W's passive bonus armor ("Malphite gains bonus armor, tripled while
+  Granite Shield is active" — cached W first effect; the "Increased
+  Bonus Armor" leveling row 30/45/60/75/90 % armor IS the tripled
+  value) is a BUFF-phase grant: it mutates the shared parse stats so
+  E's 40% armor ratio and W's own 15% armor ratios price the buffed
+  armor.  The module models Granite Shield as active for the whole
+  window (the E8c assumption), so the tripled value applies for the
+  whole fight; the shield-break revert is part of that documented
+  boundary.
 """
 
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from ..ability_spec import DamagePart
+from .engine import BUFF, SlotCtx, build_parser
 from .reviewed_batch_04 import build_batch_module
-from .slotlib import attach_self_shield
+from .slotlib import (
+    attach_self_shield,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+)
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Malphite")
 
@@ -57,9 +82,61 @@ def _seismic_shard(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
+def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: tripled-armor buff, then the empowered-attack parts (on-hit + cone).
+
+    BUFF phase so E (40% armor ratio) parses after the armor grant.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    # W passive: bonus armor, tripled while Granite Shield is active.  The
+    # cached "Increased Bonus Armor" row (30/45/60/75/90 % armor) IS the
+    # tripled value; the module treats the shield as active for the whole
+    # fight window (E8c assumption), so the grant feeds every armor-scaled
+    # row in the parse (E's 40% and W's own 15% armor ratios).
+    armor_grant = extract_named(
+        ability, "Increased Bonus Armor", rank, ctx.stats, ctx.target
+    )
+    if armor_grant > 0.0:
+        ctx.stats["armor"] = ctx.stats.get("armor", 0.0) + armor_grant
+        ctx.stats["bonus_armor"] = ctx.stats.get("bonus_armor", 0.0) + armor_grant
+    on_hit_bonus = extract_named(
+        ability, "Additional Physical Damage", rank, ctx.stats, ctx.target
+    )
+    cone = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
+    total = on_hit_bonus + cone
+    entry = damage_entry(
+        ability.get("name", "Thunderclap"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+    entry["parts"] = (
+        DamagePart("physical", on_hit_bonus),
+        DamagePart("physical", cone),
+    )
+    entry["event_order_certified"] = "single_hit"
+    entry["detail"] = (
+        f"empowered-attack on-hit {on_hit_bonus:g} (Additional Physical "
+        f"Damage) + single-target cone {cone:g} (Physical Damage); W "
+        f"passive grants {armor_grant:g} bonus armor (tripled while "
+        "Granite Shield is active) feeding E's and W's armor ratios"
+    )
+    return entry
+
+
+_thunderclap.phase = BUFF
+
+
 SLOTS = dict(SLOTS)
 _packet_q = SLOTS["Q"]
 SLOTS["Q"] = _seismic_shard
+SLOTS["W"] = _thunderclap
 parse_abilities = build_parser(SLOTS, "Malphite")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -67,6 +144,15 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "max HP spanning the fight window, riding the first Q cast. The "
     "until-broken lifetime is approximated as the full window; the "
     "out-of-combat replenishment trigger is a documented boundary",
+    "W (Thunderclap) prices both empowered-attack parts: the Additional "
+    "Physical Damage on-hit bonus and the cone's Physical Damage as a "
+    "single-target hit (the 1v1 target stands inside the melee cone).  "
+    "The cone's per-auto cadence over its 5s window is a documented "
+    "boundary — the packet prices one cone hit at the cast",
+    "W's passive bonus armor is granted at its tripled value (the cached "
+    "Increased Bonus Armor row) for the whole fight, matching the E8c "
+    "full-window Granite Shield assumption; the shield-break revert to "
+    "the un-tripled value is part of that documented boundary",
 ]
 
 MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
