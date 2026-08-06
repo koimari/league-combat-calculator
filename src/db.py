@@ -56,7 +56,9 @@ from sqlalchemy import (
     String,
     Text,
     create_engine,
+    inspect,
     select,
+    text,
     update,
 )
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
@@ -114,6 +116,11 @@ class Build(Base):
     __tablename__ = "builds"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    # Anonymous session id (see docs/beta-metrics.md) attributed at save time.
+    # Nullable: rows saved before P1b instrumentation have no session.
+    session_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, index=True
+    )
     champion: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     level: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     role: Mapped[str | None] = mapped_column(String(20), nullable=True)
@@ -140,6 +147,10 @@ class ShareLink(Base):
         ForeignKey("builds.id", ondelete="CASCADE"), nullable=False, index=True
     )
     slug: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # Anonymous session id of the sharer (see docs/beta-metrics.md).
+    session_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, index=True
+    )
     views: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), nullable=False, default=_utcnow
@@ -170,6 +181,10 @@ class ValidationFeedback(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     champion: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    # Anonymous session id of the observer (see docs/beta-metrics.md).
+    session_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, index=True
+    )
     loadout: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     expected: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     actual: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
@@ -215,6 +230,29 @@ class CacheCounter(Base):
     )
 
 
+class MetricsEvent(Base):
+    """One anonymous, session-scoped product event (P1b beta metrics).
+
+    No PII by construction: ``session_id`` is a random first-party cookie
+    id minted by the app, never an account name or email.  ``took_ms`` is
+    the wall-clock duration the session took to complete the instrumented
+    flow (e.g. the ``quick_complete`` activation funnel).
+    """
+
+    __tablename__ = "metrics_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    event: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    session_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, index=True
+    )
+    took_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), nullable=False, default=_utcnow, index=True
+    )
+
+
 # ---------------------------------------------------------------------------
 # Engine lifecycle
 # ---------------------------------------------------------------------------
@@ -222,6 +260,33 @@ class CacheCounter(Base):
 _engine: Engine | None = None
 _session_factory: sessionmaker | None = None
 _engine_lock = threading.Lock()
+
+
+def _ensure_metrics_schema(engine: Engine) -> None:
+    """Idempotently backfill P1b columns onto pre-existing tables.
+
+    ``create_all`` only creates missing tables; a database created before
+    the metrics work (the live beta Postgres) already has ``builds``,
+    ``share_links`` and ``validation_feedback`` without ``session_id``.
+    This runs one guarded ``ALTER TABLE ... ADD COLUMN`` per missing
+    column (no alembic migration step exists in this project).  Fresh
+    databases get the columns from the model DDL and this is a no-op.
+    """
+    for table_name, column_name in (
+        ("builds", "session_id"),
+        ("share_links", "session_id"),
+        ("validation_feedback", "session_id"),
+    ):
+        inspector = inspect(engine)
+        if table_name not in inspector.get_table_names():
+            continue
+        existing = {column["name"] for column in inspector.get_columns(table_name)}
+        if column_name in existing:
+            continue
+        with engine.begin() as connection:
+            connection.execute(
+                text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} VARCHAR(100)")
+            )
 
 
 def get_engine() -> Engine:
@@ -237,6 +302,7 @@ def get_engine() -> Engine:
                 kwargs["pool_pre_ping"] = True
             _engine = create_engine(url, future=True, **kwargs)
             Base.metadata.create_all(_engine)
+            _ensure_metrics_schema(_engine)
             _session_factory = sessionmaker(
                 bind=_engine, expire_on_commit=False, future=True
             )
@@ -396,12 +462,14 @@ _BUILD_TOP_LEVEL_KEYS = frozenset(
 )
 
 
-def save_build(payload: Mapping[str, Any]) -> int:
+def save_build(payload: Mapping[str, Any], session_id: str | None = None) -> int:
     """Persist one build payload, returning its id.
 
     Dedicated columns take the obvious keys; any remaining keys (boots,
     fight_mode, target stats, rotations, ...) are stored losslessly in
     ``fight_params`` so the original request can be reconstructed.
+    ``session_id`` is the anonymous beta-metrics session (see
+    docs/beta-metrics.md); it never identifies the account.
     """
     values: dict[str, Any] = {}
     for key in _BUILD_COLUMNS:
@@ -422,6 +490,7 @@ def save_build(payload: Mapping[str, Any]) -> int:
         key: value for key, value in payload.items() if key not in _BUILD_TOP_LEVEL_KEYS
     }
     values["fight_params"].update(remainder)
+    values["session_id"] = session_id
     with session() as db_session:
         build = Build(**values)
         db_session.add(build)
@@ -469,16 +538,24 @@ def _generate_token() -> str:
     return secrets.token_urlsafe(16)
 
 
-def create_share_link(build_id: int, slug: str | None = None) -> dict[str, Any]:
+def create_share_link(
+    build_id: int, slug: str | None = None, session_id: str | None = None
+) -> dict[str, Any]:
     """Create a share link for an existing build; raises KeyError when the
-    build is missing."""
+    build is missing.  ``session_id`` is the sharer's anonymous beta-metrics
+    session (see docs/beta-metrics.md)."""
     with session() as db_session:
         build = db_session.get(Build, int(build_id))
         if build is None:
             raise KeyError(build_id)
         for _attempt in range(3):
             token = _generate_token()
-            share = ShareLink(token=token, build_id=build.id, slug=slug or None)
+            share = ShareLink(
+                token=token,
+                build_id=build.id,
+                slug=slug or None,
+                session_id=session_id,
+            )
             db_session.add(share)
             try:
                 db_session.commit()
@@ -543,8 +620,13 @@ def add_feedback(
     matched: bool = False,
     delta: float | None = None,
     note: str | None = None,
+    session_id: str | None = None,
 ) -> int:
-    """Persist one validation observation, returning its id."""
+    """Persist one validation observation, returning its id.
+
+    ``session_id`` is the observer's anonymous beta-metrics session (see
+    docs/beta-metrics.md); it never identifies the account.
+    """
     if source not in _VALID_FEEDBACK_SOURCES:
         raise ValueError(f"source must be one of {sorted(_VALID_FEEDBACK_SOURCES)}")
     if delta is not None:
@@ -561,6 +643,7 @@ def add_feedback(
             matched=bool(matched),
             delta=delta,
             note=note,
+            session_id=session_id,
         )
         db_session.add(feedback)
         db_session.commit()
@@ -839,3 +922,83 @@ def staleness_get(patch: str) -> dict[str, Any] | None:
             "payload": row.payload or {},
             "checked_at": _serialize_datetime(row.checked_at),
         }
+
+
+# ---------------------------------------------------------------------------
+# Beta metrics events (P1b)
+# ---------------------------------------------------------------------------
+
+# The app validates the event name against the same whitelist before it
+# calls this helper; the check is repeated here so direct callers (the
+# scorecard CLI, tests) cannot write arbitrary event names either.
+_VALID_METRIC_EVENTS = frozenset({"quick_complete"})
+_METRIC_EVENT_MAX_TOOK_MS = 3_600_000
+
+
+def record_metric_event(
+    *,
+    event: str,
+    session_id: str,
+    took_ms: int | None = None,
+    payload: Mapping[str, Any] | None = None,
+) -> int:
+    """Persist one anonymous product event, returning its id.
+
+    ``session_id`` is the app-minted anonymous session id (a random cookie
+    id, never an account name).  ``took_ms`` is the wall-clock duration of
+    the instrumented flow; the whitelist and bounds mirror the API route so
+    direct callers get the same rejections.
+    """
+    if event not in _VALID_METRIC_EVENTS:
+        raise ValueError(f"event must be one of {sorted(_VALID_METRIC_EVENTS)}")
+    if not session_id or not isinstance(session_id, str) or len(session_id) > 100:
+        raise ValueError("session_id must be a non-empty string of at most 100 chars")
+    if took_ms is not None:
+        took_ms = int(took_ms)
+        if took_ms < 0 or took_ms > _METRIC_EVENT_MAX_TOOK_MS:
+            raise ValueError(
+                f"took_ms must be between 0 and {_METRIC_EVENT_MAX_TOOK_MS}"
+            )
+    with session() as db_session:
+        row = MetricsEvent(
+            event=event,
+            session_id=session_id,
+            took_ms=took_ms,
+            payload=dict(payload or {}),
+        )
+        db_session.add(row)
+        db_session.commit()
+        return row.id
+
+
+def list_metric_events(
+    event: str | None = None,
+    since: datetime | None = None,
+    limit: int = 200,
+) -> list[dict[str, Any]]:
+    """Return recent metrics events, newest first, optionally filtered.
+
+    ``since`` is a naive-UTC lower bound on ``created_at``; ``limit`` is
+    capped at 1000 so a runaway event stream cannot be dumped in one call.
+    """
+    statement = select(MetricsEvent).order_by(MetricsEvent.id.desc())
+    if event:
+        if event not in _VALID_METRIC_EVENTS:
+            raise ValueError(f"event must be one of {sorted(_VALID_METRIC_EVENTS)}")
+        statement = statement.where(MetricsEvent.event == event)
+    if since is not None:
+        statement = statement.where(MetricsEvent.created_at >= since)
+    statement = statement.limit(max(1, min(int(limit), 1000)))
+    with session() as db_session:
+        rows = db_session.execute(statement).scalars().all()
+        return [
+            {
+                "event_id": row.id,
+                "event": row.event,
+                "session_id": row.session_id,
+                "took_ms": row.took_ms,
+                "payload": row.payload or {},
+                "created_at": _serialize_datetime(row.created_at),
+            }
+            for row in rows
+        ]

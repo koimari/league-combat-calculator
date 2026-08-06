@@ -25,6 +25,7 @@ suffix.
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | integer PK | |
+| `session_id` | varchar(100) null | anonymous beta-metrics session (P1b); indexed, nullable for pre-P1b rows |
 | `champion` | varchar(100) | indexed |
 | `level` | integer | |
 | `role` | varchar(20) null | |
@@ -45,6 +46,7 @@ suffix.
 | `token` | varchar(64) | **unique**, URL-safe, generated server-side |
 | `build_id` | integer FK → `builds.id` | `ON DELETE CASCADE`, indexed |
 | `slug` | varchar(50) null | optional vanity slug |
+| `session_id` | varchar(100) null | anonymous beta-metrics session (P1b); indexed, nullable for pre-P1b rows |
 | `views` | integer | incremented atomically per `GET /api/share/<token>` |
 | `created_at` | timestamp | |
 
@@ -68,6 +70,7 @@ data refresh.
 | --- | --- | --- |
 | `id` | integer PK | |
 | `champion` | varchar(100) | indexed |
+| `session_id` | varchar(100) null | anonymous beta-metrics session (P1b); indexed, nullable for pre-P1b rows |
 | `loadout` | JSON | |
 | `expected` | JSON | |
 | `actual` | JSON | |
@@ -103,6 +106,29 @@ so every gunicorn worker reports the same totals for `/api/cache-status`.
 | `hits` | integer |
 | `misses` | integer |
 | `updated_at` | timestamp |
+
+### `metrics_events` — anonymous product events (P1b beta metrics)
+
+Funnel events recorded by `POST /api/metrics/event`.  No PII: `session_id`
+is a random first-party cookie id, never an account identifier.  See
+`docs/beta-metrics.md` for the metric definitions.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | integer PK | |
+| `event` | varchar(50) | indexed; whitelisted (`quick_complete` today) |
+| `session_id` | varchar(100) null | indexed; the `scryglass_anon` cookie value |
+| `took_ms` | integer null | wall-clock duration of the instrumented flow |
+| `payload` | JSON | optional bounded extras |
+| `created_at` | timestamp | indexed |
+
+## Migration note (P1b)
+
+`create_all` creates the new `metrics_events` table automatically; the
+`session_id` columns on `builds` / `share_links` / `validation_feedback`
+are backfilled onto pre-existing databases by `db._ensure_metrics_schema`
+(guarded `ALTER TABLE ... ADD COLUMN`, idempotent).  There is no alembic
+step.
 
 ## Endpoints
 

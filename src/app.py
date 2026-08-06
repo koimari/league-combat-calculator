@@ -24,10 +24,14 @@ from urllib.parse import urlsplit
 
 # Ensure the src directory is on the path so calculator imports work
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+# Repo root too: the /api/metrics scorecard is computed by the importable
+# scripts.beta_metrics module (P1b), which lives outside src/.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from flask import (
     Flask,
     Response,
+    after_this_request,
     jsonify,
     redirect,
     render_template,
@@ -132,6 +136,7 @@ from db import (
     is_configured,
     is_postgres,
     list_feedback,
+    record_metric_event,
     redis_configured,
     save_build,
     session,
@@ -206,6 +211,15 @@ _RATE_LIMIT_POLICIES = {
     # One token per 10 seconds caps sustained abuse near 20% of one core while
     # the independent calculate budget keeps the ordinary UI responsive.
     "optimize": (2, 0.1),
+    # Anonymous funnel events are tiny and fire at most a few times per
+    # session; a generous burst budget still bounds scripted spam to one
+    # write every five seconds sustained.
+    "metrics_event": (60, 0.2),
+}
+_SCOPE_LABELS = {
+    "calculate": "Calculator",
+    "optimize": "Optimizer",
+    "metrics_event": "Metrics",
 }
 _VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
 _ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
@@ -327,6 +341,42 @@ def _current_session() -> dict | None:
         return None
 
 
+# Anonymous beta-metrics session (P1b). The id is a random cookie value that
+# never encodes account material, so activation/retention are measurable
+# without a user table and without PII (see docs/beta-metrics.md).
+_ANON_SESSION_COOKIE = "scryglass_anon"
+_ANON_SESSION_MAX_AGE = 90 * 24 * 60 * 60
+
+
+def _anon_session_id() -> str:
+    """Return the anonymous session id, minting and persisting it when absent.
+
+    The cookie is first-party, HttpOnly and scoped to the whole site; it
+    carries no username, email, or invite code.  ``after_this_request``
+    persists a freshly minted id on the current response.
+    """
+    existing = request.cookies.get(_ANON_SESSION_COOKIE, "")
+    if existing and len(existing) <= 100 and re.fullmatch(r"[A-Za-z0-9_-]+", existing):
+        return existing
+
+    session_id = secrets.token_urlsafe(24)
+
+    @after_this_request
+    def _persist_anon_cookie(response):  # pylint: disable=unused-variable
+        response.set_cookie(
+            _ANON_SESSION_COOKIE,
+            session_id,
+            max_age=_ANON_SESSION_MAX_AGE,
+            httponly=True,
+            secure=request.is_secure or os.environ.get("VERCEL") == "1",
+            samesite="Lax",
+            path="/",
+        )
+        return response
+
+    return session_id
+
+
 def _auth_users() -> dict[str, str]:
     """Load the explicit username -> scrypt password-hash map."""
     raw = os.environ.get("SCRYGLASS_AUTH_USERS", "").strip()
@@ -436,6 +486,9 @@ def _enforce_authentication():
         or request.path == "/terms"
         or request.path == "/riot-disclaimer"
         or request.path == "/api/auth/invite"
+        # Anonymous funnel events fire before/without any approved session;
+        # the scorecard endpoint (GET /api/metrics) stays behind the gate.
+        or request.path == "/api/metrics/event"
         or request.path.startswith("/auth/")
     ):
         return None
@@ -477,7 +530,7 @@ def _spend_rate_limit(scope: str):
     if allowed:
         return None
 
-    label = "Optimizer" if scope == "optimize" else "Calculator"
+    label = _SCOPE_LABELS.get(scope, scope.replace("_", " ").title())
     response = jsonify({"error": f"{label} is busy; retry shortly"})
     response.status_code = 429
     response.headers["Retry-After"] = str(max(1, math.ceil(retry_after)))
@@ -3075,7 +3128,7 @@ def api_save_build():
         return jsonify({"error": str(exc)}), 400
 
     try:
-        build_id = save_build(data)
+        build_id = save_build(data, session_id=_anon_session_id())
     except SQLAlchemyError as exc:  # surface DB failure to the client
         app.logger.exception("Failed to save build")
         return jsonify({"error": f"Database unavailable: {exc}"}), 503
@@ -3114,7 +3167,9 @@ def api_create_share():
         return jsonify({"error": str(exc)}), 400
 
     try:
-        share = create_share_link(build_id, slug=slug or None)
+        share = create_share_link(
+            build_id, slug=slug or None, session_id=_anon_session_id()
+        )
     except KeyError:
         return jsonify({"error": f"Build {build_id} not found"}), 404
     except SQLAlchemyError as exc:  # surface DB failure to the client
@@ -3173,6 +3228,7 @@ def api_add_feedback():
             source=source,
             matched=matched,
             note=note,
+            session_id=_anon_session_id(),
         )
     except SQLAlchemyError as exc:  # surface DB failure to the client
         app.logger.exception("Failed to record feedback")
@@ -3544,6 +3600,7 @@ def api_receipts():
             matched=matched,
             delta=delta,
             note=note,
+            session_id=_anon_session_id(),
         )
     except SQLAlchemyError as exc:  # surface DB failure to the client
         app.logger.exception("Failed to record receipt")
@@ -3597,6 +3654,77 @@ def api_validation_champions():
         app.logger.exception("Failed to read validation champions")
         return jsonify({"error": f"Database unavailable: {exc}"}), 503
     return jsonify({"champions": summary})
+
+
+# --- Beta metrics (P1b) ---------------------------------------------------
+# Whitelist mirrors db._VALID_METRIC_EVENTS; keep the two in sync.
+_METRICS_EVENT_NAMES = frozenset({"quick_complete"})
+_METRICS_EVENT_MAX_TOOK_MS = 3_600_000
+
+
+@app.route("/api/metrics/event", methods=["POST"])
+def api_metrics_event():
+    """Record one anonymous, session-scoped product event (no PII).
+
+    Body: ``{"event": "quick_complete", "took_ms": 1234}`` where
+    ``took_ms`` is the wall-clock time the user took to complete
+    champion -> role -> Best-next-item (the beta activation funnel).  The
+    anonymous session id is a first-party cookie (``scryglass_anon``)
+    minted here when missing; it never contains account material.  The
+    route is deliberately pre-auth so funnel events can be collected from
+    any browser session, and is rate-limited like every other public API.
+    """
+    try:
+        data = _json_object()
+        event = _request_string(data, "event", required=True)
+        if event not in _METRICS_EVENT_NAMES:
+            raise ValueError(f"event must be one of {sorted(_METRICS_EVENT_NAMES)}")
+        took_ms = data.get("took_ms")
+        if took_ms is not None:
+            if not isinstance(took_ms, int) or isinstance(took_ms, bool):
+                raise ValueError("took_ms must be an integer")
+            if took_ms < 0 or took_ms > _METRICS_EVENT_MAX_TOOK_MS:
+                raise ValueError(
+                    f"took_ms must be between 0 and {_METRICS_EVENT_MAX_TOOK_MS}"
+                )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    rate_limit_response = _spend_rate_limit("metrics_event")
+    if rate_limit_response is not None:
+        return rate_limit_response
+
+    session_id = _anon_session_id()
+    try:
+        event_id = record_metric_event(
+            event=event, session_id=session_id, took_ms=took_ms
+        )
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to record metrics event")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    return jsonify({"event_id": event_id, "event": event}), 201
+
+
+@app.route("/api/metrics")
+def api_metrics():
+    """Beta success scorecard with the PASS/FAIL gate (auth-gated).
+
+    The scorecard is computed by scripts/beta_metrics.compute_scorecard so
+    the dashboard endpoint and the ``scripts/beta_metrics.py`` CLI share
+    one definition of the gate (see docs/beta-metrics.md).
+    """
+    try:
+        # pylint: disable-next=import-outside-toplevel  # deliberate lazy import
+        from scripts.beta_metrics import compute_scorecard
+    except ImportError as exc:
+        app.logger.exception("Failed to import the beta metrics scorecard")
+        return jsonify({"error": "Metrics module unavailable"}), 503
+    try:
+        scorecard = compute_scorecard()
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to compute the beta scorecard")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    return jsonify(scorecard)
 
 
 def _option_affects_slot(
