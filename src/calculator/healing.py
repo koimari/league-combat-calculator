@@ -275,6 +275,8 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Trundle",
         "Xin Zhao",
         "Yorick",
+        "Udyr",
+        "Yuumi",
     }
 )
 
@@ -1628,5 +1630,52 @@ def derive_self_healing(
                     **_trigger_fields(event),
                 }
             )
+
+
+    elif name == "Udyr":
+        # Iron Mantle (W): the shield stance heals every 0.25 s over 4 s
+        # (wiki: "Heal per Tick" x16 == "Total Healing", e2-dot-3 sourced).
+        w_rank = _rank(ability_damages, "W")
+        per_tick = extract_named(
+            _ability(champion_data, "W"), "Heal per Tick", w_rank, champion_stats
+        )
+        if per_tick > 0.0:
+            for cast in cast_timeline or []:
+                if cast.get("slot") != "W":
+                    continue
+                start = float(cast.get("time", 0.0))
+                for index in range(1, 17):
+                    healing.append(
+                        {
+                            "time": start + index * 0.25,
+                            "amount": float(per_tick),
+                            "source": "Iron Mantle",
+                            "kind": "champion_ability",
+                            "actor_wide": True,
+                        }
+                    )
+
+    elif name == "Yuumi":
+        # Final Chapter (R): each of the 5 waves heals (wiki: "Heal per
+        # Hit" x5 == "Total Heal", e2-dot-3 sourced); waves at 0.7 s.
+        r_rank = _rank(ability_damages, "R")
+        per_wave = extract_named(
+            _ability(champion_data, "R"), "Heal per Hit", r_rank, champion_stats
+        )
+        if per_wave > 0.0:
+            for cast in cast_timeline or []:
+                if cast.get("slot") != "R":
+                    continue
+                start = float(cast.get("time", 0.0))
+                for index in range(5):
+                    healing.append(
+                        {
+                            "time": start + index * 0.7,
+                            "amount": float(per_wave),
+                            "source": "Final Chapter",
+                            "kind": "champion_ability",
+                            "actor_wide": True,
+                        }
+                    )
 
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
