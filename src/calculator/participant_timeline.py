@@ -25,6 +25,8 @@ from .item_support_effects import (
     has_ordered_item_team_effects,
     schedule_knights_vow,
 )
+from .champions.skill_orders import get_ability_rank
+from .healing import GREY_HEALTH_RULE_CHAMPIONS
 from .healing_reduction import (
     GRIEVOUS_WOUNDS_FACTOR,
     healing_reduction_profiles,
@@ -1250,6 +1252,368 @@ def _schedule_authored_reactive_events(
                     event["_wound_until"] = event["time"] + event["grievous_duration"]
                 incoming.setdefault(target, []).append(event)
                 outgoing.setdefault(event["attacker"], []).append(event)
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Grey-health primitive (E8a)
+# ─────────────────────────────────────────────────────────────────────────
+# Grey-health champions store a sourced portion of post-mitigation damage
+# TAKEN as a grey pool on their health bar and pay it back as a heal when
+# their active consumes the pool.  The 1v1 heal derivation
+# (``healing.derive_self_healing``) only sees the main's OUTGOING events,
+# so the receipts are authored here against the incoming ledger: the
+# main-as-defender's pair events accumulate the sourced percentage, and
+# each consume heals the sourced portion.  Every ratio is pinned from
+# data/champions.json prose or leveling rows (citations inline below); no
+# value is invented.  The authored heals carry fixed sourced amounts (the
+# pair engine's post-mitigation values) so the ordered walk and the
+# compiled optimizer walk apply byte-identical numbers; walk-time state
+# gates (spell shields, stasis, redirects) are documented boundaries that
+# would require a stateful per-event pool, which the 1v1 receipt does not
+# model.
+#
+# Pyke P (Gift of the Drowned Ones) — data/champions.json P prose only:
+#   "Pyke stores 9% (+ 0.2% per 1 Lethality) of the post-mitigation damage
+#   he takes from enemy champions as grey health ..., increased to 40%
+#   (+ 0.4% per 1 Lethality) while there are two or more visible enemy
+#   champions nearby. He can store up to 80 (+ 800% bonus AD) grey health,
+#   with an upper cap of 55% of his maximum health."  "While Pyke is not
+#   visible to enemies, he rapidly consumes his grey health to heal for the
+#   same amount."  Out-of-vision is a boundary the 1v1 ledger does not
+#   model, so the consume is documented, not authored as an in-window heal.
+_PYKE_P_STORE_RATIO = 0.09
+_PYKE_P_STORE_PER_LETHALITY = 0.002
+_PYKE_P_STORE_MULTI_RATIO = 0.40
+_PYKE_P_STORE_MULTI_PER_LETHALITY = 0.004
+_PYKE_P_STORE_FLAT_CAP = 80.0
+_PYKE_P_STORE_BONUS_AD_CAP_RATIO = 8.0  # "80 (+ 800% bonus AD)"
+_PYKE_P_STORE_MAX_HEALTH_CAP_RATIO = 0.55
+_PYKE_P_CONSUME_HEAL_RATIO = 1.0  # out-of-vision consume heals the pool
+# Rengar W (Battle Roar) — data/champions.json W prose only (the W
+# leveling rows carry the ability's magic damage, not a heal amount):
+#   "Rengar stores 50% of the post-mitigation damage he has taken in the
+#   last 1.5 seconds as grey health ... consuming his grey health to heal
+#   for the same amount."  The active heals 100% of the stored pool, i.e.
+#   50% of the post-mitigation damage taken in the 1.5 s before the cast.
+#   A same-timestamp incoming packet resolves before the cast's heal (the
+#   ledger's damage-before-heal phase order), so the window is inclusive.
+_RENGAR_W_STORE_RATIO = 0.50
+_RENGAR_W_STORE_WINDOW_SECONDS = 1.5
+_RENGAR_W_CONSUME_HEAL_RATIO = 1.0
+# Tahm Kench E (Thick Skin) — leveling rows:
+#   "Damage Stored into Grey Health" 15/23/31/39/47 by E rank (1 enemy),
+#   "Increased Damage Stored into Grey Health" 42/44/46/48/50 with 2+
+#   visible enemies, pool cap "300% of his maximum health".  The heal is
+#   the out-of-combat consume ("after 4 seconds without taking damage ...
+#   restore 60% : 100% (based on level) of the amount") whose level row
+#   "Max Health Damage" carries 60 : 100 (based on level).  The E ACTIVE
+#   converts grey into a 2.5 s shield — a shield, not a heal — and stays
+#   out of this primitive's scope (the module documents Thick Skin as
+#   shield state).  The consume is modeled as one lump heal at the 4 s
+#   boundary; the wiki's 10%-max-health-per-0.264 s tick delivery is a
+#   rate detail with the same total, documented here.
+_TAHM_E_STORE_RANK = (0.15, 0.23, 0.31, 0.39, 0.47)
+_TAHM_E_STORE_MULTI_RANK = (0.42, 0.44, 0.46, 0.48, 0.50)
+_TAHM_E_STORE_CAP_RATIO = 3.0
+_TAHM_E_OUT_OF_COMBAT_SECONDS = 4.0
+# Mordekaiser W (Indestructible) — data/champions.json W prose:
+#   "stores 45% of the post-mitigation damage he deals and 7.5% of the
+#   pre-mitigation damage he takes ... up to 30% of his maximum health."
+#   Recast ("Indestructible can be recast after 0.5 seconds while the
+#   shield is active ... consuming the remaining shield, healing for a
+#   portion of the amount") pays the "Shield to Healing" leveling row
+#   35/37.5/40/42.5/45 by W rank of the shield amount (the pool at the
+#   first W cast; the model presses the recast at its earliest available
+#   time — the exact moment is a player decision, documented boundary).
+#   The Potential Shield decay and the active shield's exponential decay
+#   are state, not modeled.
+_MORDE_W_STORE_DEALT_RATIO = 0.45
+_MORDE_W_STORE_TAKEN_PRE_RATIO = 0.075
+_MORDE_W_STORE_CAP_RATIO = 0.30
+_MORDE_W_SHIELD_TO_HEALING_RANK = (0.35, 0.375, 0.40, 0.425, 0.45)
+_MORDE_W_RECAST_AVAILABLE_SECONDS = 0.5
+
+
+def _grey_leveling_values(ability: Mapping[str, Any], attribute: str) -> list[float]:
+    """Read one leveling attribute's first modifier value array."""
+    for effect in ability.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute") != attribute:
+                continue
+            modifiers = leveling.get("modifiers", [])
+            if not modifiers:
+                continue
+            values = modifiers[0].get("values", [])
+            if values:
+                return [float(value) for value in values]
+    return []
+
+
+def _grey_rank_ratio(
+    ability: Mapping[str, Any],
+    attribute: str,
+    rank: int,
+    default: float = 0.0,
+) -> float:
+    """One rank-indexed sourced percentage (a row of 5 values)."""
+    values = _grey_leveling_values(ability, attribute)
+    if not values:
+        return default
+    index = min(max(int(rank), 1) - 1, len(values) - 1)
+    return float(values[index]) / 100.0
+
+
+def _grey_level_ratio(ability: Mapping[str, Any], attribute: str, level: int) -> float:
+    """One level-indexed sourced percentage (an 18+ entry row)."""
+    values = _grey_leveling_values(ability, attribute)
+    if not values:
+        return 0.0
+    index = min(max(int(level), 1) - 1, len(values) - 1)
+    return float(values[index]) / 100.0
+
+
+# pylint: disable=too-many-arguments,too-many-positional-arguments
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def _grey_health_receipts(
+    champion_name: str,
+    champion_data: Mapping[str, Any],
+    level: int,
+    stats: Mapping[str, float],
+    incoming: list[tuple[float, float, float]],
+    outgoing: list[tuple[float, float, float]],
+    cast_timeline: Iterable[Mapping[str, Any]],
+    duration: float,
+    enemy_count: int,
+    ability_ranks: Mapping[str, int] | None = None,
+) -> tuple[list[tuple[float, str, float]], dict[str, float]]:
+    """Author grey-health consume heals for one grey-health main champion.
+
+    ``incoming``/``outgoing`` are ``(time, post_mitigation,
+    pre_mitigation)`` damage records for damage the main TAKES (its
+    defenders' pair packets) and DEALS within the fight window.  Returns
+    ``(consume_heals, summary)`` where each heal is ``(time, source,
+    amount)`` and the summary carries the ``grey_health_stored`` pool,
+    the ``grey_health_consumed`` total, and a ``source`` label for the
+    receipt.  The pool accumulates the sourced ratio of post-mitigation
+    incoming damage (Mordekaiser also stores from pre-mitigation damage
+    taken and from post-mitigation damage dealt), capped per champion.
+    """
+    name = str(champion_name)
+    heals: list[tuple[float, str, float]] = []
+
+    def _slot_rank(slot: str) -> int:
+        if ability_ranks and slot in ability_ranks:
+            return max(0, int(ability_ranks[slot] or 0))
+        return max(0, int(get_ability_rank(slot, level, name)))
+
+    if name == "Pyke":
+        lethality = float(stats.get("lethality", 0.0) or 0.0)
+        if enemy_count >= 2:
+            ratio = _PYKE_P_STORE_MULTI_RATIO + (
+                _PYKE_P_STORE_MULTI_PER_LETHALITY * lethality
+            )
+        else:
+            ratio = _PYKE_P_STORE_RATIO + (_PYKE_P_STORE_PER_LETHALITY * lethality)
+        max_health = max(0.0, float(stats.get("health", 0.0) or 0.0))
+        bonus_ad = max(0.0, float(stats.get("bonus_attack_damage", 0.0) or 0.0))
+        cap = min(
+            _PYKE_P_STORE_FLAT_CAP + _PYKE_P_STORE_BONUS_AD_CAP_RATIO * bonus_ad,
+            _PYKE_P_STORE_MAX_HEALTH_CAP_RATIO * max_health,
+        )
+        pool = min(cap, ratio * sum(post for _t, post, _pre in incoming))
+        # Out-of-vision consume: vision is a boundary the 1v1 ledger does
+        # not model, so the 100% heal is documented, not authored.
+        return heals, {
+            "grey_health_stored": pool,
+            "grey_health_consumed": 0.0,
+            "source": (
+                "Gift of the Drowned Ones (9% + 0.2% per Lethality of "
+                "post-mitigation damage taken; out-of-vision consume is a "
+                "vision boundary, not modeled in-window)"
+            ),
+        }
+    if name == "Rengar":
+        w_casts = sorted(
+            float(cast.get("time", 0.0))
+            for cast in cast_timeline
+            if str(cast.get("slot", "")) == "W"
+        )
+        consumed = 0.0
+        for cast_time in w_casts:
+            window = sum(
+                post
+                for event_time, post, _pre in incoming
+                if cast_time - _RENGAR_W_STORE_WINDOW_SECONDS <= event_time <= cast_time
+            )
+            amount = _RENGAR_W_STORE_RATIO * _RENGAR_W_CONSUME_HEAL_RATIO * window
+            if amount > 0.0 and cast_time <= duration:
+                heals.append((cast_time, "Battle Roar (grey health)", amount))
+                consumed += amount
+        stored = _RENGAR_W_STORE_RATIO * sum(post for _t, post, _pre in incoming)
+        return heals, {
+            "grey_health_stored": stored,
+            "grey_health_consumed": consumed,
+            "source": (
+                "Battle Roar (50% of post-mitigation damage taken in the "
+                "last 1.5 seconds stored as grey health; the active heals "
+                "the stored pool)"
+            ),
+        }
+    if name == "Tahm Kench":
+        e_rank = max(1, _slot_rank("E"))
+        rank_row = _TAHM_E_STORE_MULTI_RANK if enemy_count >= 2 else _TAHM_E_STORE_RANK
+        ratio = rank_row[min(e_rank, len(rank_row)) - 1]
+        max_health = max(0.0, float(stats.get("health", 0.0) or 0.0))
+        pool = min(
+            _TAHM_E_STORE_CAP_RATIO * max_health,
+            ratio * sum(post for _t, post, _pre in incoming),
+        )
+        consumed = 0.0
+        if pool > 0.0 and incoming:
+            last_damage_time = max(event_time for event_time, _post, _pre in incoming)
+            consume_time = last_damage_time + _TAHM_E_OUT_OF_COMBAT_SECONDS
+            if consume_time <= duration:
+                ability = _grey_ability(champion_data, "E")
+                restore = _grey_level_ratio(ability, "Max Health Damage", level)
+                amount = restore * pool
+                if amount > 0.0:
+                    heals.append((consume_time, "Thick Skin (grey health)", amount))
+                    consumed = amount
+        return heals, {
+            "grey_health_stored": pool,
+            "grey_health_consumed": consumed,
+            "source": (
+                "Thick Skin (E-rank % of post-mitigation damage taken "
+                "stored as grey health; the out-of-combat consume restores "
+                "60% : 100% based on level of the pool after 4 seconds "
+                "without damage)"
+            ),
+        }
+    if name == "Mordekaiser":
+        w_rank = max(1, _slot_rank("W"))
+        heal_ratio = _MORDE_W_SHIELD_TO_HEALING_RANK[
+            min(w_rank, len(_MORDE_W_SHIELD_TO_HEALING_RANK)) - 1
+        ]
+        max_health = max(0.0, float(stats.get("health", 0.0) or 0.0))
+        cap = _MORDE_W_STORE_CAP_RATIO * max_health
+        dealt_total = _MORDE_W_STORE_DEALT_RATIO * sum(
+            post for _t, post, _pre in outgoing
+        )
+        taken_total = _MORDE_W_STORE_TAKEN_PRE_RATIO * sum(
+            pre for _t, _post, pre in incoming
+        )
+        pool = min(cap, dealt_total + taken_total)
+        w_casts = sorted(
+            float(cast.get("time", 0.0))
+            for cast in cast_timeline
+            if str(cast.get("slot", "")) == "W"
+        )
+        consumed = 0.0
+        if w_casts:
+            w1_time = w_casts[0]
+            dealt_up_to = _MORDE_W_STORE_DEALT_RATIO * sum(
+                post for event_time, post, _pre in outgoing if event_time <= w1_time
+            )
+            taken_up_to = _MORDE_W_STORE_TAKEN_PRE_RATIO * sum(
+                pre for event_time, _post, pre in incoming if event_time <= w1_time
+            )
+            shield_amount = min(cap, dealt_up_to + taken_up_to)
+            recast_time = w1_time + _MORDE_W_RECAST_AVAILABLE_SECONDS
+            amount = heal_ratio * shield_amount
+            if amount > 0.0 and recast_time <= duration:
+                heals.append((recast_time, "Indestructible (grey health)", amount))
+                consumed = amount
+        return heals, {
+            "grey_health_stored": pool,
+            "grey_health_consumed": consumed,
+            "source": (
+                "Indestructible (45% of post-mitigation damage dealt + "
+                "7.5% of pre-mitigation damage taken stored as Potential "
+                "Shield, capped at 30% of maximum health; the W recast "
+                "heals the Shield-to-Healing % of the stored shield — the "
+                "recast is modeled at its earliest available time, shield "
+                "decay is state)"
+            ),
+        }
+    if name == "Kled":
+        # Skaarl's 400 : 1400 (based on level) health pool is the mounted
+        # duo's damage sink; dismount at zero and the remount restore are a
+        # revive-boundary pattern (like Aatrox's ghost atom) and are NOT
+        # implemented.  No heal is authored; the module documents it.
+        return heals, {
+            "grey_health_stored": 0.0,
+            "grey_health_consumed": 0.0,
+            "source": (
+                "Skaarl the Cowardly Lizard (the mounted duo's damage pool "
+                "is a revive-boundary pattern; dismount/remount are not "
+                "modeled)"
+            ),
+        }
+    return heals, {
+        "grey_health_stored": 0.0,
+        "grey_health_consumed": 0.0,
+        "source": "",
+    }
+
+
+def _grey_ability(champion_data: Mapping[str, Any], slot: str) -> dict[str, Any]:
+    """Return one ability's first JSON entry for a slot (lists allowed)."""
+    abilities = champion_data.get("abilities")
+    if not isinstance(abilities, Mapping):
+        return {}
+    entry = abilities.get(slot)
+    if isinstance(entry, list):
+        entry = entry[0] if entry else None
+    return dict(entry) if isinstance(entry, Mapping) else {}
+
+
+def _grey_health_event_receipt(
+    name: str,
+    level: int,
+    stats: Mapping[str, float],
+    enemy_count: int,
+    event: Mapping[str, Any],
+    *,
+    incoming: bool,
+    ability_ranks: Mapping[str, int] | None = None,
+) -> float | None:
+    """One event's sourced grey-health contribution for the public receipt.
+
+    ``incoming=True`` prices a packet the main TAKES, ``incoming=False`` a
+    packet the main DEALS (Mordekaiser's dealt term).  Returns None when
+    the champion authors no receipt for that direction.
+    """
+    if name == "Pyke":
+        if not incoming:
+            return None
+        lethality = float(stats.get("lethality", 0.0) or 0.0)
+        if enemy_count >= 2:
+            ratio = _PYKE_P_STORE_MULTI_RATIO + (
+                _PYKE_P_STORE_MULTI_PER_LETHALITY * lethality
+            )
+        else:
+            ratio = _PYKE_P_STORE_RATIO + (_PYKE_P_STORE_PER_LETHALITY * lethality)
+        return ratio * max(0.0, float(event.get("damage", 0.0) or 0.0))
+    if name == "Rengar":
+        if not incoming:
+            return None
+        return _RENGAR_W_STORE_RATIO * max(0.0, float(event.get("damage", 0.0) or 0.0))
+    if name == "Tahm Kench":
+        if not incoming:
+            return None
+        rank = max(1, int(ability_ranks.get("E", 0) or 0) if ability_ranks else 0)
+        if rank == 0:
+            rank = max(1, int(get_ability_rank("E", level, name)))
+        rank_row = _TAHM_E_STORE_MULTI_RANK if enemy_count >= 2 else _TAHM_E_STORE_RANK
+        ratio = rank_row[min(rank, len(rank_row)) - 1]
+        return ratio * max(0.0, float(event.get("damage", 0.0) or 0.0))
+    if name == "Mordekaiser":
+        damage = max(0.0, float(event.get("damage", 0.0) or 0.0))
+        if incoming:
+            raw = max(0.0, float(event.get("raw_damage", damage) or 0.0))
+            return _MORDE_W_STORE_TAKEN_PRE_RATIO * raw
+        return _MORDE_W_STORE_DEALT_RATIO * damage
+    return None
 
 
 def _simulate_survival(
@@ -5105,6 +5469,112 @@ def _score_with_search_context(
                 main, 0, strikes, main_thorns, main_packs, duration, "fresh"
             )
 
+    # Grey-health consume heals (E8a) are compiled from the same incoming
+    # (enemy -> main, plus enemy thorns) and outgoing (main) damage actions
+    # the walk applies, with the candidate's own stats/ranks, so the
+    # compiled score walk matches the ordered receipt's fixed amounts.
+    grey_summary: dict[str, float] = {}
+    if (
+        str(champion_data.get("name", "")) in GREY_HEALTH_RULE_CHAMPIONS
+        and enemy_actors
+    ):
+        sig_actions = panel.sig.actions
+        # Auto-attack packets expose no ``raw_damage`` (the engine emits it
+        # only for authored ability hits), so the compiled rows carry a zero
+        # there; mirror the ordered ledger's ``raw_damage or damage``
+        # fallback so both paths price Mordekaiser's pre-mitigation term
+        # identically.
+        in_records = [
+            (
+                float(action[_A_TIME]),
+                float(action[_A_AMOUNT]),
+                (
+                    float(action[_A_RAW_DAMAGE])
+                    if float(action[_A_RAW_DAMAGE]) > 0.0
+                    else float(action[_A_AMOUNT])
+                ),
+            )
+            for action in sig_actions
+            if action[_A_KIND] in (_KIND_PLAIN_DAMAGE, _KIND_DAMAGE)
+            and action[_A_SUBJECT] == 0
+            and float(action[_A_TIME]) <= duration
+        ]
+        in_records.extend(
+            (
+                float(action[_A_TIME]),
+                float(action[_A_AMOUNT]),
+                (
+                    float(action[_A_RAW_DAMAGE])
+                    if float(action[_A_RAW_DAMAGE]) > 0.0
+                    else float(action[_A_AMOUNT])
+                ),
+            )
+            for action in fresh.actions
+            if action[_A_KIND] in (_KIND_PLAIN_DAMAGE, _KIND_DAMAGE)
+            and action[_A_SUBJECT] == 0
+            and float(action[_A_TIME]) <= duration
+        )
+        out_records = [
+            (
+                float(action[_A_TIME]),
+                float(action[_A_AMOUNT]),
+                (
+                    float(action[_A_RAW_DAMAGE])
+                    if float(action[_A_RAW_DAMAGE]) > 0.0
+                    else float(action[_A_AMOUNT])
+                ),
+            )
+            for action in fresh.actions
+            if action[_A_KIND] in (_KIND_PLAIN_DAMAGE, _KIND_DAMAGE)
+            and action[_A_ATTACKER] == 0
+            and float(action[_A_TIME]) <= duration
+        ]
+        main_cast_timeline = (
+            list(first_result.get("cast_timeline", []))
+            if first_result is not None
+            else []
+        )
+        grey_heals, grey_summary = _grey_health_receipts(
+            str(champion_data.get("name", "")),
+            champion_data,
+            level,
+            main.stats,
+            in_records,
+            out_records,
+            main_cast_timeline,
+            duration,
+            len(enemy_actors),
+            params.ability_ranks,
+        )
+        for index, (heal_time, source, amount) in enumerate(grey_heals):
+            aidx = fresh.next_aidx
+            fresh.next_aidx += 1
+            event_id = f"main:grey:{source}:{index}"
+            sort_key = _action_key(
+                float(heal_time),
+                1.0,
+                "main",
+                {"attacker": "main", "_event_id": event_id, "source": source},
+            )
+            fresh.actions.append(
+                (
+                    sort_key,
+                    _KIND_HEAL,
+                    0,
+                    0,
+                    -1,
+                    aidx,
+                    float(amount),
+                    2,
+                    None,
+                    0.0,
+                    None,
+                    None,
+                    False,
+                    float(heal_time),
+                )
+            )
+
     actions = panel.sorted_actions + sorted(fresh.actions, key=itemgetter(0))
     actions = _coalesce_compiled_darius_q_heals(actions)
     actions.sort(key=itemgetter(0))
@@ -5143,6 +5613,14 @@ def _score_with_search_context(
             {"recipient": actor.participant_id, **event}
             for event in survival_rows[index].get("healing_reduction_events", [])
         ]
+    if grey_summary.get("source"):
+        survival_rows[0]["grey_health_stored"] = round(
+            float(grey_summary.get("grey_health_stored", 0.0)), 6
+        )
+        survival_rows[0]["grey_health_consumed"] = round(
+            float(grey_summary.get("grey_health_consumed", 0.0)), 6
+        )
+        survival_rows[0]["grey_health_source"] = str(grey_summary["source"])
 
     count = len(all_actors)
     base = context.base_compiler
@@ -5370,6 +5848,9 @@ def build_participant_timeline(
     support_effects: dict[str, list[dict[str, Any]]] = defaultdict(list)
     ordered_item_support_ids: set[str] = set()
     support_attached: set[str] = set()
+    # The main champion's own cast timeline (from its first outgoing pair
+    # fight) drives grey-health consume timing (Rengar W, Mordekaiser W).
+    main_cast_timeline: list[dict[str, Any]] = []
     breakdown: dict[str, dict[str, Any]] = defaultdict(
         lambda: {
             "participant_id": "",
@@ -5450,6 +5931,8 @@ def build_participant_timeline(
                     )
                     if cacheable and pair_result_cache is not None:
                         pair_result_cache[cache_key] = packet
+                    if attacker.participant_id == "main" and not main_cast_timeline:
+                        main_cast_timeline = packet["result"].get("cast_timeline", [])
                 result = packet["result"]
                 coverage_reports.append(result.get("timeline_coverage", {}))
                 # A packet that lives in the cache serves later evaluations,
@@ -5624,6 +6107,94 @@ def build_participant_timeline(
     _schedule_thorns_events(all_actors, incoming, outgoing)
     _schedule_authored_reactive_events(incoming, outgoing)
 
+    # Grey-health receipts (E8a): when the main is the defender and is a
+    # grey-health champion, the incoming ledger accumulates the sourced %
+    # of post-mitigation damage taken and the champion's active pays the
+    # stored pool back as a heal.  Authored after every incoming source
+    # (pair fights, thorns, reactive) exists so the receipts see the same
+    # event set the walk applies; the consume heals carry fixed sourced
+    # amounts and ride the ordinary heal application (Grievous, overheal
+    # caps), matching the E1 ``_heal_from_damage`` plumbing.
+    grey_summary: dict[str, float] = {}
+    grey_heals: list[dict[str, Any]] = []
+    main_name = str(champion_data.get("name", ""))
+    if main_name in GREY_HEALTH_RULE_CHAMPIONS and enemy_actors:
+        duration = params.fight_duration_seconds
+        main_incoming = [
+            event
+            for event in incoming["main"]
+            if float(event.get("time", 0.0)) <= duration
+        ]
+        main_outgoing = [
+            event
+            for event in outgoing["main"]
+            if float(event.get("time", 0.0)) <= duration
+        ]
+        in_records = [
+            (
+                float(event.get("time", 0.0)),
+                float(event.get("damage", 0.0) or 0.0),
+                float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0),
+            )
+            for event in main_incoming
+        ]
+        out_records = [
+            (
+                float(event.get("time", 0.0)),
+                float(event.get("damage", 0.0) or 0.0),
+                float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0),
+            )
+            for event in main_outgoing
+        ]
+        grey_heals, grey_summary = _grey_health_receipts(
+            main_name,
+            champion_data,
+            level,
+            main_stats,
+            in_records,
+            out_records,
+            main_cast_timeline,
+            duration,
+            len(enemy_actors),
+            params.ability_ranks,
+        )
+        for index, (heal_time, source, amount) in enumerate(grey_heals):
+            heal_event: dict[str, Any] = {
+                "time": float(heal_time),
+                "amount": float(amount),
+                "source": source,
+                "kind": "champion_ability",
+                "attacker": "main",
+                "_event_id": f"main:grey:{source}:{index}",
+                "_grey_health": True,
+            }
+            heal_event["_sk"] = _action_key(float(heal_time), 1.0, "main", heal_event)
+            healing["main"].append(heal_event)
+        for event in main_incoming:
+            receipt = _grey_health_event_receipt(
+                main_name,
+                level,
+                main_stats,
+                len(enemy_actors),
+                event,
+                incoming=True,
+                ability_ranks=params.ability_ranks,
+            )
+            if receipt is not None and receipt > 0.0:
+                event["grey_health_stored"] = round(receipt, 6)
+        for event in main_outgoing:
+            receipt = _grey_health_event_receipt(
+                main_name,
+                level,
+                main_stats,
+                len(enemy_actors),
+                event,
+                incoming=False,
+                ability_ranks=params.ability_ranks,
+            )
+            if receipt is not None and receipt > 0.0:
+                event["grey_health_stored"] = round(receipt, 6)
+
     survival = _simulate_survival(
         all_actors,
         incoming,
@@ -5633,6 +6204,14 @@ def build_participant_timeline(
         annotate=include_receipt,
         receipt_events=outgoing if include_receipt else None,
     )
+    if grey_summary.get("source"):
+        survival["main"]["grey_health_stored"] = round(
+            float(grey_summary.get("grey_health_stored", 0.0)), 6
+        )
+        survival["main"]["grey_health_consumed"] = round(
+            float(grey_summary.get("grey_health_consumed", 0.0)), 6
+        )
+        survival["main"]["grey_health_source"] = str(grey_summary["source"])
     # An actor's damage after their death is not part of team-fight value.
     for actor in all_actors:
         death_time = survival[actor.participant_id]["death_time"]
@@ -6003,6 +6582,11 @@ def build_participant_timeline(
                     if event.get("skipped_reason")
                     else {}
                 ),
+                **(
+                    {"grey_health_stored": round(float(event["grey_health_stored"]), 1)}
+                    if event.get("grey_health_stored") is not None
+                    else {}
+                ),
             }
             for event in public_events
         ],
@@ -6075,6 +6659,7 @@ def build_participant_timeline(
                     if event.get("skipped_reason")
                     else {}
                 ),
+                **({"grey_health": True} if event.get("_grey_health") else {}),
             }
             for event in public_healing_events
         ],

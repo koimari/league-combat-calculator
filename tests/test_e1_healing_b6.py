@@ -302,11 +302,10 @@ def test_zaahen_grim_deliverance_heals_flat_per_champion_hit():
         # from enemy champions (plus a health cost absent from the data);
         # the pair ledger carries only the main's outgoing events.
         ("Locke", "top"),
-        # Mordekaiser W's recast heal prices a shield built from damage
-        # dealt AND taken (taken term absent, shield decay is state), and
-        # R heals 10% of the TARGET's maximum health; W/R are also
-        # out-of-scope in the champion module, so no trigger event exists.
-        ("Mordekaiser", "top"),
+        # Mordekaiser's W recast heal is now implemented by the E8a
+        # grey-health primitive (see tests/test_e8_grey_health.py); its R
+        # heals 10% of the TARGET's maximum health and stays out of the
+        # self-heal rule set.
     ],
 )
 def test_champion_without_sourced_1v1_self_heal_authors_nothing(champion, role):

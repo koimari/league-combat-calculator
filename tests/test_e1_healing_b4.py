@@ -14,12 +14,14 @@ Every asserted number traces to ``data/champions.json`` leveling attributes:
   heal for ``Max Health Damage`` = 4% : 8.47% (based on level) of maximum
   health (8.0% at level 18).
 
-Pyke P and Rengar W are grey-health heals sourced from post-mitigation
-damage TAKEN (plus, for Pyke, an out-of-vision requirement); the fight
-ledger only carries damage dealt, so neither applies to the 1v1 model.
-Udyr's base W on-hit heal exists only in prose (no leveling attribute),
-and its leveling-sourced heal stream belongs to the Awakened recast the
-fight model does not model — all three are skipped by the rule set.
+Pyke P is a grey-health heal sourced from post-mitigation damage TAKEN
+(plus an out-of-vision requirement); the fight ledger only carries damage
+dealt, so it does not apply to the 1v1 model (E8a documents the vision
+boundary). Rengar W is now implemented by the E8a grey-health primitive
+(see tests/test_e8_grey_health.py). Udyr's base W on-hit heal exists only
+in prose (no leveling attribute), and its leveling-sourced heal stream
+belongs to the Awakened recast the fight model does not model — those two
+remain skipped by the rule set.
 """
 
 import pytest
@@ -167,9 +169,11 @@ def test_zac_cell_division_heals_percent_max_health_per_ability_hit():
 
 
 def test_skipped_champions_have_no_self_heal_rule():
-    # Pyke P and Rengar W heal from damage taken (grey health); neither
-    # should emit a champion self-heal in the 1v1 ledger. (Udyr's W Iron
-    # Mantle heal is now implemented — see test_e3_udyr_yuumi_heals.py.)
-    for champion in ("Pyke", "Rengar"):
-        combat = _fight(champion, ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
-        assert not _main_heals(combat), f"{champion} must not self-heal"
+    # Pyke P heals from damage taken only while out of enemy vision; the
+    # 1v1 ledger does not model vision, so the E8a grey-health primitive
+    # stores the pool but authors no in-window heal (see
+    # tests/test_e8_grey_health.py). Rengar W is implemented by E8a and
+    # was removed from this skip list. (Udyr's W Iron Mantle heal is now
+    # implemented — see test_e3_udyr_yuumi_heals.py.)
+    combat = _fight("Pyke", ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
+    assert not _main_heals(combat), "Pyke must not self-heal in-window"

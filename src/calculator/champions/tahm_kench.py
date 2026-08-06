@@ -82,7 +82,11 @@ SLOTS = {
     "Q": _tongue_lash,
     "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
     # Thick Skin is grey-health/shield state, not damage; omitting it keeps
-    # the damage timeline from inventing an enemy hit.
+    # the damage timeline from inventing an enemy hit.  The E8a grey-health
+    # primitive authors the E store (15/23/31/39/47% by rank, 42-50% with
+    # 2+ visible enemies) and the out-of-combat restore heal from the
+    # incoming ledger; the E active (grey -> 2.5 s shield) stays out of
+    # the heal primitive's scope.
     "R": _regurgitate,
 }
 
@@ -101,7 +105,12 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "An Acquired Taste is an explicit on-hit rider; Q may opt into the bonus damage from a pre-existing stack state.",
-    "Thick Skin is modeled as defensive grey-health/shield state rather than direct damage.",
+    "Thick Skin stores 15/23/31/39/47% of post-mitigation damage taken as "
+    "grey health (42/44/46/48/50% with 2+ visible enemies); the "
+    "out-of-combat consume (4 s without damage) restores 60% : 100% "
+    "based on level of the pool as a heal — the E8a grey-health "
+    "primitive authors it from the incoming ledger. The E active "
+    "converts grey into a 2.5 s shield and is defensive state, not a heal.",
     "R defaults to the enemy Regurgitate branch; ally Devour is a separate support/shield scenario.",
 ]
 
