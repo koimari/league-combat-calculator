@@ -42,6 +42,18 @@ _R_BASE_AD_RATIO = 1.20
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Viego")
 
 
+def _certified_single_hit(parser):
+    """Wrap a simple one-instance parser with the event-order certification."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
+            entry["event_order_certified"] = "single_hit"
+        return entry
+
+    return parse
+
+
 def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: the active thrust plus the on-hit passive and mark second strike."""
     ability = ctx.ability("Q")
@@ -69,6 +81,7 @@ def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", active + second_damage),)
+    entry["event_order_certified"] = "single_hit"
     # The passive: every basic attack deals 2-6% of the target's CURRENT
     # health (minimum 10-30) bonus physical damage — the engine's
     # current-health on-hit simulation (Jarvan IV pattern) prices it
@@ -129,8 +142,13 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (
-        DamagePart("physical", base),
-        DamagePart("physical", hp_scaled_damage=missing_health_bonus),
+        # Both the 120% AD base strike and the live %missing-health bonus
+        # land at the cast boundary: authored time_offset 0.0 upgrades the
+        # dynamic part's events from cast_boundary to "hit" precision, so
+        # the coverage classifier certifies the row instead of downgrading
+        # it coarse (cast_boundary events are never exact).
+        DamagePart("physical", base, time_offset=0.0),
+        DamagePart("physical", hp_scaled_damage=missing_health_bonus, time_offset=0.0),
     )
     entry["detail"] = (
         f"{_R_BASE_AD_RATIO * 100:g}% AD base strike ({base:.2f}) + "
@@ -143,6 +161,7 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = dict(SLOTS)
 SLOTS["Q"] = _blade_of_the_ruined_king
 SLOTS["R"] = _heartbreaker
+SLOTS["W"] = _certified_single_hit(SLOTS["W"])
 parse_abilities = build_parser(SLOTS, "Viego")
 
 OPTIONS = list(OPTIONS) + [

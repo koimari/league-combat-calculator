@@ -43,6 +43,18 @@ _TIER3_STACKS = 225
 _BURN_DURATION = 3.0
 
 
+def _certified_single_hit(parser):
+    """Wrap a simple one-instance parser with the event-order certification."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
+            entry["event_order_certified"] = "single_hit"
+        return entry
+
+    return parse
+
+
 def _dragon_practice(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: documented zero-damage row tied to the tier-3 burn on Q."""
     ability = ctx.ability("P", 0)
@@ -73,6 +85,7 @@ def _super_scorcher_breath(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = _packet_slots["Q"](ctx)
     if entry is None:
         return None
+    entry["event_order_certified"] = "single_hit"
 
     crit_chance = min(
         1.0,
@@ -110,7 +123,10 @@ def _super_scorcher_breath(ctx: SlotCtx) -> dict[str, Any] | None:
             entry["post_hit_proc"] = {
                 "name": "Dragon Practice · Tier 3 Burn",
                 "breakdown_key": "dragon_practice_burn",
-                "parts": (DamagePart("true", burn_total),),
+                # The burn rides the Q hit that applied it: the proc lands
+                # at the cast boundary (Varus blight-detonation precedent),
+                # so damage.py marks the row's timing as authored.
+                "parts": (DamagePart("true", burn_total, time_offset=0.0),),
                 "detail": (
                     f"{stacks} Dragon Practice stacks: 3s burn of "
                     f"{burn_total:g} true damage (2.5% per 100 bonus AD "
@@ -126,6 +142,9 @@ def _super_scorcher_breath(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = dict(_packet_slots)
 SLOTS["P"] = _dragon_practice
 SLOTS["Q"] = _super_scorcher_breath
+SLOTS["W"] = _certified_single_hit(SLOTS["W"])
+SLOTS["E"] = _certified_single_hit(SLOTS["E"])
+SLOTS["R"] = _certified_single_hit(SLOTS["R"])
 parse_abilities = build_parser(SLOTS, "Smolder")
 
 OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
