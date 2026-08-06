@@ -88,13 +88,14 @@ def test_alistar_triumphant_roar_heals_five_percent_max_health_per_seven_stacks(
     """Q (stun+knockup) and W (knockback) each grant one Triumph stack; at
     7 stacks the passive heals 5% of maximum health.  20 ability haste
     (Frozen Heart) lets the 30s window fit 4 Q + 4 W casts so the seventh
-    Q/W event fires the heal; Sion survives long enough for the trigger
-    to land."""
+    Q/W event fires the heal.  Galio is the durable-but-soft enemy that
+    keeps Alistar alive through the 7-stack window; Sion's corrected
+    Decimating Smash (E5-1) out-damages that window."""
     combat = _fight(
         "Alistar",
         items=["Frozen Heart"],
         duration=30,
-        enemy="Sion",
+        enemy="Galio",
     )
     heals = [e for e in _main_heals(combat) if e["source"] == "Triumphant Roar"]
     assert heals, "Triumphant Roar heal missing"
