@@ -380,13 +380,16 @@ def _enforce_authentication():
 
     The pre-auth surface stays reachable without a session: the health
     probe, the auth endpoints (login/logout/status), the invite-code
-    validation API, and the public privacy page.
+    validation API, and the public legal pages (privacy, terms, Riot
+    disclaimer).
     """
     if not _auth_enabled():
         return None
     if (
         request.path == "/healthz"
         or request.path == "/privacy"
+        or request.path == "/terms"
+        or request.path == "/riot-disclaimer"
         or request.path == "/api/auth/invite"
         or request.path.startswith("/auth/")
     ):
@@ -1210,6 +1213,18 @@ def api_auth_invite():
 def privacy():
     """Public privacy summary for the closed beta."""
     return render_template("privacy.html")
+
+
+@app.route("/terms")
+def terms():
+    """Public terms of use for the closed beta."""
+    return render_template("terms.html")
+
+
+@app.route("/riot-disclaimer")
+def riot_disclaimer():
+    """Public Riot Games disclaimer and data-source statement."""
+    return render_template("riot_disclaimer.html")
 
 
 @app.route("/")
