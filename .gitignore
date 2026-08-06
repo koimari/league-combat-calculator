@@ -33,3 +33,6 @@ data/atoms/*.atoms.json
 data/item-atoms/*.json
 docs/receipts/champions/*.json
 docs/receipts/items/*.json
+
+# P3 patch-regression game-file cache (cdtb raw exports)
+data/gamefiles/
