@@ -12,6 +12,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -36,6 +37,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -59,6 +66,10 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
   "provenance": {
    "wiki": [
     "Damage over time",
@@ -83,6 +94,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Buff"
@@ -106,6 +118,10 @@
    "damage_type": null,
    "affects_type_flags": null
   },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
   "provenance": {
    "wiki": [
     "Revive",
@@ -131,6 +147,7 @@
    "damage_type": null,
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Debuff"
@@ -154,6 +171,7 @@
    "damage_type": null,
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -178,6 +196,10 @@
    "damage_type": null,
    "affects_type_flags": null
   },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
   "provenance": {
    "wiki": [
     "Revive",
@@ -203,6 +225,10 @@
    "damage_type": null,
    "affects_type_flags": null
   },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
   "provenance": {
    "wiki": [
     "Revive",
@@ -228,6 +254,7 @@
    "damage_type": null,
    "affects_type_flags": 8143
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -253,6 +280,7 @@
    "damage_type": null,
    "affects_type_flags": 8143
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -277,6 +305,7 @@
    "damage_type": null,
    "affects_type_flags": 8143
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -302,6 +331,7 @@
    "damage_type": null,
    "affects_type_flags": 8143
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -326,6 +356,12 @@
    "damage_type": null,
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -349,6 +385,7 @@
    "damage_type": null,
    "affects_type_flags": 8143
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Critical strike",
@@ -373,6 +410,10 @@
    "damage_type": null,
    "affects_type_flags": 15567
   },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
   "provenance": {
    "wiki": [
     "Champion summoned units",
@@ -397,6 +438,7 @@
    "damage_type": null,
    "affects_type_flags": 15567
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Champion summoned units"
@@ -405,6 +447,25 @@
     "Characters/Anivia/Spells/CrystallizeAbility/Crystallize"
    ],
    "evidence": "name:crystallize"
+  }
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "anivia Passive (Rebirth)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Revive",
+    "Healing",
+    "Rebirth"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map",
+   "ghost": "removed-kit-leftover"
   }
  }
 ]
