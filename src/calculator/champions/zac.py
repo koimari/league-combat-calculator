@@ -17,8 +17,44 @@ reviewed bounce packet pricing is unchanged.
 from .reviewed_batch_10 import build_batch_module
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Zac")
+
+# E8d: sourced Cell Division revive values.  Cached passive prose (data/
+# champions.json, Zac P Cell Division): "enters resurrection for 8 / 7 / 6 /
+# 5 / 4 (based on level) seconds, instantly restoring 50% of his maximum
+# health ... After the duration, Zac is revived with 10 : 50% maximum
+# health."  The wiki's pp level brackets (levels 1 / 6 / 10 / 13 / 17) map
+# to the 8 / 7 / 6 / 5 / 4 second resurrection windows, and the revive
+# restores between 10% and 50% maximum health based on how many of the four
+# bloblets survive.  The deterministic fight model assumes all four
+# bloblets survive (no bloblet damage is modeled), so the sourced revive is
+# 50% maximum health.  The engine's revive state transition consumes
+# ``StartingDefenses.revive_*`` fields; the shared defense resolver wires
+# these per champion.
+REVIVE_COOLDOWN_SECONDS = 300.0
+_REVIVE_MAX_HEALTH_RATIO = 0.50
+# (level, delay) brackets: 8 / 7 / 6 / 5 / 4 seconds at levels 1 / 6 / 10 / 13 / 17.
+_REVIVE_DELAY_BRACKETS = ((17, 4.0), (13, 5.0), (10, 6.0), (6, 7.0), (1, 8.0))
+
+
+def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, float]:
+    """Return Zac's sourced Cell Division revive fields for StartingDefenses."""
+    delay = next(d for threshold, d in _REVIVE_DELAY_BRACKETS if level >= threshold)
+    return {
+        "revive_health_amount": float(stats.get("health", 0.0))
+        * _REVIVE_MAX_HEALTH_RATIO,
+        "revive_delay": delay,
+        "revive_cooldown": REVIVE_COOLDOWN_SECONDS,
+    }
+
+
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
+ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "P (Cell Division) is modeled as the sourced revive state: 50% maximum "
+    "health restored after the level-bracketed resurrection window "
+    "(8 / 7 / 6 / 5 / 4s at levels 1 / 6 / 10 / 13 / 17) on a 300s cooldown "
+    "(cached passive prose; all four bloblets assumed to survive).",
+]
 REVIEW_STATUS = "reviewed_module"

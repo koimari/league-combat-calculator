@@ -13,6 +13,10 @@ Why each slot is non-generic:
   it. The slow/stun is CC with no damage component.
 - W (Caretaker's Shrine) is an ally-only heal/MS buff — its "Minimum
   Heal"/"Maximum Heal" attributes are NOT damage; absent from the map.
+  E8d: the engine's ally-support scanner looks up ("Total Heal", "Heal",
+  "Heal Per Tick") only, so Bard's "Minimum Heal"/"Maximum Heal" rows are
+  not readable by the support path — the W ally heal is a documented missing
+  engine hook (support_effects heal-attribute lookup), not an emitted packet.
 - E (Magical Journey) is a one-way terrain portal, zero damage — absent.
 - R (Tempered Fate) is 2.5s stasis, zero damage (stasis prevents damage
   during it) — absent; no zero-damage display row wanted.

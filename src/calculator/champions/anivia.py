@@ -60,12 +60,41 @@ OPTIONS = [
     },
 ]
 
+# E8d: sourced Rebirth revive values.  The cached passive prose (data/
+# champions.json, Anivia P Rebirth) is the authoritative source: "Periodically,
+# upon taking fatal damage, Anivia enters resurrection for 6 seconds and
+# restores all of her health. ... If Anivia remains alive by the end of the
+# duration, she is revived with her current health."  The CDragon live-game
+# description agrees ("reborn with full health").  The engine's revive state
+# transition consumes ``StartingDefenses.revive_*`` fields, so the module
+# exposes the sourced revive contract here and the shared defense resolver
+# wires it in per champion.
+REVIVE_DELAY_SECONDS = 6.0
+REVIVE_COOLDOWN_SECONDS = 240.0
+REVIVE_MAX_HEALTH_RATIO = 1.0  # "restores all of her health"
+
+
+def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, float]:
+    """Return Anivia's sourced Rebirth revive fields for StartingDefenses.
+
+    The passive revives with full maximum health after the six-second
+    resurrection window on the cached 240-second cooldown.
+    """
+    return {
+        "revive_health_amount": float(stats.get("health", 0.0))
+        * REVIVE_MAX_HEALTH_RATIO,
+        "revive_delay": REVIVE_DELAY_SECONDS,
+        "revive_cooldown": REVIVE_COOLDOWN_SECONDS,
+    }
+
+
 ASSUMPTIONS = [
     "Q hits both pass-through and detonation (total damage used)",
     "E target is always Chilled (empowered damage used)",
     "R first 1.5s uses initial tick damage, remaining uses fully-formed tick damage",
     "W skipped (utility wall, no damage)",
-    "Passive skipped (resurrection only, no damage)",
+    "P (Rebirth) is modeled as the sourced revive state: full maximum health "
+    "after a 6s resurrection on a 240s cooldown (cached passive prose).",
 ]
 
 SLOTS = {

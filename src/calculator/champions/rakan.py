@@ -3,6 +3,14 @@
 Gleaming Quill and Grand Entrance each deal one magic-damage instance. The
 Quickness damages each enemy at most once per cast, so every selected enemy
 receives one hit. Fey Feathers and Battle Dance do not damage enemies.
+
+E8d ally-support: Q (Gleaming Quill) heals Rakan and nearby allies (cached
+Heal 40-230 by level + 55% AP; scope self_and_all_teammates) — the event is
+authored by the engine's ally-support scanner from cached leveling at the Q
+cast time.  P (Fancy Footwork) is a passive periodic self-shield (cached
+Shield 30-247.94 by level + 95% AP); the scanner only reads Q/W/E/R slots,
+so the passive shield is a documented missing engine hook, not an emitted
+packet.
 """
 
 from typing import Any

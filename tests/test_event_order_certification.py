@@ -94,7 +94,10 @@ def test_soraka_equinox_emits_the_delayed_eruption_hit():
     result = run_fight(_load_public_champion("Soraka"), 18, [], _timed_params())
     assert result["timeline_coverage"]["complete"] is True
     eruption = result["breakdown"]["E"]["damage_events"]
-    assert [round(event["time"], 2) for event in eruption] == [0.25, 1.75]
+    # E8d: Astral Infusion (W) is now a zero-damage support cast that joins
+    # the rotation, so Equinox casts at t=0.5 instead of t=0.25 and its
+    # eruption lands at t=2.0 (initial hit + 1.5s).
+    assert [round(event["time"], 2) for event in eruption] == [0.5, 2.0]
     assert {event["event_precision"] for event in eruption} == {"exact"}
 
 
