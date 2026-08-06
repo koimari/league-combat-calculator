@@ -1,0 +1,572 @@
+[
+ {
+  "champion": "Alistar",
+  "slot": "E",
+  "ability": "Trample",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 8,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 80,
+  "implied_ticks": 10.0
+ },
+ {
+  "champion": "AurelionSol",
+  "slot": "Q",
+  "ability": "Breath of Light",
+  "per_tick_attr": "Magic Damage per Tick",
+  "per_rank1": 5.625,
+  "total_attr": "Total Maximum Magic Damage",
+  "total_rank1": 146.25,
+  "implied_ticks": 26.0
+ },
+ {
+  "champion": "AurelionSol",
+  "slot": "Q",
+  "ability": "Breath of Light",
+  "per_tick_attr": "Magic Damage per Second",
+  "per_rank1": 45,
+  "total_attr": "Total Maximum Magic Damage",
+  "total_rank1": 146.25,
+  "implied_ticks": 3.2
+ },
+ {
+  "champion": "AurelionSol",
+  "slot": "E",
+  "ability": "Singularity",
+  "per_tick_attr": "Magic Damage per Tick",
+  "per_rank1": 2.5,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 50,
+  "implied_ticks": 20.0
+ },
+ {
+  "champion": "Cassiopeia",
+  "slot": "Q",
+  "ability": "Noxious Blast",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 10.71,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 75,
+  "implied_ticks": 7.0
+ },
+ {
+  "champion": "Cassiopeia",
+  "slot": "W",
+  "ability": "Miasma",
+  "per_tick_attr": "Magic Damage Per Second",
+  "per_rank1": 20,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 100,
+  "implied_ticks": 5.0
+ },
+ {
+  "champion": "Corki",
+  "slot": "W",
+  "ability": "Valkyrie",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 30,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 150,
+  "implied_ticks": 5.0
+ },
+ {
+  "champion": "Corki",
+  "slot": "E",
+  "ability": "Gatling Gun",
+  "per_tick_attr": "Physical Damage Per Tick",
+  "per_rank1": 5,
+  "total_attr": "Total Physical Damage",
+  "total_rank1": 80,
+  "implied_ticks": 16.0
+ },
+ {
+  "champion": "DrMundo",
+  "slot": "W",
+  "ability": "Heart Zapper",
+  "per_tick_attr": "Magic Damage per Tick",
+  "per_rank1": 5,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 80,
+  "implied_ticks": 16.0
+ },
+ {
+  "champion": "Fiddlesticks",
+  "slot": "R",
+  "ability": "Crowstorm",
+  "per_tick_attr": "Magic Damage per Tick",
+  "per_rank1": 37.5,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 750,
+  "implied_ticks": 20.0
+ },
+ {
+  "champion": "Fizz",
+  "slot": "W",
+  "ability": "Seastone Trident",
+  "per_tick_attr": "Passive Magic Damage per Tick",
+  "per_rank1": 5,
+  "total_attr": "Total Passive Magic Damage",
+  "total_rank1": 30,
+  "implied_ticks": 6.0
+ },
+ {
+  "champion": "Gangplank",
+  "slot": "R",
+  "ability": "Cannon Barrage",
+  "per_tick_attr": "Magic Damage Per Wave",
+  "per_rank1": 40,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 480,
+  "implied_ticks": 12.0
+ },
+ {
+  "champion": "Hecarim",
+  "slot": "W",
+  "ability": "Spirit of Dread",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 20,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 100,
+  "implied_ticks": 5.0
+ },
+ {
+  "champion": "Hwei",
+  "slot": "R",
+  "ability": "Spiraling Despair",
+  "per_tick_attr": "Magic Damage per Tick",
+  "per_rank1": 2.5,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 30,
+  "implied_ticks": 12.0
+ },
+ {
+  "champion": "Janna",
+  "slot": "R",
+  "ability": "Monsoon",
+  "per_tick_attr": "Heal Per Tick",
+  "per_rank1": 25,
+  "total_attr": "Total Heal",
+  "total_rank1": 300,
+  "implied_ticks": 12.0
+ },
+ {
+  "champion": "Jayce",
+  "slot": "W",
+  "ability": "Lightning Field",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 35,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 140,
+  "implied_ticks": 4.0
+ },
+ {
+  "champion": "Kayn",
+  "slot": "Q",
+  "ability": "Reaping Slash",
+  "per_tick_attr": "Capped Monster Damage per Hit",
+  "per_rank1": 200,
+  "total_attr": "Total Capped Monster Damage",
+  "total_rank1": 400,
+  "implied_ticks": 2.0
+ },
+ {
+  "champion": "Malzahar",
+  "slot": "E",
+  "ability": "Malefic Visions",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 5,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 80,
+  "implied_ticks": 16.0
+ },
+ {
+  "champion": "Malzahar",
+  "slot": "R",
+  "ability": "Nether Grasp",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 1,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 10,
+  "implied_ticks": 10.0
+ },
+ {
+  "champion": "Milio",
+  "slot": "W",
+  "ability": "Cozy Campfire",
+  "per_tick_attr": "Heal per Tick",
+  "per_rank1": 2.8,
+  "total_attr": "Total Heal",
+  "total_rank1": 70,
+  "implied_ticks": 25.0
+ },
+ {
+  "champion": "MissFortune",
+  "slot": "E",
+  "ability": "Make It Rain",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 8.75,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 70,
+  "implied_ticks": 8.0
+ },
+ {
+  "champion": "Naafiri",
+  "slot": "Q",
+  "ability": "Darkin Daggers",
+  "per_tick_attr": "Bleed Physical Damage per Tick",
+  "per_rank1": 3.5,
+  "total_attr": "Total Bleed Physical Damage",
+  "total_rank1": 35,
+  "implied_ticks": 10.0
+ },
+ {
+  "champion": "Nami",
+  "slot": "E",
+  "ability": "Tidecaller's Blessing",
+  "per_tick_attr": "Bonus Magic Damage Per Hit",
+  "per_rank1": 20,
+  "total_attr": "Total Bonus Magic Damage",
+  "total_rank1": 60,
+  "implied_ticks": 3.0
+ },
+ {
+  "champion": "Nasus",
+  "slot": "E",
+  "ability": "Spirit Fire",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 10,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 100,
+  "implied_ticks": 10.0
+ },
+ {
+  "champion": "Nasus",
+  "slot": "R",
+  "ability": "Fury of the Sands",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 1.5,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 45,
+  "implied_ticks": 30.0
+ },
+ {
+  "champion": "Nidalee",
+  "slot": "W",
+  "ability": "Bushwhack",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 10,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 40,
+  "implied_ticks": 4.0
+ },
+ {
+  "champion": "Nilah",
+  "slot": "R",
+  "ability": "Apotheosis",
+  "per_tick_attr": "Physical Damage per Tick",
+  "per_rank1": 15,
+  "total_attr": "Total Physical Damage",
+  "total_rank1": 60,
+  "implied_ticks": 4.0
+ },
+ {
+  "champion": "Nocturne",
+  "slot": "E",
+  "ability": "Unspeakable Horror",
+  "per_tick_attr": "Magic Damage per Tick",
+  "per_rank1": 20,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 80,
+  "implied_ticks": 4.0
+ },
+ {
+  "champion": "Nunu",
+  "slot": "E",
+  "ability": "Snowball Barrage",
+  "per_tick_attr": "Magic Damage Per Hit",
+  "per_rank1": 15,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 45,
+  "implied_ticks": 3.0
+ },
+ {
+  "champion": "Ornn",
+  "slot": "W",
+  "ability": "Bellows Breath",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 2.4,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 12,
+  "implied_ticks": 5.0
+ },
+ {
+  "champion": "Ornn",
+  "slot": "W",
+  "ability": "Bellows Breath",
+  "per_tick_attr": "Minimum/Minion Damage Per Tick",
+  "per_rank1": 16,
+  "total_attr": "Total Minimum/Minion Damage",
+  "total_rank1": 80,
+  "implied_ticks": 5.0
+ },
+ {
+  "champion": "Ornn",
+  "slot": "W",
+  "ability": "Bellows Breath",
+  "per_tick_attr": "Monster Damage Cap Per Tick",
+  "per_rank1": 52,
+  "total_attr": "Total Monster Damage Cap",
+  "total_rank1": 260,
+  "implied_ticks": 5.0
+ },
+ {
+  "champion": "Rell",
+  "slot": "R",
+  "ability": "Magnet Storm",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 18.75,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 150,
+  "implied_ticks": 8.0
+ },
+ {
+  "champion": "Renekton",
+  "slot": "W",
+  "ability": "Ruthless Predator",
+  "per_tick_attr": "Physical Damage Per Hit",
+  "per_rank1": 5,
+  "total_attr": "Total Physical Damage",
+  "total_rank1": 15,
+  "implied_ticks": 3.0
+ },
+ {
+  "champion": "Renekton",
+  "slot": "R",
+  "ability": "Dominus",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 30,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 900,
+  "implied_ticks": 30.0
+ },
+ {
+  "champion": "Samira",
+  "slot": "W",
+  "ability": "Blade Whirl",
+  "per_tick_attr": "Physical Damage per Hit",
+  "per_rank1": 20,
+  "total_attr": "Total Physical Damage",
+  "total_rank1": 40,
+  "implied_ticks": 2.0
+ },
+ {
+  "champion": "Samira",
+  "slot": "R",
+  "ability": "Inferno Trigger",
+  "per_tick_attr": "Physical Damage Per Shot",
+  "per_rank1": 20,
+  "total_attr": "Total Physical Damage",
+  "total_rank1": 200,
+  "implied_ticks": 10.0
+ },
+ {
+  "champion": "Samira",
+  "slot": "R",
+  "ability": "Inferno Trigger",
+  "per_tick_attr": "Minion Damage Per Shot",
+  "per_rank1": 5,
+  "total_attr": "Total Minion Damage",
+  "total_rank1": 50,
+  "implied_ticks": 10.0
+ },
+ {
+  "champion": "Skarner",
+  "slot": "Q",
+  "ability": "Shattered Earth",
+  "per_tick_attr": "Bonus Physical Damage per Hit",
+  "per_rank1": 10,
+  "total_attr": "Total Bonus Physical Damage",
+  "total_rank1": 30,
+  "implied_ticks": 3.0
+ },
+ {
+  "champion": "Soraka",
+  "slot": "Q",
+  "ability": "Starcall",
+  "per_tick_attr": "Heal per Tick",
+  "per_rank1": 5,
+  "total_attr": "Total Heal",
+  "total_rank1": 60,
+  "implied_ticks": 12.0
+ },
+ {
+  "champion": "Teemo",
+  "slot": "R",
+  "ability": "Noxious Trap",
+  "per_tick_attr": "Magic Damage per Tick",
+  "per_rank1": 50,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 200,
+  "implied_ticks": 4.0
+ },
+ {
+  "champion": "Trundle",
+  "slot": "R",
+  "ability": "Subjugate",
+  "per_tick_attr": "Magic Damage Per Second",
+  "per_rank1": 2.5,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 20,
+  "implied_ticks": 8.0
+ },
+ {
+  "champion": "Trundle",
+  "slot": "R",
+  "ability": "Subjugate",
+  "per_tick_attr": "Healing Per Second",
+  "per_rank1": 2.5,
+  "total_attr": "Total Healing",
+  "total_rank1": 20,
+  "implied_ticks": 8.0
+ },
+ {
+  "champion": "Udyr",
+  "slot": "W",
+  "ability": "Iron Mantle",
+  "per_tick_attr": "Heal per Tick",
+  "per_rank1": 0.63,
+  "total_attr": "Total Healing",
+  "total_rank1": 10.0,
+  "implied_ticks": 15.9
+ },
+ {
+  "champion": "Udyr",
+  "slot": "R",
+  "ability": "Wingborne Storm",
+  "per_tick_attr": "Magic Damage per Tick",
+  "per_rank1": 10,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 80,
+  "implied_ticks": 8.0
+ },
+ {
+  "champion": "Viktor",
+  "slot": "R",
+  "ability": "Arcane Storm",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 65,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 490,
+  "implied_ticks": 7.5
+ },
+ {
+  "champion": "Vladimir",
+  "slot": "W",
+  "ability": "Sanguine Pool",
+  "per_tick_attr": "Magic Damage Per Tick",
+  "per_rank1": 20,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 80,
+  "implied_ticks": 4.0
+ },
+ {
+  "champion": "MonkeyKing",
+  "slot": "R",
+  "ability": "Cyclone",
+  "per_tick_attr": "Physical Damage Per Tick",
+  "per_rank1": 1,
+  "total_attr": "Total Physical Damage",
+  "total_rank1": 8,
+  "implied_ticks": 8.0
+ },
+ {
+  "champion": "Xayah",
+  "slot": "Q",
+  "ability": "Double Daggers",
+  "per_tick_attr": "Physical Damage Per Hit",
+  "per_rank1": 45,
+  "total_attr": "Total Physical Damage",
+  "total_rank1": 90,
+  "implied_ticks": 2.0
+ },
+ {
+  "champion": "Xayah",
+  "slot": "Q",
+  "ability": "Double Daggers",
+  "per_tick_attr": "Reduced Damage per Hit",
+  "per_rank1": 22.5,
+  "total_attr": "Total Reduced Damage",
+  "total_rank1": 45,
+  "implied_ticks": 2.0
+ },
+ {
+  "champion": "Yuumi",
+  "slot": "R",
+  "ability": "Final Chapter",
+  "per_tick_attr": "Heal per Hit",
+  "per_rank1": 30,
+  "total_attr": "Total Heal",
+  "total_rank1": 150,
+  "implied_ticks": 5.0
+ },
+ {
+  "champion": "Yuumi",
+  "slot": "R",
+  "ability": "Final Chapter",
+  "per_tick_attr": "Magic Damage per Hit",
+  "per_rank1": 75,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 150,
+  "implied_ticks": 2.0
+ },
+ {
+  "champion": "Zaahen",
+  "slot": "Q",
+  "ability": "The Darkin Glaive",
+  "per_tick_attr": "Physical Damage per Hit",
+  "per_rank1": 7.5,
+  "total_attr": "Total Physical Damage",
+  "total_rank1": 15,
+  "implied_ticks": 2.0
+ },
+ {
+  "champion": "Zac",
+  "slot": "R",
+  "ability": "Let's Bounce!",
+  "per_tick_attr": "Magic Damage Per Hit",
+  "per_rank1": 120,
+  "total_attr": "Total Magic Damage",
+  "total_rank1": 300,
+  "implied_ticks": 2.5
+ },
+ {
+  "champion": "Zeri",
+  "slot": "Q",
+  "ability": "Burst Fire",
+  "per_tick_attr": "Physical Damage per Hit",
+  "per_rank1": 3.14,
+  "total_attr": "Total Physical Damage",
+  "total_rank1": 22,
+  "implied_ticks": 7.0
+ },
+ {
+  "champion": "Zeri",
+  "slot": "Q",
+  "ability": "Burst Fire",
+  "per_tick_attr": "Critical Strike per Hit",
+  "per_rank1": 6.29,
+  "total_attr": "Total Critical Strike Damage",
+  "total_rank1": 44,
+  "implied_ticks": 7.0
+ },
+ {
+  "champion": "Zeri",
+  "slot": "Q",
+  "ability": "Burst Fire",
+  "per_tick_attr": "Infinity Edge Damage per Hit",
+  "per_rank1": 7.23,
+  "total_attr": "Total Infinity Edge Damage",
+  "total_rank1": 50.6,
+  "implied_ticks": 7.0
+ }
+]

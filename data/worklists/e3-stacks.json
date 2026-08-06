@@ -1,0 +1,1697 @@
+[
+ {
+  "champion": "Ahri",
+  "slot": "P",
+  "ability": "Essence Theft",
+  "stack_attrs": [],
+  "hint": "Innate: Ahri generates a stack of Essence Fragment whenever she kills a minion or monster. At 9 stacks, she consumes them to heal herself for 35 : 95 (based on "
+ },
+ {
+  "champion": "Akali",
+  "slot": "W",
+  "ability": "Twilight Shroud",
+  "stack_attrs": [],
+  "hint": "The marked section of Twilight Shroud will linger for the mark's duration, even after the shroud ends."
+ },
+ {
+  "champion": "Akali",
+  "slot": "E",
+  "ability": "Shuriken Flip",
+  "stack_attrs": [],
+  "hint": "The shuriken marks and reveals the enemy or the last smoke section hit for 3 seconds, during which Shuriken Flip can be recast to consume the mark. | Recast: Ak"
+ },
+ {
+  "champion": "Akshan",
+  "slot": "P",
+  "ability": "Dirty Fighting",
+  "stack_attrs": [],
+  "hint": "The additional shot applies on-hit effects, triggers on-attack effects, and is affected by critical strike modifiers. | Innate: Akshan's basic attacks on-hit an"
+ },
+ {
+  "champion": "Akshan",
+  "slot": "W",
+  "ability": "Going Rogue",
+  "stack_attrs": [],
+  "hint": "Passive: Akshan marks enemy champions that kill allied champions as Scoundrels for 60 seconds. If Akshan scores a takedown against a Scoundrel while alive and w"
+ },
+ {
+  "champion": "Akshan",
+  "slot": "R",
+  "ability": "Comeuppance",
+  "stack_attrs": [
+   "Minimum Charged Physical Damage"
+  ],
+  "hint": ""
+ },
+ {
+  "champion": "Alistar",
+  "slot": "P",
+  "ability": "Triumphant Roar",
+  "stack_attrs": [],
+  "hint": "Innate: Alistar generates a stack of Triumph for each enemy champion he stuns or displaces with his abilities, and each time a nearby enemy minion or non-epic m"
+ },
+ {
+  "champion": "Alistar",
+  "slot": "E",
+  "ability": "Trample",
+  "stack_attrs": [],
+  "hint": "Active: Alistar tramples the ground around him every 0.5 seconds over 5 seconds, becoming ghosted and dealing magic damage to nearby enemies. Each time this dam"
+ },
+ {
+  "champion": "Ambessa",
+  "slot": "P",
+  "ability": "Drakehound's Step",
+  "stack_attrs": [],
+  "hint": "Innate: Whenever Ambessa casts an ability, she generates a stack of Medarda Maxim after the ability's respective lockout for 4 seconds, refreshing with subseque"
+ },
+ {
+  "champion": "Amumu",
+  "slot": "P",
+  "ability": "Cursed Touch",
+  "stack_attrs": [],
+  "hint": "Innate: Amumu's basic attacks and Curse of the Sad Mummy are empowered to mark enemies with Curse for 3 seconds, refreshing on subsequent applications and Despa"
+ },
+ {
+  "champion": "Amumu",
+  "slot": "Q",
+  "ability": "Bandage Toss",
+  "stack_attrs": [],
+  "hint": "Amumu periodically stocks a Bandage Toss charge, up to a maximum of 2."
+ },
+ {
+  "champion": "Annie",
+  "slot": "P",
+  "ability": "Pyromania",
+  "stack_attrs": [],
+  "hint": "Innate - Pyromania: Annie generates a stack of Pyromania whenever she hits an enemy with Disintegrate or casts her other abilities, stacking up to 4 times, at w"
+ },
+ {
+  "champion": "Ashe",
+  "slot": "Q",
+  "ability": "Ranger's Focus",
+  "stack_attrs": [],
+  "hint": "Passive: While Ranger's Focus is inactive, Ashe's basic attacks on-attack generate a stack of Focus for 4 seconds, refreshing on subsequent attacks and stacking"
+ },
+ {
+  "champion": "Ashe",
+  "slot": "E",
+  "ability": "Hawkshot",
+  "stack_attrs": [],
+  "hint": "Ashe periodically stocks a Hawkshot charge, up to a maximum of 2."
+ },
+ {
+  "champion": "AurelionSol",
+  "slot": "P",
+  "ability": "Cosmic Creator",
+  "stack_attrs": [],
+  "hint": "Innate: Aurelion Sol's damaging abilities against enemies generate him permanent stacks of Stardust, which gradually augments his abilities.\n Breath of Light: B"
+ },
+ {
+  "champion": "AurelionSol",
+  "slot": "Q",
+  "ability": "Breath of Light",
+  "stack_attrs": [],
+  "hint": "Active: Aurelion Sol charges for up to 3.25 seconds to exhale a beam of starfire, during which he can steer the beam in the target direction. The beam collides "
+ },
+ {
+  "champion": "Aurora",
+  "slot": "P",
+  "ability": "Spirit Abjuration",
+  "stack_attrs": [],
+  "hint": "Innate: Aurora's damaging basic attacks and abilities apply a stack of Spirit Abjuration to enemies for 4 seconds, refreshing on subsequent applications and sta"
+ },
+ {
+  "champion": "Aurora",
+  "slot": "Q",
+  "ability": "Twofold Hex",
+  "stack_attrs": [],
+  "hint": "Active: Aurora fires a bolt of energy in the target direction that deals magic damage to enemies hit and marks them with a curse for 3.5 seconds. | Twofold Hex "
+ },
+ {
+  "champion": "Azir",
+  "slot": "P",
+  "ability": "Shurima's Legacy",
+  "stack_attrs": [],
+  "hint": "Innate: Whenever a turret outside the enemy team's base is destroyed, a marker is placed above its ruins which can be targeted by Azir. | Innate - Disc of the S"
+ },
+ {
+  "champion": "Azir",
+  "slot": "E",
+  "ability": "Shifting Sands",
+  "stack_attrs": [],
+  "hint": "If Azir dashes into an enemy champion, he stops and gains a charge of Arise!."
+ },
+ {
+  "champion": "Azir",
+  "slot": "R",
+  "ability": "Emperor's Divide",
+  "stack_attrs": [
+   "Width (charge)"
+  ],
+  "hint": "Enemies impacted by the charge are dealt magic damage and knocked away over 1 second to a line 650 units in front of Azir. | Upon finishing their charge, the so"
+ },
+ {
+  "champion": "Bard",
+  "slot": "W",
+  "ability": "Caretaker's Shrine",
+  "stack_attrs": [],
+  "hint": "If the champion is an ally or Bard himself, they are healed for an amount based on the shrine's power and gain bonus movement speed decaying over 1.5 seconds. T"
+ },
+ {
+  "champion": "Belveth",
+  "slot": "P",
+  "ability": "Death in Lavender",
+  "stack_attrs": [],
+  "hint": "Innate: Whenever Bel'Veth scores a takedown against a champion, monster, or large minion within 3 seconds of damaging them, she generates a permanent stack of L"
+ },
+ {
+  "champion": "Belveth",
+  "slot": "R",
+  "ability": "Endless Banquet",
+  "stack_attrs": [],
+  "hint": "Passive: Bel'Veth's basic attacks on-hit apply a mark to the target for 5 seconds, refreshing on subsequent hits. Every attack on-hit against the marked target "
+ },
+ {
+  "champion": "Blitzcrank",
+  "slot": "R",
+  "ability": "Static Field",
+  "stack_attrs": [],
+  "hint": "Passive: While Static Field is not on cooldown, Blitzcrank's basic attacks apply a stack to the target on-hit. While the target is afflicted, one stack is consu"
+ },
+ {
+  "champion": "Brand",
+  "slot": "P",
+  "ability": "Blaze",
+  "stack_attrs": [],
+  "hint": "Innate: Brand's abilities apply a stack of Ablaze to enemies hit for 4 seconds, stacking up to 3 times and refreshing the duration of all stacks with each appli"
+ },
+ {
+  "champion": "Braum",
+  "slot": "P",
+  "ability": "Concussive Blows",
+  "stack_attrs": [],
+  "hint": "Innate: Braum's basic attacks and Winter's Bite each apply a stack of Concussive Blows to their target for 4 seconds, refreshing on subsequent applications and "
+ },
+ {
+  "champion": "Briar",
+  "slot": "P",
+  "ability": "Crimson Curse",
+  "stack_attrs": [],
+  "hint": "Innate: Briar's basic attacks on-hit and abilities inflict a bleed against enemies for 5 seconds, refreshing on subsequent applications, stacking up to 5 times "
+ },
+ {
+  "champion": "Briar",
+  "slot": "E",
+  "ability": "Chilling Scream",
+  "stack_attrs": [],
+  "hint": "Chilling Scream can be recast within the duration, and does so automatically afterwards. Chilling Scream's charge cannot be interrupted by crowd control. | If C"
+ },
+ {
+  "champion": "Briar",
+  "slot": "R",
+  "ability": "Certain Death",
+  "stack_attrs": [],
+  "hint": "Active: Briar kicks her pillory's hemolith in the target direction, briefly granting sight of its surroundings as it travels and marking the first enemy champio"
+ },
+ {
+  "champion": "Caitlyn",
+  "slot": "P",
+  "ability": "Headshot",
+  "stack_attrs": [],
+  "hint": "Innate: Caitlyn's basic attacks generate a stack of Count on-attack, doubled if she is within brush. At 5 stacks, or 4 while in brush, her next basic attack con"
+ },
+ {
+  "champion": "Caitlyn",
+  "slot": "W",
+  "ability": "Yordle Snap Trap",
+  "stack_attrs": [],
+  "hint": "Caitlyn periodically stocks a Yordle Snap Trap charge, up to a maximum amount. Deploying traps beyond the maximum destroys the oldest one."
+ },
+ {
+  "champion": "Chogath",
+  "slot": "E",
+  "ability": "Vorpal Spikes",
+  "stack_attrs": [],
+  "hint": "The width of the blast of spikes increases based on Cho'Gath's character size modifier when they launch, including but not limited to the bonus from Feast stack"
+ },
+ {
+  "champion": "Chogath",
+  "slot": "R",
+  "ability": "Feast",
+  "stack_attrs": [
+   "Bonus Health Per Stack",
+   "Bonus Attack Range Per Stack",
+   "Bonus Size Per Stack"
+  ],
+  "hint": "If the target is killed, Cho'Gath gains a stack of Feast. Only 6 stacks can be gained from non-epic monsters or minions. | Each stack of Feast increases the cas"
+ },
+ {
+  "champion": "Corki",
+  "slot": "E",
+  "ability": "Gatling Gun",
+  "stack_attrs": [
+   "Resistances Reduction Per Stack"
+  ],
+  "hint": "Active: Corki sprays bullets in a cone toward his facing direction for 4 seconds, dealing physical damage every 0.25 seconds to all enemies hit and applying a s"
+ },
+ {
+  "champion": "Corki",
+  "slot": "R",
+  "ability": "Missile Barrage",
+  "stack_attrs": [],
+  "hint": "Passive: Basic attacks on-hit against champions reduce Missile Barrage's remaining recharge time by 2 : 6 (based on critical strike chance) seconds. | Corki per"
+ },
+ {
+  "champion": "Darius",
+  "slot": "P",
+  "ability": "Hemorrhage",
+  "stack_attrs": [],
+  "hint": "Innate: Darius' damaging basic attacks and abilities apply a stack of Hemorrhage to enemies for 5 seconds, refreshing on subsequent applications and stacking up"
+ },
+ {
+  "champion": "Darius",
+  "slot": "R",
+  "ability": "Noxian Guillotine",
+  "stack_attrs": [
+   "Bonus Damage Per Stack"
+  ],
+  "hint": "Active: Darius attempts to execute the target enemy champion, leaping towards them to deal true damage, increased by 0% : 100% (based on target's Hemorrhage sta"
+ },
+ {
+  "champion": "Diana",
+  "slot": "P",
+  "ability": "Moonsilver Blade",
+  "stack_attrs": [],
+  "hint": "Innate - Moonsilver Blade: Diana's basic attacks on-hit generate a stack of Moonsilver Blade for 5 seconds, refreshing on subsequent attacks and stacking up to "
+ },
+ {
+  "champion": "Diana",
+  "slot": "W",
+  "ability": "Pale Cascade",
+  "stack_attrs": [],
+  "hint": "If all three spheres detonate, Pale Cascade's shield is reapplied, stacking with its original shield and refreshing the duration."
+ },
+ {
+  "champion": "DrMundo",
+  "slot": "W",
+  "ability": "Heart Zapper",
+  "stack_attrs": [],
+  "hint": "Active: Dr. Mundo charges up a defibrillator for up to 3 seconds, dealing magic damage every 0.25 seconds to nearby enemies and storing 80% : 95% (based on leve"
+ },
+ {
+  "champion": "Draven",
+  "slot": "P",
+  "ability": "League of Draven",
+  "stack_attrs": [],
+  "hint": "Innate: When Draven catches a Spinning Axe, kills a non-champion, or destroys a turret, he gains a stack of Adoration. | When Draven kills an enemy champion, he"
+ },
+ {
+  "champion": "Ekko",
+  "slot": "P",
+  "ability": "Z-Drive Resonance",
+  "stack_attrs": [],
+  "hint": "Innate - Resonance: Ekko's basic attacks on-hit and damaging abilities apply a stack of Resonance to enemies hit for 4 seconds, refreshing on subsequent hits an"
+ },
+ {
+  "champion": "Evelynn",
+  "slot": "Q",
+  "ability": "Hate Spike",
+  "stack_attrs": [],
+  "hint": "Active: Evelynn launches a dart in the target direction, dealing magic damage to the first enemy hit and marking them for 4 seconds. | Evelynn's next 3 basic at"
+ },
+ {
+  "champion": "Ezreal",
+  "slot": "P",
+  "ability": "Rising Spell Force",
+  "stack_attrs": [],
+  "hint": "Innate: Ezreal generates a stack of Rising Spell Force for each enemy hit by his abilities, lasting for 6 seconds, refreshing on subsequent hits, and stacking u"
+ },
+ {
+  "champion": "Ezreal",
+  "slot": "W",
+  "ability": "Essence Flux",
+  "stack_attrs": [],
+  "hint": "Active: Ezreal fires an orb in the target direction that marks the first enemy champion, epic monster, or structure hit for 4 seconds. | His next basic attack o"
+ },
+ {
+  "champion": "Ezreal",
+  "slot": "E",
+  "ability": "Arcane Shift",
+  "stack_attrs": [],
+  "hint": "Arcane Shift prioritizes firing at the nearest enemy marked by Essence Flux."
+ },
+ {
+  "champion": "Fiora",
+  "slot": "P",
+  "ability": "Duelist's Dance",
+  "stack_attrs": [],
+  "hint": "Innate: Fiora identifies the Vitals of nearby enemy champions, marked as an arc around them in North-, East-, South- or Westward direction. Vitals take 1.75 sec"
+ },
+ {
+  "champion": "Galio",
+  "slot": "W",
+  "ability": "Shield of Durand",
+  "stack_attrs": [],
+  "hint": "Active: Galio charges for up to 2 seconds, slowing himself by 15%, and gaining physical and magic damage reduction; charging increases Shield of Durand's radius"
+ },
+ {
+  "champion": "Gangplank",
+  "slot": "E",
+  "ability": "Powder Keg",
+  "stack_attrs": [
+   "Maximum charges"
+  ],
+  "hint": "Active: Gangplank consumes a charge to place a powder keg at the target location that lasts for 25 seconds and will connect to other kegs with overlapping conne"
+ },
+ {
+  "champion": "Garen",
+  "slot": "W",
+  "ability": "Courage",
+  "stack_attrs": [],
+  "hint": "Passive: Whenever Garen kills an enemy, he generates a stack of Courage, stacking up to 150 times. | Courage: For each stack, Garen gains 0.2 bonus armor and 0."
+ },
+ {
+  "champion": "Gnar",
+  "slot": "W",
+  "ability": "Hyper",
+  "stack_attrs": [],
+  "hint": "Passive: Gnar's basic attacks on-hit and ability hits apply a stack of Hyper to enemies for 3.5 seconds, refreshing on subsequent applications and stacking up t"
+ },
+ {
+  "champion": "Gragas",
+  "slot": "E",
+  "ability": "Body Slam",
+  "stack_attrs": [],
+  "hint": "Active: Gragas charges in the target direction and stops upon colliding with an enemy, dealing magic damage to all nearby enemies, knocking them back, though no"
+ },
+ {
+  "champion": "Graves",
+  "slot": "E",
+  "ability": "Quickdraw",
+  "stack_attrs": [],
+  "hint": "Active: Graves dashes to the target location, reloading one shell while generating a stack of True Grit for 4 seconds, stacking up to 8 times. Dashing towards a"
+ },
+ {
+  "champion": "Gwen",
+  "slot": "Q",
+  "ability": "Snip Snip!",
+  "stack_attrs": [],
+  "hint": "Passive: Gwen's basic attacks generate a stack of Snippy on-hit for 6 seconds, stacking up to 4 times and refreshing on subsequent attacks. | If Gwen has any Sn"
+ },
+ {
+  "champion": "Hecarim",
+  "slot": "Q",
+  "ability": "Rampage",
+  "stack_attrs": [],
+  "hint": "If this damages an enemy, Hecarim gains a stack of Rampage for 8 seconds, refreshing on subsequent damage and stacking up to 3 times. Each stack increases Rampa"
+ },
+ {
+  "champion": "Hecarim",
+  "slot": "E",
+  "ability": "Devastating Charge",
+  "stack_attrs": [],
+  "hint": "During this time, Hecarim's next basic attack is replaced by a Devastating Charge, empowering it to gain 50 : 250 (based on distance traveled) bonus range and c"
+ },
+ {
+  "champion": "Hecarim",
+  "slot": "R",
+  "ability": "Onslaught of Shadows",
+  "stack_attrs": [],
+  "hint": "Active: Hecarim dashes with displacement immunity to the target location and summons 5 spectral riders in an arrow formation that charge alongside him in the ta"
+ },
+ {
+  "champion": "Heimerdinger",
+  "slot": "Q",
+  "ability": "H-28G Evolution Turret",
+  "stack_attrs": [],
+  "hint": "Heimerdinger periodically stocks a Turret Kit charge, up to a maximum of 3."
+ },
+ {
+  "champion": "Hwei",
+  "slot": "P",
+  "ability": "Signature of the Visionary",
+  "stack_attrs": [],
+  "hint": "Innate: Hwei's damaging abilities mark enemies hit for 4 seconds. Subsequent damaging abilities against marked targets consume the mark to create an explosion b"
+ },
+ {
+  "champion": "Hwei",
+  "slot": "R",
+  "ability": "Spiraling Despair",
+  "stack_attrs": [],
+  "hint": "Active: Hwei launches a globule of pure despair in the target direction that collides with the first enemy champion hit, afflicting them with an aura that grows"
+ },
+ {
+  "champion": "Illaoi",
+  "slot": "E",
+  "ability": "Test of Spirit",
+  "stack_attrs": [],
+  "hint": "When the Spirit is killed or the target leaves tether range, the tether is severed, marking the target as a Vessel for 4 seconds and slowing them by 80% for 1.5"
+ },
+ {
+  "champion": "Irelia",
+  "slot": "P",
+  "ability": "Ionian Fervor",
+  "stack_attrs": [],
+  "hint": "Innate: Irelia generates a stack of Ionian Fervor for each enemy champion hit by her abilities, or if she hits at least one non-champion, lasting for 6 seconds,"
+ },
+ {
+  "champion": "Irelia",
+  "slot": "Q",
+  "ability": "Bladesurge",
+  "stack_attrs": [],
+  "hint": "Active: Irelia dashes 100 units through the target enemy's location, and upon collision or dash completion, she deals physical damage, applies on-hit effects, a"
+ },
+ {
+  "champion": "Irelia",
+  "slot": "W",
+  "ability": "Defiant Dance",
+  "stack_attrs": [],
+  "hint": "Active: Irelia assumes a defensive stance with her blades to charge for up to 1.5 seconds, during which she reduces incoming physical damage by 40% : 70% (based"
+ },
+ {
+  "champion": "Ivern",
+  "slot": "W",
+  "ability": "Brushmaker",
+  "stack_attrs": [],
+  "hint": "Ivern periodically stocks a Brushmaker charge, up to a maximum of 3."
+ },
+ {
+  "champion": "Janna",
+  "slot": "Q",
+  "ability": "Howling Gale",
+  "stack_attrs": [],
+  "hint": "Active: Janna summons a whirlwind at her current location that charges up over 3 seconds, increasing its range, speed, damage, and knock up duration every secon"
+ },
+ {
+  "champion": "Jax",
+  "slot": "P",
+  "ability": "Relentless Assault",
+  "stack_attrs": [],
+  "hint": "Innate: Jax's basic attacks generate a stack of Relentless Assault on-attack for 2.5 seconds, refreshing on subsequent attacks and stacking up to 8 times. Stack"
+ },
+ {
+  "champion": "Jax",
+  "slot": "R",
+  "ability": "Grandmaster-at-Arms",
+  "stack_attrs": [],
+  "hint": "Passive: Jax's basic attacks generate a stack of Grandmaster-at-Arms on-hit for 2.5 seconds, refreshing on subsequent hits and stacking up to 2 times. At 2 stac"
+ },
+ {
+  "champion": "Jhin",
+  "slot": "W",
+  "ability": "Deadly Flourish",
+  "stack_attrs": [],
+  "hint": "Passive: Enemy champions that trigger a Lotus Trap to bloom or are damaged by Jhin or allied champions are marked for 4 seconds. | Hitting a marked champion roo"
+ },
+ {
+  "champion": "Jhin",
+  "slot": "E",
+  "ability": "Captive Audience",
+  "stack_attrs": [],
+  "hint": "Jhin periodically stocks a Lotus Trap charge, up to a maximum of 2."
+ },
+ {
+  "champion": "Jinx",
+  "slot": "P",
+  "ability": "Get Excited!",
+  "stack_attrs": [],
+  "hint": "Additionally, she is allowed to exceed the attack speed cap and gains a stack of Get Excited! for the same duration, stacking up to 5 times. Only takedowns agai"
+ },
+ {
+  "champion": "Jinx",
+  "slot": "Q",
+  "ability": "Switcheroo!",
+  "stack_attrs": [
+   "Attack Speed per Subsequent Stack"
+  ],
+  "hint": "Pow-Pow: Basic attacks with Pow-Pow generate a stack of Rev'd up for 2.5 seconds, refreshing on subsequent attacks with Pow-Pow and stacking up to 3 times. Each"
+ },
+ {
+  "champion": "KSante",
+  "slot": "P",
+  "ability": "Dauntless Instinct",
+  "stack_attrs": [],
+  "hint": "Innate: K'Sante's abilities mark enemies hit for 4 seconds. His basic attacks against marked enemies are empowered to consume the mark, dealing 12 (+ 1% : 2% (b"
+ },
+ {
+  "champion": "KSante",
+  "slot": "Q",
+  "ability": "Ntofo Strikes",
+  "stack_attrs": [],
+  "hint": "If this hits at least one enemy, K'Sante generates a stack for 6 seconds, stacking up to 2 times and refreshing on subsequent hits. At 2 stacks, the next Ntofo "
+ },
+ {
+  "champion": "KSante",
+  "slot": "W",
+  "ability": "Path Maker",
+  "stack_attrs": [],
+  "hint": "Path Maker can be recast within the duration, and does so automatically afterwards. Path Maker's charge cannot be interrupted by crowd control."
+ },
+ {
+  "champion": "Kaisa",
+  "slot": "P",
+  "ability": "Second Skin",
+  "stack_attrs": [],
+  "hint": "Innate - Plasma: Kai'Sa's basic attacks on-hit and Void Seeker apply stacks of Plasma to enemies for 4 seconds, refreshing on subsequent applications and stacki"
+ },
+ {
+  "champion": "Kaisa",
+  "slot": "E",
+  "ability": "Supercharge",
+  "stack_attrs": [],
+  "hint": "Active: Kai'Sa charges up over the cast time, during which she is still able to move, becoming ghosted and gaining bonus movement speed for the duration, with t"
+ },
+ {
+  "champion": "Kalista",
+  "slot": "Q",
+  "ability": "Pierce",
+  "stack_attrs": [],
+  "hint": "If Pierce kills the target, the spear continues onward to transfer all of the target's Rend stacks to the next enemy it hits."
+ },
+ {
+  "champion": "Kalista",
+  "slot": "W",
+  "ability": "Sentinel",
+  "stack_attrs": [],
+  "hint": "Passive - Soul-Marked: While Kalista and her Oathsworn are tethered, their basic attacks and Pierce apply a Soul-Mark to the target hit for 4 seconds. | If both"
+ },
+ {
+  "champion": "Kalista",
+  "slot": "E",
+  "ability": "Rend",
+  "stack_attrs": [
+   "Bonus Damage per Additional Stack"
+  ],
+  "hint": "Passive: Kalista's basic attacks on-hit and Pierce apply a stack of Rend to enemies for 4 seconds, refreshing on subsequent hits and stacking up to 254 times pe"
+ },
+ {
+  "champion": "Kassadin",
+  "slot": "R",
+  "ability": "Riftwalk",
+  "stack_attrs": [
+   "Bonus Damage Per Stack"
+  ],
+  "hint": "Active: Kassadin blinks toward the target location, dealing magic damage to all nearby enemies upon arrival. He then gains a stack of Riftwalk for 15 seconds, r"
+ },
+ {
+  "champion": "Kayle",
+  "slot": "P",
+  "ability": "Divine Ascent",
+  "stack_attrs": [],
+  "hint": "Level 1 - Zealous: Kayle's basic attacks on-attack generate a stack of Zeal for 5 seconds, refreshing on subsequent attacks and stacking up to 5 times. For each"
+ },
+ {
+  "champion": "Kayn",
+  "slot": "R",
+  "ability": "Umbral Trespass",
+  "stack_attrs": [],
+  "hint": "Passive: Kayn marks enemy champions he damaged in the last 3.15 seconds. | Active: Kayn vanishes and dashes to a marked enemy champion over 0.25 seconds, attach"
+ },
+ {
+  "champion": "Kennen",
+  "slot": "P",
+  "ability": "Mark of the Storm",
+  "stack_attrs": [],
+  "hint": "Innate: Kennen's abilities apply a stack of Mark of the Storm to enemies hit for 6 seconds, refreshing on subsequent applications and stacking up to 3 times. | "
+ },
+ {
+  "champion": "Kennen",
+  "slot": "W",
+  "ability": "Electrical Surge",
+  "stack_attrs": [],
+  "hint": "Passive: Kennen's basic attacks on-attack generate a stack of Electrical Surge, stacking up to 4 times. At 4 stacks, his next basic attack on-attack consumes al"
+ },
+ {
+  "champion": "Kindred",
+  "slot": "P",
+  "ability": "Mark of the Kindred",
+  "stack_attrs": [],
+  "hint": "Innate: Both Lamb and Wolf mark targets to hunt. Scoring a takedown against a hunted target collects a stack of Mark of the Kindred. Mark of the Kindred: Lamb g"
+ },
+ {
+  "champion": "Kindred",
+  "slot": "Q",
+  "ability": "Dance of Arrows",
+  "stack_attrs": [],
+  "hint": "Active: Lamb dashes toward the target location, gaining 35% (+ 5% per mark) bonus attack speed for 4 seconds and firing an arrow at up to 3 nearby visible enemi"
+ },
+ {
+  "champion": "Kindred",
+  "slot": "W",
+  "ability": "Wolf's Frenzy",
+  "stack_attrs": [],
+  "hint": "Passive: Lamb generates 1 stack of Hunter's Vigor for every 27 units she travels by any means and 5 stacks on-attack, up to a maximum of 100 stacks. At maximum "
+ },
+ {
+  "champion": "Kindred",
+  "slot": "E",
+  "ability": "Mounting Dread",
+  "stack_attrs": [],
+  "hint": "Active: Lamb fires a shot at the target enemy that slows them by 30% (+ 5% per 100 AP) for 1 second and marks them for 4 seconds. Her basic attacks against the "
+ },
+ {
+  "champion": "Kled",
+  "slot": "E",
+  "ability": "Jousting",
+  "stack_attrs": [],
+  "hint": "Upon hitting an enemy champion or large monster, Skaarl dashes a fixed 350 units through them, marking them for 3 seconds, during which they are revealed. After"
+ },
+ {
+  "champion": "Kled",
+  "slot": "R",
+  "ability": "Chaaaaaaaarge!!!",
+  "stack_attrs": [],
+  "hint": "Active: Kled & Skaarl charge toward the target location, automatically navigating terrain along the way, during which they are ghosted, immune to crowd control "
+ },
+ {
+  "champion": "KogMaw",
+  "slot": "R",
+  "ability": "Living Artillery",
+  "stack_attrs": [],
+  "hint": "Kog'Maw then generates a stack of Living Artillery for 8 seconds, refreshing on subsequent casts and stacking up to 9 times. | Living Artillery: For each stack,"
+ },
+ {
+  "champion": "Leblanc",
+  "slot": "Q",
+  "ability": "Sigil of Malice",
+  "stack_attrs": [],
+  "hint": "Active: LeBlanc projects an orb at the target enemy that deals magic damage and marks them for 3.5 seconds. | LeBlanc's next damaging ability against the marked"
+ },
+ {
+  "champion": "Leblanc",
+  "slot": "R",
+  "ability": "Mimic",
+  "stack_attrs": [
+   "Mark Magic Damage"
+  ],
+  "hint": "Mimic: Sigil of Malice: The orb deals modified damage, while the mark consumption deals double that amount."
+ },
+ {
+  "champion": "LeeSin",
+  "slot": "Q",
+  "ability": "Sonic Wave",
+  "stack_attrs": [],
+  "hint": "Active: Lee Sin fires a sonic blast in the target direction that deals physical damage to the first enemy hit and marks them for 3 seconds, during which they ar"
+ },
+ {
+  "champion": "LeeSin",
+  "slot": "E",
+  "ability": "Tempest",
+  "stack_attrs": [],
+  "hint": "Active: Lee Sin smashes the ground beneath him, dealing magic damage to nearby enemies, marking them for 4 seconds and, if they are not invisible when struck, r"
+ },
+ {
+  "champion": "Leona",
+  "slot": "P",
+  "ability": "Sunlight",
+  "stack_attrs": [],
+  "hint": "Innate: Leona's abilities mark enemies hit for 2.5 seconds, refreshing on subsequent hits. Allied champions' damaging attacks and abilities against a marked tar"
+ },
+ {
+  "champion": "Lillia",
+  "slot": "Q",
+  "ability": "Blooming Blows",
+  "stack_attrs": [
+   "Bonus Movement Speed per Stack"
+  ],
+  "hint": "Passive: Whenever Lillia's abilities hit at least one enemy, she generates a stack of Prance for 6.5 seconds, refreshing on subsequent hits and stacking up to 4"
+ },
+ {
+  "champion": "Locke",
+  "slot": "Q",
+  "ability": "Ritual Nails",
+  "stack_attrs": [
+   "One Stack Bonus Damage",
+   "Two Stacks Bonus Damage",
+   "Three Stacks Bonus Damage"
+  ],
+  "hint": "Active: Locke hurls a nail in the target direction that deals magic damage to enemies hit, slows them by 25% for 1 second, and applies a stack of Soul Nails for"
+ },
+ {
+  "champion": "Locke",
+  "slot": "R",
+  "ability": "Purgatory",
+  "stack_attrs": [],
+  "hint": "Active: Locke throws a totem artifact that travels to the target location over 0.5 seconds. After landing for 0.25 seconds, the totem fires latching nails at ne"
+ },
+ {
+  "champion": "Lucian",
+  "slot": "W",
+  "ability": "Ardent Blaze",
+  "stack_attrs": [],
+  "hint": "Enemies hit are marked for 6 seconds. | Lucian gains bonus movement speed for 1 second when he or allied champions damage a marked target. Allied champions trig"
+ },
+ {
+  "champion": "Lux",
+  "slot": "P",
+  "ability": "Illumination",
+  "stack_attrs": [],
+  "hint": "Innate: Lux's abilities apply a mark to enemies hit for 6 seconds, refreshing on subsequent hits. Lux's basic attacks on-hit and Final Spark consume the mark to"
+ },
+ {
+  "champion": "Lux",
+  "slot": "W",
+  "ability": "Prismatic Barrier",
+  "stack_attrs": [],
+  "hint": "Active: Lux throws her wand in the target direction that homes back to her after reaching maximum range. Allied champions hit by the wand gain a shield for 2.5 "
+ },
+ {
+  "champion": "Malzahar",
+  "slot": "W",
+  "ability": "Void Swarm",
+  "stack_attrs": [],
+  "hint": "Passive: Malzahar generates a stack of Zz'Rot Swarm when he casts another ability, up to a maximum of 2. | Active: Malzahar consumes all Zz'Rot Swarm stacks and"
+ },
+ {
+  "champion": "MasterYi",
+  "slot": "P",
+  "ability": "Double Strike",
+  "stack_attrs": [],
+  "hint": "Innate: Master Yi's basic attacks on-hit generate a stack of Double Strike for 4 seconds, refreshing on subsequent hits and stacking up to 3 times. At 3 stacks,"
+ },
+ {
+  "champion": "MasterYi",
+  "slot": "Q",
+  "ability": "Alpha Strike",
+  "stack_attrs": [],
+  "hint": "Active: Master Yi vanishes and becomes unable to act. After 0.231 seconds, he marks the target enemy and then proceeds to mark the nearest visible un-marked ene"
+ },
+ {
+  "champion": "MasterYi",
+  "slot": "W",
+  "ability": "Meditate",
+  "stack_attrs": [],
+  "hint": "Meditate resets Master Yi's basic attack timer, pauses Wuju Style's and Highlander's duration, and grants one stack of Double Strike per second during the chann"
+ },
+ {
+  "champion": "Mel",
+  "slot": "P",
+  "ability": "Searing Brilliance",
+  "stack_attrs": [],
+  "hint": "Innate: Mel's basic attacks and abilities apply a stack of Overwhelm for each instance of damage they deal to enemies for 5 seconds, refreshing on subsequent da"
+ },
+ {
+  "champion": "Mel",
+  "slot": "R",
+  "ability": "Golden Eclipse",
+  "stack_attrs": [
+   "Stored Damage Increase per Stack"
+  ],
+  "hint": "Passive: Overwhelm stacks store more damage."
+ },
+ {
+  "champion": "Milio",
+  "slot": "E",
+  "ability": "Warm Hugs",
+  "stack_attrs": [],
+  "hint": "Milio periodically stocks a Warm Hugs charge, up to a maximum of 2. | Warm Hugs' effects can stack up to 2 times."
+ },
+ {
+  "champion": "MissFortune",
+  "slot": "P",
+  "ability": "Love Tap",
+  "stack_attrs": [],
+  "hint": "Innate: Miss Fortune's basic attacks are empowered to apply a mark that expires upon attacking a new enemy. If the enemy was unmarked, this also deals 50% : 100"
+ },
+ {
+  "champion": "MissFortune",
+  "slot": "W",
+  "ability": "Strut",
+  "stack_attrs": [],
+  "hint": "Marking a new target with Love Tap reduces Strut's current cooldown by 2 seconds."
+ },
+ {
+  "champion": "Mordekaiser",
+  "slot": "P",
+  "ability": "Darkness Rise",
+  "stack_attrs": [],
+  "hint": "Innate: Mordekaiser's basic attacks are empowered to deal 40% AP bonus magic damage on-hit. | Innate: Mordekaiser generates a stack for each enemy champion or l"
+ },
+ {
+  "champion": "Morgana",
+  "slot": "W",
+  "ability": "Tormented Shadow",
+  "stack_attrs": [],
+  "hint": "Passive: Tormented Shadow's current cooldown is reduced by 5% of its total cooldown whenever Soul Siphon triggers. Simultaneous triggers from multiple targets w"
+ },
+ {
+  "champion": "Nasus",
+  "slot": "Q",
+  "ability": "Siphoning Strike",
+  "stack_attrs": [],
+  "hint": "If Siphoning Strike kills the target, Nasus permanently gains 3 stacks, increased to 12 if the target is a champion, large minion, or large monster."
+ },
+ {
+  "champion": "Nautilus",
+  "slot": "R",
+  "ability": "Depth Charge",
+  "stack_attrs": [],
+  "hint": "Active: Nautilus sends out a Depth Charge that chases the target enemy champion, accelerating over time and creating eruptions every 0.264 seconds in its wake t"
+ },
+ {
+  "champion": "Neeko",
+  "slot": "W",
+  "ability": "Shapesplitter",
+  "stack_attrs": [],
+  "hint": "Passive: Neeko's basic attacks on-hit generate a stack of Shapesplitter, which refreshes on subsequent attacks and stacks up to 2 times. At 2 stacks, her next b"
+ },
+ {
+  "champion": "Nidalee",
+  "slot": "P",
+  "ability": "Prowl",
+  "stack_attrs": [],
+  "hint": "Innate - Hunt: Hitting enemy champions or monsters with Javelin Toss or Bushwhack applies a Hunted mark to the target for 4 seconds, during which they are revea"
+ },
+ {
+  "champion": "Nidalee",
+  "slot": "R",
+  "ability": "Aspect of the Cougar",
+  "stack_attrs": [],
+  "hint": "Human Form: Nidalee transforms into a human, gaining ranged attacks with 525 range and access to her human abilities. While in this form, applying a Hunted mark"
+ },
+ {
+  "champion": "Nilah",
+  "slot": "E",
+  "ability": "Slipstream",
+  "stack_attrs": [],
+  "hint": "Nilah periodically stocks a Slipstream charge, up to a maximum of 2."
+ },
+ {
+  "champion": "Nunu",
+  "slot": "W",
+  "ability": "Biggest Snowball Ever!",
+  "stack_attrs": [],
+  "hint": "The snowball increases in size and power linearly over the duration. Its size changes from small to medium after 2.5 seconds, then to large after 5 seconds into"
+ },
+ {
+  "champion": "Nunu",
+  "slot": "E",
+  "ability": "Snowball Barrage",
+  "stack_attrs": [],
+  "hint": "Enemies hit 3 times are slowed for 1 second. Enemy champions and large monsters hit once are marked Snowbound for 4 seconds, refreshing on subsequent hits. Snow"
+ },
+ {
+  "champion": "Orianna",
+  "slot": "P",
+  "ability": "Clockwork Windup",
+  "stack_attrs": [],
+  "hint": "Innate: Orianna's basic attacks generate a stack of Clockwork Winding for 4 seconds, refreshing on subsequent attacks and stacking up to 2 times. All stacks are"
+ },
+ {
+  "champion": "Ornn",
+  "slot": "Q",
+  "ability": "Volcanic Rupture",
+  "stack_attrs": [],
+  "hint": "The pillar will not expire during Searing Charge's dash."
+ },
+ {
+  "champion": "Ornn",
+  "slot": "E",
+  "ability": "Searing Charge",
+  "stack_attrs": [],
+  "hint": "Active: Ornn charges in the target direction, dealing physical damage to enemies he passes through and stopping upon colliding with terrain. | If Ornn collides "
+ },
+ {
+  "champion": "Pantheon",
+  "slot": "P",
+  "ability": "Mortal Will",
+  "stack_attrs": [],
+  "hint": "Innate: Pantheon generates a stack of Mortal Will whenever he lands a basic attack on-hit or casts an ability, stacking up to 5 times. At 5 stacks, Pantheon's n"
+ },
+ {
+  "champion": "Pantheon",
+  "slot": "Q",
+  "ability": "Comet Spear",
+  "stack_attrs": [],
+  "hint": "Active: Pantheon charges while being slowed by 10% for up to 4 seconds to increase Comet Spear's range after 0.35 seconds of channeling. Comet Spear can be reca"
+ },
+ {
+  "champion": "Poppy",
+  "slot": "R",
+  "ability": "Keeper's Verdict",
+  "stack_attrs": [],
+  "hint": "Active: Poppy charges while being slowed by 15% for up to 4 seconds to increase Keeper's Verdict's range and knock back distance over 0.5 seconds after the firs"
+ },
+ {
+  "champion": "Pyke",
+  "slot": "Q",
+  "ability": "Bone Skewer",
+  "stack_attrs": [],
+  "hint": "Active: Pyke charges while being slowed by 20% for up to 3 seconds to increase Bone Skewer's range over the first second of the channel. Bone Skewer can be reca"
+ },
+ {
+  "champion": "Pyke",
+  "slot": "R",
+  "ability": "Death from Below",
+  "stack_attrs": [],
+  "hint": "Active: Pyke marks the target location with the shape of an X before striking it, executing enemy champions within the area that are below 250 : 550 (based on l"
+ },
+ {
+  "champion": "Quinn",
+  "slot": "P",
+  "ability": "Harrier",
+  "stack_attrs": [],
+  "hint": "Innate: Quinn's Blinding Assault against the primary target, Vault, and Skystrike mark enemies hit with Harrier for 4 seconds, during which they are revealed. V"
+ },
+ {
+  "champion": "Quinn",
+  "slot": "Q",
+  "ability": "Blinding Assault",
+  "stack_attrs": [],
+  "hint": "Active: Quinn sends Valor in the target direction who stops upon hitting an enemy, marking them with Harrier and dealing physical damage to all nearby enemies, "
+ },
+ {
+  "champion": "Quinn",
+  "slot": "W",
+  "ability": "Heightened Senses",
+  "stack_attrs": [],
+  "hint": "Passive: Whenever Quinn uses a basic attack on-attack against a target marked by Harrier or consumes their mark, she gains bonus attack speed and bonus movement"
+ },
+ {
+  "champion": "Quinn",
+  "slot": "E",
+  "ability": "Vault",
+  "stack_attrs": [],
+  "hint": "Active: Quinn dashes to the target enemy, marking them with Harrier, dealing physical damage, knocking them back a very short distance over 0.5 seconds, and slo"
+ },
+ {
+  "champion": "Rakan",
+  "slot": "Q",
+  "ability": "Gleaming Quill",
+  "stack_attrs": [],
+  "hint": "If the target was an enemy champion or epic monster, a radius is marked around Rakan. After 3 seconds or if an allied champion enters the radius, Rakan heals hi"
+ },
+ {
+  "champion": "RekSai",
+  "slot": "R",
+  "ability": "Void Rush",
+  "stack_attrs": [],
+  "hint": "Passive: Rek'Sai applies Marked as Prey to enemy champions she damages, lasting for 5 seconds. | Active: Rek'Sai singles out the target enemy champion Marked as"
+ },
+ {
+  "champion": "Rell",
+  "slot": "P",
+  "ability": "Break the Mold",
+  "stack_attrs": [],
+  "hint": "Innate: Rell's basic attacks deal bonus magic damage on-hit equal to the sum of 5% of her total armor and 5% of her total magic resistance. | Innate: Rell's bas"
+ },
+ {
+  "champion": "Renata",
+  "slot": "P",
+  "ability": "Leverage",
+  "stack_attrs": [],
+  "hint": "Innate: Renata's basic attacks are empowered to apply a mark that lasts 6 seconds, refreshes on subsequent hits and expires when attacking a new enemy. If the e"
+ },
+ {
+  "champion": "Rengar",
+  "slot": "P",
+  "ability": "Unseen Predator",
+  "stack_attrs": [],
+  "hint": "Innate: Upon casting a basic ability or using Savagery's first attack, Rengar generates a stack of Ferocity for 1 second, stacking up 4 times but not refreshing"
+ },
+ {
+  "champion": "Rengar",
+  "slot": "R",
+  "ability": "Thrill of the Hunt",
+  "stack_attrs": [],
+  "hint": "The nearest detected enemy within 1600 range is also marked, alerting all of their allies within 1200 range about Rengar's presence. | Rengar's next basic attac"
+ },
+ {
+  "champion": "Riven",
+  "slot": "P",
+  "ability": "Runic Blade",
+  "stack_attrs": [],
+  "hint": "Innate: Riven's ability casts generate a stack of Charge for 6 seconds, refreshing on subsequent casts and stacking up to 3 times. Riven's basic attacks are emp"
+ },
+ {
+  "champion": "Rumble",
+  "slot": "E",
+  "ability": "Electro Harpoon",
+  "stack_attrs": [],
+  "hint": "Active: Rumble generates 20 Heat to shoot a harpoon in the target direction that deals magic damage to the first enemy hit, inflicting them with magic resistanc"
+ },
+ {
+  "champion": "Rumble",
+  "slot": "R",
+  "ability": "The Equalizer",
+  "stack_attrs": [],
+  "hint": "Enemies struck by the impact or within the field are marked Burning for 1 second, taking magic damage every 0.25 seconds and being slowed by 35%, refreshing whi"
+ },
+ {
+  "champion": "Ryze",
+  "slot": "Q",
+  "ability": "Overload",
+  "stack_attrs": [],
+  "hint": "Passive: Ryze's other basic ability casts reset Overload's cooldown and charge a Rune stack for 4 seconds, refreshing on subsequent casts and stacking up to 2 t"
+ },
+ {
+  "champion": "Ryze",
+  "slot": "E",
+  "ability": "Spell Flux",
+  "stack_attrs": [],
+  "hint": "Active: Ryze projects an orb upon the target enemy that deals magic damage.\nThe target and surrounding enemies are also marked with Flux for 4 seconds. Ryze's b"
+ },
+ {
+  "champion": "Ryze",
+  "slot": "R",
+  "ability": "Realm Warp",
+  "stack_attrs": [],
+  "hint": "Active: Ryze channels for 2 seconds to open a portal beneath him, marking the target location as its destination and granting sight of the target area. Ryze is "
+ },
+ {
+  "champion": "Samira",
+  "slot": "P",
+  "ability": "Daredevil Impulse",
+  "stack_attrs": [],
+  "hint": "Innate: Samira's damaging basic attacks and abilities against at least one enemy champion unique from the previous damaging hit made against champions generate "
+ },
+ {
+  "champion": "Samira",
+  "slot": "R",
+  "ability": "Inferno Trigger",
+  "stack_attrs": [],
+  "hint": "A nearby visible enemy is required to cast this ability, and targets do not have to be visible to be shot at. Style stacks are consumed at the end of the effect"
+ },
+ {
+  "champion": "Sejuani",
+  "slot": "P",
+  "ability": "Fury of the North",
+  "stack_attrs": [],
+  "hint": "Innate - Icebreaker: Enemies stunned by Sejuani are marked Frozen for the disable's duration. Sejuani's next basic attack or ability against a Frozen enemy will"
+ },
+ {
+  "champion": "Sejuani",
+  "slot": "E",
+  "ability": "Permafrost",
+  "stack_attrs": [],
+  "hint": "Passive - Frostbrand: Winter's Wrath and both Sejuani's and nearby allied melee champions' basic attacks on-hit apply stacks of Frost to enemy champions, medium"
+ },
+ {
+  "champion": "Senna",
+  "slot": "P",
+  "ability": "Absolution",
+  "stack_attrs": [],
+  "hint": "Innate - Weakened Soul: Senna's basic attacks on-hit and abilities mark enemy champions hit for 4 seconds. Subsequent attacks or ability hits against marked tar"
+ },
+ {
+  "champion": "Seraphine",
+  "slot": "P",
+  "ability": "Stage Presence",
+  "stack_attrs": [],
+  "hint": "Innate - Echo: Seraphine's basic ability casts each generate a stack of Echo, stacking up to 2 times. At 2 stacks, the next basic ability cast consumes them all"
+ },
+ {
+  "champion": "Seraphine",
+  "slot": "W",
+  "ability": "Surround Sound",
+  "stack_attrs": [],
+  "hint": "Surround Sound's shield and bonus movement speed can stack up to 2 times. Seraphine can move during Surround Sound's cast time."
+ },
+ {
+  "champion": "Sett",
+  "slot": "W",
+  "ability": "Haymaker",
+  "stack_attrs": [],
+  "hint": "Active: Sett charges up a strike over the cast time. Additionally, he immediately consumes all of his stored Grit to grant himself a shield at the start of the "
+ },
+ {
+  "champion": "Shyvana",
+  "slot": "P",
+  "ability": "Scalemail",
+  "stack_attrs": [],
+  "hint": "Innate: Shyvana generates Scalemail stacks from scoring takedowns against certain enemies. Large monsters and large minions grant 1 stack, while enemy champions"
+ },
+ {
+  "champion": "Singed",
+  "slot": "P",
+  "ability": "Noxious Slipstream",
+  "stack_attrs": [],
+  "hint": "Innate: Whenever Singed moves near a champion, he gains a stack of Noxious Slipstream for 2 seconds, refreshing on subsequent passes and stacking up to 25 times"
+ },
+ {
+  "champion": "Sion",
+  "slot": "Q",
+  "ability": "Decimating Smash",
+  "stack_attrs": [],
+  "hint": "Decimating Smash can be recast within the duration, and does so automatically afterwards. If the charge is interrupted, Decimating Smash is placed on a 2-second"
+ },
+ {
+  "champion": "Sion",
+  "slot": "R",
+  "ability": "Unstoppable Onslaught",
+  "stack_attrs": [],
+  "hint": "Active: Sion becomes immune to crowd control and ghosted and, after a brief delay, charges forward in the direction of the cursor for up to 8 seconds, during wh"
+ },
+ {
+  "champion": "Skarner",
+  "slot": "P",
+  "ability": "Threads of Vibration",
+  "stack_attrs": [],
+  "hint": "Innate: Skarner's basic attacks on-hit, Shattered Earth, Upheaval, and Impale apply a stack of Quaking to enemies hit for 4 seconds, refreshing on subsequent ap"
+ },
+ {
+  "champion": "Skarner",
+  "slot": "E",
+  "ability": "Ixtal's Impact",
+  "stack_attrs": [],
+  "hint": "Active: Skarner charges forward in the direction of the cursor for up to 2.75 seconds, during which he gains slow immunity, becomes ghosted, ignores terrain col"
+ },
+ {
+  "champion": "Smolder",
+  "slot": "P",
+  "ability": "Dragon Practice",
+  "stack_attrs": [],
+  "hint": "Innate: Smolder generates a stack of Dragon Practice each time he hits an enemy champion with an ability, or whenever Super Scorcher Breath kills a minion or mo"
+ },
+ {
+  "champion": "Smolder",
+  "slot": "Q",
+  "ability": "Super Scorcher Breath",
+  "stack_attrs": [],
+  "hint": "Active: Smolder spits a fireball at the target enemy that deals physical damage, increased by 0% : 75% (+ 0% : 22.5%) (based on critical strike chance); applies"
+ },
+ {
+  "champion": "Sona",
+  "slot": "P",
+  "ability": "Power Chord",
+  "stack_attrs": [],
+  "hint": "Innate - Accelerando: Sona generates a stack of Accelerando each time she hits an enemy champion with Hymn of Valor and each time she mitigates sufficient damag"
+ },
+ {
+  "champion": "Sona",
+  "slot": "W",
+  "ability": "Aria of Perseverance",
+  "stack_attrs": [],
+  "hint": "Sona gains a stack of Accelerando whenever she heals a wounded ally or shields a minimum amount of damage for an ally with Aria of Perseverance."
+ },
+ {
+  "champion": "Sylas",
+  "slot": "P",
+  "ability": "Petricite Burst",
+  "stack_attrs": [],
+  "hint": "Innate: Whenever Sylas casts an ability, he generates a stack of Unshackled for 4 seconds, refreshing on subsequent casts and stacking up to 3 times. | Unshackl"
+ },
+ {
+  "champion": "Syndra",
+  "slot": "P",
+  "ability": "Transcendent",
+  "stack_attrs": [],
+  "hint": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. She gains Splinte"
+ },
+ {
+  "champion": "Syndra",
+  "slot": "Q",
+  "ability": "Dark Sphere",
+  "stack_attrs": [],
+  "hint": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+ },
+ {
+  "champion": "TahmKench",
+  "slot": "P",
+  "ability": "An Acquired Taste",
+  "stack_attrs": [],
+  "hint": "Innate: Tahm Kench's basic attacks on-hit and Tongue Lash are empowered to deal 5 : 60 (based on level) (+ 1.25% AP per 100 bonus health) (+ 4% of his bonus hea"
+ },
+ {
+  "champion": "Taliyah",
+  "slot": "W",
+  "ability": "Seismic Shove",
+  "stack_attrs": [],
+  "hint": "Active: Taliyah marks the target location and selects a direction. After 0.792 seconds, a ledge erupts from the area that knocks enemies hit 400 units in the ta"
+ },
+ {
+  "champion": "Talon",
+  "slot": "P",
+  "ability": "Blade's End",
+  "stack_attrs": [],
+  "hint": "Innate: Talon's abilities apply a stack of Wound to enemy champions and large monsters hit for 6 seconds, refreshing on basic attacks and subsequent application"
+ },
+ {
+  "champion": "Taric",
+  "slot": "Q",
+  "ability": "Starlight's Touch",
+  "stack_attrs": [
+   "Maximum Charges"
+  ],
+  "hint": "Active: Taric heals himself and nearby allied champions for 25 (+ 15% AP) (+ 1% of his maximum health) per charge of Starlight's Touch that he periodically stoc"
+ },
+ {
+  "champion": "Teemo",
+  "slot": "R",
+  "ability": "Noxious Trap",
+  "stack_attrs": [
+   "Maximum Charges"
+  ],
+  "hint": "Teemo periodically stocks a Noxious Trap charge, up to a maximum amount."
+ },
+ {
+  "champion": "Thresh",
+  "slot": "P",
+  "ability": "Damnation",
+  "stack_attrs": [],
+  "hint": "Soul: For each stack, Thresh gains 1 ability power and 1 bonus armor."
+ },
+ {
+  "champion": "Tristana",
+  "slot": "P",
+  "ability": "Draw a Bead",
+  "stack_attrs": [],
+  "hint": "Innate: Tristana's basic attacks, Explosive Charge and Buster Shot gain 0 : 167.65 (based on level) bonus range, for a total of 550 : 717.65 (based on level)."
+ },
+ {
+  "champion": "Tristana",
+  "slot": "W",
+  "ability": "Rocket Jump",
+  "stack_attrs": [],
+  "hint": "Scoring an enemy champion takedown or detonating Explosive Charge at maximum stacks on a champion will reset Rocket Jump's cooldown."
+ },
+ {
+  "champion": "Tristana",
+  "slot": "E",
+  "ability": "Explosive Charge",
+  "stack_attrs": [
+   "Bonus Damage Per Stack",
+   "Full Stack Bonus Damage",
+   "Full Stack Physical Damage"
+  ],
+  "hint": "Active: Tristana tosses an explosive charge at the target enemy that attaches to them for 4 seconds. The charge then detonates, dealing physical damage to nearb"
+ },
+ {
+  "champion": "TwistedFate",
+  "slot": "E",
+  "ability": "Stacked Deck",
+  "stack_attrs": [],
+  "hint": "Passive: Twisted Fate gains bonus attack speed. His basic attacks on-hit generate a stack of Stacked Deck, stacking up to 3 times. At 3 stacks, his next basic a"
+ },
+ {
+  "champion": "TwistedFate",
+  "slot": "R",
+  "ability": "Destiny",
+  "stack_attrs": [],
+  "hint": "Active: Twisted Fate marks all targetable enemy champions, revealing them for a duration. Destiny can be recast after 0.5 seconds within the duration."
+ },
+ {
+  "champion": "Twitch",
+  "slot": "P",
+  "ability": "Deadly Venom",
+  "stack_attrs": [],
+  "hint": "Innate: Twitch's basic attacks on-hit apply a stack of Deadly Venom for 6 seconds, refreshing on subsequent applications and stacking up to 6 times. | Deadly Ve"
+ },
+ {
+  "champion": "Twitch",
+  "slot": "W",
+  "ability": "Venom Cask",
+  "stack_attrs": [],
+  "hint": "The area then becomes contaminated for 3 seconds, applying a Deadly Venom stack each second to enemies within and slowing them."
+ },
+ {
+  "champion": "Twitch",
+  "slot": "E",
+  "ability": "Contaminate",
+  "stack_attrs": [
+   "Physical Damage Per Stack"
+  ],
+  "hint": "Contaminate deals additional physical damage and 35% AP magic damage for each stack of Deadly Venom on the target."
+ },
+ {
+  "champion": "Udyr",
+  "slot": "W",
+  "ability": "Iron Mantle",
+  "stack_attrs": [],
+  "hint": "Active - Stance: Udyr enters Mantle Stance, empowering his next two basic attacks on-hit to gain life steal and heal him for 1.2% of his maximum health (+ 8% AP"
+ },
+ {
+  "champion": "Urgot",
+  "slot": "W",
+  "ability": "Purge",
+  "stack_attrs": [],
+  "hint": "Passive: Urgot's other abilities mark enemy champions hit for 5 seconds. Only one enemy can be marked at a time. Additionally, at maximum rank, Purge lasts inde"
+ },
+ {
+  "champion": "Varus",
+  "slot": "Q",
+  "ability": "Piercing Arrow",
+  "stack_attrs": [],
+  "hint": "Active: Varus charges while being slowed by 20% for up to 4 seconds to increase Piercing Arrow's range over the first 1.5 seconds and its effects over the first"
+ },
+ {
+  "champion": "Varus",
+  "slot": "W",
+  "ability": "Blighted Quiver",
+  "stack_attrs": [
+   "Bonus Magic Damage per Stack",
+   "Bonus Magic Damage at Max Stacks",
+   "Maximum Bonus Magic Damage per Stack",
+   "Maximum Bonus Magic Damage at Max Stacks"
+  ],
+  "hint": "Passive: Varus' basic attacks are empowered to deal bonus magic damage and apply a stack of Blight on-hit for 6 seconds, refreshing on subsequent applications a"
+ },
+ {
+  "champion": "Vayne",
+  "slot": "W",
+  "ability": "Silver Bolts",
+  "stack_attrs": [],
+  "hint": "Passive: Vayne's basic attacks on-hit and Condemn apply a stack of Silver Bolts for 3.5 seconds, refreshing on subsequent applications, expiring upon attacking "
+ },
+ {
+  "champion": "Veigar",
+  "slot": "P",
+  "ability": "Phenomenal Evil Power",
+  "stack_attrs": [],
+  "hint": "Innate: Veigar generates a stack of Phenomenal Evil for each enemy champion hit by his abilities, and 5 stacks whenever he scores an enemy champion takedown. | "
+ },
+ {
+  "champion": "Veigar",
+  "slot": "Q",
+  "ability": "Baleful Strike",
+  "stack_attrs": [],
+  "hint": "If this kills an enemy, it generates 1 stack of Phenomenal Evil, tripled against large minions and monsters."
+ },
+ {
+  "champion": "Veigar",
+  "slot": "W",
+  "ability": "Dark Matter",
+  "stack_attrs": [],
+  "hint": "Dark Matter's cooldown is reduced based on stacks of Phenomenal Evil."
+ },
+ {
+  "champion": "Velkoz",
+  "slot": "P",
+  "ability": "Organic Deconstruction",
+  "stack_attrs": [],
+  "hint": "Innate: Vel'Koz's abilities apply a stack of Deconstruction to enemies hit for 7 seconds, refreshing on basic attacks on-hit and subsequent applications and sta"
+ },
+ {
+  "champion": "Velkoz",
+  "slot": "W",
+  "ability": "Void Rift",
+  "stack_attrs": [],
+  "hint": "Vel'Koz periodically stocks a Void Rift charge, up to a maximum of 2."
+ },
+ {
+  "champion": "Velkoz",
+  "slot": "R",
+  "ability": "Life Form Disintegration Ray",
+  "stack_attrs": [],
+  "hint": "Passive - Researched: Applying 3 Deconstruction stacks to an enemy champion marks them as Researched for 7 seconds, refreshing on basic attacks and ability hits"
+ },
+ {
+  "champion": "Vex",
+  "slot": "P",
+  "ability": "Doom 'n Gloom",
+  "stack_attrs": [],
+  "hint": "Innate - Gloom: Nearby enemy champions and monsters that dash or blink will be marked with Gloom for 6 seconds. Vex's next basic attack, which becomes non-proje"
+ },
+ {
+  "champion": "Vex",
+  "slot": "R",
+  "ability": "Shadow Surge",
+  "stack_attrs": [],
+  "hint": "Shadow stops upon hitting an enemy champion to mark them for 4 seconds, during which they are revealed. Shadow Surge can be recast while the target is marked. |"
+ },
+ {
+  "champion": "Vi",
+  "slot": "Q",
+  "ability": "Vault Breaker",
+  "stack_attrs": [],
+  "hint": "Active: Vi charges while being slowed by 15% for up to 4 seconds to increase Vault Breaker's range, speed, and damage over the first 1.25 seconds of the channel"
+ },
+ {
+  "champion": "Vi",
+  "slot": "W",
+  "ability": "Denting Blows",
+  "stack_attrs": [],
+  "hint": "Passive: Vi's basic attacks on-hit and Vault Breaker apply a stack of Denting Blows to enemies hit for 4 seconds, refreshing on subsequent applications and stac"
+ },
+ {
+  "champion": "Vi",
+  "slot": "E",
+  "ability": "Relentless Force",
+  "stack_attrs": [],
+  "hint": "Vi periodically stocks a Relentless Force charge, up to a maximum of 2."
+ },
+ {
+  "champion": "Viego",
+  "slot": "Q",
+  "ability": "Blade of the Ruined King",
+  "stack_attrs": [],
+  "hint": "Passive: Viego's basic attacks deal bonus physical damage on-hit. This damage can critically strike for (170% + 15%) damage, has a minimum threshold and is capp"
+ },
+ {
+  "champion": "Viego",
+  "slot": "W",
+  "ability": "Spectral Maw",
+  "stack_attrs": [],
+  "hint": "Active: Viego charges while being slowed by 10% for up to 3 seconds to increase Spectral Maw's missile range and stun duration over the first second of the chan"
+ },
+ {
+  "champion": "Viktor",
+  "slot": "Q",
+  "ability": "Siphon Power",
+  "stack_attrs": [],
+  "hint": "Active: Viktor throws a draining device at the target enemy that deals magic damage. He also grants himself a shield for 40 : 140 (based on level) (+ 25% AP) fo"
+ },
+ {
+  "champion": "Viktor",
+  "slot": "W",
+  "ability": "Gravity Field",
+  "stack_attrs": [],
+  "hint": "The field applies a stack of Heavy Gravity to enemies within every 0.25 seconds, stacking up to 5 times. The fifth stack consumes them all to knock down and stu"
+ },
+ {
+  "champion": "Vladimir",
+  "slot": "P",
+  "ability": "Crimson Pact",
+  "stack_attrs": [],
+  "hint": "Innate: Vladimir gains (3.333% bonus health) as ability power and (160% AP) as bonus health. These two bonuses do not stack with each other."
+ },
+ {
+  "champion": "Vladimir",
+  "slot": "E",
+  "ability": "Tides of Blood",
+  "stack_attrs": [],
+  "hint": "Active: Vladimir charges for up to 1.5 seconds, during which he increases Tides of Blood's damage over the first second of the channel, and becomes slowed by 20"
+ },
+ {
+  "champion": "Volibear",
+  "slot": "P",
+  "ability": "The Relentless Storm",
+  "stack_attrs": [],
+  "hint": "Innate: Whenever Volibear damages at least one enemy with a basic attack or ability, he generates a stack of The Relentless Storm for 6 seconds, refreshing on s"
+ },
+ {
+  "champion": "Volibear",
+  "slot": "W",
+  "ability": "Frenzied Maul",
+  "stack_attrs": [],
+  "hint": "Active: Volibear slashes the target enemy with his claws to deal physical damage, apply on-hit effects, trigger on-attack effects, and mark the target Wounded f"
+ },
+ {
+  "champion": "Warwick",
+  "slot": "Q",
+  "ability": "Jaws of the Beast",
+  "stack_attrs": [],
+  "hint": "Active: Warwick lunges at the target enemy over 0.264 seconds and bites them, dealing magic damage, healing himself for a percentage of the post-mitigation dama"
+ },
+ {
+  "champion": "Warwick",
+  "slot": "W",
+  "ability": "Blood Hunt",
+  "stack_attrs": [],
+  "hint": "Passive: Warwick senses all enemy champions on the map who are damaged below 50% of their maximum health by him or an allied source, marking them with Blood Hun"
+ },
+ {
+  "champion": "MonkeyKing",
+  "slot": "P",
+  "ability": "Stone Skin",
+  "stack_attrs": [],
+  "hint": "Innate: Wukong gains 6 : 10.47 (based on level) bonus armor and regenerates an additional[ 0.35% of his maximum health every 5 seconds. ][ 0.035% of his maximum"
+ },
+ {
+  "champion": "Xayah",
+  "slot": "P",
+  "ability": "Clean Cuts",
+  "stack_attrs": [],
+  "hint": "Innate: Xayah's ability casts generate 3 stacks of Clean Cuts, lasting for 8 seconds, refreshing on subsequent casts, and stacking up to 5 times. Xayah's basic "
+ },
+ {
+  "champion": "Xerath",
+  "slot": "Q",
+  "ability": "Arcanopulse",
+  "stack_attrs": [],
+  "hint": "Active: Xerath charges while being slowed by 0% : 40% (based on channel time) for up to 3 seconds to increase Arcanopulse's range over the first 1.5 to 1.75 sec"
+ },
+ {
+  "champion": "Xerath",
+  "slot": "R",
+  "ability": "Rite of the Arcane",
+  "stack_attrs": [
+   "Maximum Stacks",
+   "Increased Damage per Stack"
+  ],
+  "hint": "Hitting at least one enemy champion grants a stack of Arcane Perfection during the channel, stacking up to a maximum amount. Each stack increases Arcane Barrage"
+ },
+ {
+  "champion": "XinZhao",
+  "slot": "P",
+  "ability": "Determination",
+  "stack_attrs": [],
+  "hint": "Innate: Xin Zhao's basic attacks on-hit and Wind Becomes Lightning's first slash hit and thrust on at least one enemy hit each generate a stack of Determination"
+ },
+ {
+  "champion": "XinZhao",
+  "slot": "W",
+  "ability": "Wind Becomes Lightning",
+  "stack_attrs": [],
+  "hint": "Active: Xin Zhao unleashes 4 slashes in an arc over the first 0.15 seconds of the cast time, each dealing physical damage to enemies within. After the remaining"
+ },
+ {
+  "champion": "XinZhao",
+  "slot": "E",
+  "ability": "Audacious Charge",
+  "stack_attrs": [],
+  "hint": "Active: Xin Zhao dashes to the target enemy's location, dealing magic damage to them and nearby enemies and slowing all targets hit by 30% for 0.5 seconds. Auda"
+ },
+ {
+  "champion": "XinZhao",
+  "slot": "R",
+  "ability": "Crescent Guard",
+  "stack_attrs": [],
+  "hint": "Passive: Xin Zhao's basic attacks and Audacious Charge apply the Challenged mark to enemy champions hit, with the latter applying the mark to the farthest champ"
+ },
+ {
+  "champion": "Yasuo",
+  "slot": "P",
+  "ability": "Way of the Wanderer",
+  "stack_attrs": [],
+  "hint": "Innate - Resolve: Yasuo generates a stack of Flow for every 59 / 52.5 / 46 (based on level) units he travels by any means. At[ 100 stacks ][ 5900 / 5250 / 4600 "
+ },
+ {
+  "champion": "Yasuo",
+  "slot": "Q",
+  "ability": "Steel Tempest",
+  "stack_attrs": [],
+  "hint": "Active: Yasuo thrusts his sword in a line in the target direction that deals physical damage to enemies hit and applies on-hit and on-attack effects to the firs"
+ },
+ {
+  "champion": "Yasuo",
+  "slot": "E",
+  "ability": "Sweeping Blade",
+  "stack_attrs": [
+   "Bonus Damage per Stack"
+  ],
+  "hint": "Active: Yasuo dashes a fixed distance in the direction of the target enemy and becomes ghosted for 2 seconds, refreshing on subsequent casts. Upon impact, he de"
+ },
+ {
+  "champion": "Yasuo",
+  "slot": "R",
+  "ability": "Last Breath",
+  "stack_attrs": [],
+  "hint": "Active: Yasuo blinks to the opposite side of a visible airborne enemy champion nearest to the cursor, instantly generating maximum Flow while resetting Gatherin"
+ },
+ {
+  "champion": "Yone",
+  "slot": "Q",
+  "ability": "Mortal Steel",
+  "stack_attrs": [],
+  "hint": "Active: Yone thrusts his Steel Sword in a line in the target direction that deals physical damage to enemies hit and applies on-hit and on-attack effects to the"
+ },
+ {
+  "champion": "Yone",
+  "slot": "E",
+  "ability": "Soul Unbound",
+  "stack_attrs": [],
+  "hint": "Spirit Form: Yone becomes ghosted and gains 10% : 30% (based on seconds active) bonus movement speed. His damaging basic attacks and abilities against enemy cha"
+ },
+ {
+  "champion": "Yone",
+  "slot": "R",
+  "ability": "Fate Sealed",
+  "stack_attrs": [],
+  "hint": "Active: Yone prepares a strike over the cast time, then marks all enemies within an area in the target direction, knocking them down and stunning them for 1 sec"
+ },
+ {
+  "champion": "Yorick",
+  "slot": "P",
+  "ability": "Shepherd of Souls",
+  "stack_attrs": [],
+  "hint": "Yorick can use Awakening and Mourning Mist's mark to raise 1 Mist Walker from each grave after a 1-second delay, consuming the graves in the process."
+ },
+ {
+  "champion": "Yunara",
+  "slot": "Q",
+  "ability": "Cultivation of Spirit",
+  "stack_attrs": [],
+  "hint": "Passive: Yunara's basic attacks deal bonus magic damage on-hit. While this ability is inactive, her basic attacks on-attack generate a stack of Unleash for 6 se"
+ },
+ {
+  "champion": "Yuumi",
+  "slot": "P",
+  "ability": "Feline Friendship",
+  "stack_attrs": [],
+  "hint": "Innate: While attached to an ally, Yuumi grants them 2 permanent Friendship stacks whenever they kill enemy champions or minions. The ally with the highest Frie"
+ },
+ {
+  "champion": "Yuumi",
+  "slot": "R",
+  "ability": "Final Chapter",
+  "stack_attrs": [],
+  "hint": "Enemies struck by the waves take magic damage and are slowed by 10% for 1.25 seconds. The slow stacks and refreshes on subsequent hits, up to a total strength o"
+ },
+ {
+  "champion": "Zaahen",
+  "slot": "P",
+  "ability": "Cultivation of War",
+  "stack_attrs": [],
+  "hint": "Innate: Zaahen generates a stack of Determination for each enemy champion damaged by his basic attacks and abilities, lasting for 5 seconds, refreshing on subse"
+ },
+ {
+  "champion": "Zac",
+  "slot": "E",
+  "ability": "Elastic Slingshot",
+  "stack_attrs": [],
+  "hint": "Active: Zac charges for up to 4.5 seconds to increase Elastic Slingshot's range over a cone in the target direction. | Elastic Slingshot can be recast within th"
+ },
+ {
+  "champion": "Zed",
+  "slot": "R",
+  "ability": "Death Mark",
+  "stack_attrs": [],
+  "hint": "Active: Zed becomes untargetable and, after a 0.6-second delay, he dashes to 125 units beyond the target enemy champion from his position at the end of the dela"
+ },
+ {
+  "champion": "Zeri",
+  "slot": "P",
+  "ability": "Living Battery",
+  "stack_attrs": [],
+  "hint": "Innate: Zeri generates 1 charge for every 40 units she travels by any means and 10 charge every time she casts Burst Fire, up to a maximum of 100 charge. Her ba"
+ },
+ {
+  "champion": "Zeri",
+  "slot": "E",
+  "ability": "Spark Surge",
+  "stack_attrs": [],
+  "hint": "Afterwards, she gains Lightning Rounds for 5 seconds, empowering Burst Fire to deal bonus magic damage to the first enemy hit, increased by 0% : 100% (+ 0% : 30"
+ },
+ {
+  "champion": "Zeri",
+  "slot": "R",
+  "ability": "Lightning Crash",
+  "stack_attrs": [],
+  "hint": "Active: Zeri discharges an electric nova that deals magic damage to nearby enemies. If this hits at least one enemy champion, she enters Overcharged for 5 secon"
+ },
+ {
+  "champion": "Ziggs",
+  "slot": "W",
+  "ability": "Satchel Charge",
+  "stack_attrs": [],
+  "hint": "Active: Ziggs hurls a charge to the target location, remaining there for 4 seconds and granting sight of the area. Satchel Charge can be recast within the durat"
+ },
+ {
+  "champion": "Zyra",
+  "slot": "W",
+  "ability": "Rampant Growth",
+  "stack_attrs": [],
+  "hint": "Zyra periodically stocks a Seed charge, up to a maximum of 2. Killing an enemy generates 35% charge toward a Seed, increased to 100% for large enemies and whene"
+ }
+]
