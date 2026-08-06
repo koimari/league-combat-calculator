@@ -7,7 +7,28 @@
   "per_rank1": 8,
   "total_attr": "Total Magic Damage",
   "total_rank1": 80,
-  "implied_ticks": 10.0
+  "implied_ticks": 10.0,
+  "per_tick_ranks": [
+   8,
+   11,
+   14,
+   17,
+   20
+  ],
+  "total_ranks": [
+   80,
+   110,
+   140,
+   170,
+   200
+  ],
+  "implied_ticks_per_rank": [
+   10.0,
+   10.0,
+   10.0,
+   10.0,
+   10.0
+  ]
  },
  {
   "champion": "AurelionSol",
@@ -17,7 +38,26 @@
   "per_rank1": 5.625,
   "total_attr": "Total Maximum Magic Damage",
   "total_rank1": 146.25,
-  "implied_ticks": 26.0
+  "implied_ticks": 26.0,
+  "per_tick_ranks": [
+   5.625,
+   7.5,
+   9.375,
+   11.25,
+   13.125
+  ],
+  "total_ranks": [
+   146.25,
+   195,
+   243.75,
+   292.5
+  ],
+  "implied_ticks_per_rank": [
+   26.0,
+   26.0,
+   26.0,
+   26.0
+  ]
  },
  {
   "champion": "AurelionSol",
@@ -27,7 +67,26 @@
   "per_rank1": 45,
   "total_attr": "Total Maximum Magic Damage",
   "total_rank1": 146.25,
-  "implied_ticks": 3.2
+  "implied_ticks": 3.2,
+  "per_tick_ranks": [
+   45,
+   60,
+   75,
+   90,
+   105
+  ],
+  "total_ranks": [
+   146.25,
+   195,
+   243.75,
+   292.5
+  ],
+  "implied_ticks_per_rank": [
+   3.25,
+   3.25,
+   3.25,
+   3.25
+  ]
  },
  {
   "champion": "AurelionSol",
@@ -37,7 +96,28 @@
   "per_rank1": 2.5,
   "total_attr": "Total Magic Damage",
   "total_rank1": 50,
-  "implied_ticks": 20.0
+  "implied_ticks": 20.0,
+  "per_tick_ranks": [
+   2.5,
+   3.75,
+   5,
+   6.25,
+   7.5
+  ],
+  "total_ranks": [
+   50,
+   75,
+   100,
+   125,
+   150
+  ],
+  "implied_ticks_per_rank": [
+   20.0,
+   20.0,
+   20.0,
+   20.0,
+   20.0
+  ]
  },
  {
   "champion": "Cassiopeia",
@@ -47,7 +127,28 @@
   "per_rank1": 10.71,
   "total_attr": "Total Magic Damage",
   "total_rank1": 75,
-  "implied_ticks": 7.0
+  "implied_ticks": 7.0,
+  "per_tick_ranks": [
+   10.71,
+   15.71,
+   20.71,
+   25.71,
+   30.71
+  ],
+  "total_ranks": [
+   75,
+   110,
+   145,
+   180,
+   215
+  ],
+  "implied_ticks_per_rank": [
+   7.0,
+   7.0,
+   7.0,
+   7.0,
+   7.0
+  ]
  },
  {
   "champion": "Cassiopeia",
@@ -57,7 +158,28 @@
   "per_rank1": 20,
   "total_attr": "Total Magic Damage",
   "total_rank1": 100,
-  "implied_ticks": 5.0
+  "implied_ticks": 5.0,
+  "per_tick_ranks": [
+   20,
+   25,
+   30,
+   35,
+   40
+  ],
+  "total_ranks": [
+   100,
+   125,
+   150,
+   175,
+   200
+  ],
+  "implied_ticks_per_rank": [
+   5.0,
+   5.0,
+   5.0,
+   5.0,
+   5.0
+  ]
  },
  {
   "champion": "Corki",
@@ -67,7 +189,28 @@
   "per_rank1": 30,
   "total_attr": "Total Magic Damage",
   "total_rank1": 150,
-  "implied_ticks": 5.0
+  "implied_ticks": 5.0,
+  "per_tick_ranks": [
+   30,
+   45,
+   60,
+   75,
+   90
+  ],
+  "total_ranks": [
+   150,
+   225,
+   300,
+   375,
+   450
+  ],
+  "implied_ticks_per_rank": [
+   5.0,
+   5.0,
+   5.0,
+   5.0,
+   5.0
+  ]
  },
  {
   "champion": "Corki",
@@ -77,7 +220,28 @@
   "per_rank1": 5,
   "total_attr": "Total Physical Damage",
   "total_rank1": 80,
-  "implied_ticks": 16.0
+  "implied_ticks": 16.0,
+  "per_tick_ranks": [
+   5,
+   8.125,
+   11.25,
+   14.375,
+   17.5
+  ],
+  "total_ranks": [
+   80,
+   130,
+   180,
+   230,
+   280
+  ],
+  "implied_ticks_per_rank": [
+   16.0,
+   16.0,
+   16.0,
+   16.0,
+   16.0
+  ]
  },
  {
   "champion": "DrMundo",
@@ -87,7 +251,28 @@
   "per_rank1": 5,
   "total_attr": "Total Magic Damage",
   "total_rank1": 80,
-  "implied_ticks": 16.0
+  "implied_ticks": 16.0,
+  "per_tick_ranks": [
+   5,
+   8.75,
+   12.5,
+   16.25,
+   20
+  ],
+  "total_ranks": [
+   80,
+   140,
+   200,
+   260,
+   320
+  ],
+  "implied_ticks_per_rank": [
+   16.0,
+   16.0,
+   16.0,
+   16.0,
+   16.0
+  ]
  },
  {
   "champion": "Fiddlesticks",
@@ -97,7 +282,22 @@
   "per_rank1": 37.5,
   "total_attr": "Total Magic Damage",
   "total_rank1": 750,
-  "implied_ticks": 20.0
+  "implied_ticks": 20.0,
+  "per_tick_ranks": [
+   37.5,
+   62.5,
+   87.5
+  ],
+  "total_ranks": [
+   750,
+   1250,
+   1750
+  ],
+  "implied_ticks_per_rank": [
+   20.0,
+   20.0,
+   20.0
+  ]
  },
  {
   "champion": "Fizz",
@@ -107,7 +307,28 @@
   "per_rank1": 5,
   "total_attr": "Total Passive Magic Damage",
   "total_rank1": 30,
-  "implied_ticks": 6.0
+  "implied_ticks": 6.0,
+  "per_tick_ranks": [
+   5,
+   7.5,
+   10,
+   12.5,
+   15
+  ],
+  "total_ranks": [
+   30,
+   45,
+   60,
+   75,
+   90
+  ],
+  "implied_ticks_per_rank": [
+   6.0,
+   6.0,
+   6.0,
+   6.0,
+   6.0
+  ]
  },
  {
   "champion": "Gangplank",
@@ -117,7 +338,22 @@
   "per_rank1": 40,
   "total_attr": "Total Magic Damage",
   "total_rank1": 480,
-  "implied_ticks": 12.0
+  "implied_ticks": 12.0,
+  "per_tick_ranks": [
+   40,
+   70,
+   100
+  ],
+  "total_ranks": [
+   480,
+   840,
+   1200
+  ],
+  "implied_ticks_per_rank": [
+   12.0,
+   12.0,
+   12.0
+  ]
  },
  {
   "champion": "Hecarim",
@@ -127,7 +363,28 @@
   "per_rank1": 20,
   "total_attr": "Total Magic Damage",
   "total_rank1": 100,
-  "implied_ticks": 5.0
+  "implied_ticks": 5.0,
+  "per_tick_ranks": [
+   20,
+   30,
+   40,
+   50,
+   60
+  ],
+  "total_ranks": [
+   100,
+   150,
+   200,
+   250,
+   300
+  ],
+  "implied_ticks_per_rank": [
+   5.0,
+   5.0,
+   5.0,
+   5.0,
+   5.0
+  ]
  },
  {
   "champion": "Hwei",
@@ -137,7 +394,22 @@
   "per_rank1": 2.5,
   "total_attr": "Total Magic Damage",
   "total_rank1": 30,
-  "implied_ticks": 12.0
+  "implied_ticks": 12.0,
+  "per_tick_ranks": [
+   2.5,
+   5,
+   7.5
+  ],
+  "total_ranks": [
+   30,
+   60,
+   90
+  ],
+  "implied_ticks_per_rank": [
+   12.0,
+   12.0,
+   12.0
+  ]
  },
  {
   "champion": "Janna",
@@ -147,7 +419,22 @@
   "per_rank1": 25,
   "total_attr": "Total Heal",
   "total_rank1": 300,
-  "implied_ticks": 12.0
+  "implied_ticks": 12.0,
+  "per_tick_ranks": [
+   25,
+   37.5,
+   50
+  ],
+  "total_ranks": [
+   300,
+   450,
+   600
+  ],
+  "implied_ticks_per_rank": [
+   12.0,
+   12.0,
+   12.0
+  ]
  },
  {
   "champion": "Jayce",
@@ -157,7 +444,31 @@
   "per_rank1": 35,
   "total_attr": "Total Magic Damage",
   "total_rank1": 140,
-  "implied_ticks": 4.0
+  "implied_ticks": 4.0,
+  "per_tick_ranks": [
+   35,
+   50,
+   65,
+   80,
+   95,
+   110
+  ],
+  "total_ranks": [
+   140,
+   200,
+   260,
+   320,
+   380,
+   440
+  ],
+  "implied_ticks_per_rank": [
+   4.0,
+   4.0,
+   4.0,
+   4.0,
+   4.0,
+   4.0
+  ]
  },
  {
   "champion": "Kayn",
@@ -167,7 +478,28 @@
   "per_rank1": 200,
   "total_attr": "Total Capped Monster Damage",
   "total_rank1": 400,
-  "implied_ticks": 2.0
+  "implied_ticks": 2.0,
+  "per_tick_ranks": [
+   200,
+   250,
+   300,
+   350,
+   400
+  ],
+  "total_ranks": [
+   400,
+   500,
+   600,
+   700,
+   800
+  ],
+  "implied_ticks_per_rank": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0
+  ]
  },
  {
   "champion": "Malzahar",
@@ -177,7 +509,28 @@
   "per_rank1": 5,
   "total_attr": "Total Magic Damage",
   "total_rank1": 80,
-  "implied_ticks": 16.0
+  "implied_ticks": 16.0,
+  "per_tick_ranks": [
+   5,
+   7.1875,
+   9.375,
+   11.5625,
+   13.75
+  ],
+  "total_ranks": [
+   80,
+   115,
+   150,
+   185,
+   220
+  ],
+  "implied_ticks_per_rank": [
+   16.0,
+   16.0,
+   16.0,
+   16.0,
+   16.0
+  ]
  },
  {
   "champion": "Malzahar",
@@ -187,7 +540,22 @@
   "per_rank1": 1,
   "total_attr": "Total Magic Damage",
   "total_rank1": 10,
-  "implied_ticks": 10.0
+  "implied_ticks": 10.0,
+  "per_tick_ranks": [
+   12.5,
+   20,
+   27.5
+  ],
+  "total_ranks": [
+   125,
+   200,
+   275
+  ],
+  "implied_ticks_per_rank": [
+   10.0,
+   10.0,
+   10.0
+  ]
  },
  {
   "champion": "Milio",
@@ -197,7 +565,28 @@
   "per_rank1": 2.8,
   "total_attr": "Total Heal",
   "total_rank1": 70,
-  "implied_ticks": 25.0
+  "implied_ticks": 25.0,
+  "per_tick_ranks": [
+   2.8,
+   3.6,
+   4.4,
+   5.2,
+   6
+  ],
+  "total_ranks": [
+   70,
+   90,
+   110,
+   130,
+   150
+  ],
+  "implied_ticks_per_rank": [
+   25.0,
+   25.0,
+   25.0,
+   25.0,
+   25.0
+  ]
  },
  {
   "champion": "MissFortune",
@@ -207,7 +596,28 @@
   "per_rank1": 8.75,
   "total_attr": "Total Magic Damage",
   "total_rank1": 70,
-  "implied_ticks": 8.0
+  "implied_ticks": 8.0,
+  "per_tick_ranks": [
+   8.75,
+   12.5,
+   16.25,
+   20,
+   23.75
+  ],
+  "total_ranks": [
+   70,
+   100,
+   130,
+   160,
+   190
+  ],
+  "implied_ticks_per_rank": [
+   8.0,
+   8.0,
+   8.0,
+   8.0,
+   8.0
+  ]
  },
  {
   "champion": "Naafiri",
@@ -217,7 +627,28 @@
   "per_rank1": 3.5,
   "total_attr": "Total Bleed Physical Damage",
   "total_rank1": 35,
-  "implied_ticks": 10.0
+  "implied_ticks": 10.0,
+  "per_tick_ranks": [
+   3.5,
+   6,
+   8.5,
+   11,
+   13.5
+  ],
+  "total_ranks": [
+   35,
+   60,
+   85,
+   110,
+   135
+  ],
+  "implied_ticks_per_rank": [
+   10.0,
+   10.0,
+   10.0,
+   10.0,
+   10.0
+  ]
  },
  {
   "champion": "Nami",
@@ -227,7 +658,28 @@
   "per_rank1": 20,
   "total_attr": "Total Bonus Magic Damage",
   "total_rank1": 60,
-  "implied_ticks": 3.0
+  "implied_ticks": 3.0,
+  "per_tick_ranks": [
+   20,
+   35,
+   50,
+   65,
+   80
+  ],
+  "total_ranks": [
+   60,
+   105,
+   150,
+   195,
+   240
+  ],
+  "implied_ticks_per_rank": [
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   3.0
+  ]
  },
  {
   "champion": "Nasus",
@@ -237,7 +689,28 @@
   "per_rank1": 10,
   "total_attr": "Total Magic Damage",
   "total_rank1": 100,
-  "implied_ticks": 10.0
+  "implied_ticks": 10.0,
+  "per_tick_ranks": [
+   10,
+   16,
+   22,
+   28,
+   34
+  ],
+  "total_ranks": [
+   100,
+   160,
+   220,
+   280,
+   340
+  ],
+  "implied_ticks_per_rank": [
+   10.0,
+   10.0,
+   10.0,
+   10.0,
+   10.0
+  ]
  },
  {
   "champion": "Nasus",
@@ -247,7 +720,22 @@
   "per_rank1": 1.5,
   "total_attr": "Total Magic Damage",
   "total_rank1": 45,
-  "implied_ticks": 30.0
+  "implied_ticks": 30.0,
+  "per_tick_ranks": [
+   1.5,
+   2,
+   2.5
+  ],
+  "total_ranks": [
+   45,
+   60,
+   75
+  ],
+  "implied_ticks_per_rank": [
+   30.0,
+   30.0,
+   30.0
+  ]
  },
  {
   "champion": "Nidalee",
@@ -257,7 +745,28 @@
   "per_rank1": 10,
   "total_attr": "Total Magic Damage",
   "total_rank1": 40,
-  "implied_ticks": 4.0
+  "implied_ticks": 4.0,
+  "per_tick_ranks": [
+   10,
+   20,
+   30,
+   40,
+   50
+  ],
+  "total_ranks": [
+   40,
+   80,
+   120,
+   160,
+   200
+  ],
+  "implied_ticks_per_rank": [
+   4.0,
+   4.0,
+   4.0,
+   4.0,
+   4.0
+  ]
  },
  {
   "champion": "Nilah",
@@ -267,7 +776,22 @@
   "per_rank1": 15,
   "total_attr": "Total Physical Damage",
   "total_rank1": 60,
-  "implied_ticks": 4.0
+  "implied_ticks": 4.0,
+  "per_tick_ranks": [
+   15,
+   25,
+   35
+  ],
+  "total_ranks": [
+   60,
+   100,
+   140
+  ],
+  "implied_ticks_per_rank": [
+   4.0,
+   4.0,
+   4.0
+  ]
  },
  {
   "champion": "Nocturne",
@@ -277,7 +801,28 @@
   "per_rank1": 20,
   "total_attr": "Total Magic Damage",
   "total_rank1": 80,
-  "implied_ticks": 4.0
+  "implied_ticks": 4.0,
+  "per_tick_ranks": [
+   20,
+   31.25,
+   42.5,
+   53.75,
+   65
+  ],
+  "total_ranks": [
+   80,
+   125,
+   170,
+   215,
+   260
+  ],
+  "implied_ticks_per_rank": [
+   4.0,
+   4.0,
+   4.0,
+   4.0,
+   4.0
+  ]
  },
  {
   "champion": "Nunu",
@@ -287,7 +832,28 @@
   "per_rank1": 15,
   "total_attr": "Total Magic Damage",
   "total_rank1": 45,
-  "implied_ticks": 3.0
+  "implied_ticks": 3.0,
+  "per_tick_ranks": [
+   15,
+   22.5,
+   30,
+   37.5,
+   45
+  ],
+  "total_ranks": [
+   45,
+   67.5,
+   90,
+   112.5,
+   135
+  ],
+  "implied_ticks_per_rank": [
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   3.0
+  ]
  },
  {
   "champion": "Ornn",
@@ -297,7 +863,28 @@
   "per_rank1": 2.4,
   "total_attr": "Total Magic Damage",
   "total_rank1": 12,
-  "implied_ticks": 5.0
+  "implied_ticks": 5.0,
+  "per_tick_ranks": [
+   2.4,
+   2.6,
+   2.8,
+   3,
+   3.2
+  ],
+  "total_ranks": [
+   12,
+   13,
+   14,
+   15,
+   16
+  ],
+  "implied_ticks_per_rank": [
+   5.0,
+   5.0,
+   5.0,
+   5.0,
+   5.0
+  ]
  },
  {
   "champion": "Ornn",
@@ -307,7 +894,28 @@
   "per_rank1": 16,
   "total_attr": "Total Minimum/Minion Damage",
   "total_rank1": 80,
-  "implied_ticks": 5.0
+  "implied_ticks": 5.0,
+  "per_tick_ranks": [
+   16,
+   26,
+   36,
+   46,
+   56
+  ],
+  "total_ranks": [
+   80,
+   130,
+   180,
+   230,
+   280
+  ],
+  "implied_ticks_per_rank": [
+   5.0,
+   5.0,
+   5.0,
+   5.0,
+   5.0
+  ]
  },
  {
   "champion": "Ornn",
@@ -317,7 +925,28 @@
   "per_rank1": 52,
   "total_attr": "Total Monster Damage Cap",
   "total_rank1": 260,
-  "implied_ticks": 5.0
+  "implied_ticks": 5.0,
+  "per_tick_ranks": [
+   52,
+   64,
+   76,
+   88,
+   100
+  ],
+  "total_ranks": [
+   260,
+   320,
+   380,
+   440,
+   500
+  ],
+  "implied_ticks_per_rank": [
+   5.0,
+   5.0,
+   5.0,
+   5.0,
+   5.0
+  ]
  },
  {
   "champion": "Rell",
@@ -327,7 +956,22 @@
   "per_rank1": 18.75,
   "total_attr": "Total Magic Damage",
   "total_rank1": 150,
-  "implied_ticks": 8.0
+  "implied_ticks": 8.0,
+  "per_tick_ranks": [
+   18.75,
+   31.25,
+   43.75
+  ],
+  "total_ranks": [
+   150,
+   250,
+   350
+  ],
+  "implied_ticks_per_rank": [
+   8.0,
+   8.0,
+   8.0
+  ]
  },
  {
   "champion": "Renekton",
@@ -337,7 +981,28 @@
   "per_rank1": 5,
   "total_attr": "Total Physical Damage",
   "total_rank1": 15,
-  "implied_ticks": 3.0
+  "implied_ticks": 3.0,
+  "per_tick_ranks": [
+   5,
+   20,
+   35,
+   50,
+   65
+  ],
+  "total_ranks": [
+   10,
+   40,
+   70,
+   100,
+   130
+  ],
+  "implied_ticks_per_rank": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0
+  ]
  },
  {
   "champion": "Renekton",
@@ -347,7 +1012,22 @@
   "per_rank1": 30,
   "total_attr": "Total Magic Damage",
   "total_rank1": 900,
-  "implied_ticks": 30.0
+  "implied_ticks": 30.0,
+  "per_tick_ranks": [
+   30,
+   75,
+   120
+  ],
+  "total_ranks": [
+   900,
+   2250,
+   3600
+  ],
+  "implied_ticks_per_rank": [
+   30.0,
+   30.0,
+   30.0
+  ]
  },
  {
   "champion": "Samira",
@@ -357,7 +1037,28 @@
   "per_rank1": 20,
   "total_attr": "Total Physical Damage",
   "total_rank1": 40,
-  "implied_ticks": 2.0
+  "implied_ticks": 2.0,
+  "per_tick_ranks": [
+   20,
+   35,
+   50,
+   65,
+   80
+  ],
+  "total_ranks": [
+   40,
+   70,
+   100,
+   130,
+   160
+  ],
+  "implied_ticks_per_rank": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0
+  ]
  },
  {
   "champion": "Samira",
@@ -367,7 +1068,22 @@
   "per_rank1": 20,
   "total_attr": "Total Physical Damage",
   "total_rank1": 200,
-  "implied_ticks": 10.0
+  "implied_ticks": 10.0,
+  "per_tick_ranks": [
+   20,
+   40,
+   60
+  ],
+  "total_ranks": [
+   200,
+   400,
+   600
+  ],
+  "implied_ticks_per_rank": [
+   10.0,
+   10.0,
+   10.0
+  ]
  },
  {
   "champion": "Samira",
@@ -377,7 +1093,22 @@
   "per_rank1": 5,
   "total_attr": "Total Minion Damage",
   "total_rank1": 50,
-  "implied_ticks": 10.0
+  "implied_ticks": 10.0,
+  "per_tick_ranks": [
+   5,
+   10,
+   15
+  ],
+  "total_ranks": [
+   50,
+   100,
+   150
+  ],
+  "implied_ticks_per_rank": [
+   10.0,
+   10.0,
+   10.0
+  ]
  },
  {
   "champion": "Skarner",
@@ -387,7 +1118,28 @@
   "per_rank1": 10,
   "total_attr": "Total Bonus Physical Damage",
   "total_rank1": 30,
-  "implied_ticks": 3.0
+  "implied_ticks": 3.0,
+  "per_tick_ranks": [
+   10,
+   20,
+   30,
+   40,
+   50
+  ],
+  "total_ranks": [
+   30,
+   60,
+   90,
+   120,
+   150
+  ],
+  "implied_ticks_per_rank": [
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   3.0
+  ]
  },
  {
   "champion": "Soraka",
@@ -397,7 +1149,28 @@
   "per_rank1": 5,
   "total_attr": "Total Heal",
   "total_rank1": 60,
-  "implied_ticks": 12.0
+  "implied_ticks": 12.0,
+  "per_tick_ranks": [
+   5,
+   6.25,
+   7.5,
+   8.75,
+   10
+  ],
+  "total_ranks": [
+   60,
+   75,
+   90,
+   105,
+   120
+  ],
+  "implied_ticks_per_rank": [
+   12.0,
+   12.0,
+   12.0,
+   12.0,
+   12.0
+  ]
  },
  {
   "champion": "Teemo",
@@ -407,7 +1180,22 @@
   "per_rank1": 50,
   "total_attr": "Total Magic Damage",
   "total_rank1": 200,
-  "implied_ticks": 4.0
+  "implied_ticks": 4.0,
+  "per_tick_ranks": [
+   50,
+   81.25,
+   112.5
+  ],
+  "total_ranks": [
+   200,
+   325,
+   450
+  ],
+  "implied_ticks_per_rank": [
+   4.0,
+   4.0,
+   4.0
+  ]
  },
  {
   "champion": "Trundle",
@@ -417,7 +1205,22 @@
   "per_rank1": 2.5,
   "total_attr": "Total Magic Damage",
   "total_rank1": 20,
-  "implied_ticks": 8.0
+  "implied_ticks": 8.0,
+  "per_tick_ranks": [
+   2.5,
+   3.125,
+   3.75
+  ],
+  "total_ranks": [
+   20,
+   25,
+   30
+  ],
+  "implied_ticks_per_rank": [
+   8.0,
+   8.0,
+   8.0
+  ]
  },
  {
   "champion": "Trundle",
@@ -427,7 +1230,22 @@
   "per_rank1": 2.5,
   "total_attr": "Total Healing",
   "total_rank1": 20,
-  "implied_ticks": 8.0
+  "implied_ticks": 8.0,
+  "per_tick_ranks": [
+   2.5,
+   3.125,
+   3.75
+  ],
+  "total_ranks": [
+   20,
+   25,
+   30
+  ],
+  "implied_ticks_per_rank": [
+   8.0,
+   8.0,
+   8.0
+  ]
  },
  {
   "champion": "Udyr",
@@ -437,7 +1255,67 @@
   "per_rank1": 0.63,
   "total_attr": "Total Healing",
   "total_rank1": 10.0,
-  "implied_ticks": 15.9
+  "implied_ticks": 15.9,
+  "per_tick_ranks": [
+   0.63,
+   0.8970588235294118,
+   1.1641176470588235,
+   1.4311764705882353,
+   1.698235294117647,
+   1.9652941176470589,
+   2.2323529411764707,
+   2.4994117647058824,
+   2.7664705882352942,
+   3.033529411764706,
+   3.300588235294118,
+   3.5676470588235296,
+   3.8347058823529414,
+   4.101764705882354,
+   4.368823529411765,
+   4.635882352941176,
+   4.902941176470589,
+   5.170000000000001
+  ],
+  "total_ranks": [
+   10.0,
+   14.273529411764706,
+   18.54705882352941,
+   22.820588235294117,
+   27.094117647058823,
+   31.36764705882353,
+   35.641176470588235,
+   39.91470588235294,
+   44.188235294117646,
+   48.46176470588235,
+   52.73529411764706,
+   57.008823529411764,
+   61.28235294117647,
+   65.55588235294118,
+   69.82941176470588,
+   74.10294117647058,
+   78.37647058823529,
+   82.65
+  ],
+  "implied_ticks_per_rank": [
+   15.87,
+   15.91,
+   15.93,
+   15.95,
+   15.95,
+   15.96,
+   15.97,
+   15.97,
+   15.97,
+   15.98,
+   15.98,
+   15.98,
+   15.98,
+   15.98,
+   15.98,
+   15.98,
+   15.99,
+   15.99
+  ]
  },
  {
   "champion": "Udyr",
@@ -447,7 +1325,31 @@
   "per_rank1": 10,
   "total_attr": "Total Magic Damage",
   "total_rank1": 80,
-  "implied_ticks": 8.0
+  "implied_ticks": 8.0,
+  "per_tick_ranks": [
+   10,
+   18,
+   26,
+   34,
+   42,
+   50
+  ],
+  "total_ranks": [
+   80,
+   144,
+   208,
+   272,
+   336,
+   400
+  ],
+  "implied_ticks_per_rank": [
+   8.0,
+   8.0,
+   8.0,
+   8.0,
+   8.0,
+   8.0
+  ]
  },
  {
   "champion": "Viktor",
@@ -457,7 +1359,22 @@
   "per_rank1": 65,
   "total_attr": "Total Magic Damage",
   "total_rank1": 490,
-  "implied_ticks": 7.5
+  "implied_ticks": 7.5,
+  "per_tick_ranks": [
+   65,
+   105,
+   145
+  ],
+  "total_ranks": [
+   490,
+   805,
+   1120
+  ],
+  "implied_ticks_per_rank": [
+   7.54,
+   7.67,
+   7.72
+  ]
  },
  {
   "champion": "Vladimir",
@@ -467,7 +1384,28 @@
   "per_rank1": 20,
   "total_attr": "Total Magic Damage",
   "total_rank1": 80,
-  "implied_ticks": 4.0
+  "implied_ticks": 4.0,
+  "per_tick_ranks": [
+   20,
+   33.75,
+   47.5,
+   61.25,
+   75
+  ],
+  "total_ranks": [
+   80,
+   135,
+   190,
+   245,
+   300
+  ],
+  "implied_ticks_per_rank": [
+   4.0,
+   4.0,
+   4.0,
+   4.0,
+   4.0
+  ]
  },
  {
   "champion": "MonkeyKing",
@@ -477,7 +1415,22 @@
   "per_rank1": 1,
   "total_attr": "Total Physical Damage",
   "total_rank1": 8,
-  "implied_ticks": 8.0
+  "implied_ticks": 8.0,
+  "per_tick_ranks": [
+   1,
+   1.5,
+   2
+  ],
+  "total_ranks": [
+   8,
+   12,
+   16
+  ],
+  "implied_ticks_per_rank": [
+   8.0,
+   8.0,
+   8.0
+  ]
  },
  {
   "champion": "Xayah",
@@ -487,7 +1440,28 @@
   "per_rank1": 45,
   "total_attr": "Total Physical Damage",
   "total_rank1": 90,
-  "implied_ticks": 2.0
+  "implied_ticks": 2.0,
+  "per_tick_ranks": [
+   45,
+   60,
+   75,
+   90,
+   105
+  ],
+  "total_ranks": [
+   90,
+   120,
+   150,
+   180,
+   210
+  ],
+  "implied_ticks_per_rank": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0
+  ]
  },
  {
   "champion": "Xayah",
@@ -497,7 +1471,28 @@
   "per_rank1": 22.5,
   "total_attr": "Total Reduced Damage",
   "total_rank1": 45,
-  "implied_ticks": 2.0
+  "implied_ticks": 2.0,
+  "per_tick_ranks": [
+   22.5,
+   30,
+   37.5,
+   45,
+   52.5
+  ],
+  "total_ranks": [
+   45,
+   60,
+   75,
+   90,
+   105
+  ],
+  "implied_ticks_per_rank": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0
+  ]
  },
  {
   "champion": "Yuumi",
@@ -507,7 +1502,22 @@
   "per_rank1": 30,
   "total_attr": "Total Heal",
   "total_rank1": 150,
-  "implied_ticks": 5.0
+  "implied_ticks": 5.0,
+  "per_tick_ranks": [
+   30,
+   50,
+   70
+  ],
+  "total_ranks": [
+   150,
+   250,
+   350
+  ],
+  "implied_ticks_per_rank": [
+   5.0,
+   5.0,
+   5.0
+  ]
  },
  {
   "champion": "Yuumi",
@@ -517,7 +1527,22 @@
   "per_rank1": 75,
   "total_attr": "Total Magic Damage",
   "total_rank1": 150,
-  "implied_ticks": 2.0
+  "implied_ticks": 2.0,
+  "per_tick_ranks": [
+   75,
+   125,
+   175
+  ],
+  "total_ranks": [
+   150,
+   250,
+   350
+  ],
+  "implied_ticks_per_rank": [
+   2.0,
+   2.0,
+   2.0
+  ]
  },
  {
   "champion": "Zaahen",
@@ -527,7 +1552,28 @@
   "per_rank1": 7.5,
   "total_attr": "Total Physical Damage",
   "total_rank1": 15,
-  "implied_ticks": 2.0
+  "implied_ticks": 2.0,
+  "per_tick_ranks": [
+   7.5,
+   15,
+   22.5,
+   30,
+   37.5
+  ],
+  "total_ranks": [
+   15,
+   30,
+   45,
+   60,
+   75
+  ],
+  "implied_ticks_per_rank": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0
+  ]
  },
  {
   "champion": "Zac",
@@ -537,7 +1583,22 @@
   "per_rank1": 120,
   "total_attr": "Total Magic Damage",
   "total_rank1": 300,
-  "implied_ticks": 2.5
+  "implied_ticks": 2.5,
+  "per_tick_ranks": [
+   120,
+   190,
+   260
+  ],
+  "total_ranks": [
+   300,
+   475,
+   650
+  ],
+  "implied_ticks_per_rank": [
+   2.5,
+   2.5,
+   2.5
+  ]
  },
  {
   "champion": "Zeri",
@@ -547,7 +1608,28 @@
   "per_rank1": 3.14,
   "total_attr": "Total Physical Damage",
   "total_rank1": 22,
-  "implied_ticks": 7.0
+  "implied_ticks": 7.0,
+  "per_tick_ranks": [
+   3.14,
+   3.71,
+   4.29,
+   4.86,
+   5.43
+  ],
+  "total_ranks": [
+   22,
+   26,
+   30,
+   34,
+   38
+  ],
+  "implied_ticks_per_rank": [
+   7.01,
+   7.01,
+   6.99,
+   7.0,
+   7.0
+  ]
  },
  {
   "champion": "Zeri",
@@ -557,7 +1639,28 @@
   "per_rank1": 6.29,
   "total_attr": "Total Critical Strike Damage",
   "total_rank1": 44,
-  "implied_ticks": 7.0
+  "implied_ticks": 7.0,
+  "per_tick_ranks": [
+   6.29,
+   7.43,
+   8.57,
+   9.71,
+   10.86
+  ],
+  "total_ranks": [
+   44,
+   52,
+   60,
+   68,
+   76
+  ],
+  "implied_ticks_per_rank": [
+   7.0,
+   7.0,
+   7.0,
+   7.0,
+   7.0
+  ]
  },
  {
   "champion": "Zeri",
@@ -567,6 +1670,27 @@
   "per_rank1": 7.23,
   "total_attr": "Total Infinity Edge Damage",
   "total_rank1": 50.6,
-  "implied_ticks": 7.0
+  "implied_ticks": 7.0,
+  "per_tick_ranks": [
+   7.23,
+   8.54,
+   9.86,
+   11.17,
+   12.49
+  ],
+  "total_ranks": [
+   50.6,
+   59.8,
+   69,
+   78.2,
+   87.4
+  ],
+  "implied_ticks_per_rank": [
+   7.0,
+   7.0,
+   7.0,
+   7.0,
+   7.0
+  ]
  }
 ]
