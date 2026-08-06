@@ -1,7 +1,7 @@
 {
  "Ahri": {
-  "verdict": "gap",
-  "gap_summary": "No E-series work closed Ahri's only flagged mechanic: Essence Theft (P) consumes 9 stacks to heal 35-95, listed in e3-stacks with no stack attributes; the module (ahri.py, empty ASSUMPTIONS, no P slot/option) still does not model it and Ahri is absent from HEALING_RULE_CHAMPIONS — the CP-era note ('P passive heal absent from both module and atoms') is still open and undocumented. Q/W/E/R damage rows (two-pass Q, three-flame W, charm E, three-dash R) remain fully modeled.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: P Essence Theft heal modeled (35-95 by level + 20% AP, p_essence_fragments=9, one heal per fight) in healing.py. tests/test_e9_fix_2.py. (E9.5 closure verified by tests + gates)",
   "module": "ahri.py",
   "slots": {
    "P": "out_of_scope",
@@ -180,8 +180,8 @@
   }
  },
  "Illaoi": {
-  "verdict": "gap",
-  "gap_summary": "E4-1 kept the tentacle summon damage (P tentacle procs via p_tentacles, Q command row, W, E, R) but the tentacle SELF-HEAL (5% of missing health per tentacle champion hit) is still neither modeled nor documented: Illaoi remains absent from HEALING_RULE_CHAMPIONS and the module ASSUMPTIONS never mention the heal (probe shows no Illaoi healing events). This is the exact CP-era gap, still open.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: tentacle self-heal modeled as 5% of missing health per champion hit (live formula) in healing.py. tests/test_e9_fix_2.py. (E9.5 closure verified by tests + gates)",
   "module": "illaoi.py",
   "slots": {
    "P": "modeled",
@@ -193,7 +193,7 @@
  },
  "Janna": {
   "verdict": "ok",
-  "gap_summary": "E1-b5 added Monsoon's per-tick heal to HEALING_RULE_CHAMPIONS and E8d authored E (Eye of the Storm shield) and R (Monsoon heal, Total Heal 300-600 + 150% AP) as ally-support events, closing the CP-era review question. Q charge min/max interpolation, W Zephyr and P Tailwind on-hit are modeled; the module's ASSUMPTIONS text still calls E/R 'utility' (stale — the scanner now emits them).",
+  "gap_summary": "E1-b5 added Monsoon's per-tick heal to HEALING_RULE_CHAMPIONS and E8d authored E (Eye of the Storm shield) and R (Monsoon heal, Total Heal 300-600 + 150% AP) as ally-support events, closing the CP-era review question. Q charge min/max interpolation, W Zephyr and P Tailwind on-hit are modeled; the module's ASSUMPTIONS text still calls E/R 'utility' (stale \u2014 the scanner now emits them).",
   "module": "janna.py",
   "slots": {
    "P": "modeled",
@@ -217,7 +217,7 @@
  },
  "KSante": {
   "verdict": "review",
-  "gap_summary": "E1-b6 evaluated but deliberately skipped the All Out conversion self-heal (test file documents: P/Q/W/E/R carry damage/shields/buffs only in the data, no heal term; the e8 grey-health design lists K'Sante R as a skip awaiting grey-health), and the module documents the omnivamp/resist conversion as explicit state — so the CP-era gap is now a documented boundary. E shield is emitted by the support scanner (Footwork 240 in a probe). P marks, Q, W charge + All Out true branch and R are modeled.",
+  "gap_summary": "E1-b6 evaluated but deliberately skipped the All Out conversion self-heal (test file documents: P/Q/W/E/R carry damage/shields/buffs only in the data, no heal term; the e8 grey-health design lists K'Sante R as a skip awaiting grey-health), and the module documents the omnivamp/resist conversion as explicit state \u2014 so the CP-era gap is now a documented boundary. E shield is emitted by the support scanner (Footwork 240 in a probe). P marks, Q, W charge + All Out true branch and R are modeled.",
   "module": "ksante.py",
   "slots": {
    "P": "modeled",
@@ -229,7 +229,7 @@
  },
  "Karma": {
   "verdict": "ok",
-  "gap_summary": "E1-b6 added the Renewal (Mantra W) missing-health heal (17% + 1%/100 AP, twice per tether) to HEALING_RULE_CHAMPIONS; a probe with w_renewal=true shows the W packet named 'Renewal' plus two heals (100.2 and 83.1), closing the CP-era gap. Mantra Q/W variants, tether recast (w_tether_holds) and E/R utility rows are modeled; note the Mantra-W damage row reads zero from the Renewal entry (it carries no Magic Damage leveling) — a minor residual of the tether-damage read.",
+  "gap_summary": "E1-b6 added the Renewal (Mantra W) missing-health heal (17% + 1%/100 AP, twice per tether) to HEALING_RULE_CHAMPIONS; a probe with w_renewal=true shows the W packet named 'Renewal' plus two heals (100.2 and 83.1), closing the CP-era gap. Mantra Q/W variants, tether recast (w_tether_holds) and E/R utility rows are modeled; note the Mantra-W damage row reads zero from the Renewal entry (it carries no Magic Damage leveling) \u2014 a minor residual of the tether-damage read.",
   "module": "karma.py",
   "slots": {
    "P": "modeled",
@@ -264,8 +264,8 @@
   }
  },
  "Kled": {
-  "verdict": "gap",
-  "gap_summary": "E5-1 fixed the W rank read (4th-attack bonus now uses the actual W rank instead of clamping to level) and E8a documented the Skaarl mount pool (400-1400 HP) as a revive-boundary pattern, closing the CP-era review items on W and P. Still open and undocumented: the e8-interactions worklist lists Q (Pocket Pistol) Grievous Wounds, but kled.py declares no GRIEVOUS_WOUNDS_SOURCES and the module ASSUMPTIONS never mention it (E8b implemented only Katarina R and Varus E). R charge shield remains documented utility state.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: Q Pocket Pistol Grievous Wounds declared (GRIEVOUS_WOUNDS_SOURCES={'Q'}, 40% for 3s). tests/test_e9_fix_2.py. (E9.5 closure verified by tests + gates)",
   "module": "kled.py",
   "slots": {
    "P": "no_damage",
@@ -276,8 +276,8 @@
   }
  },
  "LeeSin": {
-  "verdict": "gap",
-  "gap_summary": "The e8 shield worklist item is now closed by the support scanner (Safeguard W shield emits 240 in a probe), but the CP-era Q two-stage gap remains: the reviewed-packets asset carries Resonating Strike (120-360 + 180% bAD) as a Q variant while reviewed_batch_03 pins Lee Sin's Q to simple_damage('Physical Damage') with no option exposed, so the recast is silently unmodeled and undocumented (probe shows only Sonic Wave). R collision splash is single-target-irrelevant; P Flurry stays a documented no-damage row.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: Q prices both stages (Sonic Wave + Resonating Strike recast interpolated by missing health, q_recast option). tests/test_e9_fix_2.py. (E9.5 closure verified by tests + gates)",
   "module": "lee_sin.py",
   "slots": {
    "P": "no_damage",
@@ -301,7 +301,7 @@
  },
  "Lulu": {
   "verdict": "review",
-  "gap_summary": "E8d closed the E shield item (Help, Pix! Shield Strength is emitted as an ally-support event), but the CP-era review's main open question persists: P Pix bolt damage (3 bolts per auto, 5-39 + 5% AP each) is still unmodeled — P stays out_of_scope with only the generic packet reason, and the auto-attack policy adds no Pix bolts (probe sources show only Q and E). Q damage and E damage are modeled; W/R remain documented out.",
+  "gap_summary": "E8d closed the E shield item (Help, Pix! Shield Strength is emitted as an ally-support event), but the CP-era review's main open question persists: P Pix bolt damage (3 bolts per auto, 5-39 + 5% AP each) is still unmodeled \u2014 P stays out_of_scope with only the generic packet reason, and the auto-attack policy adds no Pix bolts (probe sources show only Q and E). Q damage and E damage are modeled; W/R remain documented out.",
   "module": "lulu.py",
   "slots": {
    "P": "out_of_scope",
@@ -325,7 +325,7 @@
  },
  "Mel": {
   "verdict": "review",
-  "gap_summary": "E5-2 fixed the W mis-read (Replicated Projectile modifier is a % of an unmodeled enemy projectile — now prices no damage and is documented) and R now prices the flat Magic Damage row plus the (4/7/10 + 4% AP)-per-stack Overwhelm term (r_overwhelm_stacks option). Remaining CP-era partial reads are unfixed and undocumented: Q prices only the Initial Explosion row (the 6-10-bolt volley's Total Magic Damage row is dropped) and E prices only the orb hit (the solar-field per-second DoT 16-64 is dropped). The P stored-damage execute is documented as a kill boundary.",
+  "gap_summary": "E5-2 fixed the W mis-read (Replicated Projectile modifier is a % of an unmodeled enemy projectile \u2014 now prices no damage and is documented) and R now prices the flat Magic Damage row plus the (4/7/10 + 4% AP)-per-stack Overwhelm term (r_overwhelm_stacks option). Remaining CP-era partial reads are unfixed and undocumented: Q prices only the Initial Explosion row (the 6-10-bolt volley's Total Magic Damage row is dropped) and E prices only the orb hit (the solar-field per-second DoT 16-64 is dropped). The P stored-damage execute is documented as a kill boundary.",
   "module": "mel.py",
   "slots": {
    "P": "out_of_scope",
@@ -348,8 +348,8 @@
   }
  },
  "Naafiri": {
-  "verdict": "gap",
-  "gap_summary": "E2-2 priced Q's bleed as 10 sourced 0.5s ticks (Total Bleed == per-tick x10), but the CP-era gap items beyond the bleed are still absent and undocumented: Q's recast bonus damage (30-160 + 40-140% bAD, Minimum/Maximum Bonus Physical Damage rows) and Q's self-heal (45-105 + 40% bAD; Naafiri absent from HEALING_RULE_CHAMPIONS), plus E's Flurry explosion (60-160 + 80% bAD — the packet prices only the Dash row, dropping ~80% of E's Total). P packmate summon and W/R shields remain documented out.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: Q recast bonus (Min/Max rows), Q heal (45-105 + 40% bAD) in healing.py, E dash + Flurry explosion (Total Physical Damage). tests/test_e9_fix_2.py. (E9.5 closure verified by tests + gates)",
   "module": "naafiri.py",
   "slots": {
    "P": "out_of_scope",
@@ -361,7 +361,7 @@
  },
  "Nautilus": {
   "verdict": "review",
-  "gap_summary": "E5-2 fixed P (Staggering Blow now prices the sourced 14-128 per-level on-hit instead of the root-duration row mis-read as flat). Still open from the CP-era review: W Titan's Wrath prices only one Magic Damage per Instance (probe: 23.0) instead of the Total Magic Damage (30-70 + 40% AP) of the two-instance Pain of Wrath, and R prices the chase-eruption Magic Damage row (probe: 148.0 at rank 3) rather than the primary-target Increased Damage (150-400 + 80% AP) — neither read is documented in the module; the W shield is now emitted by the support scanner (371.5 in a probe).",
+  "gap_summary": "E5-2 fixed P (Staggering Blow now prices the sourced 14-128 per-level on-hit instead of the root-duration row mis-read as flat). Still open from the CP-era review: W Titan's Wrath prices only one Magic Damage per Instance (probe: 23.0) instead of the Total Magic Damage (30-70 + 40% AP) of the two-instance Pain of Wrath, and R prices the chase-eruption Magic Damage row (probe: 148.0 at rank 3) rather than the primary-target Increased Damage (150-400 + 80% AP) \u2014 neither read is documented in the module; the W shield is now emitted by the support scanner (371.5 in a probe).",
   "module": "nautilus.py",
   "slots": {
    "P": "modeled",
@@ -396,8 +396,8 @@
   }
  },
  "Pantheon": {
-  "verdict": "gap",
-  "gap_summary": "No E-series fix touched Pantheon (module unchanged, not in any E2-E8 partition): the CP-era gap items are all still open and undocumented — Q prices only the Hurl base (70-190 + 115% bAD + 50% AP) while the <20%-HP execute (Increased Hurl Damage 155-455 + 230% bAD + 100% AP) and the Mortal Will empowered per-level term (20-265.88) are dropped; R prices the center Magic Damage but not the Reduced edge row; and W Shield Vault emits damage (98.2 in a probe) from the %max-HP Physical Damage row read as flat despite MODULE_COVERAGE declaring W out_of_scope.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: Q Mortal Will per-level term + q_execute branch, W %max-HP row (not flat), R edge row via r_edge. tests/test_e9_fix_2.py. (E9.5 closure verified by tests + gates)",
   "module": "pantheon.py",
   "slots": {
    "P": "out_of_scope",
@@ -420,8 +420,8 @@
   }
  },
  "Rammus": {
-  "verdict": "review",
-  "gap_summary": "The e5-mismodeled W item was never fixed (Rammus is not in the E5 partition): the reviewed packet still prices Defensive Ball Curl from the Bonus Armor row as magic damage (probe: 75.1, i.e. 47 + 60% armor against MR) while the actual thorns damage (15 + 10% total armor + 10% total MR) has no leveling row in the cache — a reviewed packet pricing an ability incorrectly, and the mis-read is not documented. Q and R rows match; E taunt and P spiked-shell remain documented out.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: W no longer misprices the Bonus Armor row as damage; thorns formula (15 + 10% armor + 10% MR per enemy basic) via w_thorns_autos option, default 0. tests/test_e9_fix_3.py. (E9.5 closure verified by tests + gates)",
   "module": "rammus.py",
   "slots": {
    "P": "out_of_scope",
@@ -432,8 +432,8 @@
   }
  },
  "Renata": {
-  "verdict": "gap",
-  "gap_summary": "The e3-stacks P Leverage mechanic is still neither modeled nor documented: Renata's on-hit mark deals 1-2% max-HP per level bonus magic damage but P stays out_of_scope with only the generic 'no enemy-damage formula' reason (factually wrong), and the probe shows no P damage. E Loyalty Program's Shield Strength (50-110 + 50% AP) is likewise not granted — the description marker ('Renata and allies struck are granted a shield') is not recognized as self-targeted, so the scanner drops it with no teammates. Q/E damage remain modeled; W bailout and R berserk stay documented out.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: P Leverage on-hit mark proc (1-2% max HP by level + 2%/100 AP); E self-shield (50-110 + 50% AP) via self_shield_events. tests/test_e9_fix_2.py. (E9.5 closure verified by tests + gates)",
   "module": "renata_glasc.py",
   "slots": {
    "P": "out_of_scope",
@@ -445,7 +445,7 @@
  },
  "Riven": {
   "verdict": "review",
-  "gap_summary": "E5-2 fixed P Runic Blade (empowered autos now deal the sourced 30-46.76% AD bonus as an on-hit), closing the CP-era review's P item. Still open from the same review and undocumented: R1 Blade of the Exile's AD buff (20/25/30% bonus AD for 15s) is not expressed — the R slot prices only the Wind Slash (300-600 + 165% bAD) — so all physical damage in the ult window is understated; E Valor shield stays documented no_damage.",
+  "gap_summary": "E5-2 fixed P Runic Blade (empowered autos now deal the sourced 30-46.76% AD bonus as an on-hit), closing the CP-era review's P item. Still open from the same review and undocumented: R1 Blade of the Exile's AD buff (20/25/30% bonus AD for 15s) is not expressed \u2014 the R slot prices only the Wind Slash (300-600 + 165% bAD) \u2014 so all physical damage in the ult window is understated; E Valor shield stays documented no_damage.",
   "module": "riven.py",
   "slots": {
    "P": "modeled",
@@ -492,8 +492,8 @@
   }
  },
  "Sion": {
-  "verdict": "gap",
-  "gap_summary": "E5-1 fixed Q (Minimum/Maximum Physical Damage rows interpolated by q_charge_fraction, default fully charged) and the W Soul Furnace shield is now emitted by the support scanner (461.4 in a probe), closing those CP-era items. Still open and undocumented from the CP-era review: E Roar of the Slayer's 25% armor reduction for 4s (present in the cache as prose, no module note) is not modeled, so all physical damage after E is overstated; P Glory in Death stays a documented no-damage row.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: E armor reduction debuff (25% for 4s, target_debuff) so post-E physical damage shreds. tests/test_e9_fix_2.py. (E9.5 closure verified by tests + gates)",
   "module": "sion.py",
   "slots": {
    "P": "no_damage",
@@ -504,8 +504,8 @@
   }
  },
  "Smolder": {
-  "verdict": "gap",
-  "gap_summary": "E1-b2 added the R self-heal to HEALING_RULE_CHAMPIONS (flat 100-170 + 50% bAD + 75% AP; probe: 170 heal), closing the CP-era gap's primary item. Still open and undocumented: Q's 0-75% (+0-22.5%) crit-chance damage increase and the tier-3 225-stack true-damage burn are not modeled — Q prices the flat base + summed AD ratios only, and P Dragon Practice stays out_of_scope with no boundary note tying it to the burn; E flight utility remains documented out.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: Q crit-chance scaling (0-75% + 0-22.5%) + tier-3 225-stack true burn (2.5%/100 bAD + 0.5%/100 stacks max HP). tests/test_e9_fix_2.py. (E9.5 closure verified by tests + gates)",
   "module": "smolder.py",
   "slots": {
    "P": "out_of_scope",
@@ -541,7 +541,7 @@
  },
  "Taric": {
   "verdict": "ok",
-  "gap_summary": "E1-b5 added Starlight's Touch per-charge heal to HEALING_RULE_CHAMPIONS and the E8d follow-up wired the prose heal into the support scanner (probe: 241.4 self heal + 48.3 ally-support heal), and the W Bastion shield is emitted via the Shield Strength attribute — closing the CP-era gap on Q/W. E Dazzle damage is modeled; R Cosmic Radiance stays documented invulnerability state and P Bravado remains out_of_scope. The module docstring is stale (still claims the Q heal hook is missing).",
+  "gap_summary": "E1-b5 added Starlight's Touch per-charge heal to HEALING_RULE_CHAMPIONS and the E8d follow-up wired the prose heal into the support scanner (probe: 241.4 self heal + 48.3 ally-support heal), and the W Bastion shield is emitted via the Shield Strength attribute \u2014 closing the CP-era gap on Q/W. E Dazzle damage is modeled; R Cosmic Radiance stays documented invulnerability state and P Bravado remains out_of_scope. The module docstring is stale (still claims the Q heal hook is missing).",
   "module": "taric.py",
   "slots": {
    "P": "out_of_scope",
@@ -576,8 +576,8 @@
   }
  },
  "Urgot": {
-  "verdict": "gap",
-  "gap_summary": "The CP-era gap was never touched by any E-series partition (module unchanged): W Purge still prices ONE shot (12 + 20-34% AD; probe: 29.4) instead of the ~12 shots over 4s at 3.0 AS, understating his core DPS; P Echoing Flames leg on-hit (%max-HP damage) remains out_of_scope with no damage; R Fear Beyond Death's sub-25% execute/fear is unmodeled. E Disdain's shield is now emitted by the support scanner (135.0 in a probe), closing that sub-item. None of the remaining items are documented in the module.",
+  "verdict": "ok",
+  "gap_summary": "E9.5: W all 12 Purge shots at 3.0 AS, P Echoing Flames legs (40-100% AD + 2-6% max HP, p_legs), R execute documented as kill boundary. tests/test_e9_fix_2.py. (E9.5 closure verified by tests + gates)",
   "module": "urgot.py",
   "slots": {
    "P": "out_of_scope",
@@ -613,7 +613,7 @@
  },
  "Vladimir": {
   "verdict": "review",
-  "gap_summary": "E0/E1 modeled the Q/W/R self-heals (Transfusion 40, Hemoplague 350, Sanguine Pool 22.5 x4 in probes) and E2-3 priced E's charged ticks, so the CP-era heal family is closed. The one remaining CP-era review item is still open and undocumented in the module: R Hemoplague's 10% increased-damage-taken debuff is not expressed by the R packet (burst + heal only) — a damage-modification mechanic the audit flagged as a judgment call. P Crimson Pact stat conversion stays documented out.",
+  "gap_summary": "E0/E1 modeled the Q/W/R self-heals (Transfusion 40, Hemoplague 350, Sanguine Pool 22.5 x4 in probes) and E2-3 priced E's charged ticks, so the CP-era heal family is closed. The one remaining CP-era review item is still open and undocumented in the module: R Hemoplague's 10% increased-damage-taken debuff is not expressed by the R packet (burst + heal only) \u2014 a damage-modification mechanic the audit flagged as a judgment call. P Crimson Pact stat conversion stays documented out.",
   "module": "vladimir.py",
   "slots": {
    "P": "out_of_scope",
@@ -649,7 +649,7 @@
  },
  "Yunara": {
   "verdict": "review",
-  "gap_summary": "No E-series fix touched Yunara (module unchanged): the CP-era review items persist — W prices only the initial impact (55-215 + 85% bAD + 50% AP) while the lingering-bead DoT (15% of impact per 0.25s; 'Linger Magic Damage per Tick'/'Total Expanded Damage' rows in the cache) is dropped, and R is priced as the empowered Arc of Ruin base (160/320/480, no ratio) rather than a buff — both undocumented in the module. Q/E rows and the minion-only execute notes are modeled.",
+  "gap_summary": "No E-series fix touched Yunara (module unchanged): the CP-era review items persist \u2014 W prices only the initial impact (55-215 + 85% bAD + 50% AP) while the lingering-bead DoT (15% of impact per 0.25s; 'Linger Magic Damage per Tick'/'Total Expanded Damage' rows in the cache) is dropped, and R is priced as the empowered Arc of Ruin base (160/320/480, no ratio) rather than a buff \u2014 both undocumented in the module. Q/E rows and the minion-only execute notes are modeled.",
   "module": "yunara.py",
   "slots": {
    "P": "modeled",
@@ -661,7 +661,7 @@
  },
  "Zac": {
   "verdict": "review",
-  "gap_summary": "E1-b4 added the Cell Division blob heal (4-8.47% max health per ability hit; probe: 7 heals of ~203), E8d added the sourced revive (50% max health after the level-bracketed 8-4s window, 300s cd), and E2-3 priced R as initial + 3 reduced bounces (Total row) — closing the CP-era P-mis-model and R items; the old P packet no longer emits damage. Still open and undocumented from the CP-era gap: Q prices the per-hit 'Magic Damage' row (probe: 118.4, one hit of 60-180 + 30% AP) instead of 'Total Magic Damage' (2x, the two-hit Stretching Strikes) — a reviewed packet pricing an ability incompletely.",
+  "gap_summary": "E1-b4 added the Cell Division blob heal (4-8.47% max health per ability hit; probe: 7 heals of ~203), E8d added the sourced revive (50% max health after the level-bracketed 8-4s window, 300s cd), and E2-3 priced R as initial + 3 reduced bounces (Total row) \u2014 closing the CP-era P-mis-model and R items; the old P packet no longer emits damage. Still open and undocumented from the CP-era gap: Q prices the per-hit 'Magic Damage' row (probe: 118.4, one hit of 60-180 + 30% AP) instead of 'Total Magic Damage' (2x, the two-hit Stretching Strikes) \u2014 a reviewed packet pricing an ability incompletely.",
   "module": "zac.py",
   "slots": {
    "P": "out_of_scope",

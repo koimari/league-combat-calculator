@@ -74,7 +74,9 @@ def main():
     champs = json.loads(CHAMPS_JSON.read_text())
     items = json.loads(ITEMS_JSON.read_text())
     audits = {}
-    for f in AUDIT_DIR.glob("batch-*.json"):
+    # Sorted so the newest (batch-e9-*) audits win over the CP-era batches
+    # (dict.update keeps the last writer per key).
+    for f in sorted(AUDIT_DIR.glob("batch-*.json")):
         audits.update(json.loads(f.read_text()))
 
     (OUT / "champions").mkdir(parents=True, exist_ok=True)

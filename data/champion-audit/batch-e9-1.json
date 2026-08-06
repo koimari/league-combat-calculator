@@ -300,8 +300,8 @@
   }
  },
  "Lucian": {
-  "verdict": "gap",
-  "gap_summary": "CP-era gap NOT closed: R (The Culling) is still priced as ONE shot (packet base 15/30/45 + ratios) while the wiki cache carries up to 22 shots over the 3s channel ('Physical Damage Per Shot' row, count unset) \u2014 a ~20x undercount of the ability's damage. P Lightslinger's second-shot damage (50-60% AD per ability) is also declared out_of_scope with the generic 'no enemy-damage formula' reason although the wiki P is a damaging on-attack mechanic; neither carries a boundary note in the module. Q/W packets are correct single-instance reads; E dash documented. Verdict: gap (R channel count + P double-shot).",
+  "verdict": "ok",
+  "gap_summary": "E9.5: R The Culling priced all 22 channel shots (22x Per-Shot row); P Lightslinger double-shot engine path (50/55/60% AD by level). tests/test_e9_fix_1.py. (E9.5 closure verified by tests + gates)",
   "module": "lucian.py",
   "slots": {
    "P": "out_of_scope",
@@ -336,8 +336,8 @@
   }
  },
  "MissFortune": {
-  "verdict": "gap",
-  "gap_summary": "New module (no CP-era entry) but gap: E2 fixed E (Make It Rain) to 8 sourced ticks, but R (Bullet Time) still prices ONE wave (packet base 20/30/40 + ratios) while the wiki cache carries 'Total Waves' 14/16/18 and 'Maximum Total Physical Damage' 280/500/720 \u2014 a ~14-18x undercount with no boundary note anywhere in the module. Q double-up modeled; P Love Tap and W Strut documented out_of_scope. Verdict: gap (R wave count).",
+  "verdict": "ok",
+  "gap_summary": "E9.5: R Bullet Time priced all sourced waves (14/16/18 x Per-Wave at the interval cadence). tests/test_e9_fix_1.py. (E9.5 closure verified by tests + gates)",
   "module": "miss_fortune.py",
   "slots": {
    "P": "out_of_scope",
@@ -348,8 +348,8 @@
   }
  },
  "Morgana": {
-  "verdict": "gap",
-  "gap_summary": "CP-era gap NOT closed: W (Tormented Shadow) still prices ONE tick (packet base 18-70 = 'Maximum Damage Per Tick') while the wiki carries 'Maximum Total Damage' 180-700 over the 5s/10-tick storm (~10x undercount); R (Soul Shackles) prices only the initial hit (200-350) while the wiki's 'Total Magic Damage' 400-700 includes the second tether-break hit; and P Soul Siphon spellvamp is unmodeled (Morgana absent from HEALING_RULE_CHAMPIONS, P declared no_damage). No boundary note for any of these in the module. Verdict: gap (W ticks, R second hit, P heal).",
+  "verdict": "ok",
+  "gap_summary": "E9.5: W 10 sourced ticks (Max Per-Tick x10 == Max Total 180-700), R initial+tether-break (Total Magic Damage 2x), P Soul Siphon 18% ability-damage heal in healing.py. tests/test_e9_fix_1.py. (E9.5 closure verified by tests + gates)",
   "module": "morgana.py",
   "slots": {
    "P": "out_of_scope",
@@ -384,8 +384,8 @@
   }
  },
  "Nunu": {
-  "verdict": "gap",
-  "gap_summary": "New module (no CP-era entry) but gap: Q (Consume) is priced from the 'Non-Champion True Damage' row (400-1200) \u2014 the wrong basis for a champion-combat calculator \u2014 while the wiki cache effect[2] carries 'Champion Magic Damage' 60-220 + 65% AP + 5% bonus HP (plus champion heal rows), which the module ignores with no note. E2 fixed E to the 3-snowball volley; W/R damage modeled. Verdict: gap (Q champion-damage basis).",
+  "verdict": "ok",
+  "gap_summary": "E9.5: Q prices the Champion Magic Damage row (60-220 + 65% AP + 5% bonus HP) instead of the minion Non-Champion row; Q heal (Base Champion Heal x1.5 below 50% HP) in healing.py. tests/test_e9_fix_1.py. (E9.5 closure verified by tests + gates)",
   "module": "nunu_willump.py",
   "slots": {
    "P": "out_of_scope",
@@ -540,8 +540,8 @@
   }
  },
  "Talon": {
-  "verdict": "gap",
-  "gap_summary": "CP-era gap NOT closed: P (Blade's End) is declared out_of_scope with the generic 'no enemy-damage formula' reason although the wiki cache carries the per-level bleed damage (80-303.53 + 210% bonus AD on the 3-stack consume) \u2014 Talon's main burst finisher is silently absent. Q's self-heal is also unmodeled (Talon absent from HEALING_RULE_CHAMPIONS). W two-hit and R modeled; E parkour documented. Verdict: gap (P bleed + Q heal).",
+  "verdict": "ok",
+  "gap_summary": "E9.5: P Blade's End 3-stack bleed priced (per-level total + 210% bAD as 16 sourced ticks, passive_procs option); Q on-kill heal in healing.py. tests/test_e9_fix_1.py. (E9.5 closure verified by tests + gates)",
   "module": "talon.py",
   "slots": {
    "P": "out_of_scope",
@@ -624,8 +624,8 @@
   }
  },
  "Warwick": {
-  "verdict": "gap",
-  "gap_summary": "CP-era gap NOT closed: R (Infinite Duress) is declared no_damage with the generic 'no enemy-damage formula' reason although the wiki cache carries 'Total Magic Damage' 175/350/525 + 167% bonus AD over the 1.5s channel (3 on-hit applications) \u2014 and healing.py already has an R 100%-heal rule that can never fire because the module emits no R damage events. Q damage + Q heal modeled (verified 86.1 heal at level 18); W/E/P documented out_of_scope. Verdict: gap (R damage).",
+  "verdict": "ok",
+  "gap_summary": "E9.5: R Infinite Duress priced (Total Magic Damage 175/350/525 + 167% bAD over the 1.5s channel), enabling the existing R-heal rule. tests/test_e9_fix_1.py. (E9.5 closure verified by tests + gates)",
   "module": "warwick.py",
   "slots": {
    "P": "out_of_scope",
