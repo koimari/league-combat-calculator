@@ -127,7 +127,7 @@
   {
    "id": "e9-e1-aatrox-umbral-dash-heal",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E1",
    "setup": {
     "champion": "Aatrox",
@@ -174,7 +174,7 @@
   {
    "id": "e9-e2-malzahar-malefic-visions",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E2",
    "setup": {
     "champion": "Malzahar",
@@ -210,7 +210,7 @@
   {
    "id": "e9-e3-varus-blight-detonation",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E3",
    "setup": {
     "champion": "Varus",
@@ -250,7 +250,7 @@
   {
    "id": "e9-e3-nasus-siphoning-stacks",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E3",
    "setup": {
     "champion": "Nasus",
@@ -289,7 +289,7 @@
   {
    "id": "e9-e4-zyra-plant-attacks",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E4",
    "setup": {
     "champion": "Zyra",
@@ -327,7 +327,7 @@
   {
    "id": "e9-e4-yorick-mist-walkers",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E4",
    "setup": {
     "champion": "Yorick",
@@ -369,7 +369,7 @@
   {
    "id": "e9-e5-zed-death-mark",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E5",
    "setup": {
     "champion": "Zed",
@@ -405,7 +405,7 @@
   {
    "id": "e9-e5-veigar-primordial-burst",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E5",
    "setup": {
     "champion": "Veigar",
@@ -441,7 +441,7 @@
   {
    "id": "e9-e5-sion-decimating-smash",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E5",
    "setup": {
     "champion": "Sion",
@@ -477,7 +477,7 @@
   {
    "id": "e9-e8-rengar-battle-roar-grey",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E8",
    "setup": {
     "champion": "Rengar",
@@ -525,7 +525,7 @@
   {
    "id": "e9-e8-annie-molten-shield",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -564,7 +564,7 @@
   {
    "id": "e9-e8-anivia-rebirth",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E8",
    "setup": {
     "champion": "Anivia",
@@ -604,7 +604,7 @@
   {
    "id": "e9-e8-morellonomicon-grievous",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E8",
    "setup": {
     "champion": "Aatrox",
@@ -641,19 +641,19 @@
     "kind": "grievous",
     "healing_events": [
      {
-      "time": 0.0,
+      "time": 0.25,
       "raw": 277.8,
       "applied": 166.7,
       "factor": 0.6
      },
      {
-      "time": 0.6,
+      "time": 0.85,
       "raw": 50.7,
       "applied": 30.4,
       "factor": 0.6
      },
      {
-      "time": 6.6,
+      "time": 6.85,
       "raw": 277.8,
       "applied": 166.7,
       "factor": 0.6
@@ -664,14 +664,14 @@
     "reduction_sources": [
      "Morellonomicon \u00b7 Grievous Wounds"
     ],
-    "formula": "Annie's Morellonomicon wounds Aatrox for 3s per hit: every Umbral Dash heal inside the window keeps 60% (40% cut). Sum of cuts = 242.5"
+    "formula": "Annie's Morellonomicon wounds Aatrox for 3s per hit: every Umbral Dash heal inside the window keeps 60% (40% cut). F2: both sides now play their optimal rotations, shifting every event +0.25s (Annie opens E->R, Aatrox opens R); the cut amounts are unchanged. Sum of cuts = 242.5"
    },
    "practice_tool_steps": "Practice Tool: Annie buys Morellonomicon. Aatrox casts spells to heal (Umbral Dash passive) while wounded; combat log heals show the 40% reduction (raw 277.8 -> 166.7, etc.) for 3 seconds after each of Annie's hits."
   },
   {
    "id": "e9-e8-serpents-fang-shield-cut",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -709,17 +709,18 @@
     "kind": "support_shield",
     "source": "Molten Shield",
     "shield": 200.0,
-    "applied": 130.0,
-    "received": 130.0,
+    "applied": 200.0,
+    "received": 200.0,
     "venom_factor": 0.65,
-    "formula": "Ahri's ranged Serpent's Fang venom cuts shields granted inside the 3s window by the sourced 35% (keep 65%): 200 x 0.65 = 130"
+    "formula": "Ahri's ranged Serpent's Fang venom cuts shields granted inside the 3s window by the sourced 35% (keep 65%). F2: Annie's optimal rotation opens with E (Molten Shield), granting the 200 shield at t=0 \u2014 before Ahri's first venom application lands at the same timestamp \u2014 so it lands uncut (200) and is fully absorbed. The venom-cut window itself stays covered by e9-item-serpents-fang-venom.",
+    "absorbed": 200.0
    },
    "practice_tool_steps": "Practice Tool: Ahri buys Serpent's Fang (ranged -> 35% cut). Annie casts E (Molten Shield 200) while the venom window is active; the shield lands at 130 (combat log)."
   },
   {
    "id": "e9-item-serpents-fang-venom",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "item",
    "setup": {
     "champion": "Katarina",
@@ -768,7 +769,7 @@
   {
    "id": "e9-item-fimbulwinter-everlasting",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "item",
    "setup": {
     "champion": "Ahri",
@@ -807,7 +808,7 @@
   {
    "id": "e9-item-steraks-lifeline",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "item",
    "setup": {
     "champion": "Darius",
@@ -851,15 +852,15 @@
     "bonus_health": 400,
     "max_health": 2990.0,
     "triggered": true,
-    "death_time": 10.78,
-    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 10.78"
+    "death_time": 9.702,
+    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 9.702 (F2: Aatrox and Zed enemies now play their optimal rotations, shifting the incoming damage timeline earlier)."
    },
    "practice_tool_steps": "Practice Tool: Darius buys Sterak's Gage (400 bonus HP). Take heavy burst from 3 enemies; when HP crosses below 30%, the Lifeline shield of 240 appears (combat log) and absorbs 240 damage."
   },
   {
    "id": "e9-item-bloodthirster-lifesteal",
    "tier": "local",
-   "sha": "a6fc91214412421246095fa9b08abfe989e09460",
+   "sha": "6e7efab85c57ad6f0f1008b9252d091895bbd3cb",
    "workstream": "item",
    "setup": {
     "champion": "Ashe",

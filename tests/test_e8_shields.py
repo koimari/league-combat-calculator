@@ -256,9 +256,12 @@ def test_camille_api_adaptive_defenses_absorbs_known_incoming_hit():
     assert len(rows) == 1
     survival = _main_survival(combat)
     assert survival["support_shield_received"] == pytest.approx(rows[0]["amount"])
-    # The 2s shield absorbs hits inside its window (Aatrox's opening W
-    # and first autos); it cannot out-absorb the sourced amount.
-    assert 0 < survival["shield_absorbed"] < rows[0]["amount"]
+    # F2 order note: Aatrox now opens with its optimal zero-damage
+    # World Ender, so the first hit (Q) lands at t=0.25 — inside the 2s
+    # Adaptive Defenses window.  The shield absorbs the entire sourced
+    # amount and can never exceed it.
+    assert 0 < survival["shield_absorbed"] <= rows[0]["amount"]
+    assert survival["shield_absorbed"] == pytest.approx(rows[0]["amount"])
 
 
 # ---------------------------------------------------------------------------
