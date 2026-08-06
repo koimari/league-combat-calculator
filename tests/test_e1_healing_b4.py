@@ -167,12 +167,9 @@ def test_zac_cell_division_heals_percent_max_health_per_ability_hit():
 
 
 def test_skipped_champions_have_no_self_heal_rule():
-    # Pyke P and Rengar W heal from damage taken (grey health), and Udyr's
-    # W heal is prose-only / Awaken-recast-only; none of them should emit a
-    # champion self-heal in the 1v1 ledger.
-    for champion in ("Pyke", "Rengar", "Udyr"):
-        combat = _fight(
-            champion,
-            ranks=None if champion == "Udyr" else {"Q": 5, "W": 5, "E": 5, "R": 3},
-        )
+    # Pyke P and Rengar W heal from damage taken (grey health); neither
+    # should emit a champion self-heal in the 1v1 ledger. (Udyr's W Iron
+    # Mantle heal is now implemented — see test_e3_udyr_yuumi_heals.py.)
+    for champion in ("Pyke", "Rengar"):
+        combat = _fight(champion, ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
         assert not _main_heals(combat), f"{champion} must not self-heal"
