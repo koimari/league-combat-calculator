@@ -1,0 +1,2180 @@
+{
+ "Kled": {
+  "P": {
+   "ability": "Skaarl the Cowardly Lizard",
+   "attrs": [
+    [
+     "Bonus Damage",
+     [
+      400,
+      442.35,
+      486.76,
+      533.24,
+      581.76,
+      632.35
+     ]
+    ]
+   ],
+   "desc": "Innate: Kled rides his semi-trusty mount, Skaarl. While Mounted, all damage dealt to the duo is suffered by Skaarl, who has 400 : 1400 (based on level"
+  },
+  "Q": {
+   "ability": "Bear Trap on a Rope",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      30,
+      55,
+      80,
+      105,
+      130
+     ]
+    ],
+    [
+     "Minion and Small Monster Damage",
+     [
+      45,
+      82.5,
+      120,
+      157.5,
+      195
+     ]
+    ],
+    [
+     "Physical Damage",
+     [
+      60,
+      110,
+      160,
+      210,
+      260
+     ]
+    ],
+    [
+     "Total Physical Damage",
+     [
+      90,
+      165,
+      240,
+      315,
+      390
+     ]
+    ],
+    [
+     "Slow",
+     [
+      30,
+      35,
+      40,
+      45,
+      50
+     ]
+    ]
+   ],
+   "desc": "Active: Kled throws a bear trap in the target direction that deals physical damage to enemies hit, increased to 150% against minions, small pets, and "
+  },
+  "W": {
+   "ability": "Violent Tendencies",
+   "attrs": [
+    [
+     "Additional Physical Damage",
+     [
+      20,
+      30,
+      40,
+      50,
+      60
+     ]
+    ],
+    [
+     "Structure Additional Damage",
+     [
+      62.0,
+      63.75,
+      65.5,
+      67.25,
+      69.0,
+      70.75
+     ]
+    ]
+   ],
+   "desc": "Passive: Kled periodically gains Violent Tendencies, which starts expiring upon his next basic attack."
+  },
+  "E": {
+   "ability": "Jousting",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      35,
+      60,
+      85,
+      110,
+      135
+     ]
+    ],
+    [
+     "Total Physical Damage",
+     [
+      70,
+      120,
+      170,
+      220,
+      270
+     ]
+    ]
+   ],
+   "desc": "Active: Skaarl dashes in the target direction, though not through terrain, dealing physical damage to enemies she passes through and pulling minions, "
+  },
+  "R": {
+   "ability": "Chaaaaaaaarge!!!",
+   "attrs": [
+    [
+     "Total Shield",
+     [
+      200,
+      300,
+      400
+     ]
+    ],
+    [
+     "Initial Shield",
+     [
+      40,
+      60,
+      80
+     ]
+    ],
+    [
+     "Shield Per Instance",
+     [
+      20,
+      30,
+      40
+     ]
+    ],
+    [
+     "Minimum Magic Damage",
+     [
+      4,
+      6,
+      8
+     ]
+    ],
+    [
+     "Maximum Magic Damage",
+     [
+      12,
+      18,
+      24
+     ]
+    ]
+   ],
+   "desc": "Active: Kled & Skaarl charge toward the target location, automatically navigating terrain along the way, during which they are ghosted, immune to crow"
+  }
+ },
+ "Mel": {
+  "P": {
+   "ability": "Searing Brilliance",
+   "attrs": [
+    [
+     "Per-Level Scaling",
+     [
+      8,
+      9.29,
+      10.59,
+      11.88,
+      13.18,
+      14.47
+     ]
+    ],
+    [
+     "Per-Level Scaling",
+     [
+      72,
+      83.65,
+      95.29,
+      106.94,
+      118.59,
+      130.24
+     ]
+    ]
+   ],
+   "desc": "Innate: Mel's basic attacks and abilities apply a stack of Overwhelm for each instance of damage they deal to enemies for 5 seconds, refreshing on sub"
+  },
+  "Q": {
+   "ability": "Radiant Volley",
+   "attrs": [
+    [
+     "Initial Explosion Magic Damage",
+     [
+      60,
+      85,
+      110,
+      135,
+      160
+     ]
+    ],
+    [
+     "Magic Damage per Subsequent Explosion",
+     [
+      5,
+      7,
+      9,
+      11,
+      13
+     ]
+    ],
+    [
+     "Number of Bolts",
+     [
+      6,
+      7,
+      8,
+      9,
+      10
+     ]
+    ],
+    [
+     "Total Magic Damage",
+     [
+      85,
+      127,
+      173,
+      223,
+      277
+     ]
+    ]
+   ],
+   "desc": "Active: Mel launches a barrage of luminous bolts at the target location over 0.5 seconds which distribute evenly in the area. Each bolt explodes upon "
+  },
+  "W": {
+   "ability": "Rebuttal",
+   "attrs": [
+    [
+     "Shield",
+     [
+      80,
+      110,
+      140,
+      170,
+      200
+     ]
+    ],
+    [
+     "Replicated Projectile Magic Damage Modifier",
+     [
+      40,
+      45,
+      50,
+      55,
+      60
+     ]
+    ],
+    [
+     "Replicated Projectile Physical Damage Modifier",
+     [
+      28,
+      31.5,
+      35,
+      38.5,
+      42
+     ]
+    ]
+   ],
+   "desc": "Active: Mel forms a protective barrier around herself for 0.75 seconds, granting herself a shield for the duration, and gaining 40% bonus movement spe"
+  },
+  "E": {
+   "ability": "Solar Snare",
+   "attrs": [
+    [
+     "Orb Magic Damage",
+     [
+      60,
+      105,
+      150,
+      195,
+      240
+     ]
+    ],
+    [
+     "Field Magic Damage per Tick",
+     [
+      2,
+      3.5,
+      5,
+      6.5,
+      8
+     ]
+    ],
+    [
+     "Field Magic Damage per Second",
+     [
+      16,
+      28,
+      40,
+      52,
+      64
+     ]
+    ],
+    [
+     "Orb Minion Magic Damage",
+     [
+      30,
+      52.5,
+      75,
+      97.5,
+      120
+     ]
+    ],
+    [
+     "Field Minion Magic Damage per Tick",
+     [
+      1,
+      1.75,
+      2.5,
+      3.25,
+      4
+     ]
+    ],
+    [
+     "Field Magic Damage per Second",
+     [
+      8,
+      14,
+      20,
+      26,
+      32
+     ]
+    ]
+   ],
+   "desc": "Active: Mel fires an orb in the target direction that grants sight of its surroundings every 0.25 seconds as it travels. Enemies hit by the orb are de"
+  },
+  "R": {
+   "ability": "Golden Eclipse",
+   "attrs": [
+    [
+     "Increased Stored Damage",
+     [
+      10,
+      20,
+      30
+     ]
+    ],
+    [
+     "Stored Damage Increase per Stack",
+     [
+      1,
+      2,
+      3
+     ]
+    ],
+    [
+     "Magic Damage",
+     [
+      125,
+      200,
+      275
+     ]
+    ]
+   ],
+   "desc": "Passive: Overwhelm stacks store more damage."
+  }
+ },
+ "MonkeyKing": {
+  "P": {
+   "ability": "Stone Skin",
+   "attrs": [
+    [
+     "Per-Level Scaling",
+     [
+      6,
+      6.24,
+      6.47,
+      6.71,
+      6.94,
+      7.18
+     ]
+    ],
+    [
+     "Per-Level Scaling",
+     [
+      6,
+      6.24,
+      6.47,
+      6.71,
+      6.94,
+      7.18
+     ]
+    ],
+    [
+     "Per-Level Scaling",
+     [
+      36,
+      37.41,
+      38.82,
+      40.24,
+      41.65,
+      43.06
+     ]
+    ]
+   ],
+   "desc": "Innate: Wukong gains 6 : 10.47 (based on level) bonus armor and regenerates an additional[ 0.35% of his maximum health every 5 seconds. ][ 0.035% of h"
+  },
+  "Q": {
+   "ability": "Crushing Blow",
+   "attrs": [
+    [
+     "Bonus Range",
+     [
+      135,
+      145,
+      155,
+      165,
+      175
+     ]
+    ],
+    [
+     "Bonus Physical Damage",
+     [
+      20,
+      45,
+      70,
+      95,
+      120
+     ]
+    ],
+    [
+     "Armor Reduction",
+     [
+      10,
+      15,
+      20,
+      25,
+      30
+     ]
+    ]
+   ],
+   "desc": "Active: Wukong empowers his next basic attack within 5 seconds to have an uncancellable windup, gain bonus range, deal bonus physical damage, and infl"
+  },
+  "W": {
+   "ability": "Warrior Trickster",
+   "attrs": [
+    [
+     "Clone Outgoing Damage",
+     [
+      40,
+      45,
+      50,
+      55,
+      60
+     ]
+    ]
+   ],
+   "desc": "Active: Wukong enters invisibility for 1 second and dashes in the target direction, leaving behind a clone of himself at his casting position for 4 se"
+  },
+  "E": {
+   "ability": "Nimbus Strike",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      80,
+      120,
+      160,
+      200,
+      240
+     ]
+    ],
+    [
+     "Bonus Attack Speed",
+     [
+      40,
+      45,
+      50,
+      55,
+      60
+     ]
+    ]
+   ],
+   "desc": "Active: Wukong dashes to the target enemy's location and sends out untargetable clones to strike up to two additional enemies near the target's locati"
+  },
+  "R": {
+   "ability": "Cyclone",
+   "attrs": [
+    [
+     "Physical Damage Per Tick",
+     [
+      1,
+      1.5,
+      2
+     ]
+    ],
+    [
+     "Total Physical Damage",
+     [
+      8,
+      12,
+      16
+     ]
+    ],
+    [
+     "Maximum Total Physical Damage",
+     [
+      16,
+      24,
+      32
+     ]
+    ]
+   ],
+   "desc": "Active: Wukong spins his staff around for up to 2 seconds, becoming ghosted and gaining 20% bonus movement speed. The staff deals physical damage ever"
+  }
+ },
+ "Nautilus": {
+  "P": {
+   "ability": "Staggering Blow",
+   "attrs": [
+    [
+     "Per-Level Scaling",
+     [
+      14,
+      20,
+      26,
+      32,
+      38,
+      44
+     ]
+    ],
+    [
+     "Bonus Damage",
+     [
+      0.75,
+      1,
+      1.25,
+      1.5
+     ]
+    ]
+   ],
+   "desc": "Innate: Nautilus' basic attacks are empowered to deal 14 : 128 (based on level) bonus physical damage and root the target for 0.75 : 1.5 (based on lev"
+  },
+  "Q": {
+   "ability": "Dredge Line",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      85,
+      130,
+      175,
+      220,
+      265
+     ]
+    ]
+   ],
+   "desc": "Active: Nautilus hurls his anchor in the target direction that stops on the first enemy or terrain hit."
+  },
+  "W": {
+   "ability": "Titan's Wrath",
+   "attrs": [
+    [
+     "Shield Strength",
+     [
+      50,
+      60,
+      70,
+      80,
+      90
+     ]
+    ],
+    [
+     "Total Magic Damage",
+     [
+      30,
+      40,
+      50,
+      60,
+      70
+     ]
+    ],
+    [
+     "Magic Damage per Instance",
+     [
+      15,
+      20,
+      25,
+      30,
+      35
+     ]
+    ]
+   ],
+   "desc": "Active: Nautilus grants himself a shield for 6 seconds, and while it holds, his basic attacks are empowered to apply Pain of Wrath to the target and e"
+  },
+  "E": {
+   "ability": "Riptide",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      55,
+      90,
+      125,
+      160,
+      195
+     ]
+    ],
+    [
+     "Reduced Damage",
+     [
+      27.5,
+      45,
+      62.5,
+      80,
+      97.5
+     ]
+    ],
+    [
+     "Maximum Total Damage",
+     [
+      110,
+      180,
+      250,
+      320,
+      390
+     ]
+    ],
+    [
+     "Slow",
+     [
+      30,
+      35,
+      40,
+      45,
+      50
+     ]
+    ],
+    [
+     "Monster Bonus Damage",
+     [
+      125,
+      165,
+      205,
+      245,
+      285
+     ]
+    ]
+   ],
+   "desc": "Active: Nautilus sends three waves of explosions that radiate from him over 0.561 seconds. Each wave deals magic damage to enemies hit, reduced to 50%"
+  },
+  "R": {
+   "ability": "Depth Charge",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      125,
+      175,
+      225
+     ]
+    ],
+    [
+     "Stun Duration",
+     [
+      1,
+      1.5,
+      2
+     ]
+    ],
+    [
+     "Increased Damage",
+     [
+      150,
+      275,
+      400
+     ]
+    ],
+    [
+     "Knock Up Duration",
+     [
+      1,
+      1.5,
+      2
+     ]
+    ]
+   ],
+   "desc": "Active: Nautilus sends out a Depth Charge that chases the target enemy champion, accelerating over time and creating eruptions every 0.264 seconds in "
+  }
+ },
+ "Nilah": {
+  "Q": {
+   "ability": "Formless Blade",
+   "attrs": [
+    [
+     "Minimum Physical Damage",
+     [
+      0,
+      10,
+      20,
+      30,
+      40
+     ]
+    ],
+    [
+     "Maximum Physical Damage",
+     [
+      0,
+      19.1,
+      38.2,
+      57.3,
+      76.4
+     ]
+    ],
+    [
+     "Per-Level Scaling",
+     [
+      10,
+      12.94,
+      15.88,
+      18.82,
+      21.76,
+      24.71
+     ]
+    ]
+   ],
+   "desc": "Passive: Nilah gains 0% : 30% (based on critical strike chance) armor penetration. Her basic attacks and Formless Blade heal her for 0% : 20% (based o"
+  },
+  "W": {
+   "ability": "Jubilant Veil",
+   "attrs": [
+    [
+     "Bonus Movement Speed",
+     [
+      15,
+      17.5,
+      20,
+      22.5,
+      25
+     ]
+    ]
+   ],
+   "desc": "Active: Nilah envelops herself in mist for 2.25 seconds, during which she becomes ghosted, gains bonus movement speed, reduces all incoming magic dama"
+  },
+  "E": {
+   "ability": "Slipstream",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      60,
+      70,
+      80,
+      90,
+      100
+     ]
+    ]
+   ],
+   "desc": "Active: Nilah dashes a fixed distance in the direction of the target unit, dealing physical damage to enemies she passes through."
+  },
+  "R": {
+   "ability": "Apotheosis",
+   "attrs": [
+    [
+     "Physical Damage per Tick",
+     [
+      15,
+      25,
+      35
+     ]
+    ],
+    [
+     "Total Physical Damage",
+     [
+      60,
+      100,
+      140
+     ]
+    ],
+    [
+     "Burst Physical Damage",
+     [
+      125,
+      225,
+      325
+     ]
+    ],
+    [
+     "Maximum Total Physical Damage",
+     [
+      185,
+      325,
+      465
+     ]
+    ]
+   ],
+   "desc": "Active: Nilah whirls her whip-blade over 1 second, dealing physical damage to nearby enemies every 0.25 seconds. She then unleashes a burst that deals"
+  }
+ },
+ "Poppy": {
+  "P": {
+   "ability": "Iron Ambassador",
+   "attrs": [
+    [
+     "Bonus Magic Damage",
+     [
+      20,
+      29.41,
+      38.82,
+      48.24,
+      57.65,
+      67.06
+     ]
+    ],
+    [
+     "Max Health Damage",
+     [
+      11,
+      11.53,
+      12.06,
+      12.59,
+      13.12,
+      13.65
+     ]
+    ]
+   ],
+   "desc": "Innate: Periodically, Poppy's next basic attack on-attack is empowered to throw her buckler, gaining 350 bonus range and dealing 20 : 198.82 (based on"
+  },
+  "Q": {
+   "ability": "Hammer Shock",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      30,
+      55,
+      80,
+      105,
+      130
+     ]
+    ],
+    [
+     "Capped Minion/Monster Health Damage",
+     [
+      75,
+      105,
+      135,
+      165,
+      195
+     ]
+    ],
+    [
+     "Maximum Minion/Monster Damage",
+     [
+      105,
+      160,
+      215,
+      270,
+      325
+     ]
+    ],
+    [
+     "Slow",
+     [
+      20,
+      25,
+      30,
+      35,
+      40
+     ]
+    ],
+    [
+     "Total Physical Damage",
+     [
+      60,
+      110,
+      160,
+      210,
+      260
+     ]
+    ],
+    [
+     "Total Maximum Minion/Monster Damage",
+     [
+      210,
+      320,
+      430,
+      540,
+      650
+     ]
+    ]
+   ],
+   "desc": "Active: Poppy smashes the area in the target direction, dealing physical damage to enemies hit. Against minions and monsters, the damage based on thei"
+  },
+  "W": {
+   "ability": "Steadfast Presence",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      70,
+      110,
+      150,
+      190,
+      230
+     ]
+    ]
+   ],
+   "desc": "Passive - Stubborn to a Fault: Poppy increases her total armor and total magic resistance by 12%, doubled to 24% while she is below 40% maximum health"
+  },
+  "E": {
+   "ability": "Heroic Charge",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      40,
+      60,
+      80,
+      100,
+      120
+     ]
+    ],
+    [
+     "Stun Duration",
+     [
+      1.6,
+      1.7,
+      1.8,
+      1.9,
+      2
+     ]
+    ],
+    [
+     "Total Physical Damage",
+     [
+      80,
+      120,
+      160,
+      200,
+      240
+     ]
+    ]
+   ],
+   "desc": "Active: Poppy dashes to the target enemy's location. If they are in range upon arrival, she deals physical damage and carries them along with her for "
+  },
+  "R": {
+   "ability": "Keeper's Verdict",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      100,
+      150,
+      200
+     ]
+    ],
+    [
+     "Increased Damage",
+     [
+      200,
+      300,
+      400
+     ]
+    ]
+   ],
+   "desc": "Active: Poppy charges while being slowed by 15% for up to 4 seconds to increase Keeper's Verdict's range and knock back distance over 0.5 seconds afte"
+  }
+ },
+ "Pyke": {
+  "Q": {
+   "ability": "Bone Skewer",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      100,
+      150,
+      200,
+      250,
+      300
+     ]
+    ]
+   ],
+   "desc": "Active: Pyke charges while being slowed by 20% for up to 3 seconds to increase Bone Skewer's range over the first second of the channel. Bone Skewer c"
+  },
+  "E": {
+   "ability": "Phantom Undertow",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      100,
+      150,
+      200,
+      250,
+      300
+     ]
+    ]
+   ],
+   "desc": "Active: Pyke dashes in the target direction, leaving behind a Phantom. Pyke is ghosted while the Phantom is active."
+  },
+  "R": {
+   "ability": "Death from Below",
+   "attrs": [
+    [
+     "Per-Level Scaling",
+     [
+      250,
+      290,
+      330,
+      370,
+      400,
+      430
+     ]
+    ],
+    [
+     "Per-Level Scaling",
+     [
+      125,
+      145,
+      165,
+      185,
+      200,
+      215
+     ]
+    ]
+   ],
+   "desc": "Active: Pyke marks the target location with the shape of an X before striking it, executing enemy champions within the area that are below 250 : 550 ("
+  }
+ },
+ "Quinn": {
+  "P": {
+   "ability": "Harrier",
+   "attrs": [
+    [
+     "Bonus Physical Damage",
+     [
+      15,
+      21.18,
+      27.35,
+      33.53,
+      39.71,
+      45.88
+     ]
+    ]
+   ],
+   "desc": "Innate: Quinn's Blinding Assault against the primary target, Vault, and Skystrike mark enemies hit with Harrier for 4 seconds, during which they are r"
+  },
+  "Q": {
+   "ability": "Blinding Assault",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      65,
+      100,
+      135,
+      170,
+      205
+     ]
+    ]
+   ],
+   "desc": "Active: Quinn sends Valor in the target direction who stops upon hitting an enemy, marking them with Harrier and dealing physical damage to all nearby"
+  },
+  "W": {
+   "ability": "Heightened Senses",
+   "attrs": [
+    [
+     "Bonus Attack Speed",
+     [
+      28,
+      41,
+      54,
+      67,
+      80
+     ]
+    ],
+    [
+     "Bonus Movement Speed",
+     [
+      20,
+      25,
+      30,
+      35,
+      40
+     ]
+    ]
+   ],
+   "desc": "Passive: Whenever Quinn uses a basic attack on-attack against a target marked by Harrier or consumes their mark, she gains bonus attack speed and bonu"
+  },
+  "E": {
+   "ability": "Vault",
+   "attrs": [
+    [
+     "Physical damage",
+     [
+      40,
+      65,
+      90,
+      115,
+      140
+     ]
+    ]
+   ],
+   "desc": "Active: Quinn dashes to the target enemy, marking them with Harrier, dealing physical damage, knocking them back a very short distance over 0.5 second"
+  },
+  "R": {
+   "ability": "Behind Enemy Lines",
+   "attrs": [
+    [
+     "Total Movement Speed Increase",
+     [
+      70,
+      100,
+      130
+     ]
+    ]
+   ],
+   "desc": "Active: Quinn channels for 2 seconds, signaling Valor to pair up. Upon completion, he picks her up and they unite, increasing her total movement speed"
+  }
+ },
+ "Riven": {
+  "P": {
+   "ability": "Runic Blade",
+   "attrs": [
+    [
+     "Per-Level Scaling",
+     [
+      30,
+      30.88,
+      31.76,
+      32.65,
+      33.53,
+      34.41
+     ]
+    ],
+    [
+     "Per-Level Scaling",
+     [
+      15,
+      15.44,
+      15.88,
+      16.32,
+      16.76,
+      17.21
+     ]
+    ]
+   ],
+   "desc": "Innate: Riven's ability casts generate a stack of Charge for 6 seconds, refreshing on subsequent casts and stacking up to 3 times. Riven's basic attac"
+  },
+  "Q": {
+   "ability": "Broken Wings",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      45,
+      75,
+      105,
+      135,
+      165
+     ]
+    ],
+    [
+     "Total Physical Damage",
+     [
+      135,
+      225,
+      315,
+      405,
+      495
+     ]
+    ]
+   ],
+   "desc": "Active: Riven can activate Broken Wings three times before the ability goes on cooldown, with a 0.3125-second static cooldown between casts. If Riven "
+  },
+  "W": {
+   "ability": "Ki Burst",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      65,
+      95,
+      125,
+      155,
+      185
+     ]
+    ]
+   ],
+   "desc": "Active: Riven emits a flash of runic energy, dealing physical damage to nearby enemies and stunning them for 0.75 seconds."
+  },
+  "E": {
+   "ability": "Valor",
+   "attrs": [
+    [
+     "Shield Strength",
+     [
+      70,
+      95,
+      120,
+      145,
+      170
+     ]
+    ]
+   ],
+   "desc": "Active: Riven dashes in the target direction, though not through terrain, while granting herself a shield for 1.5 seconds."
+  }
+ },
+ "Sion": {
+  "P": {
+   "ability": "Glory in Death",
+   "attrs": [
+    [
+     "Per-Level Scaling",
+     [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+     ]
+    ],
+    [
+     "Per-Level Scaling",
+     [
+      1.4,
+      2.1,
+      2.8,
+      3.5,
+      4.2,
+      4.9
+     ]
+    ]
+   ],
+   "desc": "Innate: Upon taking fatal damage, Sion enters stasis for 1.5 seconds to reanimate into a frenzy, restoring 100% of his maximum health but losing 2 : 2"
+  },
+  "Q": {
+   "ability": "Decimating Smash",
+   "attrs": [
+    [
+     "Maximum Base Damage Increase",
+     [
+      200,
+      244.44,
+      266.67,
+      280,
+      288.89
+     ]
+    ],
+    [
+     "Minimum Physical Damage",
+     [
+      30,
+      45,
+      60,
+      75,
+      90
+     ]
+    ],
+    [
+     "Maximum Physical Damage",
+     [
+      90,
+      155,
+      220,
+      285,
+      350
+     ]
+    ],
+    [
+     "Minimum Monster Damage",
+     [
+      49.5,
+      74.25,
+      99,
+      123.75,
+      148.5
+     ]
+    ],
+    [
+     "Maximum Monster Damage",
+     [
+      148.5,
+      255.75,
+      363,
+      470.25,
+      577.5
+     ]
+    ],
+    [
+     "Minimum Minion Damage",
+     [
+      18,
+      27,
+      36,
+      45,
+      54
+     ]
+    ],
+    [
+     "Maximum Minion Damage",
+     [
+      54,
+      93,
+      132,
+      171,
+      210
+     ]
+    ]
+   ],
+   "desc": "Active: Sion prepares a strike in the target direction, charging for up to 2 seconds to increase Decimating Smash's range over an area, knock up durat"
+  },
+  "W": {
+   "ability": "Soul Furnace",
+   "attrs": [
+    [
+     "Shield Strength",
+     [
+      60,
+      75,
+      90,
+      105,
+      120
+     ]
+    ],
+    [
+     "Magic Damage",
+     [
+      40,
+      65,
+      90,
+      115,
+      140
+     ]
+    ]
+   ],
+   "desc": "Passive: Sion gains 4 bonus health whenever he kills an enemy, increased to 15 for large enemies and takedowns against enemy champions."
+  },
+  "E": {
+   "ability": "Roar of the Slayer",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      65,
+      100,
+      135,
+      170,
+      205
+     ]
+    ],
+    [
+     "Slow",
+     [
+      40,
+      45,
+      50,
+      55,
+      60
+     ]
+    ]
+   ],
+   "desc": "Active: Sion bellows a shockwave in the target direction that deals magic damage to the first enemy hit, slows them for 2.5 seconds and inflicts them "
+  },
+  "R": {
+   "ability": "Unstoppable Onslaught",
+   "attrs": [
+    [
+     "Minimum Physical Damage",
+     [
+      150,
+      300,
+      450
+     ]
+    ],
+    [
+     "Maximum Physical Damage",
+     [
+      400,
+      800,
+      1200
+     ]
+    ],
+    [
+     "Slow",
+     [
+      40,
+      45,
+      50
+     ]
+    ]
+   ],
+   "desc": "Active: Sion becomes immune to crowd control and ghosted and, after a brief delay, charges forward in the direction of the cursor for up to 8 seconds,"
+  }
+ },
+ "Tryndamere": {
+  "Q": {
+   "ability": "Bloodlust",
+   "attrs": [
+    [
+     "Maximum Bonus Attack Damage",
+     [
+      20,
+      35,
+      50,
+      65,
+      80
+     ]
+    ],
+    [
+     "Bonus Attack Damage per 1% missing health",
+     [
+      0.22,
+      0.3875,
+      0.555,
+      0.7225,
+      0.89
+     ]
+    ],
+    [
+     "Minimum Heal",
+     [
+      30,
+      40,
+      50,
+      60,
+      70
+     ]
+    ],
+    [
+     "Heal Per 1 Fury",
+     [
+      0.5,
+      0.95,
+      1.4,
+      1.85,
+      2.3
+     ]
+    ],
+    [
+     "Maximum Heal",
+     [
+      80,
+      135,
+      190,
+      245,
+      300
+     ]
+    ]
+   ],
+   "desc": "Passive: Tryndamere gains bonus attack damage based on his missing health, up to a maximum amount at 90% missing health."
+  },
+  "W": {
+   "ability": "Mocking Shout",
+   "attrs": [
+    [
+     "Attack Damage Reduction",
+     [
+      20,
+      35,
+      50,
+      65,
+      80
+     ]
+    ],
+    [
+     "Slow",
+     [
+      30,
+      35,
+      40,
+      45,
+      50
+     ]
+    ]
+   ],
+   "desc": "Active: Tryndamere reduces the bonus attack damage of nearby enemy champions for 4 seconds."
+  },
+  "E": {
+   "ability": "Spinning Slash",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      80,
+      120,
+      160,
+      200,
+      240
+     ]
+    ]
+   ],
+   "desc": "Active: Tryndamere dashes to the target location, dealing physical damage to enemies hit and generating 2 Fury per enemy hit, increased to 5 Fury agai"
+  },
+  "R": {
+   "ability": "Undying Rage",
+   "attrs": [
+    [
+     "Fury Gained",
+     [
+      50,
+      75,
+      100
+     ]
+    ],
+    [
+     "Minimum Health Threshold",
+     [
+      30,
+      50,
+      70
+     ]
+    ]
+   ],
+   "desc": "Active: Tryndamere becomes enraged, instantly gaining Fury and a minimum health threshold for 5 seconds."
+  }
+ },
+ "TwistedFate": {
+  "Q": {
+   "ability": "Wild Cards",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      60,
+      105,
+      150,
+      195,
+      240
+     ]
+    ]
+   ],
+   "desc": "Active: Twisted Fate throws a fan of three cards in a cone in the target direction that each deal magic damage to enemies hit."
+  },
+  "W": {
+   "ability": "Pick a Card",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      40,
+      60,
+      80,
+      100,
+      120
+     ]
+    ],
+    [
+     "Mana Restored",
+     [
+      70,
+      90,
+      110,
+      130,
+      150
+     ]
+    ],
+    [
+     "Magic Damage",
+     [
+      30,
+      45,
+      60,
+      75,
+      90
+     ]
+    ],
+    [
+     "Slow",
+     [
+      30,
+      35,
+      40,
+      45,
+      50
+     ]
+    ],
+    [
+     "Magic Damage",
+     [
+      15,
+      22.5,
+      30,
+      37.5,
+      45
+     ]
+    ],
+    [
+     "Stun Duration",
+     [
+      1,
+      1.25,
+      1.5,
+      1.75,
+      2
+     ]
+    ]
+   ],
+   "desc": "Active: Twisted Fate cycles through three cards for 6 seconds, hovering each for 0.5 seconds at a time. Pick a Card can be recast within the duration,"
+  },
+  "E": {
+   "ability": "Stacked Deck",
+   "attrs": [
+    [
+     "Bonus Attack Speed",
+     [
+      15,
+      25,
+      35,
+      45,
+      55
+     ]
+    ],
+    [
+     "Bonus Magic Damage",
+     [
+      65,
+      90,
+      115,
+      140,
+      165
+     ]
+    ]
+   ],
+   "desc": "Passive: Twisted Fate gains bonus attack speed. His basic attacks on-hit generate a stack of Stacked Deck, stacking up to 3 times. At 3 stacks, his ne"
+  },
+  "R": {
+   "ability": "Destiny",
+   "attrs": [
+    [
+     "Effect Duration",
+     [
+      6,
+      8,
+      10
+     ]
+    ]
+   ],
+   "desc": "Active: Twisted Fate marks all targetable enemy champions, revealing them for a duration. Destiny can be recast after 0.5 seconds within the duration."
+  }
+ },
+ "Veigar": {
+  "Q": {
+   "ability": "Baleful Strike",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      80,
+      120,
+      160,
+      200,
+      240
+     ]
+    ]
+   ],
+   "desc": "Active: Veigar blasts a dark bolt in the target direction that deals magic damage to the first two enemies hit."
+  },
+  "W": {
+   "ability": "Dark Matter",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      85,
+      140,
+      195,
+      250,
+      305
+     ]
+    ]
+   ],
+   "desc": "Active: Veigar casts down a mass of dark matter that strikes the target location after a 1.221 seconds delay, granting sight of the area during the de"
+  },
+  "E": {
+   "ability": "Event Horizon",
+   "attrs": [
+    [
+     "Stun Duration",
+     [
+      1.5,
+      1.75,
+      2,
+      2.25,
+      2.5
+     ]
+    ]
+   ],
+   "desc": "Active: Veigar forms a cage at the target location that erects after a 0.5 second delay, remaining there for 3 seconds. Enemies that collide with the "
+  },
+  "R": {
+   "ability": "Primordial Burst",
+   "attrs": [
+    [
+     "Minimum Magic Damage",
+     [
+      175,
+      250,
+      325
+     ]
+    ],
+    [
+     "Maximum Magic Damage",
+     [
+      350,
+      500,
+      650
+     ]
+    ]
+   ],
+   "desc": "Active: Veigar sends a primordial burst at the target enemy champion that deals magic damage, increased by 0% : 100% (based on target's missing health"
+  }
+ },
+ "Zed": {
+  "Q": {
+   "ability": "Razor Shuriken",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      80,
+      120,
+      160,
+      200,
+      240
+     ]
+    ],
+    [
+     "Reduced Damage",
+     [
+      48,
+      72,
+      96,
+      120,
+      144
+     ]
+    ]
+   ],
+   "desc": "Active: Zed throws a shuriken in the target direction that deals physical damage to enemies hit, reduced to 60% against targets beyond the first."
+  },
+  "W": {
+   "ability": "Living Shadow",
+   "attrs": [
+    [
+     "Energy Restored",
+     [
+      30,
+      35,
+      40,
+      45,
+      50
+     ]
+    ]
+   ],
+   "desc": "Passive: Zed restores energy whenever he and his Shadows or multiple Shadows hit an ability on the same target. This may only occur once per cast abil"
+  },
+  "E": {
+   "ability": "Shadow Slash",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      70,
+      92.5,
+      115,
+      137.5,
+      160
+     ]
+    ],
+    [
+     "Slow",
+     [
+      20,
+      25,
+      30,
+      35,
+      40
+     ]
+    ],
+    [
+     "Enhanced Slow",
+     [
+      30,
+      37.5,
+      45,
+      52.5,
+      60
+     ]
+    ]
+   ],
+   "desc": "Active: Zed slashes to deal physical damage to nearby enemies."
+  },
+  "R": {
+   "ability": "Death Mark",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      100,
+      100,
+      100
+     ]
+    ]
+   ],
+   "desc": "Active: Zed becomes untargetable and, after a 0.6-second delay, he dashes to 125 units beyond the target enemy champion from his position at the end o"
+  }
+ },
+ "Zeri": {
+  "P": {
+   "ability": "Living Battery",
+   "attrs": [
+    [
+     "Per-Level Scaling",
+     [
+      10,
+      10.64,
+      11.3,
+      12,
+      12.73,
+      13.49
+     ]
+    ],
+    [
+     "Bonus Damage",
+     [
+      70,
+      75.29,
+      80.59,
+      85.88,
+      91.18,
+      96.47
+     ]
+    ],
+    [
+     "Per-Level Scaling",
+     [
+      75,
+      80,
+      85,
+      90,
+      95,
+      100
+     ]
+    ],
+    [
+     "Max Health Damage",
+     [
+      1,
+      1.59,
+      2.18,
+      2.76,
+      3.35,
+      3.94
+     ]
+    ]
+   ],
+   "desc": "Innate: Zeri generates 1 charge for every 40 units she travels by any means and 10 charge every time she casts Burst Fire, up to a maximum of 100 char"
+  },
+  "Q": {
+   "ability": "Burst Fire",
+   "attrs": [
+    [
+     "Total Physical Damage",
+     [
+      22,
+      26,
+      30,
+      34,
+      38
+     ]
+    ],
+    [
+     "Total Critical Strike Damage",
+     [
+      44,
+      52,
+      60,
+      68,
+      76
+     ]
+    ],
+    [
+     "Total Infinity Edge Damage",
+     [
+      50.6,
+      59.8,
+      69,
+      78.2,
+      87.4
+     ]
+    ],
+    [
+     "Physical Damage per Hit",
+     [
+      3.14,
+      3.71,
+      4.29,
+      4.86,
+      5.43
+     ]
+    ],
+    [
+     "Critical Strike per Hit",
+     [
+      6.29,
+      7.43,
+      8.57,
+      9.71,
+      10.86
+     ]
+    ],
+    [
+     "Infinity Edge Damage per Hit",
+     [
+      7.23,
+      8.54,
+      9.86,
+      11.17,
+      12.49
+     ]
+    ]
+   ],
+   "desc": "Active: Zeri fires a burst of 7 rounds in the target direction over the cast time, each dealing physical damage to the first enemy hit."
+  },
+  "W": {
+   "ability": "Ultrashock Laser",
+   "attrs": [
+    [
+     "Physical Damage",
+     [
+      30,
+      70,
+      110,
+      150,
+      190
+     ]
+    ],
+    [
+     "Critical Strike Damage",
+     [
+      45,
+      105,
+      165,
+      225,
+      285
+     ]
+    ],
+    [
+     "Infinity Edge Damage",
+     [
+      49.5,
+      115.5,
+      181.5,
+      247.5,
+      313.5
+     ]
+    ],
+    [
+     "Slow",
+     [
+      30,
+      35,
+      40,
+      45,
+      50
+     ]
+    ]
+   ],
+   "desc": "Active: Zeri fires an electric pulse in the target direction that deals physical damage to the first enemy hit and slows them for 2 seconds.If the pul"
+  },
+  "E": {
+   "ability": "Spark Surge",
+   "attrs": [
+    [
+     "Burst Fire Bonus Magic Damage",
+     [
+      22,
+      24,
+      26,
+      28,
+      30
+     ]
+    ],
+    [
+     "Burst Fire Secondary Target Damage",
+     [
+      80,
+      85,
+      90,
+      95,
+      100
+     ]
+    ]
+   ],
+   "desc": "Active: Zeri dashes in the target direction. She will dash farther across terrain if Spark Surge was cast within 50 units of any, gaining unobstructed"
+  },
+  "R": {
+   "ability": "Lightning Crash",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      150,
+      250,
+      350
+     ]
+    ]
+   ],
+   "desc": "Active: Zeri discharges an electric nova that deals magic damage to nearby enemies. If this hits at least one enemy champion, she enters Overcharged f"
+  }
+ },
+ "Zoe": {
+  "P": {
+   "ability": "More Sparkles!",
+   "attrs": [
+    [
+     "Bonus Magic Damage",
+     [
+      16,
+      20,
+      24,
+      28,
+      32,
+      36
+     ]
+    ]
+   ],
+   "desc": "Innate: After casting an ability, Zoe empowers her next basic attack or Spell Thief bolt within 5 seconds to become non-projectile and deal 16 : 150 ("
+  },
+  "Q": {
+   "ability": "Paddle Star!",
+   "attrs": [
+    [
+     "Minimum Magic Damage",
+     [
+      2.0,
+      5.294117647058823,
+      8.588235294117647,
+      11.882352941176471,
+      15.176470588235293,
+      18.470588235294116
+     ]
+    ],
+    [
+     "Maximum Magic Damage",
+     [
+      5.0,
+      13.235294117647058,
+      21.470588235294116,
+      29.705882352941174,
+      37.94117647058823,
+      46.17647058823529
+     ]
+    ]
+   ],
+   "desc": "Active: Zoe shoots a star in the target direction that explodes upon hitting an enemy, dealing magic damage to nearby enemies hit. The total damage is"
+  },
+  "W": {
+   "ability": "Spell Thief",
+   "attrs": [
+    [
+     "Bonus Movement Speed",
+     [
+      30,
+      40,
+      50,
+      60,
+      70
+     ]
+    ],
+    [
+     "Bonus Movement Speed Duration",
+     [
+      2,
+      2.25,
+      2.5,
+      2.75,
+      3
+     ]
+    ],
+    [
+     "Magic Damage Per Bolt",
+     [
+      15,
+      25,
+      35,
+      45,
+      55
+     ]
+    ],
+    [
+     "Total Magic Damage",
+     [
+      45,
+      75,
+      105,
+      135,
+      165
+     ]
+    ]
+   ],
+   "desc": "Passive - Wheeeee: Whenever Zoe casts Spell Thief or a summoner spell, she gains bonus movement speed for a duration, and summons three bolts that orb"
+  },
+  "E": {
+   "ability": "Sleepy Trouble Bubble",
+   "attrs": [
+    [
+     "Magic Damage",
+     [
+      70,
+      110,
+      150,
+      190,
+      230
+     ]
+    ],
+    [
+     "Maximum Slow",
+     [
+      10,
+      15,
+      20,
+      25,
+      30
+     ]
+    ],
+    [
+     "Bonus Damage Cap",
+     [
+      70,
+      110,
+      150,
+      190,
+      230
+     ]
+    ],
+    [
+     "Maximum Mixed Damage",
+     [
+      140,
+      220,
+      300,
+      380,
+      460
+     ]
+    ],
+    [
+     "Cooldown Refund",
+     [
+      16,
+      19.5,
+      23,
+      26.5,
+      30
+     ]
+    ]
+   ],
+   "desc": "Active: Zoe kicks a bubble in the target direction that bursts upon the first enemy hit, otherwise lingering at maximum range while slightly bouncing "
+  }
+ }
+}
