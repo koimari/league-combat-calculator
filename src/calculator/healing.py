@@ -191,6 +191,9 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Warwick",
         "Dr. Mundo",
         "Irelia",
+        "Karma",
+        "Nami",
+        "Nilah",
         "Renekton",
         "Soraka",
         "Briar",
@@ -212,6 +215,7 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Janna",
         "Milio",
         "Taric",
+        "Zaahen",
     }
 )
 
@@ -830,6 +834,39 @@ def derive_self_healing(
                         }
                     )
 
+    elif name == "Karma":
+        # Renewal (Mantra-empowered W): "Karma heals for 17% (+ 1% per 100
+        # AP) of her missing health once on-cast, and again once the tether
+        # lasts its full duration or the target dies while tethered."  The
+        # tether lasts 2 seconds (the packet module prices the completion
+        # hit at +2.0s).  The heal is a missing-health formula priced by
+        # the coupled timeline at each heal's timestamp (Darius pattern);
+        # the Mantra variant only exists when the parse picked it (its
+        # parsed name is "Renewal").  Flat trigger: the heal lands on-cast
+        # even if the paired W packet was fully blocked.
+        if str(ability_damages.get("W", {}).get("name", "")) == "Renewal":
+            ap = float(champion_stats.get("ability_power", 0.0) or 0.0)
+            ratio = 0.17 + ap / 10000.0
+
+            def _renewal_heal(current_health: float, maximum_health: float) -> float:
+                return max(0.0, maximum_health - current_health) * ratio
+
+            for cast in cast_timeline or []:
+                if cast.get("slot") != "W":
+                    continue
+                cast_time = float(cast.get("time", 0.0))
+                for offset in (0.0, 2.0):
+                    healing.append(
+                        {
+                            "time": cast_time + offset,
+                            "amount": 0.0,
+                            "amount_formula": _renewal_heal,
+                            "source": "Renewal",
+                            "kind": "champion_ability",
+                            "actor_wide": True,
+                        }
+                    )
+
     elif name == "Milio":
         # Breath of Life heals Milio himself and nearby allied champions
         # on cast (wiki: "Heal: 150 / 250 / 350 (+ 50% AP)").  R deals no
@@ -918,6 +955,94 @@ def derive_self_healing(
                             "actor_wide": True,
                         }
                     )
+    elif name == "Nami":
+        # Ebb and Flow (W): cast on the enemy, the stream bounces to Nami
+        # next, so her self-heal is the first bounce — "each bounce
+        # modifying the effectiveness of the next by -20% (+ 15% per 100
+        # AP)" of the original, never below the sourced Minimum Heal.
+        # Flat per cast: the heal lands even if the paired W damage packet
+        # was fully blocked.
+        w_rank = _rank(ability_damages, "W")
+        w_ability = _ability(champion_data, "W")
+        base = extract_named(w_ability, "Heal", w_rank, champion_stats, {})
+        floor = extract_named(w_ability, "Minimum Heal", w_rank, champion_stats, {})
+        ap = float(champion_stats.get("ability_power", 0.0) or 0.0)
+        amount = max(floor, base * (0.80 + 0.15 * ap / 100.0))
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "W"
+        ):
+            _heal_from_damage(
+                healing, event, amount, "Ebb and Flow", link_to_damage=False
+            )
+
+    elif name == "Nilah":
+        # Q passive: basic attacks and Formless Blade heal her for
+        # 0%-20% (based on critical strike chance) of the post-mitigation
+        # damage dealt to champions.  Apotheosis (R): heals her for
+        # 20%-50% (based on critical strike chance) of the post-mitigation
+        # damage dealt to champions.  Both scale linearly with crit.
+        crit = max(
+            0.0,
+            min(
+                100.0,
+                float(champion_stats.get("critical_strike_chance", 0.0) or 0.0),
+            ),
+        )
+        q_ratio = 0.20 * crit / 100.0
+        r_ratio = 0.20 + 0.30 * crit / 100.0
+        for event in damage_events:
+            source = _event_source(event)
+            if source in ("Q", "auto_attacks") and q_ratio > 0.0:
+                _heal_from_damage(
+                    healing,
+                    event,
+                    float(event.get("damage", 0.0)) * q_ratio,
+                    "Formless Blade",
+                )
+            elif source == "R" and r_ratio > 0.0:
+                _heal_from_damage(
+                    healing,
+                    event,
+                    float(event.get("damage", 0.0)) * r_ratio,
+                    "Apotheosis",
+                )
+
+    elif name == "Zaahen":
+        # The Darkin Glaive (Q): the empowered attack heals him for
+        # "Champion Healing" — 5 / 6 / 7 / 8 / 9% of his maximum health
+        # (halved against minions/monsters; champion targets assumed).  The
+        # wiki unit ("% of his maximum health") is not a slotlib-recognised
+        # unit, so the percent is read raw and priced against the sourced
+        # max health.  Flat trigger: the heal lands on-attack even if the
+        # paired strike packet was fully blocked.
+        q_rank = _rank(ability_damages, "Q")
+        q_heal_pct = _leveling_value(
+            _ability(champion_data, "Q"), "Champion Healing", q_rank
+        )
+        q_heal = q_heal_pct / 100.0 * float(champion_stats.get("health", 0.0))
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "Q"
+        ):
+            _heal_from_damage(
+                healing, event, q_heal, "The Darkin Glaive", link_to_damage=False
+            )
+        # Grim Deliverance (R): flat heal per champion hit
+        # ("Healing per Champion hit": 82.5 / 132 / 181.5 (+ 66% bonus
+        # AD)); the 1v1 pair fight sees exactly one hit per R cast.
+        r_rank = _rank(ability_damages, "R")
+        r_heal = extract_named(
+            _ability(champion_data, "R"),
+            "Healing per Champion hit",
+            r_rank,
+            champion_stats,
+            {},
+        )
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "R"
+        ):
+            _heal_from_damage(
+                healing, event, r_heal, "Grim Deliverance", link_to_damage=False
+            )
 
     if name == "Vladimir":
         # Transfusion (Q): flat heal per cast, rank-scaled, + AP ratio
