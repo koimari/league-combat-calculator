@@ -27995,6 +27995,7 @@
           "cast_time": 0.24,
           "cooldown": 18.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "Hail of Arrows",
           "parts": [
             "DamagePart(physical, amount=60.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -28007,6 +28008,7 @@
         "Q": {
           "cooldown": 12.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "Piercing Arrow",
           "parts": [
             "DamagePart(physical, amount=360.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -28016,7 +28018,7 @@
             "detail": "3 Blight stack(s) consumed at 5 points in W",
             "name": "Blight Detonation",
             "parts": [
-              "DamagePart(magic, amount=300.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+              "DamagePart(magic, amount=300.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)"
             ]
           },
           "rank": 5,
@@ -28028,6 +28030,7 @@
           "cast_time": 0.24,
           "cooldown": 80.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Chain of Corruption",
           "parts": [
             "DamagePart(magic, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -28039,6 +28042,7 @@
         },
         "W": {
           "damage_type": "magic",
+          "event_order_certified": "auto_stack_proc",
           "name": "Blighted Quiver",
           "on_hit": {
             "damage_per_hit": 22.0,
@@ -40874,7 +40878,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "958f0e2964f4b4c6e03c9ff77717edc81cd47174",
+    "git_head": "d331494d59dc2588c586e6f4bf405117f7b34d51",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785725170.32038,
@@ -67274,9 +67278,9 @@
               "blight_detonation": 253.79,
               "on_hit_ability_W": 602.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 147.08
+              "shadowflame_Shadowflame": 96.32
             },
-            "total_damage": 2541.83
+            "total_damage": 2491.07
           },
           "no_items": {
             "breakdown_totals": {
