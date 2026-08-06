@@ -84,6 +84,26 @@ _MODULE_AUTHORED_SHIELD_SLOTS = frozenset(
     {
         ("Ambessa", "W"),
         ("Vex", "W"),
+        # E9-3: Shyvana's Inferno Aegis module authors the sourced shield
+        # ('Shield Strength' + 12% bonus health + the per-nearby-champion
+        # 'Increased shield per champion' increment) with an explicit
+        # consumed-at-recast duration; the scanner's rank-based read of the
+        # same rows would double-grant a less precise amount.
+        ("Shyvana", "W"),
+    }
+)
+
+# E9-3: slots whose heal the champion module/healing rule authors itself
+# instead of this scanner.  Shyvana's Inferno Aegis 'Heal' row is the
+# DRAGON-FORM recast heal (60 : 104.71 by level + 4% : 8.47% by level
+# missing health, gated on the explosion hitting a champion) and is
+# authored by ``healing.derive_self_healing``; the scanner's static read
+# would emit the rank-indexed flat at the cast time unconditionally (no
+# dragon gate, no missing-health term, wrong leveling index), so it
+# defers to the healing rule.
+_MODULE_AUTHORED_HEAL_SLOTS = frozenset(
+    {
+        ("Shyvana", "W"),
     }
 )
 
@@ -284,6 +304,13 @@ def derive_ally_effects(
                             "rank": rank,
                         }
                     )
+            # E9-3: a module/healing-rule-authored heal slot is the exact
+            # receipt (level-indexed bases, missing-health terms, and a
+            # dragon-form gate the scanner cannot see).  The scanner defers
+            # so the ledger never pays the same heal twice from two
+            # derivations of one ability.
+            if (champion_data.get("name", ""), slot) in _MODULE_AUTHORED_HEAL_SLOTS:
+                heal_attr = None
             if heal_attr is not None:
                 module_heal = _MODULE_HEAL_AMOUNTS.get(champion_key)
                 if module_heal is not None:

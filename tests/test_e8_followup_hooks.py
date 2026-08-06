@@ -113,8 +113,13 @@ def test_rakan_p_shield_rides_q(champion_data):
     from src.calculator.champions.rakan import parse_abilities
 
     out = parse_abilities(
-        champion_data["Rakan"], 18, 0.0, {}, {},
-        {"health": 2000.0, "ability_power": 0.0}, {},
+        champion_data["Rakan"],
+        18,
+        0.0,
+        {},
+        {},
+        {"health": 2000.0, "ability_power": 0.0},
+        {},
     )
     q = out.get("Q", {})
     payload = q.get("self_shield_events")

@@ -13,10 +13,11 @@ Why each slot is non-generic:
 - Q (Plasma Fission), W (Void Rift), E (Tectonic Disruption) are plain
   attribute reads: W uses "Total Magic Damage" (both rift hits — the
   classifier would pick only the first).
-- R (Life Form Disintegration Ray) keeps the reviewed packet's
-  per-tick pricing (one 0.2s tick of "Damage Per Tick"); the full
-  channel ("Maximum Damage" = 13 ticks) and the Researched
-  true-damage conversion are documented boundaries, not modeled.
+- R (Life Form Disintegration Ray) (E9-3) prices the full 13-tick
+  channel: 13 x "Damage Per Tick" == "Maximum Damage" (450/700/925) at
+  the sourced 0.2-second cadence over the 2.6-second channel (the E2
+  per-tick x count pattern). The Researched true-damage conversion is
+  a documented boundary, not modeled.
 """
 
 import json
@@ -80,19 +81,66 @@ ASSUMPTIONS = [
     "Proc damage = the 'Per-Level Scaling' array value at the champion's "
     "level (35 at 1 up to 197.06 at 19+) + 60% AP (prose ratio, module "
     "constant)",
-    "R keeps the reviewed packet's single-tick pricing; the full "
-    "13-tick channel (the 'Maximum Damage' row) and the Researched "
-    "true-damage conversion are not modeled",
+    "R prices the full 13-tick channel: 13 x 'Damage Per Tick' == the "
+    "'Maximum Damage' row (450/700/925) at the sourced 0.2-second "
+    "cadence over the 2.6-second channel; the Researched true-damage "
+    "conversion is not modeled",
     "The Researched mark (applying 3 stacks marks the target for 7s, "
     "making R deal true damage) is not modeled — R stays magic",
     "Q slow, W sight, and E knockup/stun are CC/utility only",
 ]
 
+# HARDCODED: verify on patch updates — the 13-tick channel count is the
+# sourced Total/PerTick ratio (Maximum Damage 450/700/925 == 13 x Damage
+# Per Tick 34.62/53.85/71.15 at every rank); the 0.2-second cadence and
+# 2.6-second channel length are prose in the cached R description
+# ("channels for up to 2.6 seconds" / "deals magic damage ... every 0.2
+# seconds").
+_R_TICKS = 13
+_R_TICK_INTERVAL_SECONDS = 0.2
+_R_CHANNEL_SECONDS = 2.6
+
+
+def _disintegration_ray(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: the full 13-tick channel (per-tick x 13 == the Maximum Damage row)."""
+    ability = ctx.ability("R")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("R")
+    if rank < 1:
+        return None
+    per_tick = extract_named(ability, "Damage Per Tick", rank, ctx.stats, ctx.target)
+    total = per_tick * _R_TICKS
+    entry = damage_entry(
+        ability.get("name", "Life Form Disintegration Ray"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "magic",
+    )
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            per_tick,
+            count=_R_TICKS,
+            time_offset=_R_TICK_INTERVAL_SECONDS,
+            hit_interval=_R_TICK_INTERVAL_SECONDS,
+        ),
+    )
+    entry["dot_duration"] = _R_CHANNEL_SECONDS
+    entry["detail"] = (
+        f"full {_R_TICKS}-tick channel ({_R_TICKS} x Damage Per Tick "
+        f"{per_tick:.2f} == Maximum Damage {total:.2f} at rank {rank}); "
+        "the Researched true-damage conversion is not modeled"
+    )
+    return entry
+
+
 SLOTS = {
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "W": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Damage Per Tick", dmg_type="magic"),
+    "R": _disintegration_ray,
     "P": _organic_deconstruction,  # after the damage slots: reads their emissions
 }
 
