@@ -27,12 +27,14 @@ from .item_support_effects import (
 )
 from .healing_reduction import (
     GRIEVOUS_WOUNDS_FACTOR,
+    champion_grievous_wound_sources,
     healing_reduction_profiles,
     matching_healing_reduction,
 )
 from .item_effects import (
     ThornsEffect,
     required_effect_value,
+    serpents_fang_venom,
     sustain_effect_value,
     thorns_effects,
 )
@@ -552,6 +554,7 @@ def _pair_packet(
     attacker_id: str,
     defender_id: str,
     defender_index: int = 0,
+    champion_data: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Enrich one pair fight's events exactly once.
 
@@ -568,6 +571,12 @@ def _pair_packet(
     Hemoplague) carries that amount as an explicit receipt, and every
     defender past the first is re-priced here so each target keeps its own
     heal event instead of collapsing into one identical copy.
+
+    ``champion_data`` supplies the attacker's reviewed champion module so a
+    champion-applied Grievous Wounds hit (Katarina R, Varus E) can ride its
+    damage event as the same ``grievous_duration``/``_wound_source`` receipt
+    the survival walks consume — one event interface for item, reactive, and
+    champion wounds.
     """
     events: list[dict[str, Any]] = []
     cast_timeline = result.get("cast_timeline", [])
@@ -578,6 +587,14 @@ def _pair_packet(
     result_breakdown = result.get("breakdown", {})
     if not isinstance(result_breakdown, Mapping):
         result_breakdown = {}
+    champion_wounds = (
+        champion_grievous_wound_sources(champion_data)
+        if champion_data is not None
+        else ()
+    )
+    champion_wound_by_source = {
+        str(packet.get("source_key", "")): packet for packet in champion_wounds
+    }
     for index, event in enumerate(result.get("damage_events", [])):
         if "sequence" not in event:
             # See _action_key: pair-local event ids stay order-irrelevant
@@ -595,6 +612,18 @@ def _pair_packet(
             "is_ability": _is_authored_ability_event(event),
             "ability_instance": _ability_instance_for_event(event, cast_timeline),
         }
+        # A champion-applied Grievous Wounds hit (Katarina R, Varus E) rides
+        # the damaging event as the same wound receipt the survival walks
+        # consume: the patch-wide factor and a 3-second window, refreshed by
+        # every hit (each Death Lotus dagger), sourced to the ability label.
+        wound_packet = champion_wound_by_source.get(
+            str(event.get("source_key", "")), None
+        )
+        if wound_packet is not None and float(event.get("damage", 0.0) or 0.0) > 0.0:
+            enriched["grievous_duration"] = float(wound_packet.get("duration", 0.0))
+            enriched["_wound_source"] = str(
+                wound_packet.get("source", "Grievous Wounds")
+            )
         # Multi-target rows are authored on the engine breakdown. Carry the
         # same target-allocation receipt onto each ordered packet so the
         # coupled timeline can prove which roster slot received it instead of
@@ -1279,6 +1308,15 @@ def _simulate_survival(
         participant_id: healing_reduction_profiles(combatant.items)
         for participant_id, combatant in combatant_by_id.items()
     }
+    # Serpent's Fang venom is attacker-owned: a participant whose build
+    # holds the item wounds every target it damages for ``venom_duration``
+    # seconds, cutting shields that target gains.  ``None`` fails closed.
+    venom_profiles = {
+        participant_id: serpents_fang_venom(
+            combatant.items, is_melee=bool(combatant.stats.get("is_melee", True))
+        )
+        for participant_id, combatant in combatant_by_id.items()
+    }
     states: dict[str, dict[str, Any]] = {}
     for combatant in combatant_list:
         defenses = combatant.defenses
@@ -1325,6 +1363,12 @@ def _simulate_survival(
             "healing_reduction_factor": 1.0,
             "healing_reduction_sources": set(),
             "healing_reduction_events": [],
+            # Serpent's Fang venom: shields the target gains are cut by the
+            # sourced fraction while a venom window is active.  The factor is
+            # the surviving shield share (1.0 = no venom).
+            "venom_until": 0.0,
+            "venom_factor": 1.0,
+            "venom_events": [],
             "death_time": None,
             "execute_time": None,
             "execute_source": "",
@@ -2517,6 +2561,10 @@ def _simulate_survival(
             # not carry the prior factor or source labels into its receipt.
             state["healing_reduction_factor"] = 1.0
             state["healing_reduction_sources"].clear()
+        if state["venom_until"] > 0.0 and event_time >= state["venom_until"]:
+            # A new venom application after expiry starts a fresh window;
+            # expired venom must not keep cutting shields.
+            state["venom_factor"] = 1.0
 
         if (
             not state["threshold_shield_triggered"]
@@ -2683,6 +2731,15 @@ def _simulate_survival(
         if kind == "shield":
             amount = max(0.0, float(event.get("amount", 0.0) or 0.0))
             amount *= state["healing_received_multiplier"]
+            if state["venom_factor"] < 1.0:
+                # Serpent's Fang venom cuts shields the target gains while
+                # its 3-second window is active.
+                amount *= state["venom_factor"]
+                if annotate:
+                    event["venom"] = {
+                        "factor": round(state["venom_factor"], 6),
+                        "until": round(state["venom_until"], 6),
+                    }
             duration_value = max(0.0, float(event.get("duration", 0.0) or 0.0))
             if amount <= 0.0:
                 event["applied_amount"] = 0.0
@@ -3273,6 +3330,28 @@ def _simulate_survival(
             event["pair_damage"] = round(original_amount, 6)
             event["live_damage"] = round(amount, 6)
         state["damage_taken"] += amount
+        # Serpent's Fang venom rides every damaging hit: it applies before
+        # any shield the same hit grants (threshold lifeline, reactive
+        # barriers) and refreshes the window on each successive hit.
+        venom_profile = venom_profiles.get(str(source_id))
+        if venom_profile is not None and amount > 0.0:
+            venom_keep, venom_duration = venom_profile
+            state["venom_until"] = max(
+                state["venom_until"], float(event_time) + venom_duration
+            )
+            state["venom_factor"] = min(state["venom_factor"], venom_keep)
+            state["venom_events"].append(
+                {
+                    "time": round(float(event_time), 3),
+                    "until": round(state["venom_until"], 3),
+                    "factor": round(state["venom_factor"], 6),
+                }
+            )
+            if annotate:
+                event["venom"] = {
+                    "factor": round(state["venom_factor"], 6),
+                    "until": round(state["venom_until"], 6),
+                }
         damage_type = str(event.get("damage_type", ""))
         event_absorbed = 0.0
         if damage_type in {"magic", "physical"}:
@@ -3303,8 +3382,16 @@ def _simulate_survival(
         )
         if threshold_due or health_due:
             if threshold_due:
+                granted = state["threshold_shield"]
+                if (
+                    state["venom_factor"] < 1.0
+                    and state["threshold_shield_damage_type"] != "magic"
+                ):
+                    # Venom cuts non-magic shields the target gains; this
+                    # hit's venom was applied before the lifeline check.
+                    granted *= state["venom_factor"]
                 state["threshold_shield_triggered"] = True
-                state["shields"]["general_shield"] += state["threshold_shield"]
+                state["shields"]["general_shield"] += granted
                 state["threshold_shield"] = 0.0
                 event["threshold_shield_triggered"] = True
                 if state["maw_lifeline_omnivamp_percent"] > 0.0:
@@ -3399,6 +3486,11 @@ def _simulate_survival(
             # resolves this item-owned amount. Do not multiply it again at
             # trigger time.
             shield_amount = state["reactive_shield_amount"]
+            if state["venom_factor"] < 1.0 and reactive_type != "magic":
+                # Venom cuts non-magic shields the target gains; the reactive
+                # barrier is granted by this same damaging hit, whose venom
+                # was already applied above.
+                shield_amount *= state["venom_factor"]
             state["shields"][f"{reactive_type}_shield"] += shield_amount
             expires_at = event_time + state["reactive_shield_duration"]
             state["timed_shields"].append(
@@ -3595,6 +3687,12 @@ def _simulate_survival(
                 {"recipient": participant_id, **event}
                 for event in state["healing_reduction_events"]
             ],
+            "venom_until": round(state["venom_until"], 3),
+            "venom_factor": round(state["venom_factor"], 6),
+            "venom_events": [
+                {"recipient": participant_id, **event}
+                for event in state["venom_events"]
+            ],
             "survived_window": state["death_time"] is None,
             "death_time": (
                 round(state["death_time"], 3)
@@ -3748,6 +3846,29 @@ def _grievous_pack(
     )
 
 
+def _champion_wound_tuple(
+    champion_wounds: Mapping[str, Any] | None,
+    source_key: str,
+    damage: float,
+) -> tuple[float, str] | None:
+    """Resolve one event's champion-applied wound tuple for the compiled walk.
+
+    Mirrors ``_pair_packet``'s stamping: a wound-declaring ability hit
+    (Katarina R, Varus E) rides its damaging event as ``(duration, label)``
+    exactly like a thorns strike-back wound, so the walk's ``_A_WOUND``
+    branch applies the patch-wide factor without new arithmetic.
+    """
+    if not champion_wounds:
+        return None
+    packet = champion_wounds.get(str(source_key))
+    if packet is None or float(damage or 0.0) <= 0.0:
+        return None
+    return (
+        float(packet.get("duration", 0.0)),
+        str(packet.get("source", "Grievous Wounds")),
+    )
+
+
 class _WalkCompiler:
     """Accumulates flat walk actions with stable per-action ids.
 
@@ -3817,12 +3938,22 @@ class _WalkCompiler:
                 raw_formula if callable(raw_formula) and raw_damage > 0 else None
             )
             grievous = grievous_by_dtype.get(damage_type)
+            # Champion-applied wounds (Katarina R, Varus E) arrive stamped
+            # on the packet events by ``_pair_packet``; the walk consumes
+            # them exactly like a thorns strike-back wound.
+            wound = None
+            wound_duration = float(event.get("grievous_duration", 0.0) or 0.0)
+            if wound_duration > 0.0:
+                wound = (
+                    wound_duration,
+                    str(event.get("_wound_source", "Grievous Wounds")),
+                )
             actions_append(
                 (
                     event["_sk"],
                     (
                         _KIND_PLAIN_DAMAGE
-                        if live_formula is None and grievous is None
+                        if live_formula is None and grievous is None and wound is None
                         else _KIND_DAMAGE
                     ),
                     defender_i,
@@ -3834,7 +3965,7 @@ class _WalkCompiler:
                     live_formula,
                     raw_damage,
                     grievous,
-                    None,
+                    wound,
                     False,
                     time_value,
                 )
@@ -3930,6 +4061,7 @@ class _WalkCompiler:
         heal_dedup: dict[tuple[str, float], float],
         id_strings: list[str],
         defender_index: int = 0,
+        champion_wounds: Mapping[str, Any] | None = None,
     ) -> None:
         """Compile a fresh one-pair fight straight from the engine rows.
 
@@ -3942,6 +4074,11 @@ class _WalkCompiler:
         ``defender_index`` mirrors ``_pair_packet``'s: later roster targets
         are re-priced to a sourced reduced heal amount when the engine
         authored one, so the compiled walk matches the ordered receipt.
+
+        ``champion_wounds`` maps the attacker's wound-declaring source keys
+        (Katarina R, Varus E) to their packets; score mode skips
+        ``_pair_packet``'s per-event dict enrichment, so the wound tuple is
+        built here from the same sourced packets instead.
         """
         actions_append = self.actions.append
         order_append = self.damage_order[attacker_i].append
@@ -3972,6 +4109,7 @@ class _WalkCompiler:
                     raw_formula if callable(raw_formula) and raw_damage > 0 else None
                 )
                 grievous = grievous_by_dtype.get(row[2])
+                wound = _champion_wound_tuple(champion_wounds, source_key, row[1])
                 actions_append(
                     (
                         (
@@ -3986,7 +4124,9 @@ class _WalkCompiler:
                         ),
                         (
                             _KIND_PLAIN_DAMAGE
-                            if live_formula is None and grievous is None
+                            if live_formula is None
+                            and grievous is None
+                            and wound is None
                             else _KIND_DAMAGE
                         ),
                         defender_i,
@@ -3998,7 +4138,7 @@ class _WalkCompiler:
                         live_formula,
                         raw_damage,
                         grievous,
-                        None,
+                        wound,
                         False,
                         time_value,
                     )
@@ -4046,6 +4186,7 @@ class _WalkCompiler:
                 raw_formula if callable(raw_formula) and raw_damage > 0 else None
             )
             grievous = grievous_by_dtype.get(damage_type)
+            wound = _champion_wound_tuple(champion_wounds, source_key, damage)
             actions_append(
                 (
                     (
@@ -4060,7 +4201,7 @@ class _WalkCompiler:
                     ),
                     (
                         _KIND_PLAIN_DAMAGE
-                        if live_formula is None and grievous is None
+                        if live_formula is None and grievous is None and wound is None
                         else _KIND_DAMAGE
                     ),
                     defender_i,
@@ -4072,7 +4213,7 @@ class _WalkCompiler:
                     live_formula,
                     raw_damage,
                     grievous,
-                    None,
+                    wound,
                     False,
                     time_value,
                 )
@@ -4369,12 +4510,18 @@ def _compiled_survival_walk(
     shield_triples: list[tuple[float, float, float]],
     duration: float,
     healing_received_multipliers: list[float],
+    venom_packs: list[tuple[float, float] | None] | None = None,
 ) -> tuple[list[dict[str, Any]], list[float]]:
     """Run the flat-action survival walk.
 
     Arithmetic, operation order, and rounding mirror ``_simulate_survival``
     line for line; the only difference is representation — parallel arrays
     and one write-once ``applied`` array instead of mutated event dicts.
+
+    ``venom_packs`` mirrors the legacy per-participant Serpent's Fang venom
+    profiles: ``(keep, duration)`` for an attacker holding the item, else
+    ``None``.  Damage from a venom holder refreshes the subject's window
+    and its ``venom_factor`` cuts shields the subject gains.
     """
     count = len(max_healths)
     max_healths = list(max_healths)
@@ -4400,6 +4547,11 @@ def _compiled_survival_walk(
     hr_factor = [1.0] * count
     hr_sources: list[set[str]] = [set() for _ in range(count)]
     hr_events: list[list[dict[str, Any]]] = [[] for _ in range(count)]
+    venom_until = [0.0] * count
+    venom_factor = [1.0] * count
+    venom_events: list[list[dict[str, Any]]] = [[] for _ in range(count)]
+    if venom_packs is None:
+        venom_packs = [None] * count
     death: list[float | None] = [None] * count
 
     applied = [0.0] * n_actions
@@ -4422,6 +4574,10 @@ def _compiled_survival_walk(
         if time_value >= hr_until[subject_i] and hr_until[subject_i] > 0.0:
             hr_factor[subject_i] = 1.0
             hr_sources[subject_i].clear()
+        if venom_until[subject_i] > 0.0 and time_value >= venom_until[subject_i]:
+            # Expired venom must not keep cutting shields; a fresh
+            # application starts a new window (mirrors the hr reset).
+            venom_factor[subject_i] = 1.0
         if (
             temporary_health_amount[subject_i] > 0.0
             and temporary_health_until[subject_i] > 0.0
@@ -4446,6 +4602,19 @@ def _compiled_survival_walk(
             status[aidx] = 1
             amount = action[_A_AMOUNT]
             damage_taken[subject_i] += amount
+            venom = venom_packs[attacker_i]
+            if venom is not None and amount > 0.0:
+                venom_until[subject_i] = max(
+                    venom_until[subject_i], time_value + venom[1]
+                )
+                venom_factor[subject_i] = min(venom_factor[subject_i], venom[0])
+                venom_events[subject_i].append(
+                    {
+                        "time": round(time_value, 3),
+                        "until": round(venom_until[subject_i], 3),
+                        "factor": round(venom_factor[subject_i], 6),
+                    }
+                )
             event_absorbed = 0.0
             dtype = action[_A_DTYPE]
             if dtype == 1:
@@ -4489,6 +4658,8 @@ def _compiled_survival_walk(
         amount = action[_A_AMOUNT]
         if kind == _KIND_SHIELD:
             amount *= healing_received_multipliers[subject_i]
+            if venom_factor[subject_i] < 1.0:
+                amount *= venom_factor[subject_i]
             sh_general[subject_i] += amount
             support_shield_received[subject_i] += amount
             applied[action[_A_AIDX]] = round(amount, 6)
@@ -4548,6 +4719,17 @@ def _compiled_survival_walk(
                     live_raw = raw_damage
                 amount *= live_raw / raw_damage
         damage_taken[subject_i] += amount
+        venom = venom_packs[attacker_i]
+        if venom is not None and amount > 0.0:
+            venom_until[subject_i] = max(venom_until[subject_i], time_value + venom[1])
+            venom_factor[subject_i] = min(venom_factor[subject_i], venom[0])
+            venom_events[subject_i].append(
+                {
+                    "time": round(time_value, 3),
+                    "until": round(venom_until[subject_i], 3),
+                    "factor": round(venom_factor[subject_i], 6),
+                }
+            )
         event_absorbed = 0.0
         dtype = action[_A_DTYPE]
         if dtype == 1:
@@ -4656,6 +4838,9 @@ def _compiled_survival_walk(
                 "starting_shield": round(starting_shield, 1),
                 "healing_reduction_until": round(hr_until[index], 3),
                 "healing_reduction_sources": sorted(hr_sources[index]),
+                "venom_until": round(venom_until[index], 3),
+                "venom_factor": round(venom_factor[index], 6),
+                "venom_events": list(venom_events[index]),
                 "survived_window": death[index] is None,
                 "death_time": (
                     round(death[index], 3) if death[index] is not None else None
@@ -4841,6 +5026,7 @@ def _context_setup(
                 attacker.participant_id,
                 defender.participant_id,
                 defender_index,
+                champion_data=attacker.champion_data,
             )
             pair_result_cache[cache_key] = packet
         attacker_i = context.index_of[attacker.participant_id]
@@ -4929,6 +5115,7 @@ def _build_signature_panel(
                 ),
                 attacker.participant_id,
                 "main",
+                champion_data=attacker.champion_data,
             )
             pair_result_cache[cache_key] = packet
         attacker_i = context.index_of[attacker.participant_id]
@@ -5035,6 +5222,10 @@ def _score_with_search_context(
         damage_type: _grievous_pack(main_profiles, damage_type)
         for damage_type in ("physical", "magic", "true")
     }
+    main_champion_wounds = {
+        str(packet.get("source_key", "")): packet
+        for packet in champion_grievous_wound_sources(main.champion_data)
+    }
     reusable_stats = main.stats if reuse_main_stats else None
     heal_dedup: dict[tuple[str, float], float] = {}
     first_result = None
@@ -5062,6 +5253,7 @@ def _score_with_search_context(
             heal_dedup,
             context.pair_id_strings[defender.participant_id],
             defender_index,
+            champion_wounds=main_champion_wounds,
         )
     if first_result is not None:
         fresh.add_support_templates(
@@ -5113,6 +5305,7 @@ def _score_with_search_context(
     ]
     shield_triples = []
     healing_received_multipliers = []
+    venom_packs: list[tuple[float, float] | None] = []
     for actor in all_actors:
         defenses = _participant_defenses(actor.defenses)
         shield_triples.append(
@@ -5130,6 +5323,11 @@ def _score_with_search_context(
                 ),
             )
         )
+        venom_packs.append(
+            serpents_fang_venom(
+                list(actor.items), is_melee=bool(actor.stats.get("is_melee", True))
+            )
+        )
     survival_rows, applied = _compiled_survival_walk(
         actions,
         fresh.next_aidx,
@@ -5137,11 +5335,16 @@ def _score_with_search_context(
         shield_triples,
         duration,
         healing_received_multipliers,
+        venom_packs,
     )
     for index, actor in enumerate(all_actors):
         survival_rows[index]["healing_reduction_events"] = [
             {"recipient": actor.participant_id, **event}
             for event in survival_rows[index].get("healing_reduction_events", [])
+        ]
+        survival_rows[index]["venom_events"] = [
+            {"recipient": actor.participant_id, **event}
+            for event in survival_rows[index].get("venom_events", [])
         ]
 
     count = len(all_actors)
@@ -5447,6 +5650,7 @@ def build_participant_timeline(
                         attacker.participant_id,
                         defender.participant_id,
                         defender_index,
+                        champion_data=attacker.champion_data,
                     )
                     if cacheable and pair_result_cache is not None:
                         pair_result_cache[cache_key] = packet
@@ -5999,6 +6203,11 @@ def build_participant_timeline(
                     else {}
                 ),
                 **(
+                    {"venom": dict(event["venom"])}
+                    if event.get("venom") is not None
+                    else {}
+                ),
+                **(
                     {"skipped_reason": str(event["skipped_reason"])}
                     if event.get("skipped_reason")
                     else {}
@@ -6173,6 +6382,11 @@ def build_participant_timeline(
                 **(
                     {"expires_at": round(float(event["expires_at"]), 3)}
                     if event.get("expires_at") is not None
+                    else {}
+                ),
+                **(
+                    {"venom": dict(event["venom"])}
+                    if event.get("venom") is not None
                     else {}
                 ),
                 **(

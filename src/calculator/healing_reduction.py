@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable
+from importlib import import_module
+from typing import Any, Iterable, Mapping
 
 from .item_source import effect_text
 
@@ -66,3 +67,54 @@ def matching_healing_reduction(
         for profile in profiles
         if damage_type in profile.get("damage_types", ())
     )
+
+
+def champion_grievous_wound_sources(
+    champion_data: Mapping[str, Any],
+) -> tuple[dict[str, Any], ...]:
+    """Return a reviewed champion's sourced Grievous Wounds packets.
+
+    A champion module declares which of its abilities inflict Grievous
+    Wounds (Katarina R Death Lotus, Varus E Hail of Arrows) through the
+    ``GRIEVOUS_WOUNDS_SOURCES`` attribute; the patch-wide 40%-for-3s rule
+    supplies strength and duration, and the cached ability JSON supplies
+    the display label ("Katarina · Death Lotus").  Champions without the
+    module attribute — including every generated packet module and the
+    generic path — return no packets: their numbers are estimates and must
+    never invent a wound.
+    """
+    champion_name = str(champion_data.get("name", ""))
+    # Resolved lazily so this module never participates in the package
+    # import order; the champions registry is heavy and not needed unless
+    # a wound-declaring module is actually on the roster.
+    from .champions import _CHAMPION_MODULES  # pylint: disable=import-outside-toplevel
+
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return ()
+    package = f"{__name__.rsplit('.', 1)[0]}.champions"
+    module = import_module(f".{module_name}", package=package)
+    sources = getattr(module, "GRIEVOUS_WOUNDS_SOURCES", None)
+    if not sources:
+        return ()
+    abilities = champion_data.get("abilities") or {}
+    packets: list[dict[str, Any]] = []
+    for source_key in sources:
+        entries = abilities.get(source_key) or []
+        ability_name = ""
+        if entries:
+            ability_name = str(entries[0].get("name", "") or "")
+        label = (
+            f"{champion_name} · {ability_name}"
+            if ability_name
+            else f"{champion_name} · {source_key}"
+        )
+        packets.append(
+            {
+                "source_key": str(source_key),
+                "source": label,
+                "factor": GRIEVOUS_WOUNDS_FACTOR,
+                "duration": GRIEVOUS_WOUNDS_DURATION,
+            }
+        )
+    return tuple(packets)

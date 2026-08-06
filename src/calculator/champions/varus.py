@@ -153,6 +153,12 @@ def _living_vengeance(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+# HARDCODED: verify on patch updates — wiki prose in the cached E JSON
+# ("...inflicting them with Grievous Wounds").  Hail of Arrows' desecrated
+# area applies the patch-wide 40% Grievous Wounds window; the strength and
+# 3-second duration are the engine constants, not module numbers.
+GRIEVOUS_WOUNDS_SOURCES = frozenset({"E"})
+
 OPTIONS: list[dict[str, Any]] = [
     {
         "key": "blight_stacks",
@@ -185,8 +191,10 @@ ASSUMPTIONS = [
     "damage, emitted as a zero-damage row",
     "E is physical damage (JSON and in-game); the reviewed packet's "
     "magic label was a parser error, corrected here",
-    "R root/chain, E slow/grievous wounds, and Q self-slow are CC/utility "
-    "only and not valued as damage",
+    "E's desecrated ground applies Grievous Wounds for 3 seconds (wiki "
+    "prose); the coupled timeline wounds enemies it damages with the "
+    "patch-wide 40% window",
+    "R root/chain and Q self-slow are CC/utility only and not valued as " "damage",
 ]
 
 SLOTS = {

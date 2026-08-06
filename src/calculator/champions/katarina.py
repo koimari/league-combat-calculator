@@ -65,6 +65,12 @@ _sinister_steel = proc_damage(
     phase_order_events=True,
 )
 
+# HARDCODED: verify on patch updates — wiki prose in the cached R JSON
+# ("inflicts Grievous Wounds on the target for 3 seconds").  Every Death
+# Lotus dagger hit refreshes the patch-wide 40% Grievous Wounds window
+# (strength/duration are the engine constants, not module numbers).
+GRIEVOUS_WOUNDS_SOURCES = frozenset({"R"})
+
 SLOTS = {**_packet_slots, "P": _sinister_steel}
 parse_abilities = build_parser(SLOTS, "Katarina")
 
@@ -79,6 +85,9 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "simulated",
     "Q's dagger landing, W's toss, and E-onto-dagger pickups are all "
     "counted as the same spin proc",
+    "Death Lotus applies Grievous Wounds for 3 seconds on every dagger "
+    "hit (wiki prose); the coupled timeline refreshes the patch-wide "
+    "40% window per hit",
 ]
 SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {

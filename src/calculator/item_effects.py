@@ -5557,6 +5557,33 @@ def shield_reduction_fraction(items: list[dict[str, Any]], *, is_melee: bool) ->
     return float(required_effect_value("Serpent's Fang", key))
 
 
+def serpents_fang_venom(
+    items: Iterable[dict[str, Any]], *, is_melee: bool
+) -> tuple[float, float] | None:
+    """Serpent's Fang Shield Reaver venom: ``(keep, duration)`` or ``None``.
+
+    The venom lasts ``venom_duration`` seconds and reduces shields the
+    target gains by the sourced melee/ranged fraction while it is active —
+    the returned ``keep`` is the fraction of a shield that survives (1.0
+    minus the cut), so the survival walk multiplies shield-grant amounts
+    by it.  Magic-damage shields are unaffected; callers with a magic-only
+    shield pool must not apply the cut.
+
+    Args:
+        items: The attacker's item data dicts.
+        is_melee: Whether the attacker is melee (50% cut) or ranged (35%).
+
+    Returns:
+        ``(keep_fraction, venom_duration)`` when the attacker holds
+        Serpent's Fang, else ``None``.
+    """
+    fraction = shield_reduction_fraction(list(items), is_melee=is_melee)
+    if fraction <= 0.0:
+        return None
+    duration = sustain_effect_value("Serpent's Fang", "venom_duration")
+    return max(0.0, 1.0 - fraction), max(0.0, duration)
+
+
 @dataclass(frozen=True, slots=True)
 class ThornsEffect:
     """One reactive strike-back packet consumed by the coupled timeline.
