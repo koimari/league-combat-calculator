@@ -60,6 +60,13 @@ def _rampage(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+# W (Spirit of Dread) ticks once per second for 5 seconds — the JSON's
+# "Total Magic Damage" row is exactly 5x the "Magic Damage Per Tick"
+# row at every rank (100/20 .. 300/60), so the tick count is sourced
+# rather than invented.
+_W_TICKS = 5
+
+
 def _spirit_of_dread(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
@@ -67,7 +74,7 @@ def _spirit_of_dread(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    ticks = min(max(int(ctx.options.get("w_ticks", 4)), 1), 4)
+    ticks = min(max(int(ctx.options.get("w_ticks", _W_TICKS)), 1), _W_TICKS)
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
     )
@@ -168,9 +175,9 @@ OPTIONS = [
     {
         "key": "w_ticks",
         "type": "int",
-        "default": 4,
+        "default": _W_TICKS,
         "min": 1,
-        "max": 4,
+        "max": _W_TICKS,
         "label": "Spirit of Dread ticks",
     },
     {

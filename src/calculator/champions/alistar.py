@@ -22,6 +22,7 @@ hardcoded.
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 
@@ -78,8 +79,23 @@ def _extract_e_on_hit_damage(
     return 0.0
 
 
+# E (Trample) ticks 10 times over its 5-second duration — the JSON's
+# "Total Magic Damage" row is exactly 10x the "Magic Damage Per Tick"
+# row at every rank (80/8 .. 200/20), so the tick count is sourced
+# rather than invented.  Each tick is one second of the channel's
+# 0.5s cadence (5s / 10 ticks).
+_E_TICKS = 10
+_E_DURATION = 5.0
+_E_TICK_INTERVAL = _E_DURATION / _E_TICKS  # "every 0.5 seconds"
+
+
 def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: full-duration tick total + level-scaled empowered auto."""
+    """E: 10 sourced ticks of the per-tick row + level-scaled empowered auto.
+
+    The per-tick value x 10 equals the JSON's "Total Magic Damage" at
+    every rank, so the fight prices the full cast total across the
+    tick timeline instead of one lump.
+    """
     ability = ctx.ability()
     if ability is None:
         return None
@@ -87,13 +103,39 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
-    # The empowered auto procs once per E cast, so it joins the cast
-    # total instead of becoming a per-auto on_hit entry.
-    total += _extract_e_on_hit_damage(ability, ctx.level)
+    per_tick = extract_named(
+        ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
+    )
+    # The empowered auto procs once per E cast (after the 5s trample),
+    # so it joins the cast total instead of becoming a per-auto on_hit
+    # entry.
+    empowered = _extract_e_on_hit_damage(ability, ctx.level)
 
     name = ability.get("name", "Trample")
-    return damage_entry(name, rank, extract_cooldown(ability, rank), total, "magic")
+    entry = damage_entry(
+        name,
+        rank,
+        extract_cooldown(ability, rank),
+        per_tick * _E_TICKS + empowered,
+        "magic",
+    )
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            per_tick,
+            count=_E_TICKS,
+            time_offset=_E_TICK_INTERVAL,
+            hit_interval=_E_TICK_INTERVAL,
+        ),
+        DamagePart("magic", empowered, time_offset=_E_DURATION),
+    )
+    # Item burns (Liandry's, Blackfire Torch) stay refreshed through the
+    # whole 5-second trample (the Cassiopeia rule).
+    entry["dot_duration"] = _E_DURATION
+    entry["detail"] = (
+        f"{_E_TICKS} sourced trample ticks; empowered auto lands after the channel."
+    )
+    return entry
 
 
 OPTIONS: list[dict[str, Any]] = []

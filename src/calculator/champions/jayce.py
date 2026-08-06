@@ -70,6 +70,7 @@ from .slotlib import (
     by_option,
     damage_entry,
     extract_cooldown,
+    extract_named,
     extract_value,
     simple_damage,
 )
@@ -162,12 +163,42 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
 # W: Lightning Field (Hammer) / Hyper Charge (Cannon)
 # ---------------------------------------------------------------------------
 
-_w_hammer = simple_damage(
-    attr="Total Magic Damage",
-    dmg_type="magic",
-    source=("W", _HAMMER),
-    dot_duration=LIGHTNING_FIELD_DURATION,
-)
+
+def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W Hammer: Lightning Field's 4 sourced ticks of the full-zone total.
+
+    The JSON's "Total Magic Damage" is exactly 4x the "Magic Damage Per
+    Tick" row at every rank (140/35 .. 440/110), so the field is priced
+    as four per-second ticks over its 4-second duration.
+    """
+    ability = ctx.ability("W", _HAMMER)
+    if ability is None:
+        return None
+    rank = ctx.rank_for("W")
+    if rank < 1:
+        return None
+    total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability.get("name", "Lightning Field"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "magic",
+    )
+    ticks = int(LIGHTNING_FIELD_DURATION)
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            total / ticks,
+            count=ticks,
+            time_offset=1.0,
+            hit_interval=1.0,
+        ),
+    )
+    # Item burns (Liandry's, Blackfire Torch) stay refreshed through the
+    # whole 4-second field (the Cassiopeia rule).
+    entry["dot_duration"] = LIGHTNING_FIELD_DURATION
+    return entry
 
 
 def _burst_attack_speed(ctx: SlotCtx) -> float:

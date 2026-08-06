@@ -152,6 +152,15 @@ def _valkyrie(ctx: SlotCtx) -> dict[str, Any] | None:
         per_tick * ticks,
         "magic",
     )
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            per_tick,
+            count=ticks,
+            time_offset=_W_TICK_INTERVAL,
+            hit_interval=_W_TICK_INTERVAL,
+        ),
+    )
     entry["dot_duration"] = _W_DURATION * uptime
     entry["dot_tick_interval"] = _W_TICK_INTERVAL
     entry["detail"] = f"{ticks} tick(s) of one blazing patch over {_W_DURATION:g}s"
@@ -185,7 +194,19 @@ def _gatling_gun(ctx: SlotCtx) -> dict[str, Any] | None:
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
         "total_raw": per_tick * ticks,
-        "parts": (DamagePart("physical", per_tick, count=ticks),) if ticks else (),
+        "parts": (
+            (
+                DamagePart(
+                    "physical",
+                    per_tick,
+                    count=ticks,
+                    time_offset=_E_TICK_INTERVAL,
+                    hit_interval=_E_TICK_INTERVAL,
+                ),
+            )
+            if ticks
+            else ()
+        ),
         "dot_duration": _E_DURATION * uptime,
         "dot_tick_interval": _E_TICK_INTERVAL,
     }

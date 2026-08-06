@@ -50,6 +50,16 @@ def _urchin_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# W's passive burn ticks 6 times over its 3-second duration — the JSON's
+# "Total Passive Magic Damage" row is exactly 6x the "Passive Magic
+# Damage per Tick" row at every rank (30/5 .. 90/15), so the tick count
+# is sourced rather than invented.  Each tick is one 0.5s step of the
+# burn.
+_W_PASSIVE_TICKS = 6
+_W_PASSIVE_DURATION = 3.0
+_W_PASSIVE_TICK_INTERVAL = _W_PASSIVE_DURATION / _W_PASSIVE_TICKS
+
+
 def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
@@ -58,17 +68,39 @@ def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     active = extract_named(ability, "Active Magic Damage", rank, ctx.stats, ctx.target)
+    passive_per_tick = extract_named(
+        ability, "Passive Magic Damage per Tick", rank, ctx.stats, ctx.target
+    )
     entry = damage_entry(
         ability.get("name", "Seastone Trident"),
         rank,
         extract_cooldown(ability, rank),
-        active,
+        active + passive_per_tick * _W_PASSIVE_TICKS,
         "magic",
     )
-    entry["parts"] = (DamagePart("magic", active),)
-    entry["empowers_next_auto"] = True
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            passive_per_tick,
+            count=_W_PASSIVE_TICKS,
+            time_offset=_W_PASSIVE_TICK_INTERVAL,
+            hit_interval=_W_PASSIVE_TICK_INTERVAL,
+        ),
+        DamagePart("magic", active),
+    )
+    # Dict form with authored timing: the forced swing and the active
+    # bonus land at the cast instant, and the engine then attaches the
+    # per-tick passive events to the row instead of collapsing it to a
+    # single cast-boundary hit (the bool form leaves no row timing).
+    entry["empowers_next_auto"] = {
+        "hits": 1,
+        "authored_timing": {"first_attack_delay": 0.0, "attack_interval": 0.0},
+    }
+    entry["dot_duration"] = _W_PASSIVE_DURATION
     entry["detail"] = (
-        "Active trident damage rides the next basic attack; passive bleed and post-kill refund remain explicit state."
+        "Active trident damage rides the next basic attack; the sourced "
+        f"6-tick passive burn trails the empowered hit (post-kill refund "
+        "remains explicit state)."
     )
     return entry
 

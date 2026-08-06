@@ -25,6 +25,7 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import (
     by_option,
@@ -74,6 +75,15 @@ def _w_beam_modifier(ctx: SlotCtx) -> float:
     return modifier / 100.0
 
 
+# The beam ticks 8 times per second — the JSON's per-tick row is
+# exactly 1/8 of the per-second row at every rank (5.625 = 45/8 ...
+# 13.125 = 105/8), and its "Total Maximum Magic Damage" is 26 ticks of
+# it (146.25 = 26 x 5.625 at rank 1), i.e. one full 3.25s channel.  A
+# burst lands on the primary target at each full second of the channel.
+_Q_TICKS_PER_SECOND = 8
+_Q_TICK_INTERVAL = 1.0 / _Q_TICKS_PER_SECOND  # "every 0.125 seconds"
+
+
 def _breath_of_light(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: full-channel beam + bursts; continuous channel in timed fights."""
     ability = ctx.ability()
@@ -110,14 +120,49 @@ def _breath_of_light(ctx: SlotCtx) -> dict[str, Any] | None:
         bursts = _Q_BURSTS_PER_CHANNEL
         cooldown = extract_cooldown(ability, rank)
 
-    total = beam_per_second * seconds + per_burst * bursts
-    return damage_entry(
+    # The beam is per-tick damage x (seconds / tick interval): 26 ticks
+    # of the per-tick row for one 3.25s channel, exactly the sourced
+    # "Total Maximum Magic Damage" (per-second x 3.25).
+    ticks = int(round(seconds / _Q_TICK_INTERVAL))
+    per_tick = beam_per_second * _Q_TICK_INTERVAL
+    total = per_tick * ticks + per_burst * bursts
+    entry = damage_entry(
         ability.get("name", "Breath of Light"), rank, cooldown, total, "magic"
     )
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            per_tick,
+            count=ticks,
+            time_offset=_Q_TICK_INTERVAL,
+            hit_interval=_Q_TICK_INTERVAL,
+        ),
+        DamagePart(
+            "magic",
+            per_burst,
+            count=bursts,
+            time_offset=1.0,
+            hit_interval=1.0,
+        ),
+    )
+    entry["detail"] = (
+        f"{ticks} sourced beam tick(s) at 0.125s intervals; {bursts} burst(s) "
+        f"at each full second."
+    )
+    return entry
+
+
+# E (Singularity) ticks 20 times over its 5-second zone — the JSON's
+# "Total Magic Damage" row is exactly 20x the "Magic Damage per Tick"
+# row at every rank (50/2.5 .. 150/7.5), so the tick count is sourced
+# rather than invented.  Each tick is one 0.25s step of the zone.
+_E_TICKS = 20
+_E_DURATION = 5.0
+_E_TICK_INTERVAL = _E_DURATION / _E_TICKS  # "every 0.25 seconds"
 
 
 def _singularity(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: full 5s zone total, plus the execute-threshold display line."""
+    """E: 20 sourced ticks of the full-zone total, plus the execute line."""
     ability = ctx.ability()
     if ability is None:
         return None
@@ -133,6 +178,18 @@ def _singularity(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "magic",
     )
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            total / _E_TICKS,
+            count=_E_TICKS,
+            time_offset=_E_TICK_INTERVAL,
+            hit_interval=_E_TICK_INTERVAL,
+        ),
+    )
+    # Item burns stay refreshed through the whole 5s zone (the
+    # Cassiopeia rule).
+    entry["dot_duration"] = _E_DURATION
 
     stacks = float(ctx.options.get("stardust_stacks", 0))
     threshold_pct = _E_EXECUTE_BASE_PCT + _E_EXECUTE_PCT_PER_100_STARDUST * (
