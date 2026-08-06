@@ -31,6 +31,32 @@ def _leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float
     return 0.0
 
 
+def _leveling_modifier(
+    ability: dict[str, Any], attribute: str, rank: int, modifier_index: int = 0
+) -> float:
+    """Read one sourced leveling modifier at rank without scaling resolution.
+
+    ``extract_named`` sums every modifier and resolves stat-scaling units,
+    but a missing-health percentage (e.g. Tahm Kench's ``"% of missing
+    health"``) is not a stat the scaling layer knows, so it resolves to 0.0.
+    This helper reads the raw percentage value for those formula components;
+    the caller folds it into an amount formula evaluated against the
+    fighter's live health.
+    """
+    for effect in ability.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute") != attribute:
+                continue
+            modifiers = leveling.get("modifiers", [])
+            if modifier_index >= len(modifiers):
+                return 0.0
+            values = modifiers[modifier_index].get("values", [])
+            if not values:
+                return 0.0
+            return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+    return 0.0
+
+
 def _ability(champion_data: dict[str, Any], slot: str) -> dict[str, Any]:
     entries = champion_data.get("abilities", {}).get(slot, [])
     return entries[0] if entries and isinstance(entries[0], dict) else {}
@@ -137,6 +163,10 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Soraka",
         "Briar",
         "Vladimir",
+        "Tahm Kench",
+        "Tryndamere",
+        "Volibear",
+        "Zac",
     }
 )
 
@@ -387,6 +417,131 @@ def derive_self_healing(
                             **_trigger_fields(event),
                         }
                     )
+
+    elif name == "Tahm Kench":
+        # Tongue Lash heals Tahm Kench for a flat amount plus a percentage
+        # of his missing health whenever it hits an enemy champion (wiki:
+        # "Heal: 10 / 15 / 20 / 25 / 30 (+ 5% / 5.5% / 6% / 6.5% / 7% of
+        # missing health)").  The missing-health percentage is not a stat
+        # scaling, so ``extract_named`` resolves only the flat part; the
+        # percentage is read as the second modifier and folded into a
+        # missing-health formula the participant ledger materializes with
+        # the fighter's live health (Decimate pattern).
+        q = _ability(champion_data, "Q")
+        q_rank = _rank(ability_damages, "Q")
+        q_flat = extract_named(q, "Heal", q_rank, champion_stats, {})
+        q_missing_pct = _leveling_modifier(q, "Heal", q_rank, 1)
+
+        def tongue_lash_heal(
+            current_health: float,
+            maximum_health: float,
+            flat: float = q_flat,
+            missing_pct: float = q_missing_pct,
+        ) -> float:
+            return (
+                flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
+            )
+
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "Q"
+        ):
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": tongue_lash_heal,
+                    "source": "Tongue Lash",
+                    "kind": "champion_ability",
+                    **_trigger_fields(event),
+                }
+            )
+
+    elif name == "Tryndamere":
+        # Bloodlust consumes all Fury to heal.  The fight model does not
+        # track Fury, so the sourced receipt is the 0-Fury minimum the wiki
+        # publishes as its own leveling value: "Minimum Heal: 30 / 40 /
+        # 50 / 60 / 70 (+ 30% AP)".  The heal fires on cast regardless of
+        # whether the paired Q damage row landed.
+        q_rank = _rank(ability_damages, "Q")
+        amount = extract_named(
+            _ability(champion_data, "Q"), "Minimum Heal", q_rank, champion_stats
+        )
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "Q"
+        ):
+            _heal_from_damage(healing, event, amount, "Bloodlust", link_to_damage=False)
+
+    elif name == "Volibear":
+        # Frenzied Maul's Wounded bonus: biting an already-Wounded target
+        # heals Volibear for a flat amount plus a percentage of his missing
+        # health (wiki: "Heal: 20 / 35 / 50 / 65 / 80 (+ 8% / 11% / 14% /
+        # 17% / 20% of his missing health)").  The first W applies the
+        # Wound; the heal lands on every later W.  Each pair fight is one
+        # defender, so counting W events in this ledger is per-target.
+        w = _ability(champion_data, "W")
+        w_rank = _rank(ability_damages, "W")
+        w_flat = extract_named(w, "Heal", w_rank, champion_stats, {})
+        w_missing_pct = _leveling_modifier(w, "Heal", w_rank, 1)
+
+        def frenzied_maul_heal(
+            current_health: float,
+            maximum_health: float,
+            flat: float = w_flat,
+            missing_pct: float = w_missing_pct,
+        ) -> float:
+            return (
+                flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
+            )
+
+        w_hits = 0
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "W"
+        ):
+            w_hits += 1
+            if w_hits < 2:
+                continue
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": frenzied_maul_heal,
+                    "source": "Frenzied Maul",
+                    "kind": "champion_ability",
+                    **_trigger_fields(event),
+                }
+            )
+
+    elif name == "Zac":
+        # Cell Division: each ability hit sheds a Goo chunk that Zac
+        # consumes to heal for 4% : 8.47% (based on level) of his maximum
+        # health (passive leveling attribute "Max Health Damage", one value
+        # per champion level).  In a 1v1 every Q/W/E/R damage event is one
+        # collected chunk; R's per-bounce chunks collapse to one receipt
+        # per cast, the sourced minimum.
+        p = _ability(champion_data, "P")
+        level = int(champion_stats.get("level", 18) or 18)
+        chunk_pct = extract_named(p, "Max Health Damage", level, champion_stats, {})
+
+        def cell_division_heal(
+            _current_health: float,
+            maximum_health: float,
+            pct: float = chunk_pct,
+        ) -> float:
+            return maximum_health * pct / 100.0
+
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
+        ):
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": cell_division_heal,
+                    "source": "Cell Division",
+                    "kind": "champion_passive",
+                    **_trigger_fields(event),
+                }
+            )
 
     if name == "Vladimir":
         # Transfusion (Q): flat heal per cast, rank-scaled, + AP ratio
