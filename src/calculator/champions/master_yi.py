@@ -9,13 +9,22 @@ E3 addition over the CP10.4 packet module:
   spread across the 3 stacking hits. Alpha Strike explicitly does NOT
   grant Double Strike stacks (wiki note), so ability hits never count —
   only the simulated auto stream.
+
+P1-2 addition — W (Meditate): the module now declares W in SLOTS so the
+fight rotation casts the channel; the channel's self-heal is authored
+by the healing rule (``healing.derive_self_healing`` "Master Yi"
+branch): 8 ticks at the sourced 0.5-second cadence over the 4-second
+channel, each tick interpolated between the Minimum Heal Per Tick and
+Maximum Heal Per Tick rows by the fighter's live missing health.  W's
+damage-reduction window is a defensive state the damage model does not
+stage.
 """
 
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
 from .reviewed_batch_04 import build_batch_module
-from .slotlib import ability_on_hit_entry
+from .slotlib import ability_on_hit_entry, damage_entry, extract_cooldown
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
     build_batch_module("Master Yi")
@@ -51,7 +60,34 @@ def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
 _double_strike.phase = ONHIT
 
 
-SLOTS = {**_packet_slots, "P": _double_strike}
+def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: a zero-damage channel receipt (the heal lives in healing.py)."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    entry = damage_entry(
+        ability.get("name", "Meditate"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+    )
+    entry["parts"] = ()
+    entry["detail"] = (
+        "4-second channel: the self-heal (Minimum/Maximum Heal Per Tick, "
+        "missing-health scaled) is authored by healing.py; the damage-"
+        "reduction window is a defensive state not staged by the damage "
+        "model"
+    )
+    return entry
+
+
+SLOTS = dict(_packet_slots)
+SLOTS["P"] = _double_strike
+SLOTS["W"] = _meditate
 parse_abilities = build_parser(SLOTS, "Master Yi")
 
 OPTIONS = list(_packet_options)
@@ -63,9 +99,15 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "The engine prices the proc spread across the 3 stacking hits "
     "(Vayne W convention); the 4-second stack window is assumed not to "
     "expire during sustained combat",
+    "W (Meditate) heals for 8 ticks at 0.5-second intervals over the "
+    "4-second channel, interpolated between Minimum Heal Per Tick and "
+    "Maximum Heal Per Tick by the fighter's live missing health "
+    "(healing.py 'Master Yi' rule); the channel's damage reduction is "
+    "a defensive state not staged by the damage model.",
 ]
 SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"
+    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
+    for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

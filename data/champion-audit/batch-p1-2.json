@@ -1,0 +1,122 @@
+{
+ "Aphelios": {
+  "verdict": "ok",
+  "gap_summary": "Closed the overheal-to-shield conversion: Severum's wiki passive converts healing in excess of Aphelios' maximum health into a shield capped at the cached per-level 'Heal' row (10 : 160 by level + 6% maximum health, level-indexed) lingering up to 30 seconds (data/champions.json P[2] Severum effect[1]). healing.py's Severum rule stamps every Severum heal event with the sourced cap + 30s duration (gated by the module's aphelios_overheal_shield option, default on, carried on the Moonlight Vigil detail), and participant_timeline._apply_overheal_shield converts the excess into a timed general shield at the heal's timestamp (the Bloodthirster ichorshield convention). Verified via /api/calculate at level 18, no items: with a non-damaging enemy the 21.4 Severum heal is all excess and converts to a 21.4 shield (cap 300.0), overheal after conversion 0; with the option off the shield is 0. Tests in tests/test_p1_review_2.py.",
+  "module": "aphelios.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "out_of_scope",
+   "R": "modeled"
+  }
+ },
+ "Karthus": {
+  "verdict": "ok",
+  "gap_summary": "Closed by a documented zero-damage receipt: Death Defied (P) is a death-only trigger — the deterministic single-target alive-state fight has no death event for the main, so the passive contributes zero damage by construction. The module now emits a P receipt ('Death Defied', zero parts, detail citing the boundary) so the slot is explicit in every parse instead of absent, and the alive-state Q/E/R package is unchanged (Q 232 + E 5x27.5 + R 500 at level 18, 0 resists, verified in tests/test_p1_review_2.py). Per the P1-2 rule, a death-only trigger may stay non-priced as a documented receipt with a sourced reason.",
+  "module": "karthus.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Lulu": {
+  "verdict": "ok",
+  "gap_summary": "Closed P (Pix, Faerie Companion): the passive is now an ONHIT slot firing lulu_pix_bolts (default 3, wiki prose) magic bolts per basic attack, each bolt the level-indexed 'Per-Level Scaling' row (5 : 39 by level; 40 cached values) + 5% AP (the AP ratio is prose in the cached P description — module constant; the second row is the 3-bolt total 15 : 117 + 15% AP). Verified at level 18, no items, 0 resists: on_hit_ability_passive damage_per_hit 117 (= 3 x 39), total 117 x auto count; the bolts=1 option probe prices 39 per auto. Q/E damage and the E8d Help, Pix! shield remain modeled; W/R stay documented out of scope.",
+  "module": "lulu.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "out_of_scope"
+  }
+ },
+ "MasterYi": {
+  "verdict": "ok",
+  "gap_summary": "Closed W (Meditate): the module now declares W in SLOTS (zero-damage channel receipt, sourced 10s cooldown) and healing.py gained the 'Master Yi' rule: 8 heal ticks at the sourced 0.5s cadence over the 4s channel, each tick interpolated between the cached Minimum Heal Per Tick (15 : 55 by rank + 12.5% AP) and Maximum Heal Per Tick (30 : 110 by rank + 25% AP) by the fighter's live missing health (8 x per-tick == Total Heal at every rank). Verified via derive_self_healing (8 events at 0.5..4.0; 55/tick at full health, rank 5) and /api/calculate (8 Meditate heal events in a timed fight). P/Q/E damage (incl. the E3 Double Strike) unchanged; R Highlander remains documented out of scope.",
+  "module": "master_yi.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "out_of_scope"
+  }
+ },
+ "Nautilus": {
+  "verdict": "ok",
+  "gap_summary": "Closed the two CP-era reads: W (Titan's Wrath) now prices Pain of Wrath's Total Magic Damage (30 : 70 by rank + 40% AP; 70 at rank 5) split across its two sourced instances (half immediately, half after 1.25s — module constant, wiki prose) instead of one Magic Damage per Instance row (35 total before); R (Depth Charge) prices the primary-target final eruption's Increased Damage (150 : 400 by rank + 80% AP; 400 at rank 3) instead of the chase-eruption Magic Damage row (225), with the wake-eruption boundary documented in the module and ASSUMPTIONS. The W shield stays scanner-emitted (371.52 at level 18). Verified at level 18, 0 resists: W 70 across two events, R 400, shield 371.52.",
+  "module": "nautilus.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Rell": {
+  "verdict": "ok",
+  "gap_summary": "Closed all three CP-era items: (1) P (Break the Mold) is an ONHIT slot dealing 5% of Rell's total armor + 5% of her total magic resistance as bonus magic damage per basic attack (wiki P prose; module constants — the JSON carries only the min-reduction leveling row); verified 7.85/hit at level 18 (98 armor + 59 MR). (2) W (Ferromancy: Crash Down) shield is now emitted as a self shield: the ally-support scanner's self-target marker list was missing the description's 'granting herself' phrasing, so the sourced Shield Strength (20 : 100 by rank + 11% maximum health; 362.68 at level 18) was targeted at a non-existent teammate; fixed the marker list and verified the self-scoped shield event. (3) E (Full Tilt) MODULE_COVERAGE inconsistency fixed — E is modeled (Bonus Magic Damage 5% : 7% by rank of target max health + 3% per 100 AP; 140 against the 2000-HP target).",
+  "module": "rell.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Shaco": {
+  "verdict": "ok",
+  "gap_summary": "Closed both items: (1) E (Two-Shiv Poison) gains the e_execute option (default False — the deterministic target is above 30% max health): when on, the sourced Increased Damage row (105/142.5/180/217.5/255 by rank + 120% bonus AD + 90% AP; the wiki's 50% execute bump over the base row) replaces the base Magic Damage row — verified 255 vs 170 at rank 5, 0 resists. (2) R's controllable clone is expressed as the r_clone_attacks option (default 0 = the player does not command the clone): each commanded attack deals 75% of Shaco's total AD physical damage (wiki Pets prose, module constant — the cached R JSON carries no clone-attack row), added to the death-explosion Magic Damage; verified 300 + 3 x 85.5 = 556.5 at level 18. The W sprung-volley model (E4) is unchanged.",
+  "module": "shaco.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Udyr": {
+  "verdict": "ok",
+  "gap_summary": "Closed Q (Wilding Claw): the wiki_attribute packet that misread the Awaken 'Max Health Damage' row as flat magic (2.5 at level 18) is replaced by an ONHIT slot pricing the stance's empowered attacks: q_empowered_attacks (default 2) basic attacks each deal the cached Bonus Physical Damage row (3% : 8% by rank of target max health + 3.5% per 100 bonus AD; 7% at rank 5) plus the 4-second Bonus Physical Damage On-Hit row (6 : 36 by rank + 20% bonus AD + 1% : 2% by rank of bonus health; 30 at rank 5) — 170 per hit, 340 total at level 18, 0 resists, max_procs 2. q_awaken (default False) adds the per-level Max Health Damage row (2% : 4.24% by level + 1.5% per 100 bonus AD + 0.1% per 100 bonus health; 4.0% at level 18) to the empowered attacks and prices the lightning chain as 6 magic strikes per empowered attack at the sourced 0.2s cadence (per-strike row 1.5% : 3.18% by level + 0.6% per 100 AP of target max health; 3.0% at level 18) — verified 500 on-hit + 720 lightning with q_awaken. The W shield is scanner-emitted (196.3 at level 18) and the W heal stream remains healing.py-authored; the cache's Q 'Heal' row is the minion minimum, documented.",
+  "module": "udyr.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "out_of_scope",
+   "R": "modeled"
+  }
+ },
+ "Viktor": {
+  "verdict": "ok",
+  "gap_summary": "Closed both Q items: (1) Siphon Power now carries the sourced self-shield — the cached 'Bonus Damage' row is the shield base (40 : 140 by level + 25% AP, 18 level-indexed values; 140 at level 18) for 2.5s, authored via the E8c self_shield_events payload (the Q packet is certified single_hit so the payload rides the projectile event); verified as a 140/2.5s self shield in /api/calculate. (2) The Discharge empowered next basic attack is priced as a one-application on-hit from the Modified Magic Damage row (20 : 120 by rank + 100% AD + 50% AP; 224 at rank 5 with 104 AD), gated by q_discharge (default True); verified count 1 x 224 at 0 resists. W cc and P augments stay documented out of scope; R/E unchanged.",
+  "module": "viktor.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Yunara": {
+  "verdict": "ok",
+  "gap_summary": "Closed both items: (1) W (Arc of Judgment) now prices the lingering-bead DoT: 4 ticks at the sourced 0.25s cadence over the 1s linger, each tick the cached Linger Magic Damage per Tick row (8.25 : 32.25 by rank + 12.75% bonus AD + 7.5% AP; 15% of the initial impact; 4 x per-tick == Total Expanded Damage at every rank) — 215 impact + 4 x 32.25 = 344 at rank 5, 0 resists, verified as 5 W events. (2) R (Transcend One's Self) is modeled as the buff it is: the zero-damage R entry documents the Transcendent State, and r_transcendent (default False — the base form is the deterministic default, the Shyvana dragon-form convention) switches W to the empowered Arc of Ruin (base 160/320/480 by R rank from the cached 'Arc of Ruin Base Damage' row + 120% bonus AD + 75% AP from the cached W[1] description prose) — verified W 480 with r_transcendent. Q/E rows and the minion-only execute notes stay modeled.",
+  "module": "yunara.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ }
+}
