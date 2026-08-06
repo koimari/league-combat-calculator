@@ -6,6 +6,12 @@ reduce W's cooldown; the resurrection is a death passive. Neither
 changes outgoing damage, so no stack slot is added — the chunk heal row
 the packet prices as target-max-health damage is the passive's existing
 packet read and is left untouched (not part of the E3 worklist).
+
+E4 boundary: the E4-3 worklist skips Zac — R (Let's Bounce!) is the
+self-movement rework, not a summoned unit (the "Champion summoned
+units" page lists only Zac's Cell Division Bloblets, which are a death
+passive with no outgoing damage).  No summon slot is added; the
+reviewed bounce packet pricing is unchanged.
 """
 
 from .reviewed_batch_10 import build_batch_module

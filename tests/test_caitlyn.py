@@ -91,14 +91,38 @@ class TestQPiltoverPeacemaker:
 
 
 class TestWYordleSnapTrap:
-    """W deals no damage itself: no W row; its value lives in P's trap."""
+    """W (E4 summon) deals no damage itself: a zero-damage utility row;
+    the trap's value lives in P's trap headshot."""
 
-    def test_w_absent_from_results(self, caitlyn_data) -> None:
+    def test_w_is_zero_damage_utility_row(self, caitlyn_data) -> None:
         abilities = parse_abilities(
             caitlyn_data,
             18,
             0.0,
             ability_ranks=ALL_RANKED,
+            champion_stats=dict(AD_200),
+        )
+        w = abilities["W"]
+        assert w["total_raw"] == 0.0
+        assert "trap" in w["detail"].lower()
+
+    def test_w_unranked_still_absent(self, caitlyn_data) -> None:
+        abilities = parse_abilities(
+            caitlyn_data,
+            18,
+            0.0,
+            ability_ranks={"Q": 5, "W": 0, "E": 5, "R": 3},
+            champion_stats=dict(AD_200),
+        )
+        assert "W" not in abilities
+
+    def test_w_traps_zero_drops_the_utility_row(self, caitlyn_data) -> None:
+        abilities = parse_abilities(
+            caitlyn_data,
+            18,
+            0.0,
+            ability_ranks=ALL_RANKED,
+            champion_options={"w_traps": 0},
             champion_stats=dict(AD_200),
         )
         assert "W" not in abilities
@@ -598,14 +622,19 @@ class TestFightIntegration:
 
 
 class TestOptionsMeta:
-    """The single E3 headshot pre-stack option, plus assumptions."""
+    """The E3 headshot pre-stack and E4 trap options, plus assumptions."""
 
-    def test_pre_stacks_option_declared(self) -> None:
+    def test_options_declared(self) -> None:
         meta = get_champion_options_meta("Caitlyn")
-        assert [option["key"] for option in meta["options"]] == ["p_pre_stacks"]
+        assert [option["key"] for option in meta["options"]] == [
+            "p_pre_stacks",
+            "w_traps",
+        ]
         assert meta["options"][0]["min"] == 0
         assert meta["options"][0]["max"] == 5
         assert meta["options"][0]["default"] == 0
+        assert meta["options"][1]["min"] == 0
+        assert meta["options"][1]["default"] == 1
 
     def test_assumptions_documented(self) -> None:
         meta = get_champion_options_meta("Caitlyn")
