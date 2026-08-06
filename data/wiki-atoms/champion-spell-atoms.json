@@ -124,5 +124,107 @@
   "atom_id": "stack-transform-summon-resource.transform",
   "wiki_name": "Inherent Glamour",
   "note": "Passive disguise as any champion (already in passive map)."
+ },
+ {
+  "champion": "Ahri",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "Essence Theft",
+  "note": "P: 9-stack consume heals 35-95 + 20% AP."
+ },
+ {
+  "champion": "Maokai",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "Sap Magic",
+  "note": "P: empowered auto heals 4-12.8% max HP."
+ },
+ {
+  "champion": "Gragas",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "Happy Hour",
+  "note": "P: each ability cast heals 5.5% max HP."
+ },
+ {
+  "champion": "Morgana",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "Soul Siphon",
+  "note": "P: ability hits heal (18 + 6% AP on champions)."
+ },
+ {
+  "champion": "Nunu",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "Consume (Q heal)",
+  "note": "Q heals on consume."
+ },
+ {
+  "champion": "Nocturne",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "Umbra Blades",
+  "note": "P: every 4th attack heals (14-40 + 30% AP)."
+ },
+ {
+  "champion": "Ambessa",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "R (Public Execution heal)",
+  "note": "R heal exists in wiki."
+ },
+ {
+  "champion": "Cassiopeia",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "E (Twin Fang heal)",
+  "note": "E heals on poisoned targets."
+ },
+ {
+  "champion": "Gangplank",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "Remove Scurvy (W)",
+  "note": "W heals (modeled in E1)."
+ },
+ {
+  "champion": "Ekko",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "Chronobreak (R heal)",
+  "note": "R heals for damage taken in 4s."
+ },
+ {
+  "champion": "Fiora",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "Duelist's Dance (vital proc)",
+  "note": "P vitals heal on proc."
+ },
+ {
+  "champion": "Garen",
+  "atom_id": "heal-shield.health-regeneration",
+  "wiki_name": "Perseverance",
+  "note": "P regen out of combat."
+ },
+ {
+  "champion": "Hecarim",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "Spirit of Dread (W)",
+  "note": "W heals 25% of damage dealt."
+ },
+ {
+  "champion": "KSante",
+  "atom_id": "heal-shield.heal",
+  "wiki_name": "All Out (R conversion)",
+  "note": "R converts resistances to health."
+ },
+ {
+  "champion": "Zac",
+  "atom_id": "heal-shield.revive",
+  "wiki_name": "Cell Division",
+  "note": "P blobs revive/self-heal."
+ },
+ {
+  "champion": "Anivia",
+  "atom_id": "heal-shield.revive",
+  "wiki_name": "Rebirth",
+  "note": "P egg revive."
+ },
+ {
+  "champion": "Zilean",
+  "atom_id": "heal-shield.revive",
+  "wiki_name": "Chronoshift",
+  "note": "R revive."
  }
 ]

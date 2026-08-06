@@ -117,10 +117,11 @@
   },
   {
    "champion": "ahri",
-   "atom_count": 27,
+   "atom_count": 28,
    "family_counts": {
     "crowd-control-mobility": 6,
     "damage": 18,
+    "heal-shield": 1,
     "stack-transform-summon-resource": 3
    },
    "unclassified": [
@@ -340,11 +341,11 @@
   },
   {
    "champion": "ambessa",
-   "atom_count": 38,
+   "atom_count": 39,
    "family_counts": {
     "crowd-control-mobility": 6,
     "damage": 23,
-    "heal-shield": 2,
+    "heal-shield": 3,
     "interaction": 1,
     "stack-transform-summon-resource": 6
    },
@@ -448,10 +449,10 @@
   },
   {
    "champion": "anivia",
-   "atom_count": 17,
+   "atom_count": 18,
    "family_counts": {
     "damage": 10,
-    "heal-shield": 3,
+    "heal-shield": 4,
     "stack-transform-summon-resource": 4
    },
    "unclassified": [
@@ -2004,11 +2005,11 @@
   },
   {
    "champion": "cassiopeia",
-   "atom_count": 24,
+   "atom_count": 25,
    "family_counts": {
     "crowd-control-mobility": 3,
     "damage": 17,
-    "heal-shield": 1,
+    "heal-shield": 2,
     "stack-transform-summon-resource": 3
    },
    "unclassified": [
@@ -2405,11 +2406,11 @@
   },
   {
    "champion": "ekko",
-   "atom_count": 52,
+   "atom_count": 53,
    "family_counts": {
     "crowd-control-mobility": 12,
     "damage": 29,
-    "heal-shield": 5,
+    "heal-shield": 6,
     "interaction": 2,
     "stack-transform-summon-resource": 4
    },
@@ -2700,11 +2701,11 @@
   },
   {
    "champion": "fiora",
-   "atom_count": 44,
+   "atom_count": 45,
    "family_counts": {
     "crowd-control-mobility": 12,
     "damage": 21,
-    "heal-shield": 2,
+    "heal-shield": 3,
     "interaction": 7,
     "stack-transform-summon-resource": 2
    },
@@ -2876,11 +2877,11 @@
   },
   {
    "champion": "gangplank",
-   "atom_count": 20,
+   "atom_count": 21,
    "family_counts": {
     "crowd-control-mobility": 3,
     "damage": 13,
-    "heal-shield": 1,
+    "heal-shield": 2,
     "stack-transform-summon-resource": 3
    },
    "unclassified": [
@@ -2960,10 +2961,10 @@
   },
   {
    "champion": "garen",
-   "atom_count": 29,
+   "atom_count": 30,
    "family_counts": {
     "damage": 19,
-    "heal-shield": 3,
+    "heal-shield": 4,
     "interaction": 3,
     "stack-transform-summon-resource": 4
    },
@@ -3055,10 +3056,11 @@
   },
   {
    "champion": "gragas",
-   "atom_count": 31,
+   "atom_count": 32,
    "family_counts": {
     "crowd-control-mobility": 6,
     "damage": 21,
+    "heal-shield": 1,
     "interaction": 2,
     "stack-transform-summon-resource": 2
    },
@@ -3264,11 +3266,11 @@
   },
   {
    "champion": "hecarim",
-   "atom_count": 38,
+   "atom_count": 39,
    "family_counts": {
     "crowd-control-mobility": 12,
     "damage": 22,
-    "heal-shield": 1,
+    "heal-shield": 2,
     "stack-transform-summon-resource": 3
    },
    "unclassified": [
@@ -5683,11 +5685,11 @@
   },
   {
    "champion": "ksante",
-   "atom_count": 57,
+   "atom_count": 58,
    "family_counts": {
     "crowd-control-mobility": 28,
     "damage": 17,
-    "heal-shield": 3,
+    "heal-shield": 4,
     "interaction": 3,
     "stack-transform-summon-resource": 6
    },
@@ -6388,10 +6390,11 @@
   },
   {
    "champion": "maokai",
-   "atom_count": 45,
+   "atom_count": 46,
    "family_counts": {
     "crowd-control-mobility": 14,
     "damage": 20,
+    "heal-shield": 1,
     "stack-transform-summon-resource": 8,
     "vision-economy": 3
    },
@@ -6906,11 +6909,11 @@
   },
   {
    "champion": "morgana",
-   "atom_count": 17,
+   "atom_count": 18,
    "family_counts": {
     "crowd-control-mobility": 3,
     "damage": 11,
-    "heal-shield": 1,
+    "heal-shield": 2,
     "stack-transform-summon-resource": 2
    },
    "unclassified": [
@@ -7493,11 +7496,11 @@
   },
   {
    "champion": "nocturne",
-   "atom_count": 16,
+   "atom_count": 17,
    "family_counts": {
     "crowd-control-mobility": 4,
     "damage": 10,
-    "heal-shield": 1,
+    "heal-shield": 2,
     "stack-transform-summon-resource": 1
    },
    "unclassified": [
@@ -7565,11 +7568,11 @@
   },
   {
    "champion": "nunu",
-   "atom_count": 33,
+   "atom_count": 34,
    "family_counts": {
     "crowd-control-mobility": 9,
     "damage": 12,
-    "heal-shield": 2,
+    "heal-shield": 3,
     "stack-transform-summon-resource": 6,
     "vision-economy": 4
    },
@@ -12955,11 +12958,11 @@
   },
   {
    "champion": "zac",
-   "atom_count": 34,
+   "atom_count": 35,
    "family_counts": {
     "crowd-control-mobility": 9,
     "damage": 18,
-    "heal-shield": 4,
+    "heal-shield": 5,
     "interaction": 3
    },
    "unclassified": [
@@ -13261,11 +13264,11 @@
   },
   {
    "champion": "zilean",
-   "atom_count": 22,
+   "atom_count": 23,
    "family_counts": {
     "crowd-control-mobility": 5,
     "damage": 9,
-    "heal-shield": 2,
+    "heal-shield": 3,
     "stack-transform-summon-resource": 6
    },
    "unclassified": [
@@ -13592,14 +13595,14 @@
  ],
  "totals": {
   "champions_processed": 173,
-  "atoms_classified": 5355,
+  "atoms_classified": 5372,
   "unclassified_real_mechanics": 1211,
   "unclassified_noise_artifacts": 700,
   "unclassified_total_objects": 1911,
   "family_counts": {
    "crowd-control-mobility": 1028,
    "damage": 2991,
-   "heal-shield": 272,
+   "heal-shield": 289,
    "interaction": 155,
    "stack-transform-summon-resource": 841,
    "vision-economy": 68
