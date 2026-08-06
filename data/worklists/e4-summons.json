@@ -1,0 +1,203 @@
+{
+ "map_sourced": [
+  {
+   "champion": "Annie",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "Tibbers",
+   "note": "R summons Tibbers (shared summon script)."
+  },
+  {
+   "champion": "Heimerdinger",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "H-28G Evolution Turret",
+   "note": "Q/W turrets + R turret upgrade."
+  },
+  {
+   "champion": "Malzahar",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "Voidling",
+   "note": "W summons Voidlings."
+  },
+  {
+   "champion": "Yorick",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "Mist Walker / Maiden",
+   "note": "W ghouls + R Maiden."
+  },
+  {
+   "champion": "Zyra",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "Plant",
+   "note": "W seeds sprout plants."
+  },
+  {
+   "champion": "Ivern",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "Daisy",
+   "note": "R summons Daisy."
+  },
+  {
+   "champion": "Azir",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "Sand Soldier",
+   "note": "W summons Sand Soldiers."
+  },
+  {
+   "champion": "Kindred",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "Wolf",
+   "note": "W summons Wolf."
+  },
+  {
+   "champion": "Illaoi",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "Tentacle",
+   "note": "Passive/W/R spawn tentacles."
+  },
+  {
+   "champion": "Shaco",
+   "atom_id": "stack-transform-summon-resource.trap",
+   "wiki_name": "Jack in the Box",
+   "note": "W places a trap."
+  },
+  {
+   "champion": "Teemo",
+   "atom_id": "stack-transform-summon-resource.trap",
+   "wiki_name": "Noxious Trap",
+   "note": "R places mushrooms (traps)."
+  },
+  {
+   "champion": "Nidalee",
+   "atom_id": "stack-transform-summon-resource.trap",
+   "wiki_name": "Bushwhack",
+   "note": "W places traps."
+  },
+  {
+   "champion": "Caitlyn",
+   "atom_id": "stack-transform-summon-resource.trap",
+   "wiki_name": "Yordle Snap Trap",
+   "note": "W places traps."
+  },
+  {
+   "champion": "Jhin",
+   "atom_id": "stack-transform-summon-resource.trap",
+   "wiki_name": "Captive Audience",
+   "note": "E places traps."
+  },
+  {
+   "champion": "Maokai",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "Sapling",
+   "note": "E throws sapling (mobile ward/summon)."
+  },
+  {
+   "champion": "Zyra",
+   "atom_id": "stack-transform-summon-resource.summon",
+   "wiki_name": "Seed",
+   "note": "Passive/W seeds."
+  },
+  {
+   "champion": "LeBlanc",
+   "atom_id": "stack-transform-summon-resource.clone",
+   "wiki_name": "Mirror Image",
+   "note": "Passive + R create clones (shared clonechampion script)."
+  },
+  {
+   "champion": "Neeko",
+   "atom_id": "stack-transform-summon-resource.clone",
+   "wiki_name": "Shapesplitter",
+   "note": "W creates a clone."
+  },
+  {
+   "champion": "Zed",
+   "atom_id": "stack-transform-summon-resource.clone",
+   "wiki_name": "Living Shadow",
+   "note": "W creates a shadow (clone-like unit)."
+  },
+  {
+   "champion": "Wukong",
+   "atom_id": "stack-transform-summon-resource.clone",
+   "wiki_name": "Warrior Trickster",
+   "note": "W creates a decoy clone."
+  },
+  {
+   "champion": "Neeko",
+   "atom_id": "stack-transform-summon-resource.transform",
+   "wiki_name": "Inherent Glamour",
+   "note": "Passive disguise as any champion (already in passive map)."
+  }
+ ],
+ "audit_mentions": {
+  "Anivia": "Revive atom (heal-shield.revive Rebirth) unmodeled \u2014 documented as out of scope ('resurrection only, no damage'), consis",
+  "Annie": "The summon atom family IS modeled: R emits Tibbers burst + aura (wiki constants, pet stats not in JSON). E shield atoms ",
+  "Azir": "The summon atom family IS modeled (W Sand Soldier auto_attack_override with on-hit effectiveness). E shield atom unmodel",
+  "Elise": "All slots modeled with form dispatch: P spider-form on-hit (+ heal recorded as non-TDD sustain), Q form-aware Neurotoxin",
+  "Heimerdinger": "All outgoing-damage atoms are covered: turret summon damage is modeled via explicit options (q_turrets, q_turret_attacks",
+  "Illaoi": "Tentacle SELF-HEAL is unmodeled: atoms heal-shield.heal on IllaoiTentacleHeal / IllaoiTentacleHealCooldown (evidence nam",
+  "Ivern": "Daisy pet DAMAGE is unmodeled: atoms for IvernR carry damage.aoe + damage.damage-instance + summon (tag:Trait_Pet) + imm",
+  "Kindred": "Self-heal atoms are unmodeled: KindredWPassiveHealMissile (W passive Hunter's Vigor heal at 100 stacks) and heal-shield.",
+  "KogMaw": "Module covers all combat atoms: W on-hit %maxHP, R missing-HP execute curve (damage.execute), Q resist shred (damage.py ",
+  "Leblanc": "All damage atoms are covered: Q mark consumption, E chain fracture, and R mimic variants are explicit options reading th",
+  "Lillia": "All notable atoms are modeled: P DoT (damage.dot on LilliaPDoT) with tick option, Q outer-edge true damage, W epicenter ",
+  "Malzahar": "E and R DoTs are modeled as a single tick each: the E packet reads 'Magic Damage Per Tick' (5-13.75) with no count even ",
+  "MonkeyKing": "Q's armor reduction debuff (3s; atom MonkeyKingDoubleAttackDebuff) is not modeled even though the infrastructure exists ",
+  "Naafiri": "GAP: Q packet models only 'Initial Physical Damage' (35-55 + 20% bAD); wiki Q also has Total Bleed 35-135 + 80% bAD (ato",
+  "Neeko": "REVIEW: Q/W/E/R damage rows modeled (Q initial 60-260 + 60% AP, W on-hit bonus 30-170 + 60% AP, E 70-210 + 65% AP, R 150",
+  "Pyke": "GAP: P grey-health heal (atoms heal-shield.heal PykePHealON/PykePHealOFF) is unmodeled and Pyke is absent from HEALING_R",
+  "Qiyana": "OK: custom module models P on-hit (15-91 + 25% bAD + 30% AP), Q element variants (q_variant 0-2 with q_target_below_half",
+  "Quinn": "GAP: P Harrier on-hit bonus damage (15-132.35 + 40% bAD, atoms stack-transform-summon-resource.ammo QuinnPassiveAmmo) is",
+  "RekSai": "REVIEW: Q variants (Queen's Wrath 30-50% AD on-hit; Prey Seeker 50-170 + 25% bAD + 70% AP), W Unburrow (30-130 + 80% AP)",
+  "Renata": "REVIEW: Q (80-260 + 80% AP) and E (65-185 + 55% AP) damage rows match. P Leverage on-hit mark damage (1-2% max HP per le",
+  "Rumble": "The heat/overheat system (stack-transform-summon-resource.heat) and Danger Zone 50% bonus damage/shield are declared out",
+  "Shaco": "E packet models the base 'Magic Damage' row (70-170 + 80% bonus AD + 60% AP) only; the wiki 'Increased Damage' execute r",
+  "Sylas": "CLEAR GAP: W Kingslayer self-heal (heals for damage dealt to champions, 20-100 + 30% AP minimum / 40-200 + 60% AP maximu",
+  "Taliyah": "All champion-target damage atoms covered: Q modeled with normal (5 shards, 40% reduced) and Worked Ground (boulder) vari",
+  "Trundle": "R Subjugate is modeled only as its initial hit (wiki_attribute 'Initial Magic Damage' 10-15): the drain DoT ('Magic Dama",
+  "Yasuo": "P is out_of_scope, so the two biggest passive mechanics are unmodeled: (1) crit conversion \u2014 wiki P: 'total critical str",
+  "Yorick": "Q self-heal is unmodeled \u2014 Yorick absent from healing.py HEALING_RULE_CHAMPIONS; wiki Q: 'deal bonus physical damage, an",
+  "Zed": "R Death Mark is declared modeled but parsed via wiki attribute 'Physical Damage', which is a percentage row (100% / 25-4",
+  "Ziggs": "Custom module models all five slots: P Short Fuse with sourced cooldown + 4/5/6s cast refund and passive_procs option, E",
+  "Zoe": "W is declared modeled but the packet is a single flat bolt (15-55 + 10% AP, verified 70 raw at rank 5) \u2014 the Spell Thief",
+  "Zyra": "The plant-summon mechanic \u2014 Zyra's core sustained DPS \u2014 is unmodeled: P (Garden of Thorns seeds) and W (Rampant Growth) "
+ },
+ "champions": [
+  "Anivia",
+  "Annie",
+  "Azir",
+  "Caitlyn",
+  "Elise",
+  "Heimerdinger",
+  "Illaoi",
+  "Ivern",
+  "Jhin",
+  "Kindred",
+  "KogMaw",
+  "LeBlanc",
+  "Leblanc",
+  "Lillia",
+  "Malzahar",
+  "Maokai",
+  "MonkeyKing",
+  "Naafiri",
+  "Neeko",
+  "Nidalee",
+  "Pyke",
+  "Qiyana",
+  "Quinn",
+  "RekSai",
+  "Renata",
+  "Rumble",
+  "Shaco",
+  "Sylas",
+  "Taliyah",
+  "Teemo",
+  "Trundle",
+  "Wukong",
+  "Yasuo",
+  "Yorick",
+  "Zed",
+  "Ziggs",
+  "Zoe",
+  "Zyra"
+ ]
+}
