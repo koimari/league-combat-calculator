@@ -1007,6 +1007,8 @@
         "W": {
           "cooldown": 16.0,
           "damage_type": "physical",
+          "detail": "W also shields Ambessa for 208.82 for 1.5s (self)",
+          "event_order_certified": "single_hit",
           "name": "Repudiation",
           "parts": [
             "DamagePart(physical, amount=150.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -1014,6 +1016,13 @@
           "rank": 3,
           "resource_cost": 70.0,
           "resource_type": "ENERGY",
+          "self_shield_events": [
+            {
+              "amount": 208.82,
+              "duration": 1.5,
+              "source": "Repudiation"
+            }
+          ],
           "total_raw": 150.0
         },
         "passive": {
@@ -3054,6 +3063,8 @@
           "cast_time": 0.25,
           "cooldown": 16.0,
           "damage_type": "magic",
+          "detail": "Q carries Mana Barrier's pre-fight shield: 216.3 (35% of max mana) for up to 10s; the 30%-health trigger boundary is documented in ASSUMPTIONS",
+          "event_order_certified": "single_hit",
           "name": "Rocket Grab",
           "parts": [
             "DamagePart(magic, amount=310.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -3061,6 +3072,13 @@
           "rank": 5,
           "resource_cost": 100.0,
           "resource_type": "MANA",
+          "self_shield_events": [
+            {
+              "amount": 216.3,
+              "duration": 10.0,
+              "source": "Mana Barrier"
+            }
+          ],
           "total_raw": 310.0
         },
         "R": {
@@ -4073,6 +4091,8 @@
         "W": {
           "cooldown": 15.0,
           "damage_type": "physical",
+          "detail": "W carries Adaptive Defenses' pre-fight shield: 303.8 (20% of max HP) for 2s; the physical/magic adaptation boundary is documented in ASSUMPTIONS",
+          "event_order_certified": "single_hit",
           "name": "Tactical Sweep",
           "parts": [
             "DamagePart(physical, amount=180.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -4080,6 +4100,13 @@
           "rank": 1,
           "resource_cost": 50.0,
           "resource_type": "MANA",
+          "self_shield_events": [
+            {
+              "amount": 303.8,
+              "duration": 2.0,
+              "source": "Adaptive Defenses"
+            }
+          ],
           "total_raw": 180.0
         }
       },
@@ -15035,6 +15062,8 @@
           "cast_time": 0.25,
           "cooldown": 8.0,
           "damage_type": "magic",
+          "detail": "Q carries Granite Shield's pre-fight barrier: 157.8 (10% of max HP), until broken (modeled as the 5s fight window)",
+          "event_order_certified": "single_hit",
           "name": "Seismic Shard",
           "parts": [
             "DamagePart(magic, amount=270.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -15042,6 +15071,13 @@
           "rank": 5,
           "resource_cost": 90.0,
           "resource_type": "MANA",
+          "self_shield_events": [
+            {
+              "amount": 157.8,
+              "duration": 5.0,
+              "source": "Granite Shield"
+            }
+          ],
           "total_raw": 270.0
         },
         "R": {
@@ -22452,6 +22488,8 @@
           "cast_time": 1.0,
           "cooldown": 140.0,
           "damage_type": "physical",
+          "detail": "R also shields Senna for 220 for 3s (flat + 50% AP + 150% of 40 Mist stacks)",
+          "event_order_certified": "single_hit",
           "name": "Dawning Shadow",
           "parts": [
             "DamagePart(physical, amount=434.5, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -22459,6 +22497,13 @@
           "rank": 2,
           "resource_cost": 100.0,
           "resource_type": "MANA",
+          "self_shield_events": [
+            {
+              "amount": 220.0,
+              "duration": 3.0,
+              "source": "Dawning Shadow"
+            }
+          ],
           "total_raw": 434.5
         },
         "W": {
@@ -28646,6 +28691,8 @@
           "cast_time": 0.25,
           "cooldown": 16.0,
           "damage_type": "magic",
+          "detail": "W also shields Vex for 100 for 2.5s (self)",
+          "event_order_certified": "single_hit",
           "name": "Personal Space",
           "parts": [
             "DamagePart(magic, amount=160.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -28653,6 +28700,13 @@
           "rank": 3,
           "resource_cost": 75.0,
           "resource_type": "MANA",
+          "self_shield_events": [
+            {
+              "amount": 100.0,
+              "duration": 2.5,
+              "source": "Personal Space"
+            }
+          ],
           "total_raw": 160.0
         },
         "passive": {
@@ -29534,6 +29588,7 @@
         "E": {
           "cooldown": 16.0,
           "damage_type": "magic",
+          "detail": "E also shields Volibear for 218.82 for 3s (14% max HP + 75% AP)",
           "event_order_certified": "single_hit",
           "name": "Sky Splitter",
           "parts": [
@@ -29542,6 +29597,13 @@
           "rank": 1,
           "resource_cost": 50.0,
           "resource_type": "MANA",
+          "self_shield_events": [
+            {
+              "amount": 218.82,
+              "duration": 3.0,
+              "source": "Sky Splitter"
+            }
+          ],
           "total_raw": 80.0
         },
         "Q": {
@@ -40686,7 +40748,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "6e194cd475c1c89022e119d200a24de0d7ebe7d4",
+    "git_head": "df8e14d13ff68779e3913fc488b8ca4ab7c3d4a3",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785725170.32038,

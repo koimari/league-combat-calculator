@@ -23,7 +23,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .reviewed_batch_09 import build_batch_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import attach_self_shield, damage_entry, extract_cooldown, extract_named
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
     build_batch_module("Volibear")
@@ -38,6 +38,14 @@ _STORM_AS_PER_STACK = 5.0  # % bonus attack speed per stack
 _STORM_AS_PER_100_AP = 3.0  # additional % per stack per 100 AP
 _WOUNDED_BONUS_BASE = 0.50  # +50% damage on the 2nd bite
 _WOUNDED_BONUS_PER_100_BONUS_AD = 0.25  # +25% per 100 bonus AD
+# HARDCODED: verify on patch updates — Sky Splitter's self shield is
+# prose-only in the cached ability description ("a shield equal to 14% of
+# his maximum health (+ 75% AP) for 3 seconds"); the JSON carries no
+# Shield leveling row, so the ratio and duration are pinned here from the
+# cached description (data/champions.json, Volibear E).
+_SKY_SPLITTER_SHIELD_MAX_HP_RATIO = 0.14
+_SKY_SPLITTER_SHIELD_AP_RATIO = 0.75
+_SKY_SPLITTER_SHIELD_DURATION_SECONDS = 3.0
 
 
 def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -123,7 +131,38 @@ def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {**_packet_slots, "P": _relentless_storm, "W": _frenzied_maul}
+def _sky_splitter(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: the reviewed magic hit plus the sourced self-shield payload.
+
+    The 14% max HP + 75% AP shield (cached description prose) rides the
+    E damage event; the shared ledger grants it as a timed 3-second
+    self-shield at the cast.
+    """
+    entry = _packet_e(ctx)
+    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+    if entry is None or rank < 1:
+        return entry
+    shield = _SKY_SPLITTER_SHIELD_MAX_HP_RATIO * ctx.stats.get(
+        "health", 0.0
+    ) + _SKY_SPLITTER_SHIELD_AP_RATIO * ctx.stats.get("ability_power", 0.0)
+    return attach_self_shield(
+        entry,
+        amount=shield,
+        duration=_SKY_SPLITTER_SHIELD_DURATION_SECONDS,
+        source=entry.get("name", "Sky Splitter"),
+        detail=(
+            f"E also shields Volibear for {shield:g} for "
+            f"{_SKY_SPLITTER_SHIELD_DURATION_SECONDS:g}s "
+            f"(14% max HP + 75% AP)"
+        ),
+    )
+
+
+SLOTS = dict(_packet_slots)
+SLOTS["P"] = _relentless_storm
+SLOTS["W"] = _frenzied_maul
+_packet_e = SLOTS["E"]
+SLOTS["E"] = _sky_splitter
 parse_abilities = build_parser(SLOTS, "Volibear")
 
 OPTIONS = list(_packet_options) + [
@@ -155,8 +194,10 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "Frenzied Maul's Wounded 2nd bite deals 50% (+ 25% per 100 bonus AD) "
     "increased damage — wiki prose (module constant); the option picks "
     "the already-marked bite because the one-rotation model casts W once",
-    "W's heal, Q's stun/MS, E's shield/slow and R's bonus health are "
-    "utility/state only",
+    "E (Sky Splitter) also shields Volibear for 14% max HP + 75% AP for "
+    "3s at the cast (cached description prose, module constants); the "
+    "shield absorbs incoming damage in the participant ledger",
+    "Q's stun/MS, W's heal and R's bonus health remain utility/state " "only",
 ]
 
 SOURCES = list(_packet_sources)

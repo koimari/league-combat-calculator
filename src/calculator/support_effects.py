@@ -34,6 +34,21 @@ _SUPPORT_ATTRIBUTES = frozenset(
 )
 _SUPPORT_ATTRS_MEMO: dict[int, tuple[dict[str, Any], bool]] = {}
 
+# E8c: slots whose shield the champion module authors itself (via the
+# ``self_shield_events`` payload on its damage entry) instead of this
+# scanner.  The scanner would otherwise re-derive the same ability from
+# its cached JSON — with a rank-indexed (not level-indexed) base for
+# Ambessa W and a description-marker miss that mis-targets Vex W's
+# self-only Personal Space as a one-teammate packet — and double-grant
+# the shield.  Modules own the exact level/stat formula and duration;
+# the scanner defers so the ledger sees exactly one sourced shield.
+_MODULE_AUTHORED_SHIELD_SLOTS = frozenset(
+    {
+        ("Ambessa", "W"),
+        ("Vex", "W"),
+    }
+)
+
 
 def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
     memo = _SUPPORT_ATTRS_MEMO.get(id(champion_data))
@@ -186,6 +201,12 @@ def derive_ally_effects(
         except (TypeError, ValueError):
             rank = default_rank
         if rank < 1:
+            continue
+        # E8c: a module-authored shield slot is the module's exact receipt
+        # (level-indexed bases, stat scalings, and sourced duration).  The
+        # scanner defers to it so the ledger never grants the same shield
+        # twice from two derivations of one ability.
+        if (champion_data.get("name", ""), slot) in _MODULE_AUTHORED_SHIELD_SLOTS:
             continue
         shield_attr, heal_attr, target_self, target_scope = _support_profile(ability)
         if shield_attr is None and heal_attr is None:

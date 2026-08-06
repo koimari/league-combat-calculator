@@ -28,7 +28,9 @@ import re
 from typing import Any
 
 from .engine import SlotCtx, SlotParser, build_parser
+from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
+    attach_self_shield,
     by_option,
     find_named_leveling,
     proc_damage,
@@ -36,6 +38,77 @@ from .slotlib import (
     stat_buff,
     sum_modifiers,
 )
+
+# HARDCODED: verify on patch updates — Repudiation's shield duration (1.5s)
+# is prose in the cached ability description ("shields herself ... for 1.5
+# seconds"); the shield base and 150% bonus-AD ratio are cached leveling
+# rows read live below.
+_REPUDIATION_SHIELD_DURATION_SECONDS = 1.5
+
+
+def _repudiation_shield_amount(ctx: SlotCtx) -> float:
+    """W's shield: a per-LEVEL base (40 cached values, 50 at level 1 and
+    320 at level 18) plus 150% bonus AD.
+
+    ``sum_modifiers`` indexes every modifier by RANK, so the 40-value
+    level row would read values[4] = 113.53 at W rank 5; the shield's
+    base is level-indexed, matching the wiki's "50 : 320 (based on
+    level)" prose.  Long arrays (>= 18 values) are level-indexed here,
+    short arrays rank-indexed.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return 0.0
+    leveling = find_named_leveling(ability, "Shield")
+    if leveling is None:
+        raise ValueError("Ambessa W Shield leveling row is unavailable")
+    total = 0.0
+    rank = ctx.rank_for()
+    for modifier in leveling.get("modifiers", []):
+        values = modifier.get("values", [])
+        units = modifier.get("units", [])
+        if not values:
+            continue
+        if len(values) >= 18:
+            index = min(max(ctx.level - 1, 0), len(values) - 1)
+        else:
+            index = min(max(rank - 1, 0), len(values) - 1)
+        value = float(values[index])
+        unit = units[index] if index < len(units) else ""
+        total += (
+            value
+            if is_flat_unit(unit)
+            else resolve_scaling(unit, value, ctx.stats, ctx.target)
+        )
+    return total
+
+
+def _repudiation(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: the empowered hit plus the sourced self-shield payload.
+
+    The shield is granted at the cast (the damage event timestamp); the
+    shared ledger converts the ``self_shield_events`` payload into a
+    timed 1.5-second self-shield.  The generic ally-support scanner
+    defers this slot (``support_effects._MODULE_AUTHORED_SHIELD_SLOTS``)
+    because its rank-based derivation cannot read the level-indexed
+    base.
+    """
+    entry = _packet_w(ctx)
+    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+    if entry is None or rank < 1:
+        return entry
+    shield = _repudiation_shield_amount(ctx)
+    entry["event_order_certified"] = "single_hit"
+    return attach_self_shield(
+        entry,
+        amount=shield,
+        duration=_REPUDIATION_SHIELD_DURATION_SECONDS,
+        source=entry.get("name", "Repudiation"),
+        detail=(
+            f"W also shields Ambessa for {shield:g} for "
+            f"{_REPUDIATION_SHIELD_DURATION_SECONDS:g}s (self)"
+        ),
+    )
 
 
 def _parse_passive_damage(
@@ -191,4 +264,13 @@ SLOTS = {
     "P": _drakehounds_step,
 }
 
+SLOTS = dict(SLOTS)
+_packet_w = SLOTS["W"]
+SLOTS["W"] = _repudiation
 parse_abilities = build_parser(SLOTS, "Ambessa")
+
+ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "W (Repudiation) also shields Ambessa at the cast for the level-indexed "
+    "base (50 : 320 by level) + 150% bonus AD for 1.5s; the shield absorbs "
+    "incoming damage in the participant ledger.",
+]

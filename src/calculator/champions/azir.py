@@ -26,7 +26,9 @@ Why each slot is non-generic:
   never pre-multiplied (Amumu charge pattern).
 - E (Shifting Sands) pins the "Magic Damage" attribute because the
   JSON duplicates identical values under "Shield Strength" — exactly
-  one damage row is emitted (the shield is not modeled).
+  one damage row is emitted; the Shield Strength row feeds the
+  ally-support scanner, which grants the self shield at the cast
+  (E8c).
 - R (Emperor's Divide) pins "Magic Damage"; effect[0] carries geometry
   rows ("Width" with units of " soldiers") that must never parse as
   damage or scaling values.
@@ -127,7 +129,11 @@ ASSUMPTIONS = [
     "Single-target: soldier spear line's reduced damage to targets beyond "
     "the closest (20-100% by level) not modeled",
     "Q deals one instance regardless of soldier count (in-game rule)",
-    "E shield (70-230 +60% AP) not modeled; damage component only",
+    "E (Shifting Sands) shields Azir for the sourced 70/110/150/190/230 "
+    "+ 60% AP for 1.5s at the cast; the shield is emitted by the "
+    "ally-support scanner from the cached Shield Strength row (untimed "
+    "packet — the 1.5s expiry is a documented boundary of that "
+    "interface) and absorbs incoming damage in the participant ledger",
     "Soldier attacks use Azir's attack speed; they cannot crit, apply no "
     "lifesteal, and apply on-hit effects at 50% effectiveness to the "
     "primary target",
