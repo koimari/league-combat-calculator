@@ -166,6 +166,48 @@ def _dancing_grenade(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: the summoned Lotus Trap's detonation damage.
+
+    One trap detonates for the full "Magic Damage" row (20-260 + 120%
+    AD + 100% AP by rank) and slows 35% for 2 seconds (utility).  The
+    wiki notes a champion struck by ANOTHER Lotus Trap within the last
+    1 second takes 65% damage ("Reduced Damage" row), so ``e_traps``
+    (default 1, max 2 — the charge cap) prices the first trap full and
+    each further trap at the reduced row.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    traps = min(max(int(ctx.options.get("e_traps", 1)), 1), 2)
+    full = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
+    parts = [DamagePart("magic", full, time_offset=0.0)]
+    if traps > 1:
+        parts.append(
+            DamagePart(
+                "magic", reduced, count=traps - 1, time_offset=1.0, hit_interval=0.0
+            )
+        )
+    entry = damage_entry(
+        ability.get("name", "Captive Audience"),
+        rank,
+        extract_cooldown(ability, rank),
+        full + reduced * (traps - 1),
+        "magic",
+    )
+    entry["parts"] = tuple(parts)
+    entry["detail"] = (
+        f"{traps} Lotus Trap detonation(s): the first full, each further "
+        f"trap at the 65% reduced row (struck by another trap within 1s); "
+        "the 35% 2s slow is utility."
+    )
+    return entry
+
+
 def _curtain_call(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
@@ -227,7 +269,7 @@ SLOTS = {
     "final_round": _final_round,
     "Q": _dancing_grenade,
     "W": simple_damage(attr="Physical Damage", dmg_type="physical"),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": _captive_audience,
     "R": _curtain_call,
 }
 parse_abilities = build_parser(SLOTS, "Jhin")
@@ -272,6 +314,14 @@ OPTIONS = [
         "label": "Deaths after grenade hit",
     },
     {
+        "key": "e_traps",
+        "type": "int",
+        "default": 1,
+        "min": 1,
+        "max": 2,
+        "label": "Lotus Trap detonations",
+    },
+    {
         "key": "r_shots",
         "type": "int",
         "default": 4,
@@ -281,15 +331,23 @@ OPTIONS = [
     },
 ]
 ASSUMPTIONS = [
-    "Every Moment Matters uses the cached level scaling plus explicit crit/bonus-AS inputs; its AD grant is applied before later damage.",
+    "Every Moment Matters uses the cached level scaling plus explicit "
+    "crit/bonus-AS inputs; its AD grant is applied before later damage.",
     "Whisper's final round is the 4th shot of the 4-round clip: always a "
     "crit, adding 15/20/25% (levels 1/6/11) of target missing health. "
     "p_shot_number is the explicit pre-stack (shots into the clip); "
     "p_missing_health prices the bonus at the fight engine's static "
     "target context (the per-auto dynamic missing-health curve is beyond "
     "the engine's proc model — the expected contribution is priced flat).",
-    "Dancing Grenade exposes bounce/death state, while Deadly Flourish and Lotus Trap use their typed source damage once.",
-    "Curtain Call interpolates each bullet's missing-health range and keeps the fourth bullet's sourced critical packet separate.",
+    "Dancing Grenade exposes bounce/death state, while Deadly Flourish "
+    "and Lotus Trap use their typed source damage once; e_traps (max 2, "
+    "the charge cap) prices the second trap at the 65% reduced row "
+    "(champion struck by another Lotus Trap within 1s).",
+    "Lotus Trap's 35% 2s slow and the reveal are utility the fight model "
+    "does not price; trap arm time and placement are state outside the "
+    "damage model.",
+    "Curtain Call interpolates each bullet's missing-health range and "
+    "keeps the fourth bullet's sourced critical packet separate.",
 ]
 SOURCES = [
     source_row(
