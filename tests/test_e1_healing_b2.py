@@ -11,7 +11,8 @@ Hand-derived values (no items unless noted, AP = 0):
     Kindred R (Lamb's Respite)    rank 3: 375                 -> 375
     Lissandra R (Frozen Tomb)     rank 3: min 20 / max 40 per tick (+ 5.5% / 11% AP)
     Nidalee E (Primal Surge)      rank 5: min 150 / max 300 (+ 35% / 70% AP)
-    Senna Q (Piercing Darkness)   rank 5: 120 (+ 40% bonus AD)(+ 35% AP) -> 120; with DC 179.15
+    Senna Q (Piercing Darkness)   rank 5: 120 (+ 40% bonus AD)(+ 35% AP) -> 132
+                                   with default 40 Mist stacks (E3: +30 bonus AD); with DC 191.15
     Smolder R (MMOOOMMMM!)        rank 3: 170 (+ 50% bonus AD)(+ 75% AP) -> 170; with DC 296.75
     Sylas W (Kingslayer)          rank 5: min 100 / max 200 (+ 30% / 60% AP)
 
@@ -218,11 +219,15 @@ def test_nidalee_primal_surge_heals_scaled_by_missing_health():
 
 
 def test_senna_piercing_darkness_heals_flat_per_cast():
-    """Q heals 120 (rank 5) + 35% AP; 179.15 with Deathcap."""
+    """Q heals 120 (rank 5) + 35% AP; with Deathcap 179.15. The E3 Mist
+    stack modeling (default 40 stacks = 30 bonus AD) feeds the heal's
+    40% bonus-AD ratio: +12 without items, +12 on top of the Deathcap
+    case."""
     combat = _fight("Senna")
     heals = [e for e in _main_heals(combat) if e["source"] == "Piercing Darkness"]
     assert heals, "Piercing Darkness heal missing"
-    assert all(e["amount"] == pytest.approx(120.0) for e in heals)
+    mist_bonus_ad = 0.75 * 40  # E3 default Mist stacks
+    assert all(e["amount"] == pytest.approx(120.0 + 0.4 * mist_bonus_ad) for e in heals)
     combat = _fight("Senna", items=[_RABADONS])
     heals = [e for e in _main_heals(combat) if e["source"] == "Piercing Darkness"]
     assert heals
@@ -230,7 +235,7 @@ def test_senna_piercing_darkness_heals_flat_per_cast():
     stats = calculate_total_stats(data, 18, [get_item_by_name(_RABADONS)], role="mid")
     expected = _sourced_flat(data["abilities"]["Q"][0], "Healing", 5, stats)
     assert expected == pytest.approx(179.15, abs=0.01)
-    assert heals[0]["amount"] == pytest.approx(expected, abs=0.1)
+    assert heals[0]["amount"] == pytest.approx(expected + 0.4 * mist_bonus_ad, abs=0.1)
 
 
 def test_smolder_mmoooo_mm_heals_flat_per_cast():
