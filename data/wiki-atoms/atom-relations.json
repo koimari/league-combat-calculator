@@ -1,0 +1,96 @@
+{
+ "heal-shield.heal": [
+  "heal-shield.grievous-wounds",
+  "heal-shield.heal-amplification",
+  "heal-shield.healing-negation",
+  "heal-shield.overheal"
+ ],
+ "heal-shield.grievous-wounds": [
+  "heal-shield.heal",
+  "heal-shield.health-regeneration",
+  "damage.dot"
+ ],
+ "heal-shield.shield": [
+  "heal-shield.shield-reduction",
+  "heal-shield.shield-destruction",
+  "heal-shield.heal-and-shield-power"
+ ],
+ "heal-shield.shield-reduction": [
+  "heal-shield.shield",
+  "heal-shield.shield-magic",
+  "heal-shield.shield-physical"
+ ],
+ "heal-shield.heal-amplification": [
+  "heal-shield.heal",
+  "heal-shield.shield",
+  "heal-shield.health-regeneration"
+ ],
+ "heal-shield.grey-health": [
+  "heal-shield.heal",
+  "damage.damage-instance"
+ ],
+ "crowd-control-mobility.tenacity": [
+  "crowd-control-mobility.brittle",
+  "crowd-control-mobility.slow",
+  "crowd-control-mobility.stun",
+  "crowd-control-mobility.root",
+  "crowd-control-mobility.silence",
+  "crowd-control-mobility.knockback"
+ ],
+ "crowd-control-mobility.brittle": [
+  "crowd-control-mobility.tenacity",
+  "crowd-control-mobility.immobilize"
+ ],
+ "damage.damage-instance": [
+  "damage.resistance-mitigation",
+  "heal-shield.life-steal",
+  "heal-shield.omnivamp",
+  "heal-shield.grey-health"
+ ],
+ "damage.resistance-mitigation": [
+  "damage.damage-instance",
+  "damage.armor-penetration",
+  "damage.magic-penetration"
+ ],
+ "damage.dot": [
+  "heal-shield.grievous-wounds",
+  "damage.damage-instance"
+ ],
+ "damage.execute": [
+  "stats.health",
+  "damage.missing-health"
+ ],
+ "heal-shield.revive": [
+  "damage.damage-instance",
+  "heal-shield.heal"
+ ],
+ "stack-transform-summon-resource.stack": [
+  "damage.on-hit",
+  "damage.damage-instance"
+ ],
+ "damage.on-hit": [
+  "stack-transform-summon-resource.stack",
+  "damage.damage-instance"
+ ],
+ "stack-transform-summon-resource.summon": [
+  "damage.damage-instance",
+  "damage.aoe"
+ ],
+ "vision-economy.stealth": [
+  "vision-economy.true-sight",
+  "vision-economy.attacker-reveal"
+ ],
+ "vision-economy.true-sight": [
+  "vision-economy.stealth",
+  "vision-economy.camouflage"
+ ],
+ "interaction.attack-reset": [
+  "stats.attack-speed",
+  "damage.basic-attack"
+ ],
+ "stack-transform-summon-resource.transform": [
+  "stats.health",
+  "stats.armor",
+  "stats.attack-damage"
+ ]
+}

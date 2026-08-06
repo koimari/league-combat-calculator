@@ -2484,12 +2484,12 @@
   },
   {
    "champion": "elise",
-   "atom_count": 46,
+   "atom_count": 45,
    "family_counts": {
     "crowd-control-mobility": 12,
     "damage": 15,
     "interaction": 1,
-    "stack-transform-summon-resource": 17,
+    "stack-transform-summon-resource": 16,
     "vision-economy": 1
    },
    "unclassified": [
@@ -5978,10 +5978,10 @@
   },
   {
    "champion": "lissandra",
-   "atom_count": 34,
+   "atom_count": 33,
    "family_counts": {
     "crowd-control-mobility": 10,
-    "damage": 20,
+    "damage": 19,
     "heal-shield": 2,
     "stack-transform-summon-resource": 2
    },
@@ -9579,10 +9579,10 @@
   },
   {
    "champion": "sivir",
-   "atom_count": 34,
+   "atom_count": 32,
    "family_counts": {
     "crowd-control-mobility": 1,
-    "damage": 21,
+    "damage": 19,
     "heal-shield": 2,
     "interaction": 2,
     "stack-transform-summon-resource": 8
@@ -10894,10 +10894,10 @@
   },
   {
    "champion": "twitch",
-   "atom_count": 27,
+   "atom_count": 22,
    "family_counts": {
-    "damage": 12,
-    "stack-transform-summon-resource": 14,
+    "damage": 13,
+    "stack-transform-summon-resource": 8,
     "vision-economy": 1
    },
    "unclassified": [
@@ -10906,6 +10906,18 @@
      "object": "Characters/Twitch/Spells/TwitchExpungeAbility/TwitchEParticle",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "Deadly_Venom",
+     "object": "Characters/Twitch/Spells/Deadly_Venom",
+     "looks_noise": false,
+     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
+    },
+    {
+     "name": "TwitchDeadlyVenom",
+     "object": "Characters/Twitch/Spells/TwitchDeadlyVenomMarkerAbility/TwitchDeadlyVenom",
+     "looks_noise": false,
+     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
      "name": "TwitchUlt",
@@ -13351,10 +13363,10 @@
   },
   {
    "champion": "zoe",
-   "atom_count": 65,
+   "atom_count": 62,
    "family_counts": {
     "crowd-control-mobility": 11,
-    "damage": 37,
+    "damage": 34,
     "heal-shield": 2,
     "stack-transform-summon-resource": 15
    },
@@ -13580,28 +13592,28 @@
  ],
  "totals": {
   "champions_processed": 173,
-  "atoms_classified": 5367,
-  "unclassified_real_mechanics": 1209,
+  "atoms_classified": 5355,
+  "unclassified_real_mechanics": 1211,
   "unclassified_noise_artifacts": 700,
-  "unclassified_total_objects": 1909,
+  "unclassified_total_objects": 1911,
   "family_counts": {
    "crowd-control-mobility": 1028,
-   "damage": 2996,
+   "damage": 2991,
    "heal-shield": 272,
    "interaction": 155,
-   "stack-transform-summon-resource": 848,
+   "stack-transform-summon-resource": 841,
    "vision-economy": 68
   },
   "damage_type": {
-   "damage_atoms": 2996,
-   "typed": 1598,
+   "damage_atoms": 2991,
+   "typed": 1594,
    "by_type": {
-    "magic": 929,
+    "magic": 925,
     "other": 86,
     "physical": 565,
     "true": 18
    },
-   "coverage": 0.5334,
+   "coverage": 0.5329,
    "coverage_before_bridge": 0.0137,
    "source": "data/champions.json per-ability damageType, bridged by script-name prefix (champion+slot letter) and ability-name tokens; token inference is the fallback"
   },

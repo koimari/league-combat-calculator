@@ -288,6 +288,13 @@ NOISE_TOKENS = {
 TAG_MAP_FILE = VOCAB_DIR / "spell-tags.json"
 
 
+def load_atom_relations() -> dict[str, list[str]]:
+    p = VOCAB_DIR / "atom-relations.json"
+    if p.exists():
+        return json.loads(p.read_text())
+    return {}
+
+
 def load_tag_map() -> dict:
     if TAG_MAP_FILE.exists():
         return json.loads(TAG_MAP_FILE.read_text())
@@ -676,7 +683,7 @@ def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, 
     return sorted(hits.items())
 
 
-def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, passive_map=None, tag_map=None, wiki_types=None) -> dict:
+def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, passive_map=None, tag_map=None, wiki_types=None, atom_relations=None) -> dict:
     ser = json.loads(bin_path.read_text())
     atoms: dict[tuple[str, str], dict] = {}   # (atom_id, behavior) -> atom
     unclassified: list[dict] = []
@@ -737,6 +744,7 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
                 "trigger": trigger,
                 "target_policy": infer_target(atom_id, feat),
                 "parameters": params,
+                "relations": (atom_relations or {}).get(atom_id, []),
                 "provenance": {
                     "wiki": list(vocab[atom_id].get("wiki_pages", [])),
                     "binary": [key],
@@ -974,11 +982,12 @@ def main(argv=None) -> int:
     passive_map = load_passive_map()
     tag_map = load_tag_map()
     wiki_types = load_wiki_damage_types()
+    atom_relations = load_atom_relations()
 
     results = []
     for f in bin_files:
         champ = f.name[:-len(".bin.json")]
-        results.append(extract_champion(champ, f, keyword_index, vocab, passive_map, tag_map, wiki_types))
+        results.append(extract_champion(champ, f, keyword_index, vocab, passive_map, tag_map, wiki_types, atom_relations))
         (out / f"{champ}.atoms.json").write_text(
             json.dumps(results[-1]["atoms"], indent=1))
 

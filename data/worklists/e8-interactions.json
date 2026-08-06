@@ -191,5 +191,10 @@
    "mechanic": "Hail of Arrows GW"
   }
  ],
- "grey_health_primitive": "shared grey-health primitive needed (Pyke P, Tahm Kench E, Rengar W, Tryndamere Q, Kled) \u2014 E1-b4 scope"
+ "grey_health_primitive": "shared grey-health primitive needed (Pyke P, Tahm Kench E, Rengar W, Tryndamere Q, Kled) \u2014 E1-b4 scope",
+ "atom_interaction_semantics": {
+  "shield-reduction": "Serpent's Fang venom reduces shields the target gains (incl. Sterak's Lifeline) by 50%/35% for 3s; reduce the shield amount at grant time when the attacker holds Serpent's Fang.",
+  "brittle": "Ornn's abilities apply Brittle: target Tenacity -30% (affects subsequent CC durations except airborne/drowsy/nearsight/stasis/suppression) + next immobilize duration +30%; model as an enemy-sourced tenacity modifier.",
+  "tenacity": "Reduces disable durations at application time; floor 0.3s; multiplicative/additive stacking per source."
+ }
 }

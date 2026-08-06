@@ -591,12 +591,10 @@
   "name": "Brittle",
   "keywords": [
    "brittle",
-   "brittled",
-   "tenacity reduction",
-   "-30% tenacity",
-   "ornn brittle"
+   "ornn",
+   "living forge"
   ],
-  "description": "Debuff that reduces the target's tenacity by 30% (making CC last longer) and ends prematurely when the target is immobilized.",
+  "description": "Ornn's debuff: reduces the target's Tenacity by 30% and increases the duration of the next immobilizing crowd control. An interaction atom \u2014 applied by Ornn's abilities, affecting subsequent CC durations via the target's tenacity.",
   "wiki_pages": [
    "Crowd control",
    "Tenacity"

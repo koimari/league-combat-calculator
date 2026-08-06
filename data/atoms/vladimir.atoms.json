@@ -12,6 +12,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -41,6 +42,7 @@
    "damage_type": "magic",
    "affects_type_flags": 8192
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -66,6 +68,7 @@
    "damage_type": "magic",
    "affects_type_flags": 8192
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -90,6 +93,12 @@
    "damage_type": "magic",
    "affects_type_flags": 8192
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -113,6 +122,12 @@
    "damage_type": "magic",
    "affects_type_flags": 13327
   },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
   "provenance": {
    "wiki": [
     "Healing",
@@ -138,6 +153,7 @@
    "damage_type": "magic",
    "affects_type_flags": 7183
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Debuff"
@@ -161,6 +177,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -185,6 +202,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -208,6 +231,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
   "provenance": {
    "wiki": [
     "Healing",
@@ -233,6 +262,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Debuff"
@@ -256,6 +286,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -285,6 +316,7 @@
    "damage_type": null,
    "affects_type_flags": 24527
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Critical strike",
@@ -309,6 +341,7 @@
    "damage_type": "magic",
    "affects_type_flags": 1029
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control"
@@ -332,6 +365,7 @@
    "damage_type": "magic",
    "affects_type_flags": 1029
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -356,6 +390,12 @@
    "damage_type": "magic",
    "affects_type_flags": 1029
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -379,6 +419,10 @@
    "damage_type": "magic",
    "affects_type_flags": 1029
   },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
   "provenance": {
    "wiki": [
     "Damage over time",
@@ -403,6 +447,12 @@
    "damage_type": "magic",
    "affects_type_flags": 1029
   },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
   "provenance": {
    "wiki": [
     "Healing",
@@ -428,6 +478,12 @@
    "damage_type": "magic",
    "affects_type_flags": 17413
   },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
   "provenance": {
    "wiki": [
     "Healing",
@@ -453,6 +509,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -476,6 +538,12 @@
    "damage_type": "magic",
    "affects_type_flags": 7375
   },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
   "provenance": {
    "wiki": [
     "Healing",
@@ -501,6 +569,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Debuff"
@@ -524,6 +593,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Debuff"
@@ -547,6 +617,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -570,6 +646,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
   "provenance": {
    "wiki": [
     "Healing",
@@ -595,6 +677,7 @@
    "damage_type": null,
    "affects_type_flags": 24527
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -620,6 +703,7 @@
    "damage_type": null,
    "affects_type_flags": 24527
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -644,6 +728,7 @@
    "damage_type": null,
    "affects_type_flags": 24527
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -669,6 +754,7 @@
    "damage_type": null,
    "affects_type_flags": 24527
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -693,6 +779,7 @@
    "damage_type": null,
    "affects_type_flags": 24527
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -718,6 +805,7 @@
    "damage_type": null,
    "affects_type_flags": 24527
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -742,6 +830,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Ability resource",
@@ -766,6 +855,7 @@
    "damage_type": null,
    "affects_type_flags": 24527
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -791,6 +881,7 @@
    "damage_type": null,
    "affects_type_flags": 24527
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",

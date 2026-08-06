@@ -9850,6 +9850,12 @@
   "champion": "twitch",
   "unclassified": [
    {
+    "name": "TwitchDeadlyVenom",
+    "object": "Characters/Twitch/Spells/TwitchDeadlyVenomMarkerAbility/TwitchDeadlyVenom",
+    "looks_noise": false,
+    "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
+   },
+   {
     "name": "TwitchUlt",
     "object": "Characters/Twitch/Spells/TwitchFullAutomaticAbility/TwitchUlt",
     "looks_noise": false,
@@ -9860,6 +9866,12 @@
     "object": "Characters/Twitch/Spells/TwitchExpungeAbility/TwitchEParticle",
     "looks_noise": true,
     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+   },
+   {
+    "name": "Deadly_Venom",
+    "object": "Characters/Twitch/Spells/Deadly_Venom",
+    "looks_noise": false,
+    "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
    }
   ]
  },

@@ -1,598 +1,597 @@
 [
-  {
-    "atom_id": "heal-shield.heal",
-    "family": "heal-shield",
-    "name": "Heal",
-    "keywords": [
-      "heal",
-      "healing",
-      "heal received",
-      "incoming heal",
-      "outgoing heal",
-      "self-heal",
-      "restore health",
-      "cure",
-      "health restore",
-      "summoner heal"
-    ],
-    "description": "Directly increase a unit's current health, capped at maximum health; negative heal values deal no damage and cannot kill.",
-    "wiki_pages": [
-      "Healing",
-      "Heal",
-      "Health"
-    ],
-    "game_hints": [
-      "'Recently Healed' debuff (35 s) halves subsequent summoner Heal effects",
-      "healing restored below 20 HP is not shown as the +X green text",
-      "leveling up and max-health increases also raise current health but are NOT considered healing",
-      "{tip|healing} status template; heal is modified by Grievous Wounds and healing amplifiers"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.heal-and-shield-power",
-    "family": "heal-shield",
-    "name": "Heal and shield power",
-    "keywords": [
-      "heal and shield power",
-      "HSP",
-      "heal power",
-      "shield power",
-      "heal amp",
-      "heal & shield power",
-      "h&sp"
-    ],
-    "description": "Champion stat that additively increases the effectiveness of self and outgoing heals and shields.",
-    "wiki_pages": [
-      "Heal and shield power",
-      "Healing",
-      "Shield",
-      "Template:Healing modifiers"
-    ],
-    "game_hints": [
-      "affects self heals, self shields, outgoing heals/shields and drain; NOT incoming heals/shields, life steal, vamp, health regen, or bonus health (per {Healing modifiers} matrix)",
-      "stacks additively with itself but multiplicatively with other heal modifiers",
-      "granted by items (Dawncore, Diadem of Songs, Whispering Circlet), rune Revitalize (5%), Yuumi You and Me!, neutral buff Chemtech Blight"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.heal-amplification",
-    "family": "heal-shield",
-    "name": "Heal amplification",
-    "keywords": [
-      "heal amplification",
-      "healing increase",
-      "healing amplifier",
-      "heal multiplier",
-      "increased healing",
-      "healing received increase"
-    ],
-    "description": "Multiplicative modifiers that increase healing effectiveness (healing received or outgoing), separate from heal and shield power.",
-    "wiki_pages": [
-      "Healing",
-      "Life steal",
-      "Vamp",
-      "Heal and shield power",
-      "Template:Healing modifiers"
-    ],
-    "game_hints": [
-      "Spirit Visage passive 'Boundless Vitality' (+25%) multiplies the life steal/omnivamp stat value itself, not just healing",
-      "Immortal Path amplifies healing below 50% health; Revitalize adds 10% healing increase (5% below 40% health)",
-      "Aatrox World Ender, Briar Crimson Curse, Trundle Frozen Domain, Nilah Joy Unending also amplify healing"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.health-regeneration",
-    "family": "heal-shield",
-    "name": "Health regeneration",
-    "keywords": [
-      "health regeneration",
-      "HP5",
-      "health regen",
-      "regen",
-      "passive health restore",
-      "regeneration",
-      "HP/5"
-    ],
-    "description": "Passive restoration of current health over time (stat per 5 s, ticking in 0.5 s intervals, disabled at full health).",
-    "wiki_pages": [
-      "Health regeneration",
-      "Health",
-      "Grievous Wounds"
-    ],
-    "game_hints": [
-      "considered healing only for healing modifiers and end-of-game 'Healing Done' tracking",
-      "reduced by Grievous Wounds; amplified by Spirit Visage/Immortal Path; NOT by Revitalize or heal and shield power",
-      "sources: fountain, Health Relic, potions (Health Potion, Refillable Potion, Total Biscuit of Everlasting Will), Warmog's Armor, Doran's Shield, Second Wind, Biscuit Delivery, Crest of Cinders"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.health-threshold",
-    "family": "heal-shield",
-    "name": "Health threshold",
-    "keywords": [
-      "health threshold",
-      "max health cap",
-      "health cap",
-      "cannot exceed health"
-    ],
-    "description": "Restricts a unit so its health cannot exceed a set maximum via healing or health regeneration; current health is reduced to the threshold if above it.",
-    "wiki_pages": [
-      "Health"
-    ],
-    "game_hints": [
-      "applied by K'Sante All Out"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.grey-health",
-    "family": "heal-shield",
-    "name": "Grey health",
-    "keywords": [
-      "grey health",
-      "gray health",
-      "stored damage",
-      "recent damage",
-      "delayed damage"
-    ],
-    "description": "Health-bar storage of recently taken damage that designated champion abilities convert into healing.",
-    "wiki_pages": [
-      "Health"
-    ],
-    "game_hints": [
-      "appears dark grey between current health and shields; not counted by health-based effects",
-      "users: Dr. Mundo (Heart Zapper), Locke (Soul Ignition), Pyke (Gift of the Drowned Ones), Rengar (Battle Roar), Tahm Kench (Thick Skin)"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.max-health-increase-restores-current",
-    "family": "heal-shield",
-    "name": "Max health increase restores current health",
-    "keywords": [
-      "maximum health",
-      "max HP",
-      "current health",
-      "level up",
-      "max health increase",
-      "bonus health"
-    ],
-    "description": "Increasing a unit's maximum health raises its current health by the same amount; this is not considered healing and ignores healing reduction.",
-    "wiki_pages": [
-      "Health",
-      "Healing"
-    ],
-    "game_hints": [
-      "leveling up and abilities like Lulu Wild Growth raise current health with max health but bypass healing modifiers",
-      "a decrease in max health does not lower current health unless it would exceed the new maximum"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.overheal",
-    "family": "heal-shield",
-    "name": "Overheal",
-    "keywords": [
-      "overheal",
-      "excess healing",
-      "over-heal",
-      "healing conversion",
-      "heal to shield"
-    ],
-    "description": "Conversion of healing in excess of maximum health into a temporary shield (Overheal rune, removed in V14.10).",
-    "wiki_pages": [
-      "Overheal",
-      "Healing"
-    ],
-    "game_hints": [
-      "life steal, omnivamp and physical vamp apply Overheal; health regeneration does not",
-      "shield scaled with 11% maximum health at removal; decayed 2.5% of max shield per second after 6 s",
-      "replaced by rune Absorb Life (V14.10); shield VFX file 'Overheal shield VFX.png'"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.life-steal",
-    "family": "heal-shield",
-    "name": "Life steal",
-    "keywords": [
-      "life steal",
-      "lifesteal",
-      "LS",
-      "attack vamp",
-      "basic damage heal"
-    ],
-    "description": "Stat granting healing equal to a percentage of post-mitigation basic damage dealt (basic attacks and abilities tagged as basic damage).",
-    "wiki_pages": [
-      "Life steal",
-      "Vamp",
-      "Healing",
-      "Health",
-      "Template:Healing modifiers"
-    ],
-    "game_hints": [
-      "does not benefit from heal and shield power; stacks additively; reduced by Grievous Wounds",
-      "applies to post-mitigation damage; item on-hit effects tagged via {tip info|Applies lifesteal}",
-      "Spirit Visage 'Boundless Vitality' multiplies the life steal stat itself (10% * 1.25 = 12.5%)",
-      "no effect vs structures; effectively 0 vs wards (damage reduced to 1)"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.omnivamp",
-    "family": "heal-shield",
-    "name": "Omnivamp",
-    "keywords": [
-      "omnivamp",
-      "omni vamp",
-      "omnivampirism",
-      "all damage vamp",
-      "full vamp"
-    ],
-    "description": "Stat granting healing equal to a percentage of post-mitigation physical, magic and true damage dealt; reduced to 33% effectiveness vs minions/monsters for AoE, pet and damage-over-time sources.",
-    "wiki_pages": [
-      "Vamp",
-      "Healing",
-      "Health",
-      "Template:Healing modifiers"
-    ],
-    "game_hints": [
-      "does not apply to Ignite or Smite damage (since V26.04)",
-      "does not benefit from heal and shield power; stacks additively; reduced by Grievous Wounds",
-      "33% AoE/pet penalty vs minions/monsters since V26.01 (previously 20%); V14.1 removed AoE/pet penalty entirely"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.physical-vamp",
-    "family": "heal-shield",
-    "name": "Physical vamp",
-    "keywords": [
-      "physical vamp",
-      "physical vampirism",
-      "PVamp",
-      "AD vamp"
-    ],
-    "description": "Archived stat subtype of vamp granting healing equal to a percentage of post-mitigation physical damage dealt; no current sources since V11.13.",
-    "wiki_pages": [
-      "Vamp",
-      "Life steal"
-    ],
-    "game_hints": [
-      "stat removed from the HUD in V14.1; last source Sanguine Blade removed V11.13",
-      "does not benefit from heal and shield power; still listed in {Healing modifiers} matrix as affected by Spirit Visage, Revitalize, Grievous Wounds"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.spell-vamp",
-    "family": "heal-shield",
-    "name": "Spell vamp",
-    "keywords": [
-      "spell vamp",
-      "spellvamp",
-      "SV",
-      "ability vamp",
-      "magic vamp"
-    ],
-    "description": "Archived stat subtype of vamp granting healing equal to a percentage of post-mitigation ability damage dealt; no sources left since V26.04.",
-    "wiki_pages": [
-      "Vamp",
-      "Life steal"
-    ],
-    "game_hints": [
-      "last source Lee Sin Iron Will removed V26.04",
-      "does not benefit from heal and shield power; proc, default and basic damage do not benefit from spell vamp",
-      "historically 33% effectiveness for area and pet damage (removed V14.1)"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.drain",
-    "family": "heal-shield",
-    "name": "Drain",
-    "keywords": [
-      "drain",
-      "attack drain",
-      "damage-based heal",
-      "heal on damage",
-      "vamp-like heal"
-    ],
-    "description": "Unofficial category of effects that heal based on damage dealt (post- or pre-mitigation) and benefit from heal and shield power.",
-    "wiki_pages": [
-      "Vamp",
-      "Life steal"
-    ],
-    "game_hints": [
-      "post-mitigation drain: Aatrox Deathbringer Stance, Aphelios Severum, Briar Snack Attack, Warwick Eternal Hunger, Conqueror, Elixir of Wrath, Knight's Vow; pre-mitigation: Briar Crimson Curse, Fiddlesticks Bountiful Harvest, Vladimir Sanguine Pool",
-      "drain effects have no AoE penalty unless stated; all benefit from heal and shield power (unlike vamp stats)"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.vamp",
-    "family": "heal-shield",
-    "name": "Vamp",
-    "keywords": [
-      "vamp",
-      "vampirism",
-      "healing on damage",
-      "damage heal"
-    ],
-    "description": "Umbrella category of stats that heal based on damage dealt, regrouping omnivamp, physical vamp, spell vamp and drain.",
-    "wiki_pages": [
-      "Vamp",
-      "Vampirism",
-      "Life steal",
-      "Health"
-    ],
-    "game_hints": [
-      "{tip|Reactive damage} (Bramble Vest, Thornmail) does not benefit from any vamp",
-      "Vampirism is a removed mastery that granted life steal and spell vamp (archival link)"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.shield",
-    "family": "heal-shield",
-    "name": "Shield",
-    "keywords": [
-      "shield",
-      "shields",
-      "barrier",
-      "absorb damage",
-      "damage absorption",
-      "temporary hit points"
-    ],
-    "description": "Temporary hit-points that absorb damage in place of health; resistances still mitigate first, strength scales with heal and shield power, and Grievous Wounds does not reduce shields.",
-    "wiki_pages": [
-      "Shield",
-      "Heal and shield power",
-      "Grievous Wounds",
-      "Overheal"
-    ],
-    "game_hints": [
-      "shielded damage is separate from health for health-based (current/max/missing) effects",
-      "most shields appear as a buff on the status bar; shield color on health bar indicates type",
-      "not to be confused with {tip|Spell shield} (spell negation) or visual-only shields like Leona Eclipse",
-      "Barrier and Unleashed Teleport (Toplane Quest) summoner spells create shields"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.shield-normal",
-    "family": "heal-shield",
-    "name": "Normal shield",
-    "keywords": [
-      "normal shield",
-      "all damage shield",
-      "grey shield",
-      "physical magic true shield"
-    ],
-    "description": "Shield that absorbs all damage types (physical, magic, true), displayed greyish-white on the health bar.",
-    "wiki_pages": [
-      "Shield"
-    ],
-    "game_hints": [
-      "health-bar color #C0C0C0 greyish-white; includes Locket of the Iron Solari, Guardian, Summon Aery, Bloodthirster, Sterak's Gage, Fimbulwinter"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.shield-magic",
-    "family": "heal-shield",
-    "name": "Magic shield",
-    "keywords": [
-      "magic shield",
-      "magic damage shield",
-      "MR shield",
-      "purple shield"
-    ],
-    "description": "Shield that only absorbs magic damage, displayed purple on the health bar.",
-    "wiki_pages": [
-      "Shield"
-    ],
-    "game_hints": [
-      "users: Morgana Black Shield, Galio Hero's Entrance/Shield of Durand, Kassadin Null Sphere; items Hexdrinker, Kaenic Rookern, Maw of Malmortius, Chainlaced Crushers"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.shield-physical",
-    "family": "heal-shield",
-    "name": "Physical shield",
-    "keywords": [
-      "physical shield",
-      "physical damage shield",
-      "armor shield",
-      "orange shield"
-    ],
-    "description": "Shield that only absorbs physical damage, displayed orange on the health bar.",
-    "wiki_pages": [
-      "Shield"
-    ],
-    "game_hints": [
-      "users: Camille Adaptive Defenses (physical mode), item Armored Advance"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.shield-reduction",
-    "family": "heal-shield",
-    "name": "Shield reduction",
-    "keywords": [
-      "shield reduction",
-      "shield cut",
-      "reduce shields",
-      "serpent's fang",
-      "anti-shield"
-    ],
-    "description": "Effects that reduce the strength of shields granted to a unit (Serpent's Fang; does not apply to magic damage shields).",
-    "wiki_pages": [
-      "Shield"
-    ],
-    "game_hints": [
-      "Serpent's Fang is the only current source; per {Healing modifiers} matrix it affects self shields and incoming shields only"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.shield-destruction",
-    "family": "heal-shield",
-    "name": "Shield destruction",
-    "keywords": [
-      "shield destruction",
-      "destroy shields",
-      "shield break",
-      "remove shields",
-      "shield purge"
-    ],
-    "description": "Effects that fully destroy any shields before applying their damage, even when the damage would be blocked by a spell shield.",
-    "wiki_pages": [
-      "Shield"
-    ],
-    "game_hints": [
-      "sources: executes, Blitzcrank Static Field, Rell Shattering Strike, empowered Renekton Ruthless Predator"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.shield-stacking-priority",
-    "family": "heal-shield",
-    "name": "Shield stacking priority",
-    "keywords": [
-      "shield stacking",
-      "shield priority",
-      "shield order",
-      "expiring soonest",
-      "multiple shields"
-    ],
-    "description": "When multiple shields are active, damage is absorbed by the shield expiring soonest, except Camille Adaptive Defenses and Morgana Black Shield which take priority.",
-    "wiki_pages": [
-      "Shield"
-    ],
-    "game_hints": [
-      "Camille Adaptive Defenses and Morgana Black Shield absorb damage before all other shields"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.on-heal-effect",
-    "family": "heal-shield",
-    "name": "On-heal effect",
-    "keywords": [
-      "on-heal",
-      "heal trigger",
-      "heal proc",
-      "when healed",
-      "upon healing"
-    ],
-    "description": "Effects that trigger upon healing or being healed by an ally (Ardent Censer, Staff of Flowing Water, Summon Aery, etc.).",
-    "wiki_pages": [
-      "Healing"
-    ],
-    "game_hints": [
-      "triggers: Ardent Censer, Staff of Flowing Water, Summon Aery, Echoes of Helia, Diadem of Songs, Crimson Lucidity, Lucian Vigilance (Lightslinger), Nilah Joy Unending"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.on-shield-effect",
-    "family": "heal-shield",
-    "name": "On-shield effect",
-    "keywords": [
-      "on-shield",
-      "shield trigger",
-      "shield proc",
-      "when shielded",
-      "upon shielding"
-    ],
-    "description": "Effects that trigger upon shielding or being shielded by an ally (same item/rune family as on-heal effects).",
-    "wiki_pages": [
-      "Shield"
-    ],
-    "game_hints": [
-      "triggers: Ardent Censer, Staff of Flowing Water, Summon Aery, Echoes of Helia, Diadem of Songs, Crimson Lucidity, Lucian Vigilance, Nilah Joy Unending"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.healing-reduction",
-    "family": "heal-shield",
-    "name": "Healing reduction",
-    "keywords": [
-      "healing reduction",
-      "heal cut",
-      "reduced healing",
-      "anti-heal",
-      "healing debuff",
-      "reduce healing received"
-    ],
-    "description": "Modifiers that reduce all healing and health regeneration a unit receives (Grievous Wounds 40%; also Howling Abyss aura 50% outgoing, Sion Glory in Death 100% incoming).",
-    "wiki_pages": [
-      "Grievous Wounds",
-      "Healing",
-      "Health regeneration",
-      "Life steal",
-      "Vamp",
-      "Template:Healing modifiers"
-    ],
-    "game_hints": [
-      "{tip|Howling Abyss aura} reduces all outgoing healing effects by 50%",
-      "Sion Glory in Death reduces incoming healing that is not life steal or spell vamp by 100%",
-      "Mutilator was Aatrox's old self-heal/shield reduction debuff (40%) — trivia",
-      "reduces health regeneration too; does not affect shields"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.grievous-wounds",
-    "family": "heal-shield",
-    "name": "Grievous Wounds",
-    "keywords": [
-      "grievous wounds",
-      "GW",
-      "grievous",
-      "mortal wounds",
-      "anti-heal",
-      "healing reduction debuff"
-    ],
-    "description": "Named debuff status that reduces all healing and health regeneration received by 40%; does not stack (refreshes) and does not affect shields.",
-    "wiki_pages": [
-      "Grievous Wounds",
-      "Healing",
-      "Life steal",
-      "Vamp",
-      "Heal"
-    ],
-    "game_hints": [
-      "applied by Ignite, Bramble Vest, Thornmail, Executioner's Calling, Mortal Reminder, Chempunk Chainsword, Oblivion Orb, Morellonomicon, Katarina Death Lotus, Varus Hail of Arrows, Singed Poison Trail (during Insanity Potion)",
-      "dispelled by resurrection effects, Sion Glory in Death, and death ({tip|dispel})",
-      "damage-dependent sources apply GW even if damage was fully mitigated by a shield (since V13.7)",
-      "standard effect 40% since V13.3; enhanced 60% variant removed"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.healing-negation",
-    "family": "heal-shield",
-    "name": "Healing negation",
-    "keywords": [
-      "prevent healing",
-      "negate healing",
-      "no healing",
-      "healing immunity",
-      "suppress healing"
-    ],
-    "description": "Effects that prevent a unit from being healed altogether once a condition is met (Kindred Lamb's Respite health threshold).",
-    "wiki_pages": [
-      "Healing"
-    ],
-    "game_hints": [
-      "Kindred Lamb's Respite negates all healing on a unit once they reach a certain health threshold"
-    ]
-  },
-  {
-    "atom_id": "heal-shield.revive",
-    "family": "heal-shield",
-    "name": "Revive",
-    "keywords": [
-      "revive",
-      "revival",
-      "resurrection",
-      "respawn",
-      "return from death",
-      "rebirth",
-      "rise from the grave"
-    ],
-    "description": "Return a dead unit to life at a location (summoner spell Revive — removed V5.4; resurrection-status effects still exist in game).",
-    "wiki_pages": [
-      "Revive",
-      "Healing"
-    ],
-    "game_hints": [
-      "{tip|resurrection} and {tip|zombie state} statuses; resurrection clears Grievous Wounds via dispel",
-      "Revive summoner spell respawned the champion at home base with a decaying speed boost; converted to Soul Anchor trinket in Dominion",
-      "resurrection/zombie-state heals after fatal damage are unaffected by healing modifiers"
-    ]
-  }
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "name": "Heal",
+  "keywords": [
+   "heal",
+   "healing",
+   "heal received",
+   "incoming heal",
+   "outgoing heal",
+   "self-heal",
+   "restore health",
+   "cure",
+   "health restore",
+   "summoner heal"
+  ],
+  "description": "Directly increase a unit's current health, capped at maximum health; negative heal values deal no damage and cannot kill.",
+  "wiki_pages": [
+   "Healing",
+   "Heal",
+   "Health"
+  ],
+  "game_hints": [
+   "'Recently Healed' debuff (35 s) halves subsequent summoner Heal effects",
+   "healing restored below 20 HP is not shown as the +X green text",
+   "leveling up and max-health increases also raise current health but are NOT considered healing",
+   "{tip|healing} status template; heal is modified by Grievous Wounds and healing amplifiers"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.heal-and-shield-power",
+  "family": "heal-shield",
+  "name": "Heal and shield power",
+  "keywords": [
+   "heal and shield power",
+   "HSP",
+   "heal power",
+   "shield power",
+   "heal amp",
+   "heal & shield power",
+   "h&sp"
+  ],
+  "description": "Champion stat that additively increases the effectiveness of self and outgoing heals and shields.",
+  "wiki_pages": [
+   "Heal and shield power",
+   "Healing",
+   "Shield",
+   "Template:Healing modifiers"
+  ],
+  "game_hints": [
+   "affects self heals, self shields, outgoing heals/shields and drain; NOT incoming heals/shields, life steal, vamp, health regen, or bonus health (per {Healing modifiers} matrix)",
+   "stacks additively with itself but multiplicatively with other heal modifiers",
+   "granted by items (Dawncore, Diadem of Songs, Whispering Circlet), rune Revitalize (5%), Yuumi You and Me!, neutral buff Chemtech Blight"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.heal-amplification",
+  "family": "heal-shield",
+  "name": "Heal amplification",
+  "keywords": [
+   "heal amplification",
+   "healing increase",
+   "healing amplifier",
+   "heal multiplier",
+   "increased healing",
+   "healing received increase"
+  ],
+  "description": "Multiplicative modifiers that increase healing effectiveness (healing received or outgoing), separate from heal and shield power.",
+  "wiki_pages": [
+   "Healing",
+   "Life steal",
+   "Vamp",
+   "Heal and shield power",
+   "Template:Healing modifiers"
+  ],
+  "game_hints": [
+   "Spirit Visage passive 'Boundless Vitality' (+25%) multiplies the life steal/omnivamp stat value itself, not just healing",
+   "Immortal Path amplifies healing below 50% health; Revitalize adds 10% healing increase (5% below 40% health)",
+   "Aatrox World Ender, Briar Crimson Curse, Trundle Frozen Domain, Nilah Joy Unending also amplify healing"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.health-regeneration",
+  "family": "heal-shield",
+  "name": "Health regeneration",
+  "keywords": [
+   "health regeneration",
+   "HP5",
+   "health regen",
+   "regen",
+   "passive health restore",
+   "regeneration",
+   "HP/5"
+  ],
+  "description": "Passive restoration of current health over time (stat per 5 s, ticking in 0.5 s intervals, disabled at full health).",
+  "wiki_pages": [
+   "Health regeneration",
+   "Health",
+   "Grievous Wounds"
+  ],
+  "game_hints": [
+   "considered healing only for healing modifiers and end-of-game 'Healing Done' tracking",
+   "reduced by Grievous Wounds; amplified by Spirit Visage/Immortal Path; NOT by Revitalize or heal and shield power",
+   "sources: fountain, Health Relic, potions (Health Potion, Refillable Potion, Total Biscuit of Everlasting Will), Warmog's Armor, Doran's Shield, Second Wind, Biscuit Delivery, Crest of Cinders"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.health-threshold",
+  "family": "heal-shield",
+  "name": "Health threshold",
+  "keywords": [
+   "health threshold",
+   "max health cap",
+   "health cap",
+   "cannot exceed health"
+  ],
+  "description": "Restricts a unit so its health cannot exceed a set maximum via healing or health regeneration; current health is reduced to the threshold if above it.",
+  "wiki_pages": [
+   "Health"
+  ],
+  "game_hints": [
+   "applied by K'Sante All Out"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.grey-health",
+  "family": "heal-shield",
+  "name": "Grey health",
+  "keywords": [
+   "grey health",
+   "gray health",
+   "stored damage",
+   "recent damage",
+   "delayed damage"
+  ],
+  "description": "Health-bar storage of recently taken damage that designated champion abilities convert into healing.",
+  "wiki_pages": [
+   "Health"
+  ],
+  "game_hints": [
+   "appears dark grey between current health and shields; not counted by health-based effects",
+   "users: Dr. Mundo (Heart Zapper), Locke (Soul Ignition), Pyke (Gift of the Drowned Ones), Rengar (Battle Roar), Tahm Kench (Thick Skin)"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.max-health-increase-restores-current",
+  "family": "heal-shield",
+  "name": "Max health increase restores current health",
+  "keywords": [
+   "maximum health",
+   "max HP",
+   "current health",
+   "level up",
+   "max health increase",
+   "bonus health"
+  ],
+  "description": "Increasing a unit's maximum health raises its current health by the same amount; this is not considered healing and ignores healing reduction.",
+  "wiki_pages": [
+   "Health",
+   "Healing"
+  ],
+  "game_hints": [
+   "leveling up and abilities like Lulu Wild Growth raise current health with max health but bypass healing modifiers",
+   "a decrease in max health does not lower current health unless it would exceed the new maximum"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.overheal",
+  "family": "heal-shield",
+  "name": "Overheal",
+  "keywords": [
+   "overheal",
+   "excess healing",
+   "over-heal",
+   "healing conversion",
+   "heal to shield"
+  ],
+  "description": "Conversion of healing in excess of maximum health into a temporary shield (Overheal rune, removed in V14.10).",
+  "wiki_pages": [
+   "Overheal",
+   "Healing"
+  ],
+  "game_hints": [
+   "life steal, omnivamp and physical vamp apply Overheal; health regeneration does not",
+   "shield scaled with 11% maximum health at removal; decayed 2.5% of max shield per second after 6 s",
+   "replaced by rune Absorb Life (V14.10); shield VFX file 'Overheal shield VFX.png'"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.life-steal",
+  "family": "heal-shield",
+  "name": "Life steal",
+  "keywords": [
+   "life steal",
+   "lifesteal",
+   "LS",
+   "attack vamp",
+   "basic damage heal"
+  ],
+  "description": "Stat granting healing equal to a percentage of post-mitigation basic damage dealt (basic attacks and abilities tagged as basic damage).",
+  "wiki_pages": [
+   "Life steal",
+   "Vamp",
+   "Healing",
+   "Health",
+   "Template:Healing modifiers"
+  ],
+  "game_hints": [
+   "does not benefit from heal and shield power; stacks additively; reduced by Grievous Wounds",
+   "applies to post-mitigation damage; item on-hit effects tagged via {tip info|Applies lifesteal}",
+   "Spirit Visage 'Boundless Vitality' multiplies the life steal stat itself (10% * 1.25 = 12.5%)",
+   "no effect vs structures; effectively 0 vs wards (damage reduced to 1)"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.omnivamp",
+  "family": "heal-shield",
+  "name": "Omnivamp",
+  "keywords": [
+   "omnivamp",
+   "omni vamp",
+   "omnivampirism",
+   "all damage vamp",
+   "full vamp"
+  ],
+  "description": "Stat granting healing equal to a percentage of post-mitigation physical, magic and true damage dealt; reduced to 33% effectiveness vs minions/monsters for AoE, pet and damage-over-time sources.",
+  "wiki_pages": [
+   "Vamp",
+   "Healing",
+   "Health",
+   "Template:Healing modifiers"
+  ],
+  "game_hints": [
+   "does not apply to Ignite or Smite damage (since V26.04)",
+   "does not benefit from heal and shield power; stacks additively; reduced by Grievous Wounds",
+   "33% AoE/pet penalty vs minions/monsters since V26.01 (previously 20%); V14.1 removed AoE/pet penalty entirely"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.physical-vamp",
+  "family": "heal-shield",
+  "name": "Physical vamp",
+  "keywords": [
+   "physical vamp",
+   "physical vampirism",
+   "PVamp",
+   "AD vamp"
+  ],
+  "description": "Archived stat subtype of vamp granting healing equal to a percentage of post-mitigation physical damage dealt; no current sources since V11.13.",
+  "wiki_pages": [
+   "Vamp",
+   "Life steal"
+  ],
+  "game_hints": [
+   "stat removed from the HUD in V14.1; last source Sanguine Blade removed V11.13",
+   "does not benefit from heal and shield power; still listed in {Healing modifiers} matrix as affected by Spirit Visage, Revitalize, Grievous Wounds"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.spell-vamp",
+  "family": "heal-shield",
+  "name": "Spell vamp",
+  "keywords": [
+   "spell vamp",
+   "spellvamp",
+   "SV",
+   "ability vamp",
+   "magic vamp"
+  ],
+  "description": "Archived stat subtype of vamp granting healing equal to a percentage of post-mitigation ability damage dealt; no sources left since V26.04.",
+  "wiki_pages": [
+   "Vamp",
+   "Life steal"
+  ],
+  "game_hints": [
+   "last source Lee Sin Iron Will removed V26.04",
+   "does not benefit from heal and shield power; proc, default and basic damage do not benefit from spell vamp",
+   "historically 33% effectiveness for area and pet damage (removed V14.1)"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.drain",
+  "family": "heal-shield",
+  "name": "Drain",
+  "keywords": [
+   "drain",
+   "attack drain",
+   "damage-based heal",
+   "heal on damage",
+   "vamp-like heal"
+  ],
+  "description": "Unofficial category of effects that heal based on damage dealt (post- or pre-mitigation) and benefit from heal and shield power.",
+  "wiki_pages": [
+   "Vamp",
+   "Life steal"
+  ],
+  "game_hints": [
+   "post-mitigation drain: Aatrox Deathbringer Stance, Aphelios Severum, Briar Snack Attack, Warwick Eternal Hunger, Conqueror, Elixir of Wrath, Knight's Vow; pre-mitigation: Briar Crimson Curse, Fiddlesticks Bountiful Harvest, Vladimir Sanguine Pool",
+   "drain effects have no AoE penalty unless stated; all benefit from heal and shield power (unlike vamp stats)"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.vamp",
+  "family": "heal-shield",
+  "name": "Vamp",
+  "keywords": [
+   "vamp",
+   "vampirism",
+   "healing on damage",
+   "damage heal"
+  ],
+  "description": "Umbrella category of stats that heal based on damage dealt, regrouping omnivamp, physical vamp, spell vamp and drain.",
+  "wiki_pages": [
+   "Vamp",
+   "Vampirism",
+   "Life steal",
+   "Health"
+  ],
+  "game_hints": [
+   "{tip|Reactive damage} (Bramble Vest, Thornmail) does not benefit from any vamp",
+   "Vampirism is a removed mastery that granted life steal and spell vamp (archival link)"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "name": "Shield",
+  "keywords": [
+   "shield",
+   "shields",
+   "barrier",
+   "absorb damage",
+   "damage absorption",
+   "temporary hit points"
+  ],
+  "description": "Temporary hit-points that absorb damage in place of health; resistances still mitigate first, strength scales with heal and shield power, and Grievous Wounds does not reduce shields.",
+  "wiki_pages": [
+   "Shield",
+   "Heal and shield power",
+   "Grievous Wounds",
+   "Overheal"
+  ],
+  "game_hints": [
+   "shielded damage is separate from health for health-based (current/max/missing) effects",
+   "most shields appear as a buff on the status bar; shield color on health bar indicates type",
+   "not to be confused with {tip|Spell shield} (spell negation) or visual-only shields like Leona Eclipse",
+   "Barrier and Unleashed Teleport (Toplane Quest) summoner spells create shields"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield-normal",
+  "family": "heal-shield",
+  "name": "Normal shield",
+  "keywords": [
+   "normal shield",
+   "all damage shield",
+   "grey shield",
+   "physical magic true shield"
+  ],
+  "description": "Shield that absorbs all damage types (physical, magic, true), displayed greyish-white on the health bar.",
+  "wiki_pages": [
+   "Shield"
+  ],
+  "game_hints": [
+   "health-bar color #C0C0C0 greyish-white; includes Locket of the Iron Solari, Guardian, Summon Aery, Bloodthirster, Sterak's Gage, Fimbulwinter"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield-magic",
+  "family": "heal-shield",
+  "name": "Magic shield",
+  "keywords": [
+   "magic shield",
+   "magic damage shield",
+   "MR shield",
+   "purple shield"
+  ],
+  "description": "Shield that only absorbs magic damage, displayed purple on the health bar.",
+  "wiki_pages": [
+   "Shield"
+  ],
+  "game_hints": [
+   "users: Morgana Black Shield, Galio Hero's Entrance/Shield of Durand, Kassadin Null Sphere; items Hexdrinker, Kaenic Rookern, Maw of Malmortius, Chainlaced Crushers"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield-physical",
+  "family": "heal-shield",
+  "name": "Physical shield",
+  "keywords": [
+   "physical shield",
+   "physical damage shield",
+   "armor shield",
+   "orange shield"
+  ],
+  "description": "Shield that only absorbs physical damage, displayed orange on the health bar.",
+  "wiki_pages": [
+   "Shield"
+  ],
+  "game_hints": [
+   "users: Camille Adaptive Defenses (physical mode), item Armored Advance"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield-reduction",
+  "family": "heal-shield",
+  "name": "Shield reduction",
+  "keywords": [
+   "serpent's fang",
+   "shield reaver",
+   "reducing any shields",
+   "venom"
+  ],
+  "description": "Shield Reaver (Serpent's Fang): dealing damage inflicts venom for 3 s, reducing shields the target GAINS by 50%/35% and reducing active shields on first application. An interaction atom \u2014 reduces shield-granting effects from any source (e.g. Sterak's Lifeline).",
+  "wiki_pages": [
+   "Shield"
+  ],
+  "game_hints": [
+   "Serpent's Fang is the only current source; per {Healing modifiers} matrix it affects self shields and incoming shields only"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield-destruction",
+  "family": "heal-shield",
+  "name": "Shield destruction",
+  "keywords": [
+   "shield destruction",
+   "destroy shields",
+   "shield break",
+   "remove shields",
+   "shield purge"
+  ],
+  "description": "Effects that fully destroy any shields before applying their damage, even when the damage would be blocked by a spell shield.",
+  "wiki_pages": [
+   "Shield"
+  ],
+  "game_hints": [
+   "sources: executes, Blitzcrank Static Field, Rell Shattering Strike, empowered Renekton Ruthless Predator"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.shield-stacking-priority",
+  "family": "heal-shield",
+  "name": "Shield stacking priority",
+  "keywords": [
+   "shield stacking",
+   "shield priority",
+   "shield order",
+   "expiring soonest",
+   "multiple shields"
+  ],
+  "description": "When multiple shields are active, damage is absorbed by the shield expiring soonest, except Camille Adaptive Defenses and Morgana Black Shield which take priority.",
+  "wiki_pages": [
+   "Shield"
+  ],
+  "game_hints": [
+   "Camille Adaptive Defenses and Morgana Black Shield absorb damage before all other shields"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.on-heal-effect",
+  "family": "heal-shield",
+  "name": "On-heal effect",
+  "keywords": [
+   "on-heal",
+   "heal trigger",
+   "heal proc",
+   "when healed",
+   "upon healing"
+  ],
+  "description": "Effects that trigger upon healing or being healed by an ally (Ardent Censer, Staff of Flowing Water, Summon Aery, etc.).",
+  "wiki_pages": [
+   "Healing"
+  ],
+  "game_hints": [
+   "triggers: Ardent Censer, Staff of Flowing Water, Summon Aery, Echoes of Helia, Diadem of Songs, Crimson Lucidity, Lucian Vigilance (Lightslinger), Nilah Joy Unending"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.on-shield-effect",
+  "family": "heal-shield",
+  "name": "On-shield effect",
+  "keywords": [
+   "on-shield",
+   "shield trigger",
+   "shield proc",
+   "when shielded",
+   "upon shielding"
+  ],
+  "description": "Effects that trigger upon shielding or being shielded by an ally (same item/rune family as on-heal effects).",
+  "wiki_pages": [
+   "Shield"
+  ],
+  "game_hints": [
+   "triggers: Ardent Censer, Staff of Flowing Water, Summon Aery, Echoes of Helia, Diadem of Songs, Crimson Lucidity, Lucian Vigilance, Nilah Joy Unending"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.healing-reduction",
+  "family": "heal-shield",
+  "name": "Healing reduction",
+  "keywords": [
+   "healing reduction",
+   "heal cut",
+   "reduced healing",
+   "anti-heal",
+   "healing debuff",
+   "reduce healing received"
+  ],
+  "description": "Modifiers that reduce all healing and health regeneration a unit receives (Grievous Wounds 40%; also Howling Abyss aura 50% outgoing, Sion Glory in Death 100% incoming).",
+  "wiki_pages": [
+   "Grievous Wounds",
+   "Healing",
+   "Health regeneration",
+   "Life steal",
+   "Vamp",
+   "Template:Healing modifiers"
+  ],
+  "game_hints": [
+   "{tip|Howling Abyss aura} reduces all outgoing healing effects by 50%",
+   "Sion Glory in Death reduces incoming healing that is not life steal or spell vamp by 100%",
+   "Mutilator was Aatrox's old self-heal/shield reduction debuff (40%) \u2014 trivia",
+   "reduces health regeneration too; does not affect shields"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.grievous-wounds",
+  "family": "heal-shield",
+  "name": "Grievous Wounds",
+  "keywords": [
+   "grievous wounds",
+   "GW",
+   "grievous",
+   "mortal wounds",
+   "anti-heal",
+   "healing reduction debuff"
+  ],
+  "description": "Named debuff status that reduces all healing and health regeneration received by 40%; does not stack (refreshes) and does not affect shields.",
+  "wiki_pages": [
+   "Grievous Wounds",
+   "Healing",
+   "Life steal",
+   "Vamp",
+   "Heal"
+  ],
+  "game_hints": [
+   "applied by Ignite, Bramble Vest, Thornmail, Executioner's Calling, Mortal Reminder, Chempunk Chainsword, Oblivion Orb, Morellonomicon, Katarina Death Lotus, Varus Hail of Arrows, Singed Poison Trail (during Insanity Potion)",
+   "dispelled by resurrection effects, Sion Glory in Death, and death ({tip|dispel})",
+   "damage-dependent sources apply GW even if damage was fully mitigated by a shield (since V13.7)",
+   "standard effect 40% since V13.3; enhanced 60% variant removed"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.healing-negation",
+  "family": "heal-shield",
+  "name": "Healing negation",
+  "keywords": [
+   "prevent healing",
+   "negate healing",
+   "no healing",
+   "healing immunity",
+   "suppress healing"
+  ],
+  "description": "Effects that prevent a unit from being healed altogether once a condition is met (Kindred Lamb's Respite health threshold).",
+  "wiki_pages": [
+   "Healing"
+  ],
+  "game_hints": [
+   "Kindred Lamb's Respite negates all healing on a unit once they reach a certain health threshold"
+  ]
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "name": "Revive",
+  "keywords": [
+   "revive",
+   "revival",
+   "resurrection",
+   "respawn",
+   "return from death",
+   "rebirth",
+   "rise from the grave"
+  ],
+  "description": "Return a dead unit to life at a location (summoner spell Revive \u2014 removed V5.4; resurrection-status effects still exist in game).",
+  "wiki_pages": [
+   "Revive",
+   "Healing"
+  ],
+  "game_hints": [
+   "{tip|resurrection} and {tip|zombie state} statuses; resurrection clears Grievous Wounds via dispel",
+   "Revive summoner spell respawned the champion at home base with a decaying speed boost; converted to Soul Anchor trinket in Dominion",
+   "resurrection/zombie-state heals after fatal damage are unaffected by healing modifiers"
+  ]
+ }
 ]

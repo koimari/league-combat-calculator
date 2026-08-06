@@ -119,7 +119,7 @@ def classify(text: str, vocab: dict[str, dict], existing: set[str]) -> list[tupl
     return hits
 
 
-def decompose_item(item: dict, vocab: dict[str, dict]) -> dict:
+def decompose_item(item: dict, vocab: dict[str, dict], relations: dict) -> dict:
     name = item.get("name", "?")
     atoms = []
     seen = set()
@@ -132,6 +132,7 @@ def decompose_item(item: dict, vocab: dict[str, dict]) -> dict:
             atoms.append({
                 "atom_id": atom_id, "family": "stats", "behavior": stat_key,
                 "parameters": {"flat": flat, "percent": pct},
+                "relations": relations.get(atom_id, []),
                 "provenance": {"wiki": [name], "binary": [], "evidence": "stats"},
             })
             seen.add(atom_id)
@@ -149,6 +150,7 @@ def decompose_item(item: dict, vocab: dict[str, dict]) -> dict:
                 "atom_id": atom_id, "family": family,
                 "behavior": pname or "passive",
                 "parameters": {},
+                "relations": relations.get(atom_id, []),
                 "provenance": {"wiki": [name], "binary": [], "evidence": f"passive:{pname}"},
             })
             seen.add(atom_id)
@@ -161,14 +163,23 @@ def decompose_item(item: dict, vocab: dict[str, dict]) -> dict:
                 "atom_id": atom_id, "family": family,
                 "behavior": aname or "active",
                 "parameters": {},
+                "relations": relations.get(atom_id, []),
                 "provenance": {"wiki": [name], "binary": [], "evidence": f"active:{aname}"},
             })
             seen.add(atom_id)
     return {"name": name, "id": item.get("id"), "atoms": atoms}
 
 
+def load_relations() -> dict[str, list[str]]:
+    p = VOCAB_DIR / "atom-relations.json"
+    if p.exists():
+        return json.loads(p.read_text())
+    return {}
+
+
 def main():
     vocab = load_vocab()
+    relations = load_relations()
     items = json.loads(ITEMS_JSON.read_text())
     pruned = corpus_prune(vocab, items)
     print(f"pruned {len(pruned)} over-firing atom_ids: {sorted(pruned)[:20]}")
@@ -177,7 +188,7 @@ def main():
     summary: dict[str, set[str]] = {}
     total = 0
     for item_id, item in items.items():
-        dec = decompose_item(item, vocab)
+        dec = decompose_item(item, vocab, relations)
         (OUT_DIR / f"{item_id}.json").write_text(json.dumps(dec, indent=1))
         total += len(dec["atoms"])
         for a in dec["atoms"]:
