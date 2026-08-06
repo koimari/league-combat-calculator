@@ -196,5 +196,35 @@
   "shield-reduction": "Serpent's Fang venom reduces shields the target gains (incl. Sterak's Lifeline) by 50%/35% for 3s; reduce the shield amount at grant time when the attacker holds Serpent's Fang.",
   "brittle": "Ornn's abilities apply Brittle: target Tenacity -30% (affects subsequent CC durations except airborne/drowsy/nearsight/stasis/suppression) + next immobilize duration +30%; model as an enemy-sourced tenacity modifier.",
   "tenacity": "Reduces disable durations at application time; floor 0.3s; multiplicative/additive stacking per source."
- }
+ },
+ "grey_health_design": {
+  "problem": "Pyke P, Rengar W, Tahm Kench E, Mordekaiser W, Kled heal from damage TAKEN (post-mitigation) stored as grey health; the 1v1 healing derivation only sees the attacker's OUTGOING events.",
+  "design": "Author grey-health receipts in participant_timeline.py's incoming ledger: when the main is the defender and is a grey-health champion, accumulate 100%/50% (per champion) of post-mitigation incoming damage as grey health; pay it as a heal when the champion's active consumes it (Pyke P out-of-vision, Rengar W recast, Tahm K E, Mordekaiser W recast). Add a shared primitive (grey_health_store) keyed by participant.",
+  "champions": [
+   "Pyke",
+   "Rengar",
+   "Tahm Kench",
+   "Mordekaiser",
+   "Kled",
+   "Tryndamere",
+   "Zac"
+  ],
+  "dependency": "after E1 (heal rules landed) \u2014 the grey-health heals will call the same _heal_from_damage/later_target plumbing.",
+  "test": "enemy attacks main for known post-mitigation damage -> grey-health champion's stored grey + heal on consume match wiki ratios."
+ },
+ "e1_skips_awaiting_grey_health": [
+  "Pyke P",
+  "Rengar W",
+  "Tahm Kench E",
+  "Udyr W",
+  "Locke W",
+  "Mordekaiser W/R",
+  "Belveth R",
+  "ChoGath P",
+  "Maokai P",
+  "Bard W",
+  "Yuumi P/E/R",
+  "Zilean R",
+  "KSante R"
+ ]
 }
