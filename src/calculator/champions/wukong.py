@@ -1,17 +1,35 @@
-"""Wukong's Stone Skin, empowered attack, and Cyclone timeline."""
+"""Wukong's Stone Skin, empowered attack, and Cyclone timeline.
+
+Why the Q slot is non-generic:
+- Q (Crushing Blow) is a DEBUFF-phase custom fn: the empowered basic
+  attack's bonus physical damage plus a percentage armor reduction
+  emitted as a ``target_debuff`` (``q_armor_reduction`` option, default
+  True). damage.py applies the shred AFTER the ability's own damage —
+  Q's bonus packet is always priced at full target armor, while
+  everything after it (R ticks, E follow-ups, later Q casts, autos)
+  sees the reduced armor for the debuff's 3 seconds (the Kog'Maw Q
+  rule). In the sustained auto path the empowered swing rides the auto
+  stream, which the fight engine prices against its single time-weighted
+  armor scalar like every other post-Q hit.
+"""
 
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    extract_value,
     find_named_leveling,
     simple_damage,
     sum_modifiers,
 )
+
+# Crushing Blow's debuff lasts 3s ("inflict armor reduction for 3
+# seconds", wiki prose below) — it is not permanent.
+Q_SHRED_DURATION = 3.0
 
 
 def _stone_skin(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -53,8 +71,22 @@ def _crushing_blow(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("physical", bonus, time_offset=0.0),)
     entry["empowers_next_auto"] = True
+
+    # Armor REDUCTION (not penetration): damage.py shreds target armor
+    # after Q's own damage, so the empowered swing itself lands at full
+    # armor while everything after it (R ticks, E follow-up, later Q
+    # casts) sees the reduced armor — matching in-game.
+    shred = extract_value(ability, "Armor Reduction", rank)
+    if ctx.options.get("q_armor_reduction", True) and shred > 0:
+        entry["target_debuff"] = {
+            "armor_reduction_percent": shred,
+            "duration": Q_SHRED_DURATION,
+        }
     entry["detail"] = "bonus damage is attached to the empowered basic attack"
     return entry
+
+
+_crushing_blow.phase = DEBUFF
 
 
 def _cyclone(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -107,6 +139,12 @@ OPTIONS = [
         "label": "Strength of Stone stacks",
     },
     {
+        "key": "q_armor_reduction",
+        "type": "bool",
+        "default": True,
+        "label": "Q armor reduction active",
+    },
+    {
         "key": "r_casts",
         "type": "int",
         "default": 1,
@@ -119,6 +157,9 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Stone Skin armor uses explicit Strength of Stone stacks; regeneration is a separate survival effect.",
     "Crushing Blow exposes its bonus packet and attaches the next basic attack through the shared empowered-auto path.",
+    "Q's armor reduction (10-30% of target's armor by rank, 3s) applies "
+    "to damage dealt after the empowered attack lands, not to the attack "
+    "itself.",
     "Warrior Trickster clone attacks are a separate pet timeline and are not invented as direct W spell damage.",
     "Cyclone uses eight sourced 0.25-second ticks per cast; the second cast is explicit.",
 ]
