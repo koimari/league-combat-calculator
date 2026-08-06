@@ -19,11 +19,29 @@ from __future__ import annotations
 
 from typing import Any
 
+import re
+
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .reviewed_batch_01 import no_damage
 from .reviewed_batch_07 import _full_entry_sources, build_batch_module
-from .slotlib import extract_named
+from .slotlib import (
+    attach_self_shield,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    find_named_leveling,
+)
+
+# HARDCODED: verify on patch updates — wiki prose, not in the JSON.
+# Haymaker's shield equals the expended Grit ("grant himself a shield ...
+# equal to the expended Grit for 3 seconds"); the center-line damage is
+# true ("those hit in a line in the middle are dealt true damage
+# instead"); the grit damage ratio is the cached "Damage" row's unit
+# string ("% (+ 25% per 100 bonus AD) of expended Grit").
+_W_SHIELD_DURATION_SECONDS = 3.0
+_W_GRIT_OPTION = "w_grit"
+_Q_TOTAL_ATTR = "Total Bonus Physical Damage"
 
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
     build_batch_module("Sett")
@@ -69,10 +87,147 @@ def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+def _knuckle_down(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: BOTH empowered basic attacks (the Total Bonus Physical Damage row).
+
+    Knuckle Down empowers Sett's next two basic attacks; the reviewed
+    packet read the single-attack "Bonus Physical Damage" row once.  The
+    cached "Total Bonus Physical Damage" row (20-100 by rank) is exactly
+    double.  The %max-HP term's unit ("% (+ 2 / 3 / 4 / 5 / 6% per 100
+    AD) of target's maximum health") is not a generic scaling unit: the
+    base percentage is the cached value (2% for the total row) and the
+    per-100-AD percentage is the rank-scaled value embedded in the unit
+    string (2/3/4/5/6% by rank), both priced against the target's max
+    health and Sett's total AD.
+    """
+    ability = ctx.ability("Q")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("Q")
+    if rank < 1:
+        return None
+    leveling = find_named_leveling(ability, _Q_TOTAL_ATTR)
+    if leveling is None:
+        raise ValueError("Sett Q Total Bonus Physical Damage row is unavailable")
+    total = 0.0
+    for modifier in leveling.get("modifiers", []):
+        values = modifier.get("values", [])
+        units = modifier.get("units", [])
+        if not values:
+            continue
+        index = min(max(rank - 1, 0), len(values) - 1)
+        value = float(values[index])
+        unit = units[index] if index < len(units) else ""
+        if not unit or not str(unit).strip():
+            total += value
+            continue
+        # "% (+ 2 / 3 / 4 / 5 / 6% per 100 AD) of target's maximum health":
+        # the base percentage is the cached value; the per-100-AD
+        # percentage is the rank-scaled value embedded in the unit string
+        # ("2 / 3 / 4 / 5 / 6" precedes the "per 100 AD" literal, so the
+        # rank-1 index picks the rank's percentage).
+        per_100_ad = 0.0
+        if "per 100 AD" in str(unit):
+            values_in_unit = re.findall(r"\d+(?:\.\d+)?", str(unit))
+            if len(values_in_unit) >= 5:
+                per_100_ad = float(values_in_unit[index])
+        total += (
+            value / 100.0
+            + per_100_ad / 100.0 * ctx.stats.get("attack_damage", 0.0) / 100.0
+        ) * float(ctx.target.get("target_max_health", 0.0))
+    entry = damage_entry(
+        ability.get("name", "Knuckle Down"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+    entry["parts"] = (DamagePart("physical", total),)
+    entry["detail"] = (
+        "both empowered attacks priced from the Total Bonus Physical "
+        "Damage row (20-100 by rank + %max-HP + % per 100 AD of target "
+        "max health)"
+    )
+    return entry
+
+
+def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: the center-line TRUE damage plus the grit shield.
+
+    Haymaker consumes all stored Grit: the blast deals the cached "Damage"
+    row's flat base (80-160 by rank) plus 25% (+ 25% per 100 bonus AD) of
+    the expended Grit, and those in the center line take TRUE damage
+    (the row's damageType is OTHER — the center-line branch is the one
+    priced, the outer physical ring is state).  The cast also grants Sett
+    a shield equal to the expended Grit for 3 seconds (wiki prose), so
+    ``w_grit`` is the explicit expended-Grit state that prices both the
+    grit damage term and the self-shield.
+    """
+    ability = ctx.ability("W")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("W")
+    if rank < 1:
+        return None
+    leveling = find_named_leveling(ability, "Damage")
+    if leveling is None:
+        raise ValueError("Sett W Damage leveling row is unavailable")
+    flat = 0.0
+    grit_ratio = 0.0
+    for modifier in leveling.get("modifiers", []):
+        values = modifier.get("values", [])
+        units = modifier.get("units", [])
+        if not values:
+            continue
+        index = min(max(rank - 1, 0), len(values) - 1)
+        value = float(values[index])
+        unit = units[index] if index < len(units) else ""
+        if not unit or not str(unit).strip():
+            flat += value
+            continue
+        # "% (+ 25% per 100 bonus AD) of expended Grit" — the value IS the
+        # base percentage (25), and the unit embeds the per-100-bonus-AD
+        # percentage (25).
+        if "of expended Grit" in str(unit):
+            grit_ratio = (
+                value / 100.0
+                + 0.25 * float(ctx.stats.get("bonus_attack_damage", 0.0)) / 100.0
+            )
+    grit = max(0.0, float(ctx.options.get(_W_GRIT_OPTION, 0) or 0))
+    entry = damage_entry(
+        ability.get("name", "Haymaker"),
+        rank,
+        extract_cooldown(ability, rank),
+        flat + grit_ratio * grit,
+        "true",
+    )
+    entry["parts"] = (DamagePart("true", flat + grit_ratio * grit),)
+    if grit > 0.0:
+        return attach_self_shield(
+            entry,
+            amount=grit,
+            duration=_W_SHIELD_DURATION_SECONDS,
+            source="Haymaker",
+            detail=(
+                f"center-line true damage {flat:g} + "
+                f"{grit_ratio * 100:g}% of expended Grit ({grit:g}) = "
+                f"{flat + grit_ratio * grit:g}; the expended Grit also "
+                f"shields Sett for {grit:g} for "
+                f"{_W_SHIELD_DURATION_SECONDS:g}s"
+            ),
+        )
+    entry["detail"] = (
+        f"center-line true damage {flat:g} (flat only); the grit term "
+        "(25% + 25% per 100 bonus AD of expended Grit) and the equal-"
+        "grit shield are priced via the w_grit option (0 = no Grit)"
+    )
+    return entry
+
+
 SLOTS = {
     "P": _pit_grit,
-    "Q": _BATCH_SLOTS["Q"],
-    "W": _BATCH_SLOTS["W"],
+    "Q": _knuckle_down,
+    "W": _haymaker,
     "E": _BATCH_SLOTS["E"],
     "R": _BATCH_SLOTS["R"],
 }
@@ -87,6 +242,14 @@ OPTIONS = [
         "max": 30,
         "label": "Right Punch count (Pit Grit combo)",
     },
+    {
+        "key": "w_grit",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 3000,
+        "label": "Expended Grit (Haymaker damage + shield)",
+    },
 ]
 
 ASSUMPTIONS = [
@@ -97,7 +260,16 @@ ASSUMPTIONS = [
     "auto stream (each attack alternates); p_right_punches is the "
     "explicit pre-stack state",
     "The Right Punch's 8x attack speed and 50 bonus range are state",
-    "Q/W/E/R damage keep the reviewed CP10.7 packet pricing",
+    "Q (Knuckle Down) prices BOTH empowered attacks from the cached "
+    "'Total Bonus Physical Damage' row (20-100 by rank); the %max-HP "
+    "term uses the cached base percentage plus the rank-scaled "
+    "per-100-AD percentage embedded in the row's unit string",
+    "W (Haymaker) prices the center-line TRUE damage: the cached "
+    "'Damage' row flat (80-160 by rank) plus 25% (+ 25% per 100 bonus "
+    "AD) of the expended Grit (w_grit option, 0 = flat only); the "
+    "expended Grit also grants Sett an equal shield for 3s "
+    "(self_shield_events). The outer physical ring is state",
+    "E/R damage keep the reviewed CP10.7 packet pricing",
 ]
 
 SOURCES = _full_entry_sources("Sett")

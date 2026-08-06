@@ -280,6 +280,7 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Morgana",
         "Talon",
         "Nunu & Willump",
+        "Shyvana",
     }
 )
 
@@ -1769,5 +1770,54 @@ def derive_self_healing(
                     **_trigger_fields(event),
                 }
             )
+    elif name == "Shyvana":
+        # Inferno Aegis (W) recast, Dragon Form: "If the explosion hits an
+        # enemy champion, Shyvana heals herself for 60 : 104.71 (based on
+        # level) (+ 4% : 8.47% (based on level) missing health)".  The W
+        # module emits the recast explosion as W damage events (gated on
+        # the w_recast option and stamped "dragon form" in the W row when
+        # the dragon_form option is set), so each damaging W event is one
+        # champion-hit explosion.  The flat is the level-indexed "Heal"
+        # row (60 at level 1 .. 104.71 at level 18); the missing-health
+        # percentage is the level-indexed "Missing Health Damage" row
+        # (4% .. 8.47%) — the "Heal" row's own second modifier carries the
+        # percentage only as prose ("% : 8.47% (based on level"), so the
+        # leveled array is the source.  A live missing-health formula
+        # (Volibear W pattern) prices the heal at the fighter's health at
+        # the explosion timestamp; the zero-damage shield-grant event the
+        # module emits at the cast is not an explosion and heals nothing.
+        w_row = ability_damages.get("W", {})
+        if "dragon form" in str(w_row.get("detail", "")).lower():
+            level = max(1, int(champion_stats.get("level", 18) or 18))
+            w = _ability(champion_data, "W")
+            flat = extract_named(w, "Heal", level, champion_stats, {})
+            missing_pct = _leveling_modifier(w, "Missing Health Damage", level, 0)
+
+            def inferno_aegis_heal(
+                current_health: float,
+                maximum_health: float,
+                flat: float = flat,
+                missing_pct: float = missing_pct,
+            ) -> float:
+                return (
+                    flat
+                    + max(0.0, maximum_health - current_health) * missing_pct / 100.0
+                )
+
+            for event in _attributed_events(
+                damage_events, lambda source, _event: source == "W"
+            ):
+                if float(event.get("damage", 0.0)) <= 0.0:
+                    continue
+                healing.append(
+                    {
+                        "time": float(event.get("time", 0.0)),
+                        "amount": 0.0,
+                        "amount_formula": inferno_aegis_heal,
+                        "source": "Inferno Aegis",
+                        "kind": "champion_ability",
+                        **_trigger_fields(event),
+                    }
+                )
 
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
