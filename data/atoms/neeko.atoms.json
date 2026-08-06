@@ -12,6 +12,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Buff"
@@ -35,6 +36,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Pets",
@@ -59,6 +61,10 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
   "provenance": {
    "wiki": [
     "Stealth",
@@ -84,6 +90,11 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
   "provenance": {
    "wiki": [
     "Shield",
@@ -110,6 +121,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -137,6 +149,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -162,6 +175,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -185,6 +204,7 @@
    "damage_type": null,
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Debuff"
@@ -208,6 +228,7 @@
    "damage_type": null,
    "affects_type_flags": 5327
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -233,6 +254,7 @@
    "damage_type": null,
    "affects_type_flags": 5327
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -257,6 +279,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -280,6 +308,7 @@
    "damage_type": null,
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Buff"
@@ -303,6 +332,7 @@
    "damage_type": null,
    "affects_type_flags": 5327
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Critical strike",
@@ -327,6 +357,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -355,6 +386,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -380,6 +412,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"

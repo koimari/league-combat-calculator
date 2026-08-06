@@ -12,6 +12,7 @@
    "damage_type": "magic",
    "affects_type_flags": 9221
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -41,6 +42,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -66,6 +68,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -89,6 +97,7 @@
    "damage_type": "magic",
    "affects_type_flags": 7183
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -116,6 +125,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -144,6 +154,11 @@
    "damage_type": null,
    "affects_type_flags": 65
   },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
   "provenance": {
    "wiki": [
     "Shield",
@@ -170,6 +185,7 @@
    "damage_type": null,
    "affects_type_flags": 65
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Buff"
@@ -193,6 +209,7 @@
    "damage_type": null,
    "affects_type_flags": 1029
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -217,6 +234,11 @@
    "damage_type": null,
    "affects_type_flags": 1029
   },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
   "provenance": {
    "wiki": [
     "Shield",
@@ -243,6 +265,7 @@
    "damage_type": null,
    "affects_type_flags": 1029
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Buff"
@@ -266,6 +289,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -293,6 +317,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
@@ -318,6 +343,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Types of Crowd Control"
@@ -341,6 +367,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -365,6 +392,12 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -388,6 +421,7 @@
    "damage_type": "magic",
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Stacking",
@@ -412,6 +446,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Stacking",
@@ -436,6 +471,7 @@
    "damage_type": null,
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Stack",
@@ -462,6 +498,7 @@
    "damage_type": null,
    "affects_type_flags": null
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Stack",
@@ -488,6 +525,7 @@
    "damage_type": null,
    "affects_type_flags": 7375
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Stack",
@@ -514,6 +552,7 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Stacking",
@@ -538,6 +577,7 @@
    "damage_type": "magic",
    "affects_type_flags": 9221
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -562,6 +602,12 @@
    "damage_type": "magic",
    "affects_type_flags": 9221
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
@@ -585,6 +631,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -610,6 +657,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -634,6 +682,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -659,6 +708,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -683,6 +733,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Stacking",
@@ -707,6 +758,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -732,6 +784,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -756,6 +809,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Stacking",
@@ -780,6 +834,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -805,6 +860,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -829,6 +885,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
@@ -854,6 +911,7 @@
    "damage_type": null,
    "affects_type_flags": 512
   },
+  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
