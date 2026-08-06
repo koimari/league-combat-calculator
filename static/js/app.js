@@ -4037,6 +4037,15 @@ document.addEventListener("change", (event) => {
   if (event.target.closest("[data-fight-range]")) render();
 });
 
+const shareDismiss = document.getElementById("shareDismiss");
+if (shareDismiss) {
+  shareDismiss.addEventListener("click", () => {
+    document.getElementById("shareBanner").hidden = true;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("share");
+    window.history.replaceState({}, "", url);
+  });
+}
 $("pickerSearch").addEventListener("input", (event) => renderPicker(event.target.value));
 $("pickerClose").addEventListener("click", closePicker);
 $("picker").addEventListener("click", (event) => { if (event.target === $("picker")) closePicker(); });
@@ -4759,8 +4768,17 @@ async function renderSharedBuild(token) {
   const response = await fetch(`/api/share/${encodeURIComponent(token)}`);
   const payload = await response.json();
   if (!response.ok || payload.error) {
-    document.getElementById("shareBannerText").textContent = payload.error || "Share link could not be loaded.";
-    document.getElementById("shareBanner").hidden = false;
+    // Invalid/expired share token: keep the banner hidden, surface inline.
+    document.getElementById("shareBanner").hidden = true;
+    let host = document.getElementById("shareError");
+    if (!host) {
+      host = document.createElement("p");
+      host.id = "shareError";
+      host.className = "engine-error";
+      const col = document.querySelector(".result-column");
+      if (col) col.prepend(host);
+    }
+    if (host) host.textContent = "This shared build link is invalid or expired.";
     return;
   }
   document.getElementById("shareBanner").hidden = false;

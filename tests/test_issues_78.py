@@ -178,6 +178,7 @@ CONTROL_IDS = {
     "sharePanelClose": ("controls", "share"),
     "shareCopy": ("controls", "share"),
     "shareUrl": ("controls", "share"),
+    "shareDismiss": ("controls", "share"),
     "picker": ("controls", "picker"),
     "pickerClose": ("controls", "picker"),
     "pickerSearch": ("controls", "picker"),

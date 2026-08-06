@@ -208,7 +208,15 @@
   function installObserver() {
     var target = document.querySelector(".result-column") || document.body;
     if (!window.MutationObserver) return;
-    var observer = new MutationObserver(function () {
+    var mountEl = document.getElementById("eventOrderPanel");
+    var observer = new MutationObserver(function (records) {
+      // Never re-render from our own mutations: render() replaces the
+      // mount's innerHTML, which would otherwise re-trigger this observer
+      // forever and peg the main thread (freeze after adding an enemy).
+      for (var i = 0; i < records.length; i++) {
+        var node = records[i].target;
+        if (node === mountEl || (mountEl && mountEl.contains(node))) return;
+      }
       if (latest) render(latest);
     });
     observer.observe(target, { childList: true, subtree: true });
