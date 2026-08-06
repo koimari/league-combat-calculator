@@ -6906,13 +6906,13 @@ def _stacked_champion_proc_times(
     """Schedule a stack-gated champion proc from authored hit boundaries.
 
     Eclipse's passive counts separate damaging ability casts and basic
-    attacks, not every part of a multi-hit spell.  Cast events and the
-    shared auto schedule are the only timestamps this engine certifies, so
-    each accepted cast contributes one stack at its authored hit time when
-    available, otherwise at its explicit cast boundary; each authored swing
-    contributes one stack at its swing time.  A pair must
-    land inside ``stack_window`` and later pairs wait for the item's
-    per-target cooldown.  A malformed receipt withholds event precision.
+    attacks, not every part of a multi-hit spell.  Each accepted cast
+    contributes one stack at its authored hit time when available, otherwise
+    at its sourced cast-instance boundary (certified for non-DoT abilities,
+    explicitly coarse for DoT ticks); each authored swing contributes one
+    stack at its swing time.  A pair must land inside ``stack_window`` and
+    later pairs wait for the item's per-target cooldown.  A malformed
+    receipt withholds event precision.
     """
     required = effect.stack_required
     window = effect.stack_window
@@ -6937,7 +6937,16 @@ def _stacked_champion_proc_times(
             return None
         if math.isfinite(float(raw_damage)) and float(raw_damage) > 0.0:
             trigger_time = event_time
-            precision = "cast_boundary"
+            # The engine certifies a non-DoT ability's damage at its sourced
+            # cast-instance boundary, so the hit that stacks the passive
+            # carries that same certification; a DoT ability spreads its
+            # damage across authored ticks and keeps the coarse marker.
+            ability_info = state.ability_damages.get(slot, {})
+            precision = (
+                "cast_boundary"
+                if float(ability_info.get("dot_duration", 0.0) or 0.0) > 0.0
+                else "exact"
+            )
             authored_events = row.get("damage_events")
             if isinstance(authored_events, list):
                 if row.get("basic_attack") and slot not in forced_event_slots:
@@ -6969,7 +6978,7 @@ def _stacked_champion_proc_times(
                     candidate_damage = _finite_numeric_receipt(candidate.get("damage"))
                     if candidate_time is None or candidate_damage is None:
                         return None
-                    if candidate_time + 1e-9 < event_time:
+                    if candidate_time + _PROC_HIT_MATCH_EPS < event_time:
                         cursor += 1
                         continue
                     if candidate_damage > 0.0:
@@ -7681,11 +7690,17 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
 def _muramana_proc_events(
     state: FightState, rotation: RotationResult
 ) -> list[dict[str, Any]] | None:
-    """Build one cast-boundary event per authored Muramana proc instance.
+    """Build one timestamped event per authored Muramana proc instance.
 
-    Cast events are the only shared receipt for ability timing.  A malformed
-    or incomplete cast ledger withholds the event list while preserving the
-    aggregate damage row; no timestamp is invented.
+    Shock's ability branch triggers on the same ability hit that deals the
+    damage, so a proc instance rides the ability's own certified timing:
+    module-authored hit packets keep their timestamps, and an aggregate
+    non-DoT cast keeps its sourced cast-instance boundary (the engine
+    certifies that cast time as the ability's damage time).  Only DoT
+    abilities — whose damage spreads across authored ticks — keep the
+    explicitly coarse cast_boundary marker.  A malformed or incomplete cast
+    ledger withholds the event list while preserving the aggregate damage
+    row; no timestamp is invented.
     """
     expected = rotation.total_muramana_procs
     if expected <= 0:
@@ -7724,7 +7739,7 @@ def _muramana_proc_events(
                     candidate_damage = _finite_numeric_receipt(candidate.get("damage"))
                     if candidate_time is None or candidate_damage is None:
                         return None
-                    if candidate_time + 1e-9 < event_time:
+                    if candidate_time + _PROC_HIT_MATCH_EPS < event_time:
                         cursor += 1
                         continue
                     if candidate_damage > 0.0:
@@ -7745,12 +7760,14 @@ def _muramana_proc_events(
             event_cursors[slot] = cursor
             events.extend(cast_events)
             continue
+        is_dot = float(ability.get("dot_duration", 0.0) or 0.0) > 0.0
+        precision = "cast_boundary" if is_dot else "exact"
         for _ in range(raw_instances):
             events.append(
                 {
                     "time": event_time,
                     "damage": 0.0,
-                    "event_precision": "cast_boundary",
+                    "event_precision": precision,
                 }
             )
     if len(events) != expected:

@@ -60,9 +60,9 @@ def test_muramana_multicast_emits_one_boundary_event_per_instance() -> None:
 
     row = fight["breakdown"]["muramana_ability"]
     assert [event["time"] for event in row["damage_events"]] == [0.0, 0.0, 0.0]
-    assert all(
-        event["event_precision"] == "cast_boundary" for event in row["damage_events"]
-    )
+    # The engine certifies the non-DoT ability's damage at its sourced
+    # cast-instance boundary, so Shock riding the same instances is exact.
+    assert all(event["event_precision"] == "exact" for event in row["damage_events"])
     assert sum(event["damage"] for event in row["damage_events"]) == pytest.approx(
         row["total_damage"]
     )

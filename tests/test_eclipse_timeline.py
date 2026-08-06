@@ -62,12 +62,14 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
 
     row = fight["breakdown"]["proc_Eclipse"]
     assert row["count"] == 1
+    # The engine certifies each non-DoT ability's damage at its sourced
+    # cast-instance boundary, so the pair completing on those casts is exact.
     assert row["damage_events"] == [
         {
             "time": 0.0,
             "damage": 80.0,
             "damage_type": "physical",
-            "event_precision": "cast_boundary",
+            "event_precision": "exact",
         }
     ]
 
@@ -106,9 +108,7 @@ def test_eclipse_pairing_waits_for_cooldown_before_next_pair() -> None:
     row = fight["breakdown"]["proc_Eclipse"]
     assert row["count"] == 2
     assert [event["time"] for event in row["damage_events"]] == [0.0, 7.0]
-    assert all(
-        event["event_precision"] == "cast_boundary" for event in row["damage_events"]
-    )
+    assert all(event["event_precision"] == "exact" for event in row["damage_events"])
 
 
 def test_eclipse_can_pair_an_ability_with_an_authored_auto_swing() -> None:
