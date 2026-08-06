@@ -14,7 +14,10 @@ passive with no outgoing damage).  No summon slot is added; the
 reviewed bounce packet pricing is unchanged.
 """
 
+from ..ability_spec import DamagePart
+from .engine import SlotCtx, build_parser
 from .reviewed_batch_10 import build_batch_module
+from .slotlib import damage_entry, extract_cooldown, extract_named
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Zac")
 
@@ -47,11 +50,55 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
     }
 
 
+# P1-3: Q (Stretching Strikes) prices BOTH arm strikes.  The wiki's
+# "Total Magic Damage" row is exactly 2 x the per-hit "Magic Damage" row
+# (120-360 + 60% AP + 6% of bonus health == 2 x 60-180 + 30% AP + 3% of
+# bonus health at every rank): the cast's left-arm strike plus the
+# empowered second Stretching Strike that replaces Zac's next basic
+# attack while the tether persists.  The second strike has a sourced
+# 0.25-second cast time.
+def _stretching_strikes(ctx: SlotCtx):
+    """Q: both Stretching Strikes — 2 x the sourced per-hit Magic Damage."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability.get("name", "Stretching Strikes"),
+        rank,
+        extract_cooldown(ability, rank),
+        per_hit * 2,
+        "magic",
+    )
+    entry["parts"] = (
+        DamagePart("magic", amount=per_hit, time_offset=0.0),
+        DamagePart("magic", amount=per_hit, time_offset=0.25),
+    )
+    entry["detail"] = (
+        f"both arm strikes: 2 x {per_hit:g} (per-hit 'Magic Damage' x 2 "
+        "== the wiki's 'Total Magic Damage' row); the second strike is "
+        "the empowered basic-attack replacement"
+    )
+    return entry
+
+
+SLOTS = dict(SLOTS)
+SLOTS["Q"] = _stretching_strikes
+parse_abilities = build_parser(SLOTS, "Zac")
+
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
 ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "Q (Stretching Strikes) prices both arm strikes: 2 x the sourced "
+    "per-hit 'Magic Damage' row == the wiki's 'Total Magic Damage' row "
+    "(data/champions.json Q; 120-360 + 60% AP + 6% of bonus health at "
+    "rank 5); the second strike replaces Zac's next basic attack while "
+    "the tether persists (0.25s cast).",
     "P (Cell Division) is modeled as the sourced revive state: 50% maximum "
     "health restored after the level-bracketed resurrection window "
     "(8 / 7 / 6 / 5 / 4s at levels 1 / 6 / 10 / 13 / 17) on a 300s cooldown "

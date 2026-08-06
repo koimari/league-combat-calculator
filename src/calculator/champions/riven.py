@@ -10,13 +10,70 @@ structure-reduced share).  The passive is an on-hit entry priced at
 crit-affected and life-steals at 100% in game; the on-hit framework
 prices the flat per-hit amount (no crit rider), conservative for the
 0%-crit test fights.
+
+P1-3 fix — Blade of the Exile (R1): the reviewed R slot priced only
+the Wind Slash.  The R1 active buffs Riven for 15 seconds with bonus
+attack damage; the current game file sources it as a flat 20% of her
+BONUS attack damage at every rank (riven.bin.json RivenFengShuiEngine
+PercentBonusAD 0.20 x bonus AD; wiki patch history: "Blade of the
+Exile: Bonus attack damage ratio reduced to 20% bonus AD from 25%";
+the cached R[0] description reads "gaining 20% AD bonus attack
+damage").  The buff is a BUFF-phase stat entry (the Aatrox R
+precedent) so every later physical slot (Q/W/R) scales off the buffed
+AD; the amount is factored at cast and does not change (wiki note).
 """
 
+from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .reviewed_batch_06 import build_batch_module
-from .engine import ONHIT, SlotCtx, build_parser
-from .slotlib import extract_named, on_hit_entry
+from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Riven")
+
+# HARDCODED: verify on patch updates — the current R1 AD buff is a flat
+# 20% of bonus AD at every rank (riven.bin.json RivenFengShuiEngine
+# PercentBonusAD = 0.20; wiki patch history: "reduced to 20% bonus AD
+# from 25%").  The older 20/25/30% rank array was retired by the patch.
+_R_BONUS_AD_RATIO = 0.20
+_R_BUFF_DURATION = 15.0  # wiki prose: "empowers her blade for 15 seconds"
+
+
+def _blade_of_the_exile(ctx: SlotCtx):
+    """R1: +20% of bonus AD as bonus AD for 15s (BUFF phase).
+
+    Runs before every damage slot, so Q/W/R all scale off the buffed
+    bonus AD within the ult window.  The amount is snapshot at cast
+    ("factored upon cast, and does not change" — cached R[0] notes).
+    """
+    ability = ctx.ability("R", 0)
+    if ability is None:
+        return None
+    rank = ctx.rank_for("R")
+    if rank < 1:
+        return None
+    value = _R_BONUS_AD_RATIO * float(ctx.stats.get("bonus_attack_damage", 0.0) or 0.0)
+    ctx.stats["attack_damage"] = (
+        float(ctx.stats.get("attack_damage", 0.0) or 0.0) + value
+    )
+    ctx.stats["bonus_attack_damage"] = (
+        float(ctx.stats.get("bonus_attack_damage", 0.0) or 0.0) + value
+    )
+    entry = damage_entry(
+        ability.get("name", "Blade of the Exile"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+    )
+    entry["stat_buff"] = {"bonus_attack_damage": value}
+    entry["detail"] = (
+        f"+{value:g} bonus attack damage ({_R_BONUS_AD_RATIO * 100:g}% of "
+        f"bonus AD) for {_R_BUFF_DURATION:g}s; the Wind Slash is priced "
+        "by the R slot"
+    )
+    return entry
+
+
+_blade_of_the_exile.phase = BUFF
 
 
 def _runic_blade(ctx: SlotCtx):
@@ -34,6 +91,7 @@ def _runic_blade(ctx: SlotCtx):
 _runic_blade.phase = ONHIT
 
 SLOTS = dict(SLOTS)
+SLOTS["R_buff"] = _blade_of_the_exile
 SLOTS["P"] = _runic_blade
 parse_abilities = build_parser(SLOTS, "Riven")
 
@@ -46,6 +104,14 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "modifiers in game; the on-hit framework prices the flat per-hit "
     "amount and does not roll crits on it (conservative, and exact at "
     "0% crit).",
+    "R1 (Blade of the Exile) prices the AD steroid: +20% of bonus AD "
+    "as bonus AD for 15s (riven.bin.json PercentBonusAD 0.20 x bonus "
+    "AD, flat at all ranks — the retired 20/25/30% rank array was "
+    "patched to a flat 20% bonus AD), factored at cast; the Wind Slash "
+    "stays priced by the R slot and now scales off the buffed AD.",
+    "E (Valor) shield is documented no_damage: 70-170 + 110% bonus AD "
+    "for 1.5s is a defensive shield on a no-damage dash, outside the "
+    "packet's damage model.",
 ]
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")

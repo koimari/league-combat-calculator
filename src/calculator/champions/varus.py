@@ -35,6 +35,7 @@ from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    extract_value,
     simple_damage,
     sum_modifiers,
     find_named_leveling,
@@ -44,6 +45,39 @@ from .slotlib import (
 # Blight stacks to 3 on basic attacks; abilities detonate all stacks.
 _BLIGHT_MAX_STACKS = 3
 _BLIGHT_DETONATION_ATTR = "Bonus Magic Damage per Stack"
+
+
+def _missing_hp_fraction(ctx: SlotCtx) -> float:
+    """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
+    pct = float(ctx.options.get("target_missing_hp_pct", 50))
+    return min(max(pct, 0.0), 100.0) / 100.0
+
+
+def _w_active_empower(ctx: SlotCtx, rank: int) -> float:
+    """W active: the next Q is empowered with % of the target's MISSING
+    health as bonus magic damage.
+
+    Cached W prose: "Varus' next Piercing Arrow within 5.5 seconds is
+    empowered to deal additional bonus magic damage, increased by 0% :
+    50% (based on Piercing Arrow's charge time)".  Q is priced at its
+    Maximum (fully-charged) rows, so the empower is priced at the
+    sourced "Active Maximum Magic Damage" row (9-21% of missing health
+    by W rank) against the shared ``target_missing_hp_pct`` option.
+    """
+    if not ctx.options.get("w_active_empower", True):
+        return 0.0
+    ability = ctx.ability("W", 0)
+    if ability is None:
+        return 0.0
+    # Raw percent read: the "% of target's missing health" unit resolves
+    # to 0 through the generic scaling core (the fight's target context
+    # starts at full health), so the percent is read flat and priced
+    # against the shared target_missing_hp_pct option.
+    percent = extract_value(ability, "Active Maximum Magic Damage", rank)
+    missing_health = float(ctx.target.get("target_max_health", 0.0) or 0.0) * (
+        _missing_hp_fraction(ctx)
+    )
+    return percent / 100.0 * missing_health
 
 
 def _blight_detonation(ctx: SlotCtx, rank: int) -> float:
@@ -94,18 +128,32 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["event_order_certified"] = "single_hit"
 
     detonation = _blight_detonation(ctx, rank)
-    if detonation > 0:
+    empower = _w_active_empower(ctx, rank)
+    if detonation > 0 or empower > 0:
         stacks = min(
             _BLIGHT_MAX_STACKS,
             max(0, int(ctx.options.get("blight_stacks", _BLIGHT_MAX_STACKS))),
         )
+        parts = []
+        detail = []
+        if detonation > 0:
+            parts.append(DamagePart("magic", detonation, time_offset=0.0))
+            detail.append(f"{stacks} Blight stack(s) consumed at {rank} points in W")
+        if empower > 0:
+            parts.append(DamagePart("magic", empower, time_offset=0.0))
+            empower_detail = (
+                f"W-active empower: {empower:g} magic "
+                f"({_missing_hp_fraction(ctx) * 100:g}% missing health "
+                f"x Active Maximum Magic Damage {rank} points in W)"
+            )
+            detail.append(empower_detail)
         entry["post_hit_proc"] = {
             "name": "Blight Detonation",
             "breakdown_key": "blight_detonation",
-            "parts": (DamagePart("magic", detonation, time_offset=0.0),),
-            "detail": (f"{stacks} Blight stack(s) consumed at {rank} points in W"),
+            "parts": tuple(parts),
+            "detail": "; ".join(detail),
         }
-        entry["total_raw"] = arrow + detonation
+        entry["total_raw"] = arrow + detonation + empower
     return entry
 
 
@@ -174,6 +222,23 @@ OPTIONS: list[dict[str, Any]] = [
             "(3 = fully stacked; the Q detonation consumes them)"
         ),
     },
+    {
+        "key": "w_active_empower",
+        "type": "bool",
+        "default": True,
+        "label": (
+            "W active empowers the next Piercing Arrow (+% of the "
+            "target's missing health as magic damage)"
+        ),
+    },
+    {
+        "key": "target_missing_hp_pct",
+        "type": "int",
+        "default": 50,
+        "min": 0,
+        "max": 100,
+        "label": "Target missing health %",
+    },
 ]
 
 ASSUMPTIONS = [
@@ -188,6 +253,12 @@ ASSUMPTIONS = [
     "row (% of target max health + 1.3% per 100 AP by rank); Q's "
     "0-50% charge bonus (the 'Maximum' rows) is not modeled — the "
     "arrow itself is priced at its Maximum (fully-charged) row",
+    "W active empower: the next Piercing Arrow is empowered for the "
+    "sourced 'Active Maximum Magic Damage' row (9-21% of the target's "
+    "missing health by W rank, data/champions.json W) — priced at "
+    "Maximum like the arrow, against the target_missing_hp_pct option "
+    "(default 50%); toggle w_active_empower off to price an unempowered "
+    "arrow",
     "Q detonation requires the Q cast; with blight_stacks=0 the option "
     "models a fresh target and no detonation fires",
     "P (Living Vengeance) is a takedown attack-speed buff — no enemy "

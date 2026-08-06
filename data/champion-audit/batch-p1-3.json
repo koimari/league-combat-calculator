@@ -1,0 +1,122 @@
+{
+ "Briar": {
+  "verdict": "ok",
+  "gap_summary": "P1-3 closed the remaining heal family in healing.py (HEALING_RULE_CHAMPIONS already held Briar for the E charge heal): P Crimson Curse now heals 25% of the bleed's pre-mitigation damage per tick (cached P prose: 'The bleed always heals Briar for 25% of the pre-mitigation damage dealt'; the per-stack heal rows 2.5-12.5 + 12.5% bAD are exactly 25% of each stack's damage), W Snack Attack heals 5% of maximum health + the sourced Heal Percentage (24-40% by rank) of the bite's post-mitigation damage, and R Certain Death's life steal (10/15/20% by rank) heals from basic-attack damage. The 35% E charge damage-reduction and the kill-only bleed heal (125% of remaining bleed) stay documented boundaries (incoming-damage window / death-only trigger). Verified: test_p1_review_3.py TestBriar \u2014 every bleed tick pays 25% of its pre-mitigation amount, Snack Attack heals 0.05*2240 + 0.40*W-damage, R heals 0.20*auto damage.",
+  "module": "briar.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Kindred": {
+  "verdict": "ok",
+  "gap_summary": "P1-3 closed the W Hunter's Vigor heal: the module now emits a W_vigor receipt at the sourced 100-stack cap (w_hunters_vigor_stacks option, default 100) and healing.py pays the next basic attack's heal \u2014 the missing-health share of the sourced per-level 'Heal' row 47 : 81 (data/champions.json W; 81 at level 18), naturally zero at full health (wiki: the heal is not triggered there). Verified: test_p1_review_3.py TestKindred \u2014 receipt at 100 stacks; the first-auto heal fires with raw_amount in (0, 81] in an enemy fight; W damage keeps the sourced Magic Damage row x w_attacks.",
+  "module": "kindred.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "out_of_scope",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "out_of_scope"
+  }
+ },
+ "Lux": {
+  "verdict": "ok",
+  "gap_summary": "P1-3 closed the CP-era scope question: P Illumination is now modeled \u2014 each post-ability auto/Final Spark consumes the mark for the sourced per-level proc 30 : 200 (+ 35% AP), priced from the p_illumination_procs option (default 3, one per Q/E/R in the one-rotation combo; data/champions.json P 'Per-Level Scaling'). W Prismatic Barrier shields Lux for the sourced 'Maximum Shield' row (80-200 + 80% AP by rank) \u2014 the throw plus the return stack \u2014 emitted as a self-targeted support shield (support_effects.py Lux W scope override + shield-attribute override). Verified: test_p1_review_3.py TestLux \u2014 3 procs of 200 == 600 at level 18; procs=1 probe; W shield 200 at rank 5.",
+  "module": "lux.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Mel": {
+  "verdict": "ok",
+  "gap_summary": "P1-3 closed the two partial packet reads: Q Radiant Volley prices the full 6-10-bolt volley \u2014 'Initial Explosion Magic Damage' + (Number of Bolts - 1) x 'Magic Damage per Subsequent Explosion' == the wiki's 'Total Magic Damage' row (160 + 9 x 13 == 277 at rank 5) over the sourced 0.5s volley; E Solar Snare prices the orb hit plus the field DoT \u2014 4 ticks of 'Field Magic Damage per Tick' at 0.125s intervals (the game-file MelE DataValues source DoTDuration 0.5s at AreaTicksPerSecond 8) after the 0.5s expansion delay. The W projectile-reflection and P stored-damage execute stay documented (no enemy projectile source / kill boundary). Verified: test_p1_review_3.py TestMel \u2014 Q 277, E 240+4x8, r_overwhelm_stacks probe.",
+  "module": "mel.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Neeko": {
+  "verdict": "ok",
+  "gap_summary": "P1-3 closed the Q bounce and R shield items: Q Blooming Burst prices the full three-burst chain \u2014 'Initial Magic Damage' + 2 x 'Subsequent Magic Damage' == the wiki's 'Total Maximum Magic Damage' row (260 + 2 x 135 == 530 at rank 5; the re-blooms fire because the burst hits a champion, 0.75s apart). R Pop Blossom now carries the 2s self-shield priced from the game files (neeko.bin.json NeekoR: ShieldAmount 75/125/175 + ShieldPerChampion 40/60/80 per nearby enemy champion + 75% AP + 40% AP; the cached wiki page omits the shield row) \u2014 255 at rank 3 with the fight's own target as the one nearby champion. P disguise and W clone/stealth stay documented. Verified: test_p1_review_3.py TestNeeko \u2014 Q 530, R shield 255.",
+  "module": "neeko.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Riven": {
+  "verdict": "ok",
+  "gap_summary": "P1-3 closed the R1 Blade of the Exile AD-buff item: a BUFF-phase R_buff slot now prices the sourced steroid \u2014 +20% of bonus AD as bonus AD for 15s, flat at all ranks (riven.bin.json RivenFengShuiEngine PercentBonusAD 0.20 x bonus AD; wiki patch history 'reduced to 20% bonus AD from 25%'; cached R[0] description '20% AD bonus attack damage'; the retired 20/25/30% rank array is patched out), factored at cast (wiki note) \u2014 so every physical slot (Q/W/R) scales off the buffed AD inside the ult window, closing the understatement. E Valor shield stays documented no_damage. Verified: test_p1_review_3.py TestRiven \u2014 R_buff entry +20% x bAD; 0-bAD burst unchanged; Long-Sword probe raises Q to the buffed-row value.",
+  "module": "riven.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "out_of_scope",
+   "R": "modeled"
+  }
+ },
+ "Skarner": {
+  "verdict": "ok",
+  "gap_summary": "P1-3 closed the W shield and the E inconsistency: W Seismic Bastion's shockwave entry now carries the sourced self-shield \u2014 8% of Skarner's maximum health for 2.5s (cached W prose) via the E8c self_shield_events interface. E Ixtal's Impact is now priced (and MODULE_COVERAGE marks it modeled, matching the packet manifest's formula slot): the terrain-collision 'Physical Damage' row \u2014 30-150 + 120% bonus AD + 6% of his maximum health by rank, with the '% of his maximum health' unit resolved explicitly \u2014 assuming the charged target collides with terrain. Verified: test_p1_review_3.py TestSkarner \u2014 W shield 0.08 x 2500 == 200; E 150 + 6% x 2500 == 300 at rank 5.",
+  "module": "skarner.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Varus": {
+  "verdict": "ok",
+  "gap_summary": "P1-3 closed the W-active empowered-shot item: Q Piercing Arrow now prices the sourced 'Active Maximum Magic Damage' row (9-21% of the target's MISSING health by W rank, data/champions.json W) as a second magic part of the detonation proc \u2014 the empowered arrow is priced at Maximum like the arrow itself, against the shared target_missing_hp_pct option (default 50%), gated by w_active_empower (default True). E/R detonation conservatism stays documented. Verified: test_p1_review_3.py TestVarus \u2014 Q + 3-stack detonation + 21% x 50% x maxHP empower == 510 at 2000 HP; w_active_empower=False and target_missing_hp_pct=100 probes.",
+  "module": "varus.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Vladimir": {
+  "verdict": "ok",
+  "gap_summary": "P1-3 closed the R Hemoplague debuff: an AMP-phase hemoplague pseudo-slot (the Amumu Cursed Touch precedent) amplifies every damage entry by the sourced 10% increased-damage-taken (cached R prose; patch history 'reduced to 10% from 12%') \u2014 each part's amount is scaled in place so the E2 per-tick certifications survive. The R detonation itself prices 385 at rank 3, exactly the wiki's self-amplified note ('amplifies itself for an actual damage of 165 / 275 / 385 (+ 77% AP)'). The mark is assumed applied at fight start (R-first opening; r_hemoplague_debuff option default True, off prices an unmarked rotation). P Crimson Pact stat conversion stays documented. Verified: test_p1_review_3.py TestVladimir \u2014 Q 176/W 330/R 385 with cast_order R,Q,W,E; debuff-off probe; W keeps 4 ticks.",
+  "module": "vladimir.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Zac": {
+  "verdict": "ok",
+  "gap_summary": "P1-3 closed the Q half-pricing: Stretching Strikes now prices BOTH arm strikes \u2014 2 x the per-hit 'Magic Damage' row == the wiki's 'Total Magic Damage' row (120-360 + 60% AP + 6% of bonus health at every rank; data/champions.json Q), with the empowered basic-attack replacement landing at its sourced 0.25s cast time. The P revive state, blob heal, and R bounce pricing are unchanged. Verified: test_p1_review_3.py TestZac \u2014 Q 360 at rank 5 with two authored hit events; R keeps 650.",
+  "module": "zac.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ }
+}

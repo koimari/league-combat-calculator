@@ -68,7 +68,10 @@ def test_cp10_6_modules_are_reviewed_and_have_full_entry_receipts():
         module = importlib.import_module(f"src.calculator.champions.{module_name}")
         assert engine_registration_kind(name) == "reviewed_module"
         assert module.REVIEW_STATUS == "reviewed_module"
-        assert len(module.SLOTS) == 5
+        # P1-3: Riven carries one extra BUFF-phase pseudo-slot ("R_buff",
+        # Blade of the Exile's +20% bonus AD steroid) alongside its five
+        # packet slots; every other CP10.6 module keeps the five-slot shape.
+        assert len(module.SLOTS) == (6 if name == "Riven" else 5)
         assert len(module.SOURCES) == 6
 
 

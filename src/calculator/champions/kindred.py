@@ -33,6 +33,7 @@ from .reviewed_batch_03 import build_batch_module
 from .slotlib import (
     damage_entry,
     extract_cooldown,
+    extract_named,
     find_named_leveling,
     sum_modifiers,
 )
@@ -132,6 +133,46 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _hunters_vigor(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W passive: Hunter's Vigor — the at-100-stacks next-auto heal.
+
+    Cached W prose: "Lamb generates ... 5 stacks on-attack, up to a
+    maximum of 100 stacks. At maximum stacks, her next basic attack
+    heals her for 0% : 100% (based on Kindred's missing health) of
+    47 : 81 (based on level)."  The module emits the receipt only when
+    the ``w_hunters_vigor_stacks`` option reaches the sourced 100-stack
+    cap; healing.py pays the missing-health-scaled heal on the first
+    basic-attack damage event (the deterministic next auto).
+    """
+    ability = ctx.ability("W", 0)
+    if ability is None:
+        return None
+    stacks = min(max(int(ctx.options.get("w_hunters_vigor_stacks", 100)), 0), 100)
+    if stacks < 100:
+        return no_damage(
+            ctx,
+            slot="W",
+            name="Hunter's Vigor",
+            reason=(
+                f"{stacks}/100 Hunter's Vigor stacks; at 100 stacks the "
+                "next basic attack heals Kindred for 0% : 100% (based on "
+                "missing health) of 47 : 81 (based on level)."
+            ),
+        )
+    heal = extract_named(ability, "Heal", ctx.level, ctx.stats, ctx.target)
+    return no_damage(
+        ctx,
+        slot="W",
+        name="Hunter's Vigor",
+        reason=(
+            f"{stacks}/100 Hunter's Vigor stacks: the next basic attack "
+            f"heals Kindred for the missing-health share of {heal:g} "
+            "(47 : 81 based on level); the heal is not triggered at full "
+            "health."
+        ),
+    )
+
+
 def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: Wolf's Frenzy — Wolf basic attacks over the fight window.
 
@@ -189,6 +230,7 @@ SLOTS = {
     "P": _mark_of_the_kindred,
     "Q": _BATCH_SLOTS["Q"],
     "W": _wolfs_frenzy,
+    "W_vigor": _hunters_vigor,
     "E": _mounting_dread,
     "R": _BATCH_SLOTS["R"],
 }
@@ -210,6 +252,14 @@ OPTIONS = [
         "min": 1,
         "max": 8,
         "label": "Wolf attacks (W)",
+    },
+    {
+        "key": "w_hunters_vigor_stacks",
+        "type": "int",
+        "default": 100,
+        "min": 0,
+        "max": 100,
+        "label": ("Hunter's Vigor stacks (100 = the next basic attack heals)"),
     },
     {
         "key": "e_stacks",
@@ -235,6 +285,10 @@ ASSUMPTIONS = [
     "w_attacks Wolf attacks, including the per-Mark current-health term "
     "(1.5% + 1% per Mark); the zone duration and 25%-of-bonus-AS rate are "
     "state (attack count is the player-controlled option)",
+    "W passive Hunter's Vigor: at 100 stacks (w_hunters_vigor_stacks, "
+    "default 100) the next basic attack heals Kindred for the "
+    "missing-health share of the sourced 47 : 81 (based on level) heal "
+    "(healing.py; the heal is not triggered at full health)",
     "R (Lamb's Respite) is the reviewed no-damage packet",
 ]
 

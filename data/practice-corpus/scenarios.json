@@ -226,7 +226,8 @@
     "fight": "one_rotation",
     "auto": false,
     "champion_options": {
-     "blight_stacks": 3
+     "blight_stacks": 3,
+     "w_active_empower": false
     },
     "enemies": [
      {
@@ -244,7 +245,7 @@
     "formula": "3 stacks x 5% maxHP per stack (W rank 5, 0 AP) of Ahri's 2358 max HP = 3 x 117.9 = 353.7 raw magic; post-mitigation vs 52 MR = 232.7",
     "damage_type": "magic"
    },
-   "practice_tool_steps": "Load Varus, buy nothing. Level 18, rank 5 W. Practice Tool: apply 3 Blight stacks to a practice dummy (3 basic attacks), then detonate with Q; combat log shows the Blight Detonation magic hit for 5% max HP per stack (3 x 117.9 raw)."
+   "practice_tool_steps": "Load Varus, buy nothing. Level 18, rank 5 W. Practice Tool: apply 3 Blight stacks to a practice dummy (3 basic attacks), then detonate with Q; combat log shows the Blight Detonation magic hit for 5% max HP per stack (3 x 117.9 raw). (W active empower off: this receipt pins the detonation-only math; the P1-3 empowered-shot rider is priced in tests/test_p1_review_3.py.)"
   },
   {
    "id": "e9-e3-nasus-siphoning-stacks",
