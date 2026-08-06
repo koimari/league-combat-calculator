@@ -120,6 +120,38 @@ def _heal_from_damage(
     healing.append(heal)
 
 
+def _missing_health_scaled_heal(minimum: float, maximum: float):
+    """Build a live missing-health interpolation between two sourced bounds.
+
+    Wiki "0% : 100% (based on missing health)" means the heal pays the
+    minimum at full health and the maximum at 0 health, interpolated
+    linearly by the recipient's missing-health ratio at the moment the heal
+    lands.  The survival walk evaluates the returned callable with the
+    recipient's live (current, maximum) health.
+    """
+    minimum = max(0.0, float(minimum))
+    maximum = max(minimum, float(maximum))
+
+    def amount_formula(current_health: float, maximum_health: float) -> float:
+        if maximum_health <= 0.0:
+            return minimum
+        missing_ratio = max(0.0, maximum_health - current_health) / maximum_health
+        return minimum + (maximum - minimum) * missing_ratio
+
+    return amount_formula
+
+
+def _cast_slot_times(
+    cast_timeline: list[dict[str, Any]] | None, slot: str
+) -> list[float]:
+    """Ordered cast times for one slot from the engine's cast timeline."""
+    return sorted(
+        float(cast.get("time", 0.0))
+        for cast in (cast_timeline or [])
+        if cast.get("slot") == slot
+    )
+
+
 # Every champion with a sourced self-heal rule in ``derive_self_healing``'s
 # dispatch below.  The scoring fast path reads this to know a fight's event
 # ledger feeds no heal author at all; a rule branch added without extending
@@ -137,6 +169,14 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Soraka",
         "Briar",
         "Vladimir",
+        "Kayle",
+        "Kha'Zix",
+        "Kindred",
+        "Lissandra",
+        "Nidalee",
+        "Senna",
+        "Smolder",
+        "Sylas",
     }
 )
 
@@ -387,6 +427,171 @@ def derive_self_healing(
                             **_trigger_fields(event),
                         }
                     )
+
+    elif name == "Kayle":
+        # Celestial Blessing (W): flat self-heal per cast (wiki: "Heal:
+        # 55 / 80 / 105 / 130 / 155 (+ 25% AP)").  W deals no damage, so the
+        # cast timeline is the only trigger receipt; the heal pays once per
+        # cast regardless of which enemy pair produced the damage result, so
+        # it is authored actor-wide.
+        w = _ability(champion_data, "W")
+        w_rank = _rank(ability_damages, "W")
+        w_heal = extract_named(w, "Heal", w_rank, champion_stats)
+        for cast_time in _cast_slot_times(cast_timeline, "W"):
+            healing.append(
+                {
+                    "time": cast_time,
+                    "amount": w_heal,
+                    "source": "Celestial Blessing",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+            )
+
+    elif name == "Kha'Zix":
+        # Void Spike (W): heals Kha'Zix for a flat amount per cast when he
+        # is within the explosion (wiki/data: "Heal: 55 / 75 / 95 / 115 /
+        # 135 (+ 50% AP)").  The explosion happens whether or not the spike
+        # damage is blocked, so the flat heal is not linked to damage.
+        w = _ability(champion_data, "W")
+        w_rank = _rank(ability_damages, "W")
+        w_heal = extract_named(w, "Heal", w_rank, champion_stats)
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "W"
+        ):
+            _heal_from_damage(
+                healing, event, w_heal, "Void Spike", link_to_damage=False
+            )
+
+    elif name == "Kindred":
+        # Lamb's Respite (R): every unit inside the zone is healed when the
+        # blessing ends, 4 seconds after the cast (wiki: "Heal: 225 / 300 /
+        # 375").  R deals no damage, so the cast timeline is the trigger;
+        # the heal is actor-wide because one cast pays one heal regardless
+        # of roster size.
+        r = _ability(champion_data, "R")
+        r_rank = _rank(ability_damages, "R")
+        r_heal = extract_named(r, "Heal", r_rank, champion_stats)
+        duration = max(0.0, float(fight_duration_seconds or 0.0))
+        for cast_time in _cast_slot_times(cast_timeline, "R"):
+            heal_time = cast_time + 4.0
+            if heal_time > duration + 1e-9:
+                continue
+            healing.append(
+                {
+                    "time": heal_time,
+                    "amount": r_heal,
+                    "source": "Lamb's Respite",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+            )
+
+    elif name == "Lissandra":
+        # Frozen Tomb self-cast (R): heals every 0.25 seconds for the 2.5
+        # second stasis, scaled from minimum to maximum per tick by her
+        # missing health (wiki: "Minimum Heal per Tick" / "Maximum Heal per
+        # Tick"; 10 ticks of 0.25s reconcile the total attributes).  The
+        # engine's R damage row anchors the cast time; the heal amount is a
+        # live missing-health formula.
+        r = _ability(champion_data, "R")
+        r_rank = _rank(ability_damages, "R")
+        min_tick = extract_named(r, "Minimum Heal per Tick", r_rank, champion_stats)
+        max_tick = extract_named(r, "Maximum Heal per Tick", r_rank, champion_stats)
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "R"
+        ):
+            trigger = _trigger_fields(event)
+            for index in range(1, 11):
+                healing.append(
+                    {
+                        "time": float(event.get("time", 0.0)) + index * 0.25,
+                        "amount": 0.0,
+                        "amount_formula": _missing_health_scaled_heal(
+                            min_tick, max_tick
+                        ),
+                        "source": "Frozen Tomb",
+                        "kind": "champion_ability",
+                        **trigger,
+                    }
+                )
+
+    elif name == "Nidalee":
+        # Primal Surge (E): self/ally heal scaled by the target's missing
+        # health (wiki: "Minimum Heal" / "Maximum Heal").  The engine's E
+        # damage row anchors the cast; the heal triggers on cast whether or
+        # not the paired damage landed, so it is not linked to damage.
+        e = _ability(champion_data, "E")
+        e_rank = _rank(ability_damages, "E")
+        min_heal = extract_named(e, "Minimum Heal", e_rank, champion_stats)
+        max_heal = extract_named(e, "Maximum Heal", e_rank, champion_stats)
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "E"
+        ):
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": _missing_health_scaled_heal(min_heal, max_heal),
+                    "source": "Primal Surge",
+                    "kind": "champion_ability",
+                    **_trigger_fields(event),
+                }
+            )
+
+    elif name == "Senna":
+        # Piercing Darkness (Q): the light ray heals Senna and allied
+        # champions hit (wiki: "Healing: 40 / 60 / 80 / 100 / 120
+        # (+ 40% bonus AD) (+ 35% AP)").  Flat heal per cast, unlinked from
+        # the damage row.
+        q = _ability(champion_data, "Q")
+        q_rank = _rank(ability_damages, "Q")
+        q_heal = extract_named(q, "Healing", q_rank, champion_stats)
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "Q"
+        ):
+            _heal_from_damage(
+                healing, event, q_heal, "Piercing Darkness", link_to_damage=False
+            )
+
+    elif name == "Smolder":
+        # MMOOOMMMM! (R): the fire wave heals Smolder (wiki: "Self Heal:
+        # 100 / 135 / 170 (+ 50% bonus AD) (+ 75% AP)").  Flat heal per
+        # cast, unlinked from the damage row.
+        r = _ability(champion_data, "R")
+        r_rank = _rank(ability_damages, "R")
+        r_heal = extract_named(r, "Self Heal", r_rank, champion_stats)
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "R"
+        ):
+            _heal_from_damage(
+                healing, event, r_heal, "MMOOOMMMM!", link_to_damage=False
+            )
+
+    elif name == "Sylas":
+        # Kingslayer (W): if the strike damages a champion, Sylas is healed
+        # for an amount scaled by his missing health (wiki: "Minimum Heal" /
+        # "Maximum Heal", doubled at 0 health).  The heal is conditional on
+        # the W damage landing, so it stays linked to the damage row.
+        w = _ability(champion_data, "W")
+        w_rank = _rank(ability_damages, "W")
+        min_heal = extract_named(w, "Minimum Heal", w_rank, champion_stats)
+        max_heal = extract_named(w, "Maximum Heal", w_rank, champion_stats)
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "W"
+        ):
+            if float(event.get("damage", 0.0)) <= 0.0:
+                continue
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": _missing_health_scaled_heal(min_heal, max_heal),
+                    "source": "Kingslayer",
+                    "kind": "champion_ability",
+                    **_trigger_fields(event),
+                }
+            )
 
     if name == "Vladimir":
         # Transfusion (Q): flat heal per cast, rank-scaled, + AP ratio
