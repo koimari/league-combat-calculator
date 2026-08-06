@@ -128,6 +128,9 @@ function mergeItemCoverage(catalog) {
     return {
       ...item,
       ...metadata,
+      // /api/items reports price 0 in this cache generation; keep the patch
+      // snapshot's real gold so quick-mode cards can show "cheapest slot".
+      price: Number(metadata.price) > 0 ? metadata.price : item.price,
       backendName: metadata.name,
       backendAvailable: true,
       modelCoverage: metadata.model_coverage || null,
@@ -1794,7 +1797,8 @@ function exactPoint(result) {
 }
 
 function exactBreakdown(result) {
-  return Object.values(result?.breakdown || {}).filter((entry) => Number(entry.total_damage || 0) > 0).map((entry) => ({
+  return Object.entries(result?.breakdown || {}).filter(([, entry]) => Number(entry.total_damage || 0) > 0).map(([slotKey, entry]) => ({
+    slot: slotKey,
     source: entry.name || entry.slot || "Damage source",
     detail: (() => {
       const base = entry.casts ? `${entry.casts} cast${entry.casts === 1 ? "" : "s"}` : entry.count ? `${entry.count} hit${entry.count === 1 ? "" : "s"}` : "Event-ordered output";
@@ -1924,7 +1928,7 @@ function renderExactBreakdown(aResult, bResult) {
   // ownership labels.  The UI deduplicates only identical source/detail keys.
   ingestCombatSources(aResult, "a");
   if (bResult) ingestCombatSources(bResult, "b");
-  const body = [...rows.values()].map((row) => `<tr><td><strong>${escapeHtml(row.source)}</strong><small>${escapeHtml(row.detail)}</small></td><td>${fmt(row.a)}</td>${bResult ? `<td>${fmt(row.b)}</td><td>${Math.abs(row.a - row.b) < .5 ? "—" : `${row.a > row.b ? "+" : ""}${fmt(row.a - row.b)}`}</td>` : ""}</tr>`).join("");
+  const body = [...rows.values()].map((row) => `<tr><td><strong>${escapeHtml(row.source)}</strong>${certaintyChipHtml(row.slot)}<small>${escapeHtml(row.detail)}</small></td><td>${fmt(row.a)}</td>${bResult ? `<td>${fmt(row.b)}</td><td>${Math.abs(row.a - row.b) < .5 ? "—" : `${row.a > row.b ? "+" : ""}${fmt(row.a - row.b)}`}</td>` : ""}</tr>`).join("");
   const mainTotal = (result) => Number(result?.combat?.breakdown?.find((entry) => entry.participant_id === "main")?.total_damage ?? result?.total_damage ?? 0);
   const aMainTotal = mainTotal(aResult);
   const bMainTotal = bResult ? mainTotal(bResult) : 0;
@@ -1946,7 +1950,7 @@ function renderExactBreakdown(aResult, bResult) {
   const healingRows = healingEventsForResult(aResult).filter((event) => Number(event.raw_amount || event.amount || 0) > 0).map((event) => {
     const factor = Number(event.healing_reduction_factor || 1);
     const wound = factor < 1 ? ` · Grievous Wounds ${Math.round((1 - factor) * 100)}%` : "";
-    return `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(event.source || "healing")} · ${escapeHtml(event.kind || "heal")}${wound}</small></td><td>${fmt(event.applied_amount || 0)}<small>${fmt(event.raw_amount || event.amount || 0)} sourced</small></td></tr>`;
+    return `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong>${certaintyChipHtml(event.source)}<small>${escapeHtml(event.source || "healing")} · ${escapeHtml(event.kind || "heal")}${wound}</small></td><td>${fmt(event.applied_amount || 0)}<small>${fmt(event.raw_amount || event.amount || 0)} sourced</small></td></tr>`;
   }).join("");
   const supportRows = (aResult?.combat?.support_events || []).filter((event) => Number(event.applied_amount || event.amount || 0) > 0).map((event) => {
     const target = labels.get(event.target || event.recipient) || event.target || event.recipient || "selected teammate";
@@ -2715,6 +2719,10 @@ function renderPrototypeResult(aResult = null, bResult = null) {
     ? `<div class="ledger-line"><span>Additional receipts</span><strong>${combatEvents.length > 24 ? combatEvents.length - 24 : 0} damage · ${healingEvents.length > 12 ? healingEvents.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
     : "";
   $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD`}</strong></div>${eventRows.join("")}${healingRows.join("")}${supportRows.join("")}${overflow}`;
+  // P4: the per-ability damage table carries a certainty chip next to every
+  // sourced number. It re-renders on every result so chips track the loaded
+  // /api/certainty contract (or its placeholder fallback).
+  renderExactBreakdown(aResult, bResult);
 }
 
 function render() {
@@ -4309,6 +4317,897 @@ Promise.all([
     render();
   })
   .catch(() => { $("builder").innerHTML = `<p class="empty-roster">The patch snapshot could not load. Refresh to try again.</p>`; });
+
+// ============================================================================
+// P5 · Casual quick mode + presets + build sharing + trust labels (P4)
+// A self-contained layer on top of the analyst engine above. It owns:
+//   - the Quick view (champion → role → enemy → "Best next item")
+//   - preset scenarios (static/quick-presets.json)
+//   - build sharing (POST /api/builds + POST /api/share + ?share=<token>)
+//   - trust chips (GET /api/certainty, GET /api/not-modeled) with a
+//     contract-shaped mock fallback until the P7 backend routes deploy.
+// ============================================================================
+
+const QUICK_ROLES = ["top", "jungle", "mid", "bottom", "support"];
+const ROLE_LABELS = { top: "Top", jungle: "Jungle", mid: "Mid", bottom: "Bottom", support: "Support" };
+// Implicit practice target used when the casual user skips enemy selection.
+const QUICK_PRACTICE_ENEMY = { champion: "Jhin", level: 18, role: "bottom", items: [] };
+const QUICK_MAX_ITEMS = 5;
+const QUICK_LEVEL = 18;
+
+const QUICK_STATE = {
+  champion: null,
+  role: "mid",
+  enemy: null,           // null = practice target
+  items: [],             // legendary item names already owned
+  presetId: null,
+  running: false,
+  results: null,         // { baseline: {...}, candidates: [...], slot: {...}, payload: {...}, at: ts }
+  share: null,           // { token, url, buildId }
+};
+let QUICK_PRESETS = [];
+let QUICK_VIEW_READY = false;
+let QUICK_INIT_STARTED = false;
+
+// --- Trust labels (P4) ------------------------------------------------------
+// Consumed contract (owned by the P7 backend agent):
+//   GET /api/certainty?champion=X -> {"champion": "...", "slots": {"Q": {"certainty": "exact|estimate|boundary", "reason": "..."}}}
+//   GET /api/not-modeled?champion=X -> {"champion": "...", "items": ["..."]}
+// A missing/erroring route falls back to a contract-shaped mock; the UI shows
+// a "placeholder" note whenever the fallback is active so no chip is ever
+// presented as sourced data it is not.
+const CERTAINTY_LABELS = {
+  exact: { label: "EXACT", detail: "Fully sourced formula, no player-controlled options." },
+  estimate: { label: "ESTIMATE", detail: "Uses a defaulted player-controlled option." },
+  boundary: { label: "BOUNDARY", detail: "Documented mechanic that is not computed." },
+};
+const CERTAINTY_STATE = { source: "api", champion: null, slots: {}, loading: false };
+const NOT_MODELED_STATE = { source: "api", champion: null, items: [], loading: false };
+
+function certaintyMock(champion) {
+  return {
+    champion,
+    slots: {
+      P: { certainty: "boundary", reason: "Passive mechanics are documented but not computed by the shared event model." },
+      Q: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
+      W: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
+      E: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
+      R: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
+    },
+  };
+}
+
+function notModeledMock(champion) {
+  return { champion, items: [] };
+}
+
+async function fetchTrustContract(path, champion, mockBuilder) {
+  try {
+    const response = await fetch(`${path}?champion=${encodeURIComponent(champion)}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    if (!payload || typeof payload !== "object") throw new Error("malformed payload");
+    return { ...payload, source: "api" };
+  } catch (error) {
+    const mock = mockBuilder(champion);
+    return { ...mock, source: "mock", reason: `endpoint unavailable (${error.message})` };
+  }
+}
+
+async function loadTrustLabels(champion) {
+  if (!champion) return;
+  if (CERTAINTY_STATE.champion === champion && !CERTAINTY_STATE.loading && !NOT_MODELED_STATE.loading) return;
+  CERTAINTY_STATE.champion = champion;
+  CERTAINTY_STATE.loading = true;
+  NOT_MODELED_STATE.loading = true;
+  const [certainty, notModeled] = await Promise.all([
+    fetchTrustContract("/api/certainty", champion, certaintyMock),
+    fetchTrustContract("/api/not-modeled", champion, notModeledMock),
+  ]);
+  CERTAINTY_STATE.source = certainty.source === "api" ? "api" : "mock";
+  CERTAINTY_STATE.slots = (certainty && certainty.slots) || {};
+  NOT_MODELED_STATE.source = notModeled.source === "api" ? "api" : "mock";
+  NOT_MODELED_STATE.items = Array.isArray(notModeled && notModeled.items) ? notModeled.items : [];
+  CERTAINTY_STATE.loading = false;
+  NOT_MODELED_STATE.loading = false;
+  renderTrustPanels();
+  // Re-render an already-visible analyst breakdown so chips appear live.
+  if (!document.getElementById("analystView").hidden && engine.responses?.a) {
+    renderExactBreakdown(engine.responses.a, engine.responses.b || null);
+  }
+}
+
+function certaintyForSlot(slot) {
+  const entry = CERTAINTY_STATE.slots[String(slot || "")];
+  if (!entry || !CERTAINTY_LABELS[entry.certainty]) return null;
+  return {
+    label: CERTAINTY_LABELS[entry.certainty].label,
+    certainty: entry.certainty,
+    reason: entry.reason || CERTAINTY_LABELS[entry.certainty].detail,
+  };
+}
+
+function certaintyChipHtml(slot) {
+  const meta = certaintyForSlot(slot);
+  if (!meta) return "";
+  return `<span class="certainty-chip certainty-${meta.certainty}" title="${escapeHtml(meta.reason)}">${meta.label}</span>`;
+}
+
+function renderTrustPanels() {
+  const champion = state.attacker.champion || QUICK_STATE.champion || "";
+  const placeholder = CERTAINTY_STATE.source === "mock" || NOT_MODELED_STATE.source === "mock";
+  const legend = document.getElementById("trustLegend");
+  if (legend) {
+    legend.hidden = !champion;
+    const note = legend.querySelector(".trust-legend-note");
+    if (note) {
+      note.textContent = placeholder
+        ? "Placeholder chips — certainty endpoints are not deployed yet."
+        : "";
+      note.hidden = !placeholder;
+    }
+  }
+  const quickLegendHost = document.querySelector("#quickView .trust-legend");
+  const quickNote = quickLegendHost ? quickLegendHost.querySelector(".trust-legend-note") : null;
+  if (quickNote) {
+    quickNote.textContent = placeholder
+      ? "Placeholder chips — certainty endpoints are not deployed yet."
+      : "";
+    quickNote.hidden = !placeholder;
+  }
+  const panel = document.getElementById("notModeledPanel");
+  const quickPanel = document.getElementById("quickNotModeled");
+  const items = NOT_MODELED_STATE.items || [];
+  if (panel) {
+    panel.hidden = !champion;
+    document.getElementById("notModeledList").innerHTML = items.length
+      ? items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
+      : `<li class="not-modeled-empty">Nothing — every modeled item for ${escapeHtml(champion)} is included in calculations.</li>`;
+  }
+  if (quickPanel) {
+    quickPanel.hidden = !champion;
+    document.getElementById("quickNotModeledList").innerHTML = items.length
+      ? items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
+      : `<li class="not-modeled-empty">Nothing — every modeled item for ${escapeHtml(champion)} is included in calculations.</li>`;
+  }
+}
+
+// --- Quick view rendering ---------------------------------------------------
+
+function quickChampionEntries() {
+  return (DATA?.champions || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function quickItemEntries(query) {
+  const q = String(query || "").trim().toLowerCase();
+  return (DATA?.items || [])
+    .filter((item) => item.backendAvailable !== false && Number(item.price) > 0)
+    .filter((item) => !q || item.name.toLowerCase().includes(q))
+    .slice(0, 30);
+}
+
+function quickGridButton(kind, entry, selected) {
+  const isChampion = kind === "champion" || kind === "enemy";
+  const icon = isChampion
+    ? `<img src="${championImage(entry.name)}" alt="" loading="lazy" />`
+    : `<img src="${itemImage(entry.id)}" alt="" loading="lazy" />`;
+  const detail = isChampion
+    ? escapeHtml(entry.title || "")
+    : `${fmt(Number(entry.price) || 0)} gold`;
+  return `<button type="button" class="quick-choice ${selected ? "selected" : ""}" data-quick-pick="${kind}" data-value="${escapeHtml(isChampion ? entry.name : entry.name)}" aria-pressed="${selected}">${icon}<span><strong>${escapeHtml(entry.name)}</strong><small>${detail}</small></span></button>`;
+}
+
+function renderQuickRole() {
+  const host = document.getElementById("quickRole");
+  if (!host) return;
+  host.innerHTML = QUICK_ROLES.map((role) => `<button type="button" class="quick-role ${QUICK_STATE.role === role ? "active" : ""}" data-quick-role="${role}" aria-pressed="${QUICK_STATE.role === role}">${ROLE_LABELS[role]}</button>`).join("");
+}
+
+function renderQuickChampionGrid(query) {
+  const host = document.getElementById("quickChampionGrid");
+  if (!host) return;
+  const q = String(query || "").trim().toLowerCase();
+  const entries = quickChampionEntries().filter((entry) => !q || entry.name.toLowerCase().includes(q));
+  host.innerHTML = entries.slice(0, 40).map((entry) => quickGridButton("champion", entry, QUICK_STATE.champion === entry.name)).join("");
+  const note = document.getElementById("quickChampionNote");
+  if (note) {
+    note.textContent = QUICK_STATE.champion
+      ? `Locked: ${QUICK_STATE.champion}. Pick a different champion to change it.`
+      : `${entries.length} champions · type to filter`;
+  }
+}
+
+function renderQuickEnemyGrid(query) {
+  const host = document.getElementById("quickEnemyGrid");
+  if (!host) return;
+  const q = String(query || "").trim().toLowerCase();
+  const entries = quickChampionEntries().filter((entry) => !q || entry.name.toLowerCase().includes(q));
+  const practice = QUICK_STATE.enemy === null;
+  host.innerHTML = `<button type="button" class="quick-choice ${practice ? "selected" : ""}" data-quick-pick="enemy" data-value="" aria-pressed="${practice}"><span class="quick-choice-icon quick-practice-icon" aria-hidden="true">🎯</span><span><strong>Practice target</strong><small>Default squishy dummy — no specific enemy</small></span></button>` + entries.slice(0, 40).map((entry) => quickGridButton("enemy", entry, !practice && QUICK_STATE.enemy?.champion === entry.name)).join("");
+  const note = document.getElementById("quickEnemyNote");
+  if (note) {
+    note.textContent = QUICK_STATE.enemy
+      ? `Fighting ${QUICK_STATE.enemy.champion}.`
+      : "Leave empty to fight a default practice target.";
+  }
+  const clear = document.getElementById("quickEnemyClear");
+  if (clear) clear.hidden = QUICK_STATE.enemy === null;
+}
+
+function renderQuickItemGrid(query) {
+  const host = document.getElementById("quickItemGrid");
+  if (!host) return;
+  const q = String(query || "").trim().toLowerCase();
+  const owned = new Set(QUICK_STATE.items);
+  host.innerHTML = quickItemEntries(q).filter((item) => !owned.has(item.name)).slice(0, 24).map((entry) => quickGridButton("item", entry, false)).join("");
+}
+
+function renderQuickItemsStrip() {
+  const host = document.getElementById("quickItems");
+  if (!host) return;
+  host.innerHTML = QUICK_STATE.items.length
+    ? QUICK_STATE.items.map((name) => {
+        const item = findItemByBackendName(name);
+        return `<span class="quick-item-chip"><img src="${item ? itemImage(item.id) : ""}" alt="" /><b>${escapeHtml(name)}</b><button type="button" class="quick-item-remove" data-quick-remove="${escapeHtml(name)}" aria-label="Remove ${escapeHtml(name)}">×</button></span>`;
+      }).join("")
+    : `<span class="quick-items-empty">No items yet — the recommendation is for your first completed item.</span>`;
+}
+
+function renderQuickPresets() {
+  const host = document.getElementById("quickPresets");
+  if (!host) return;
+  host.innerHTML = QUICK_PRESETS.map((preset) => `<button type="button" class="quick-preset ${QUICK_STATE.presetId === preset.id ? "active" : ""}" data-quick-preset="${escapeHtml(preset.id)}" title="${escapeHtml(preset.tagline || "")}" aria-pressed="${QUICK_STATE.presetId === preset.id}"><span class="quick-preset-emoji" aria-hidden="true">${preset.emoji || "🎮"}</span><span><strong>${escapeHtml(preset.label)}</strong><small>${escapeHtml(preset.tagline || "")}</small></span></button>`).join("");
+}
+
+function renderQuickView() {
+  if (!QUICK_VIEW_READY) return;
+  renderQuickRole();
+  renderQuickChampionGrid(document.getElementById("quickChampionSearch")?.value || "");
+  renderQuickEnemyGrid(document.getElementById("quickEnemySearch")?.value || "");
+  renderQuickItemsStrip();
+  renderQuickItemGrid(document.getElementById("quickItemSearch")?.value || "");
+  renderQuickPresets();
+  renderTrustPanels();
+  const run = document.getElementById("quickRun");
+  if (run) {
+    run.disabled = !QUICK_STATE.champion || QUICK_STATE.running;
+    run.textContent = QUICK_STATE.running ? "Working…" : "Best next item";
+  }
+}
+
+// --- Payloads ---------------------------------------------------------------
+
+function quickPreset() {
+  return QUICK_PRESETS.find((preset) => preset.id === QUICK_STATE.presetId) || null;
+}
+
+function quickFightSettings() {
+  const preset = quickPreset();
+  if (preset) return { ...preset.fight };
+  return {
+    rotations: 1,
+    fight_mode: "one_rotation",
+    fight_duration: 10,
+    auto_attack_uptime_mode: "calculated",
+    include_auto_attacks: true,
+  };
+}
+
+function quickEnemyLoadout() {
+  if (QUICK_STATE.enemy) {
+    return [
+      {
+        champion: QUICK_STATE.enemy.champion,
+        level: QUICK_STATE.enemy.level || 18,
+        role: QUICK_STATE.enemy.role || "top",
+        items: QUICK_STATE.enemy.items || [],
+      },
+    ];
+  }
+  const preset = quickPreset();
+  if (preset && Array.isArray(preset.enemies) && preset.enemies.length) {
+    // A preset owns its full enemy roster (the 4v4 preset is a coupled
+    // team fight); a user-picked enemy always overrides it.
+    return preset.enemies.map((enemy) => ({ ...enemy }));
+  }
+  return [{ ...QUICK_PRACTICE_ENEMY }];
+}
+
+function quickCalculatePayload() {
+  const fight = quickFightSettings();
+  const preset = quickPreset();
+  const payload = {
+    champion: QUICK_STATE.champion,
+    level: QUICK_LEVEL,
+    role: QUICK_STATE.role,
+    items: QUICK_STATE.items.slice(0, QUICK_MAX_ITEMS),
+    item_options: {},
+    ability_ranks: null,
+    champion_options: {},
+    enemies: quickEnemyLoadout(),
+    allies: preset ? (preset.allies || []).slice() : [],
+    role_quest_complete: false,
+    include_actives: true,
+    include_crossover: false,
+    rotations: fight.rotations,
+    fight_mode: fight.fight_mode,
+    fight_duration: fight.fight_duration,
+    auto_attack_uptime_mode: fight.auto_attack_uptime_mode,
+    include_auto_attacks: fight.include_auto_attacks,
+  };
+  return payload;
+}
+
+function quickBisPayload() {
+  const payload = quickCalculatePayload();
+  const count = QUICK_STATE.items.length;
+  if (count < QUICK_MAX_ITEMS) {
+    payload.slot_index = count;
+    payload.slot_kind = "item";
+  } else {
+    payload.slot_index = 0;
+    payload.slot_kind = "boots";
+  }
+  payload.subject_team = "main";
+  payload.objective = "overall";
+  return payload;
+}
+
+function postJson(url, body) {
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+async function quickBaselineResult(payload) {
+  const response = await postJson("/api/calculate", payload);
+  const result = await response.json();
+  if (!response.ok || result.error) throw new Error(result.error || `calculate failed (HTTP ${response.status})`);
+  const main = (result.combat?.participants || []).find((participant) => participant.participant_id === "main");
+  const mainBreakdown = (result.combat?.breakdown || []).find((row) => row.participant_id === "main");
+  return {
+    tdd: Number(mainBreakdown?.total_damage ?? result.total_damage ?? 0),
+    ehp: Number(main?.survival?.effective_health ?? 0),
+    effectiveArmor: Number(result.effective_armor ?? 0),
+    effectiveMr: Number(result.effective_mr ?? 0),
+    result,
+  };
+}
+
+async function quickCandidates(payload) {
+  const response = await postJson("/api/bis", payload);
+  const data = await response.json();
+  if (!response.ok || data.error) throw new Error(data.error || `best-next-item failed (HTTP ${response.status})`);
+  const certified = Array.isArray(data.candidates) ? data.candidates : [];
+  const partial = Array.isArray(data.partial_candidates) ? data.partial_candidates : [];
+  const pool = certified.length ? certified : partial;
+  return {
+    candidates: pool.slice(0, 3).map((candidate) => ({
+      name: candidate.name,
+      icon: candidate.icon || "",
+      score: Number(candidate.score ?? candidate.objective_value ?? 0),
+      components: candidate.components || {},
+      stats: candidate.stats || {},
+      survival: candidate.survival || {},
+      gold: Number((findItemByBackendName(candidate.name) || {}).price || 0),
+      certified: Boolean(candidate.timeline_coverage?.complete),
+    })),
+    certified: certified.length > 0,
+    coverageNote: data.coverage?.note || "",
+  };
+}
+
+// --- One-line "why" ---------------------------------------------------------
+
+function quickWhy(candidate, baseline, index, context) {
+  const deltaD = candidate.score - baseline.tdd;
+  const deltaE = (Number(candidate.survival.effective_health) || 0) - baseline.ehp;
+  const stats = candidate.stats || {};
+  const armorPen = Number(stats.armorPenetration || 0) + Number(stats.lethality || 0);
+  const magicPen = Number(stats.magicPenetration || 0) + Number(stats.percentPen || 0);
+  const defensive = Number(stats.hp || 0) + Number(stats.armor || 0) * 5 + Number(stats.magicResistance || 0) * 5;
+  if (baseline.effectiveMr > 120 && magicPen > 0) {
+    return "Bypasses the enemy's heavy magic resistance";
+  }
+  if (baseline.effectiveArmor > 120 && armorPen > 0) {
+    return "Cuts through the enemy's heavy armor";
+  }
+  if (deltaE > 0 && defensive > 300 && baseline.ehp < 2200) {
+    return "Adds durability — your current build is fragile here";
+  }
+  if (context.leadsDamage === candidate.name) {
+    return `Biggest single-slot damage gain (+${fmt(deltaD)} TDD)`;
+  }
+  if (context.leadsSurvival === candidate.name) {
+    return `Biggest survivability gain (+${fmt(deltaE)} eHP)`;
+  }
+  if (context.cheapest === candidate.name) {
+    return `Cheapest slot improvement (${fmt(candidate.gold)} gold)`;
+  }
+  return "Strong all-round pick for this matchup";
+}
+
+function quickContext(candidates, baseline) {
+  const withD = candidates.map((candidate) => ({ candidate, deltaD: candidate.score - baseline.tdd }));
+  const withE = candidates.map((candidate) => ({ candidate, deltaE: (Number(candidate.survival.effective_health) || 0) - baseline.ehp }));
+  // Only claim a "gain" when the delta is actually positive; a zero/negative
+  // delta (e.g. an attack-speed boots pick for a mage) must not be sold as a
+  // damage gain.
+  const positiveD = withD.filter((row) => row.deltaD > 0.5);
+  const positiveE = withE.filter((row) => row.deltaE > 0.5);
+  const bestD = positiveD.reduce((best, row) => (row.deltaD > best.deltaD ? row : best), positiveD[0]);
+  const bestE = positiveE.reduce((best, row) => (row.deltaE > best.deltaE ? row : best), positiveE[0]);
+  const cheapest = candidates.reduce((best, candidate) => (!best || candidate.gold < best.gold ? candidate : best), null);
+  return {
+    leadsDamage: bestD ? bestD.candidate.name : null,
+    leadsSurvival: bestE ? bestE.candidate.name : null,
+    cheapest: cheapest ? cheapest.name : null,
+  };
+}
+
+// --- Results rendering ------------------------------------------------------
+
+function quickResultCard(candidate, index, baseline, context, certified) {
+  const deltaD = candidate.score - baseline.tdd;
+  const deltaE = (Number(candidate.survival.effective_health) || 0) - baseline.ehp;
+  const deltaClass = (delta) => (Math.abs(delta) < 0.5 ? "quick-delta-flat" : delta > 0 ? "quick-delta-up" : "quick-delta-down");
+  const why = quickWhy(candidate, baseline, index, context);
+  return `<article class="quick-card ${index === 0 ? "quick-card-top" : ""}">
+    <div class="quick-card-rank" aria-hidden="true">${index + 1}</div>
+    <img class="quick-card-icon" src="${candidate.icon || ""}" alt="" loading="lazy" />
+    <div class="quick-card-main">
+      <div class="quick-card-title"><strong>${escapeHtml(candidate.name)}</strong>${candidate.gold ? `<span class="quick-card-gold">${fmt(candidate.gold)}g</span>` : ""}${certified ? "" : `<span class="certainty-chip certainty-estimate" title="Event order is partially certified for this coupled roster">PARTIAL</span>`}</div>
+      <p class="quick-card-why">${escapeHtml(why)}</p>
+    </div>
+    <dl class="quick-card-deltas">
+      <div><dt>TDD</dt><dd class="${deltaClass(deltaD)}">${deltaD >= 0 ? "+" : ""}${fmt(deltaD)}</dd></div>
+      <div><dt>eHP</dt><dd class="${deltaClass(deltaE)}">${deltaE >= 0 ? "+" : ""}${fmt(deltaE)}</dd></div>
+    </dl>
+  </article>`;
+}
+
+function renderQuickResults(results) {
+  const host = document.getElementById("quickResults");
+  const after = document.getElementById("quickAfter");
+  if (!results) {
+    host.hidden = true;
+    if (after) after.hidden = true;
+    return;
+  }
+  host.hidden = false;
+  if (after) after.hidden = false;
+  const context = quickContext(results.candidates, results.baseline);
+  const enemy = Array.isArray(results.enemies) && results.enemies.length ? results.enemies[0] : quickEnemyLoadout()[0] || QUICK_PRACTICE_ENEMY;
+  const preset = quickPreset();
+  const slotLabel = results.slot.kind === "boots" ? "boots slot" : `item slot ${results.slot.index + 1}`;
+  const coverage = results.certified
+    ? ""
+    : `<p class="quick-coverage-note">${escapeHtml(results.coverageNote || "Coupled-roster event order is partially certified; scores below are estimates.")}</p>`;
+  host.innerHTML = `
+    <div class="quick-results-head">
+      <div><p class="eyebrow">Recommended next item</p><h2>${escapeHtml(QUICK_STATE.champion)} · ${ROLE_LABELS[QUICK_STATE.role]}</h2></div>
+      <p class="quick-scenario-line">vs ${results.enemies.length > 1 ? `${results.enemies.length} enemies` : escapeHtml(enemy.champion)}${preset ? ` · ${escapeHtml(preset.label)}` : ""} · filling the ${slotLabel}</p>
+    </div>
+    ${coverage}
+    <div class="quick-card-list">
+      ${results.candidates.map((candidate, index) => quickResultCard(candidate, index, results.baseline, context, results.certified)).join("")}
+    </div>
+    <p class="quick-baseline-line">Baseline (your current build): ${fmt(results.baseline.tdd)} TDD · ${fmt(results.baseline.ehp)} eHP before adding an item.</p>`;
+}
+
+// --- Best next item ---------------------------------------------------------
+
+async function runQuickBestNextItem() {
+  if (QUICK_STATE.running) return;
+  if (!QUICK_STATE.champion) {
+    document.getElementById("quickChampionSearch").focus();
+    return;
+  }
+  QUICK_STATE.running = true;
+  renderQuickView();
+  const spinner = document.getElementById("quickSpinner");
+  spinner.hidden = false;
+  const results = document.getElementById("quickResults");
+  results.hidden = true;
+  document.getElementById("quickAfter").hidden = true;
+  const started = Date.now();
+  try {
+    const payload = quickCalculatePayload();
+    const bisPayload = quickBisPayload();
+    const [baseline, candidatesData] = await Promise.all([quickBaselineResult(payload), quickCandidates(bisPayload)]);
+    if (!candidatesData.candidates.length) {
+      throw new Error("No event-ordered candidates were available for this scenario.");
+    }
+    QUICK_STATE.results = {
+      baseline,
+      candidates: candidatesData.candidates,
+      certified: candidatesData.certified,
+      coverageNote: candidatesData.coverageNote,
+      slot: bisPayload.slot_kind === "boots" ? { kind: "boots", index: 0 } : { kind: "item", index: bisPayload.slot_index },
+      enemies: payload.enemies,
+      payload,
+    };
+    const elapsed = Date.now() - started;
+    spinner.querySelector("#quickSpinnerText").textContent = `Crunching the event-ordered numbers… (${Math.max(1, Math.round(elapsed / 100) / 10)}s)`;
+    renderQuickResults(QUICK_STATE.results);
+    spinner.hidden = true;
+    results.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (error) {
+    spinner.hidden = true;
+    results.hidden = false;
+    results.innerHTML = `<div class="quick-error" role="alert"><strong>Could not compute a recommendation</strong><p>${escapeHtml(error.message || String(error))}</p><p class="quick-error-hint">Try a different champion, role, or preset.</p></div>`;
+  } finally {
+    QUICK_STATE.running = false;
+    renderQuickView();
+  }
+}
+
+// --- Sharing ----------------------------------------------------------------
+
+async function mintShareUrl(payload, slug) {
+  // /api/builds stores ability_ranks in a dedicated JSON column and rejects
+  // null, while /api/calculate needs null for level-derived transform kits
+  // (Elise/Jayce/Karma/Nidalee/Udyr).  Save the empty object (level-derived
+  // for every kit) and let the read-only renderer restore null for those kits.
+  const savedPayload = { ...payload };
+  if (savedPayload.ability_ranks === null) savedPayload.ability_ranks = {};
+  const saved = await postJson("/api/builds", savedPayload);
+  const savedData = await saved.json();
+  if (!saved.ok || savedData.error) throw new Error(savedData.error || `saving the build failed (HTTP ${saved.status})`);
+  const share = await postJson("/api/share", { build_id: savedData.build_id, slug: slug || null });
+  const shareData = await share.json();
+  if (!share.ok || shareData.error) throw new Error(shareData.error || `minting the share link failed (HTTP ${share.status})`);
+  return {
+    token: shareData.token,
+    buildId: savedData.build_id,
+    url: `${window.location.origin}/?share=${encodeURIComponent(shareData.token)}`,
+  };
+}
+
+function openSharePanel(share) {
+  const panel = document.getElementById("sharePanel");
+  const urlInput = document.getElementById("shareUrl");
+  const status = document.getElementById("shareStatus");
+  urlInput.value = share.url;
+  status.textContent = "";
+  panel.hidden = false;
+  requestAnimationFrame(() => urlInput.select());
+}
+
+async function shareQuickBuild() {
+  if (!QUICK_STATE.results) {
+    await runQuickBestNextItem();
+  }
+  if (!QUICK_STATE.results) return;
+  const status = document.getElementById("shareStatus");
+  try {
+    status.textContent = "Creating your share link…";
+    const share = await mintShareUrl(QUICK_STATE.results.payload, "quick-build");
+    QUICK_STATE.share = share;
+    openSharePanel(share);
+  } catch (error) {
+    status.textContent = error.message;
+  }
+}
+
+async function shareAnalystBuild() {
+  const payload = engineFightPayload("A");
+  const status = document.getElementById("shareStatus");
+  try {
+    status.textContent = "Creating your share link…";
+    const share = await mintShareUrl(payload, "analyst-build");
+    openSharePanel(share);
+  } catch (error) {
+    status.textContent = error.message;
+  }
+}
+
+// --- Shared build rendering (?share=<token>) --------------------------------
+
+async function renderSharedBuild(token) {
+  const response = await fetch(`/api/share/${encodeURIComponent(token)}`);
+  const payload = await response.json();
+  if (!response.ok || payload.error) {
+    document.getElementById("shareBannerText").textContent = payload.error || "Share link could not be loaded.";
+    document.getElementById("shareBanner").hidden = false;
+    return;
+  }
+  document.getElementById("shareBanner").hidden = false;
+  document.getElementById("shareBannerText").textContent = `Shared build · ${payload.champion || "unknown champion"} · level ${payload.level || 18} · created ${payload.created_at || ""}`;
+  window.__sharedBuild = payload;
+  const request = payload.request || payload;
+  const host = document.getElementById("quickResults");
+  host.hidden = false;
+  const itemChips = (payload.items || []).map((name) => {
+    const item = findItemByBackendName(name);
+    return `<span class="quick-item-chip"><img src="${item ? itemImage(item.id) : ""}" alt="" /><b>${escapeHtml(name)}</b></span>`;
+  }).join("") || `<span class="quick-items-empty">No items</span>`;
+  const enemyChips = (payload.enemies || []).map((enemy) => `<span class="quick-shared-participant">${escapeHtml(enemy.champion)} <small>Lv ${enemy.level || 18}${enemy.role ? ` · ${escapeHtml(enemy.role)}` : ""}</small></span>`).join("") || `<span class="quick-shared-participant">Practice target</span>`;
+  host.innerHTML = `<div class="quick-shared-card">
+    <div class="quick-results-head"><div><p class="eyebrow">Shared build</p><h2>${escapeHtml(payload.champion || "Unknown champion")}</h2></div><p class="quick-scenario-line">${ROLE_LABELS[payload.role || "mid"] || "Mid"} · level ${payload.level || 18}</p></div>
+    <div class="quick-shared-row"><span class="quick-shared-label">Items</span><div class="quick-shared-chips">${itemChips}</div></div>
+    <div class="quick-shared-row"><span class="quick-shared-label">Enemies</span><div class="quick-shared-chips">${enemyChips}</div></div>
+    <div class="quick-shared-metrics" id="quickSharedMetrics"><span class="quick-spinner-inline">Calculating…</span></div>
+    <div class="quick-shared-sources" id="quickSharedSources"></div>
+  </div>`;
+  try {
+    if (usesLevelDerivedRanks(request.champion)) request.ability_ranks = null;
+    const result = await postJson("/api/calculate", request);
+    const data = await result.json();
+    if (!result.ok || data.error) throw new Error(data.error || "calculate failed");
+    const main = (data.combat?.participants || []).find((participant) => participant.participant_id === "main");
+    const mainBreakdown = (data.combat?.breakdown || []).find((row) => row.participant_id === "main");
+    const tdd = Number(mainBreakdown?.total_damage ?? data.total_damage ?? 0);
+    const ehp = Number(main?.survival?.effective_health ?? 0);
+    document.getElementById("quickSharedMetrics").innerHTML = `<div><dt>TDD</dt><dd>${fmt(tdd)}</dd></div><div><dt>eHP</dt><dd>${fmt(ehp)}</dd></div>`;
+    const rows = Object.entries(data.breakdown || {}).filter(([, entry]) => Number(entry.total_damage || 0) > 0).slice(0, 6).map(([slot, entry]) => `<div class="quick-shared-source"><span>${escapeHtml(entry.name || slot)}</span>${certaintyChipHtml(slot)}<b>${fmt(entry.total_damage)}</b></div>`).join("");
+    document.getElementById("quickSharedSources").innerHTML = rows ? `<p class="eyebrow">Damage sources</p>${rows}` : "";
+  } catch (error) {
+    document.getElementById("quickSharedMetrics").innerHTML = `<p class="quick-error">${escapeHtml(error.message)}</p>`;
+  }
+}
+
+function openSharedBuildInEditor() {
+  const payload = window.__sharedBuild;
+  if (!payload) return;
+  try {
+    loadSharedBuildIntoAnalyst(payload);
+    switchView("analyst");
+  } catch (error) {
+    document.getElementById("shareBannerText").textContent = `Could not open in editor: ${error.message}`;
+  }
+}
+
+function loadSharedBuildIntoAnalyst(payload) {
+  const request = payload.request || payload;
+  state.attacker.champion = request.champion || "";
+  state.attacker.level = Number(request.level || 18);
+  state.attacker.role = request.role || "mid";
+  state.attacker.roleQuestComplete = Boolean(request.role_quest_complete);
+  state.attacker.comparisonEnabled = false;
+  const itemIds = (request.items || []).map((name) => (findItemByBackendName(name) || {}).id || 0).filter(Boolean);
+  const nextA = [0, 0, 0, 0, 0, 0];
+  itemIds.slice(0, 6).forEach((id, index) => { nextA[index] = id; });
+  state.attacker.buildA = nextA;
+  state.attacker.buildAStacks = [0, 0, 0, 0, 0, 0];
+  state.attacker.buildAItemOptions = [{}, {}, {}, {}, {}, {}];
+  const bootName = request.boots || "";
+  const bootId = bootName ? (findItemByBackendName(bootName) || {}).id || 0 : 0;
+  state.attacker.questBootA = bootId;
+  state.attacker.includeBootsA = bootName ? Boolean(bootId) : true;
+  state.attacker.keystoneA = "";
+  state.attacker.abilityInputs = {};
+  state.attacker.championOptions = {};
+  // Restore the authored rank allocation so the analyst engine scores the
+  // shared build identically.  An empty object (what the save endpoint stores
+  // for level-derived kits) means "use level-derived defaults": seed them via
+  // syncAbilityInputsToLevel for regular kits; transform kits keep empty
+  // inputs and the backend applies its own level order.
+  let appliedRanks = false;
+  if (request.ability_ranks && typeof request.ability_ranks === "object") {
+    activeAbilityKit().forEach((ability) => {
+      if (ability.slot === "P") return;
+      const rank = Number(request.ability_ranks[ability.slot] || 0);
+      if (rank > 0) {
+        state.attacker.abilityInputs[ability.slot] = { ...abilityInput(ability.slot), rank };
+        appliedRanks = true;
+      }
+    });
+  }
+  if (!appliedRanks && !usesLevelDerivedRanks(state.attacker.champion)) {
+    syncAbilityInputsToLevel();
+  }
+  const fillSide = (roster, entries) => {
+    roster.length = 0;
+    (entries || []).forEach((entry) => {
+      const ids = [0, 0, 0, 0, 0, 0];
+      (entry.items || []).map((name) => (findItemByBackendName(name) || {}).id || 0).filter(Boolean).slice(0, 6).forEach((id, index) => { ids[index] = id; });
+      const rosterBoot = (findItemByBackendName(entry.boots || "") || {}).id || 0;
+      roster.push({
+        champion: entry.champion || "",
+        level: Number(entry.level || 18),
+        role: entry.role || "",
+        roleQuestComplete: Boolean(entry.role_quest_complete),
+        items: ids,
+        itemStacks: [0, 0, 0, 0, 0, 0],
+        itemOptions: [{}, {}, {}, {}, {}, {}],
+        boots: rosterBoot,
+        includeBoots: entry.include_boots !== false,
+        abilityRanks: {},
+        championOptions: {},
+        allyEffectsEnabled: entry.ally_effects_enabled !== false,
+      });
+    });
+  };
+  fillSide(state.targets, request.enemies || []);
+  fillSide(state.allies, request.allies || []);
+  const fightParams = request.fight_params || request;
+  state.fight.rotations = Number(fightParams.rotations || 1);
+  state.fight.duration = Number(fightParams.fight_duration || 10);
+  state.fight.aaUptimeMode = fightParams.auto_attack_uptime_mode || "calculated";
+  state.fight.aaUptime = Number(fightParams.auto_attack_uptime || 0);
+  engine.responses = null;
+  render();
+}
+
+// --- View switching ---------------------------------------------------------
+
+function switchView(view) {
+  const quick = document.getElementById("quickView");
+  const analyst = document.getElementById("analystView");
+  const quickTab = document.getElementById("viewQuickTab");
+  const analystTab = document.getElementById("viewAnalystTab");
+  if (view === "analyst") {
+    quick.hidden = true;
+    analyst.hidden = false;
+    quickTab.classList.remove("active");
+    analystTab.classList.add("active");
+    quickTab.setAttribute("aria-selected", "false");
+    analystTab.setAttribute("aria-selected", "true");
+    requestAnimationFrame(() => scheduleEngineCalculation());
+  } else {
+    analyst.hidden = true;
+    quick.hidden = false;
+    analystTab.classList.remove("active");
+    quickTab.classList.add("active");
+    analystTab.setAttribute("aria-selected", "false");
+    quickTab.setAttribute("aria-selected", "true");
+    renderQuickView();
+  }
+  window.scrollTo({ top: 0 });
+}
+
+// --- Quick mode event wiring ------------------------------------------------
+
+function bindQuickEvents() {
+  document.getElementById("viewQuickTab").addEventListener("click", () => switchView("quick"));
+  document.getElementById("viewAnalystTab").addEventListener("click", () => switchView("analyst"));
+
+  const championSearch = document.getElementById("quickChampionSearch");
+  championSearch.addEventListener("input", () => renderQuickChampionGrid(championSearch.value));
+  const enemySearch = document.getElementById("quickEnemySearch");
+  enemySearch.addEventListener("input", () => renderQuickEnemyGrid(enemySearch.value));
+  const itemSearch = document.getElementById("quickItemSearch");
+  itemSearch.addEventListener("input", () => renderQuickItemGrid(itemSearch.value));
+
+  document.getElementById("quickChampionGrid").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-quick-pick='champion']");
+    if (!button) return;
+    QUICK_STATE.champion = button.dataset.value;
+    loadTrustLabels(QUICK_STATE.champion);
+    renderQuickChampionGrid(championSearch.value);
+    renderQuickView();
+  });
+
+  document.getElementById("quickEnemyGrid").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-quick-pick='enemy']");
+    if (!button) return;
+    if (!button.dataset.value) {
+      QUICK_STATE.enemy = null;
+    } else {
+      const champion = quickChampionEntries().find((entry) => entry.name === button.dataset.value);
+      QUICK_STATE.enemy = champion
+        ? { champion: champion.name, level: 18, role: "top", items: [] }
+        : { champion: button.dataset.value, level: 18, role: "top", items: [] };
+    }
+    renderQuickEnemyGrid(enemySearch.value);
+    renderQuickView();
+  });
+  document.getElementById("quickEnemyClear").addEventListener("click", () => {
+    QUICK_STATE.enemy = null;
+    enemySearch.value = "";
+    renderQuickEnemyGrid("");
+    renderQuickView();
+  });
+
+  document.getElementById("quickItemGrid").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-quick-pick='item']");
+    if (!button) return;
+    if (QUICK_STATE.items.length >= QUICK_MAX_ITEMS) return;
+    QUICK_STATE.items.push(button.dataset.value);
+    itemSearch.value = "";
+    renderQuickItemsStrip();
+    renderQuickItemGrid("");
+  });
+  document.getElementById("quickItems").addEventListener("click", (event) => {
+    const remove = event.target.closest("[data-quick-remove]");
+    if (!remove) return;
+    QUICK_STATE.items = QUICK_STATE.items.filter((name) => name !== remove.dataset.quickRemove);
+    renderQuickItemsStrip();
+    renderQuickItemGrid(itemSearch.value);
+  });
+
+  document.getElementById("quickRole").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-quick-role]");
+    if (!button) return;
+    QUICK_STATE.role = button.dataset.quickRole;
+    renderQuickRole();
+  });
+
+  document.getElementById("quickPresets").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-quick-preset]");
+    if (!button) return;
+    QUICK_STATE.presetId = QUICK_STATE.presetId === button.dataset.quickPreset ? null : button.dataset.quickPreset;
+    renderQuickPresets();
+  });
+
+  document.getElementById("quickRun").addEventListener("click", runQuickBestNextItem);
+  document.getElementById("quickShareButton").addEventListener("click", shareQuickBuild);
+  document.getElementById("shareAnalystButton").addEventListener("click", shareAnalystBuild);
+  document.getElementById("sharePanelClose").addEventListener("click", () => { document.getElementById("sharePanel").hidden = true; });
+  document.getElementById("shareCopy").addEventListener("click", async () => {
+    const urlInput = document.getElementById("shareUrl");
+    const status = document.getElementById("shareStatus");
+    try {
+      await navigator.clipboard.writeText(urlInput.value);
+      status.textContent = "Copied to clipboard";
+    } catch (error) {
+      urlInput.select();
+      status.textContent = "Select the link and copy it manually.";
+    }
+  });
+  document.getElementById("shareOpenEditor").addEventListener("click", openSharedBuildInEditor);
+}
+
+// --- Boot -------------------------------------------------------------------
+
+async function initQuickView() {
+  if (QUICK_INIT_STARTED) return;
+  QUICK_INIT_STARTED = true;
+  try {
+    const response = await fetch("/static/quick-presets.json");
+    if (!response.ok) throw new Error("presets failed to load");
+    const data = await response.json();
+    QUICK_PRESETS = Array.isArray(data?.presets) ? data.presets : [];
+  } catch (error) {
+    QUICK_PRESETS = [];
+  }
+  QUICK_VIEW_READY = true;
+  bindQuickEvents();
+  renderQuickView();
+  const params = new URLSearchParams(window.location.search);
+  const shareToken = params.get("share");
+  if (shareToken) {
+    switchView("quick");
+    renderSharedBuild(shareToken);
+    loadTrustLabels((window.__sharedBuild || {}).champion || "");
+  } else if (state.attacker.champion) {
+    loadTrustLabels(state.attacker.champion);
+  }
+}
+
+document.addEventListener("scryglass:engine-ready", () => {
+  if (!QUICK_VIEW_READY) initQuickView();
+  renderQuickView();
+  loadTrustLabels(state.attacker.champion || QUICK_STATE.champion || "");
+});
+
+// Boot the quick view immediately so its controls are live even before the
+// patch snapshot finishes loading; grids repopulate on engine-ready.
+initQuickView();
+
+// Patch the analyst champion selection so trust labels follow the analyst view.
+const _originalRenderPrototypeChampion = renderPrototypeChampion;
+renderPrototypeChampion = function (...args) {
+  const result = _originalRenderPrototypeChampion.apply(this, args);
+  const champion = state.attacker.champion;
+  if (champion && !CERTAINTY_STATE.loading) loadTrustLabels(champion);
+  return result;
+};
+
+// Hook the engine-ready signal into the existing bootstrap.
+if (typeof window.__scryglassEngineReadyHook === "undefined") {
+  window.__scryglassEngineReadyHook = true;
+  const _originalRender = render;
+  render = function (...args) {
+    const result = _originalRender.apply(this, args);
+    document.dispatchEvent(new Event("scryglass:engine-ready"));
+    return result;
+  };
+}
+
 
 // Temporary local design-review mode. It is opt-in via ?review=1 and has no
 // effect on the calculator's normal interaction or persisted calculation state.
