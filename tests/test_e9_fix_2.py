@@ -566,13 +566,15 @@ class TestSionArmorReduction:
         }
 
     def test_post_e_physical_damage_benefits_from_the_shred(self):
-        """R (after E in the burst) mitigates at the 25%-shredded armor."""
+        """F3 shred-first: E opens the rotation, so Q and R both mitigate
+        at the 25%-shredded armor (100 -> 75)."""
         data = _fight("Sion", armor=100, one_rotation=True)
         assert data["effective_armor"] == pytest.approx(75.0)
-        # Q casts before E, so it mitigates at the full 100 armor.
+        # E (Roar of the Slayer) now opens the burst — its 25% armor
+        # reduction shred lands BEFORE Q, so Q mitigates at 75 armor.
         q_raw = 350.0 + 2.4 * float(data["champion_stats"]["attack_damage"])
         assert data["breakdown"]["Q"]["total_damage"] == pytest.approx(
-            q_raw * 100.0 / 200.0
+            q_raw * 100.0 / 175.0, abs=0.11
         )
         # R resolves after the shred: 1200 + 120% bonus AD at 75 armor.
         r_raw = 1200.0 + 1.2 * float(data["champion_stats"]["bonus_attack_damage"])

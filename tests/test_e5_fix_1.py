@@ -281,13 +281,12 @@ def test_sion_q_fight_damage_uses_maximum_physical_damage():
     ad = float(data["champion_stats"]["attack_damage"])
     expected_raw = 350.0 + 2.4 * ad
     sources = _main_sources(data)
-    # Q casts before E (Roar of the Slayer), so the E9-2 25% armor
-    # reduction shred lands after Q's own hit: Q mitigates at the
-    # enemy's FULL armor, while the response's effective_armor reflects
-    # the post-E shred.
+    # F3 shred-first derivation: E (Roar of the Slayer) opens the rotation,
+    # so the 25% armor-reduction shred is applied BEFORE Q's own hit — the
+    # fully charged Decimating Smash mitigates at the shredded armor.
     enemy_armor = float(_enemy_stats(data)["armor"])
     assert sources["Decimating Smash"] == pytest.approx(
-        _mitigated(expected_raw, enemy_armor), abs=0.06
+        _mitigated(expected_raw, enemy_armor * 0.75), abs=0.06
     )
 
 

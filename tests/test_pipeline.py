@@ -428,14 +428,18 @@ def test_energy_regenerates_between_timed_casts():
 
 
 def test_ambessa_passive_restores_energy_between_ability_casts():
+    # F3 derives R-first (the 20% armor-pen buff opens the burst), so the
+    # 10s timed rotation is R, Q, Q2, W, E.  The passive refunds 70 energy
+    # per cast regardless of order — assert the derived cadence.
     params = FightParams.from_request(
         {"fight_mode": "timed", "fight_duration": 10}, deterministic=True
     )
 
     result = run_fight(get_champion("Ambessa"), 18, [], params)
 
-    assert result["breakdown"]["Q"]["casts"] == 2
-    assert result["breakdown"]["Q2"]["casts"] == 2
+    assert result["rotation"]["cast_order"] == ["R", "Q", "Q2", "W", "E"]
+    assert result["breakdown"]["Q"]["casts"] == 1
+    assert result["breakdown"]["Q2"]["casts"] == 1
     opening = result["cast_timeline"][:4]
     assert all(event["resource_restored"] == 70 for event in opening)
     assert result["resource_remaining"] >= 0

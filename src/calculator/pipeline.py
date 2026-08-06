@@ -860,17 +860,24 @@ def run_fight(
     resolved_certified_order = None
     resolved_user_order = None
     if params.cast_order is None:
+        # F3: the algorithmic resolver derives the order for EVERY champion
+        # from the atomized ability data (setup/consume edges + per-rank DPS),
+        # falling back to the champion module's certified CAST_ORDER or the
+        # engine default when the data shows a flat kit.  The ten F2 seeds
+        # remain documented overrides inside the resolver.
         declared_order, combo_rule = resolve_cast_order(
-            champion_data.get("name", ""), ability_damages
+            champion_data.get("name", ""),
+            ability_damages,
+            champion_data=champion_data,
+            certified_order=get_champion_cast_order(champion_data.get("name", "")),
         )
-        certified_order = None
-        if combo_rule is None:
-            certified_order = get_champion_cast_order(champion_data.get("name", ""))
-            if certified_order is not None:
-                declared_order = list(certified_order)
         params = replace(params, cast_order=declared_order)
         resolved_rotation_rule = combo_rule
-        resolved_certified_order = certified_order
+        resolved_certified_order = (
+            combo_rule.order
+            if combo_rule is not None and not combo_rule.derived
+            else None
+        )
     else:
         resolved_user_order = list(params.cast_order)
     resolved_uptime, auto_attack_policy = resolve_auto_attack_policy(

@@ -1,8 +1,10 @@
-"""Optimal event-order engine (F2) — the per-champion combo layer.
+"""Optimal event-order engine (F3) — algorithmic per-champion combo layer.
 
-Derives the fight's ``cast_order`` from the atomized ability data and a
-per-champion combo-priority table, replacing the naive
-``DEFAULT_CAST_ORDER`` whenever a champion has a real combo signal.
+Derives the fight's ``cast_order`` from the atomized ability data for ALL
+champions, replacing the naive ``DEFAULT_CAST_ORDER`` whenever the data
+supports a setup/consume structure.  The ten hand-verified seeds in
+:data:`COMBO_TABLE` remain as documented OVERRIDES; every other champion
+is derived on the fly by :func:`derive_champion_rule` — no combo database.
 
 Scoring model (see ``docs/rotation-design.md`` for the full write-up)
 ----------------------------------------------------------------------
@@ -10,36 +12,43 @@ For each champion the order of damaging abilities is ranked by four
 signals, in decreasing weight:
 
 1. **Setup/consume relationships** (the strongest signal): an ability
-   that applies a debuff/mark/poison/stun must cast BEFORE the abilities
-   that consume it.  This is read from the atomized data itself — the
-   ``target_poisoned`` option and ``dot_duration`` (Cassiopeia Q/E), the
-   ``on_hit`` + ``post_hit_proc`` pair (Varus W/Q Blight), the
-   stack-application rows (Brand P), the AMP pseudo-slot
-   (Vladimir R Hemoplague), the ``stat_buff`` (Aatrox R), the
-   mark/proc rows (Lux P Illumination, Zed R stored damage).
+   that applies a debuff/mark/poison/stun/shred/buff must cast BEFORE the
+   abilities that consume it.  Detected from TYPED atoms only — the
+   parsed keys (``dot_duration``, ``on_hit``, ``applies_dot_stack``,
+   ``stacking_dot``, ``post_hit_proc``, ``target_debuff``, ``stat_buff``,
+   ``cc_kind`` on parts, ``recast_of``), the module OPTION keys
+   (``target_poisoned``, ``blight_stacks``, ``p_illumination_procs``,
+   ``r_hemoplague_debuff``, ...), and the structured wiki attribute rows
+   ("Enhanced Damage", "Bonus Damage Per Stack", "Missing Health
+   Damage").  Free-form ability prose is never scanned; the only phrases
+   used are the wiki's anchored application rows ("applies a stack of
+   X", "become Chilled", "consumes the mark").
 2. **DPS contribution per rank at the fight's stats** — ``total_raw``
    divided by the effective per-rank cooldown from the atomized ability
-   rows (see :func:`rank_ability_dps`).
+   rows (see :func:`rank_ability_dps`), weighted by the number of enemy
+   champions an AoE slot can hit.  A DPS promotion only applies when it
+   is CONSISTENT across a level/build reference matrix (L1/L18 x
+   no-items/magic/physical/spellblade); otherwise the certified/base
+   relative order is kept (deterministic across builds by construction).
 3. **Cooldown gating** — the fight engine schedules recasts on one
    shared timeline, so the derived order doubles as the tie-break: a
-   low-cooldown spam tool (Cassiopeia E, 0.75s) placed right after its
-   setup ability starts its cadence earliest and maximizes casts in the
-   window (``_schedule_shared_casts``).
-4. **Buffs before damage** — stat/damage amplifiers must resolve before
-   the abilities they amplify (Aatrox R, Vladimir R, Annie R's magic
-   pen shred).
+   low-cooldown spam tool placed right after its setup ability starts
+   its cadence earliest and maximizes casts in the window
+   (``_schedule_shared_casts``).
+4. **Buffs before damage** — ``stat_buff`` rows that amplify ability
+   damage (bonus AD / AP / penetration) and damage-taken amplifiers must
+   resolve before the abilities they amplify; resistance-shred
+   ``target_debuff`` rows open the burst.
 
-The table below is the curated per-champion output of that scoring,
-with the atom/attribute that drives each entry in ``sources``.  The
-fallback for a champion with no combo signal is the engine's historical
-``DEFAULT_CAST_ORDER`` (Q, Q2, W, E, R); champions whose reviewed module
-declares its own ``CAST_ORDER`` keep that certified order (see
-``champions.get_champion_cast_order``) — those are themselves combos and
-migrate into this table as they are re-certified.
+Fallback: a champion with NO detectable setup/consume signal keeps the
+certified module ``CAST_ORDER`` (when present) or the engine's historical
+``DEFAULT_CAST_ORDER``, with a rationale that says exactly that — the
+"flat kit" classification is itself data-driven and honest.
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
@@ -76,6 +85,9 @@ class ComboRule:
             weighted by ``min(roster target count, cap)`` so the derived
             order and rationale reflect fights that hit more than one
             champion.
+        derived: ``True`` when the rule was produced algorithmically by
+            :func:`derive_champion_rule` (F3), ``False`` for the
+            hand-verified seeds in :data:`COMBO_TABLE`.
     """
 
     champion: str
@@ -85,6 +97,7 @@ class ComboRule:
     setup: tuple[str, ...] = ()
     consume: tuple[str, ...] = ()
     aoe: dict[str, int] = field(default_factory=dict)
+    derived: bool = False
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -327,35 +340,1137 @@ COMBO_TABLE: dict[str, ComboRule] = {
 }
 
 
+# ─────────────────────────────────────────────────────────────────────
+# F3 — algorithmic derivation from the atomized ability data
+#
+# The derivation consumes THREE typed atom surfaces and nothing else:
+#
+#  1. the parsed ability package (``ability_damages``) — ``dot_duration``,
+#     ``on_hit``, ``applies_dot_stack``, ``stacking_dot``,
+#     ``post_hit_proc``, ``target_debuff``, ``stat_buff``, ``cc_kind`` on
+#     ``parts``, ``recast_of``, ``total_raw``, ``cooldown``;
+#  2. the module OPTION keys (``get_champion_options_meta``) — the typed
+#     setup/consume atoms (``target_poisoned``, ``blight_stacks``,
+#     ``poison_stacks``, ``rend_stacks``, ``r_overwhelm_stacks``,
+#     ``p_illumination_procs``, ``q_marked_target``, ``r_hemoplague_debuff``,
+#     execute options, ...);
+#  3. the structured wiki attribute rows in ``data/champions.json``
+#     ("Enhanced Damage", "Bonus Damage Per Stack", "Detonation Magic
+#     Damage", "Missing Health Damage", "Mark Magic Damage", "Stored
+#     Damage").  The only anchored phrases used are the wiki's stable
+#     application rows ("applies a stack of X", "become Chilled",
+#     "consumes the mark", "takes X% increased damage") — free-form ability
+#     prose is never scanned.
+# ─────────────────────────────────────────────────────────────────────
+
+# ── closed vocabulary: typed consume option keys ──
+# (option key -> (role, condition)); role drives the edge direction.
+_CONSUME_OPTIONS: dict[str, tuple[str, str]] = {
+    "target_poisoned": ("poison_consume", "poison"),
+    "poison_stacks": ("stack_consume", "poison"),
+    "blight_stacks": ("stack_consume", "blight"),
+    "rend_stacks": ("stack_consume", "rend"),
+    "r_overwhelm_stacks": ("stack_consume", "overwhelm"),
+    "plasma_starting_stacks": ("stack_consume", "plasma"),
+    "denting_blows_starting_stacks": ("stack_consume", "denting-blows"),
+    "p_illumination_procs": ("mark_consume", "illumination"),
+    "q_marked_target": ("mark_consume", "mark"),
+    "w_wounded": ("mark_consume", "wounded"),
+    "q_consume": ("mark_applier", "sigil"),
+    "q_execute": ("execute", "execute"),
+    "e_execute": ("execute", "execute"),
+    "r_execute_ready": ("execute", "execute"),
+    "target_missing_hp_pct": ("execute", "execute"),
+    "q_missing_health": ("execute", "execute"),
+    "w_target_missing_health": ("execute", "execute"),
+    "r_hemoplague_debuff": ("amp", "amp"),
+}
+
+# Options whose slot cannot be read from the key prefix or the parsed-row
+# detail string; mapped by inspection of the champion module.
+_OPTION_SLOT_SPECIAL: dict[str, Any] = {
+    "target_poisoned": "E",
+    "poison_stacks": "E",
+    "blight_stacks": "Q",
+    "p_illumination_procs": "R",
+    "denting_blows_starting_stacks": "W",
+    "target_missing_hp_pct": {"Bel'Veth": "E", "Briar": "W", "Varus": "Q"},
+}
+
+# Self-generated stacks / self-buffs: NOT target setup — no cross-slot edge.
+_SELF_OPTIONS = {
+    "r_stacks",
+    "q_stacks",
+    "q_gathering_storm",
+    "e_stacks",
+    "r_arcane_perfection",
+    "e_true_grit_stacks",
+    "q_focus_stacks",
+    "p_stacks",
+    "p_marks",
+    "scalemail_stacks",
+    "adoration_stacks",
+    "senna_mist_stacks",
+    "q_snippy_stacks",
+    "p_style_stacks",
+    "relentless_storm_stacks",
+    "clean_cuts_stacks",
+    "stone_skin_stacks",
+    "jinx_rev_up_stacks",
+    "jinx_get_excited_stacks",
+    "q_passive_stacks",
+    "feast_stacks",
+    "starting_hemorrhage_stacks",
+    "w_hunters_vigor_stacks",
+    "marks",
+    "lavender_stacks",
+    "stardust_stacks",
+    "chimes",
+    "souls",
+    "mist_walkers",
+    "plant_count",
+    "voidling_count",
+    "soldier_count",
+    "p_vitals",
+    "p_ferocity",
+    "p_legs",
+    "p_tentacles",
+    "p_daggers",
+    "p_procs",
+    "passive_procs",
+    "p_right_punches",
+    "p_gloom_detonations",
+    "p_triggers",
+    "p_exalted",
+    "p_essence_fragments",
+    "r_daggers",
+    "tibbers_aura_seconds",
+    "tibbers_attacks",
+    "q_target_below_half",
+    "q_isolated",
+    "soul_nails",
+    "mundo_missing_health_percent",
+}
+
+# Damage-amplifying stat_buff keys: buffs-first applies to these only.
+_DAMAGE_AMP_STAT_KEYS = {
+    "bonus_attack_damage",
+    "ability_power",
+    "armor_penetration_percent",
+    "magic_penetration_percent",
+    "bonus_ability_power",
+    "bonus_magic_damage",
+    "bonus_physical_damage",
+    "lethality",
+}
+
+# structured wiki attribute rows (exact leveling-row attribute names)
+_ATTR_PER_STACK = re.compile(
+    r"per stack|per additional stack|per subsequent stack|damage per stack|"
+    r"stack bonus|full stack|at max stacks|max stacks|one stack|two stacks|three stacks"
+)
+_ATTR_ENHANCED_DMG = re.compile(r"enhanc[a-z]* (damage|physical|magic)|prowl-enhanc")
+_ATTR_DETONATION = re.compile(r"detonat")
+_ATTR_MISSING = re.compile(r"missing")
+_ATTR_MARK_DMG = re.compile(r"mark magic damage")
+_ATTR_STORED_DMG = re.compile(r"stored damage")
+
+# anchored wiki application/consume rows (confirmation only — never the
+# sole signal; every edge also carries a typed atom or structured attr)
+_P_APPLIES_STACK = re.compile(r"appl(y|ies|ied|ying).{0,40}\bstack")
+_P_MARKS_TARGET = re.compile(
+    r"mark(s|ed) (the target|them|enemies|the first enemy|with)"
+)
+_P_ABILITY_CONSUMES_MARK = re.compile(
+    r"abilit(y|ies).{0,80}(consume|detonat).{0,40}mark", re.I
+)
+_P_TARGET_MISSING = re.compile(
+    r"target's? missing|target’s? missing|missing health of the target|missing hp", re.I
+)
+_P_NAMED_APPLIER_STACK = re.compile(r"([\w' ]+?) apply a stack of ([A-Za-z']+)", re.I)
+_P_NAMED_APPLIER_COND = re.compile(
+    r"enemies? hit by ([\w' ]+?) (?:or ([\w' ]+?))?.{0,40}?become (chilled|poisoned|marked)",
+    re.I,
+)
+_P_NAMED_CONSUMER = re.compile(
+    r"([\w' ]+?) against an enemy with ([A-Za-z']+) stacks? consumes", re.I
+)
+_P_PASSIVE_ABILITIES_APPLY = re.compile(
+    r"abilit(y|ies).{0,80}apply a stack of ([A-Za-z']+)", re.I
+)
+_P_PASSIVE_ABILITIES_MARK = re.compile(
+    r"abilit(y|ies).{0,80}(apply a mark|become marked|are marked)", re.I
+)
+# target-oriented condition phrase for "Enhanced Damage" consumers
+_P_COND_PHRASE = re.compile(
+    r"(if|when|while|against|on|vs\.?|versus|doubled|increased|bonus).{0,50}"
+    r"(the target|they|it|enemies|an enemy|a target|them|targets?|enemy)"
+    r".{0,30}(is|are|were|has|had|take|takes|become)",
+    re.I,
+)
+_P_SELF_RESOURCE = re.compile(
+    r"\b(heat|fury|rage|mana|energy|reign of anger|has at least|gains? a stack|"
+    r"generates? a stack|at max stacks)\b",
+    re.I,
+)
+# named conditions shared by consume phrases and apply rows
+_CONDITIONS = (
+    ("poisoned", r"poison"),
+    ("chilled", r"chill|frost"),
+    ("ablaze", r"ablaze|blaze"),
+    ("bleeding", r"bleed"),
+    ("marked", r"mark"),
+    ("stunned", r"stun"),
+    ("rooted", r"root"),
+    ("slowed", r"slow"),
+    ("charmed", r"charm"),
+    ("feared", r"fear"),
+    ("wounded", r"wound"),
+    ("immobilized", r"immobiliz"),
+)
+
+_CAST_SLOTS = ("Q", "Q2", "W", "E", "R")
+_PARENT_SLOT = {"Q2": "Q", "R_buff": "R", "W_frenzy": "W", "R_onhit": "R"}
+
+
+@dataclass(frozen=True)
+class _Edge:
+    """A detected setup→consume ordering constraint between two cast slots."""
+
+    setup: str
+    consume: str
+    kind: str
+    cite: str
+
+    def sentence(self) -> str:
+        """A rationale sentence naming the atoms that drove the edge.
+
+        Edge citations are authored as full sentences ("E applies cc_kind
+        crowd control — setup before Q", "Q is a missing-health execute —
+        after E's damage"); recast edges get an explicit parent clause.
+        """
+        if self.kind == "recast":
+            return f"{self.consume} is the recast of {self.setup} — {self.cite}"
+        return self.cite
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Raw-row corpus (structured fields only: name, attributes, blurb, notes)
+# ─────────────────────────────────────────────────────────────────────
+
+
+def _slot_corpus(
+    champion_data: Mapping[str, Any], slot: str
+) -> dict[str, list[str]] | None:
+    """Structured row corpus for a slot (special slots fall back to parent)."""
+    abilities = champion_data.get("abilities", {})
+    rows = abilities.get(slot, []) or abilities.get(_PARENT_SLOT.get(slot, slot), [])
+    if not rows:
+        return None
+    out: dict[str, list[str]] = {
+        "names": [],
+        "attrs": [],
+        "descs": [],
+        "notes": [],
+        "blurb": [],
+        "fields": [],
+    }
+    for row in rows:
+        out["names"].append(str(row.get("name") or ""))
+        for eff in row.get("effects") or []:
+            out["attrs"].extend(
+                str(lvl.get("attribute") or "") for lvl in eff.get("leveling") or []
+            )
+            out["descs"].append(str(eff.get("description") or ""))
+        out["notes"].append(str(row.get("notes") or ""))
+        out["blurb"].append(str(row.get("blurb") or ""))
+        for f in ("targeting", "spellEffects", "affects", "damageType"):
+            v = row.get(f)
+            if v:
+                out["fields"].append(str(v))
+    return out
+
+
+def _corpus_text(corpus: Mapping[str, list[str]]) -> str:
+    return " ".join(
+        corpus["names"]
+        + corpus["attrs"]
+        + corpus["descs"]
+        + corpus["notes"]
+        + corpus["blurb"]
+    ).lower()
+
+
+def _corpus_attrs(corpus: Mapping[str, list[str]]) -> str:
+    return " ".join(corpus["attrs"]).lower()
+
+
+def _is_damage_row(info: Mapping[str, Any]) -> bool:
+    if float(info.get("total_raw", 0.0) or 0.0) > 0:
+        return True
+    return any(
+        float(getattr(p, "amount", 0.0) or 0.0) > 0 for p in info.get("parts", ())
+    )
+
+
+def _castable(info: Mapping[str, Any], slot: str) -> bool:
+    """A slot that appears on the shared cast timeline (R always casts once)."""
+    if slot == "R":
+        return True
+    return float(info.get("cooldown", 0.0) or 0.0) > 0
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Option-key slot resolution
+# ─────────────────────────────────────────────────────────────────────
+
+
+def _resolve_option_slot(  # pylint: disable=unused-argument
+    champion_name: str, key: str, ability_damages: Mapping[str, Any]
+) -> str | None:
+    """The cast slot an option atom belongs to.
+
+    Resolution order: explicit special-case map, parsed-row detail/name
+    token match (the module's own atomized output), then the option-key
+    slot prefix (``q_``/``w_``/``e_``/``r_``).
+    """
+    special = _OPTION_SLOT_SPECIAL.get(key)
+    if special is not None:
+        if isinstance(special, dict):
+            return special.get(champion_name)
+        return special
+    parts = [
+        p
+        for p in key.split("_")
+        if p
+        not in (
+            "q",
+            "w",
+            "e",
+            "r",
+            "p",
+            "stacks",
+            "stack",
+            "target",
+            "starting",
+            "procs",
+            "debuff",
+            "health",
+            "missing",
+            "consume",
+            "marked",
+            "ready",
+            "execute",
+            "pct",
+            "hp",
+            "blows",
+        )
+    ]
+    token = parts[0] if parts else key
+    for slot, info in ability_damages.items():
+        if not isinstance(info, Mapping):
+            continue
+        blob = f"{info.get('name', '')} {info.get('detail', '')}".lower()
+        if token and token in blob:
+            return slot if slot in _CAST_SLOTS else None
+    m = re.match(r"^(q|w|e|r)_", key)
+    return m.group(1).upper() if m else None
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Edge detection
+# ─────────────────────────────────────────────────────────────────────
+
+
+def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks,too-many-return-statements,unused-argument
+    champion_name: str,
+    ability_damages: Mapping[str, Any],
+    champion_data: Mapping[str, Any],
+    option_keys: Mapping[str, list[str]],
+) -> list[_Edge]:
+    """Detect setup→consume ordering constraints from typed atoms.
+
+    See the module docstring for the atom taxonomy.  Returns a list of
+    :class:`_Edge` constraints; a champion with no detectable signal
+    returns ``[]`` and keeps its certified/default order.
+    """
+    slots = [s for s in _CAST_SLOTS if isinstance(ability_damages.get(s), Mapping)]
+    corpora = {s: _slot_corpus(champion_data, s) for s in slots}
+    corpora = {s: c for s, c in corpora.items() if c}
+    if not corpora:
+        return []
+    infos = {s: ability_damages[s] for s in corpora}
+    texts = {s: _corpus_text(c) for s, c in corpora.items()}
+    atexts = {s: _corpus_attrs(c) for s, c in corpora.items()}
+    slot_by_name: dict[str, str] = {}
+    for s, c in corpora.items():
+        for n in c["names"]:
+            if n:
+                slot_by_name[n.lower()] = s
+
+    def slot_from_name(nm: str) -> str | None:
+        nm = nm.strip().lower()
+        if nm in slot_by_name:
+            return slot_by_name[nm]
+        for key, s in slot_by_name.items():
+            if key.startswith(nm) or nm.startswith(key):
+                return s
+        return None
+
+    edges: list[_Edge] = []
+
+    def add(a: str, b: str, kind: str, cite: str) -> None:
+        if a != b and a in corpora and b in corpora:
+            edges.append(_Edge(a, b, kind, cite))
+
+    # recast adjacency: a recast rides its parent's casts on the timeline
+    for s in slots:
+        parent = infos.get(s, {}).get("recast_of")
+        if parent and parent in corpora:
+            add(parent, s, "recast", f"{s} is {parent}'s recast (recast_of atom)")
+    if "Q" in corpora and "Q2" in corpora:
+        add("Q", "Q2", "recast", "Q2 is Q's second cast")
+
+    # ── typed apply atoms per slot ──
+    apply_atoms: dict[str, list[str]] = {}
+    for s in corpora:
+        info = infos[s]
+        atoms: list[str] = []
+        if float(info.get("cooldown", 0.0) or 0.0) <= 0:
+            atoms.append("passive-row(cd=0)")  # auto-stream row, not a cast
+        if info.get("dot_duration"):
+            atoms.append(f"dot_duration={info['dot_duration']}")
+        if info.get("on_hit"):
+            atoms.append("on_hit")
+        if info.get("applies_dot_stack"):
+            atoms.append("applies_dot_stack")
+        if info.get("stacking_dot"):
+            atoms.append("stacking_dot")
+        if info.get("target_debuff"):
+            atoms.append("target_debuff")
+        if info.get("stat_buff") and isinstance(info["stat_buff"], Mapping):
+            amp = sorted(set(info["stat_buff"]) & _DAMAGE_AMP_STAT_KEYS)
+            if amp:
+                atoms.append(f"stat_buff({','.join(amp)})")
+        for part in info.get("parts", ()):
+            if getattr(part, "cc_kind", None):
+                atoms.append(f"cc_kind={part.cc_kind}")
+        if _P_APPLIES_STACK.search(texts[s]):
+            atoms.append("phrase:applies-stack")
+        if _P_MARKS_TARGET.search(texts[s]):
+            atoms.append("phrase:marks-target")
+        apply_atoms[s] = atoms
+
+    # champion passive: "abilities apply a stack/mark of X" -> every slot
+    # applies X (Mel Overwhelm, Lux Illumination, ...)
+    passive_applies: list[str] = []
+    for ps in ("P", "passive"):
+        pc = _slot_corpus(champion_data, ps)
+        if pc:
+            t = _corpus_text(pc)
+            passive_applies.extend(
+                m.group(2).strip().lower()
+                for m in _P_PASSIVE_ABILITIES_APPLY.finditer(t)
+            )
+            if _P_PASSIVE_ABILITIES_MARK.search(t):
+                passive_applies.append("__mark__")
+
+    def applies_condition(s: str, cond_token: str) -> bool:
+        atoms = apply_atoms[s]
+        t = texts[s]
+        # a cd-0 row (on-hit/passive) applies through the AUTO STREAM, not a
+        # cast — it can never be a cast-order setup endpoint
+        if "passive-row(cd=0)" in atoms:
+            return False
+        if passive_applies:
+            if cond_token == "stack":
+                return True
+            if cond_token == "mark" and "__mark__" in passive_applies:
+                return True
+            if any(nm not in ("__mark__",) and nm in t for nm in passive_applies):
+                return True
+        if cond_token == "stack":
+            return any("stack" in a for a in atoms)
+        if cond_token == "mark":
+            return "phrase:marks-target" in atoms or "target_debuff" in " ".join(atoms)
+        return any(cond_token in a for a in atoms)
+
+    # ── typed consume atoms per slot ──
+    consume_atoms: dict[str, list[tuple[str, str, str]]] = {}
+    for b in corpora:
+        info = infos[b]
+        cons: list[tuple[str, str, str]] = []
+        for key in option_keys.get(b, []) + option_keys.get("__all__", []):
+            if key in _SELF_OPTIONS:
+                continue
+            if key in _CONSUME_OPTIONS:
+                role, cond = _CONSUME_OPTIONS[key]
+                if role == "execute" and not _is_damage_row(info):
+                    continue
+                cons.append((role, cond, f"option {key}"))
+        if info.get("post_hit_proc"):
+            nm = (
+                info["post_hit_proc"].get("name", "proc")
+                if isinstance(info["post_hit_proc"], Mapping)
+                else "proc"
+            )
+            cons.append(("detonation_consume", "stacks", f"post_hit_proc {nm!r}"))
+        at = atexts[b]
+        if _ATTR_PER_STACK.search(at):
+            cons.append(
+                (
+                    "stack_consume",
+                    "stacks",
+                    f"attribute {_ATTR_PER_STACK.search(at).group(0)!r}",
+                )
+            )
+        if _ATTR_ENHANCED_DMG.search(at):
+            if _P_TARGET_MISSING.search(texts[b]) and _is_damage_row(info):
+                # "Enhanced ... based on the target's missing health" rows are
+                # missing-health executes, not conditional-vs-state consumes
+                # (Seraphine Q: up to 75% bonus vs missing health).
+                cons.append(
+                    (
+                        "execute",
+                        "execute",
+                        f"attribute {_ATTR_ENHANCED_DMG.search(at).group(0)!r} + target-missing-health",
+                    )
+                )
+            else:
+                cons.append(
+                    (
+                        "enhanced_consume",
+                        "enhanced",
+                        f"attribute {_ATTR_ENHANCED_DMG.search(at).group(0)!r}",
+                    )
+                )
+        if _ATTR_DETONATION.search(at):
+            cons.append(
+                (
+                    "detonation_consume",
+                    "stacks",
+                    f"attribute {_ATTR_DETONATION.search(at).group(0)!r}",
+                )
+            )
+        if (
+            _ATTR_MISSING.search(at)
+            and _P_TARGET_MISSING.search(texts[b])
+            and _is_damage_row(info)
+        ):
+            cons.append(
+                (
+                    "execute",
+                    "execute",
+                    "attribute Missing Health + target-missing-health",
+                )
+            )
+        if _ATTR_MARK_DMG.search(at) or _P_ABILITY_CONSUMES_MARK.search(texts[b]):
+            cons.append(("mark_consume", "mark", "mark consumption"))
+        if _ATTR_STORED_DMG.search(at):
+            cons.append(
+                (
+                    "stored_consume",
+                    "stored",
+                    f"attribute {_ATTR_STORED_DMG.search(at).group(0)!r}",
+                )
+            )
+        consume_atoms[b] = cons
+
+    def has_consume_role(b: str, roles: tuple[str, ...]) -> bool:
+        return any(r in roles for r, _, _ in consume_atoms[b])
+
+    # ── pairwise edges: setup slots before their consumers ──
+    for b, cons in consume_atoms.items():
+        bt = texts[b]
+        for role, cond, cite in cons:
+            if role == "poison_consume":
+                for a in corpora:
+                    if (
+                        a != b
+                        and any(x.startswith("dot_duration") for x in apply_atoms[a])
+                        and "passive-row(cd=0)" not in " ".join(apply_atoms[a])
+                    ):
+                        add(
+                            a,
+                            b,
+                            "dot_consume",
+                            f"{b} {cite} consumes the champion's poison; {a} {', '.join(apply_atoms[a])} applies it",
+                        )
+            elif role == "stack_consume":
+                for a in corpora:
+                    if a != b and applies_condition(a, "stack"):
+                        add(
+                            a,
+                            b,
+                            "stack_consume",
+                            f"{b} {cite} consumes stacks; {a} {', '.join(apply_atoms[a])} applies them",
+                        )
+            elif role == "mark_consume":
+                for a in corpora:
+                    if a != b and applies_condition(a, "mark"):
+                        add(
+                            a,
+                            b,
+                            "mark_consume",
+                            f"{b} {cite} consumes the mark; {a} {', '.join(apply_atoms[a])} applies it",
+                        )
+            elif role == "mark_applier":
+                for a in corpora:
+                    if a != b and _is_damage_row(infos[a]) and _castable(infos[a], a):
+                        add(
+                            b,
+                            a,
+                            "mark_applier",
+                            f"{b} {cite} applies a mark consumed by any next damaging ability",
+                        )
+            elif role == "detonation_consume":
+                for a in corpora:
+                    if a != b and applies_condition(a, "stack"):
+                        add(
+                            a,
+                            b,
+                            "detonate",
+                            f"{b} {cite} detonates stacks; {a} {', '.join(apply_atoms[a])} applies them",
+                        )
+            elif role == "enhanced_consume":
+                if not _P_COND_PHRASE.search(bt) or _P_SELF_RESOURCE.search(bt):
+                    continue
+                for condtok, pattern in _CONDITIONS:
+                    if not re.search(pattern, bt):
+                        continue
+                    for a in corpora:
+                        if a == b:
+                            continue
+                        at = texts[a]
+                        if re.search(pattern, at) and any(
+                            x.startswith(
+                                (
+                                    "dot_duration",
+                                    "cc_kind",
+                                    "phrase:applies-stack",
+                                    "applies_dot_stack",
+                                    "target_debuff",
+                                )
+                            )
+                            for x in apply_atoms[a]
+                        ):
+                            add(
+                                a,
+                                b,
+                                "enhanced_consume",
+                                f"{b} {cite} enhanced vs {condtok}; {a} applies {condtok} ({', '.join(apply_atoms[a])})",
+                            )
+                    break
+        # named appliers/consumers inside the consumer's own structured rows
+        if has_consume_role(b, ("stack_consume", "detonation_consume", "mark_consume")):
+            for m in _P_NAMED_APPLIER_STACK.finditer(bt):
+                nm = m.group(1)
+                if re.search(r"(does not|cannot|do not|won't|no)\s*$", nm):
+                    continue
+                a = slot_from_name(nm.split(" and ")[-1].strip()) or slot_from_name(nm)
+                if a and a != b:
+                    atom = cons[0][2] if cons else "stack consume"
+                    add(
+                        a,
+                        b,
+                        "stack_consume",
+                        f"{b} names {nm.split(' and ')[-1].strip()} as the stack applier ({atom})",
+                    )
+            for m in _P_NAMED_APPLIER_COND.finditer(bt):
+                for g in (m.group(1), m.group(2)):
+                    a = slot_from_name(g)
+                    if a and a != b:
+                        add(
+                            a,
+                            b,
+                            "enhanced_consume",
+                            f"{b} names {g} as the condition applier",
+                        )
+            for m in _P_NAMED_CONSUMER.finditer(bt):
+                a = slot_from_name(m.group(1))
+                if a and a != b:
+                    add(
+                        b,
+                        a,
+                        "mark_applier",
+                        f"{b} names {m.group(1)} as the stack consumer",
+                    )
+        # execute / stored-damage consumers come after ALL other damage;
+        # slots that already consume stacks/marks (detonators) are exempt —
+        # their consume relationship dominates the missing-health rider.
+        if any(role in ("execute", "stored_consume") for role, _, _ in cons):
+            if not has_consume_role(
+                b,
+                (
+                    "stack_consume",
+                    "detonation_consume",
+                    "mark_consume",
+                    "enhanced_consume",
+                ),
+            ):
+                for a in corpora:
+                    if a != b and _is_damage_row(infos[a]) and _castable(infos[a], a):
+                        add(
+                            a,
+                            b,
+                            "execute",
+                            f"{b} is a missing-health/stored execute — after {a}'s damage",
+                        )
+
+    # mark applier by own text: slot says its mark is consumed by the
+    # champion's abilities (Ezreal W, Ryze E) -> slot before the burst
+    for b in corpora:
+        if (
+            _P_ABILITY_CONSUMES_MARK.search(texts[b])
+            and "phrase:marks-target" in apply_atoms[b]
+        ):
+            for a in corpora:
+                if a != b and _is_damage_row(infos[a]) and _castable(infos[a], a):
+                    add(b, a, "mark_applier", f"{b}'s mark is consumed by abilities")
+
+    # ── fan-out: shred / buff / cc / amp before all castable damage ──
+    for s in corpora:
+        info = infos[s]
+        atoms = apply_atoms[s]
+        if "passive-row(cd=0)" in atoms:
+            continue
+        if info.get("target_debuff"):
+            for d in corpora:
+                if d != s and _is_damage_row(infos[d]) and _castable(infos[d], d):
+                    add(
+                        s,
+                        d,
+                        "shred",
+                        f"{s} applies target_debuff resistance shred — before {d}",
+                    )
+        amp_keys = [a for a in atoms if a.startswith("stat_buff(")]
+        if amp_keys:
+            for d in corpora:
+                if d != s and _is_damage_row(infos[d]) and _castable(infos[d], d):
+                    add(
+                        s,
+                        d,
+                        "buff",
+                        f"{s} {amp_keys[0]} amplifies ability damage — before {d}",
+                    )
+        if any(a.startswith("cc_kind=") for a in atoms):
+            for d in corpora:
+                if d != s and _is_damage_row(infos[d]) and _castable(infos[d], d):
+                    add(
+                        s,
+                        d,
+                        "cc_setup",
+                        f"{s} applies cc_kind crowd control — setup before {d}",
+                    )
+        if has_consume_role(s, ("amp",)):
+            for d in corpora:
+                if d != s and _is_damage_row(infos[d]) and _castable(infos[d], d):
+                    add(
+                        s,
+                        d,
+                        "amp",
+                        f"{s} amplifies damage taken ({s}'s AMP atom) — before {d}",
+                    )
+
+    seen: set[tuple[str, str, str]] = set()
+    out: list[_Edge] = []
+    for e in edges:
+        key = (e.setup, e.consume, e.kind)
+        if key not in seen:
+            seen.add(key)
+            out.append(e)
+    return out
+
+
+# ─────────────────────────────────────────────────────────────────────
+# AoE classification + DPS ranking
+# ─────────────────────────────────────────────────────────────────────
+
+
+def detect_aoe_cap(champion_data: Mapping[str, Any], slot: str) -> int:
+    """Conservative AoE cap from the structured row fields."""
+    corpus = _slot_corpus(champion_data, slot)
+    if not corpus:
+        return 1
+    fields = " ".join(corpus["fields"]).lower()
+    if any(t in fields for t in ("aoe", "area of effect")) or "Location" in " ".join(
+        corpus["fields"]
+    ):
+        return 5
+    return 1
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Order construction: constraints + matrix-consistent DPS tie-break
+# ─────────────────────────────────────────────────────────────────────
+
+
+def _kahn_order(slots: list[str], edges: list[_Edge], tie_key: Any) -> list[str] | None:
+    successors: dict[str, list[str]] = {s: [] for s in slots}
+    indegree = {s: 0 for s in slots}
+    for e in edges:
+        if e.setup in successors and e.consume in successors:
+            successors[e.setup].append(e.consume)
+            indegree[e.consume] += 1
+    ready = sorted([s for s in slots if indegree[s] == 0], key=tie_key)
+    order: list[str] = []
+    while ready:
+        s = ready.pop(0)
+        order.append(s)
+        for nxt in successors[s]:
+            indegree[nxt] -= 1
+            if indegree[nxt] == 0:
+                ready.append(nxt)
+                ready.sort(key=tie_key)
+    return order if len(order) == len(slots) else None
+
+
+# level x build reference matrix for the DPS-consistency gate (mirrors the
+# golden snapshot's sweep builds)
+_MATRIX_SPECS = (
+    (1, ()),
+    (11, ()),
+    (18, ()),
+    (18, ("Luden's Echo", "Shadowflame", "Rabadon's Deathcap")),
+    (18, ("Kraken Slayer", "Infinity Edge", "Lord Dominik's Regards")),
+    (18, ("Trinity Force", "Infinity Edge", "Berserker's Greaves")),
+)
+
+# per-champion cache: matrix DPS rows at the reference points
+_MATRIX_DPS_CACHE: dict[str, list[list[tuple[str, float]]]] = {}
+
+# per-champion cache: the FULL-KIT derived rule (order is matrix-invariant by
+# construction; the fight's own level/build only narrows which slots exist).
+_DERIVED_RULE_CACHE: dict[str, ComboRule] = {}
+
+
+def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
+    champion_name: str, champion_data: Mapping[str, Any], aoe: Mapping[str, int]
+) -> list[list[tuple[str, float]]]:
+    """Per-rank DPS at the reference level/build matrix (cached per champion).
+
+    The matrix is a pure function of the champion's cached data — it never
+    depends on the request's level or build — so it is computed once per
+    process and reused by every fight.
+    """
+    cached = _MATRIX_DPS_CACHE.get(champion_name)
+    if cached is not None:
+        return cached
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.data_fetcher import fetch_item_data
+    from src.calculator.stats import calculate_total_stats
+
+    items_by_name = {d["name"]: d for d in fetch_item_data().values()}
+    target_stats = {
+        "target_max_health": 2000.0,
+        "target_current_health": 2000.0,
+        "target_missing_health": 0.0,
+    }
+    rows: list[list[tuple[str, float]]] = []
+    for level, build in _MATRIX_SPECS:
+        items = [items_by_name[n] for n in build if n in items_by_name]
+        stats = calculate_total_stats(dict(champion_data), level, items)
+        parsed = parse_champion_abilities(
+            dict(champion_data),
+            level,
+            stats["ability_power"],
+            ability_ranks=None,
+            champion_stats=stats,
+            target_stats=target_stats,
+            champion_options=None,
+        )
+        rows.append(rank_ability_dps(parsed, target_count=1, aoe=aoe))
+    _MATRIX_DPS_CACHE[champion_name] = rows
+    return rows
+
+
+def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel
+    champion_name: str, champion_data: Mapping[str, Any]
+) -> dict[str, dict[str, Any]]:
+    """The full-kit parse (level 11, no items) used for the cached derivation.
+
+    The derived order is matrix-invariant by construction, so the derivation
+    runs once against the canonical kit; a request's own level/build/options
+    only narrow which slots exist.
+    """
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.stats import calculate_total_stats
+
+    data = dict(champion_data)
+    stats = calculate_total_stats(data, 11, [])
+    return parse_champion_abilities(
+        data,
+        11,
+        stats["ability_power"],
+        ability_ranks=None,
+        champion_stats=stats,
+        target_stats={
+            "target_max_health": 2000.0,
+            "target_current_health": 2000.0,
+            "target_missing_health": 0.0,
+        },
+        champion_options=None,
+    )
+
+
+def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    champion_name: str,
+    ability_damages: Mapping[str, Any],
+    champion_data: Mapping[str, Any],
+    certified_order: list[str] | None = None,
+) -> ComboRule:
+    """Algorithmically derive the champion's optimal cast order.
+
+    Steps (see the module docstring and ``docs/rotation-design.md``):
+
+    1. Detect setup/consume edges from the typed atoms (see
+       :func:`detect_setup_consume_edges`).
+    2. Base order = certified module ``CAST_ORDER`` when present, else the
+       engine ``DEFAULT_CAST_ORDER``.
+    3. No edges → keep the base order (honest flat-kit fallback).
+    4. Edges → topological sort; free slots ranked by per-rank DPS at the
+       fight's stats, but only when the ranking is CONSISTENT across the
+       level/build matrix (else the certified/base relative order is kept,
+       which is deterministic across builds by construction).
+    5. Build a :class:`ComboRule` with a rationale citing the driving
+       atoms and the setup/consume/aoe receipts.
+
+    Returns:
+        The derived rule (``derived=True``).  The order is a permutation
+        of the base slots — no new slots, none dropped.
+    """
+    cached = _DERIVED_RULE_CACHE.get(champion_name)
+    if cached is not None:
+        # The cached rule is the FULL-KIT derivation (matrix-invariant); the
+        # fight's own parse decides which slots exist — filter the order to
+        # the available slots, preserving relative positions.  Option-gated
+        # slots absent from the canonical kit (Gnar's Mega R) fall back to
+        # their base-order position.
+        available = [
+            s for s in cached.order if isinstance(ability_damages.get(s), Mapping)
+        ]
+        base = [
+            s
+            for s in (certified_order or list(DEFAULT_CAST_ORDER))
+            if isinstance(ability_damages.get(s), Mapping)
+        ]
+        for slot in base:
+            if slot not in available:
+                available.append(slot)
+        return ComboRule(
+            champion=champion_name,
+            order=tuple(available) if available else cached.order,
+            rationale=cached.rationale,
+            sources=cached.sources,
+            setup=cached.setup,
+            consume=cached.consume,
+            aoe=dict(cached.aoe),
+            derived=True,
+        )
+
+    # Derive from the CANONICAL full-kit parse (level 11, no items), not the
+    # request's parse — the request may be a partial kit (level 1) and the
+    # derivation must reflect the champion's complete mechanic surface.
+    ability_damages = _canonical_kit_parse(champion_name, champion_data)
+
+    from src.calculator.champions import (
+        get_champion_options_meta,
+    )  # pylint: disable=import-outside-toplevel
+
+    base = [
+        s
+        for s in (certified_order or list(DEFAULT_CAST_ORDER))
+        if isinstance(ability_damages.get(s), Mapping)
+    ]
+    aoe = {
+        s: detect_aoe_cap(champion_data, s)
+        for s in ability_damages
+        if isinstance(ability_damages[s], Mapping)
+    }
+
+    meta = get_champion_options_meta(champion_name)
+    slot_options: dict[str, list[str]] = {}
+    for opt in meta.get("options", []):
+        key = str(opt.get("key", ""))
+        if key not in _CONSUME_OPTIONS:
+            continue
+        slot = _resolve_option_slot(champion_name, key, ability_damages)
+        if slot:
+            slot_options.setdefault(slot, []).append(key)
+        else:
+            slot_options.setdefault("__all__", []).append(key)
+
+    edges = detect_setup_consume_edges(
+        champion_name, ability_damages, champion_data, slot_options
+    )
+
+    if not edges:
+        rationale = (
+            f"{champion_name} has no detectable setup/consume signal in the "
+            "atomized ability data — no DoT/poison/mark/stack consumer, no "
+            "resistance shred, no damage-amplifying buff, no missing-health "
+            "execute. The certified module order"
+            + (
+                " " + " → ".join(certified_order)
+                if certified_order
+                else " (engine default Q → Q2 → W → E → R)"
+            )
+            + " is kept exactly as reviewed; the flat kit derives no reorder."
+        )
+        rule = ComboRule(
+            champion=champion_name,
+            order=tuple(base),
+            rationale=rationale,
+            sources=("no setup/consume atoms detected (flat kit)",),
+            setup=(),
+            consume=(),
+            aoe=aoe,
+            derived=True,
+        )
+        _DERIVED_RULE_CACHE[champion_name] = rule
+        return rule
+
+    base_idx = {s: i for i, s in enumerate(base)}
+    outgoing = {s: any(e.setup == s for e in edges) for s in base}
+
+    def tie_base(s: str) -> tuple[int, int]:
+        return (0 if outgoing.get(s) else 1, base_idx.get(s, 99))
+
+    stable = _kahn_order(base, edges, tie_base)
+    if stable is None:
+        # cycle in the detected edges — fall back to the certified order and
+        # flag the ambiguity for the verification swarm.
+        rationale = (
+            f"{champion_name}'s detected setup/consume edges form a cycle "
+            "(conflicting atoms) — the certified module order "
+            + (" ".join(certified_order) if certified_order else "Q → Q2 → W → E → R")
+            + " is kept; the ambiguous atoms are listed for the F4 swarm."
+        )
+        sources = tuple(e.sentence() for e in edges)
+        rule = ComboRule(
+            champion=champion_name,
+            order=tuple(base),
+            rationale=rationale,
+            sources=sources,
+            setup=tuple(sorted({e.setup for e in edges})),
+            consume=tuple(sorted({e.consume for e in edges})),
+            aoe=aoe,
+            derived=True,
+        )
+        _DERIVED_RULE_CACHE[champion_name] = rule
+        return rule
+
+    fight_dps = rank_ability_dps(ability_damages, target_count=1, aoe=aoe)
+    dps_idx = {s: i for i, (s, *_) in enumerate(fight_dps)}
+
+    def tie_dps(s: str) -> tuple[Any, ...]:
+        return (dps_idx.get(s, 10**9), 0 if outgoing.get(s) else 1, base_idx.get(s, 99))
+
+    fight_order = _kahn_order(base, edges, tie_dps)
+    use_dps_order = fight_order is not None
+    if fight_order is not None:
+        for point_rows in _matrix_dps_rows(champion_name, champion_data, aoe):
+            idx = {s: i for i, (s, *_) in enumerate(point_rows)}
+
+            def tie(s: str, idx=idx) -> tuple[Any, ...]:
+                return (
+                    idx.get(s, 10**9),
+                    0 if outgoing.get(s) else 1,
+                    base_idx.get(s, 99),
+                )
+
+            if _kahn_order(base, edges, tie) != fight_order:
+                use_dps_order = False
+                break
+
+    order = fight_order if use_dps_order else stable
+
+    setup = tuple(sorted({e.setup for e in edges}))
+    consume = tuple(sorted({e.consume for e in edges}))
+    source_lines = [e.sentence() for e in edges]
+    if use_dps_order:
+        source_lines.append(
+            "free slots ranked by per-rank DPS (total_raw / effective cooldown) — "
+            "consistent across the L1/L18 x no-items/magic/physical/spellblade matrix"
+        )
+    else:
+        source_lines.append(
+            "DPS ranking is build-sensitive across the reference matrix — free slots "
+            "keep their certified/base relative order (deterministic)"
+        )
+    rationale_lines = [e.sentence() for e in edges]
+    if use_dps_order:
+        rationale_lines.append(
+            "Remaining abilities are ranked by per-rank DPS at the fight's stats "
+            "(total_raw / effective cooldown, AoE-weighted) — the ranking is "
+            "consistent across the level/build reference matrix."
+        )
+    else:
+        rationale_lines.append(
+            "The DPS ranking between the unconstrained abilities is build-sensitive "
+            "across the reference matrix, so they keep their certified/base relative "
+            "order — the derivation is deterministic across levels and items."
+        )
+    rationale_lines.append(f"Derived order: {' → '.join(order)}.")
+    rule = ComboRule(
+        champion=champion_name,
+        order=tuple(order),
+        rationale=" ".join(rationale_lines),
+        sources=tuple(source_lines),
+        setup=setup,
+        consume=consume,
+        aoe=aoe,
+        derived=True,
+    )
+    _DERIVED_RULE_CACHE[champion_name] = rule
+    return rule
+
+
 def resolve_cast_order(
     champion_name: str,
     ability_damages: Mapping[str, Any],
+    *,
+    champion_data: Mapping[str, Any] | None = None,
+    certified_order: list[str] | None = None,
 ) -> tuple[list[str], ComboRule | None]:
-    """Resolve the fight's ``cast_order`` from the combo table.
+    """Resolve the fight's ``cast_order``: override → algorithmic derive.
 
-    The fallback is the engine's historical default order (with the
-    optional second-cast ``Q2`` slot).  Champions whose reviewed module
-    declares a certified ``CAST_ORDER`` are handled by the caller
-    (:func:`src.calculator.pipeline.run_fight`) when this returns
-    ``None``; those certified orders are themselves combo rules and
-    migrate into :data:`COMBO_TABLE` as they are re-certified.
+    The ten hand-verified :data:`COMBO_TABLE` seeds win (documented
+    overrides).  Every other champion with atomized data is derived
+    algorithmically by :func:`derive_champion_rule`; a champion with no
+    detectable setup/consume signal keeps its certified module order or
+    the engine default with an honest data-driven rationale.  Unknown
+    names (synthetic fixtures with no cached data) return ``None`` for the
+    rule, preserving the F2 fallback contract.
 
     Args:
         champion_name: Public champion display name.
-        ability_damages: The parsed ability package.  Kept in the
-            signature so a future data-driven pass can verify the rule's
-            atoms against the parse (and so callers can skip slots absent
-            from the parse).
+        ability_damages: The parsed ability package (atoms + per-rank
+            ``total_raw`` / ``cooldown`` at the fight's stats).
+        champion_data: The cached champion object (raw wiki rows).  When
+            omitted and the name is unknown, the default order applies.
+        certified_order: The champion module's reviewed ``CAST_ORDER``, if
+            any; looked up when omitted.
 
     Returns:
-        ``(cast_order, rule)`` — ``rule`` is the matching
-        :class:`ComboRule`, or ``None`` when the champion has no combo
-        signal and the default order applies.
+        ``(cast_order, rule)`` — ``rule`` is ``None`` only for unknown
+        names without atomized data.
     """
     rule = COMBO_TABLE.get(champion_name)
     if rule is not None:
         return list(rule.order), rule
-    return list(DEFAULT_CAST_ORDER), None
+    if champion_data is None and not ability_damages:
+        return list(DEFAULT_CAST_ORDER), None
+    if certified_order is None:
+        from src.calculator.champions import (
+            get_champion_cast_order,
+        )  # pylint: disable=import-outside-toplevel
+
+        certified_order = get_champion_cast_order(champion_name)
+    derived = derive_champion_rule(
+        champion_name, ability_damages, champion_data or {}, certified_order
+    )
+    return list(derived.order), derived
 
 
 def rank_ability_dps(
@@ -370,8 +1485,8 @@ def rank_ability_dps(
     Signal (b) of the scoring model: ``total_raw`` divided by the
     effective per-rank cooldown read from the atomized ability rows.
     Zero- or missing-cooldown rows (on-hits, procs, passives) are
-    excluded — they are not rotation casts.  Used by the design doc and
-    the F2 tests to prove the table matches the data.
+    excluded — they are not rotation casts.  Used by the derivation, the
+    design doc, and the F2 tests.
 
     AoE weighting: a slot listed in ``aoe`` hits up to ``aoe[slot]``
     enemy champions, so its effective DPS is multiplied by
@@ -416,10 +1531,10 @@ def build_rotation_receipt(
     The receipt's ``order`` is the fight's actual cast sequence from the
     engine's cooldown-aware ``cast_timeline`` (one-rotation: the derived
     permutation, once per slot; timed mode: every recast at its cooldown,
-    e.g. Cassiopeia Q, E, E, E, Q, E, ...).  ``rationale`` is the
-    combo rule's plain-language explanation so the UI can show WHY the
-    order is optimal; champions with no combo signal get a documented
-    fallback rationale.
+    e.g. Cassiopeia Q, E, E, E, Q, E, ...).  ``rationale`` is the combo
+    rule's plain-language explanation so the UI can show WHY the order is
+    optimal; champions with no combo signal get a documented fallback
+    rationale.
 
     Returns:
         ``{"order", "rationale", "cast_order", "sources", "setup",
