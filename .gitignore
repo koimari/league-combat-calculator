@@ -28,6 +28,9 @@ Desktop.ini
 .app-server.stdout.log
 .app-server.stderr.log
 
+# P0b database backups (scripts/backup_db.py output)
+backups/
+
 # Local browser-verification artifacts
 .playwright-cli/
 output/

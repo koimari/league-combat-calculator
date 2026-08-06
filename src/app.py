@@ -116,6 +116,7 @@ from calculator.pipeline import (
     run_fight,
 )
 from rate_limit import TokenBucketStore
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from db import (
     CacheUnavailable,
@@ -133,6 +134,7 @@ from db import (
     list_feedback,
     redis_configured,
     save_build,
+    session,
     stable_cache_key,
     validation_summary,
 )
@@ -152,6 +154,48 @@ app.config.update(
 # production-deployment concern, not a test-mode one.
 if app.config.get("TESTING"):
     app.config["RATE_LIMIT_ENABLED"] = False
+
+# --- Sentry error tracking ---------------------------------------------------
+# The sentry-sdk package is imported lazily: without ``SENTRY_DSN`` this module
+# never touches the dependency, so local installs and the test suite run
+# without it. Initialisation happens once at import time; the captured module
+# reference is what the error handlers consult. Rate-limit 429 rejections are
+# expected traffic and are deliberately kept out of capture.
+_sentry = None
+
+
+def _configure_sentry() -> None:
+    """Initialise Sentry from ``SENTRY_DSN``; a missing DSN is a no-op."""
+    global _sentry
+    dsn = os.environ.get("SENTRY_DSN", "").strip()
+    if not dsn:
+        _sentry = None
+        return
+    try:
+        # pylint: disable-next=import-outside-toplevel  # deliberate lazy import
+        import sentry_sdk
+    except ImportError:
+        app.logger.warning(
+            "SENTRY_DSN is set but the sentry-sdk package is not installed"
+        )
+        _sentry = None
+        return
+    sentry_sdk.init(
+        dsn=dsn,
+        environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
+        traces_sample_rate=0.0,  # error capture only on the closed-beta floor
+        send_default_pii=False,
+    )
+    _sentry = sentry_sdk
+
+
+def _capture_exception(error: BaseException) -> None:
+    """Report an exception to Sentry when configured; otherwise no-op."""
+    if _sentry is not None:
+        _sentry.capture_exception(error)
+
+
+_configure_sentry()
 
 _AUTH_COOKIE = "scryglass_session"
 _AUTH_TTL_SECONDS = 7 * 24 * 60 * 60
@@ -386,6 +430,7 @@ def _enforce_authentication():
         return None
     if (
         request.path == "/healthz"
+        or request.path.startswith("/api/health/")
         or request.path == "/privacy"
         or request.path == "/api/auth/invite"
         or request.path.startswith("/auth/")
@@ -440,6 +485,28 @@ def _spend_rate_limit(scope: str):
 def _request_too_large(_error):
     """Return the same JSON error shape as every other API rejection."""
     return jsonify({"error": "Request body exceeds 32 KiB"}), 413
+
+
+@app.errorhandler(500)
+def _internal_error(error):
+    """Capture unhandled exceptions and keep the API's JSON error shape.
+
+    Flask wraps non-HTTP exceptions in ``InternalServerError`` before the
+    handler runs; Sentry should see the original exception, not the wrapper.
+    """
+    _capture_exception(getattr(error, "original_exception", error))
+    return jsonify({"error": "Internal server error"}), 500
+
+
+@app.errorhandler(429)
+def _rate_limited(_error):
+    """Rate-limit rejections are expected traffic, never Sentry noise.
+
+    The token-bucket guard returns its 429 responses directly from the
+    route, so they never pass through this handler; it exists for the
+    symmetric ``abort(429)`` path and deliberately skips capture.
+    """
+    return jsonify({"error": "Rate limit exceeded"}), 429
 
 
 @app.after_request
@@ -1249,6 +1316,138 @@ def manrope_prototype_asset(asset_path: str):
 def health():
     """Cheap liveness probe that avoids loading calculator data."""
     return jsonify({"status": "ok"})
+
+
+# How old the patch-regression report may be before the golden check is
+# considered stale. LoL patches land every two weeks, so 14 days is exactly
+# one patch cycle: a report older than that cannot vouch for the current game.
+_HEALTH_GOLDEN_STALE_DAYS = 14
+
+
+def _health_db_check() -> dict:
+    """Probe the persistence layer with the cheapest possible round trip."""
+    backend = "postgresql" if is_postgres() else "sqlite"
+    try:
+        with session() as db_session:
+            db_session.execute(text("SELECT 1"))
+    # pylint: disable-next=broad-exception-caught
+    except Exception as exc:
+        app.logger.exception("Deep health: database check failed")
+        return {
+            "status": "error",
+            "backend": backend,
+            "configured": is_configured(),
+            "error": str(exc),
+        }
+    return {"status": "ok", "backend": backend, "configured": is_configured()}
+
+
+def _health_cache_check() -> dict:
+    """Read the result-cache counters; a backend failure is an error."""
+    try:
+        stats = cache_stats()
+    except (SQLAlchemyError, CacheUnavailable) as exc:
+        app.logger.exception("Deep health: cache check failed")
+        return {
+            "status": "error",
+            "enabled": _result_cache_enabled(),
+            "backend": cache_backend(),
+            "error": str(exc),
+        }
+    hits = int(stats.get("hits") or 0)
+    misses = int(stats.get("misses") or 0)
+    total = hits + misses
+    return {
+        "status": "ok",
+        "enabled": _result_cache_enabled(),
+        "backend": cache_backend(),
+        "hits": hits,
+        "misses": misses,
+        "hit_ratio": round(hits / total, 4) if total else None,
+        "cached_entries": int(stats.get("cached_entries") or 0),
+    }
+
+
+def _health_golden_check() -> dict:
+    """Golden (patch-regression) staleness from data/staleness.json.
+
+    The report's ``checked_at`` timestamp is authoritative; when it is
+    missing or unparseable the file mtime is the fallback age. A report
+    at or beyond ``_HEALTH_GOLDEN_STALE_DAYS`` old is ``stale``.
+    """
+    report = _read_staleness()
+    path = _staleness_path()
+    if report is None:
+        return {
+            "status": "missing",
+            "path": str(path),
+            "stale_threshold_days": _HEALTH_GOLDEN_STALE_DAYS,
+        }
+    checked_at = report.get("checked_at")
+    age_days = None
+    if isinstance(checked_at, str):
+        try:
+            parsed = datetime.fromisoformat(checked_at)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            age_days = max(
+                0.0, (datetime.now(timezone.utc) - parsed).total_seconds() / 86400.0
+            )
+        except ValueError:
+            age_days = None
+    if age_days is None:
+        try:
+            age_days = max(0.0, (time.time() - path.stat().st_mtime) / 86400.0)
+        except OSError:
+            age_days = None
+    stale = age_days is None or age_days >= _HEALTH_GOLDEN_STALE_DAYS
+    return {
+        "status": "stale" if stale else "ok",
+        "patch": report.get("patch"),
+        "checked_at": checked_at,
+        "age_days": round(age_days, 2) if age_days is not None else None,
+        "stale_threshold_days": _HEALTH_GOLDEN_STALE_DAYS,
+    }
+
+
+def _health_engine_check() -> dict:
+    """Engine registration counts; an empty registry means broken data."""
+    return {
+        "status": "ok" if _ENGINE_CHAMPIONS else "degraded",
+        "registered": len(_ENGINE_CHAMPIONS),
+        "reviewed": len(_VERIFIED_CHAMPIONS),
+        "generated": len(_GENERATED_CHAMPIONS),
+    }
+
+
+@app.route("/api/health/deep")
+def api_health_deep():
+    """Deep health probe: db, result cache, golden staleness, engine.
+
+    Public (like /healthz) so uptime monitors can reach it without a
+    session. Status is ``ok`` when every check is ok, ``degraded`` when a
+    check is stale/missing/degraded, and ``error`` when any check failed.
+    """
+    checks = {
+        "db": _health_db_check(),
+        "cache": _health_cache_check(),
+        "golden": _health_golden_check(),
+        "engine": _health_engine_check(),
+    }
+    statuses = {check["status"] for check in checks.values()}
+    if "error" in statuses:
+        overall = "error"
+    elif statuses - {"ok"}:
+        overall = "degraded"
+    else:
+        overall = "ok"
+    return jsonify(
+        {
+            "status": overall,
+            "checks": checks,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
 
 
 def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
