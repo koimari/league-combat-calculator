@@ -13,11 +13,13 @@ Stack mechanics modeled (E3):
   50% based on critical strike chance (wiki prose).  ``e_stacks`` is
   the explicit pre-stack state; the pounce is priced at 3 stacks.
 
-Q (Dance of Arrows) and W (Wolf's Frenzy) keep the reviewed CP10.3
-custom packet pricing (W's per-mark current-health term is a known
-parse boundary: the generic resolver drops the "per Mark" part, so it
-prices only the base % current-health term).  R (Lamb's Respite) keeps
-the reviewed no-damage packet.
+Q (Dance of Arrows) and R (Lamb's Respite) keep the reviewed CP10.3
+packet pricing.  W (Wolf's Frenzy) is the E4 summon row: Wolf's frenzy
+attacks price the sourced "Magic Damage" leveling with the full
+per-Mark current-health term (+1% per Mark, resolved via the same
+modifier override Mounting Dread uses), over ``w_attacks`` attacks
+(Wolf attacks at 25% of Kindred's bonus attack speed; the count is the
+player-controlled option, default 3 attacks in the window).
 """
 
 from __future__ import annotations
@@ -130,10 +132,63 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: Wolf's Frenzy — Wolf basic attacks over the fight window.
+
+    Wolf's attacks are magic and the rate scales with 25% of Kindred's
+    bonus attack speed (wiki prose); the zone lasts 8.5 seconds.  The
+    attack COUNT is the player-controlled ``w_attacks`` option (default
+    3).  The per-Mark current-health term (1.5% + 1% per Mark) resolves
+    through the same modifier override Mounting Dread uses, so the
+    sourced formula prices exactly.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    attacks = min(max(int(ctx.options.get("w_attacks", 3)), 1), 8)
+    marks = _marks(ctx)
+    leveling = find_named_leveling(ability, "Magic Damage")
+    if leveling is None:
+        return None
+
+    def per_mark_override(unit: str, value: float) -> float | None:
+        """Wolf's current-health modifier: 1.5% (+ 1% per Mark)."""
+        if "of target's current health" not in unit:
+            return None
+        percent = value + 1.0 * marks
+        current = float(ctx.target.get("target_current_health", 0.0) or 0.0)
+        return percent / 100.0 * current
+
+    per = sum_modifiers(
+        leveling, rank, ctx.stats, ctx.target, modifier_override=per_mark_override
+    )
+    entry = damage_entry(
+        ability.get("name", "Wolf's Frenzy"),
+        rank,
+        0.0,
+        per * attacks,
+        "magic",
+    )
+    entry["parts"] = (
+        DamagePart("magic", per, count=attacks, time_offset=0.5, hit_interval=1.0),
+    )
+    entry["target_max_health_sensitive"] = True
+    entry["detail"] = (
+        f"Wolf attacks {attacks} time(s) for {per:.2f} magic each (25 : 45 by "
+        f"rank + 20% bonus AD + 20% AP + 1.5% (+1% per Mark) of current health "
+        f"at {marks} mark(s)); Wolf attack speed scales with 25% of Kindred's "
+        "bonus attack speed and the 8.5s zone duration are state"
+    )
+    return entry
+
+
 SLOTS = {
     "P": _mark_of_the_kindred,
     "Q": _BATCH_SLOTS["Q"],
-    "W": _BATCH_SLOTS["W"],
+    "W": _wolfs_frenzy,
     "E": _mounting_dread,
     "R": _BATCH_SLOTS["R"],
 }
@@ -176,14 +231,15 @@ ASSUMPTIONS = [
     "The pounce is the sourced Additional Physical Damage (+ 100% bonus "
     "AD + missing-health term), amplified up to 50% by critical strike "
     "chance (crit_effectiveness 0.5, wiki prose)",
-    "W (Wolf's Frenzy) keeps the reviewed CP10.3 pricing; its per-mark "
-    "current-health term is a parse boundary (only the base % "
-    "current-health term resolves)",
+    "W (Wolf's Frenzy) prices the sourced Magic Damage leveling over "
+    "w_attacks Wolf attacks, including the per-Mark current-health term "
+    "(1.5% + 1% per Mark); the zone duration and 25%-of-bonus-AS rate are "
+    "state (attack count is the player-controlled option)",
     "R (Lamb's Respite) is the reviewed no-damage packet",
 ]
 
 SOURCES = _BATCH_SOURCES
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "E"} else "out_of_scope") for slot in "PQWER"
+    slot: ("modeled" if slot in {"P", "W", "E"} else "out_of_scope") for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
