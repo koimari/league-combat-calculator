@@ -294,15 +294,43 @@ function championOptionCapability(kind, championName) {
 }
 
 function abilityOptionBinding(slot, field, championName = state.attacker.champion) {
+  // Legacy explicit overrides first (sourced module option keys).
   const bindings = {
     "P:ability_casts": "passive_procs",
     "E:ability_hits": "mines_hit",
     "R:ability_variants": "r_sweet_spot",
   };
-  const key = bindings[`${slot}:${field}`];
-  if (!key) return null;
+  const overrideKey = bindings[`${slot}:${field}`];
   const options = engine.championOptions[championName]?.options || [];
-  return options.some((option) => option.key === key) ? key : null;
+  if (overrideKey) {
+    return options.some((option) => option.key === overrideKey) ? overrideKey : null;
+  }
+  if (field !== "ability_variants") {
+    // Cast/hit counts only bind to explicitly declared per-slot count options.
+    return null;
+  }
+  // Data-driven variant binding: a slot's variant control is enabled when the
+  // champion module declares an option that drives that slot's form — a
+  // per-slot variant/stance/mode key, or a global form toggle (Jayce
+  // hammer_stance, Gnar mega, stance) that re-shapes every Q/W/E/R entry.
+  const slotKey = slot.toLowerCase();
+  const perSlot = [
+    `${slotKey}_variant`, `${slotKey}_stance`, `${slotKey}_mode`,
+    `${slotKey}_form`, `${slotKey}_charge`, `${slotKey}_style`,
+    `accelerated_${slotKey}`, `${slotKey}_accelerated`,
+  ];
+  const declared = new Set(options.map((option) => option.key));
+  const direct = perSlot.find((key) => declared.has(key));
+  if (direct) return direct;
+  if (slot !== "R" && (declared.has("hammer_stance") || declared.has("mega"))) {
+    return "hammer_stance" in declared ? "hammer_stance" : "mega";
+  }
+  if (slot !== "R" && declared.has("stance")) return "stance";
+  // A generic variant-family option for the slot (e.g. q_variant on Heimer).
+  const family = [...declared].find((key) =>
+    key.startsWith(slotKey) && /variant|stance|mode|form|style/.test(key)
+  );
+  return family || null;
 }
 
 function abilityCapability(slot, field, championName = state.attacker.champion) {
