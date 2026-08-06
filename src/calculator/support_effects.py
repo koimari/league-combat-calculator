@@ -107,6 +107,17 @@ _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
     }
 )
 
+# E9-2: slots whose heal the champion module + the E1 self-heal rule
+# author exactly (Naafiri's Q recast heal rides the module's Q damage
+# receipts at the cached "Heal" row).  The scanner would otherwise
+# re-derive the same ability from its cached JSON and double-grant the
+# heal in a separate ledger, so it defers these slots.
+_MODULE_AUTHORED_HEAL_SLOTS = frozenset(
+    {
+        ("Naafiri", "Q"),
+    }
+)
+
 
 def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
     memo = _SUPPORT_ATTRS_MEMO.get(id(champion_data))
@@ -267,7 +278,10 @@ def derive_ally_effects(
         # (level-indexed bases, stat scalings, and sourced duration).  The
         # scanner defers to it so the ledger never grants the same shield
         # twice from two derivations of one ability.
-        if (champion_data.get("name", ""), slot) in _MODULE_AUTHORED_SHIELD_SLOTS:
+        if (champion_data.get("name", ""), slot) in _MODULE_AUTHORED_SHIELD_SLOTS or (
+            champion_data.get("name", ""),
+            slot,
+        ) in _MODULE_AUTHORED_HEAL_SLOTS:
             continue
         shield_attr, heal_attr, target_self, target_scope = _support_profile(ability)
         champion_key = (champion_data.get("name", ""), slot)

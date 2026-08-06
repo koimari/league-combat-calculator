@@ -2548,8 +2548,14 @@ class TestBreakdownProcRowShape:
         assert result["champion_stats"]["omnivamp_percent"] == pytest.approx(6.0)
         assert result["self_healing"] > 0.0
         assert result["self_healing_events"]
-        assert all(
+        # Ahri's E9-2 Essence Theft passive heal joins the item omnivamp
+        # receipts in the same ledger.
+        assert any(
             event["source"] == "Omnivamp (explicit single-target attacks and on-hit)"
+            for event in result["self_healing_events"]
+        )
+        assert any(
+            event["source"] == "Essence Theft"
             for event in result["self_healing_events"]
         )
 

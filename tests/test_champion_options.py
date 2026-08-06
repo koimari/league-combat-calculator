@@ -65,10 +65,11 @@ class TestGetChampionOptionsMeta:
         }
 
     def test_manifest_receipt_fills_module_without_inline_sources(self) -> None:
-        """Ahri falls back to the tracked reviewed-packet receipt."""
+        """Ahri exposes the E9-2 P option and keeps the packet sources."""
         meta = get_champion_options_meta("Ahri")
-        assert meta["options"] == []
-        assert meta["assumptions"] == []
+        assert [option["key"] for option in meta["options"]] == ["p_essence_fragments"]
+        assert meta["assumptions"]
+        assert any("Essence Theft" in text for text in meta["assumptions"])
         assert meta["sources"] == [
             {
                 "label": "Local League Wiki cache",

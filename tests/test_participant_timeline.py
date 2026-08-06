@@ -291,7 +291,10 @@ def test_darius_decimate_self_heal_coalesces_targets_in_both_walks():
     )
     main_survival = receipt["participants"][0]["survival"]
     heals = receipt["healing_events"]
-    assert len(heals) == 1
+    # The Ahri enemy's E9-2 Essence Theft passive heal is a separate
+    # receipt; Decimate's own heal is the only main-owned one.
+    assert len(heals) == 2
+    assert [event["source"] for event in heals] == ["Decimate", "Essence Theft"]
     assert heals[0]["source"] == "Decimate"
     # The heal fires at Decimate's cast (t=0), so its missing-health
     # basis is the damage Darius has taken up to that cast — not the
@@ -420,7 +423,11 @@ def test_sundered_sky_heal_uses_live_missing_health_in_both_walks():
         if event["source"] == "Sundered Sky (Lightshield Strike)"
     )
     assert heal["raw_amount"] > heal["amount"]
-    assert heal["raw_amount"] == pytest.approx(118.0)
+    # Ahri's Essence Theft passive heal (95, 20% AP) lands first at t=0,
+    # so the item heal's missing-health component re-prices from the
+    # already-healed live health: 118.0 before the E9-2 passive fix, 112.3
+    # with it.
+    assert heal["raw_amount"] == pytest.approx(112.3)
     assert fast["participants"] == legacy["participants"]
     assert fast["breakdown"] == legacy["breakdown"]
 
@@ -502,7 +509,10 @@ def test_dusk_and_dawn_self_heal_mutates_main_participant_health_ledger():
     main = next(
         row for row in combat["participants"] if row["participant_id"] == "main"
     )
-    assert main["survival"]["healing_received"] == 15.0
+    # Ahri's Essence Theft passive heal (107 with Dusk and Dawn's 60 AP)
+    # now lands at t=0 alongside the item heal: 15.0 before the E9-2
+    # passive fix, 122.0 with it.
+    assert main["survival"]["healing_received"] == 122.0
 
 
 def test_life_steal_keeps_pair_target_attribution_at_shared_timestamps():
@@ -4492,10 +4502,10 @@ def test_bloodthirster_converts_explicit_lifesteal_excess_to_uncapped_duration_s
 def test_search_context_keeps_item_heals_and_ignores_post_window_packets():
     """Compiled scoring matches the event walk for item-owned healing.
 
-    Ahri has no champion healing rule, so this exercises the item-owned
-    Dusk-and-Dawn Spellblade heal path.  The second proc is timestamped at
-    4.5s while the authored fight window ends at 4s and must not affect the
-    score-only survival walk.
+    The Dusk-and-Dawn Spellblade heal path runs alongside Ahri's E9-2
+    Essence Theft passive heal (107 with the item's 60 AP); the second
+    proc is timestamped at 4.5s while the authored fight window ends at
+    4s and must not affect the score-only survival walk.
     """
     from src.calculator.defensive_effects import resolve_starting_defenses
     from src.calculator.participant_timeline import CoupledSearchContext
@@ -4539,7 +4549,8 @@ def test_search_context_keeps_item_heals_and_ignores_post_window_packets():
 
     assert fast == legacy
     main = next(row for row in fast["participants"] if row["participant_id"] == "main")
-    assert main["survival"]["healing_received"] == 15.0
+    # 107 Essence Theft (60 AP from Dusk and Dawn) + 15 item heal.
+    assert main["survival"]["healing_received"] == 122.0
 
 
 def test_search_context_replays_the_rounded_death_cutoff():

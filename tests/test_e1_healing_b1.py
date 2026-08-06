@@ -278,5 +278,11 @@ def test_belveth_void_coral_heal_is_out_of_scope():
     # Endless Banquet's only self-heal fires when Bel'Veth consumes a Void
     # Coral, which requires a champion takedown; the 1v1 fight model
     # produces no deaths, so no rule is authored and no heal appears.
+    # (The Ahri enemy's Essence Theft passive heal is a separate E9-2
+    # receipt and is filtered out here.)
     data = _fight("Belveth")
-    assert not data["combat"]["healing_events"]
+    assert not [
+        event
+        for event in data["combat"]["healing_events"]
+        if event.get("attacker") == "main"
+    ]

@@ -230,6 +230,7 @@ def _cast_slot_times(
 HEALING_RULE_CHAMPIONS = frozenset(
     {
         "Aatrox",
+        "Ahri",
         "Alistar",
         "Ambessa",
         "Darius",
@@ -241,6 +242,7 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Garen",
         "Gragas",
         "Gwen",
+        "Illaoi",
         "Irelia",
         "Karma",
         "Nami",
@@ -254,6 +256,7 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Kindred",
         "Lissandra",
         "Nidalee",
+        "Naafiri",
         "Senna",
         "Smolder",
         "Sylas",
@@ -316,7 +319,35 @@ def derive_self_healing(
         return []
     healing: list[dict[str, Any]] = []
 
-    if name == "Aatrox":
+    if name == "Ahri":
+        # Essence Theft (P): at 9 Essence Fragments the passive heals Ahri
+        # for 35 : 95 (based on level) (+ 20% AP) and consumes the stacks
+        # (cached P "Heal" leveling row; the fragment count is player state
+        # the module exposes as ``p_essence_fragments``).  The module emits
+        # the P receipt only when the user has 9+ fragments, and the fight
+        # does not simulate fragment generation mid-duel, so one completed
+        # 9-stack cycle heals once — on the first ability that hits the
+        # enemy champion (the "next ability" that consumes them).
+        if "passive" in ability_damages:
+            # The module emits the P receipt only at 9+ fragments.
+            level = int(champion_stats.get("level", 0) or 0)
+            heal = extract_named(
+                _ability(champion_data, "P"), "Heal", level, champion_stats
+            )
+            for event in damage_events:
+                source = _event_source(event)
+                if source not in {"Q", "W", "E", "R"}:
+                    continue
+                _heal_from_damage(
+                    healing,
+                    event,
+                    heal,
+                    "Essence Theft",
+                    link_to_damage=False,
+                )
+                break
+
+    elif name == "Aatrox":
         # Deathbringer Stance: heals for the post-mitigation bonus damage.
         passive_events = _attributed_events(
             damage_events,
@@ -373,6 +404,31 @@ def derive_self_healing(
                         **_trigger_fields(event),
                     }
                 )
+
+    elif name == "Illaoi":
+        # Prophet of an Elder God: "Each Tentacle also heals Illaoi for 5%
+        # of her missing health if it hits at least one enemy champion"
+        # (cached P description prose).  Every tentacle champion hit — the
+        # module's P proc events, whose source key is ``passive`` — is one
+        # heal of 5% of the missing health at the hit's timestamp, priced
+        # by the participant ledger with the fighter's live health (the
+        # Decimate missing-health pattern).
+        tentacle_hits = _attributed_events(
+            damage_events, lambda source, _event: source == "passive"
+        )
+        for event in tentacle_hits:
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": lambda current_health, maximum_health: (
+                        max(0.0, maximum_health - current_health) * 0.05
+                    ),
+                    "source": "Prophet of an Elder God",
+                    "kind": "champion_passive",
+                    **_trigger_fields(event),
+                }
+            )
 
     elif name == "Ambessa":
         r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
@@ -653,6 +709,41 @@ def derive_self_healing(
                     "kind": "champion_ability",
                     **_trigger_fields(event),
                 }
+            )
+
+    elif name == "Naafiri":
+        # Darkin Daggers (Q) recast: "If that target is also a champion or
+        # large monster, Naafiri heals herself" (cached Q description).
+        # The heal is the cached "Heal" row (45 : 105 by rank + 40% bonus
+        # AD) and fires once per Q cast — the recast hits the already-
+        # bleeding champion the module prices as the Q entry's second stage.
+        # The scanner is excluded from this slot (support_effects
+        # ``_MODULE_AUTHORED_HEAL_SLOTS``) so the champion-owned ledger is
+        # the single receipt.
+        q_rank = _rank(ability_damages, "Q")
+        q_heal = extract_named(
+            _ability(champion_data, "Q"), "Heal", q_rank, champion_stats
+        )
+        # One heal per Q cast: the module emits the initial hit at the
+        # cast boundary, then the bleed ticks and the recast share later
+        # timestamps, so the heal anchors to the cast's initial-hit event
+        # (the recast hits an already-bleeding champion the same cast).
+        q_events = _attributed_events(
+            damage_events, lambda source, _event: source == "Q"
+        )
+        q_event_by_time: dict[float, dict[str, Any]] = {}
+        for event in q_events:
+            q_event_by_time.setdefault(round(float(event.get("time", 0.0)), 6), event)
+        for cast_time in _cast_slot_times(cast_timeline, "Q"):
+            anchor = q_event_by_time.get(round(cast_time, 6))
+            if anchor is None:
+                continue
+            _heal_from_damage(
+                healing,
+                anchor,
+                q_heal,
+                "Darkin Daggers",
+                link_to_damage=False,
             )
 
     elif name == "Senna":
