@@ -1,0 +1,110 @@
+# Database schema (P6)
+
+The Flask app persists product state in PostgreSQL through SQLAlchemy 2.x
+(`src/db.py`).  Tables are created automatically on first use
+(`Base.metadata.create_all`), so there is no alembic migration step for the
+initial schema.  This document is the schema contract.
+
+## Connection
+
+| Setting | Meaning |
+| --- | --- |
+| `DATABASE_URL` | SQLAlchemy URL.  `postgres://` and `postgresql://` are normalized to `postgresql+psycopg://` (psycopg3 driver). |
+| unset `DATABASE_URL` | Local SQLite fallback at `sqlite:////tmp/lol-calculator-fallback.sqlite3`, so the app works without Postgres during development. |
+| `CACHE_TTL_SECONDS` | Result-cache TTL in seconds (default 86400, one day). |
+
+Timestamps are stored as **naive UTC**.  The postgres service in
+`docker-compose.yml` pins `TZ`/`PGTZ` to UTC so bound datetimes are never
+zone-shifted; API responses serialize timestamps as ISO-8601 with a `Z`
+suffix.
+
+## Models
+
+### `builds` — saved builds
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | integer PK | |
+| `champion` | varchar(100) | indexed |
+| `level` | integer | |
+| `role` | varchar(20) null | |
+| `items` | JSON | item-name list |
+| `item_options` | JSON | |
+| `ability_ranks` | JSON | |
+| `champion_options` | JSON | |
+| `enemies` | JSON | roster list |
+| `allies` | JSON | roster list |
+| `fight_params` | JSON | every remaining request key (boots, fight_mode, target stats, rotations, …) so a saved build reconstructs a full `/api/calculate` payload |
+| `created_at` | timestamp | |
+
+### `share_links` — public build shares
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | integer PK | |
+| `token` | varchar(64) | **unique**, URL-safe, generated server-side |
+| `build_id` | integer FK → `builds.id` | `ON DELETE CASCADE`, indexed |
+| `slug` | varchar(50) null | optional vanity slug |
+| `views` | integer | incremented atomically per `GET /api/share/<token>` |
+| `created_at` | timestamp | |
+
+### `cached_results` — /api/calculate + /api/bis result cache
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | integer PK | |
+| `cache_key` | varchar(64) | **unique**; sha256 of `namespace + "\x00" + canonical request JSON` |
+| `payload` | JSON | serialized endpoint response |
+| `created_at` | timestamp | |
+| `expires_at` | timestamp | `created_at + TTL`; expired rows are lazily deleted on lookup |
+
+Consulted only when `DATABASE_URL` is configured **and** the app is not in
+`TESTING`.  `/api/update-data` calls `cache_delete_all()` after a successful
+data refresh.
+
+### `validation_feedback` — validation loop observations
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | integer PK | |
+| `champion` | varchar(100) | indexed |
+| `loadout` | JSON | |
+| `expected` | JSON | |
+| `actual` | JSON | |
+| `source` | varchar(20) | `manual` \| `combat_log` \| `practice_tool` |
+| `matched` | boolean | |
+| `note` | text null | |
+| `created_at` | timestamp | |
+
+### `staleness_state` — per-patch staleness bookkeeping
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | integer PK | |
+| `patch` | varchar(20) | **unique** |
+| `payload` | JSON | |
+| `checked_at` | timestamp | |
+
+### `cache_counters` — shared cache hit/miss counters
+
+Single row (`id = 1`) updated atomically (`INSERT … ON CONFLICT DO UPDATE`)
+so every gunicorn worker reports the same totals for `/api/cache-status`.
+
+| Column | Type |
+| --- | --- |
+| `id` | integer PK |
+| `hits` | integer |
+| `misses` | integer |
+| `updated_at` | timestamp |
+
+## Endpoints
+
+| Endpoint | Behavior |
+| --- | --- |
+| `POST /api/builds` | save a build → `{"build_id": …}` (201) |
+| `GET /api/builds/<id>` | build payload or 404 |
+| `POST /api/share` | `{"build_id": …, "slug": …}` → `{"token": …, "url": "/api/share/<token>"}` (201) |
+| `GET /api/share/<token>` | build payload + `share` block; increments `views` |
+| `POST /api/feedback` | record validation feedback → `{"feedback_id": …}` (201) |
+| `GET /api/feedback?champion=&source=&limit=` | recent feedback, newest first (limit ≤ 200, default 50) |
+| `GET /api/cache-status` | `{hits, misses, cached_entries, cache_enabled, database_configured, database}` |

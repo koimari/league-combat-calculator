@@ -110,6 +110,22 @@ from calculator.pipeline import (
     run_fight,
 )
 from rate_limit import TokenBucketStore
+from sqlalchemy.exc import SQLAlchemyError
+from db import (
+    add_feedback,
+    cache_delete_all,
+    cache_get,
+    cache_set,
+    cache_stats,
+    create_share_link,
+    get_build,
+    get_share_link,
+    is_configured,
+    is_postgres,
+    list_feedback,
+    save_build,
+    stable_cache_key,
+)
 
 app = Flask(
     __name__,
@@ -339,6 +355,16 @@ def _enforce_authentication():
         return None
     next_path = request.full_path.rstrip("?") if request.full_path else "/"
     return redirect(url_for("auth_login", next=next_path))
+
+
+def _result_cache_enabled() -> bool:
+    """Result caching is an explicit-DATABASE_URL feature, bypassed in tests.
+
+    /api/calculate and /api/bis consult CachedResult only when the operator
+    configured a database; the local SQLite fallback and the test suite keep
+    computing fresh results so a misconfigured cache can never hide a bug.
+    """
+    return not app.config.get("TESTING") and is_configured()
 
 
 def _spend_rate_limit(scope: str):
@@ -1427,6 +1453,13 @@ def api_calculate():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
+    cache_key = None
+    if _result_cache_enabled():
+        cache_key = stable_cache_key("calculate", data)
+        cached_payload = cache_get(cache_key)
+        if cached_payload is not None:
+            return jsonify(cached_payload)
+
     try:
         champion_data = _load_public_champion(champion_name)
     except LookupError as exc:
@@ -1568,6 +1601,8 @@ def api_calculate():
                 enemies=[],
                 allies=allies,
             )
+        if cache_key is not None:
+            cache_set(cache_key, response)
         return jsonify(response)
 
     target_results = []
@@ -1691,6 +1726,8 @@ def api_calculate():
         _add_comparison_curve(
             response, champion_data, level, items, fight_params, enemies
         )
+    if cache_key is not None:
+        cache_set(cache_key, response)
     return jsonify(response)
 
 
@@ -2128,6 +2165,13 @@ def api_bis():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
+    cache_key = None
+    if _result_cache_enabled():
+        cache_key = stable_cache_key("bis", data)
+        cached_payload = cache_get(cache_key)
+        if cached_payload is not None:
+            return jsonify(cached_payload)
+
     try:
         main_loadout = main_request.resolve()
         # Validate the focused main request against the same champion-specific
@@ -2392,78 +2436,77 @@ def api_bis():
     coverage_complete = (
         bool(certified_ranked) and not partial_ranked and not blocking_withheld
     )
-    return jsonify(
-        {
-            "objective": objective_meta,
-            "defensive_effects": {
-                "certified": _BIS_CERTIFIED_DEFENSIVE_EFFECTS,
-                "withheld": _BIS_UNMODELED_DEFENSIVE_EFFECTS,
-            },
-            "subject_team": subject_team,
-            "subject_index": subject_index,
-            "slot_index": slot_index,
-            "slot_kind": slot_kind,
-            "candidate_scope": (
-                f"role-tagged:{role}"
-                if role and slot_kind != "boots"
-                else "all-supported"
-            ),
-            # Return every evaluated receipt, not a top-12 preview.  The
-            # backend acceptance contract requires per-candidate coverage so
-            # omitted coarse builds cannot be mistaken for a complete BIS
-            # search.  The client may still choose how many rows to render.
-            "candidates": certified_ranked,
-            "partial_candidates": partial_ranked,
-            "candidate_count": candidate_count,
-            "certified_candidate_count": len(certified_ranked),
-            "partial_candidate_count": len(partial_ranked),
-            "withheld_candidate_count": len(withheld_candidates),
-            "withheld_candidates": withheld_candidates,
-            "coverage": {
-                "complete": coverage_complete,
-                "certification": (
-                    "bis_event_order_certified_with_exclusions"
-                    if coverage_complete and timing_excluded
-                    else (
-                        "bis_event_order_certified"
-                        if coverage_complete
-                        else (
-                            "bis_certified_subset_not_exhaustive"
-                            if certified_ranked
-                            else "bis_no_certified_candidates"
-                        )
-                    )
-                ),
-                "note": (
-                    "Every candidate has complete sourced event order."
+    result = {
+        "objective": objective_meta,
+        "defensive_effects": {
+            "certified": _BIS_CERTIFIED_DEFENSIVE_EFFECTS,
+            "withheld": _BIS_UNMODELED_DEFENSIVE_EFFECTS,
+        },
+        "subject_team": subject_team,
+        "subject_index": subject_index,
+        "slot_index": slot_index,
+        "slot_kind": slot_kind,
+        "candidate_scope": (
+            f"role-tagged:{role}" if role and slot_kind != "boots" else "all-supported"
+        ),
+        # Return every evaluated receipt, not a top-12 preview.  The
+        # backend acceptance contract requires per-candidate coverage so
+        # omitted coarse builds cannot be mistaken for a complete BIS
+        # search.  The client may still choose how many rows to render.
+        "candidates": certified_ranked,
+        "partial_candidates": partial_ranked,
+        "candidate_count": candidate_count,
+        "certified_candidate_count": len(certified_ranked),
+        "partial_candidate_count": len(partial_ranked),
+        "withheld_candidate_count": len(withheld_candidates),
+        "withheld_candidates": withheld_candidates,
+        "coverage": {
+            "complete": coverage_complete,
+            "certification": (
+                "bis_event_order_certified_with_exclusions"
+                if coverage_complete and timing_excluded
+                else (
+                    "bis_event_order_certified"
                     if coverage_complete
                     else (
-                        (
-                            "Certified candidates are available, but exhaustive "
-                            "BIS is withheld because one or more candidates were "
-                            "not fully evaluated or still have partial event order."
-                        )
+                        "bis_certified_subset_not_exhaustive"
                         if certified_ranked
-                        else (
-                            "No candidate has complete sourced event order; BIS "
-                            "is withheld and only partial or pre-timeline receipts "
-                            "are shown."
-                        )
+                        else "bis_no_certified_candidates"
                     )
                 )
-                + (
-                    f" {len(timing_excluded)} candidate timing receipt(s) were "
-                    "excluded before ranking."
-                    if timing_excluded
-                    else ""
+            ),
+            "note": (
+                "Every candidate has complete sourced event order."
+                if coverage_complete
+                else (
+                    (
+                        "Certified candidates are available, but exhaustive "
+                        "BIS is withheld because one or more candidates were "
+                        "not fully evaluated or still have partial event order."
+                    )
+                    if certified_ranked
+                    else (
+                        "No candidate has complete sourced event order; BIS "
+                        "is withheld and only partial or pre-timeline receipts "
+                        "are shown."
+                    )
                 )
-                + (f" {target_coverage_note}" if target_coverage_note else ""),
-            },
-            "target_coverage_filtered": len(target_coverage_filtered),
-            "target_coverage_note": target_coverage_note,
-            "timing_excluded_candidate_count": len(timing_excluded),
-        }
-    )
+            )
+            + (
+                f" {len(timing_excluded)} candidate timing receipt(s) were "
+                "excluded before ranking."
+                if timing_excluded
+                else ""
+            )
+            + (f" {target_coverage_note}" if target_coverage_note else ""),
+        },
+        "target_coverage_filtered": len(target_coverage_filtered),
+        "target_coverage_note": target_coverage_note,
+        "timing_excluded_candidate_count": len(timing_excluded),
+    }
+    if cache_key is not None:
+        cache_set(cache_key, result)
+    return jsonify(result)
 
 
 @app.route("/api/optimize", methods=["POST"])
@@ -2660,6 +2703,181 @@ def api_optimize():
     return jsonify(result)
 
 
+@app.route("/api/builds", methods=["POST"])
+def api_save_build():
+    """Persist one build scenario for later reload or sharing.
+
+    The request mirrors the /api/calculate payload.  Dedicated columns take
+    champion/level/role/items/item_options/ability_ranks/champion_options/
+    enemies/allies; every remaining key (boots, fight_mode, target stats,
+    rotations, ...) is preserved losslessly in ``fight_params`` so the saved
+    build can be reconstructed into a full calculate request.
+    """
+    try:
+        data = _json_object()
+        _request_string(data, "champion", required=True)
+        _request_int(data, "level", 1, 1, MAX_LEVEL)
+        role = _request_string(data, "role")
+        items = data.get("items", [])
+        if not isinstance(items, list) or not all(
+            isinstance(entry, str) and 0 < len(entry.strip()) <= 100 for entry in items
+        ):
+            raise ValueError("items must be a list of item names")
+        if len(items) > 20:
+            raise ValueError("items may contain at most 20 entries")
+        for key in ("item_options", "ability_ranks", "champion_options"):
+            value = data.get(key, {})
+            if not isinstance(value, dict):
+                raise ValueError(f"{key} must be a JSON object")
+        for key in ("enemies", "allies"):
+            value = data.get(key, [])
+            if not isinstance(value, list):
+                raise ValueError(f"{key} must be a list")
+        if role and len(role) > 20:
+            raise ValueError("role must be at most 20 characters")
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    try:
+        build_id = save_build(data)
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to save build")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    return jsonify({"build_id": build_id}), 201
+
+
+@app.route("/api/builds/<int:build_id>")
+def api_get_build(build_id: int):
+    """Return one saved build payload, or 404."""
+    try:
+        build = get_build(build_id)
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to load build")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    if build is None:
+        return jsonify({"error": f"Build {build_id} not found"}), 404
+    return jsonify(build)
+
+
+@app.route("/api/share", methods=["POST"])
+def api_create_share():
+    """Create a public share link for a saved build."""
+    try:
+        data = _json_object()
+        build_id = _request_int(data, "build_id", 0, 1, 1_000_000_000)
+        slug = _request_string(data, "slug")
+        if slug and not all(
+            character.isalnum() or character in "-_" for character in slug
+        ):
+            raise ValueError(
+                "slug may contain only letters, digits, dashes, underscores"
+            )
+        if len(slug) > 50:
+            raise ValueError("slug must be at most 50 characters")
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    try:
+        share = create_share_link(build_id, slug=slug or None)
+    except KeyError:
+        return jsonify({"error": f"Build {build_id} not found"}), 404
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to create share link")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    return jsonify(share), 201
+
+
+@app.route("/api/share/<token>")
+def api_get_share(token: str):
+    """Resolve a share token to its build payload; counts one view."""
+    if not token or len(token) > 100:
+        return jsonify({"error": "Invalid share token"}), 404
+    try:
+        payload = get_share_link(token, increment_views=True)
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to resolve share link")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    if payload is None:
+        return jsonify({"error": "Share link not found"}), 404
+    return jsonify(payload)
+
+
+@app.route("/api/feedback", methods=["POST"])
+def api_add_feedback():
+    """Record one validation observation for the champion-module loop."""
+    try:
+        data = _json_object()
+        champion = _request_string(data, "champion", required=True)
+        source = _request_string(data, "source", "manual")
+        if source not in {"manual", "combat_log", "practice_tool"}:
+            raise ValueError("source must be manual, combat_log, or practice_tool")
+        for key in ("loadout", "expected", "actual"):
+            value = data.get(key, {})
+            if not isinstance(value, dict):
+                raise ValueError(f"{key} must be a JSON object")
+        matched = data.get("matched", False)
+        if not isinstance(matched, bool):
+            raise ValueError("matched must be true or false")
+        note = data.get("note")
+        if note is not None:
+            if not isinstance(note, str):
+                raise ValueError("note must be a string")
+            note = note.strip()
+            if len(note) > 2000:
+                raise ValueError("note must be at most 2000 characters")
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    try:
+        feedback_id = add_feedback(
+            champion=champion,
+            loadout=data.get("loadout", {}),
+            expected=data.get("expected", {}),
+            actual=data.get("actual", {}),
+            source=source,
+            matched=matched,
+            note=note,
+        )
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to record feedback")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    return jsonify({"feedback_id": feedback_id}), 201
+
+
+@app.route("/api/feedback")
+def api_list_feedback():
+    """Return recent validation feedback for the review loop."""
+    champion = request.args.get("champion", "").strip() or None
+    source = request.args.get("source", "").strip() or None
+    try:
+        limit = int(request.args.get("limit", "50"))
+        rows = list_feedback(champion=champion, source=source, limit=limit)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to list feedback")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    return jsonify({"feedback": rows, "count": len(rows)})
+
+
+@app.route("/api/cache-status")
+def api_cache_status():
+    """Cache hit/miss counters plus live entry count."""
+    try:
+        stats = cache_stats()
+    except SQLAlchemyError as exc:  # surface DB failure to the client
+        app.logger.exception("Failed to read cache status")
+        return jsonify({"error": f"Database unavailable: {exc}"}), 503
+    return jsonify(
+        {
+            "cache_enabled": _result_cache_enabled(),
+            "database_configured": is_configured(),
+            "database": "postgresql" if is_postgres() else "sqlite",
+            **stats,
+        }
+    )
+
+
 @app.route("/api/update-data")
 def api_update_data():
     """Stream data update progress via Server-Sent Events. Dev-only:
@@ -2677,6 +2895,9 @@ def api_update_data():
         # registries so effects reflect the newly fetched patch data.
         refresh_item_effects()
         refresh_rune_effects()
+        # Every cached calculation was produced against the previous data
+        # snapshot; drop the results so the next request recomputes.
+        cache_delete_all()
 
     return Response(generate(), mimetype="text/event-stream")
 

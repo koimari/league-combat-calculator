@@ -1,0 +1,35 @@
+# Local development database for the LoL calculator (P6).
+#
+# The Flask app reads DATABASE_URL at first database use.  Point it here with:
+#
+#     DATABASE_URL=postgresql://lcc:lcc@localhost:5432/lcc
+#
+# (src/db.py normalizes postgres:// and postgresql:// URLs onto the psycopg3
+# driver automatically.)  Tables are created on first use, so no migration
+# step is needed for local development.
+#
+# Start with:  docker compose up -d
+# Inspect:     docker compose exec db psql -U lcc -d lcc
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lcc
+      POSTGRES_PASSWORD: lcc
+      POSTGRES_DB: lcc
+      # All timestamps are stored as naive UTC; pin the server session zone
+      # so bound datetime parameters are never interpreted in a local zone.
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      - lcc_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lcc -d lcc"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  lcc_pgdata:
