@@ -57,7 +57,11 @@ from calculator.item_coverage import (
     target_build_coverage,
 )
 from calculator.ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
-from calculator.loadout_rules import role_scoped_shop_items, validate_resolved_loadout
+from calculator.loadout_rules import (
+    role_quest_legal_items,
+    role_scoped_shop_items,
+    validate_resolved_loadout,
+)
 from calculator.defensive_effects import resolve_starting_defenses
 from calculator.participant_timeline import (
     build_participant_timeline,
@@ -1823,6 +1827,7 @@ def _bis_candidate_pool(
     *,
     boots_tier: int,
     role: str = "",
+    role_quest_complete: bool = False,
 ) -> list[dict]:
     legal = (
         get_eligible_boots(tier=boots_tier)
@@ -1835,6 +1840,10 @@ def _bis_candidate_pool(
         if slot_kind == "boots"
         else _role_scoped_bis_candidates(supported, role=role)
     )
+    if slot_kind != "boots":
+        scoped = role_quest_legal_items(
+            scoped, role=role, role_quest_complete=role_quest_complete
+        )
     return sorted(scoped, key=lambda item: item.get("name", ""))
 
 
@@ -2231,7 +2240,12 @@ def api_bis():
         role = subject_base.role
         if role == "mid" and subject_base.role_quest_complete:
             boots_tier = 3
-        candidates = _bis_candidate_pool(slot_kind, boots_tier=boots_tier, role=role)
+        candidates = _bis_candidate_pool(
+            slot_kind,
+            boots_tier=boots_tier,
+            role=role,
+            role_quest_complete=subject_base.role_quest_complete,
+        )
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404

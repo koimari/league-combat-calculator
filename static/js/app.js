@@ -5029,6 +5029,11 @@ function loadSharedBuildIntoAnalyst(payload) {
   state.fight.aaUptimeMode = fightParams.auto_attack_uptime_mode || "calculated";
   state.fight.aaUptime = Number(fightParams.auto_attack_uptime || 0);
   engine.responses = null;
+  // A shared build was authored under one role-quest state; re-normalize the
+  // restored quest boot and support items so an illegal stage never renders
+  // in the editor.  The backend remains the authority for the tier contract.
+  normalizeAttackerBootsForRole();
+  normalizeAttackerSupportItemsForRole();
   render();
 }
 
