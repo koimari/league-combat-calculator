@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from .item_effects import (
+    grouped_sustain_stat_percent,
     input_option_retribution_bonus_ad,
     input_option_crit_chance,
     input_option_stat_bonuses,
@@ -530,7 +531,7 @@ def calculate_total_stats(
         "base_health_regen_per_five": base_health_regen_per_five,
         "health_regen_per_five": health_regen_per_five,
         "health_regen_per_second": health_regen_per_second,
-        "lifesteal_percent": total_item_stats["lifesteal_percent"],
+        "lifesteal_percent": grouped_sustain_stat_percent(items, "lifesteal_percent"),
         "omnivamp_percent": total_item_stats["omnivamp_percent"]
         + bonuses.bonus_omnivamp,
         "heal_and_shield_power_percent": total_item_stats[
