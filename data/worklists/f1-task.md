@@ -1,0 +1,15 @@
+You are fixing the BIS + metric bugs reported by the product owner (F1) in the Scryglass calculator.
+
+YOUR WORKTREE: /Users/river/Projects/lcc-f1 (branch codex/f1-bis-metrics). Python: /Users/river/Projects/league-combat-calculator-audit/.venv/bin/python. Start the app with: .venv/bin/python -m flask --app src.app run --port 5000.
+
+THE REPORTED BUGS (all verified in the code, reproduce them in the browser before/after):
+1. **'Find Best Item for a Slot' only shows for the first slot.** In static/js/app.js, `itemSlot(path, id, compact, allowBis=false)` — allowBis is only true for attacker build A slot 0. Fix: render the BIS trigger for EVERY attacker build A/B item slot, and for every ENEMY and ALLY roster item slot (the backend /api/bis already accepts subject_team=ally/enemy + subject_index + slot_index — wire the roster cards to call it). Disable it when the slot has no champion/role context, with a tooltip.
+2. **BIS recommends the same best item already present in slot 1.** The candidate pool includes the currently equipped item. Fix in src/calculator/optimizer.py (or the /api/bis candidate build): exclude the item currently in the target slot from the candidates for that slot (while still allowing other slots' items). Test: with item X in slot 0, /api/bis for slot 0 must NOT recommend X; moving X to slot 3 makes it a candidate for slot 0 again.
+3. **Kill time is incorrectly 0s when both builds are enough to kill.** The comparison panel shows '0 s' when the build kills within the window; when both A and B kill, show the REAL kill time for each (the actual time-to-death from the timeline), and when only one kills, keep the comparison but never display 0s as if no time elapsed. Also, when a build does NOT kill, show the enemy HP remaining (or '—').
+4. **Show TDD even if above the enemy's effective HP, and show the OVERKILL damage.** The main output shows 2,087 TDD for an enemy with ~1.5k HP with no overkill label. Fix: keep TDD as-is, ADD an 'Overkill' figure (TDD − enemy effective HP, when positive) next to it, and surface enemy eHP in the result. Add the overkill value to the /api/calculate combat response if not present (compute = total_damage − health_damage of the target, or via the participant rows).
+
+YOU OWN: static/js/app.js (BIS/roster/metrics-display paths only — the file was just redesigned, make additive/careful), src/calculator/optimizer.py, src/app.py (roster BIS wiring + overkill in response), tests/test_f1_bis_metrics.py (new). DO NOT touch src/calculator/damage.py rotation logic (another agent owns it).
+
+GATES: pytest -q full; pylint src/ --fail-under=9; black --check src/ tests/; node --check static/js/app.js; git diff --check; golden — re-capture + explain if any fight totals change (overkill is additive; exclusion changes BIS only).
+COMMIT "fix(F1): BIS on all slots + exclude equipped + roster BIS + kill-time/overkill" and PUSH origin/codex/f1-bis-metrics. Do NOT merge.
+Reply to parent: per bug — the fix + test evidence (browser before/after + API), commit SHA.
