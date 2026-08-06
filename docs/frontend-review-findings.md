@@ -296,4 +296,6 @@ See `docs/frontend-design.md` for the design; the implementation:
    rendered into a hidden container. (A3 extension)
 10. Shared-link recipients now get the read-only build card above the fold
     (the interactive quick form collapses in ?share= mode). (A1 extension)
-9. Added `tests/test_f0_frontend.py` pinning the above.
+11. Added `tests/test_f0_frontend.py` (20 tests) pinning the above, and
+    updated the stale frontend-contract pins in `test_app.py` /
+    `test_issues_78.py` that referenced the removed legacy DOM.
