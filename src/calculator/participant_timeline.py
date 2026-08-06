@@ -2246,6 +2246,18 @@ def _simulate_survival(
         revive_delay = max(0.0, float(getattr(defenses, "revive_delay", 0.0) or 0.0))
         if revive_amount <= 0.0 or revive_delay <= 0.0:
             continue
+        # E8d follow-up: the revive source is the champion's own passive when
+        # the module declares one (Anivia Rebirth, Zac Cell Division, Zilean
+        # Chronoshift); Guardian Angel remains the item-source label.
+        revive_source = (
+            str(getattr(defenses, "revive_source", "") or "")
+            or "Guardian Angel (Rebirth)"
+        )
+        revive_key = (
+            f"revive_{revive_source.replace(' ', '_')}"
+            if revive_source != "Guardian Angel (Rebirth)"
+            else "revive_Guardian Angel"
+        )
         candidates: list[dict[str, Any]] = []
         for index, event in enumerate(events):
             if str(event.get("kind", "")) in {
@@ -2265,8 +2277,8 @@ def _simulate_survival(
                     "time": event_time + revive_delay,
                     "kind": "revive",
                     "amount": revive_amount,
-                    "source": "Guardian Angel (Rebirth)",
-                    "source_key": "revive_Guardian Angel",
+                    "source": revive_source,
+                    "source_key": revive_key,
                     "sequence": int(event.get("sequence", index) or index),
                     "_revive_candidate": True,
                 }

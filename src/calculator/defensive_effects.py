@@ -64,6 +64,7 @@ class StartingDefenses:
     revive_health_amount: float = 0.0
     revive_delay: float = 0.0
     revive_cooldown: float = 0.0
+    revive_source: str = ""
     # Death's Dance ordered defenses.  The participant timeline consumes
     # these fields only when the item is present; zero is the fail-closed
     # absence state for every other loadout.
@@ -491,6 +492,15 @@ def _galio_starting_defenses(level: int, maximum_health: float) -> StartingDefen
     )
 
 
+# E8d follow-up: sourced revive-source labels for champions whose modules
+# declare ``starting_revive_defense``; used by the ledger's revive receipts.
+_CHAMPION_REVIVE_SOURCES = {
+    "Anivia": "Rebirth",
+    "Zac": "Cell Division",
+    "Zilean": "Chronoshift",
+}
+
+
 def _champion_starting_revive(
     champion_name: str, level: int, stats: dict[str, float]
 ) -> dict[str, float]:
@@ -534,6 +544,7 @@ def resolve_starting_defenses(
             revive_health_amount=float(revive_fields.get("revive_health_amount", 0.0)),
             revive_delay=float(revive_fields.get("revive_delay", 0.0)),
             revive_cooldown=float(revive_fields.get("revive_cooldown", 0.0)),
+            revive_source=_CHAMPION_REVIVE_SOURCES.get(champion_name, ""),
             coverage="modeled_starting_passive",
         )
 
@@ -573,6 +584,7 @@ def resolve_starting_defenses(
     revive_health_amount = champion_defenses.revive_health_amount
     revive_delay = champion_defenses.revive_delay
     revive_cooldown = champion_defenses.revive_cooldown
+    revive_source = champion_defenses.revive_source
     damage_deferral_fraction = champion_defenses.damage_deferral_fraction
     damage_deferral_duration = champion_defenses.damage_deferral_duration
     damage_deferral_ticks = champion_defenses.damage_deferral_ticks
@@ -770,6 +782,10 @@ def resolve_starting_defenses(
         revive_cooldown = float(
             required_effect_value("Guardian Angel", "revive_cooldown")
         )
+        # The item source stays the item label unless a champion passive
+        # already claimed the revive (Anivia/Zac/Zilean + GA both present).
+        if not revive_source:
+            revive_source = "Guardian Angel (Rebirth)"
         assumptions.append(
             "Guardian Angel's Rebirth is ready and restores 50% base health "
             "after four seconds of sourced resurrection stasis."
@@ -958,6 +974,7 @@ def resolve_starting_defenses(
                 revive_health_amount=revive_health_amount,
                 revive_delay=revive_delay,
                 revive_cooldown=revive_cooldown,
+                revive_source=_CHAMPION_REVIVE_SOURCES.get(champion_name, ""),
                 coverage="modeled_starting_passive",
             )
         return StartingDefenses()
@@ -995,6 +1012,7 @@ def resolve_starting_defenses(
         revive_health_amount=revive_health_amount,
         revive_delay=revive_delay,
         revive_cooldown=revive_cooldown,
+        revive_source=revive_source,
         damage_deferral_fraction=damage_deferral_fraction,
         damage_deferral_duration=damage_deferral_duration,
         damage_deferral_ticks=damage_deferral_ticks,
