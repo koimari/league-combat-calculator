@@ -17,6 +17,7 @@ from .champions import (
     get_unsupported_fight_mode_reason,
     parse_champion_abilities,
 )
+from .rotation_resolver import build_rotation_receipt, resolve_cast_order
 from .champions.skill_orders import get_ability_rank
 from .damage import (
     FightConfig,
@@ -848,12 +849,30 @@ def run_fight(
     # as the champion's stats so the UI panel shows the fight-effective
     # values, not the pre-buff base+items snapshot.
     fight_stats = dict(champion_stats)
-    # A champion may declare its own rotation order (Jayce transforms
-    # before he casts). An explicit caller-supplied order still wins.
+    # F2: the optimal event-order engine derives the fight's cast order
+    # from the atomized ability data + the per-champion combo table (see
+    # rotation_resolver.py) — e.g. Cassiopeia opens with Q so the poison
+    # is up for E-spam, Varus puts the Blight detonator Q first, Aatrox
+    # casts R before its AD-amped damage. An explicit caller-supplied
+    # order still wins; champions with no combo signal fall back to their
+    # certified module order, then the engine default.
+    resolved_rotation_rule = None
+    resolved_certified_order = None
+    resolved_user_order = None
     if params.cast_order is None:
-        declared = get_champion_cast_order(champion_data.get("name", ""))
-        if declared is not None:
-            params = replace(params, cast_order=declared)
+        declared_order, combo_rule = resolve_cast_order(
+            champion_data.get("name", ""), ability_damages
+        )
+        certified_order = None
+        if combo_rule is None:
+            certified_order = get_champion_cast_order(champion_data.get("name", ""))
+            if certified_order is not None:
+                declared_order = list(certified_order)
+        params = replace(params, cast_order=declared_order)
+        resolved_rotation_rule = combo_rule
+        resolved_certified_order = certified_order
+    else:
+        resolved_user_order = list(params.cast_order)
     resolved_uptime, auto_attack_policy = resolve_auto_attack_policy(
         champion_data,
         ability_damages,
@@ -916,6 +935,19 @@ def run_fight(
         item_options=params.item_options,
     )
     result["champion_stats"] = fight_stats
+    # F2 rotation receipt: the optimal order + WHY it is optimal, for the
+    # event-order panel. ``order`` is the engine's actual cooldown-aware
+    # cast sequence; ``rationale`` explains the combo.
+    result["rotation"] = build_rotation_receipt(
+        champion_data.get("name", ""),
+        cast_order=list(params.cast_order or []),
+        cast_timeline=list(result.get("cast_timeline", [])),
+        rule=resolved_rotation_rule,
+        certified_order=(
+            resolved_certified_order if resolved_rotation_rule is None else None
+        ),
+        user_order=resolved_user_order,
+    )
     result["auto_attack_policy"] = auto_attack_policy
     # Every stateful item shares one typed, inspectable receipt.  The receipt
     # is descriptive metadata over the same accessors the engine consumed;

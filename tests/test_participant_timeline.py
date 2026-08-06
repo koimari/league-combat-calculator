@@ -425,9 +425,11 @@ def test_sundered_sky_heal_uses_live_missing_health_in_both_walks():
     assert heal["raw_amount"] > heal["amount"]
     # Ahri's Essence Theft passive heal (95, 20% AP) lands first at t=0,
     # so the item heal's missing-health component re-prices from the
-    # already-healed live health: 118.0 before the E9-2 passive fix, 112.3
-    # with it.
-    assert heal["raw_amount"] == pytest.approx(112.3)
+    # already-healed live health: 118.0 before the E9-2 passive fix,
+    # 112.3 with it.  F2: the enemy Annie now opens with her optimal
+    # E (shield) -> R burst, which shifts her damage timing and leaves
+    # Ahri with less missing health at the heal: 121.6.
+    assert heal["raw_amount"] == pytest.approx(121.6)
     assert fast["participants"] == legacy["participants"]
     assert fast["breakdown"] == legacy["breakdown"]
 
