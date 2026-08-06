@@ -1,4 +1,9 @@
-"""Nunu & Willump — CP10.5 full-entry-reviewed packet module."""
+"""Nunu & Willump — CP10.5 full-entry-reviewed packet module.
+
+E2 DoT fix: E (Snowball Barrage) prices the 3-snowball volley from the
+per-hit row (packet_module _PACKET_TICK_FIXES overrides the wrong
+Snowbound-root row the pinned packet had selected).
+"""
 
 from .reviewed_batch_05 import build_batch_module
 

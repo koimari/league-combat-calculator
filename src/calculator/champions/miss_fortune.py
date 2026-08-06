@@ -1,4 +1,8 @@
-"""Miss Fortune — CP10.4 full-entry-reviewed packet module."""
+"""Miss Fortune — CP10.4 full-entry-reviewed packet module.
+
+E2 DoT fix: E (Make It Rain) prices 8 sourced 0.25s ticks (packet_module
+_PACKET_TICK_FIXES).
+"""
 
 from .reviewed_batch_04 import build_batch_module
 
