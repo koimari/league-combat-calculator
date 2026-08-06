@@ -277,6 +277,9 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Yorick",
         "Udyr",
         "Yuumi",
+        "Morgana",
+        "Talon",
+        "Nunu & Willump",
     }
 )
 
@@ -1697,5 +1700,74 @@ def derive_self_healing(
                             "actor_wide": True,
                         }
                     )
+
+    elif name == "Morgana":
+        # Soul Siphon: "heals herself for 18% of the post-mitigation
+        # damage dealt by her abilities against champions, large
+        # minions, and medium and large monsters" (wiki P).  In a
+        # champion duel every Q/W/R damage event is ability damage
+        # against the champion target (W's storm ticks included); E is
+        # a shield and deals no damage.
+        for event in damage_events:
+            if _event_source(event) not in {"Q", "W", "R"}:
+                continue
+            _heal_from_damage(
+                healing,
+                event,
+                0.18 * max(0.0, float(event.get("damage", 0.0))),
+                "Soul Siphon",
+            )
+
+    elif name == "Talon":
+        # Noxian Diplomacy: "If Noxian Diplomacy kills the target, Talon
+        # heals for 9 : 60.41 (based on level) and the ability's
+        # cooldown is reduced by 50%" (wiki Q effect[1]).  The heal is
+        # a per-LEVEL flat (20 values, independent of Q rank); the kill
+        # condition is state the outgoing ledger cannot identify (no
+        # killing-blow marker), so the sourced flat heal is priced once
+        # per Q cast — exact for a 1v1 that ends on a Q cast, an
+        # overstatement of at most one heal per extra Q cast otherwise.
+        # The 50% cooldown refund is a cooldown-state rider not modeled.
+        level = max(1, int(champion_stats.get("level", 18) or 18))
+        heal = _leveling_value(_ability(champion_data, "Q"), "Heal", level)
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "Q"
+        ):
+            _heal_from_damage(healing, event, heal, "Noxian Diplomacy")
+
+    elif name == "Nunu & Willump":
+        # Consume against a champion heals for the Base Champion Heal
+        # (39-111 + 54% AP + 6% bonus health), increased by 50% while
+        # Willump is below 50% maximum health (the wiki's Empowered
+        # Champion Heal row is exactly 1.5x the base row at every
+        # rank).  The empowerment is a live health-ratio formula
+        # re-priced by the participant ledger at the heal timestamp
+        # (the Darius missing-health pattern).
+        q = _ability(champion_data, "Q")
+        q_rank = _rank(ability_damages, "Q")
+        base = extract_named(q, "Base Champion Heal", q_rank, champion_stats, {})
+
+        def consume_heal(
+            current_health: float,
+            maximum_health: float,
+            base_amount: float = base,
+        ) -> float:
+            if maximum_health > 0.0 and current_health < maximum_health * 0.5:
+                return base_amount * 1.5
+            return base_amount
+
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "Q"
+        ):
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": consume_heal,
+                    "source": "Consume",
+                    "kind": "champion_ability",
+                    **_trigger_fields(event),
+                }
+            )
 
     return sorted(healing, key=lambda event: (event["time"], event["source"]))

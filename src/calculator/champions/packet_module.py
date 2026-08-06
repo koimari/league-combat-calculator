@@ -129,6 +129,19 @@ _SINGLE_HIT_EVENT_PACKETS = {
 #   ``dot_duration``  — total seconds of zone/channel damage past the cast
 #       (keeps item burns refreshed, Cassiopeia's Q/W convention).
 _PACKET_TICK_FIXES: dict[tuple[str, str], dict[str, Any]] = {
+    # Lucian R — The Culling: "channels for up to 3 seconds, rapidly
+    # firing up to 22 shots in the target direction over the duration"
+    # (wiki prose; the cache carries no Total row).  The packet priced
+    # ONE shot of "Physical Damage Per Shot"; the fix prices all 22 at
+    # the uniform 3.0/22 cadence of the sourced channel.  The wiki's
+    # crit-chance-scaled extra shots ("+ 0 : 6 (based on critical
+    # strike chance)") are zero at 0% crit and not modeled.
+    ("Lucian", "The Culling"): {
+        "count": 22,
+        "first_tick": 0.0,
+        "tick_interval": 0.1364,
+        "dot_duration": 3.0,
+    },
     # Miss Fortune E — "for 2 seconds ... dealing magic damage every 0.25
     # seconds": 8 ticks; "Magic Damage Per Tick" x8 == "Total Magic Damage".
     ("Miss Fortune", "Make It Rain"): {
@@ -237,6 +250,17 @@ _PACKET_TICK_FIXES: dict[tuple[str, str], dict[str, Any]] = {
         "tick_interval": 0.5,
         "dot_duration": 15.0,
     },
+    # Rumble R — The Equalizer: enemies hit by the impact or inside the
+    # field are marked Burning, "taking magic damage every 0.25 seconds
+    # ... for up to 5 seconds, for a total of 20 instances of its
+    # effect"; "Magic Damage per Tick" x20 == "Maximum Magic Damage".
+    # The packet priced ONE tick (30/50/70 + 8.75% AP).
+    ("Rumble", "The Equalizer"): {
+        "count": 20,
+        "first_tick": 0.25,
+        "tick_interval": 0.25,
+        "dot_duration": 5.0,
+    },
     # Samira W — "slashes twice during Blade Whirl"; "the first slash
     # occurs immediately and the second one occurs after the duration"
     # (0.75s spin): "Physical Damage per Hit" x2 == "Total Physical
@@ -256,6 +280,21 @@ _PACKET_TICK_FIXES: dict[tuple[str, str], dict[str, Any]] = {
         "first_tick": 0.0,
         "tick_interval": 0.2,
         "dot_duration": 2.013,
+    },
+    # Teemo E — Toxic Shot: the on-hit packet ("Magic Damage On-Hit")
+    # plus the poison it inflicts, "magic damage every second over 4
+    # seconds": 4 ticks of "Magic Damage per Tick" == "Total Poison
+    # Damage" at every rank.  The packet priced only the on-hit.
+    ("Teemo", "Toxic Shot"): {
+        "initial_tick": 0.0,
+        "extra_part": {
+            "attribute": "Magic Damage per Tick",
+            "count": 4,
+            "damage_type": "magic",
+            "first_tick": 1.0,
+            "tick_interval": 1.0,
+            "dot_duration": 4.0,
+        },
     },
 }
 
