@@ -58,14 +58,7 @@
    "pure damage",
    "ignores armor",
    "ignores magic resistance",
-   "ignore damage reduction",
-   "Smite",
-   "Ignite",
-   "Vayne Silver Bolts",
-   "Olaf Reckless Swing",
-   "invulnerability",
-   "spell shield",
-   "shield"
+   "ignore damage reduction"
   ],
   "description": "Damage type not reduced by resistances or almost all damage-reduction effects; still respects shields and invulnerability, is blocked by spell shields, and is affected by most damage amplifiers (except jungle-item/Smite/Ignite true damage). Not to be confused with raw damage.",
   "wiki_pages": [

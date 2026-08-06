@@ -694,13 +694,8 @@
   "name": "Flow",
   "keywords": [
    "flow",
-   "wind",
-   "Way of the Wanderer",
-   "Way of the Hunter",
-   "Yasuo",
-   "Yone",
-   "shield",
-   "blue bar"
+   "flow resource",
+   "wind resource"
   ],
   "description": "Yasuo's and Yone's resource (internal index 11, 'wind'): generated while moving; at maximum it is consumed and converted into a shield upon taking damage from champions or monsters.",
   "wiki_pages": [
@@ -790,26 +785,7 @@
   "atom_id": "stack-transform-summon-resource.internal-resource-index",
   "family": "stack-transform-summon-resource",
   "name": "Internal (engine) resource types",
-  "keywords": [
-   "internal",
-   "engine",
-   "resource index",
-   "mana",
-   "energy",
-   "none",
-   "shield",
-   "battlefury",
-   "dragonfury",
-   "rage",
-   "heat",
-   "gnarfury",
-   "ferocity",
-   "bloodwell",
-   "wind",
-   "ammo",
-   "moonlight",
-   "other"
-  ],
+  "keywords": [],
   "description": "Riot's internal resource type indices as documented by the wiki: 0 mana, 1 energy, 2 none, 3 shield (Mordekaiser), 4 battlefury (Tryndamere), 5 dragonfury (Briar/Shyvana/Vex), 6 rage (Renekton), 7 heat (Rumble/Samira), 8 gnarfury (Gnar/Rek'Sai/Sett/Kled/Udyr/Vladimir), 9 ferocity (Rengar), 10 bloodwell (Aatrox/Swain/Sylas), 11 wind (Yasuo/Yone), 12 ammo, 13 moonlight (Aphelios), 14 other.",
   "wiki_pages": [
    "Ability resource"

@@ -70,6 +70,35 @@ META_ATOMS = {
 }
 
 
+def corpus_prune(vocab: dict[str, dict], items: dict) -> set[str]:
+    """Drop vocab keywords that fire on too many items (>25%) — they carry no
+    signal on item prose (e.g. 'true' in random stats text, 'deep' substrings).
+    Returns the set of pruned atom_ids."""
+    from collections import Counter
+    fire = Counter()
+    total = 0
+    for item in items.values():
+        hay = tokens(strip_html(" ".join([
+            item.get("name") or "",
+            item.get("simpleDescription") or "",
+            strip_html(item.get("riotDescription") or ""),
+        ])))
+        for atom_id, a in vocab.items():
+            if a.get("family") == "interaction":
+                continue
+            for kw in a.get("keywords", []):
+                nk = norm(kw)
+                ktoks = tokens(kw)
+                if not nk or len(nk) < 4:
+                    continue
+                if ktoks and ktoks <= set(hay):
+                    fire[atom_id] += 1
+                    break
+        total += 1
+    pruned = {aid for aid, n in fire.items() if total and n / total > 0.25}
+    return pruned
+
+
 def classify(text: str, vocab: dict[str, dict], existing: set[str]) -> list[tuple[str, str]]:
     """Return [(atom_id, family)] for keywords that appear as TOKENS in the
     text (token-level, never substring — "heal" must not fire on "health").
@@ -141,6 +170,9 @@ def decompose_item(item: dict, vocab: dict[str, dict]) -> dict:
 def main():
     vocab = load_vocab()
     items = json.loads(ITEMS_JSON.read_text())
+    pruned = corpus_prune(vocab, items)
+    print(f"pruned {len(pruned)} over-firing atom_ids: {sorted(pruned)[:20]}")
+    vocab = {aid: a for aid, a in vocab.items() if aid not in pruned}
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     summary: dict[str, set[str]] = {}
     total = 0
