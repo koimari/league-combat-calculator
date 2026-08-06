@@ -315,24 +315,30 @@ def test_malphite_api_w_and_e_match_sourced_mitigation():
 
 
 def _assert_soul_eater_heals(combat, *, level, ratio):
-    """Soul Eater heals 12/18/24% of each post-mitigation physical auto."""
-    from src.calculator.data_fetcher import get_champion
+    """Soul Eater heals 12/18/24% of each post-mitigation physical auto.
 
+    The exact post-mitigation auto amount is read from the event ledger so
+    this contract remains valid when a sourced ability (Nasus E) changes the
+    target's armor during the fight.
+    """
     heals = [h for h in _main_heals(combat, "Soul Eater")]
+    autos = _main_damage_events(combat, "auto_attacks")
     assert heals, "Soul Eater heal missing"
-    enemy_stats = _enemy_stats(combat)
-    nasus_stats = calculate_total_stats(get_champion("Nasus"), level, [])
-    per_auto = nasus_stats["attack_damage"] * 100.0 / (100.0 + enemy_stats["armor"])
-    expected_per_heal = ratio * per_auto
-    for heal in heals:
-        assert heal["amount"] == pytest.approx(expected_per_heal, abs=0.06)
+    assert len(heals) == len(autos), "one Soul Eater receipt per auto"
+    for heal, auto in zip(heals, autos):
+        # ``pair_damage`` preserves the authored auto amount when a later
+        # event is skipped because the attacker died; the heal receipt still
+        # records the sourced amount for that trigger.
+        auto_damage = auto.get("pair_damage", auto["damage"])
+        assert heal["amount"] == pytest.approx(ratio * auto_damage, abs=0.06)
     survival = _main_survival(combat)
     if survival["death_time"] is None:
         # The survival walk applies the receipts only while the fighter is
         # alive; a dead-by-first-swing level-6 Nasus still emits the sourced
         # receipts but applies none.
         assert survival["healing_received"] == pytest.approx(
-            ratio * per_auto * len(heals), abs=0.25
+            ratio * sum(auto.get("pair_damage", auto["damage"]) for auto in autos),
+            abs=0.25,
         )
 
 

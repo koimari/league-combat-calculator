@@ -61,6 +61,15 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "cast_instances",
         "recast_of",
         "empowers_next_auto",
+        # Champion-owned next-ability empower state (Karma R Mantra): the
+        # cast does not damage itself but readies the next Q/W/E variant.
+        # Typed value: {"slots": (slot, ...), "window_seconds": float}.
+        "empowers_next_ability",
+        # Champion-owned self-setup/charge state (Tristana E Explosive
+        # Charge): the cast attaches a charge that the champion's own
+        # later attacks/abilities build before the priced detonation.
+        # Typed value: {"kind": "stack_charge", ...} (never a stat buff).
+        "self_setup",
         "stat_buff",
         "target_debuff",
         "post_hit_proc",

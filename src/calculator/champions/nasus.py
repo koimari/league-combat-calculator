@@ -12,7 +12,9 @@ Why each slot is non-generic:
 - E (Spirit Fire) prices the initial hit plus 10 sourced 0.5s zone
   ticks (E2 fix: "Magic Damage" + 10 x "Magic Damage Per Tick" ==
   "Total Magic Damage"), with the burn tail keeping item burns
-  refreshed.
+  refreshed; the hit also applies the "Armor Reduction" row
+  (30/35/40/45/50% of the target's armor by rank) as a 1s
+  ``target_debuff`` on the E entry.
 - R (Fury of the Sands) prices all 30 sourced 0.5s ticks ("Magic
   Damage Per Tick" x30 == "Total Magic Damage"); the bonus health /
   resistances are self-stats and the Siphoning Strike cooldown halving
@@ -30,6 +32,7 @@ from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    extract_value,
 )
 
 # E2-sourced tick cadences (data/worklists/e2-dot-ticks.json and the
@@ -43,6 +46,9 @@ _E_DOT_DURATION = 5.0
 _R_TICKS = 30
 _R_TICK_INTERVAL = 0.5
 _R_DOT_DURATION = 15.0
+# Spirit Fire's armor reduction "lingering for 1 second" (the E ability
+# description that sources the damage rows).
+_E_ARMOR_REDUCTION_DURATION = 1.0
 
 
 def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -95,6 +101,12 @@ def _spirit_fire(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "magic",
     )
+    entry["target_debuff"] = {
+        "armor_reduction_percent": extract_named(
+            ability, "Armor Reduction", rank, ctx.stats, ctx.target
+        ),
+        "duration": 1.0,
+    }
     entry["parts"] = (
         DamagePart("magic", initial, time_offset=_E_INITIAL_DELAY),
         DamagePart(
@@ -110,6 +122,17 @@ def _spirit_fire(ctx: SlotCtx) -> dict[str, Any] | None:
         f"initial hit + {_E_TICKS} sourced {_E_TICK_INTERVAL:g}s-interval "
         f"ticks (Magic Damage Per Tick x{_E_TICKS} = Spirit Fire total)"
     )
+    # Armor Reduction leveling row: 30/35/40/45/50% of the target's armor
+    # by rank, lingering 1 second (the E description).  damage.py applies
+    # the shred AFTER E's own damage (the Kog'Maw rule), so the initial
+    # hit and this cast's zone ticks land at full target armor while
+    # later casts see the reduction.
+    shred = extract_value(ability, "Armor Reduction", rank)
+    if shred > 0:
+        entry["target_debuff"] = {
+            "armor_reduction_percent": shred,
+            "duration": _E_ARMOR_REDUCTION_DURATION,
+        }
     return entry
 
 
@@ -211,7 +234,10 @@ ASSUMPTIONS = [
     "casts are capped by the fight's auto count; with no auto stream it "
     "forces its own swing",
     "E (Spirit Fire) prices the initial hit + 10 sourced 0.5s zone "
-    "ticks (E2 fix, unchanged from the reviewed packet)",
+    "ticks (E2 fix, unchanged from the reviewed packet); the hit also "
+    "applies its Armor Reduction row (30/35/40/45/50% of the target's "
+    "armor by rank) as a 1-second target_debuff (lingering for 1 "
+    "second, per the ability description)",
     "R (Fury of the Sands) prices all 30 sourced 0.5s ticks (E2 fix, "
     "unchanged); its bonus health/resistances are self-stats and the "
     "Q-cooldown halving is not modeled",

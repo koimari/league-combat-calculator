@@ -49,7 +49,7 @@ _EXPECTED_ORDERS = {
     "Jhin": ["Q", "W", "E", "R"],
     "Annie": ["E", "R", "Q", "W"],
     "Lux": ["E", "Q", "R", "W"],
-    "Zed": ["W", "E", "Q", "R"],
+    "Zed": ["W", "R", "E", "Q"],
     "Aphelios": ["Q", "W", "R"],
 }
 
@@ -212,7 +212,7 @@ class TestParseLevelRotations:
     def test_zed_places_shadow_before_burst(self, champion_by_name) -> None:
         result = _run(champion_by_name["Zed"])
         rotation = result["rotation"]
-        assert rotation["cast_order"] == ["W", "E", "Q", "R"]
+        assert rotation["cast_order"] == ["W", "R", "E", "Q"]
         assert rotation["setup"] == ["W"]
         assert rotation["consume"] == ["R"]
 

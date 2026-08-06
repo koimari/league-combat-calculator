@@ -295,13 +295,13 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # burst and detonates 3s later for 100% AD + % of stored damage.
     "Zed": ComboRule(
         champion="Zed",
-        order=("W", "E", "Q", "R"),
+        order=("W", "R", "E", "Q"),
         rationale=(
-            "W (Living Shadow) places the shadow first so E and Q hit from "
-            "it; E (Shadow Slash) slows, Q (Razor Shuriken) deals the primary "
-            "damage, then R (Death Mark) stores that burst and detonates 3s "
-            "later for 100% AD + 25/40/55% of the damage stored during the "
-            "mark."
+            "W (Living Shadow) places the shadow first so R lands from it; "
+            "R (Death Mark) marks the target and stores damage dealt during "
+            "the mark, then E (Shadow Slash) slows and Q (Razor Shuriken) "
+            "deals the primary damage into the mark, detonating 3s later for "
+            "100% AD + 25/40/55% of the damage stored during the mark."
         ),
         sources=(
             "W 'Living Shadow' shadow placement (no-damage row)",
@@ -485,7 +485,17 @@ _P_ABILITY_CONSUMES_MARK = re.compile(
     r"abilit(y|ies).{0,80}(consume|detonat).{0,40}mark", re.I
 )
 _P_TARGET_MISSING = re.compile(
-    r"target's? missing|target’s? missing|missing health of the target|missing hp", re.I
+    r"target's? missing|target’s? missing|missing health of the target|missing hp",
+    re.I,
+)
+# anchored champion-execute phrase (Draven R blurb: "This executes enemy
+# champions ...").  Minion/turret executes ("executes minions", "executes
+# turrets") do NOT count — the consume role requires a champion-targeted
+# execute, so the phrase is anchored to enemy champions.
+_P_EXECUTES = re.compile(r"executes?\s+enemy\s+champions?", re.I)
+_P_LETHAL_EXECUTE = re.compile(r"\b(?:lethal|will die)\b", re.I)
+_ATTR_EXECUTE_DAMAGE = re.compile(
+    r"\b(?:minimum|maximum)\s+(?:magic|physical|true)\s+damage\b", re.I
 )
 _P_NAMED_APPLIER_STACK = re.compile(r"([\w' ]+?) apply a stack of ([A-Za-z']+)", re.I)
 _P_NAMED_APPLIER_COND = re.compile(
@@ -528,6 +538,15 @@ _CONDITIONS = (
     ("wounded", r"wound"),
     ("immobilized", r"immobiliz"),
 )
+
+# typed synonym path for "Enhanced Damage" consumers: a consumer names a
+# condition the applier applies under a different word (Anivia E "doubled
+# if they were Chilled" is fed by Q's slow).  Only pairs an anchored
+# consumer condition phrase with a typed cc_kind/dot applier atom — the
+# applier text is checked against the synonym pattern, never free prose.
+_CONDITION_SYNONYMS: dict[str, tuple[tuple[str, str], ...]] = {
+    "chilled": (("slowed", r"\bslow"),),
+}
 
 _CAST_SLOTS = ("Q", "Q2", "W", "E", "R")
 _PARENT_SLOT = {"Q2": "Q", "R_buff": "R", "W_frenzy": "W", "R_onhit": "R"}
@@ -748,6 +767,8 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
             atoms.append("stacking_dot")
         if info.get("target_debuff"):
             atoms.append("target_debuff")
+        if info.get("self_setup"):
+            atoms.append("self_setup")
         if info.get("stat_buff") and isinstance(info["stat_buff"], Mapping):
             amp = sorted(set(info["stat_buff"]) & _DAMAGE_AMP_STAT_KEYS)
             if amp:
@@ -781,6 +802,12 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
         # a cd-0 row (on-hit/passive) applies through the AUTO STREAM, not a
         # cast — it can never be a cast-order setup endpoint
         if "passive-row(cd=0)" in atoms:
+            return False
+        # The passive's blanket claim ("abilities apply a stack of X") only
+        # promotes slots that are themselves damaging casts; a zero-damage
+        # utility row (Darius E Apprehend, cd 26) applies no stack and must
+        # not become a stack-setup endpoint (F4 alpha 2.4).
+        if passive_applies and not _is_damage_row(infos[s]):
             return False
         if passive_applies:
             if cond_token == "stack":
@@ -852,18 +879,28 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                     f"attribute {_ATTR_DETONATION.search(at).group(0)!r}",
                 )
             )
+        execute_prose = _P_EXECUTES.search(texts[b])
+        lethal_prose = _P_LETHAL_EXECUTE.search(texts[b])
+        # A generic "based on missing health" amplifier (for example
+        # Bel'Veth E slashes or Nidalee's human Q packet) is not itself an
+        # execute.  The fallback is intentionally narrow: an existing
+        # Missing Health attribute, an explicit lethal/execute statement, or
+        # an R row whose Minimum/Maximum Magic/Physical/True Damage rows are
+        # the source of a missing-health curve (Garen/Jinx/Akali/Veigar).
+        execute_attr = _ATTR_MISSING.search(at) or (
+            b == "R" and _ATTR_EXECUTE_DAMAGE.search(at)
+        )
         if (
-            _ATTR_MISSING.search(at)
-            and _P_TARGET_MISSING.search(texts[b])
-            and _is_damage_row(info)
-        ):
-            cons.append(
-                (
-                    "execute",
-                    "execute",
-                    "attribute Missing Health + target-missing-health",
-                )
-            )
+            (_P_TARGET_MISSING.search(texts[b]) and (execute_attr or lethal_prose))
+            or execute_prose
+        ) and _is_damage_row(info):
+            if execute_attr:
+                cite = "attribute Missing Health + target-missing-health"
+            elif execute_prose:
+                cite = "explicit execute prose + damage row"
+            else:
+                cite = "lethal execute prose + target-missing-health"
+            cons.append(("execute", "execute", cite))
         if _ATTR_MARK_DMG.search(at) or _P_ABILITY_CONSUMES_MARK.search(texts[b]):
             cons.append(("mark_consume", "mark", "mark consumption"))
         if _ATTR_STORED_DMG.search(at):
@@ -942,7 +979,19 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                         if a == b:
                             continue
                         at = texts[a]
-                        if re.search(pattern, at) and any(
+                        applier_cond = condtok if re.search(pattern, at) else None
+                        if applier_cond is None:
+                            # typed synonym path: the consumer names the
+                            # condition with a different word than the
+                            # applier's cc/dot atom (Anivia E "doubled if
+                            # they were Chilled" is fed by Q's slow).
+                            for alt_cond, alt_pattern in _CONDITION_SYNONYMS.get(
+                                condtok, ()
+                            ):
+                                if re.search(alt_pattern, at):
+                                    applier_cond = alt_cond
+                                    break
+                        if applier_cond and any(
                             x.startswith(
                                 (
                                     "dot_duration",
@@ -958,7 +1007,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                                 a,
                                 b,
                                 "enhanced_consume",
-                                f"{b} {cite} enhanced vs {condtok}; {a} applies {condtok} ({', '.join(apply_atoms[a])})",
+                                f"{b} {cite} enhanced vs {condtok}; {a} applies {applier_cond} ({', '.join(apply_atoms[a])})",
                             )
                     break
         # named appliers/consumers inside the consumer's own structured rows
@@ -1017,6 +1066,25 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                             f"{b} is a missing-health/stored execute — after {a}'s damage",
                         )
 
+    # stored-setup edge: the slot whose EXACT leveling attribute is
+    # "Damage Stored" (Yone's Soul Unbound) opens the storage window and
+    # must cast BEFORE the damaging slots whose damage it stores.  Only
+    # the exact attribute name counts — prose mentions like Zed's
+    # "% of damage stored" (Death Mark) are NOT stored setups.
+    for b in corpora:
+        if not any(a.strip().lower() == "damage stored" for a in corpora[b]["attrs"]):
+            continue
+        if not _castable(infos[b], b):
+            continue
+        for a in corpora:
+            if a != b and _is_damage_row(infos[a]) and _castable(infos[a], a):
+                add(
+                    b,
+                    a,
+                    "stored_setup",
+                    f"{b} stores damage while untethered (attribute 'Damage Stored') — before {a}",
+                )
+
     # mark applier by own text: slot says its mark is consumed by the
     # champion's abilities (Ezreal W, Ryze E) -> slot before the burst
     for b in corpora:
@@ -1071,6 +1139,42 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                         "amp",
                         f"{s} amplifies damage taken ({s}'s AMP atom) — before {d}",
                     )
+        if info.get("self_setup"):
+            # self-setup/charge state (Tristana E Explosive Charge): the cast
+            # attaches a charge the champion's own later casts build before
+            # the priced detonation — setup before every damaging cast.
+            for d in corpora:
+                if d != s and _is_damage_row(infos[d]) and _castable(infos[d], d):
+                    add(
+                        s,
+                        d,
+                        "self_setup",
+                        f"{s} is a self-setup charge (self_setup atom, "
+                        f"kind={info['self_setup'].get('kind', 'charge')}) — before {d}",
+                    )
+        empower = info.get("empowers_next_ability")
+        if empower:
+            # next-ability empower state (Karma R Mantra): the cast readies
+            # the listed slots (or every castable damaging slot when the
+            # typed marker lists none) — empower before the empowered casts.
+            targets = (
+                tuple(empower.get("slots", ())) if isinstance(empower, Mapping) else ()
+            )
+            targets = tuple(t for t in targets if t in corpora and t != s)
+            if not targets:
+                targets = tuple(
+                    d
+                    for d in corpora
+                    if d != s and _is_damage_row(infos[d]) and _castable(infos[d], d)
+                )
+            for d in targets:
+                add(
+                    s,
+                    d,
+                    "empower",
+                    f"{s} empowers_next_ability readies the next ability "
+                    f"({', '.join(targets)}) — before {d}",
+                )
 
     seen: set[tuple[str, str, str]] = set()
     out: list[_Edge] = []

@@ -279,6 +279,9 @@ class TestEdgeInvariants:
             "buff",
             "cc_setup",
             "amp",
+            "empower",
+            "self_setup",
+            "stored_setup",
         }
         for name in sorted(champion_by_name):
             data = champion_by_name[name]
@@ -356,6 +359,10 @@ class TestRationaleCitesAtoms:
             "execute",
             "shred",
             "amplif",
+            "empower",
+            "empowers_next_ability",
+            "self_setup",
+            "stored_setup",
             "mark",
             "poison",
             "stacks",

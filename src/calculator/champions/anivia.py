@@ -17,6 +17,7 @@ All numeric values are read from the champion JSON data; nothing is
 hardcoded.
 """
 
+from dataclasses import replace
 from typing import Any
 
 from .engine import SlotCtx, build_parser
@@ -46,6 +47,19 @@ def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     return damage_entry(
         ability.get("name", "Glacial Storm"), rank, 999.0, total, "magic"
     )
+
+
+def _flash_frost(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: slow/chill setup receipt for Frostbite's enhanced branch.
+
+    Flash Frost's sourced slow chills the target; the combined packet is
+    retained unchanged and the typed control marker lets rotation F4 prove
+    Q before E without guessing from a display name.
+    """
+    entry = simple_damage(attr="Total Magic Damage", dmg_type="magic")(ctx)
+    if entry is not None and entry.get("parts"):
+        entry["parts"] = tuple(replace(part, cc_kind="slow") for part in entry["parts"])
+    return entry
 
 
 OPTIONS = [
@@ -90,6 +104,8 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
 
 ASSUMPTIONS = [
     "Q hits both pass-through and detonation (total damage used)",
+    "Q's sourced slow/chill is emitted as a typed slow marker so E's "
+    "Enhanced Damage receipt is ordered after the chilled setup",
     "E target is always Chilled (empowered damage used)",
     "R first 1.5s uses initial tick damage, remaining uses fully-formed tick damage",
     "W skipped (utility wall, no damage)",
@@ -98,7 +114,7 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
+    "Q": _flash_frost,
     "E": simple_damage(attr="Enhanced Damage", dmg_type="magic"),
     "R": _glacial_storm,
 }

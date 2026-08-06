@@ -60,9 +60,16 @@ def _explosive_charge(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", total),)
+    entry["self_setup"] = {
+        "kind": "stack_charge",
+        "stacks_from": ("basic_attack", "ability_hit"),
+        "max_stacks": _E_MAX_STACKS,
+    }
     entry["detail"] = (
         f"{stacks}/4 stack(s); "
-        f"base {base:.2f} + {stacks} x {per_stack:.2f} per-stack bonus"
+        f"base {base:.2f} + {stacks} x {per_stack:.2f} per-stack bonus; "
+        "self-setup charge: basic attacks/abilities against the target "
+        "build the stack count before the detonation"
     )
     return entry
 

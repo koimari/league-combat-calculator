@@ -37,6 +37,36 @@ def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _mantra(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: an explicit next-ability empower state, not a damage row.
+
+    Mantra itself deals no damage; it readies the next basic ability
+    (Q/W/E) for an additional effect (sourced R description: "empowers
+    her next basic ability within 8 seconds").  The empowered Q/W/E
+    variants are priced in their own slots behind the q_mantra /
+    w_renewal options and scale with Mantra's rank.  The typed
+    ``empowers_next_ability`` marker lets a consumer place R before the
+    ability it empowers.
+    """
+    entry = no_damage(
+        ctx,
+        name="Mantra",
+        reason=(
+            "Mantra readies the next basic ability (Q/W/E) for an "
+            "additional effect; the empowered variant is priced in its "
+            "own slot via the q_mantra / w_renewal options."
+        ),
+    )
+    if entry is None:
+        return None
+    entry["empowers_next_ability"] = {"slots": ("Q", "W", "E"), "window_seconds": 8.0}
+    entry["detail"] = (
+        "Next-ability empower marker: Mantra readies Q/W/E (8s window); "
+        "the toggle itself has no outgoing damage."
+    )
+    return entry
+
+
 def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
     renewal = bool(ctx.options.get("w_renewal", False))
     ability = ctx.ability("W", 1 if renewal else 0)
@@ -76,11 +106,7 @@ SLOTS = {
         name="Inspire/Defiance",
         reason="Shield, ally spread and movement speed are ally-facing utility.",
     ),
-    "R": lambda ctx: no_damage(
-        ctx,
-        name="Mantra",
-        reason="Mantra empowers the next Q/W/E variant; the toggle itself has no outgoing damage.",
-    ),
+    "R": _mantra,
 }
 parse_abilities = build_parser(SLOTS, "Karma")
 OPTIONS = [
