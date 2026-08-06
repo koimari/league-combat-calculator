@@ -1,0 +1,25 @@
+{
+ "purpose": "E4: model summoned-unit damage (pets/traps) in champion modules. Pet damage sources: champion ability descriptions (formulas like Illaoi tentacle 9-180 + 110% AD + 40% AP), existing module pet constants (Annie Tibbers burst+aura), wiki 'Champion summoned units' page, and the fight window (rotation/duration). Where the fight model cannot price a pet's autonomous behavior, model its sourced fixed contributions (summon burst, aura, commanded attacks) and document the boundary.",
+ "batch1_directed_burst": {
+  "Annie": "Tibbers: summon burst already modeled; ensure aura ticks + Tibbers attacks in window",
+  "Heimerdinger": "turrets: Q turret attacks (sourced damage), R upgrade",
+  "Malzahar": "voidlings: W summon damage (voidling attacks, 2-4 active)",
+  "Azir": "Sand Soldiers: W soldier attacks + Q command dash damage",
+  "Illaoi": "tentacles: P spawn + commanded slam damage (9-180 + 110% AD + 40% AP)"
+ },
+ "batch2_melee_pets": {
+  "Yorick": "Mist Walkers (up to 4) + Maiden: attack damage in window",
+  "Zyra": "plants: W/Q/E plant DPS (attack damage + duration 8s)",
+  "Ivern": "Daisy: R summon, 3-hit knockup + attack damage",
+  "Kindred": "Wolf: W frenzy attacks",
+  "Maokai": "Sapling: E throw + explosion (already initial; ensure burn \u2014 overlaps E2)"
+ },
+ "batch3_traps": {
+  "Teemo": "Noxious Trap: R shroom damage + slow (overlaps E2 DoT)",
+  "Shaco": "Jack in the Box: W box fear + attack",
+  "Nidalee": "Bushwhack: W trap damage + armor shred",
+  "Caitlyn": "Yordle Snap Trap: W trap damage + reveal",
+  "Jhin": "Captive Audience: E trap damage + slow",
+  "Zac": "R rework \u2014 not a pet; skip"
+ }
+}
