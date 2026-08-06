@@ -21,3 +21,15 @@ RULES: only touch src/calculator/ (item effects/coverage/support layers + timeli
 GATES: pytest tests/test_e9_bis_b.py; pytest -q (full); pylint src/ --fail-under=9; black --check src/ tests/; golden compare (explain any diffs).
 COMMIT "feat(E9-BIS-B): certify/audit remaining BIS item withholdings" and PUSH origin/codex/e9-bis-b. Do NOT merge.
 Reply to parent: per item — the modeled effect + authored timing (or the documented exclusion + why), certified/withheld before/after for the test champions, gates, golden status, commit SHA.
+CRITICAL EXECUTION RULE: You MUST produce a pushed branch. Do NOT stop at exploration. Work through the items one at a time, commit after each, and push origin/codex/e9-bis-b when done (or after the first commit if you risk stopping early). If you find the work is too large for one pass, SPAWN YOUR OWN CHILDREN (you are allowed RLM depth 2): give each child 2-3 items on a separate branch/worktree under /Users/river/Projects/lcc-e9-bis-b-<n>/, then merge their branches into yours and push. Never end a turn without either a pushed commit or an explicit blocker report.
+
+SUGGESTED ORDER (each item: find cached effect -> model with authored timing -> verify /api/bis certifies for 2 champions -> commit):
+1. Bloodsong (support starter upgrade — spellblade proc on support items)
+2. Celestial Opposition (support starter upgrade — proc shield)
+3. Dream Maker (support starter upgrade — proc damage/buffs)
+4. Solstice Sleigh (support starter upgrade — proc heal)
+5. Zaz'Zak's Realmspike (support starter upgrade — proc damage)
+6. Eclipse (proc_Eclipse coarse source -> authored self-shield event timing)
+7. Muramana (muramana_ability coarse source -> authored ability-hit timing)
+8. Bastionbreaker (shaped_charge_Bastionbreaker coarse source -> authored charge timing)
+If an item's combat effect is genuinely unpriceable in the fight model (pure utility/vision), certify it as a documented no-damage source and UPDATE the corpus scenario expectation with a marker comment.
