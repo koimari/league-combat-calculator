@@ -26,6 +26,7 @@ from .item_support_effects import (
     schedule_knights_vow,
 )
 from .champions.skill_orders import get_ability_rank
+from .champions.slotlib import extract_named
 from .healing import GREY_HEALTH_RULE_CHAMPIONS
 from .healing_reduction import (
     GRIEVOUS_WOUNDS_FACTOR,
@@ -1361,6 +1362,24 @@ _MORDE_W_STORE_TAKEN_PRE_RATIO = 0.075
 _MORDE_W_STORE_CAP_RATIO = 0.30
 _MORDE_W_SHIELD_TO_HEALING_RANK = (0.35, 0.375, 0.40, 0.425, 0.45)
 _MORDE_W_RECAST_AVAILABLE_SECONDS = 0.5
+# Locke W (Soul Ignition) — data/champions.json W prose:
+#   "He also stores an amount of grey health on his health bar equal to
+#   100% of the post-mitigation damage he takes from enemy champions, up
+#   to a cap ... Recast: Locke ends Soul Ignition and consumes his grey
+#   health to heal for the same amount."  The cap is the leveling row
+#   "Damage taken grey health cap" (40/60/80/100/120 by W rank + 100%
+#   AP); the storage window is the 6-second active ("ignites his soul
+#   for 6 seconds").  The recast is available after 0.5 s and "does so
+#   automatically afterwards" — the auto-recast at the 6 s boundary is
+#   the deterministic consume.  The additional pool from Soul Ignition's
+#   health cost and the missing-health bonus ("increased by up to
+#   40 : 200 (based on level) (+ 20% AP) based on his missing health")
+#   are dynamic self-state and remain documented boundaries, exactly as
+#   the E1-b6 review scoped them.
+_LOCKE_W_STORE_RATIO = 1.0
+_LOCKE_W_STORE_WINDOW_SECONDS = 6.0
+_LOCKE_W_AUTO_RECAST_SECONDS = 6.0
+_LOCKE_W_CONSUME_HEAL_RATIO = 1.0
 
 
 def _grey_leveling_values(ability: Mapping[str, Any], attribute: str) -> list[float]:
@@ -1564,6 +1583,61 @@ def _grey_health_receipts(
                 "decay is state)"
             ),
         }
+    if name == "Locke":
+        # Soul Ignition (W): each W cast opens a 6-second storage window
+        # during which 100% of the post-mitigation champion damage taken
+        # accumulates as grey health, capped by the rank row; the
+        # automatic recast at the 6 s boundary consumes the pool to heal
+        # for the same amount (cached W prose, leveling row "Damage taken
+        # grey health cap").  The health-cost and missing-health bonus
+        # terms remain documented boundaries (dynamic self-state, per the
+        # E1-b6 scope note).
+        w_rank = max(1, _slot_rank("W"))
+        cap = extract_named(
+            _grey_ability(champion_data, "W"),
+            "Damage taken grey health cap",
+            w_rank,
+            stats,
+            {},
+        )
+        w_casts = sorted(
+            float(cast.get("time", 0.0))
+            for cast in cast_timeline
+            if str(cast.get("slot", "")) == "W"
+        )
+        consumed = 0.0
+        for cast_time in w_casts:
+            window_start = cast_time
+            window_end = cast_time + _LOCKE_W_STORE_WINDOW_SECONDS
+            stored = min(
+                cap,
+                _LOCKE_W_STORE_RATIO
+                * sum(
+                    post
+                    for event_time, post, _pre in incoming
+                    if window_start <= event_time <= window_end
+                ),
+            )
+            consume_time = cast_time + _LOCKE_W_AUTO_RECAST_SECONDS
+            amount = _LOCKE_W_CONSUME_HEAL_RATIO * stored
+            if amount > 0.0 and consume_time <= duration:
+                heals.append((consume_time, "Soul Ignition (grey health)", amount))
+                consumed += amount
+        return heals, {
+            "grey_health_stored": min(
+                cap,
+                _LOCKE_W_STORE_RATIO * sum(post for _t, post, _pre in incoming),
+            ),
+            "grey_health_consumed": consumed,
+            "source": (
+                "Soul Ignition (100% of post-mitigation damage taken from "
+                "enemy champions during the 6s active stored as grey "
+                "health, capped by the 'Damage taken grey health cap' row; "
+                "the automatic recast at 6s heals the stored pool; the "
+                "health-cost add and missing-health bonus remain dynamic "
+                "self-state boundaries)"
+            ),
+        }
     if name == "Kled":
         # Skaarl's 400 : 1400 (based on level) health pool is the mounted
         # duo's damage sink; dismount at zero and the remount restore are a
@@ -1642,6 +1716,10 @@ def _grey_health_event_receipt(
             raw = max(0.0, float(event.get("raw_damage", damage) or 0.0))
             return _MORDE_W_STORE_TAKEN_PRE_RATIO * raw
         return _MORDE_W_STORE_DEALT_RATIO * damage
+    if name == "Locke":
+        if not incoming:
+            return None
+        return _LOCKE_W_STORE_RATIO * max(0.0, float(event.get("damage", 0.0) or 0.0))
     return None
 
 

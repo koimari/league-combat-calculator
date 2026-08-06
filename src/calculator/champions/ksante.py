@@ -15,6 +15,11 @@ from .slotlib import (
     simple_damage,
 )
 
+# HARDCODED: verify on patch updates — All Out's omnivamp is prose in the
+# cached R fourth effect: "he gains bonus attack speed, 50% bonus-armor
+# penetration, and 20% omnivamp" (no leveling row; flat at every R rank).
+_ALLOUT_OMNIVAMP_PERCENT = 20.0
+
 
 def _marked_attack(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     base = extract_value(ability, "Bonus Damage", ctx.level)
@@ -144,12 +149,22 @@ def _all_out(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = parts
     entry["detail"] = (
-        "Terrain strike is explicit; the 65% health threshold, omnivamp and resist conversion are state."
+        "Terrain strike is explicit; the 65% health threshold and resist "
+        "conversion are state; All Out's 20% omnivamp is priced on the "
+        "fight's explicitly single-target attack/on-hit packets."
     )
     if bool(ctx.options.get("all_out", False)):
         entry["stat_buff"] = {
             "bonus_attack_speed": extract_value(ability, "Bonus Attack Speed", rank),
             "armor_penetration_percent": 50.0,
+            # "he gains bonus attack speed, 50% bonus-armor penetration, and
+            # 20% omnivamp" (cached R fourth effect).  The fight engine's
+            # omnivamp channel prices 20% of the post-mitigation damage of
+            # explicitly single-target attack/on-hit packets (its
+            # full-effectiveness certification scope); the remaining
+            # ability-damage omnivamp stays a documented boundary, matching
+            # the engine's conservative omnivamp contract.
+            "omnivamp_percent": _ALLOUT_OMNIVAMP_PERCENT,
         }
     return entry
 
@@ -195,7 +210,7 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Dauntless Instinct is an explicit marked-attack proc, not an assumed proc on every auto.",
     "Path Maker uses its physical packet and optionally the authored All Out true-damage range; charge duration is explicit.",
-    "All Out terrain routing, health threshold, omnivamp and resistance conversion remain visible state rather than hidden arithmetic.",
+    "All Out terrain routing and the health threshold / resistance conversion remain visible state rather than hidden arithmetic; the 20% omnivamp IS priced on the fight's explicitly single-target attack/on-hit packets (the engine's full-effectiveness omnivamp scope) and the remaining ability-damage omnivamp is a documented boundary",
 ]
 SOURCES = [
     source_row(

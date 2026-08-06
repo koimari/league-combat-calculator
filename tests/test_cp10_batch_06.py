@@ -86,7 +86,7 @@ def test_cp10_6_variant_options_and_provenance_are_exposed():
         assert len(metadata["sources"]) == 6
     assert {
         option["key"] for option in get_champion_options_meta("Rek'Sai")["options"]
-    } == {"q_variant"}
+    } == {"q_variant", "e_fury"}
     assert {
         option["key"] for option in get_champion_options_meta("Rell")["options"]
     } == {"w_variant"}

@@ -25,11 +25,13 @@ Implemented:
 Deliberately skipped (no sourced self-heal fits the 1v1 fight ledger):
 - KSante      — no healing anywhere in the kit data (P/Q/W/E/R are
   damage/shield/buff only).
-- Locke       — W Soul Ignition's grey-health heal is 100% of the
-  post-mitigation damage he *takes* from enemy champions (plus an
-  undocumented health cost and a missing-health bonus); the pair fight
-  ledger only carries the main's outgoing events, so the dominant term
-  cannot be sourced.
+- Locke       — W Soul Ignition's grey-health heal is authored by the
+  E8a grey-health primitive instead (participant_timeline, see
+  tests/test_p1_review_1.py): 100% of the post-mitigation damage he
+  *takes* during the 6s W active is stored (capped by the sourced
+  "Damage taken grey health cap" row) and healed at the automatic 6s
+  recast; the health-cost add and missing-health bonus remain dynamic
+  self-state boundaries.
 - Mordekaiser — W Indestructible's recast heal prices a shield built
   from damage dealt AND taken (taken term not in the ledger, exponential
   shield decay is state), and R Realm of Death heals 10% of the
@@ -296,12 +298,13 @@ def test_zaahen_grim_deliverance_heals_flat_per_champion_hit():
     ("champion", "role"),
     [
         # KSante's P/Q/W/E/R carry damage, shields and buffs only — the
-        # kit has no heal term at all in data/champions.json.
+        # kit has no heal term at all in data/champions.json (its All Out
+        # 20% omnivamp is priced by the engine's omnivamp channel instead,
+        # see tests/test_p1_review_1.py).
         ("KSante", "top"),
-        # Locke W's grey-health heal needs post-mitigation damage TAKEN
-        # from enemy champions (plus a health cost absent from the data);
-        # the pair ledger carries only the main's outgoing events.
-        ("Locke", "top"),
+        # Locke W's grey-health heal is now implemented by the E8a
+        # grey-health primitive (see tests/test_p1_review_1.py) — Locke
+        # authors a heal and no longer belongs in this list.
         # Mordekaiser's W recast heal is now implemented by the E8a
         # grey-health primitive (see tests/test_e8_grey_health.py); its R
         # heals 10% of the TARGET's maximum health and stays out of the

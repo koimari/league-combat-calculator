@@ -2385,6 +2385,42 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
     )
 
+    # Champion-owned crit modifiers (Yasuo/Yone P: "total critical strike
+    # chance is doubled from all other sources" and "critical strikes deal
+    # only 90% of the critical damage champions usually have" — cached P
+    # description prose; the 0.9 factor is also the champion's game stat
+    # ``criticalStrikeDamageModifier``).  The first ``crit_modifier``
+    # payload in the parsed ability rows applies to BOTH the auto-attack
+    # simulation and ability parts that declare ``crit_effectiveness``,
+    # because both read the shared ``state.crit_chance`` /
+    # ``state.crit_multiplier`` resolved here.  Crit chance in excess of
+    # 100% converts to bonus AD ("every 1% critical strike chance in
+    # excess of 100% is converted into 0.5 bonus attack damage") — the
+    # conversion lands on the same stats the auto stream prices.
+    for ability_info in state.ability_damages.values():
+        crit_modifier = ability_info.get("crit_modifier")
+        if not crit_modifier:
+            continue
+        chance_multiplier = float(crit_modifier.get("crit_chance_multiplier", 1.0))
+        raw_crit_percent = float(stats.get("critical_strike_chance", 0.0) or 0.0)
+        state.crit_chance = min(raw_crit_percent / 100.0 * chance_multiplier, 1.0)
+        damage_factor = float(crit_modifier.get("crit_damage_multiplier_factor", 1.0))
+        state.crit_multiplier = (
+            BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
+        ) * damage_factor
+        excess_percent = raw_crit_percent * chance_multiplier - 100.0
+        per_percent = float(
+            crit_modifier.get("excess_crit_bonus_ad_per_percent", 0.0) or 0.0
+        )
+        if excess_percent > 0.0 and per_percent > 0.0:
+            stats["bonus_attack_damage"] = (
+                stats.get("bonus_attack_damage", 0.0) + excess_percent * per_percent
+            )
+            stats["attack_damage"] = stats.get("base_attack_damage", 0.0) + stats.get(
+                "bonus_attack_damage", 0.0
+            )
+        break
+
 
 @dataclass(frozen=True)
 class AbilityItemApplication:
@@ -4371,6 +4407,12 @@ def _add_precomputed_proc_damage(
             "total_damage": proc_total,
             "damage_type": dtype,
         }
+        # Module-authored self-shield payloads (E8c) ride proc rows too: the
+        # rebuilt damage-event ledger is aligned by ordinal against this list
+        # in ``_ordered_damage_events`` (Akshan's Dirty Fighting proc shield
+        # grants on the first completed 3-stack detonation).
+        if info.get("self_shield_events") is not None:
+            state.breakdown[key]["self_shield_events"] = info["self_shield_events"]
         if (
             rotation is not None
             and info.get("timeline_event_model") == "brand_blaze"

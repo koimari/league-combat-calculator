@@ -284,6 +284,7 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Talon",
         "Nunu & Willump",
         "Shyvana",
+        "Nasus",
     }
 )
 
@@ -297,7 +298,9 @@ HEALING_RULE_CHAMPIONS = frozenset(
 # timeline and this module stay in one source of truth.  Kled's Skaarl
 # pool is a revive-boundary pattern (dismount/remount) and is documented
 # in the Kled module, not authored as a heal.
-GREY_HEALTH_RULE_CHAMPIONS = frozenset({"Pyke", "Rengar", "Tahm Kench", "Mordekaiser"})
+GREY_HEALTH_RULE_CHAMPIONS = frozenset(
+    {"Pyke", "Rengar", "Tahm Kench", "Mordekaiser", "Locke"}
+)
 
 
 def derive_self_healing(
@@ -1439,6 +1442,30 @@ def derive_self_healing(
                     / 100.0
                 )
                 _heal_from_damage(healing, event, amount, "Wind Becomes Lightning")
+
+    if name == "Nasus":
+        # Soul Eater (P): innate lifesteal — "Nasus gains 12% / 18% / 24%
+        # (based on level) life steal" (cached P description).  The exact
+        # breakpoints are the game-file LifestealTooltip (12% at level 1,
+        # +6% at level 7, +6% at level 13 — verified in the game files via
+        # Community Dragon NasusPassive, NOT the wiki, whose page omits
+        # the levels).  Lifesteal heals the sourced % of post-mitigation
+        # physical basic-attack and on-hit damage dealt, mirroring the
+        # engine's lifesteal eligibility for items (auto_attacks and
+        # on_hit_* rows, physical only) so the passive behaves like the
+        # stat it replaces.
+        nasus_level = max(1, int(champion_stats.get("level", 18) or 18))
+        soul_eater_ratio = (
+            0.24 if nasus_level >= 13 else (0.18 if nasus_level >= 7 else 0.12)
+        )
+        for event in damage_events:
+            source = _event_source(event)
+            if source != "auto_attacks" and not source.startswith("on_hit_"):
+                continue
+            if event.get("damage_type") != "physical":
+                continue
+            amount = max(0.0, float(event.get("damage", 0.0))) * soul_eater_ratio
+            _heal_from_damage(healing, event, amount, "Soul Eater")
 
     if name == "Vladimir":
         # Transfusion (Q): flat heal per cast, rank-scaled, + AP ratio

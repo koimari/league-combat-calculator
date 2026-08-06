@@ -35,6 +35,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import (
+    attach_self_shield,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -253,18 +254,56 @@ _dirty_fighting_packet = proc_damage(
 )
 
 
+# HARDCODED: verify on patch updates — the 3-stack proc shield's duration is
+# prose in the cached passive description ("Akshan will also gain a
+# 40 : 280 (based on level) (+ 35% bonus AD) shield for 2 seconds. The
+# shield may be gained only once every few seconds."); the leveling row
+# "Bonus Damage" (data/champions.json P[2]) carries the 40 : 280 per-level
+# array and the 35% bonus-AD ratio, so the amount is read live.  The
+# internal cooldown is the game-file PassiveCooldown (16/12/8/4 by level
+# breakpoints 6/11/16; 4s at level 18) — the fight's proc events all ride
+# the cast boundary, so the model grants one shield per proc burst and the
+# ICD is a documented boundary.
+_DIRTY_FIGHTING_SHIELD_DURATION_SECONDS = 2.0
+
+
+def _dirty_fighting_shield(passive: dict[str, Any], ctx: SlotCtx) -> float:
+    """Dirty Fighting 3-stack proc shield amount (40:280 + 35% bAD by level)."""
+    return extract_named(passive, "Bonus Damage", ctx.level, ctx.stats, ctx.target)
+
+
 def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
     """Emit the 3-stack proc with its sourced auto-stack cadence.
 
     Dirty Fighting triggers on every third damaging attack.  The proc count
     remains the user-controlled packet count, while the event ledger places
-    each proc on the corresponding third auto swing in timed fights.
+    each proc on the corresponding third auto swing in timed fights.  Each
+    completed 3-stack detonation against a champion also grants the proc
+    shield (40:280 by level + 35% bonus AD for 2s, sourced from the cached
+    "Bonus Damage" leveling row); the fight model grants one shield per
+    proc burst — every proc event rides the cast boundary and the shield's
+    internal cooldown (16/12/8/4 by level) cannot elapse between them.
     """
     entry = _dirty_fighting_packet(ctx)
     if entry is None:
         return None
     entry["event_order_certified"] = "auto_stack_proc"
     entry["auto_stack_every"] = 3
+    passive = ctx.ability("P")
+    if passive is not None:
+        attach_self_shield(
+            entry,
+            amount=_dirty_fighting_shield(passive, ctx),
+            duration=_DIRTY_FIGHTING_SHIELD_DURATION_SECONDS,
+            source="Dirty Fighting (3-Stack Shield)",
+            detail=(
+                "Each completed 3-stack detonation grants Akshan the proc "
+                "shield (40:280 by level + 35% bonus AD) for 2s; one shield "
+                "per proc burst (the internal cooldown of 16/12/8/4s by "
+                "level cannot elapse between the fight's cast-boundary "
+                "procs)"
+            ),
+        )
     return entry
 
 
@@ -297,6 +336,11 @@ ASSUMPTIONS = [
     "stack consumes them all: each passive_procs entry is one completed "
     "3-stack detonation (15/40/80/150 by level + 60% AP, the level "
     "breakpoints and AP ratio regex-read from the wiki description)",
+    "Each completed 3-stack detonation also grants the proc shield "
+    "(40:280 by level + 35% bonus AD for 2s, the cached 'Bonus Damage' "
+    "row); one shield per proc burst — the proc events ride the cast "
+    "boundary and the shield internal cooldown (16/12/8/4s by level, "
+    "game-file PassiveCooldown) cannot elapse between them",
 ]
 
 SLOTS = {

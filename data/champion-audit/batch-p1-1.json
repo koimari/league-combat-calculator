@@ -1,0 +1,122 @@
+{
+ "Akshan": {
+  "verdict": "ok",
+  "gap_summary": "Closed: Dirty Fighting's 3-stack proc SHIELD (40 : 280 based on level + 35% bonus AD for 2s) now rides the modeled proc entry as a self_shield_events payload \u2014 the amount is read live from the cached P 'Bonus Damage' leveling row (280.0 at level 18, 0 bonus AD, verified in tests/test_p1_review_1.py), the 2s duration from the cached description prose, and the shield internal cooldown (16/12/8/4s by level, game-file PassiveCooldown) is a documented boundary: one shield per proc burst (the fight's proc events all ride the cast boundary). API evidence: one 'Dirty Fighting (3-Stack Shield)' support event at 280.0, support_shield_received 280.0; passive_procs=0 emits none.",
+  "module": "akshan.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "KSante": {
+  "verdict": "ok",
+  "gap_summary": "Closed: All Out's 20% omnivamp self-heal (cached R fourth-effect prose 'he gains bonus attack speed, 50% bonus-armor penetration, and 20% omnivamp') is now granted in the R stat_buff (omnivamp_percent 20.0) when the all_out option is on; the fight engine's omnivamp channel prices 20% of the post-mitigation damage of its explicitly single-target attack/on-hit packets (124.0 = 0.20 x 620.0 auto damage in the API probe, tests/test_p1_review_1.py). The remaining ability-damage omnivamp, the 65% health threshold, and the resist conversion stay documented state/boundaries per the engine's conservative omnivamp contract.",
+  "module": "ksante.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Locke": {
+  "verdict": "ok",
+  "gap_summary": "Closed: W Soul Ignition's recast heal is now authored by the E8a grey-health primitive \u2014 Locke added to GREY_HEALTH_RULE_CHAMPIONS and a participant_timeline branch stores 100% of the post-mitigation champion damage taken during each W's 6s active (cached W prose) capped by the 'Damage taken grey health cap' leveling row (40/60/80/100/120 by W rank + 100% AP), healed at the automatic 6s recast (120.0 = the rank-5 cap in the API probe, grey_health_stored == grey_health_consumed == 120.0; tests/test_p1_review_1.py). The health-cost add and the missing-health bonus remain documented dynamic-self-state boundaries (the E1-b6 scope note).",
+  "module": "locke.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "no_damage",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Malphite": {
+  "verdict": "ok",
+  "gap_summary": "Closed: W (Thunderclap) now prices BOTH sourced parts of the empowered attack \u2014 'Additional Physical Damage' (30-70 + 20% AP + 15% armor) on-hit bonus plus the cone's 'Physical Damage' (15-55 + 30% AP + 15% armor) as a single-target hit (the 1v1 target stands inside the melee cone; the per-auto cone cadence over 5s is a documented boundary) \u2014 and W's passive bonus armor is granted at its tripled value ('Increased Bonus Armor' row 30/45/60/75/90% armor, tripled while Granite Shield is active, which the E8c module models as active for the whole window) as a BUFF-phase stat feeding E's 40% armor ratio (E raw 294.24 vs 249.6 un-buffed at level 18, verified in tests/test_p1_review_1.py).",
+  "module": "malphite.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Nasus": {
+  "verdict": "ok",
+  "gap_summary": "Closed: P Soul Eater lifesteal is now a self-heal rule \u2014 Nasus added to HEALING_RULE_CHAMPIONS and a derive_self_healing branch heals 12%/18%/24% (based on level) of the post-mitigation physical basic-attack/on-hit damage dealt, matching the engine's lifesteal eligibility. The level breakpoints are the game-file LifestealTooltip (12% levels 1-6, 18% 7-12, 24% 13+ \u2014 verified via Community Dragon NasusPassive, NOT the wiki which omits the levels; the cached P description carries '12% / 18% / 24% (based on level)'). API evidence: 4 Soul Eater heals of 14.7 = 0.24 x 61.25 per-auto at level 18, 0.12-ratio at level 6 (tests/test_p1_review_1.py).",
+  "module": "nasus.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "RekSai": {
+  "verdict": "ok",
+  "gap_summary": "Closed: E (Furious Bite) max-Fury branch is now priced via the e_fury option (int 0-100, default 0): at 100 Fury the packet uses the cached 'True Damage' leveling row (84-204 + 72% bonus AD == 120% of the 'Physical Damage' row, per the cached E second effect 'At maximum Fury, Furious Bite deals 120% damage and is converted to true damage'); below 100 Fury it keeps the reviewed physical row. API evidence: E deals 170 physical at 0 Fury and 204 true (unmitigated) at 100 Fury (tests/test_p1_review_1.py). Fury generation and burrow CC remain documented out_of_scope.",
+  "module": "reksai.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Seraphine": {
+  "verdict": "ok",
+  "gap_summary": "Closed: Q (High Note) now prices the missing-health amplifier \u2014 'the damage is increased by 0% : 75% (based on target's missing health)' (cached Q second effect) as a second hp-scaled part (0.75 x base x the target's live missing-health ratio), so at full missing health the total equals the cached 'Maximum Enhanced Damage' row (105-280 + 70% AP == 1.75 x base at every rank; the closure is asserted against the row in tests/test_p1_review_1.py). The pair ledger re-prices the part at the defender's live health (API Q total strictly above the flat base and bounded by the max row).",
+  "module": "seraphine.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Sylas": {
+  "verdict": "ok",
+  "gap_summary": "Closed: the CP-era E2 shield atom (SylasEShield, 80/115/150/185/220 + 100% AP for 2s) is documented as HISTORICAL \u2014 the wiki patch history records 'Abscond Removed: ... No longer shields for 80 / 115 / 150 / 185 / 220 (+ 100% AP) against magic damage for 2 seconds upon dashing' (V10.2), and the pinned cached data (patch 16.15) carries no shield row on either E entry, so the module's E packet (Abduct 80-280 + 80% AP magic damage) is complete and nothing damage-relevant is absent. W Kingslayer heal stays closed by E1-b2; tests/test_p1_review_1.py asserts the E packet prices the sourced row and emits no shield.",
+  "module": "sylas.py",
+  "slots": {
+   "P": "out_of_scope",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "out_of_scope"
+  }
+ },
+ "Vex": {
+  "verdict": "ok",
+  "gap_summary": "Closed: P Doom 'n Gloom's Gloom detonation is now priced as an on-hit rider \u2014 'Vex's next basic attack ... will detonate the mark. Gloom's detonation deals 40 : 162.94 (based on level) (+ 25% AP) bonus magic damage' (cached P description; the 'Bonus Magic Damage' leveling row is read live: 150.0 at level 18, 0 AP), capped by the new p_gloom_detonations option (default 1 = the fight opens with one dashing enemy) via the engine's max_procs cap. API evidence: 89.8 = 150 mitigated vs the defender's MR; 3 detonations -> 269.4; 0 -> no row (tests/test_p1_review_1.py). The Doom fear/knock-down (CC) and the reduced non-champion damage stay documented out of scope.",
+  "module": "vex.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "modeled",
+   "E": "modeled",
+   "R": "modeled"
+  }
+ },
+ "Yasuo": {
+  "verdict": "ok",
+  "gap_summary": "Closed: P Way of the Wanderer's Intent is now priced \u2014 the module emits a crit_modifier payload (crit_chance_multiplier 2.0, crit_damage_multiplier_factor 0.9, excess_crit_bonus_ad_per_percent 0.5) from the cached P prose ('total critical strike chance is doubled from all other sources ... every 1% critical strike chance in excess of 100% is converted into 0.5 bonus attack damage ... critical strikes deal only 90% of the critical damage champions usually have'; the 0.9 factor is also the champion game stat criticalStrikeDamageModifier), and the fight engine applies it once in _apply_stat_buff_ultimates so autos AND ability crits share the converted values. Steel Tempest splits the flat 20-120 base (never crits) from the crit-eligible 105% AD portion ('Steel Tempest's damage based on its AD ratio can critically strike'). API evidence: 25%+25% item crit -> doubled to 100% with 2.07 = 0.9 x 2.30 per-auto (tests/test_p1_review_1.py). Flow shield stays a documented state row.",
+  "module": "yasuo.py",
+  "slots": {
+   "P": "modeled",
+   "Q": "modeled",
+   "W": "out_of_scope",
+   "E": "modeled",
+   "R": "out_of_scope"
+  }
+ }
+}
