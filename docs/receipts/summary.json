@@ -1,0 +1,2318 @@
+{
+ "champions": {
+  "Aatrox": {
+   "atoms": 25,
+   "verdict": "ok"
+  },
+  "Ahri": {
+   "atoms": 27,
+   "verdict": "ok"
+  },
+  "Akali": {
+   "atoms": 51,
+   "verdict": "ok"
+  },
+  "Akshan": {
+   "atoms": 31,
+   "verdict": "review"
+  },
+  "Alistar": {
+   "atoms": 27,
+   "verdict": "gap"
+  },
+  "Ambessa": {
+   "atoms": 38,
+   "verdict": "ok"
+  },
+  "Amumu": {
+   "atoms": 18,
+   "verdict": "ok"
+  },
+  "Anivia": {
+   "atoms": 17,
+   "verdict": "ok"
+  },
+  "Annie": {
+   "atoms": 26,
+   "verdict": "ok"
+  },
+  "Aphelios": {
+   "atoms": 26,
+   "verdict": "gap"
+  },
+  "Ashe": {
+   "atoms": 30,
+   "verdict": "ok"
+  },
+  "AurelionSol": {
+   "atoms": 26,
+   "verdict": "ok"
+  },
+  "Aurora": {
+   "atoms": 17,
+   "verdict": "ok"
+  },
+  "Azir": {
+   "atoms": 23,
+   "verdict": "ok"
+  },
+  "Bard": {
+   "atoms": 30,
+   "verdict": "review"
+  },
+  "Belveth": {
+   "atoms": 24,
+   "verdict": "gap"
+  },
+  "Blitzcrank": {
+   "atoms": 28,
+   "verdict": "ok"
+  },
+  "Brand": {
+   "atoms": 22,
+   "verdict": "ok"
+  },
+  "Braum": {
+   "atoms": 34,
+   "verdict": "ok"
+  },
+  "Briar": {
+   "atoms": 68,
+   "verdict": "review"
+  },
+  "Caitlyn": {
+   "atoms": 23,
+   "verdict": "ok"
+  },
+  "Camille": {
+   "atoms": 51,
+   "verdict": "gap"
+  },
+  "Cassiopeia": {
+   "atoms": 24,
+   "verdict": "ok"
+  },
+  "Chogath": {
+   "atoms": 36,
+   "verdict": "ok"
+  },
+  "Corki": {
+   "atoms": 28,
+   "verdict": "ok"
+  },
+  "Darius": {
+   "atoms": 28,
+   "verdict": "ok"
+  },
+  "Diana": {
+   "atoms": 23,
+   "verdict": "ok"
+  },
+  "DrMundo": {
+   "atoms": 30,
+   "verdict": "ok"
+  },
+  "Draven": {
+   "atoms": 26,
+   "verdict": "ok"
+  },
+  "Ekko": {
+   "atoms": 52,
+   "verdict": "ok"
+  },
+  "Elise": {
+   "atoms": 45,
+   "verdict": "ok"
+  },
+  "Evelynn": {
+   "atoms": 26,
+   "verdict": "ok"
+  },
+  "Ezreal": {
+   "atoms": 15,
+   "verdict": "ok"
+  },
+  "Fiddlesticks": {
+   "atoms": 28,
+   "verdict": "ok"
+  },
+  "Fiora": {
+   "atoms": 44,
+   "verdict": "ok"
+  },
+  "Fizz": {
+   "atoms": 39,
+   "verdict": "review"
+  },
+  "Galio": {
+   "atoms": 36,
+   "verdict": "ok"
+  },
+  "Gangplank": {
+   "atoms": 20,
+   "verdict": "ok"
+  },
+  "Garen": {
+   "atoms": 29,
+   "verdict": "ok"
+  },
+  "Gnar": {
+   "atoms": 48,
+   "verdict": "ok"
+  },
+  "Gragas": {
+   "atoms": 31,
+   "verdict": "ok"
+  },
+  "Graves": {
+   "atoms": 29,
+   "verdict": "ok"
+  },
+  "Gwen": {
+   "atoms": 25,
+   "verdict": "ok"
+  },
+  "Hecarim": {
+   "atoms": 38,
+   "verdict": "ok"
+  },
+  "Heimerdinger": {
+   "atoms": 23,
+   "verdict": "ok"
+  },
+  "Hwei": {
+   "atoms": 18,
+   "verdict": "ok"
+  },
+  "Illaoi": {
+   "atoms": 31,
+   "verdict": "gap"
+  },
+  "Irelia": {
+   "atoms": 32,
+   "verdict": "ok"
+  },
+  "Ivern": {
+   "atoms": 33,
+   "verdict": "gap"
+  },
+  "Janna": {
+   "atoms": 18,
+   "verdict": "review"
+  },
+  "JarvanIV": {
+   "atoms": 22,
+   "verdict": "ok"
+  },
+  "Jax": {
+   "atoms": 28,
+   "verdict": "ok"
+  },
+  "Jayce": {
+   "atoms": 39,
+   "verdict": "ok"
+  },
+  "Jhin": {
+   "atoms": 32,
+   "verdict": "ok"
+  },
+  "Jinx": {
+   "atoms": 44,
+   "verdict": "ok"
+  },
+  "KSante": {
+   "atoms": 57,
+   "verdict": "gap"
+  },
+  "Kaisa": {
+   "atoms": 44,
+   "verdict": "ok"
+  },
+  "Kalista": {
+   "atoms": 49,
+   "verdict": "ok"
+  },
+  "Karma": {
+   "atoms": 21,
+   "verdict": "gap"
+  },
+  "Karthus": {
+   "atoms": 32,
+   "verdict": "review"
+  },
+  "Kassadin": {
+   "atoms": 20,
+   "verdict": "ok"
+  },
+  "Katarina": {
+   "atoms": 22,
+   "verdict": "ok"
+  },
+  "Kayle": {
+   "atoms": 38,
+   "verdict": "gap"
+  },
+  "Kayn": {
+   "atoms": 30,
+   "verdict": "review"
+  },
+  "Kennen": {
+   "atoms": 21,
+   "verdict": "ok"
+  },
+  "Khazix": {
+   "atoms": 27,
+   "verdict": "gap"
+  },
+  "Kindred": {
+   "atoms": 50,
+   "verdict": "gap"
+  },
+  "Kled": {
+   "atoms": 64,
+   "verdict": "review"
+  },
+  "KogMaw": {
+   "atoms": 23,
+   "verdict": "ok"
+  },
+  "Leblanc": {
+   "atoms": 47,
+   "verdict": "ok"
+  },
+  "LeeSin": {
+   "atoms": 25,
+   "verdict": "review"
+  },
+  "Leona": {
+   "atoms": 33,
+   "verdict": "review"
+  },
+  "Lillia": {
+   "atoms": 28,
+   "verdict": "ok"
+  },
+  "Lissandra": {
+   "atoms": 33,
+   "verdict": "gap"
+  },
+  "Locke": {
+   "atoms": 31,
+   "verdict": "gap"
+  },
+  "Lucian": {
+   "atoms": 28,
+   "verdict": "gap"
+  },
+  "Lulu": {
+   "atoms": 22,
+   "verdict": "review"
+  },
+  "Lux": {
+   "atoms": 29,
+   "verdict": "review"
+  },
+  "Malphite": {
+   "atoms": 34,
+   "verdict": "review"
+  },
+  "Malzahar": {
+   "atoms": 29,
+   "verdict": "gap"
+  },
+  "Maokai": {
+   "atoms": 45,
+   "verdict": "gap"
+  },
+  "MasterYi": {
+   "atoms": 25,
+   "verdict": "gap"
+  },
+  "Mel": {
+   "atoms": 40,
+   "verdict": "review"
+  },
+  "Milio": {
+   "atoms": 23,
+   "verdict": "gap"
+  },
+  "MissFortune": {
+   "atoms": 21,
+   "verdict": "gap"
+  },
+  "Mordekaiser": {
+   "atoms": 21,
+   "verdict": "gap"
+  },
+  "Morgana": {
+   "atoms": 17,
+   "verdict": "gap"
+  },
+  "Naafiri": {
+   "atoms": 30,
+   "verdict": "gap"
+  },
+  "Nami": {
+   "atoms": 26,
+   "verdict": "gap"
+  },
+  "Nasus": {
+   "atoms": 22,
+   "verdict": "gap"
+  },
+  "Nautilus": {
+   "atoms": 34,
+   "verdict": "review"
+  },
+  "Neeko": {
+   "atoms": 21,
+   "verdict": "review"
+  },
+  "Nidalee": {
+   "atoms": 31,
+   "verdict": "gap"
+  },
+  "Nilah": {
+   "atoms": 45,
+   "verdict": "gap"
+  },
+  "Nocturne": {
+   "atoms": 16,
+   "verdict": "review"
+  },
+  "Nunu": {
+   "atoms": 33,
+   "verdict": "gap"
+  },
+  "Olaf": {
+   "atoms": 22,
+   "verdict": "review"
+  },
+  "Orianna": {
+   "atoms": 24,
+   "verdict": "ok"
+  },
+  "Ornn": {
+   "atoms": 27,
+   "verdict": "ok"
+  },
+  "Pantheon": {
+   "atoms": 37,
+   "verdict": "gap"
+  },
+  "Poppy": {
+   "atoms": 31,
+   "verdict": "review"
+  },
+  "Pyke": {
+   "atoms": 26,
+   "verdict": "gap"
+  },
+  "Qiyana": {
+   "atoms": 48,
+   "verdict": "ok"
+  },
+  "Quinn": {
+   "atoms": 20,
+   "verdict": "gap"
+  },
+  "Rakan": {
+   "atoms": 40,
+   "verdict": "gap"
+  },
+  "Rammus": {
+   "atoms": 22,
+   "verdict": "gap"
+  },
+  "RekSai": {
+   "atoms": 57,
+   "verdict": "review"
+  },
+  "Rell": {
+   "atoms": 33,
+   "verdict": "review"
+  },
+  "Renata": {
+   "atoms": 20,
+   "verdict": "review"
+  },
+  "Renekton": {
+   "atoms": 28,
+   "verdict": "review"
+  },
+  "Rengar": {
+   "atoms": 53,
+   "verdict": "gap"
+  },
+  "Riven": {
+   "atoms": 30,
+   "verdict": "review"
+  },
+  "Rumble": {
+   "atoms": 28,
+   "verdict": "review"
+  },
+  "Ryze": {
+   "atoms": 20,
+   "verdict": "ok"
+  },
+  "Samira": {
+   "atoms": 33,
+   "verdict": "review"
+  },
+  "Sejuani": {
+   "atoms": 27,
+   "verdict": "ok"
+  },
+  "Senna": {
+   "atoms": 33,
+   "verdict": "gap"
+  },
+  "Seraphine": {
+   "atoms": 31,
+   "verdict": "review"
+  },
+  "Sett": {
+   "atoms": 40,
+   "verdict": "review"
+  },
+  "Shaco": {
+   "atoms": 32,
+   "verdict": "review"
+  },
+  "Shen": {
+   "atoms": 31,
+   "verdict": "ok"
+  },
+  "Shyvana": {
+   "atoms": 41,
+   "verdict": "review"
+  },
+  "Singed": {
+   "atoms": 14,
+   "verdict": "ok"
+  },
+  "Sion": {
+   "atoms": 44,
+   "verdict": "review"
+  },
+  "Sivir": {
+   "atoms": 32,
+   "verdict": "ok"
+  },
+  "Skarner": {
+   "atoms": 21,
+   "verdict": "review"
+  },
+  "Smolder": {
+   "atoms": 25,
+   "verdict": "gap"
+  },
+  "Sona": {
+   "atoms": 26,
+   "verdict": "review"
+  },
+  "Soraka": {
+   "atoms": 28,
+   "verdict": "ok"
+  },
+  "Swain": {
+   "atoms": 29,
+   "verdict": "gap"
+  },
+  "Sylas": {
+   "atoms": 25,
+   "verdict": "gap"
+  },
+  "Syndra": {
+   "atoms": 43,
+   "verdict": "ok"
+  },
+  "TahmKench": {
+   "atoms": 23,
+   "verdict": "gap"
+  },
+  "Taliyah": {
+   "atoms": 38,
+   "verdict": "ok"
+  },
+  "Talon": {
+   "atoms": 29,
+   "verdict": "gap"
+  },
+  "Taric": {
+   "atoms": 22,
+   "verdict": "gap"
+  },
+  "Teemo": {
+   "atoms": 29,
+   "verdict": "gap"
+  },
+  "Thresh": {
+   "atoms": 37,
+   "verdict": "gap"
+  },
+  "Tristana": {
+   "atoms": 18,
+   "verdict": "gap"
+  },
+  "Trundle": {
+   "atoms": 27,
+   "verdict": "gap"
+  },
+  "Tryndamere": {
+   "atoms": 13,
+   "verdict": "gap"
+  },
+  "TwistedFate": {
+   "atoms": 16,
+   "verdict": "review"
+  },
+  "Twitch": {
+   "atoms": 22,
+   "verdict": "gap"
+  },
+  "Udyr": {
+   "atoms": 25,
+   "verdict": "gap"
+  },
+  "Urgot": {
+   "atoms": 35,
+   "verdict": "gap"
+  },
+  "Varus": {
+   "atoms": 28,
+   "verdict": "gap"
+  },
+  "Vayne": {
+   "atoms": 37,
+   "verdict": "ok"
+  },
+  "Veigar": {
+   "atoms": 18,
+   "verdict": "review"
+  },
+  "Velkoz": {
+   "atoms": 34,
+   "verdict": "gap"
+  },
+  "Vex": {
+   "atoms": 21,
+   "verdict": "review"
+  },
+  "Vi": {
+   "atoms": 32,
+   "verdict": "ok"
+  },
+  "Viego": {
+   "atoms": 47,
+   "verdict": "review"
+  },
+  "Viktor": {
+   "atoms": 25,
+   "verdict": "review"
+  },
+  "Vladimir": {
+   "atoms": 36,
+   "verdict": "review"
+  },
+  "Volibear": {
+   "atoms": 30,
+   "verdict": "gap"
+  },
+  "Warwick": {
+   "atoms": 40,
+   "verdict": "gap"
+  },
+  "MonkeyKing": {
+   "atoms": 22,
+   "verdict": "gap"
+  },
+  "Xayah": {
+   "atoms": 23,
+   "verdict": "ok"
+  },
+  "Xerath": {
+   "atoms": 24,
+   "verdict": "ok"
+  },
+  "XinZhao": {
+   "atoms": 31,
+   "verdict": "gap"
+  },
+  "Yasuo": {
+   "atoms": 60,
+   "verdict": "gap"
+  },
+  "Yone": {
+   "atoms": 34,
+   "verdict": "gap"
+  },
+  "Yorick": {
+   "atoms": 29,
+   "verdict": "gap"
+  },
+  "Yunara": {
+   "atoms": 45,
+   "verdict": "review"
+  },
+  "Yuumi": {
+   "atoms": 40,
+   "verdict": "gap"
+  },
+  "Zaahen": {
+   "atoms": 40,
+   "verdict": "gap"
+  },
+  "Zac": {
+   "atoms": 34,
+   "verdict": "gap"
+  },
+  "Zed": {
+   "atoms": 39,
+   "verdict": "review"
+  },
+  "Zeri": {
+   "atoms": 27,
+   "verdict": "review"
+  },
+  "Ziggs": {
+   "atoms": 22,
+   "verdict": "ok"
+  },
+  "Zilean": {
+   "atoms": 22,
+   "verdict": "gap"
+  },
+  "Zoe": {
+   "atoms": 62,
+   "verdict": "review"
+  },
+  "Zyra": {
+   "atoms": 29,
+   "verdict": "gap"
+  }
+ },
+ "items": {
+  "Boots": {
+   "id": "1001",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Faerie Charm": {
+   "id": "1004",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Rejuvenation Bead": {
+   "id": "1006",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Giant's Belt": {
+   "id": "1011",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Cloak of Agility": {
+   "id": "1018",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Blasting Wand": {
+   "id": "1026",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Sapphire Crystal": {
+   "id": "1027",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Ruby Crystal": {
+   "id": "1028",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Cloth Armor": {
+   "id": "1029",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Chain Vest": {
+   "id": "1031",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Null-Magic Mantle": {
+   "id": "1033",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Long Sword": {
+   "id": "1036",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Pickaxe": {
+   "id": "1037",
+   "atoms": 1,
+   "effects": 0
+  },
+  "B. F. Sword": {
+   "id": "1038",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Dagger": {
+   "id": "1042",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Recurve Bow": {
+   "id": "1043",
+   "atoms": 3,
+   "effects": 2
+  },
+  "Amplifying Tome": {
+   "id": "1052",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Vampiric Scepter": {
+   "id": "1053",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Doran's Shield": {
+   "id": "1054",
+   "atoms": 6,
+   "effects": 5
+  },
+  "Doran's Blade": {
+   "id": "1055",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Doran's Ring": {
+   "id": "1056",
+   "atoms": 9,
+   "effects": 7
+  },
+  "Negatron Cloak": {
+   "id": "1057",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Needlessly Large Rod": {
+   "id": "1058",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Dark Seal": {
+   "id": "1082",
+   "atoms": 3,
+   "effects": 1
+  },
+  "Cull": {
+   "id": "1083",
+   "atoms": 10,
+   "effects": 9
+  },
+  "Doran's Bow": {
+   "id": "1086",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Scorchclaw Pup": {
+   "id": "1101",
+   "atoms": 7,
+   "effects": 7
+  },
+  "Gustwalker Hatchling": {
+   "id": "1102",
+   "atoms": 5,
+   "effects": 5
+  },
+  "Mosstomper Seedling": {
+   "id": "1103",
+   "atoms": 5,
+   "effects": 5
+  },
+  "Jarvan I's": {
+   "id": "1111",
+   "atoms": 10,
+   "effects": 4
+  },
+  "Doran's Helm": {
+   "id": "1120",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Ohmwrecker (Turret Item)": {
+   "id": "1500",
+   "atoms": 4,
+   "effects": 3
+  },
+  "Reinforced Armor (Turret Item)": {
+   "id": "1502",
+   "atoms": 5,
+   "effects": 5
+  },
+  "Warden's Eye": {
+   "id": "1503",
+   "atoms": 3,
+   "effects": 3
+  },
+  "Base Turret Reinforced Armor (Turret Item)": {
+   "id": "1506",
+   "atoms": 9,
+   "effects": 9
+  },
+  "Overcharged": {
+   "id": "1507",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Anti-Tower Socks": {
+   "id": "1508",
+   "atoms": 3,
+   "effects": 3
+  },
+  "Gusto": {
+   "id": "1509",
+   "atoms": 2,
+   "effects": 2
+  },
+  "Phreakish Gusto": {
+   "id": "1510",
+   "atoms": 2,
+   "effects": 2
+  },
+  "Super Mech Armor": {
+   "id": "1511",
+   "atoms": 1,
+   "effects": 1
+  },
+  "Super Mech Power Field": {
+   "id": "1512",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Turret Plating": {
+   "id": "1515",
+   "atoms": 3,
+   "effects": 3
+  },
+  "Crystalline Overgrowth": {
+   "id": "1524",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Health Potion": {
+   "id": "2003",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Total Biscuit of Everlasting Will": {
+   "id": "2010",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Steel Sigil": {
+   "id": "2019",
+   "atoms": 2,
+   "effects": 0
+  },
+  "The Brutalizer": {
+   "id": "2020",
+   "atoms": 3,
+   "effects": 0
+  },
+  "Tunneler": {
+   "id": "2021",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Glowing Mote": {
+   "id": "2022",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Refillable Potion": {
+   "id": "2031",
+   "atoms": 2,
+   "effects": 2
+  },
+  "Guardian's Amulet": {
+   "id": "2049",
+   "atoms": 15,
+   "effects": 12
+  },
+  "Guardian's Shroud": {
+   "id": "2050",
+   "atoms": 3,
+   "effects": 0
+  },
+  "Guardian's Horn": {
+   "id": "2051",
+   "atoms": 4,
+   "effects": 3
+  },
+  "Poro-Snax": {
+   "id": "2052",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Control Ward": {
+   "id": "2055",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Shurelya's Battlesong": {
+   "id": "2065",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Elixir of Iron": {
+   "id": "2138",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Elixir of Sorcery": {
+   "id": "2139",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Elixir of Wrath": {
+   "id": "2140",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Cappa Juice": {
+   "id": "2141",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Juice of Power": {
+   "id": "2142",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Juice of Vitality": {
+   "id": "2143",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Juice of Haste": {
+   "id": "2144",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Lucky Dice": {
+   "id": "2145",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Enhanced Lucky Dice": {
+   "id": "2146",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Elixir of Skill": {
+   "id": "2150",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Elixir of Avarice": {
+   "id": "2151",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Elixir of Force": {
+   "id": "2152",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Seeker's Armguard": {
+   "id": "2420",
+   "atoms": 4,
+   "effects": 2
+  },
+  "Shattered Armguard": {
+   "id": "2421",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Slightly Magical Boots": {
+   "id": "2422",
+   "atoms": 2,
+   "effects": 2
+  },
+  "Overlord's Bloodmail": {
+   "id": "2501",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Unending Despair": {
+   "id": "2502",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Blackfire Torch": {
+   "id": "2503",
+   "atoms": 8,
+   "effects": 5
+  },
+  "Kaenic Rookern": {
+   "id": "2504",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Fated Ashes": {
+   "id": "2508",
+   "atoms": 2,
+   "effects": 1
+  },
+  "Dusk and Dawn": {
+   "id": "2510",
+   "atoms": 9,
+   "effects": 5
+  },
+  "Fiendhunter Bolts": {
+   "id": "2512",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Endless Hunger": {
+   "id": "2517",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Bastionbreaker": {
+   "id": "2520",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Actualizer": {
+   "id": "2522",
+   "atoms": 10,
+   "effects": 7
+  },
+  "Hexoptics C44": {
+   "id": "2523",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Bandlepipes": {
+   "id": "2524",
+   "atoms": 8,
+   "effects": 4
+  },
+  "Protoplasm Harness": {
+   "id": "2525",
+   "atoms": 11,
+   "effects": 9
+  },
+  "Whispering Circlet": {
+   "id": "2526",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Diadem of Songs": {
+   "id": "2530",
+   "atoms": 8,
+   "effects": 5
+  },
+  "Archangel's Staff": {
+   "id": "3003",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Manamune": {
+   "id": "3004",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Berserker's Greaves": {
+   "id": "3006",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Gluttonous Greaves": {
+   "id": "3008",
+   "atoms": 6,
+   "effects": 6
+  },
+  "Boots of Swiftness": {
+   "id": "3009",
+   "atoms": 1,
+   "effects": 1
+  },
+  "Sorcerer's Shoes": {
+   "id": "3020",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Glacial Buckler": {
+   "id": "3024",
+   "atoms": 3,
+   "effects": 0
+  },
+  "Guardian Angel": {
+   "id": "3026",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Infinity Edge": {
+   "id": "3031",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Yun Tal Wildarrows": {
+   "id": "3032",
+   "atoms": 7,
+   "effects": 5
+  },
+  "Mortal Reminder": {
+   "id": "3033",
+   "atoms": 10,
+   "effects": 7
+  },
+  "Last Whisper": {
+   "id": "3035",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Lord Dominik's Regards": {
+   "id": "3036",
+   "atoms": 12,
+   "effects": 9
+  },
+  "Seraph's Embrace": {
+   "id": "3040",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Mejai's Soulstealer": {
+   "id": "3041",
+   "atoms": 3,
+   "effects": 1
+  },
+  "Muramana": {
+   "id": "3042",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Phage": {
+   "id": "3044",
+   "atoms": 5,
+   "effects": 3
+  },
+  "Phantom Dancer": {
+   "id": "3046",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Plated Steelcaps": {
+   "id": "3047",
+   "atoms": 4,
+   "effects": 3
+  },
+  "Zeke's Convergence": {
+   "id": "3050",
+   "atoms": 6,
+   "effects": 2
+  },
+  "Hearthbound Axe": {
+   "id": "3051",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Sterak's Gage": {
+   "id": "3053",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Sheen": {
+   "id": "3057",
+   "atoms": 3,
+   "effects": 2
+  },
+  "Spirit Visage": {
+   "id": "3065",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Winged Moonplate": {
+   "id": "3066",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Kindlegem": {
+   "id": "3067",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Sunfire Aegis": {
+   "id": "3068",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Tear of the Goddess": {
+   "id": "3070",
+   "atoms": 3,
+   "effects": 2
+  },
+  "Black Cleaver": {
+   "id": "3071",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Bloodthirster": {
+   "id": "3072",
+   "atoms": 5,
+   "effects": 4
+  },
+  "Experimental Hexplate": {
+   "id": "3073",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Ravenous Hydra": {
+   "id": "3074",
+   "atoms": 5,
+   "effects": 3
+  },
+  "Thornmail": {
+   "id": "3075",
+   "atoms": 4,
+   "effects": 2
+  },
+  "Bramble Vest": {
+   "id": "3076",
+   "atoms": 3,
+   "effects": 2
+  },
+  "Tiamat": {
+   "id": "3077",
+   "atoms": 3,
+   "effects": 2
+  },
+  "Trinity Force": {
+   "id": "3078",
+   "atoms": 9,
+   "effects": 5
+  },
+  "Warden's Mail": {
+   "id": "3082",
+   "atoms": 2,
+   "effects": 1
+  },
+  "Warmog's Armor": {
+   "id": "3083",
+   "atoms": 7,
+   "effects": 6
+  },
+  "Heartsteel": {
+   "id": "3084",
+   "atoms": 6,
+   "effects": 5
+  },
+  "Runaan's Hurricane": {
+   "id": "3085",
+   "atoms": 11,
+   "effects": 9
+  },
+  "Zeal": {
+   "id": "3086",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Statikk Shiv": {
+   "id": "3087",
+   "atoms": 11,
+   "effects": 8
+  },
+  "Rabadon's Deathcap": {
+   "id": "3089",
+   "atoms": 2,
+   "effects": 1
+  },
+  "Wit's End": {
+   "id": "3091",
+   "atoms": 8,
+   "effects": 5
+  },
+  "Rapid Firecannon": {
+   "id": "3094",
+   "atoms": 9,
+   "effects": 7
+  },
+  "Stormrazor": {
+   "id": "3097",
+   "atoms": 12,
+   "effects": 9
+  },
+  "Lich Bane": {
+   "id": "3100",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Banshee's Veil": {
+   "id": "3102",
+   "atoms": 5,
+   "effects": 3
+  },
+  "Redemption": {
+   "id": "3107",
+   "atoms": 12,
+   "effects": 9
+  },
+  "Fiendish Codex": {
+   "id": "3108",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Knight's Vow": {
+   "id": "3109",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Frozen Heart": {
+   "id": "3110",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Mercury's Treads": {
+   "id": "3111",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Guardian's Orb": {
+   "id": "3112",
+   "atoms": 3,
+   "effects": 1
+  },
+  "Aether Wisp": {
+   "id": "3113",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Forbidden Idol": {
+   "id": "3114",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Nashor's Tooth": {
+   "id": "3115",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Rylai's Crystal Scepter": {
+   "id": "3116",
+   "atoms": 3,
+   "effects": 1
+  },
+  "Malignance": {
+   "id": "3118",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Winter's Approach": {
+   "id": "3119",
+   "atoms": 5,
+   "effects": 2
+  },
+  "Fimbulwinter": {
+   "id": "3121",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Executioner's Calling": {
+   "id": "3123",
+   "atoms": 3,
+   "effects": 2
+  },
+  "Guinsoo's Rageblade": {
+   "id": "3124",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Caulfield's Warhammer": {
+   "id": "3133",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Serrated Dirk": {
+   "id": "3134",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Void Staff": {
+   "id": "3135",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Cryptbloom": {
+   "id": "3137",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Mercurial Scimitar": {
+   "id": "3139",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Quicksilver Sash": {
+   "id": "3140",
+   "atoms": 4,
+   "effects": 3
+  },
+  "Youmuu's Ghostblade": {
+   "id": "3142",
+   "atoms": 4,
+   "effects": 2
+  },
+  "Randuin's Omen": {
+   "id": "3143",
+   "atoms": 5,
+   "effects": 3
+  },
+  "Scout's Slingshot": {
+   "id": "3144",
+   "atoms": 4,
+   "effects": 3
+  },
+  "Hextech Alternator": {
+   "id": "3145",
+   "atoms": 3,
+   "effects": 2
+  },
+  "Hextech Gunblade": {
+   "id": "3146",
+   "atoms": 5,
+   "effects": 3
+  },
+  "Haunting Guise": {
+   "id": "3147",
+   "atoms": 4,
+   "effects": 2
+  },
+  "Hextech Rocketbelt": {
+   "id": "3152",
+   "atoms": 5,
+   "effects": 2
+  },
+  "Blade of the Ruined King": {
+   "id": "3153",
+   "atoms": 11,
+   "effects": 9
+  },
+  "Hexdrinker": {
+   "id": "3155",
+   "atoms": 5,
+   "effects": 3
+  },
+  "Maw of Malmortius": {
+   "id": "3156",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Zhonya's Hourglass": {
+   "id": "3157",
+   "atoms": 4,
+   "effects": 2
+  },
+  "Ionian Boots of Lucidity": {
+   "id": "3158",
+   "atoms": 2,
+   "effects": 1
+  },
+  "Spear of Shojin": {
+   "id": "3161",
+   "atoms": 4,
+   "effects": 2
+  },
+  "Morellonomicon": {
+   "id": "3165",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Immortal Path": {
+   "id": "3168",
+   "atoms": 9,
+   "effects": 9
+  },
+  "Swiftmarch": {
+   "id": "3170",
+   "atoms": 4,
+   "effects": 4
+  },
+  "Crimson Lucidity": {
+   "id": "3171",
+   "atoms": 2,
+   "effects": 1
+  },
+  "Gunmetal Greaves": {
+   "id": "3172",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Chainlaced Crushers": {
+   "id": "3173",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Armored Advance": {
+   "id": "3174",
+   "atoms": 5,
+   "effects": 4
+  },
+  "Spellslinger's Shoes": {
+   "id": "3175",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Guardian's Blade": {
+   "id": "3177",
+   "atoms": 3,
+   "effects": 0
+  },
+  "Umbral Glaive": {
+   "id": "3179",
+   "atoms": 16,
+   "effects": 13
+  },
+  "Hullbreaker": {
+   "id": "3181",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Guardian's Hammer": {
+   "id": "3184",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Locket of the Iron Solari": {
+   "id": "3190",
+   "atoms": 10,
+   "effects": 6
+  },
+  "Spectre's Cowl": {
+   "id": "3211",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Mikael's Blessing": {
+   "id": "3222",
+   "atoms": 13,
+   "effects": 10
+  },
+  "Terminus": {
+   "id": "3302",
+   "atoms": 14,
+   "effects": 12
+  },
+  "Scarecrow Effigy": {
+   "id": "3330",
+   "atoms": 9,
+   "effects": 9
+  },
+  "Stealth Ward": {
+   "id": "3340",
+   "atoms": 10,
+   "effects": 10
+  },
+  "Arcane Sweeper (Trinket)": {
+   "id": "3348",
+   "atoms": 6,
+   "effects": 6
+  },
+  "Farsight Alteration": {
+   "id": "3363",
+   "atoms": 2,
+   "effects": 2
+  },
+  "Oracle Lens": {
+   "id": "3364",
+   "atoms": 11,
+   "effects": 11
+  },
+  "Your Cut": {
+   "id": "3400",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Rite of Ruin": {
+   "id": "3430",
+   "atoms": 10,
+   "effects": 7
+  },
+  "Ardent Censer": {
+   "id": "3504",
+   "atoms": 16,
+   "effects": 14
+  },
+  "Essence Reaver": {
+   "id": "3508",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Eye of the Herald": {
+   "id": "3513",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Black Spear": {
+   "id": "3599",
+   "atoms": 2,
+   "effects": 2
+  },
+  "Dead Man's Plate": {
+   "id": "3742",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Titanic Hydra": {
+   "id": "3748",
+   "atoms": 7,
+   "effects": 5
+  },
+  "Crystalline Bracer": {
+   "id": "3801",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Lost Chapter": {
+   "id": "3802",
+   "atoms": 4,
+   "effects": 1
+  },
+  "Catalyst of Aeons": {
+   "id": "3803",
+   "atoms": 3,
+   "effects": 1
+  },
+  "Edge of Night": {
+   "id": "3814",
+   "atoms": 5,
+   "effects": 2
+  },
+  "World Atlas": {
+   "id": "3865",
+   "atoms": 3,
+   "effects": 1
+  },
+  "Runic Compass": {
+   "id": "3866",
+   "atoms": 23,
+   "effects": 21
+  },
+  "Bounty of Worlds": {
+   "id": "3867",
+   "atoms": 20,
+   "effects": 18
+  },
+  "Celestial Opposition": {
+   "id": "3869",
+   "atoms": 18,
+   "effects": 16
+  },
+  "Dream Maker": {
+   "id": "3870",
+   "atoms": 26,
+   "effects": 24
+  },
+  "Zaz'Zak's Realmspike": {
+   "id": "3871",
+   "atoms": 18,
+   "effects": 16
+  },
+  "Solstice Sleigh": {
+   "id": "3876",
+   "atoms": 20,
+   "effects": 18
+  },
+  "Bloodsong": {
+   "id": "3877",
+   "atoms": 21,
+   "effects": 19
+  },
+  "Fire at Will": {
+   "id": "3901",
+   "atoms": 3,
+   "effects": 3
+  },
+  "Death's Daughter": {
+   "id": "3902",
+   "atoms": 1,
+   "effects": 1
+  },
+  "Raise Morale": {
+   "id": "3903",
+   "atoms": 1,
+   "effects": 1
+  },
+  "Oblivion Orb": {
+   "id": "3916",
+   "atoms": 4,
+   "effects": 3
+  },
+  "Lifeline": {
+   "id": "4003",
+   "atoms": 10,
+   "effects": 8
+  },
+  "Imperial Mandate": {
+   "id": "4005",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Sword of Blossoming Dawn": {
+   "id": "4011",
+   "atoms": 11,
+   "effects": 7
+  },
+  "Perplexity": {
+   "id": "4015",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Wordless Promise": {
+   "id": "4016",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Hellfire Hatchet": {
+   "id": "4017",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Force of Nature": {
+   "id": "4401",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Horizon Focus": {
+   "id": "4628",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Cosmic Drive": {
+   "id": "4629",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Blighting Jewel": {
+   "id": "4630",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Verdant Barrier": {
+   "id": "4632",
+   "atoms": 5,
+   "effects": 3
+  },
+  "Riftmaker": {
+   "id": "4633",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Bandleglass Mirror": {
+   "id": "4642",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Shadowflame": {
+   "id": "4645",
+   "atoms": 5,
+   "effects": 3
+  },
+  "Stormsurge": {
+   "id": "4646",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Death's Dance": {
+   "id": "6333",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Chempunk Chainsword": {
+   "id": "6609",
+   "atoms": 3,
+   "effects": 0
+  },
+  "Sundered Sky": {
+   "id": "6610",
+   "atoms": 3,
+   "effects": 0
+  },
+  "Staff of Flowing Water": {
+   "id": "6616",
+   "atoms": 10,
+   "effects": 7
+  },
+  "Moonstone Renewer": {
+   "id": "6617",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Echoes of Helia": {
+   "id": "6620",
+   "atoms": 12,
+   "effects": 9
+  },
+  "Dawncore": {
+   "id": "6621",
+   "atoms": 7,
+   "effects": 5
+  },
+  "Stridebreaker": {
+   "id": "6631",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Liandry's Torment": {
+   "id": "6653",
+   "atoms": 9,
+   "effects": 7
+  },
+  "Luden's Echo": {
+   "id": "6655",
+   "atoms": 5,
+   "effects": 2
+  },
+  "Rod of Ages": {
+   "id": "6657",
+   "atoms": 8,
+   "effects": 5
+  },
+  "Bami's Cinder": {
+   "id": "6660",
+   "atoms": 3,
+   "effects": 1
+  },
+  "Iceborn Gauntlet": {
+   "id": "6662",
+   "atoms": 12,
+   "effects": 9
+  },
+  "Hollow Radiance": {
+   "id": "6664",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Jak'Sho, The Protean": {
+   "id": "6665",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Noonquiver": {
+   "id": "6670",
+   "atoms": 2,
+   "effects": 0
+  },
+  "Kraken Slayer": {
+   "id": "6672",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Immortal Shieldbow": {
+   "id": "6673",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Navori Flickerblade": {
+   "id": "6675",
+   "atoms": 6,
+   "effects": 4
+  },
+  "The Collector": {
+   "id": "6676",
+   "atoms": 11,
+   "effects": 8
+  },
+  "Rectrix": {
+   "id": "6690",
+   "atoms": 1,
+   "effects": 0
+  },
+  "Eclipse": {
+   "id": "6692",
+   "atoms": 3,
+   "effects": 1
+  },
+  "Serylda's Grudge": {
+   "id": "6694",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Serpent's Fang": {
+   "id": "6695",
+   "atoms": 7,
+   "effects": 5
+  },
+  "Axiom Arc": {
+   "id": "6696",
+   "atoms": 5,
+   "effects": 2
+  },
+  "Hubris": {
+   "id": "6697",
+   "atoms": 4,
+   "effects": 1
+  },
+  "Profane Hydra": {
+   "id": "6698",
+   "atoms": 5,
+   "effects": 2
+  },
+  "Voltaic Cyclosword": {
+   "id": "6699",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Bloodletter's Curse": {
+   "id": "8010",
+   "atoms": 5,
+   "effects": 2
+  },
+  "Abyssal Mask": {
+   "id": "8020",
+   "atoms": 4,
+   "effects": 1
+  },
+  "Stat Bonus (ARAM: Mayhem)": {
+   "id": "220000",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Legendary Fighter Item": {
+   "id": "220001",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Legendary Marksman Item": {
+   "id": "220002",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Legendary Assassin Item": {
+   "id": "220003",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Legendary Mage Item": {
+   "id": "220004",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Legendary Tank Item": {
+   "id": "220005",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Legendary Support Item": {
+   "id": "220006",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Prismatic Item": {
+   "id": "220007",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Ghostcrawlers": {
+   "id": "223005",
+   "atoms": 3,
+   "effects": 3
+  },
+  "Atma's Reckoning": {
+   "id": "223039",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Void Immolation": {
+   "id": "223069",
+   "atoms": 7,
+   "effects": 3
+  },
+  "Zephyr": {
+   "id": "223172",
+   "atoms": 8,
+   "effects": 5
+  },
+  "Guardian's Dirk": {
+   "id": "223185",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Spectral Cutlass": {
+   "id": "224004",
+   "atoms": 8,
+   "effects": 6
+  },
+  "The Golden Spatula": {
+   "id": "224403",
+   "atoms": 19,
+   "effects": 10
+  },
+  "Goredrinker": {
+   "id": "226630",
+   "atoms": 5,
+   "effects": 2
+  },
+  "Anathema's Chains": {
+   "id": "228001",
+   "atoms": 3,
+   "effects": 1
+  },
+  "Wooglet's Witchcap": {
+   "id": "228002",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Multitool": {
+   "id": "228009",
+   "atoms": 0,
+   "effects": 0
+  },
+  "Darksteel Talons": {
+   "id": "443054",
+   "atoms": 7,
+   "effects": 5
+  },
+  "Fulmination": {
+   "id": "443055",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Demon King's Crown": {
+   "id": "443056",
+   "atoms": 3,
+   "effects": 3
+  },
+  "Shield of Molten Stone": {
+   "id": "443058",
+   "atoms": 7,
+   "effects": 5
+  },
+  "Cloak of Starry Night": {
+   "id": "443059",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Sword of the Divine": {
+   "id": "443060",
+   "atoms": 4,
+   "effects": 3
+  },
+  "Force of Entropy": {
+   "id": "443061",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Sanguine Gift": {
+   "id": "443062",
+   "atoms": 10,
+   "effects": 7
+  },
+  "Eleisa's Miracle": {
+   "id": "443063",
+   "atoms": 11,
+   "effects": 8
+  },
+  "Talisman of Ascension": {
+   "id": "443064",
+   "atoms": 21,
+   "effects": 21
+  },
+  "Hamstringer": {
+   "id": "443069",
+   "atoms": 12,
+   "effects": 9
+  },
+  "Turbo Chemtank": {
+   "id": "443079",
+   "atoms": 2,
+   "effects": 1
+  },
+  "Twin Mask": {
+   "id": "443080",
+   "atoms": 2,
+   "effects": 2
+  },
+  "Hexbolt Companion": {
+   "id": "443081",
+   "atoms": 9,
+   "effects": 7
+  },
+  "Reaper's Toll": {
+   "id": "443090",
+   "atoms": 7,
+   "effects": 6
+  },
+  "Gargoyle Stoneplate": {
+   "id": "443193",
+   "atoms": 8,
+   "effects": 5
+  },
+  "Night Harvester": {
+   "id": "444636",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Demonic Embrace": {
+   "id": "444637",
+   "atoms": 4,
+   "effects": 2
+  },
+  "Crown of the Shattered Queen": {
+   "id": "444644",
+   "atoms": 6,
+   "effects": 2
+  },
+  "Divine Sunderer": {
+   "id": "446632",
+   "atoms": 5,
+   "effects": 2
+  },
+  "Everfrost": {
+   "id": "446656",
+   "atoms": 7,
+   "effects": 3
+  },
+  "Radiant Virtue": {
+   "id": "446667",
+   "atoms": 14,
+   "effects": 10
+  },
+  "Galeforce": {
+   "id": "446671",
+   "atoms": 10,
+   "effects": 7
+  },
+  "Duskblade of Draktharr": {
+   "id": "446691",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Prowler's Claw": {
+   "id": "446693",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Mirage Blade": {
+   "id": "447100",
+   "atoms": 6,
+   "effects": 5
+  },
+  "Gambler's Blade": {
+   "id": "447101",
+   "atoms": 6,
+   "effects": 4
+  },
+  "Reality Fracture": {
+   "id": "447102",
+   "atoms": 6,
+   "effects": 3
+  },
+  "Hemomancer's Helm": {
+   "id": "447103",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Innervating Locket": {
+   "id": "447104",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Empyrean Promise": {
+   "id": "447105",
+   "atoms": 11,
+   "effects": 8
+  },
+  "Dragonheart": {
+   "id": "447106",
+   "atoms": 3,
+   "effects": 3
+  },
+  "Decapitator": {
+   "id": "447107",
+   "atoms": 4,
+   "effects": 3
+  },
+  "Runecarver": {
+   "id": "447108",
+   "atoms": 9,
+   "effects": 7
+  },
+  "Cruelty": {
+   "id": "447109",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Moonflair Spellblade": {
+   "id": "447110",
+   "atoms": 7,
+   "effects": 4
+  },
+  "Flesheater": {
+   "id": "447112",
+   "atoms": 5,
+   "effects": 3
+  },
+  "Detonation Orb": {
+   "id": "447113",
+   "atoms": 10,
+   "effects": 6
+  },
+  "Reverberation": {
+   "id": "447114",
+   "atoms": 11,
+   "effects": 8
+  },
+  "Regicide": {
+   "id": "447115",
+   "atoms": 7,
+   "effects": 5
+  },
+  "Kinkou Jitte": {
+   "id": "447116",
+   "atoms": 4,
+   "effects": 2
+  },
+  "Pyromancer's Cloak": {
+   "id": "447118",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Lightning Rod": {
+   "id": "447119",
+   "atoms": 9,
+   "effects": 6
+  },
+  "Diamond-Tipped Spear": {
+   "id": "447120",
+   "atoms": 3,
+   "effects": 2
+  },
+  "Twilight's Edge": {
+   "id": "447121",
+   "atoms": 4,
+   "effects": 2
+  },
+  "Black Hole Gauntlet": {
+   "id": "447122",
+   "atoms": 8,
+   "effects": 6
+  },
+  "Puppeteer": {
+   "id": "447123",
+   "atoms": 17,
+   "effects": 14
+  }
+ }
+}

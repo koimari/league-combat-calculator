@@ -31,3 +31,5 @@ data/bin/
 data/wiki-raw/
 data/atoms/*.atoms.json
 data/item-atoms/*.json
+docs/receipts/champions/*.json
+docs/receipts/items/*.json
