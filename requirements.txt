@@ -32,3 +32,9 @@ psycopg[binary]==3.3.4
 
 # P0a managed Redis result-cache backend.
 redis==7.4.1
+
+# P0b error tracking (lazy import; only initialised when SENTRY_DSN is set).
+sentry-sdk==2.66.1
+
+# P0b load sanity test (scripts/load_sanity.py).
+httpx==0.28.1
