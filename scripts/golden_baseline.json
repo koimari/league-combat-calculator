@@ -24735,6 +24735,17 @@
           "resource_cost": 65.0,
           "resource_type": "MANA",
           "total_raw": 225.0
+        },
+        "W": {
+          "cast_time": 0.25,
+          "cooldown": 4.0,
+          "damage_type": "magic",
+          "detail": "Ally-only heal (sourced by the support scanner); costs 10% of max health per cast, not modeled as mana.",
+          "name": "Astral Infusion",
+          "parts": [],
+          "rank": 3,
+          "resource_cost": 0.0,
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -63921,6 +63932,7 @@
           "breakdown_totals": {
             "E": 394.88,
             "Q": 303.76,
+            "W": 0.0,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36
           },
@@ -63930,6 +63942,7 @@
           "breakdown_totals": {
             "E": 100.0,
             "Q": 160.71,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 260.71
@@ -63938,6 +63951,7 @@
           "breakdown_totals": {
             "E": 100.0,
             "Q": 160.71,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 260.71
@@ -63946,6 +63960,7 @@
           "breakdown_totals": {
             "E": 100.0,
             "Q": 160.71,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 260.71
@@ -63955,6 +63970,7 @@
             "breakdown_totals": {
               "E": 394.88,
               "Q": 607.52,
+              "W": 0.0,
               "auto_attacks": 152.0,
               "proc_Luden's Echo": 155.36
             },
@@ -63964,6 +63980,7 @@
             "breakdown_totals": {
               "E": 100.0,
               "Q": 321.43,
+              "W": 0.0,
               "auto_attacks": 152.0
             },
             "total_damage": 573.43
@@ -63972,6 +63989,7 @@
             "breakdown_totals": {
               "E": 100.0,
               "Q": 321.43,
+              "W": 0.0,
               "auto_attacks": 1150.64,
               "on_hit_Kraken Slayer": 121.12
             },
@@ -63981,6 +63999,7 @@
             "breakdown_totals": {
               "E": 100.0,
               "Q": 321.43,
+              "W": 0.0,
               "auto_attacks": 825.92,
               "spellblade_Trinity Force": 202.67
             },
@@ -63993,6 +64012,7 @@
           "breakdown_totals": {
             "E": 554.88,
             "Q": 303.76,
+            "W": 0.0,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36
           },
@@ -64002,6 +64022,7 @@
           "breakdown_totals": {
             "E": 242.86,
             "Q": 160.71,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 403.57
@@ -64010,6 +64031,7 @@
           "breakdown_totals": {
             "E": 242.86,
             "Q": 160.71,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 403.57
@@ -64018,6 +64040,7 @@
           "breakdown_totals": {
             "E": 242.86,
             "Q": 160.71,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 403.57
@@ -64027,6 +64050,7 @@
             "breakdown_totals": {
               "E": 554.88,
               "Q": 607.52,
+              "W": 0.0,
               "auto_attacks": 269.33,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 60.75
@@ -64037,6 +64061,7 @@
             "breakdown_totals": {
               "E": 242.86,
               "Q": 321.43,
+              "W": 0.0,
               "auto_attacks": 269.33
             },
             "total_damage": 833.62
@@ -64045,6 +64070,7 @@
             "breakdown_totals": {
               "E": 242.86,
               "Q": 321.43,
+              "W": 0.0,
               "auto_attacks": 1593.96,
               "on_hit_Kraken Slayer": 149.63
             },
@@ -64054,6 +64080,7 @@
             "breakdown_totals": {
               "E": 242.86,
               "Q": 321.43,
+              "W": 0.0,
               "auto_attacks": 936.33,
               "spellblade_Trinity Force": 269.33
             },

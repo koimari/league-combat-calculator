@@ -1,4 +1,14 @@
-"""Janna's charge-scaled whirlwind, Zephyr damage and utility branches."""
+"""Janna's charge-scaled whirlwind, Zephyr damage and utility branches.
+
+E8d ally-support: E (Eye of the Storm, Shield Strength 80-240 + 55% AP, scope
+one_teammate) shields the selected teammate; R (Monsoon, Total Heal 300-600 +
+150% AP, scope self_and_all_teammates) heals the caster and all allies.  Both
+events are authored by the engine's ally-support scanner from cached leveling
+at the cast times; the module declares E/R in SLOTS so the fight rotation
+casts them.  R's heal is delivered as the sourced Total Heal at cast time
+(the cached per-tick row is the cadence detail: 12 ticks x Heal Per Tick ==
+Total Heal).
+"""
 
 from __future__ import annotations
 
