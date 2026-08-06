@@ -45,7 +45,7 @@
  ],
  "Trait_ActiveHeal": [
   "heal-shield.heal",
-  "ally"
+  "self"
  ],
  "Trait_SelfHeal": [
   "heal-shield.heal",

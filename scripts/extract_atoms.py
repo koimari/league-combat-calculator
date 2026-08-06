@@ -76,6 +76,7 @@ DAMAGE_TYPE_COVERAGE_BEFORE = 0.0137
 # --------------------------------------------------------------------------
 _CAMEL1 = re.compile(r"([a-z0-9])([A-Z])")
 _CAMEL2 = re.compile(r"([A-Z]+)([A-Z][a-z])")
+_DIGIT_BOUNDARY = re.compile(r"([a-z])([0-9])|([0-9])([a-z])")
 _NONALNUM = re.compile(r"[^a-z0-9]+")
 
 
@@ -85,9 +86,12 @@ def norm(text: str) -> str:
 
 
 def tokens(text: str) -> list[str]:
-    """Split an identifier/name into lower-case tokens (camelCase, snake, spaces)."""
+    """Split an identifier/name into lower-case tokens (camelCase, snake,
+    spaces, and digit boundaries: ``Skin56Form`` -> skin,56,form so skin
+    artifacts hit the noise filter)."""
     s = _CAMEL1.sub(r"\1 \2", str(text))
     s = _CAMEL2.sub(r"\1 \2", s)
+    s = _DIGIT_BOUNDARY.sub(r"\1 \2", s)
     return [t for t in _NONALNUM.split(s.lower()) if t]
 
 
@@ -833,6 +837,24 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
                 },
             }
             atoms[(atom_id, name)] = clone_atom
+
+    # Ghost-atom check (removed-kit leftovers): a revive atom for a champion
+    # whose current wiki data has no revive/resurrect mechanic is flagged.
+    if atoms:
+        try:
+            champ_json = json.loads(Path("data/champions.json").read_text())
+            champ_text = " ".join(
+                str(e.get("description", ""))
+                for ab in (champ_json.get(champ_name, {}).get("abilities") or {}).values()
+                for a_ in ab[:1] for e in (a_.get("effects") or [])
+            ).lower()
+            has_revive = "revive" in champ_text or "resurrect" in champ_text
+            if not has_revive:
+                for (atom_id, _b), a in list(atoms.items()):
+                    if atom_id.endswith(".revive"):
+                        a["provenance"]["ghost"] = "removed-kit-leftover"
+        except (OSError, ValueError, KeyError):
+            pass
     return {"champion": champ_name, "atoms": list(atoms.values()), "unclassified": still_unclassified}
 
 

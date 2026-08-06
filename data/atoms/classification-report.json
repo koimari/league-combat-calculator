@@ -188,11 +188,11 @@
   },
   {
    "champion": "akali",
-   "atom_count": 50,
+   "atom_count": 51,
    "family_counts": {
     "crowd-control-mobility": 8,
-    "damage": 36,
-    "stack-transform-summon-resource": 3,
+    "damage": 34,
+    "stack-transform-summon-resource": 6,
     "vision-economy": 3
    },
    "unclassified": [
@@ -221,20 +221,8 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "AkaliPVFXMis1",
-     "object": "Characters/Akali/Spells/AkaliPAbility/AkaliPVFXMis1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "AkaliPVFXMis2",
      "object": "Characters/Akali/Spells/AkaliPAbility/AkaliPVFXMis2",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "AkaliPVFXMisEnemy1",
-     "object": "Characters/Akali/Spells/AkaliPAbility/AkaliPVFXMisEnemy1",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -352,13 +340,13 @@
   },
   {
    "champion": "ambessa",
-   "atom_count": 36,
+   "atom_count": 38,
    "family_counts": {
     "crowd-control-mobility": 6,
     "damage": 23,
     "heal-shield": 2,
     "interaction": 1,
-    "stack-transform-summon-resource": 4
+    "stack-transform-summon-resource": 6
    },
    "unclassified": [
     {
@@ -1178,12 +1166,12 @@
   },
   {
    "champion": "bard",
-   "atom_count": 29,
+   "atom_count": 30,
    "family_counts": {
     "crowd-control-mobility": 6,
     "damage": 11,
     "heal-shield": 4,
-    "stack-transform-summon-resource": 8
+    "stack-transform-summon-resource": 9
    },
    "unclassified": [
     {
@@ -1325,12 +1313,6 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "BardRMissileRange1",
-     "object": "Characters/Bard/Spells/BardRAbility/BardRMissileRange1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "BardRMissileRange2",
      "object": "Characters/Bard/Spells/BardRAbility/BardRMissileRange2",
      "looks_noise": false,
@@ -1364,13 +1346,13 @@
   },
   {
    "champion": "belveth",
-   "atom_count": 23,
+   "atom_count": 24,
    "family_counts": {
     "crowd-control-mobility": 3,
     "damage": 16,
     "heal-shield": 1,
     "interaction": 2,
-    "stack-transform-summon-resource": 1
+    "stack-transform-summon-resource": 2
    },
    "unclassified": [
     {
@@ -1518,12 +1500,6 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "BelvethPassiveMissile1",
-     "object": "Characters/Belveth/Spells/BelvethPassiveAbility/BelvethPassiveMissile1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "BelvethPassiveMissile2",
      "object": "Characters/Belveth/Spells/BelvethPassiveAbility/BelvethPassiveMissile2",
      "looks_noise": false,
@@ -1594,16 +1570,22 @@
   },
   {
    "champion": "brand",
-   "atom_count": 23,
+   "atom_count": 22,
    "family_counts": {
     "crowd-control-mobility": 2,
-    "damage": 18,
+    "damage": 17,
     "stack-transform-summon-resource": 3
    },
    "unclassified": [
     {
      "name": "BrandDamageTracker",
      "object": "Characters/Brand/Spells/BrandDamageTracker",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "BrandDamageTracker2",
+     "object": "Characters/Brand/Spells/BrandDamageTracker2",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
@@ -1665,13 +1647,13 @@
   },
   {
    "champion": "braum",
-   "atom_count": 33,
+   "atom_count": 34,
    "family_counts": {
     "crowd-control-mobility": 7,
     "damage": 16,
     "heal-shield": 2,
     "interaction": 1,
-    "stack-transform-summon-resource": 7
+    "stack-transform-summon-resource": 8
    },
    "unclassified": [
     {
@@ -1931,13 +1913,13 @@
   },
   {
    "champion": "camille",
-   "atom_count": 50,
+   "atom_count": 51,
    "family_counts": {
     "crowd-control-mobility": 16,
     "damage": 23,
     "heal-shield": 5,
     "interaction": 3,
-    "stack-transform-summon-resource": 3
+    "stack-transform-summon-resource": 4
    },
    "unclassified": [
     {
@@ -2502,24 +2484,18 @@
   },
   {
    "champion": "elise",
-   "atom_count": 45,
+   "atom_count": 46,
    "family_counts": {
     "crowd-control-mobility": 12,
     "damage": 15,
     "interaction": 1,
-    "stack-transform-summon-resource": 16,
+    "stack-transform-summon-resource": 17,
     "vision-economy": 1
    },
    "unclassified": [
     {
      "name": "ElisePassive",
      "object": "Characters/Elise/Spells/ElisePassiveAbility/ElisePassive",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "EliseSpider1",
-     "object": "{8539e329}",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -3115,11 +3091,11 @@
   },
   {
    "champion": "graves",
-   "atom_count": 28,
+   "atom_count": 29,
    "family_counts": {
     "crowd-control-mobility": 2,
     "damage": 19,
-    "stack-transform-summon-resource": 7
+    "stack-transform-summon-resource": 8
    },
    "unclassified": [
     {
@@ -3378,11 +3354,11 @@
   },
   {
    "champion": "heimerdinger",
-   "atom_count": 22,
+   "atom_count": 23,
    "family_counts": {
     "crowd-control-mobility": 2,
     "damage": 14,
-    "stack-transform-summon-resource": 6
+    "stack-transform-summon-resource": 7
    },
    "unclassified": [
     {
@@ -3518,12 +3494,6 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "HeimerdingerQSpell1",
-     "object": "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerdingerQSpell1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "HeimerdingerQSpell2",
      "object": "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerdingerQSpell2",
      "looks_noise": false,
@@ -3617,13 +3587,13 @@
   },
   {
    "champion": "hwei",
-   "atom_count": 19,
+   "atom_count": 18,
    "family_counts": {
     "crowd-control-mobility": 8,
     "damage": 6,
     "heal-shield": 1,
     "stack-transform-summon-resource": 2,
-    "vision-economy": 2
+    "vision-economy": 1
    },
    "unclassified": [
     {
@@ -3713,6 +3683,12 @@
     {
      "name": "HweiQW",
      "object": "Characters/Hwei/Spells/HweiQAbility/HweiQW",
+     "looks_noise": false,
+     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
+    },
+    {
+     "name": "HweiQuestGoldenRatioLoss",
+     "object": "{f635e0b6}",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -3836,10 +3812,10 @@
   },
   {
    "champion": "ivern",
-   "atom_count": 34,
+   "atom_count": 33,
    "family_counts": {
     "crowd-control-mobility": 3,
-    "damage": 20,
+    "damage": 19,
     "heal-shield": 1,
     "stack-transform-summon-resource": 10
    },
@@ -4179,12 +4155,12 @@
   },
   {
    "champion": "jhin",
-   "atom_count": 33,
+   "atom_count": 32,
    "family_counts": {
     "crowd-control-mobility": 8,
     "damage": 16,
     "stack-transform-summon-resource": 7,
-    "vision-economy": 2
+    "vision-economy": 1
    },
    "unclassified": [
     {
@@ -4244,6 +4220,12 @@
     {
      "name": "JhinQMisBounce",
      "object": "Characters/Jhin/Spells/JhinQAbility/JhinQMisBounce",
+     "looks_noise": false,
+     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
+    },
+    {
+     "name": "JhinQuestGoldenRatioLoss",
+     "object": "{0a30352a}",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     }
@@ -4389,13 +4371,13 @@
   },
   {
    "champion": "kaisa",
-   "atom_count": 42,
+   "atom_count": 44,
    "family_counts": {
     "crowd-control-mobility": 1,
     "damage": 18,
     "heal-shield": 2,
     "interaction": 1,
-    "stack-transform-summon-resource": 13,
+    "stack-transform-summon-resource": 15,
     "vision-economy": 7
    },
    "unclassified": [
@@ -4448,12 +4430,6 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "KaisaQLeftMissile1",
-     "object": "Characters/Kaisa/Spells/KaisaQAbility/KaisaQLeftMissile1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "KaisaQLeftMissile2",
      "object": "Characters/Kaisa/Spells/KaisaQAbility/KaisaQLeftMissile2",
      "looks_noise": false,
@@ -4480,12 +4456,6 @@
     {
      "name": "KaisaQLeftMissile6",
      "object": "Characters/Kaisa/Spells/KaisaQAbility/KaisaQLeftMissile6",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "KaisaQRightMissile1",
-     "object": "Characters/Kaisa/Spells/KaisaQAbility/KaisaQRightMissile1",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -4529,11 +4499,11 @@
   },
   {
    "champion": "kalista",
-   "atom_count": 48,
+   "atom_count": 49,
    "family_counts": {
     "crowd-control-mobility": 18,
     "damage": 19,
-    "stack-transform-summon-resource": 10,
+    "stack-transform-summon-resource": 11,
     "vision-economy": 1
    },
    "unclassified": [
@@ -5250,11 +5220,11 @@
   },
   {
    "champion": "kennen",
-   "atom_count": 19,
+   "atom_count": 21,
    "family_counts": {
     "crowd-control-mobility": 1,
     "damage": 16,
-    "stack-transform-summon-resource": 2
+    "stack-transform-summon-resource": 4
    },
    "unclassified": [
     {
@@ -5278,12 +5248,6 @@
     {
      "name": "KennenMoSDiminish",
      "object": "Characters/Kennen/Spells/KennenPassiveAbility/KennenMoSDiminish",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "KennenShurikenHurl1",
-     "object": "Characters/Kennen/Spells/KennenShurikenHurlMissile1Ability/KennenShurikenHurl1",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     }
@@ -5406,13 +5370,13 @@
   },
   {
    "champion": "kindred",
-   "atom_count": 49,
+   "atom_count": 50,
    "family_counts": {
     "crowd-control-mobility": 8,
     "damage": 20,
     "heal-shield": 2,
     "interaction": 2,
-    "stack-transform-summon-resource": 17
+    "stack-transform-summon-resource": 18
    },
    "unclassified": [
     {
@@ -5428,8 +5392,44 @@
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
     {
+     "name": "KindredHitListActiveTracker0",
+     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListActiveTracker0",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "KindredHitListActiveTracker1",
+     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListActiveTracker1",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "KindredHitListActiveTracker2",
+     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListActiveTracker2",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
      "name": "KindredHitListMonsterActiveTracker",
      "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListMonsterActiveTracker",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "KindredHitListSuccessTracker0",
+     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListSuccessTracker0",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "KindredHitListSuccessTracker1",
+     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListSuccessTracker1",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "KindredHitListSuccessTracker2",
+     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListSuccessTracker2",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
@@ -5542,42 +5542,6 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "KindredHitListActiveTracker0",
-     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListActiveTracker0",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "KindredHitListActiveTracker1",
-     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListActiveTracker1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "KindredHitListActiveTracker2",
-     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListActiveTracker2",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "KindredHitListSuccessTracker0",
-     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListSuccessTracker0",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "KindredHitListSuccessTracker1",
-     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListSuccessTracker1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "KindredHitListSuccessTracker2",
-     "object": "Characters/Kindred/Spells/KindredPassiveManagerAbility/KindredHitListSuccessTracker2",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "KindredLegendPassive",
      "object": "Characters/Kindred/Spells/KindredLegendPassive",
      "looks_noise": false,
@@ -5617,12 +5581,12 @@
   },
   {
    "champion": "kled",
-   "atom_count": 65,
+   "atom_count": 64,
    "family_counts": {
     "crowd-control-mobility": 16,
-    "damage": 42,
+    "damage": 39,
     "heal-shield": 2,
-    "stack-transform-summon-resource": 5
+    "stack-transform-summon-resource": 7
    },
    "unclassified": [
     {
@@ -5646,12 +5610,6 @@
     {
      "name": "KledPassive",
      "object": "Characters/Kled/Spells/KledPassiveAbility/KledPassive",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "KledRiderWAttack1",
-     "object": "Characters/Kled/Spells/KledRiderWAttack1",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -5725,13 +5683,13 @@
   },
   {
    "champion": "ksante",
-   "atom_count": 61,
+   "atom_count": 57,
    "family_counts": {
-    "crowd-control-mobility": 32,
-    "damage": 18,
+    "crowd-control-mobility": 28,
+    "damage": 17,
     "heal-shield": 3,
     "interaction": 3,
-    "stack-transform-summon-resource": 5
+    "stack-transform-summon-resource": 6
    },
    "unclassified": [
     {
@@ -5979,11 +5937,11 @@
   },
   {
    "champion": "lillia",
-   "atom_count": 21,
+   "atom_count": 28,
    "family_counts": {
     "crowd-control-mobility": 7,
-    "damage": 11,
-    "stack-transform-summon-resource": 3
+    "damage": 17,
+    "stack-transform-summon-resource": 4
    },
    "unclassified": [
     {
@@ -5991,24 +5949,6 @@
      "object": "{d8fed239}",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
-    },
-    {
-     "name": "LilliaBasicAttack1",
-     "object": "Characters/Lillia/Spells/LilliaBasicAttack1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "LilliaBasicAttack2",
-     "object": "Characters/Lillia/Spells/LilliaBasicAttack2",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "LilliaBasicAttack3",
-     "object": "Characters/Lillia/Spells/LilliaBasicAttack3",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
      "name": "LilliaERollingMissile",
@@ -6605,13 +6545,13 @@
   },
   {
    "champion": "mel",
-   "atom_count": 41,
+   "atom_count": 40,
    "family_counts": {
     "crowd-control-mobility": 4,
-    "damage": 32,
+    "damage": 30,
     "heal-shield": 1,
     "interaction": 1,
-    "stack-transform-summon-resource": 3
+    "stack-transform-summon-resource": 4
    },
    "unclassified": [
     {
@@ -6966,12 +6906,12 @@
   },
   {
    "champion": "morgana",
-   "atom_count": 19,
+   "atom_count": 17,
    "family_counts": {
-    "crowd-control-mobility": 4,
+    "crowd-control-mobility": 3,
     "damage": 11,
     "heal-shield": 1,
-    "stack-transform-summon-resource": 3
+    "stack-transform-summon-resource": 2
    },
    "unclassified": [
     {
@@ -6993,8 +6933,44 @@
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
     {
+     "name": "MorganaSkin80MapWallSpawn",
+     "object": "{8e93b47b}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "MorganaSkin80RStunsAndKills",
+     "object": "{4f89cd33}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "Morgana_Skin80_3DEBlockCC",
+     "object": "{5ff7cc87}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "Morgana_Skin80_3DQWCombo",
+     "object": "{a09a0205}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "Morgana_Skin80_EBlockCC_Ally",
+     "object": "{0b3cbb17}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
      "name": "Morgana_Skin80_Manager",
      "object": "{0fd25b11}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "Morgana_Skin80_SuperbloomActive",
+     "object": "{2b6e7332}",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
@@ -7013,30 +6989,6 @@
     {
      "name": "MorganaRVFXMis",
      "object": "Characters/Morgana/Spells/MorganaRAbility/MorganaRVFXMis",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "Morgana_Skin80_3DEBlockCC",
-     "object": "{5ff7cc87}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "Morgana_Skin80_3DQWCombo",
-     "object": "{a09a0205}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "Morgana_Skin80_EBlockCC_Ally",
-     "object": "{0b3cbb17}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "Morgana_Skin80_SuperbloomActive",
-     "object": "{2b6e7332}",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     }
@@ -7418,10 +7370,10 @@
   },
   {
    "champion": "nidalee",
-   "atom_count": 29,
+   "atom_count": 31,
    "family_counts": {
     "crowd-control-mobility": 3,
-    "damage": 12,
+    "damage": 14,
     "heal-shield": 1,
     "interaction": 1,
     "stack-transform-summon-resource": 11,
@@ -7613,21 +7565,15 @@
   },
   {
    "champion": "nunu",
-   "atom_count": 32,
+   "atom_count": 33,
    "family_counts": {
     "crowd-control-mobility": 9,
     "damage": 12,
     "heal-shield": 2,
-    "stack-transform-summon-resource": 5,
+    "stack-transform-summon-resource": 6,
     "vision-economy": 4
    },
    "unclassified": [
-    {
-     "name": "NunuBloodBoilAttack1",
-     "object": "Characters/Nunu/Spells/NunuBloodBoilAttack1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
     {
      "name": "NunuBloodBoilAttack2",
      "object": "Characters/Nunu/Spells/NunuBloodBoilAttack2",
@@ -8228,13 +8174,13 @@
   },
   {
    "champion": "rell",
-   "atom_count": 32,
+   "atom_count": 33,
    "family_counts": {
     "crowd-control-mobility": 9,
     "damage": 14,
     "heal-shield": 2,
     "interaction": 1,
-    "stack-transform-summon-resource": 6
+    "stack-transform-summon-resource": 7
    },
    "unclassified": [
     {
@@ -8282,12 +8228,6 @@
     {
      "name": "RellE_Target",
      "object": "{97b3c7df}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "RellE_Target1",
-     "object": "{be03bbaa}",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -8422,13 +8362,13 @@
   },
   {
    "champion": "rengar",
-   "atom_count": 52,
+   "atom_count": 53,
    "family_counts": {
     "crowd-control-mobility": 10,
     "damage": 22,
     "heal-shield": 1,
     "interaction": 6,
-    "stack-transform-summon-resource": 12,
+    "stack-transform-summon-resource": 13,
     "vision-economy": 1
    },
    "unclassified": [
@@ -8721,6 +8661,12 @@
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
     {
+     "name": "SamiraSkin30RHits",
+     "object": "Characters/Samira/Spells/SamiraSkin30RHits",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
      "name": "SamiraPJuggle",
      "object": "Characters/Samira/Spells/SamiraPJuggle",
      "looks_noise": false,
@@ -8771,12 +8717,6 @@
     {
      "name": "SamiraQSword",
      "object": "Characters/Samira/Spells/SamiraQAbility/SamiraQSword",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "SamiraSkin30RHits",
-     "object": "Characters/Samira/Spells/SamiraSkin30RHits",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     }
@@ -8837,13 +8777,13 @@
   },
   {
    "champion": "senna",
-   "atom_count": 36,
+   "atom_count": 33,
    "family_counts": {
     "crowd-control-mobility": 3,
     "damage": 18,
     "heal-shield": 2,
-    "stack-transform-summon-resource": 10,
-    "vision-economy": 3
+    "stack-transform-summon-resource": 9,
+    "vision-economy": 1
    },
    "unclassified": [
     {
@@ -8895,6 +8835,12 @@
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
     {
+     "name": "SennaSkin56Form",
+     "object": "{017c6619}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
      "name": "SennaSkin56Manager",
      "object": "{7c3a36ea}",
      "looks_noise": true,
@@ -8931,6 +8877,18 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
+     "name": "SennaQuestActive",
+     "object": "Characters/Senna/Spells/SennaQuestActive",
+     "looks_noise": false,
+     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
+    },
+    {
+     "name": "SennaQuestActiveThresh",
+     "object": "Characters/Senna/Spells/SennaQuestActiveThresh",
+     "looks_noise": false,
+     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
+    },
+    {
      "name": "SennaRAlly",
      "object": "Characters/Senna/Spells/SennaRAbility/SennaRAlly",
      "looks_noise": false,
@@ -8946,12 +8904,12 @@
   },
   {
    "champion": "seraphine",
-   "atom_count": 30,
+   "atom_count": 31,
    "family_counts": {
     "crowd-control-mobility": 6,
     "damage": 17,
     "heal-shield": 4,
-    "stack-transform-summon-resource": 3
+    "stack-transform-summon-resource": 4
    },
    "unclassified": [
     {
@@ -8975,6 +8933,12 @@
     {
      "name": "SeraphineSkin43Manager",
      "object": "{b5d821a8}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "SeraphineSkin43RTPCStack",
+     "object": "{a910fd9a}",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
@@ -9021,12 +8985,6 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "SeraphinePassiveEchoStage1",
-     "object": "Characters/Seraphine/Spells/SeraphinePassiveEchoStage1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "SeraphinePassiveEchoStage2",
      "object": "Characters/Seraphine/Spells/SeraphinePassiveEchoStage2",
      "looks_noise": false,
@@ -9041,12 +8999,6 @@
     {
      "name": "SeraphinePassiveNotesMissileOrbitingAlly",
      "object": "Characters/Seraphine/Spells/SeraphinePassiveNotesMissileOrbitingAlly",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "SeraphinePassiveNotesMissileTarget1",
-     "object": "Characters/Seraphine/Spells/SeraphinePassiveNotesMissileTarget1",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -9114,18 +9066,30 @@
   },
   {
    "champion": "sett",
-   "atom_count": 42,
+   "atom_count": 40,
    "family_counts": {
     "crowd-control-mobility": 4,
     "damage": 22,
     "heal-shield": 3,
     "interaction": 4,
-    "stack-transform-summon-resource": 9
+    "stack-transform-summon-resource": 7
    },
    "unclassified": [
     {
      "name": "SettSkin38Manager",
      "object": "Characters/Sett/Spells/SettSkin38Manager",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "SettSkin66CumulativeSpentGrit",
+     "object": "{ea5c4d85}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "SettSkin66LastThresholdUsed",
+     "object": "{2df9da76}",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
@@ -9136,14 +9100,14 @@
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
     {
-     "name": "SettPassive",
-     "object": "Characters/Sett/Spells/SettPassiveAbility/SettPassive",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "SettSkin66ShowMom",
      "object": "{5369cb08}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "SettPassive",
+     "object": "Characters/Sett/Spells/SettPassiveAbility/SettPassive",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     }
@@ -9194,13 +9158,12 @@
   },
   {
    "champion": "shen",
-   "atom_count": 32,
+   "atom_count": 31,
    "family_counts": {
     "crowd-control-mobility": 7,
     "damage": 13,
     "heal-shield": 3,
-    "stack-transform-summon-resource": 8,
-    "vision-economy": 1
+    "stack-transform-summon-resource": 8
    },
    "unclassified": [
     {
@@ -9277,6 +9240,18 @@
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
     {
+     "name": "ShyvanaQAttackReady2",
+     "object": "{682fb9ec}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "ShyvanaQAttackReady3",
+     "object": "{692fbb7f}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
      "name": "ShyvanaEDragon",
      "object": "{eb7a2f5f}",
      "looks_noise": false,
@@ -9303,18 +9278,6 @@
     {
      "name": "ShyvanaQAttackDragon3",
      "object": "{30a2f206}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ShyvanaQAttackReady2",
-     "object": "{682fb9ec}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ShyvanaQAttackReady3",
-     "object": "{692fbb7f}",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -10146,11 +10109,11 @@
   },
   {
    "champion": "syndra",
-   "atom_count": 41,
+   "atom_count": 43,
    "family_counts": {
     "crowd-control-mobility": 11,
     "damage": 19,
-    "stack-transform-summon-resource": 11
+    "stack-transform-summon-resource": 13
    },
    "unclassified": [
     {
@@ -10222,12 +10185,6 @@
     {
      "name": "SyndraRSpell",
      "object": "Characters/Syndra/Spells/SyndraRAbility/SyndraRSpell",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "SyndraRSpread1",
-     "object": "Characters/Syndra/Spells/SyndraRSpread1",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -10619,12 +10576,12 @@
   },
   {
    "champion": "thresh",
-   "atom_count": 28,
+   "atom_count": 37,
    "family_counts": {
-    "crowd-control-mobility": 10,
-    "damage": 11,
+    "crowd-control-mobility": 8,
+    "damage": 17,
     "heal-shield": 2,
-    "stack-transform-summon-resource": 5
+    "stack-transform-summon-resource": 10
    },
    "unclassified": [
     {
@@ -10646,38 +10603,8 @@
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
     {
-     "name": "ThreshBasicAttack1M",
-     "object": "Characters/Thresh/Spells/ThreshBasicAttack1M",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ThreshBasicAttack1S",
-     "object": "Characters/Thresh/Spells/ThreshBasicAttack1S",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ThreshBasicAttack2M",
-     "object": "Characters/Thresh/Spells/ThreshBasicAttack2M",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ThreshBasicAttack2S",
-     "object": "Characters/Thresh/Spells/ThreshBasicAttack2S",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "ThreshEPassive",
      "object": "Characters/Thresh/Spells/ThreshEAbility/ThreshEPassive",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ThreshEPassive1",
-     "object": "Characters/Thresh/Spells/ThreshEAbility/ThreshEPassive1",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -10702,12 +10629,6 @@
     {
      "name": "ThreshQInternal",
      "object": "Characters/Thresh/Spells/ThreshQAbility/ThreshQInternal",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ThreshRTrigger1",
-     "object": "Characters/Thresh/Spells/ThreshRTrigger1",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -10996,11 +10917,12 @@
   },
   {
    "champion": "udyr",
-   "atom_count": 29,
+   "atom_count": 25,
    "family_counts": {
     "crowd-control-mobility": 3,
-    "damage": 19,
-    "heal-shield": 7
+    "damage": 14,
+    "heal-shield": 5,
+    "stack-transform-summon-resource": 3
    },
    "unclassified": [
     {
@@ -11115,13 +11037,26 @@
   },
   {
    "champion": "urgot",
-   "atom_count": 32,
+   "atom_count": 35,
    "family_counts": {
     "crowd-control-mobility": 12,
     "damage": 18,
-    "heal-shield": 2
+    "heal-shield": 2,
+    "stack-transform-summon-resource": 3
    },
    "unclassified": [
+    {
+     "name": "UrgotQMissileExtraSkin03",
+     "object": "Characters/Urgot/Spells/UrgotQAbility/UrgotQMissileExtraSkin03",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "UrgotQMissileSkin03",
+     "object": "Characters/Urgot/Spells/UrgotQAbility/UrgotQMissileSkin03",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
     {
      "name": "UrgotREscapedVO",
      "object": "{ddf77325}",
@@ -11141,6 +11076,18 @@
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
     {
+     "name": "UrgotWMissile2Skin03",
+     "object": "Characters/Urgot/Spells/UrgotWAbility/UrgotWMissile2Skin03",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "UrgotWMissileExtra2Skin03",
+     "object": "Characters/Urgot/Spells/UrgotWAbility/UrgotWMissileExtra2Skin03",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
      "name": "UrgotWOnHitManager",
      "object": "Characters/Urgot/Spells/UrgotWOnHitManager",
      "looks_noise": true,
@@ -11155,24 +11102,6 @@
     {
      "name": "UrgotPassive",
      "object": "Characters/Urgot/Spells/UrgotPassiveAbility/UrgotPassive",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "UrgotPassiveZone1Activating",
-     "object": "Characters/Urgot/Spells/UrgotPassiveZone1Activating",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "UrgotPassiveZone1Active",
-     "object": "Characters/Urgot/Spells/UrgotPassiveZone1Active",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "UrgotPassiveZone1Inactive",
-     "object": "Characters/Urgot/Spells/UrgotPassiveZone1Inactive",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -11267,18 +11196,6 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "UrgotQMissileExtraSkin03",
-     "object": "Characters/Urgot/Spells/UrgotQAbility/UrgotQMissileExtraSkin03",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "UrgotQMissileSkin03",
-     "object": "Characters/Urgot/Spells/UrgotQAbility/UrgotQMissileSkin03",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "UrgotRFacing",
      "object": "Characters/Urgot/Spells/UrgotRFacing",
      "looks_noise": false,
@@ -11309,20 +11226,8 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "UrgotWMissile2Skin03",
-     "object": "Characters/Urgot/Spells/UrgotWAbility/UrgotWMissile2Skin03",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "UrgotWMissileExtra",
      "object": "Characters/Urgot/Spells/UrgotWAbility/UrgotWMissileExtra",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "UrgotWMissileExtra2Skin03",
-     "object": "Characters/Urgot/Spells/UrgotWAbility/UrgotWMissileExtra2Skin03",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -11356,6 +11261,54 @@
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
     {
+     "name": "VarusEMissileDummy1",
+     "object": "Characters/Varus/Spells/VarusEMissileDummy1",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "VarusEMissileDummy2",
+     "object": "Characters/Varus/Spells/VarusEMissileDummy2",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "VarusEMissileDummy3",
+     "object": "Characters/Varus/Spells/VarusEMissileDummy3",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "VarusEMissileDummy4",
+     "object": "Characters/Varus/Spells/VarusEMissileDummy4",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "VarusEMissileDummy5",
+     "object": "Characters/Varus/Spells/VarusEMissileDummy5",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "VarusEMissileDummy6",
+     "object": "Characters/Varus/Spells/VarusEMissileDummy6",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "VarusEMissileDummy7",
+     "object": "Characters/Varus/Spells/VarusEMissileDummy7",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "VarusEMissileDummy8",
+     "object": "Characters/Varus/Spells/VarusEMissileDummy8",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
      "name": "VarusEMissileDummyMedium",
      "object": "{52bef9c8}",
      "looks_noise": true,
@@ -11384,54 +11337,6 @@
      "object": "Characters/Varus/Spells/VarusRTooltip",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
-    },
-    {
-     "name": "VarusEMissileDummy1",
-     "object": "Characters/Varus/Spells/VarusEMissileDummy1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "VarusEMissileDummy2",
-     "object": "Characters/Varus/Spells/VarusEMissileDummy2",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "VarusEMissileDummy3",
-     "object": "Characters/Varus/Spells/VarusEMissileDummy3",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "VarusEMissileDummy4",
-     "object": "Characters/Varus/Spells/VarusEMissileDummy4",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "VarusEMissileDummy5",
-     "object": "Characters/Varus/Spells/VarusEMissileDummy5",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "VarusEMissileDummy6",
-     "object": "Characters/Varus/Spells/VarusEMissileDummy6",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "VarusEMissileDummy7",
-     "object": "Characters/Varus/Spells/VarusEMissileDummy7",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "VarusEMissileDummy8",
-     "object": "Characters/Varus/Spells/VarusEMissileDummy8",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
      "name": "VarusPassive",
@@ -11800,13 +11705,13 @@
   },
   {
    "champion": "viego",
-   "atom_count": 48,
+   "atom_count": 47,
    "family_counts": {
     "crowd-control-mobility": 13,
     "damage": 15,
     "heal-shield": 3,
     "interaction": 4,
-    "stack-transform-summon-resource": 9,
+    "stack-transform-summon-resource": 8,
     "vision-economy": 4
    },
    "unclassified": [
@@ -11835,8 +11740,62 @@
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
     {
+     "name": "ViegoSkin43Ctrl5Toggle",
+     "object": "{7600a636}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
      "name": "ViegoSkin43Manager",
      "object": "{6b528185}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "ViegoSkin43Nemesis",
+     "object": "{b6e090fa}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "ViegoSkin43Sword0",
+     "object": "{ada0a9a9}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "ViegoSkin43Sword1",
+     "object": "{aca0a816}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "ViegoSkin43Sword2",
+     "object": "{aba0a683}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "ViegoSkin43Sword3",
+     "object": "{aaa0a4f0}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "ViegoSkin43Sword4",
+     "object": "{b1a0aff5}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "ViegoSkin43Sword5",
+     "object": "{b0a0ae62}",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "ViegoSkin43Sword6",
+     "object": "{afa0accf}",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
@@ -11873,54 +11832,6 @@
     {
      "name": "ViegoRMoveAway",
      "object": "{b1c3aa2f}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ViegoSkin43Nemesis",
-     "object": "{b6e090fa}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ViegoSkin43Sword0",
-     "object": "{ada0a9a9}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ViegoSkin43Sword1",
-     "object": "{aca0a816}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ViegoSkin43Sword2",
-     "object": "{aba0a683}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ViegoSkin43Sword3",
-     "object": "{aaa0a4f0}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ViegoSkin43Sword4",
-     "object": "{b1a0aff5}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ViegoSkin43Sword5",
-     "object": "{b0a0ae62}",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "ViegoSkin43Sword6",
-     "object": "{afa0accf}",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -12108,12 +12019,13 @@
   },
   {
    "champion": "volibear",
-   "atom_count": 29,
+   "atom_count": 30,
    "family_counts": {
     "crowd-control-mobility": 6,
     "damage": 17,
     "heal-shield": 3,
     "interaction": 2,
+    "stack-transform-summon-resource": 1,
     "vision-economy": 1
    },
    "unclassified": [
@@ -12136,12 +12048,6 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "VolibearRTowerAttack1",
-     "object": "Characters/Volibear/Spells/VolibearRTowerAttack1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "VolibearRTowerAttack2",
      "object": "Characters/Volibear/Spells/VolibearRTowerAttack2",
      "looks_noise": false,
@@ -12157,13 +12063,13 @@
   },
   {
    "champion": "warwick",
-   "atom_count": 39,
+   "atom_count": 40,
    "family_counts": {
     "crowd-control-mobility": 11,
     "damage": 22,
     "heal-shield": 1,
     "interaction": 2,
-    "stack-transform-summon-resource": 3
+    "stack-transform-summon-resource": 4
    },
    "unclassified": [
     {
@@ -12296,12 +12202,12 @@
   },
   {
    "champion": "xayah",
-   "atom_count": 25,
+   "atom_count": 23,
    "family_counts": {
     "crowd-control-mobility": 4,
-    "damage": 15,
-    "interaction": 3,
-    "stack-transform-summon-resource": 3
+    "damage": 13,
+    "interaction": 2,
+    "stack-transform-summon-resource": 4
    },
    "unclassified": [
     {
@@ -12409,13 +12315,13 @@
   },
   {
    "champion": "xinzhao",
-   "atom_count": 30,
+   "atom_count": 31,
    "family_counts": {
     "crowd-control-mobility": 8,
     "damage": 17,
     "heal-shield": 2,
     "interaction": 1,
-    "stack-transform-summon-resource": 2
+    "stack-transform-summon-resource": 3
    },
    "unclassified": [
     {
@@ -12467,12 +12373,6 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "XinZhaoQThrust1",
-     "object": "Characters/XinZhao/Spells/XinZhaoQThrust1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "XinZhaoQThrust2",
      "object": "Characters/XinZhao/Spells/XinZhaoQThrust2",
      "looks_noise": false,
@@ -12488,13 +12388,13 @@
   },
   {
    "champion": "yasuo",
-   "atom_count": 59,
+   "atom_count": 60,
    "family_counts": {
     "crowd-control-mobility": 17,
     "damage": 22,
     "heal-shield": 4,
     "interaction": 3,
-    "stack-transform-summon-resource": 13
+    "stack-transform-summon-resource": 14
    },
    "unclassified": [
     {
@@ -12578,6 +12478,36 @@
     {
      "name": "YasuoRLeashParticle",
      "object": "Characters/Yasuo/Spells/YasuoRLeashParticle",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "YasuoRSound0",
+     "object": "Characters/Yasuo/Spells/YasuoRSound0",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "YasuoRSound1",
+     "object": "Characters/Yasuo/Spells/YasuoRSound1",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "YasuoRSound2",
+     "object": "Characters/Yasuo/Spells/YasuoRSound2",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "YasuoRSound3",
+     "object": "Characters/Yasuo/Spells/YasuoRSound3",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "YasuoRSound4",
+     "object": "Characters/Yasuo/Spells/YasuoRSound4",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
@@ -12704,36 +12634,6 @@
     {
      "name": "YasuoRIsAvailable",
      "object": "Characters/Yasuo/Spells/YasuoRIsAvailable",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "YasuoRSound0",
-     "object": "Characters/Yasuo/Spells/YasuoRSound0",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "YasuoRSound1",
-     "object": "Characters/Yasuo/Spells/YasuoRSound1",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "YasuoRSound2",
-     "object": "Characters/Yasuo/Spells/YasuoRSound2",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "YasuoRSound3",
-     "object": "Characters/Yasuo/Spells/YasuoRSound3",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
-     "name": "YasuoRSound4",
-     "object": "Characters/Yasuo/Spells/YasuoRSound4",
      "looks_noise": false,
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
@@ -13115,13 +13015,12 @@
   },
   {
    "champion": "zed",
-   "atom_count": 40,
+   "atom_count": 39,
    "family_counts": {
     "crowd-control-mobility": 9,
     "damage": 19,
     "interaction": 2,
-    "stack-transform-summon-resource": 9,
-    "vision-economy": 1
+    "stack-transform-summon-resource": 9
    },
    "unclassified": [
     {
@@ -13452,12 +13351,12 @@
   },
   {
    "champion": "zoe",
-   "atom_count": 64,
+   "atom_count": 65,
    "family_counts": {
     "crowd-control-mobility": 11,
     "damage": 37,
     "heal-shield": 2,
-    "stack-transform-summon-resource": 14
+    "stack-transform-summon-resource": 15
    },
    "unclassified": [
     {
@@ -13481,6 +13380,12 @@
     {
      "name": "ZoeQMis2Warning",
      "object": "Characters/Zoe/Spells/ZoeQAbility/ZoeQMis2Warning",
+     "looks_noise": true,
+     "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
+    },
+    {
+     "name": "ZoeQMis2Warning2",
+     "object": "Characters/Zoe/Spells/ZoeQAbility/ZoeQMis2Warning2",
      "looks_noise": true,
      "note": "engine/cosmetic artifact (VFX, manager, UI tracker, event helper)"
     },
@@ -13593,12 +13498,6 @@
      "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
     },
     {
-     "name": "ZoeQMis2Warning2",
-     "object": "Characters/Zoe/Spells/ZoeQAbility/ZoeQMis2Warning2",
-     "looks_noise": false,
-     "note": "no wiki-vocabulary match; looks like a real mechanic (unmapped)"
-    },
-    {
      "name": "ZoeQRecast",
      "object": "Characters/Zoe/Spells/ZoeQAbility/ZoeQRecast",
      "looks_noise": false,
@@ -13681,28 +13580,28 @@
  ],
  "totals": {
   "champions_processed": 173,
-  "atoms_classified": 5345,
-  "unclassified_real_mechanics": 1274,
-  "unclassified_noise_artifacts": 652,
-  "unclassified_total_objects": 1926,
+  "atoms_classified": 5367,
+  "unclassified_real_mechanics": 1209,
+  "unclassified_noise_artifacts": 700,
+  "unclassified_total_objects": 1909,
   "family_counts": {
-   "crowd-control-mobility": 1035,
-   "damage": 2999,
-   "heal-shield": 274,
-   "interaction": 156,
-   "stack-transform-summon-resource": 807,
-   "vision-economy": 74
+   "crowd-control-mobility": 1028,
+   "damage": 2996,
+   "heal-shield": 272,
+   "interaction": 155,
+   "stack-transform-summon-resource": 848,
+   "vision-economy": 68
   },
   "damage_type": {
-   "damage_atoms": 2999,
-   "typed": 1616,
+   "damage_atoms": 2996,
+   "typed": 1598,
    "by_type": {
-    "magic": 939,
-    "other": 88,
-    "physical": 571,
+    "magic": 929,
+    "other": 86,
+    "physical": 565,
     "true": 18
    },
-   "coverage": 0.5388,
+   "coverage": 0.5334,
    "coverage_before_bridge": 0.0137,
    "source": "data/champions.json per-ability damageType, bridged by script-name prefix (champion+slot letter) and ability-name tokens; token inference is the fallback"
   },

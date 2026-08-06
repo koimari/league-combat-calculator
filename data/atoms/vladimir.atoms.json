@@ -200,7 +200,7 @@
   "family": "heal-shield",
   "behavior": "VladimirHemoplague",
   "trigger": "on_effect",
-  "target_policy": "ally",
+  "target_policy": "self",
   "parameters": {
    "cooldown_rank1": 120.0,
    "cooldown_rank_max": 120.0,
@@ -395,7 +395,7 @@
   "family": "heal-shield",
   "behavior": "VladimirSanguinePool",
   "trigger": "on_effect",
-  "target_policy": "ally",
+  "target_policy": "self",
   "parameters": {
    "cooldown_rank1": 31.0,
    "cooldown_rank_max": 16.0,
@@ -562,7 +562,7 @@
   "family": "heal-shield",
   "behavior": "VladimirQ",
   "trigger": "on_cast",
-  "target_policy": "ally",
+  "target_policy": "self",
   "parameters": {
    "cooldown_rank1": 10.100000381469727,
    "cooldown_rank_max": 3.5,
@@ -580,6 +580,153 @@
     "Characters/Vladimir/Spells/VladimirQAbility/VladimirQ"
    ],
    "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "VladimirBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 402.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Vladimir/Spells/VladimirBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
   }
  },
  {
@@ -728,159 +875,6 @@
    ],
    "inherited_from": "VladimirE",
    "evidence": "inherited:VladimirE"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "VladimirBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 402.0,
-   "damage_type": null,
-   "affects_type_flags": 24527
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Vladimir/Spells/VladimirBasicAttack3"
-   ],
-   "inherited_from": "VladimirBasicAttack",
-   "evidence": "inherited:VladimirBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "VladimirBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 402.0,
-   "damage_type": null,
-   "affects_type_flags": 24527
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Vladimir/Spells/VladimirBasicAttack3"
-   ],
-   "inherited_from": "VladimirBasicAttack",
-   "evidence": "inherited:VladimirBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "VladimirBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 402.0,
-   "damage_type": null,
-   "affects_type_flags": 24527
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Vladimir/Spells/VladimirBasicAttack2"
-   ],
-   "inherited_from": "VladimirBasicAttack",
-   "evidence": "inherited:VladimirBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "VladimirBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 402.0,
-   "damage_type": null,
-   "affects_type_flags": 24527
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Vladimir/Spells/VladimirBasicAttack2"
-   ],
-   "inherited_from": "VladimirBasicAttack",
-   "evidence": "inherited:VladimirBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "VladimirBasicAttack4",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 402.0,
-   "damage_type": null,
-   "affects_type_flags": 24527
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Vladimir/Spells/VladimirBasicAttack4"
-   ],
-   "inherited_from": "VladimirBasicAttack",
-   "evidence": "inherited:VladimirBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "VladimirBasicAttack4",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 402.0,
-   "damage_type": null,
-   "affects_type_flags": 24527
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Vladimir/Spells/VladimirBasicAttack4"
-   ],
-   "inherited_from": "VladimirBasicAttack",
-   "evidence": "inherited:VladimirBasicAttack"
   }
  }
 ]

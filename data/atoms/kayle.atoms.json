@@ -365,7 +365,7 @@
   "family": "heal-shield",
   "behavior": "KayleW",
   "trigger": "on_effect",
-  "target_policy": "ally",
+  "target_policy": "self",
   "parameters": {
    "cooldown_rank1": 15.0,
    "cooldown_rank_max": 15.0,
@@ -453,6 +453,104 @@
    ],
    "binary": [
     "Characters/Kayle/Spells/KayleBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 554.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 554.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 16896
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 16896
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack2"
    ],
    "evidence": "name:basicattack"
   }
@@ -553,6 +651,55 @@
     "Characters/Kayle/Spells/KayleEAttackUpgrade"
    ],
    "evidence": "name:upgrade"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 554.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KayleBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 554.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 21711
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kayle/Spells/KayleBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
   }
  },
  {
@@ -768,159 +915,6 @@
    ],
    "inherited_from": "KayleQ",
    "evidence": "inherited:KayleQ"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "KayleBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 16896
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Kayle/Spells/KayleBasicAttack3"
-   ],
-   "inherited_from": "KayleBasicAttack",
-   "evidence": "inherited:KayleBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "KayleBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 16896
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Kayle/Spells/KayleBasicAttack3"
-   ],
-   "inherited_from": "KayleBasicAttack",
-   "evidence": "inherited:KayleBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "KayleBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 16896
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Kayle/Spells/KayleBasicAttack2"
-   ],
-   "inherited_from": "KayleBasicAttack",
-   "evidence": "inherited:KayleBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "KayleBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 16896
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Kayle/Spells/KayleBasicAttack2"
-   ],
-   "inherited_from": "KayleBasicAttack",
-   "evidence": "inherited:KayleBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "KayleBasicAttack4",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 16896
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Kayle/Spells/KayleBasicAttack4"
-   ],
-   "inherited_from": "KayleBasicAttack",
-   "evidence": "inherited:KayleBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "KayleBasicAttack4",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 16896
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Kayle/Spells/KayleBasicAttack4"
-   ],
-   "inherited_from": "KayleBasicAttack",
-   "evidence": "inherited:KayleBasicAttack"
   }
  }
 ]

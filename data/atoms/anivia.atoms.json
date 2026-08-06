@@ -114,7 +114,8 @@
    "binary": [
     "Characters/Anivia/Spells/RebirthMarkerAbility/RebirthMarker"
    ],
-   "evidence": "name:rebirth"
+   "evidence": "name:rebirth",
+   "ghost": "removed-kit-leftover"
   }
  },
  {
@@ -185,7 +186,8 @@
    "binary": [
     "Characters/Anivia/Spells/RebirthMarkerAbility/RebirthCooldown"
    ],
-   "evidence": "name:rebirth"
+   "evidence": "name:rebirth",
+   "ghost": "removed-kit-leftover"
   }
  },
  {
@@ -209,7 +211,8 @@
    "binary": [
     "Characters/Anivia/Spells/RebirthMarkerAbility/Rebirth"
    ],
-   "evidence": "name:rebirth"
+   "evidence": "name:rebirth",
+   "ghost": "removed-kit-leftover"
   }
  },
  {
@@ -257,6 +260,55 @@
    ],
    "binary": [
     "Characters/Anivia/Spells/AniviaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AniviaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Anivia/Spells/AniviaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AniviaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Anivia/Spells/AniviaBasicAttack2"
    ],
    "evidence": "name:basicattack"
   }
@@ -353,57 +405,6 @@
     "Characters/Anivia/Spells/CrystallizeAbility/Crystallize"
    ],
    "evidence": "name:crystallize"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "AniviaBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 650.0,
-   "damage_type": null,
-   "affects_type_flags": 8143
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Anivia/Spells/AniviaBasicAttack2"
-   ],
-   "inherited_from": "AniviaBasicAttack",
-   "evidence": "inherited:AniviaBasicAttack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "AniviaBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 650.0,
-   "damage_type": null,
-   "affects_type_flags": 8143
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Anivia/Spells/AniviaBasicAttack2"
-   ],
-   "inherited_from": "AniviaBasicAttack",
-   "evidence": "inherited:AniviaBasicAttack"
   }
  }
 ]

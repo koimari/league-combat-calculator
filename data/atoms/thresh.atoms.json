@@ -376,6 +376,54 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ThreshEPassive1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshEAbility/ThreshEPassive1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ThreshEMissile1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1075.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshEAbility/ThreshEMissile1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
   "atom_id": "stack-transform-summon-resource.soul",
   "family": "stack-transform-summon-resource",
   "behavior": "ThreshPassiveSouls",
@@ -451,6 +499,30 @@
     "Characters/Thresh/Spells/ThreshPassiveSoulsVlad"
    ],
    "evidence": "name:soul"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ThreshRTrigger1",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 20000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshRTrigger1"
+   ],
+   "evidence": "name:11"
   }
  },
  {
@@ -550,140 +622,285 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "ThreshQMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 19.0,
-   "cooldown_rank_max": 9.0,
-   "range": 10000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Thresh/Spells/ThreshQAbility/ThreshQMissile"
-   ],
-   "inherited_from": "ThreshQ",
-   "evidence": "inherited:ThreshQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
+  "atom_id": "damage.basic-attack",
   "family": "damage",
-  "behavior": "ThreshQMissile",
+  "behavior": "ThreshBasicAttack1M",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 19.0,
-   "cooldown_rank_max": 9.0,
-   "range": 10000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Thresh/Spells/ThreshQAbility/ThreshQMissile"
-   ],
-   "inherited_from": "ThreshQ",
-   "evidence": "inherited:ThreshQ"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "ThreshEMissile1",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 13.0,
-   "cooldown_rank_max": 9.25,
-   "range": 20000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Thresh/Spells/ThreshEAbility/ThreshEMissile1"
-   ],
-   "inherited_from": "ThreshE",
-   "evidence": "inherited:ThreshE"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.knockback",
-  "family": "crowd-control-mobility",
-  "behavior": "ThreshEMissile1",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 13.0,
-   "cooldown_rank_max": 9.25,
-   "range": 20000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Types of Crowd Control"
-   ],
-   "binary": [
-    "Characters/Thresh/Spells/ThreshEAbility/ThreshEMissile1"
-   ],
-   "inherited_from": "ThreshE",
-   "evidence": "inherited:ThreshE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "ThreshEMissile1",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 13.0,
-   "cooldown_rank_max": 9.25,
-   "range": 20000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512
   },
   "provenance": {
    "wiki": [
     "Damage",
-    "Damage over time"
+    "Attack damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Thresh/Spells/ThreshEAbility/ThreshEMissile1"
+    "Characters/Thresh/Spells/ThreshBasicAttack1M"
    ],
-   "inherited_from": "ThreshE",
-   "evidence": "inherited:ThreshE"
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ThreshBasicAttack1M",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshBasicAttack1M"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ThreshBasicAttack1M",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshBasicAttack1M"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ThreshBasicAttack1S",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshBasicAttack1S"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ThreshBasicAttack1S",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshBasicAttack1S"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ThreshBasicAttack1S",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshBasicAttack1S"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ThreshBasicAttack2S",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshBasicAttack2S"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ThreshBasicAttack2S",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshBasicAttack2S"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ThreshBasicAttack2M",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshBasicAttack2M"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ThreshBasicAttack2M",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshBasicAttack2M"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ThreshQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 19.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Thresh/Spells/ThreshQAbility/ThreshQMissile"
+   ],
+   "inherited_from": "ThreshQ",
+   "evidence": "inherited:ThreshQ"
   }
  },
  {
   "atom_id": "damage.damage-instance",
   "family": "damage",
-  "behavior": "ThreshEMissile1",
+  "behavior": "ThreshQMissile",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 13.0,
-   "cooldown_rank_max": 9.25,
-   "range": 20000.0,
+   "cooldown_rank1": 19.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
@@ -692,10 +909,10 @@
     "Damage"
    ],
    "binary": [
-    "Characters/Thresh/Spells/ThreshEAbility/ThreshEMissile1"
+    "Characters/Thresh/Spells/ThreshQAbility/ThreshQMissile"
    ],
-   "inherited_from": "ThreshE",
-   "evidence": "inherited:ThreshE"
+   "inherited_from": "ThreshQ",
+   "evidence": "inherited:ThreshQ"
   }
  }
 ]

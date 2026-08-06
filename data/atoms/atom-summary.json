@@ -671,6 +671,8 @@
   "tryndamere",
   "twistedfate",
   "twitch",
+  "udyr",
+  "urgot",
   "varus",
   "vayne",
   "velkoz",
@@ -678,6 +680,7 @@
   "viego",
   "viktor",
   "vladimir",
+  "volibear",
   "warwick",
   "xayah",
   "xerath",
@@ -726,7 +729,6 @@
   "rengar",
   "senna",
   "shaco",
-  "shen",
   "talon",
   "teemo",
   "twistedfate",
@@ -734,7 +736,6 @@
   "vayne",
   "viego",
   "volibear",
-  "zed",
   "zyra"
  ]
 }
