@@ -265,6 +265,11 @@
             <span class="trust-legend-note" hidden></span>
           </div>
           <div class="result-note"><span class="note-mark">i</span><span>Live engine output · incomplete mechanics remain visibly qualified.</span></div>
+      <!-- F2 event-order panel mount. eventorder.js renders the optimal
+         rotation (cast chips + combo rationale) into this hook from the
+         /api/calculate rotation receipt; it stays hidden when the receipt
+         is absent. -->
+    <div id="eventOrderPanel" hidden></div>
       <!-- P7 feedback widget mount. feedback.js renders into this hook; if it is
          removed, the widget falls back to .result-column and stays silent when
          neither exists. P5: optionally expose window.scryglass.getCurrentLoadout()
@@ -347,6 +352,7 @@
       <span class="site-footer-note">Not endorsed by Riot Games · League Wiki (CC-BY-SA) + game-file data · no Riot API.</span>
     </div>
   </footer>
+  <script src="/static/js/eventorder.js"></script>
   <script src="/static/js/app.js"></script>
   <script src="/static/js/staleness.js"></script>
   <script src="/static/js/feedback.js"></script>

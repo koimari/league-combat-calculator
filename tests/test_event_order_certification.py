@@ -501,13 +501,17 @@ def test_poppy_hammer_shock_exports_both_authored_hits():
 
 
 def test_brand_pyroclasm_exports_the_sourced_bounce_clock():
+    # F2: Brand's optimal rotation opens Q -> R, so Pyroclasm now casts
+    # right after Q (t=0.25) instead of after the old fixed Q,W,E order
+    # (t=0.75). The sourced bounce CLOCK (0.15s between bounces) is what
+    # this test certifies; the absolute times follow the rotation.
     result = run_fight(_load_public_champion("Brand"), 18, [], _timed_params())
     assert result["timeline_coverage"]["complete"] is True
     pyroclasm = result["breakdown"]["R"]
     assert [round(event["time"], 2) for event in pyroclasm["damage_events"]] == [
-        0.75,
-        0.9,
-        1.05,
+        0.25,
+        0.4,
+        0.55,
     ]
     assert sum(
         event["damage"] for event in pyroclasm["damage_events"]

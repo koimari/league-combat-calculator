@@ -254,7 +254,17 @@ def test_ally_ledger_receives_sourced_support(champion, source, kind, amount):
     if kind == "shield":
         assert ally_row["survival"]["support_shield_received"] >= amount
     else:
-        assert ally_row["survival"]["healing_received"] >= amount
+        # F2 order note: the enemy now plays its optimal rotation
+        # (Aatrox opens with the zero-damage World Ender), so the first
+        # hit on the ally lands at t=0.25 — after the t=0 heal.  A heal
+        # that lands on a full-health ally overheals (applied 0); the
+        # sourced amount is still fully accounted in the ledger as
+        # healing_received + overhealing.
+        assert (
+            ally_row["survival"]["healing_received"]
+            + ally_row["survival"]["overhealing"]
+            >= amount
+        )
 
 
 def test_yuumi_zoomies_emits_sourced_self_shield_ally_target_is_missing_hook():
@@ -361,7 +371,13 @@ def test_support_caster_in_allies_list_targets_main_ledger():
         row for row in combat["participants"] if row["participant_id"] == "main"
     )
     assert main_row["survival"]["support_shield_received"] >= 105.0
-    assert main_row["survival"]["healing_received"] >= 90.0
+    # The t=0 heal lands while the main is still at full health (the
+    # enemy's optimal rotation delays its first hit to t=0.25), so the
+    # sourced 90 heals as overheal — still fully accounted.
+    assert (
+        main_row["survival"]["healing_received"] + main_row["survival"]["overhealing"]
+        >= 90.0
+    )
 
 
 def test_soraka_astral_infusion_sourced_amount_and_health_cost_documented():
