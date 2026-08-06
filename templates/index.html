@@ -20,55 +20,160 @@
   </header>
 
   <main class="app-shell">
-    <h1>Item calculator</h1>
-    <section class="scenario-rail" aria-label="Scenario controls">
-      <div class="scenario-block state-block">
-        <span class="micro-label">Game state</span>
-        <button class="state-button active" id="stateTheory" type="button" data-game-state="theory" aria-pressed="true">Theory</button>
-        <button class="state-button" id="stateLive" type="button" data-game-state="live" aria-pressed="false">Snapshot lens</button>
-      </div>
-      <div class="objective-block">
-        <span class="micro-label">Objective</span>
-        <div class="objective-list" role="group" aria-label="Objective">
-          <button class="objective active" data-objective="overall" aria-pressed="true" type="button">Overall</button>
-          <button class="objective" data-objective="kill" aria-pressed="false" type="button">Kill</button>
-          <button class="objective" data-objective="survival" aria-pressed="false" type="button">Survival</button>
-          <button class="objective" data-objective="damage" aria-pressed="false" type="button">Damage</button>
-          <button class="objective" data-objective="utility" aria-pressed="false" type="button">Utility</button>
-        </div>
-      </div>
-      <p id="scenarioSentence" class="scenario-summary" aria-live="polite"></p>
-    </section>
+    <nav class="view-switch" role="tablist" aria-label="Calculator mode">
+      <button class="view-tab active" id="viewQuickTab" type="button" role="tab" aria-selected="true" data-view="quick">Quick <span class="view-tab-hint">3 clicks</span></button>
+      <button class="view-tab" id="viewAnalystTab" type="button" role="tab" aria-selected="false" data-view="analyst">Analyst</button>
+    </nav>
 
-    <div class="content-grid">
-      <section class="builder-column" aria-label="Scenario builder">
-        <section class="champion-section section-rule">
-          <div class="section-heading"><span class="micro-label">Champion</span><span id="stateReadout" class="section-note">Theory state</span></div>
-          <div class="champion-card">
-            <div class="champion-identity">
-              <button class="champion-portrait champion-portrait-button is-empty" id="championPicker" type="button" data-picker="champion" data-path="attacker.champion" aria-label="Choose champion"><img id="championImage" src="/static/img/rift-illustration-4k.webp" alt="" hidden /></button>
-              <div><div class="eyebrow">Main champion</div><h1 id="championName">Choose a champion</h1><p id="championTitle">Start with the champion you want to compare.</p><div class="identity-controls"><label class="role-control">Role <select id="roleSelect" aria-label="Role"><option value="top">Top</option><option value="jungle">Jungle</option><option value="mid" selected>Mid</option><option value="bottom">Bottom</option><option value="support">Support</option></select></label><div class="level-stepper"><span>Level</span><button type="button" data-level-path="attacker.level" data-level-delta="-1" aria-label="Decrease level">−</button><output id="levelOutput">1</output><button type="button" data-level-path="attacker.level" data-level-delta="1" aria-label="Increase level">+</button><input id="levelInput" type="number" min="1" max="18" value="1" aria-label="Level" /></div><button class="outline-button" id="questToggle" type="button" aria-pressed="false">Quest off</button><button class="outline-button active-outline" id="bootsToggle" type="button" aria-pressed="true">Boots on</button></div></div>
-            </div>
-            <div class="stats-grid" id="statsGrid"></div>
-          </div>
-        </section>
-
-        <section class="abilities-section section-rule"><div class="section-heading"><span class="micro-label">Abilities</span><span class="section-note">Ranks · casts</span></div><div class="ability-row" id="abilityRow"></div><div id="championOptionsRow"></div></section>
-
-        <section class="builds-section section-rule"><div class="section-heading"><span class="micro-label">Builds</span><span class="section-note">6 slots · compare</span></div><div class="build-grid"><article class="build-card build-a" data-build="a"><header class="build-header"><div><span class="build-kicker">Build A</span><strong id="buildAScore">—</strong></div><button class="text-button" type="button" data-copy="b">Copy B → A</button></header><div class="build-caption">baseline</div><div class="slot-grid" id="slotsA"></div></article><article class="build-card build-b" data-build="b"><header class="build-header"><div><span class="build-kicker">Build B</span><strong id="buildBScore">—</strong></div><button class="text-button" type="button" data-copy="a">Copy A → B</button></header><div class="build-caption winner-caption" id="winnerCaption">comparison off</div><div class="slot-grid" id="slotsB"></div></article></div><button class="compare-link" id="bisButton" type="button"><span>+</span> Find best item for a slot</button></section>
-
-        <section class="roster-section section-rule"><div class="section-heading"><span class="micro-label">Roster</span><span class="section-note"><span id="enemyCount">0</span> enemies · <span id="allyCount">0</span> allies</span></div><div class="roster-grid"><div class="roster-group"><div class="roster-label"><span>Enemies</span><button class="add-button" id="addEnemy" type="button">+ Add</button></div><div id="enemies" class="roster-list"></div></div><div class="roster-group"><div class="roster-label"><span>Allies</span><button class="add-button" id="addAlly" type="button">+ Add</button></div><div id="allies" class="roster-list"></div></div></div></section>
-
-        <section class="window-section section-rule"><div class="section-heading"><span class="micro-label">Window</span><span class="section-note">Assumed actions land</span></div><div class="window-controls"><label class="range-control"><span>Rotations</span><output id="rotationOutput">1</output><input id="rotationRange" type="range" min="1" max="6" value="1" data-proto-range="rotations" /></label><label class="range-control"><span>Window per rotation</span><output id="durationOutput">10s</output><input id="durationRange" type="range" min="1" max="30" step="0.5" value="10" data-proto-range="duration" /></label><label class="range-control"><span>Auto uptime <button class="inline-mode-button" id="uptimeModeToggle" type="button" aria-pressed="true">Use explicit</button></span><output id="uptimeOutput">CALCULATED</output><input id="uptimeRange" type="range" min="0" max="100" value="0" data-proto-range="aaUptime" disabled /></label></div></section>
-      </section>
-
-      <aside class="result-column" aria-label="Comparison result"><section class="result-card"><div class="result-top"><span class="micro-label">Result</span><span class="result-status" id="resultStatus">waiting</span></div><div class="result-hero"><div class="result-overline" id="resultObjective">Overall</div><div class="result-answer"><strong id="winnerLetter">—</strong><div><span id="winnerLabel">waiting</span><b id="resultDelta">—</b></div></div><p id="resultSummary">Choose a champion, a complete build, and an enemy roster.</p></div><div class="score-compare"><div class="score-col score-a"><span>Build A</span><strong id="scoreA">—</strong></div><div class="score-divider"></div><div class="score-col score-b"><span>Build B</span><strong id="scoreB">—</strong></div></div><div class="metric-legend" id="metricLegend">A / B · higher is better except Kill time</div><div class="metric-list" id="metricList"></div><div class="health-ledger"><div class="ledger-heading"><span>Team fight</span><span>HP at end</span></div><div id="healthRows"></div></div><details class="proof-details"><summary><span>Open event ledger</span><span>↘</span></summary><div class="timeline" id="timeline"></div><div class="ledger-table" id="ledgerTable"></div></details></section><div class="result-note"><span class="note-mark">i</span><span>Live engine output · incomplete mechanics remain visibly qualified.</span></div></aside>
+    <div id="shareBanner" class="share-banner" hidden>
+      <span class="share-banner-mark" aria-hidden="true">🔗</span>
+      <span id="shareBannerText">Viewing a shared build.</span>
+      <button id="shareOpenEditor" class="share-banner-button" type="button">Open in editor</button>
     </div>
 
-    <section id="builder" hidden aria-hidden="true"></section>
-    <div id="winnerVisual" hidden></div><div id="scoreGrid" hidden></div><div id="resistanceOutput" hidden></div><div id="why" hidden></div><div id="threshold" hidden></div><div id="mechanicsOutput" hidden></div><div id="rotationTable" hidden></div><span id="resultContext" hidden></span><span id="resultFootnote" hidden></span><span id="tableA" hidden></span><span id="tableB" hidden></span>
-    <section id="damageBreakdown" hidden aria-hidden="true"></section>
-    <details class="method" hidden><summary>Damage package &amp; calculation boundary</summary><div class="method-grid"><input id="baseDamage" type="number" value="0" /><input id="apRatio" type="number" value="0" /><input id="physicalDamage" type="number" value="0" /><input id="adRatio" type="number" value="0" /></div></details>
+    <section id="quickView" class="quick-view" aria-label="Quick mode">
+      <div class="quick-head">
+        <div class="quick-title">
+          <p class="eyebrow">Quick mode</p>
+          <h1>What should I build next?</h1>
+          <p class="quick-sub">Pick a champion and a fight, then get your top three item picks — with the numbers to back them.</p>
+        </div>
+        <div class="quick-preset-row" id="quickPresets" role="group" aria-label="Scenario presets"></div>
+      </div>
+
+      <ol class="quick-steps">
+        <li class="quick-step">
+          <span class="quick-step-num" aria-hidden="true">1</span>
+          <div class="quick-step-body">
+            <span class="micro-label" id="quickChampionLabel">Your champion</span>
+            <input id="quickChampionSearch" class="quick-search" type="search" autocomplete="off" placeholder="Search champions…" aria-label="Search champions" />
+            <div class="quick-pick-grid" id="quickChampionGrid" aria-label="Champion choices"></div>
+            <p class="quick-step-note" id="quickChampionNote">Type to filter. Tapping a champion locks it in.</p>
+          </div>
+        </li>
+        <li class="quick-step">
+          <span class="quick-step-num" aria-hidden="true">2</span>
+          <div class="quick-step-body">
+            <span class="micro-label">Your role</span>
+            <div class="quick-segmented" id="quickRole" role="group" aria-label="Role"></div>
+          </div>
+        </li>
+        <li class="quick-step">
+          <span class="quick-step-num" aria-hidden="true">3</span>
+          <div class="quick-step-body">
+            <span class="micro-label">Enemy <span class="quick-optional">optional</span></span>
+            <input id="quickEnemySearch" class="quick-search" type="search" autocomplete="off" placeholder="Search enemies… (empty = practice target)" aria-label="Search enemies" />
+            <div class="quick-pick-grid" id="quickEnemyGrid" aria-label="Enemy choices"></div>
+            <p class="quick-step-note" id="quickEnemyNote">Leave empty to fight a default practice target.</p>
+            <button id="quickEnemyClear" class="quick-clear-button" type="button" hidden>Clear enemy</button>
+          </div>
+        </li>
+        <li class="quick-step">
+          <span class="quick-step-num" aria-hidden="true">4</span>
+          <div class="quick-step-body">
+            <span class="micro-label">Items you already own <span class="quick-optional">optional</span></span>
+            <div class="quick-items-strip" id="quickItems"></div>
+            <input id="quickItemSearch" class="quick-search" type="search" autocomplete="off" placeholder="Search items to add… (empty = fresh build)" aria-label="Search items" />
+            <div class="quick-pick-grid" id="quickItemGrid" aria-label="Item choices"></div>
+          </div>
+        </li>
+      </ol>
+
+      <button id="quickRun" class="quick-run" type="button">Best next item</button>
+      <div class="quick-spinner" id="quickSpinner" role="status" aria-live="polite" hidden>
+        <span class="spinner" aria-hidden="true"></span><span id="quickSpinnerText">Crunching the event-ordered numbers…</span>
+      </div>
+
+      <div class="quick-results" id="quickResults" hidden></div>
+
+      <div class="quick-after" id="quickAfter" hidden>
+        <div class="quick-share-row">
+          <button id="quickShareButton" class="outline-button" type="button">Share this build</button>
+          <div class="trust-legend">
+            <span class="trust-legend-title">Certainty</span>
+            <span class="certainty-chip certainty-exact" title="Fully sourced formula, no player-controlled options">EXACT</span>
+            <span class="certainty-chip certainty-estimate" title="Uses a defaulted player-controlled option">ESTIMATE</span>
+            <span class="certainty-chip certainty-boundary" title="Documented but not computed mechanic">BOUNDARY</span>
+            <span class="trust-legend-note" hidden></span>
+          </div>
+        </div>
+        <details class="quick-not-modeled" id="quickNotModeled" hidden>
+          <summary>What is not modeled for this champion</summary>
+          <ul id="quickNotModeledList"></ul>
+        </details>
+      </div>
+    </section>
+
+    <div id="analystView" hidden>
+      <h1>Item calculator</h1>
+      <section class="scenario-rail" aria-label="Scenario controls">
+        <div class="scenario-block state-block">
+          <span class="micro-label">Game state</span>
+          <button class="state-button active" id="stateTheory" type="button" data-game-state="theory" aria-pressed="true">Theory</button>
+          <button class="state-button" id="stateLive" type="button" data-game-state="live" aria-pressed="false">Snapshot lens</button>
+        </div>
+        <div class="objective-block">
+          <span class="micro-label">Objective</span>
+          <div class="objective-list" role="group" aria-label="Objective">
+            <button class="objective active" data-objective="overall" aria-pressed="true" type="button">Overall</button>
+            <button class="objective" data-objective="kill" aria-pressed="false" type="button">Kill</button>
+            <button class="objective" data-objective="survival" aria-pressed="false" type="button">Survival</button>
+            <button class="objective" data-objective="damage" aria-pressed="false" type="button">Damage</button>
+            <button class="objective" data-objective="utility" aria-pressed="false" type="button">Utility</button>
+          </div>
+        </div>
+        <p id="scenarioSentence" class="scenario-summary" aria-live="polite"></p>
+      </section>
+
+      <div class="content-grid">
+        <section class="builder-column" aria-label="Scenario builder">
+          <section class="champion-section section-rule">
+            <div class="section-heading"><span class="micro-label">Champion</span><span id="stateReadout" class="section-note">Theory state</span></div>
+            <div class="champion-card">
+              <div class="champion-identity">
+                <button class="champion-portrait champion-portrait-button is-empty" id="championPicker" type="button" data-picker="champion" data-path="attacker.champion" aria-label="Choose champion"><img id="championImage" src="/static/img/rift-illustration-4k.webp" alt="" hidden /></button>
+                <div><div class="eyebrow">Main champion</div><h1 id="championName">Choose a champion</h1><p id="championTitle">Start with the champion you want to compare.</p><div class="identity-controls"><label class="role-control">Role <select id="roleSelect" aria-label="Role"><option value="top">Top</option><option value="jungle">Jungle</option><option value="mid" selected>Mid</option><option value="bottom">Bottom</option><option value="support">Support</option></select></label><div class="level-stepper"><span>Level</span><button type="button" data-level-path="attacker.level" data-level-delta="-1" aria-label="Decrease level">−</button><output id="levelOutput">1</output><button type="button" data-level-path="attacker.level" data-level-delta="1" aria-label="Increase level">+</button><input id="levelInput" type="number" min="1" max="18" value="1" aria-label="Level" /></div><button class="outline-button" id="questToggle" type="button" aria-pressed="false">Quest off</button><button class="outline-button active-outline" id="bootsToggle" type="button" aria-pressed="true">Boots on</button></div></div>
+              </div>
+              <div class="stats-grid" id="statsGrid"></div>
+            </div>
+          </section>
+
+          <section class="abilities-section section-rule"><div class="section-heading"><span class="micro-label">Abilities</span><span class="section-note">Ranks · casts</span></div><div class="ability-row" id="abilityRow"></div><div id="championOptionsRow"></div></section>
+
+          <section class="builds-section section-rule"><div class="section-heading"><span class="micro-label">Builds</span><span class="section-note">6 slots · compare</span><button class="text-button share-build-button" id="shareAnalystButton" type="button">Share this build</button></div><div class="build-grid"><article class="build-card build-a" data-build="a"><header class="build-header"><div><span class="build-kicker">Build A</span><strong id="buildAScore">—</strong></div><button class="text-button" type="button" data-copy="b">Copy B → A</button></header><div class="build-caption">baseline</div><div class="slot-grid" id="slotsA"></div></article><article class="build-card build-b" data-build="b"><header class="build-header"><div><span class="build-kicker">Build B</span><strong id="buildBScore">—</strong></div><button class="text-button" type="button" data-copy="a">Copy A → B</button></header><div class="build-caption winner-caption" id="winnerCaption">comparison off</div><div class="slot-grid" id="slotsB"></div></article></div><button class="compare-link" id="bisButton" type="button"><span>+</span> Find best item for a slot</button></section>
+
+          <section class="roster-section section-rule"><div class="section-heading"><span class="micro-label">Roster</span><span class="section-note"><span id="enemyCount">0</span> enemies · <span id="allyCount">0</span> allies</span></div><div class="roster-grid"><div class="roster-group"><div class="roster-label"><span>Enemies</span><button class="add-button" id="addEnemy" type="button">+ Add</button></div><div id="enemies" class="roster-list"></div></div><div class="roster-group"><div class="roster-label"><span>Allies</span><button class="add-button" id="addAlly" type="button">+ Add</button></div><div id="allies" class="roster-list"></div></div></div></section>
+
+          <section class="window-section section-rule"><div class="section-heading"><span class="micro-label">Window</span><span class="section-note">Assumed actions land</span></div><div class="window-controls"><label class="range-control"><span>Rotations</span><output id="rotationOutput">1</output><input id="rotationRange" type="range" min="1" max="6" value="1" data-proto-range="rotations" /></label><label class="range-control"><span>Window per rotation</span><output id="durationOutput">10s</output><input id="durationRange" type="range" min="1" max="30" step="0.5" value="10" data-proto-range="duration" /></label><label class="range-control"><span>Auto uptime <button class="inline-mode-button" id="uptimeModeToggle" type="button" aria-pressed="true">Use explicit</button></span><output id="uptimeOutput">CALCULATED</output><input id="uptimeRange" type="range" min="0" max="100" value="0" data-proto-range="aaUptime" disabled /></label></div></section>
+        </section>
+
+        <aside class="result-column" aria-label="Comparison result"><section class="result-card"><div class="result-top"><span class="micro-label">Result</span><span class="result-status" id="resultStatus">waiting</span></div><div class="result-hero"><div class="result-overline" id="resultObjective">Overall</div><div class="result-answer"><strong id="winnerLetter">—</strong><div><span id="winnerLabel">waiting</span><b id="resultDelta">—</b></div></div><p id="resultSummary">Choose a champion, a complete build, and an enemy roster.</p></div><div class="score-compare"><div class="score-col score-a"><span>Build A</span><strong id="scoreA">—</strong></div><div class="score-divider"></div><div class="score-col score-b"><span>Build B</span><strong id="scoreB">—</strong></div></div><div class="metric-legend" id="metricLegend">A / B · higher is better except Kill time</div><div class="metric-list" id="metricList"></div><div class="health-ledger"><div class="ledger-heading"><span>Team fight</span><span>HP at end</span></div><div id="healthRows"></div></div><details class="proof-details"><summary><span>Open event ledger</span><span>↘</span></summary><div class="timeline" id="timeline"></div><div class="ledger-table" id="ledgerTable"></div></details></section>
+          <details class="not-modeled-panel" id="notModeledPanel" hidden>
+            <summary>What is not modeled for this champion</summary>
+            <ul id="notModeledList"></ul>
+          </details>
+          <div class="trust-legend analyst-trust-legend" id="trustLegend" hidden>
+            <span class="trust-legend-title">Number certainty</span>
+            <span class="certainty-chip certainty-exact" title="Fully sourced formula, no player-controlled options">EXACT</span>
+            <span class="certainty-chip certainty-estimate" title="Uses a defaulted player-controlled option">ESTIMATE</span>
+            <span class="certainty-chip certainty-boundary" title="Documented but not computed mechanic">BOUNDARY</span>
+            <span class="trust-legend-note" hidden></span>
+          </div>
+          <div class="result-note"><span class="note-mark">i</span><span>Live engine output · incomplete mechanics remain visibly qualified.</span></div></aside>
+      </div>
+
+      <section id="builder" hidden aria-hidden="true"></section>
+      <div id="winnerVisual" hidden></div><div id="scoreGrid" hidden></div><div id="resistanceOutput" hidden></div><div id="why" hidden></div><div id="threshold" hidden></div><div id="mechanicsOutput" hidden></div><div id="rotationTable" hidden></div><span id="resultContext" hidden></span><span id="resultFootnote" hidden></span><span id="tableA" hidden></span><span id="tableB" hidden></span>
+      <section id="damageBreakdown" hidden aria-hidden="true"></section>
+      <details class="method" hidden><summary>Damage package &amp; calculation boundary</summary><div class="method-grid"><input id="baseDamage" type="number" value="0" /><input id="apRatio" type="number" value="0" /><input id="physicalDamage" type="number" value="0" /><input id="adRatio" type="number" value="0" /></div></details>
+    </div>
+
+    <div class="share-panel" id="sharePanel" hidden>
+      <div class="share-panel-head"><strong>Build link</strong><button class="share-panel-close" id="sharePanelClose" type="button" aria-label="Close share panel">×</button></div>
+      <p class="share-panel-note">Anyone with this link can view the build read-only. Sharing is permanent.</p>
+      <div class="share-url-row"><input id="shareUrl" type="text" readonly aria-label="Share URL" /><button id="shareCopy" class="share-copy-button" type="button">Copy</button></div>
+      <p class="share-status" id="shareStatus" role="status"></p>
+    </div>
   </main>
 
   <dialog id="picker" class="picker"><div class="picker-shell"><header><div><p class="eyebrow" id="pickerKind">Choose</p><h2 id="pickerTitle">Select</h2></div><button class="picker-close" id="pickerClose" type="button" aria-label="Close picker">×</button></header><label class="search-box"><span aria-hidden="true">⌕</span><input id="pickerSearch" type="search" autocomplete="off" placeholder="Search" aria-label="Search choices" /></label><div id="pickerGrid" class="picker-grid"></div></div></dialog>

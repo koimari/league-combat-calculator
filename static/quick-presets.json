@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "presets": [
+    {
+      "id": "rotation-vs-tank",
+      "label": "Full rotation vs tank",
+      "emoji": "🛡️",
+      "tagline": "One full combo into a frontline tank with a completed tank build.",
+      "fight": {
+        "rotations": 1,
+        "fight_mode": "one_rotation",
+        "fight_duration": 10,
+        "auto_attack_uptime_mode": "calculated",
+        "include_auto_attacks": true
+      },
+      "enemies": [
+        {
+          "champion": "Ornn",
+          "level": 18,
+          "role": "top",
+          "items": [
+            "Sunfire Aegis",
+            "Thornmail",
+            "Force of Nature",
+            "Jak'Sho, The Protean",
+            "Warmog's Armor"
+          ]
+        }
+      ],
+      "allies": []
+    },
+    {
+      "id": "sustained-vs-squishy",
+      "label": "10s sustained vs squishy",
+      "emoji": "⚡",
+      "tagline": "Ten seconds of continuous damage into a soft, itemless target.",
+      "fight": {
+        "rotations": 1,
+        "fight_mode": "time_based",
+        "fight_duration": 10,
+        "auto_attack_uptime_mode": "calculated",
+        "include_auto_attacks": true
+      },
+      "enemies": [
+        {
+          "champion": "Jhin",
+          "level": 18,
+          "role": "bottom",
+          "items": []
+        }
+      ],
+      "allies": []
+    },
+    {
+      "id": "burst-vs-1v1",
+      "label": "Burst vs 1v1",
+      "emoji": "⚔️",
+      "tagline": "One rotation against a single level-16 duelist.",
+      "fight": {
+        "rotations": 1,
+        "fight_mode": "one_rotation",
+        "fight_duration": 10,
+        "auto_attack_uptime_mode": "calculated",
+        "include_auto_attacks": true
+      },
+      "enemies": [
+        {
+          "champion": "Darius",
+          "level": 16,
+          "role": "top",
+          "items": []
+        }
+      ],
+      "allies": []
+    },
+    {
+      "id": "teamfight-4v4",
+      "label": "Team fight 4v4",
+      "emoji": "🔥",
+      "tagline": "A full four-versus-four skirmish with a tank, a carry, and a mage on each side.",
+      "fight": {
+        "rotations": 1,
+        "fight_mode": "one_rotation",
+        "fight_duration": 10,
+        "auto_attack_uptime_mode": "calculated",
+        "include_auto_attacks": true
+      },
+      "enemies": [
+        {
+          "champion": "Ornn",
+          "level": 18,
+          "role": "top",
+          "items": [
+            "Sunfire Aegis",
+            "Thornmail"
+          ]
+        },
+        {
+          "champion": "Ashe",
+          "level": 18,
+          "role": "bottom",
+          "items": [
+            "Infinity Edge",
+            "Runaan's Hurricane"
+          ]
+        },
+        {
+          "champion": "Lux",
+          "level": 18,
+          "role": "support",
+          "items": []
+        }
+      ],
+      "allies": [
+        {
+          "champion": "Lulu",
+          "level": 18,
+          "role": "support",
+          "items": []
+        },
+        {
+          "champion": "Sejuani",
+          "level": 18,
+          "role": "jungle",
+          "items": [
+            "Sunfire Aegis"
+          ]
+        },
+        {
+          "champion": "Soraka",
+          "level": 18,
+          "role": "support",
+          "items": []
+        }
+      ]
+    }
+  ]
+}
