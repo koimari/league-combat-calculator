@@ -1,4 +1,8 @@
-"""Nidalee — CP10.5 full-entry-reviewed packet module."""
+"""Nidalee — CP10.5 full-entry-reviewed packet module.
+
+E2 DoT fix: W Bushwhack (human-form trap) prices 4 sourced 1s ticks
+(packet_module _PACKET_TICK_FIXES); the Pounce variant is untouched.
+"""
 
 from .reviewed_batch_05 import build_batch_module
 

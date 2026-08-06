@@ -1,4 +1,8 @@
-"""Nami — CP10.5 full-entry-reviewed packet module."""
+"""Nami — CP10.5 full-entry-reviewed packet module.
+
+E2 DoT fix: E (Tidecaller's Blessing) prices 3 empowered hits
+(packet_module _PACKET_TICK_FIXES).
+"""
 
 from .reviewed_batch_05 import build_batch_module
 

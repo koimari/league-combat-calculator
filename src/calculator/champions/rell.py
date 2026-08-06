@@ -1,4 +1,8 @@
-"""Rell — CP10.6 full-entry-reviewed packet module."""
+"""Rell — CP10.6 full-entry-reviewed packet module.
+
+E2 DoT fix: R (Magnet Storm) prices 8 sourced 0.25s ticks
+(packet_module _PACKET_TICK_FIXES).
+"""
 
 from .reviewed_batch_06 import build_batch_module
 

@@ -14,7 +14,12 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .slotlib import damage_entry, simple_damage
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    simple_damage,
+)
 
 _ROOT = Path(__file__).resolve().parents[3]
 _PACKET_PATH = _ROOT / "static" / "reviewed-packets.json"
@@ -55,6 +60,169 @@ _SINGLE_HIT_EVENT_PACKETS = {
     ("Xin Zhao", "R"),
     ("Yone", "W"),
     ("Rek'Sai", "R"),
+}
+
+# E2 DoT/channel tick-count fixes: a packet whose ``base``/``ratios`` price
+# ONE tick/hit of a multi-tick ability, so the fight previously priced a
+# fraction of the ability.  Every count below is the implied
+# Total/PerTick ratio from the E2 worklist (``data/worklists/e2-dot-ticks.json``)
+# re-verified against the ``data/champions.json`` leveling rows; the
+# cadences come from the ability descriptions in the same cache.  The keys
+# are ``(champion display name, packet name)`` so variant packets (Nidalee W
+# Bushwhack) are fixed without touching their sibling variants.
+#
+# Fields:
+#   ``count``         — how many ticks/hits one cast prices.
+#   ``first_tick``    — authored seconds from cast start to the first hit.
+#   ``tick_interval`` — authored seconds between repeated hits.
+#   ``base``/``ratios`` — override the packet's per-tick row when the pinned
+#       packet picked the wrong leveling entry (Nunu E).
+#   ``extra_part``    — a second typed part read from a different leveling
+#       attribute (initial-hit abilities whose DoT lives in its own row):
+#       ``{attribute, count, damage_type, first_tick, tick_interval}``.
+#   ``dot_duration``  — total seconds of zone/channel damage past the cast
+#       (keeps item burns refreshed, Cassiopeia's Q/W convention).
+_PACKET_TICK_FIXES: dict[tuple[str, str], dict[str, Any]] = {
+    # Miss Fortune E — "for 2 seconds ... dealing magic damage every 0.25
+    # seconds": 8 ticks; "Magic Damage Per Tick" x8 == "Total Magic Damage".
+    ("Miss Fortune", "Make It Rain"): {
+        "count": 8,
+        "first_tick": 0.25,
+        "tick_interval": 0.25,
+        "dot_duration": 2.0,
+    },
+    # Naafiri Q — initial hit ("Initial Physical Damage") + a bleed that
+    # "deals bonus physical damage every 0.5 seconds over 5 seconds":
+    # 10 ticks; "Bleed Physical Damage per Tick" x10 ==
+    # "Total Bleed Physical Damage".
+    ("Naafiri", "Darkin Daggers"): {
+        "initial_tick": 0.0,
+        "extra_part": {
+            "attribute": "Bleed Physical Damage per Tick",
+            "count": 10,
+            "damage_type": "physical",
+            "first_tick": 0.5,
+            "tick_interval": 0.5,
+            "dot_duration": 5.0,
+        },
+    },
+    # Nami E — "empowering their next 3 basic attacks or abilities":
+    # 3 hits; "Bonus Magic Damage Per Hit" x3 == "Total Bonus Magic
+    # Damage".  The buff rides the next three attacks; a nominal 1-second
+    # cadence approximates that schedule in the fixed packet ledger.
+    ("Nami", "Tidecaller's Blessing"): {
+        "count": 3,
+        "first_tick": 0.5,
+        "tick_interval": 1.0,
+    },
+    # Nasus E — initial hit ("Magic Damage", after the sourced 0.264s
+    # delay) + a 5-second zone ("Magic Damage Per Tick" x10 == "Total
+    # Magic Damage", 10 ticks at 0.5s).
+    ("Nasus", "Spirit Fire"): {
+        "initial_tick": 0.264,
+        "extra_part": {
+            "attribute": "Magic Damage Per Tick",
+            "count": 10,
+            "damage_type": "magic",
+            "first_tick": 0.764,
+            "tick_interval": 0.5,
+            "dot_duration": 5.0,
+        },
+    },
+    # Nidalee W Bushwhack — the sprung trap "deal[s] magic damage every
+    # second over 4 seconds": 4 ticks; "Magic Damage Per Tick" x4 ==
+    # "Total Magic Damage".
+    ("Nidalee", "Bushwhack"): {
+        "count": 4,
+        "first_tick": 1.0,
+        "tick_interval": 1.0,
+        "dot_duration": 4.0,
+    },
+    # Nilah R — "whirls her whip-blade over 1 second, dealing physical
+    # damage to nearby enemies every 0.25 seconds": 4 ticks;
+    # "Physical Damage per Tick" x4 == "Total Physical Damage".
+    ("Nilah", "Apotheosis"): {
+        "count": 4,
+        "first_tick": 0.25,
+        "tick_interval": 0.25,
+        "dot_duration": 1.0,
+    },
+    # Nocturne E — "forming a tether ... for 2 seconds": 4 ticks at 0.5s;
+    # "Magic Damage per Tick" x4 == "Total Magic Damage".
+    ("Nocturne", "Unspeakable Horror"): {
+        "count": 4,
+        "first_tick": 0.5,
+        "tick_interval": 0.5,
+        "dot_duration": 2.0,
+    },
+    # Nunu E — "throws a volley of 3 snowballs ... over 0.4 seconds":
+    # 3 hits; "Magic Damage Per Hit" x3 == "Total Magic Damage".  The
+    # pinned packet priced the Snowbound root row instead, so the per-hit
+    # base/ratio are overridden from the same ability entry.
+    ("Nunu & Willump", "Snowball Barrage"): {
+        "base": [15.0, 22.5, 30.0, 37.5, 45.0],
+        "ratios": [{"stat": "ap", "values": [0.12, 0.12, 0.12, 0.12, 0.12]}],
+        "count": 3,
+        "first_tick": 0.0,
+        "tick_interval": 0.2,
+    },
+    # Rell R — "creating a gravitational field around her for [2 seconds]":
+    # 8 ticks at 0.25s; "Magic Damage Per Tick" x8 == "Total Magic Damage".
+    ("Rell", "Magnet Storm"): {
+        "count": 8,
+        "first_tick": 0.25,
+        "tick_interval": 0.25,
+        "dot_duration": 2.0,
+    },
+    # Renekton W — empowered double strike: "Physical Damage Per Hit" x2
+    # == "Total Physical Damage" (the Reign of Anger three-strike row is a
+    # separate 50+ Fury branch, deliberately not the default packet).
+    ("Renekton", "Ruthless Predator"): {
+        "count": 2,
+        "first_tick": 0.0,
+        "tick_interval": 0.2,
+    },
+    # Renekton R — "empowers himself for 15 seconds ... deals magic damage
+    # every 0.5 seconds": 30 ticks; "Magic Damage Per Tick" x30 == "Total
+    # Magic Damage".
+    ("Renekton", "Dominus"): {
+        "count": 30,
+        "first_tick": 0.5,
+        "tick_interval": 0.5,
+        "dot_duration": 15.0,
+    },
+    # Samira W — "slashes twice during Blade Whirl"; "the first slash
+    # occurs immediately and the second one occurs after the duration"
+    # (0.75s spin): "Physical Damage per Hit" x2 == "Total Physical
+    # Damage".
+    ("Samira", "Blade Whirl"): {
+        "count": 2,
+        "first_tick": 0.0,
+        "tick_interval": 0.75,
+    },
+    # Samira R — "shooting ... in 0.2-second intervals each (up to 10
+    # times per enemy)": 10 shots; "Physical Damage Per Shot" x10 ==
+    # "Total Physical Damage".  The minion row ("Minion Damage Per Shot"
+    # x10 == "Total Minion Damage") is the 75%-reduced minion branch and
+    # does not apply to a champion duel.
+    ("Samira", "Inferno Trigger"): {
+        "count": 10,
+        "first_tick": 0.0,
+        "tick_interval": 0.2,
+        "dot_duration": 2.013,
+    },
+}
+
+# The same E2 fix for ``wiki_attribute`` slots (no packet base): read the
+# per-tick attribute directly and multiply by the sourced count.  Nasus R
+# (Fury of the Sands) ticks 30 times at 0.5s over its 15-second duration.
+_WIKI_ATTRIBUTE_TICK_FIXES: dict[tuple[str, str], dict[str, Any]] = {
+    ("Nasus", "R"): {
+        "count": 30,
+        "first_tick": 0.5,
+        "tick_interval": 0.5,
+        "dot_duration": 15.0,
+    },
 }
 
 
@@ -209,6 +377,174 @@ def _packet_parser(spec: dict[str, Any], slot: str, champion_name: str):
                 )
                 for part in parts
             )
+        fix = _PACKET_TICK_FIXES.get((champion_name, str(spec.get("name", ""))))
+        if fix is not None:
+            entry = _apply_packet_tick_fix(ctx, entry, spec, fix)
+        return entry
+
+    parse.phase = "damage"
+    return parse
+
+
+def _override_packet_static(ctx: SlotCtx, fix: dict[str, Any], rank: int) -> float:
+    """Re-resolve a packet's per-hit base from an override (Nunu E).
+
+    The pinned packet priced the wrong leveling row, so the fix carries the
+    per-tick base and ratios from the same ability entry.  Returns the
+    per-tick static damage the override prices.
+    """
+    base = _ranked(list(fix.get("base", [])), rank)
+    static = base
+    for ratio in fix.get("ratios", []):
+        stat = str(ratio.get("stat", ""))
+        value = _ranked(ratio.get("values", []), rank)
+        stat_key = {
+            "ap": "ability_power",
+            "ad": "attack_damage",
+            "bonusAd": "bonus_attack_damage",
+            "health": "health",
+            "bonusHealth": "bonus_health",
+            "armor": "armor",
+            "magicResistance": "magic_resistance",
+        }.get(stat)
+        if stat_key:
+            static += value * float(ctx.stats.get(stat_key, 0.0))
+    return static
+
+
+def _apply_packet_tick_fix(
+    ctx: SlotCtx, entry: dict[str, Any], spec: dict[str, Any], fix: dict[str, Any]
+) -> dict[str, Any]:
+    """Price one full multi-tick cast instead of a single tick.
+
+    The packet's ``base``/``ratios`` are per-tick values; the fix supplies
+    the sourced count (and cadence) so per-tick damage x ticks == the wiki
+    Total row at every rank.  Abilities with an initial hit keep that hit as
+    a separate single part and append the ticked part from its own leveling
+    attribute.
+    """
+    rank = ctx.level if spec.get("ranks") == "level" else ctx.rank_for()
+    if "base" in fix:
+        per_tick = _override_packet_static(ctx, fix, rank)
+    else:
+        per_tick = float(entry.get("total_raw", 0.0) or 0.0)
+
+    extra = fix.get("extra_part")
+    if extra is not None:
+        ability = ctx.ability()
+        extra_per_tick = (
+            extract_named(
+                ability,
+                str(extra["attribute"]),
+                rank,
+                ctx.stats,
+                ctx.target,
+            )
+            if ability is not None
+            else 0.0
+        )
+        parts = (
+            DamagePart(
+                str(entry.get("damage_type", "magic")),
+                amount=per_tick,
+                time_offset=fix.get("initial_tick"),
+            ),
+            DamagePart(
+                str(extra.get("damage_type", "magic")),
+                amount=extra_per_tick,
+                count=int(extra["count"]),
+                time_offset=extra.get("first_tick"),
+                hit_interval=extra.get("tick_interval"),
+            ),
+        )
+        total = per_tick + extra_per_tick * int(extra["count"])
+        entry["detail"] = (
+            f"initial hit + {int(extra['count'])} sourced "
+            f"{extra.get('tick_interval', '?')}s-interval ticks "
+            f"({extra['attribute']} x{int(extra['count'])} = "
+            f"{entry.get('name', '')} total)"
+        )
+        if extra.get("dot_duration") is not None:
+            entry["dot_duration"] = float(extra["dot_duration"])
+    else:
+        count = int(fix.get("count", 1))
+        first_tick = fix.get("first_tick")
+        tick_interval = fix.get("tick_interval")
+        parts = (
+            DamagePart(
+                str(entry.get("damage_type", "magic")),
+                amount=per_tick,
+                count=count,
+                time_offset=first_tick,
+                hit_interval=tick_interval,
+            ),
+        )
+        total = per_tick * count
+        entry["detail"] = (
+            f"{count} sourced {tick_interval or '?'}s-interval "
+            f"tick{'s' if count != 1 else ''} (per-tick x{count} = "
+            f"{entry.get('name', '')} total)"
+        )
+        if fix.get("dot_duration") is not None:
+            entry["dot_duration"] = float(fix["dot_duration"])
+
+    entry["parts"] = parts
+    entry["total_raw"] = total
+    return entry
+
+
+def _ticked_wiki_attribute_parser(spec: dict[str, Any], fix: dict[str, Any]):
+    """A ``wiki_attribute`` slot whose value is per-tick (Nasus R).
+
+    Reads the named per-tick attribute and multiplies by the sourced tick
+    count so the entry prices the ability's full Total row with one event
+    per tick.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        source = tuple(spec["source"]) if spec.get("source") else (ctx.slot, 0)
+        ability = ctx.ability(*source)
+        if ability is None:
+            return None
+        rank = ctx.level if spec.get("ranks") == "level" else ctx.rank_for(source[0])
+        if rank < 1:
+            return None
+        per_tick = extract_named(
+            ability,
+            str(spec["attribute"]),
+            rank,
+            ctx.stats,
+            ctx.target,
+        )
+        count = int(fix.get("count", 1))
+        total = per_tick * count
+        dmg_type = str(spec.get("damage_type", "auto"))
+        if dmg_type == "auto":
+            dmg_type = "magic"
+        entry = damage_entry(
+            ability.get("name", spec.get("name", f"Ability {ctx.slot}")),
+            rank,
+            extract_cooldown(ability, rank),
+            total,
+            dmg_type,
+        )
+        entry["parts"] = (
+            DamagePart(
+                dmg_type,
+                amount=per_tick,
+                count=count,
+                time_offset=fix.get("first_tick"),
+                hit_interval=fix.get("tick_interval"),
+            ),
+        )
+        entry["total_raw"] = total
+        entry["detail"] = (
+            f"{count} sourced {fix.get('tick_interval', '?')}s-interval "
+            f"tick{'s' if count != 1 else ''} ({spec['attribute']} x{count} "
+            f"= {entry['name']} total)"
+        )
+        if fix.get("dot_duration") is not None:
+            entry["dot_duration"] = float(fix["dot_duration"])
         return entry
 
     parse.phase = "damage"
@@ -306,12 +642,16 @@ def build_packet_module(champion_name: str):
                 }
             )
         elif spec.get("kind") == "wiki_attribute":
-            slots[slot] = simple_damage(
-                attr=str(spec["attribute"]),
-                dmg_type=str(spec.get("damage_type", "auto")),
-                ranks=str(spec.get("ranks", "rank")),
-                source=tuple(spec["source"]) if spec.get("source") else None,
-            )
+            tick_fix = _WIKI_ATTRIBUTE_TICK_FIXES.get((champion_name, slot))
+            if tick_fix is not None:
+                slots[slot] = _ticked_wiki_attribute_parser(spec, tick_fix)
+            else:
+                slots[slot] = simple_damage(
+                    attr=str(spec["attribute"]),
+                    dmg_type=str(spec.get("damage_type", "auto")),
+                    ranks=str(spec.get("ranks", "rank")),
+                    source=tuple(spec["source"]) if spec.get("source") else None,
+                )
         elif spec.get("kind") == "packet":
             slots[slot] = _packet_parser(spec, slot, champion_name)
         elif spec.get("kind") == "no_damage":

@@ -947,6 +947,40 @@ def derive_self_healing(
                         "actor_wide": True,
                     }
                 )
+        # Cozy Campfire (W): the fuemigo heals Milio himself — "Milio counts
+        # as an allied champion for this ability" — every tick over its
+        # 6-second duration (wiki: "Heal per Tick: 2.8 / 3.6 / 4.4 / 5.2 / 6
+        # (+ 0.6% AP)"; "Total Heal: 70 / 90 / 110 / 130 / 150 (+ 15% AP)").
+        # The tick count is sourced from the Total/PerTick ratio (25) and
+        # spread across the 6s duration -> 0.24s intervals.  The 0.264s
+        # cadence in the description does not reconcile to the sourced 25
+        # ticks, so the ratio-derived count wins, exactly as Janna's Monsoon
+        # is handled.  W deals no enemy damage, so the W cast timeline is
+        # the sourced trigger.
+        w_rank = _rank(ability_damages, "W")
+        w_ability = _ability(champion_data, "W")
+        w_per_tick = extract_named(w_ability, "Heal per Tick", w_rank, champion_stats)
+        w_total = extract_named(w_ability, "Total Heal", w_rank, champion_stats)
+        w_tick_count = (
+            max(1, min(100, int(round(w_total / w_per_tick))))
+            if w_per_tick > 0.0 and w_total > 0.0
+            else 25
+        )
+        if w_per_tick > 0.0:
+            for cast in cast_timeline or []:
+                if cast.get("slot") != "W":
+                    continue
+                start = float(cast.get("time", 0.0))
+                for index in range(1, w_tick_count + 1):
+                    healing.append(
+                        {
+                            "time": start + index * 0.24,
+                            "amount": float(w_per_tick),
+                            "source": "Cozy Campfire",
+                            "kind": "champion_ability",
+                            "actor_wide": True,
+                        }
+                    )
 
     elif name == "Taric":
         # Starlight's Touch heals Taric himself and nearby allies per
