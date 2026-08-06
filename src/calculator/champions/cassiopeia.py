@@ -77,32 +77,36 @@ def _twin_fang(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-# The current Wiki packet supplies the actual poison cadence, rather than
-# merely a pre-summed display value. Keeping these ticks explicit lets the
-# coupled fight ledger order burns and incoming effects against Cassiopeia's
-# damage instead of marking Q/W as aggregate cast-boundary damage.
+# Q's poison ticks are the wiki packet's authored 0.429s cadence (seven
+# over 3s); W's five ticks are the Total/Per-Second ratio (each tick is
+# one second of the per-second row), which is the count the worklist
+# sources.  Keeping the ticks explicit lets the coupled fight ledger
+# order burns and incoming effects against Cassiopeia's damage instead
+# of marking Q/W as aggregate cast-boundary damage.
 _Q_TICKS = 7
 _Q_FIRST_TICK = 0.429
 _Q_TICK_INTERVAL = 0.429
 _Q_DURATION = 3.0
-_W_TICKS = 19
-_W_FIRST_TICK = 0.263
-_W_TICK_INTERVAL = 0.263
+_W_TICKS = 5
 _W_DURATION = 5.0
+_W_TICK_INTERVAL = _W_DURATION / _W_TICKS  # "every 1.0 seconds"
 
 
 def _noxious_blast(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: seven sourced poison ticks over the three-second duration."""
+    """Q: full-poison total across seven sourced ticks (0.429s cadence).
+
+    The "Total Magic Damage" row is read directly (75..215 at 0 AP) so
+    the priced sum is exact at every rank; the per-tick row (10.71..30.71)
+    is its rounded 1/7th, which would drift by ~0.03 per rank.  The seven
+    ticks are still emitted as events for the coupled ledger.
+    """
     ability = ctx.ability()
     if ability is None:
         return None
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    per_tick = extract_named(
-        ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
-    )
-    total = per_tick * _Q_TICKS
+    total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Noxious Blast"),
         rank,
@@ -113,7 +117,7 @@ def _noxious_blast(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["parts"] = (
         DamagePart(
             "magic",
-            per_tick,
+            total / _Q_TICKS,
             count=_Q_TICKS,
             time_offset=_Q_FIRST_TICK,
             hit_interval=_Q_TICK_INTERVAL,
@@ -125,18 +129,22 @@ def _noxious_blast(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _miasma(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: nineteen sourced zone ticks at 0.263-second intervals."""
+    """W: full-zone total across five sourced per-second ticks.
+
+    The "Total Magic Damage" row is exactly five times the "Magic Damage
+    Per Second" row at every rank (100/20 .. 200/40), so the zone is
+    priced as five per-second ticks over the five-second duration and
+    the sum is exact.  (The wiki packet's raw 0.263s cadence would be
+    19 x per-second/4 = 95% of the total — the round-off the worklist
+    targets.)
+    """
     ability = ctx.ability()
     if ability is None:
         return None
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    per_tick = (
-        extract_named(ability, "Magic Damage Per Second", rank, ctx.stats, ctx.target)
-        / 4.0
-    )
-    total = per_tick * _W_TICKS
+    total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Miasma"),
         rank,
@@ -147,14 +155,14 @@ def _miasma(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["parts"] = (
         DamagePart(
             "magic",
-            per_tick,
+            total / _W_TICKS,
             count=_W_TICKS,
-            time_offset=_W_FIRST_TICK,
+            time_offset=_W_TICK_INTERVAL,
             hit_interval=_W_TICK_INTERVAL,
         ),
     )
     entry["dot_duration"] = _W_DURATION
-    entry["detail"] = "19 zone ticks at 0.263s intervals"
+    entry["detail"] = "5 per-second zone ticks over the 5s duration"
     return entry
 
 

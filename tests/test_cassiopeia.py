@@ -3,7 +3,8 @@
 Reference damage (wiki: https://wiki.leagueoflegends.com/en-us/Cassiopeia),
 all raw pre-resistance magic damage at exactly 100 AP:
 - Q (Noxious Blast) rank 5: 215 + 65% AP = 280 (full 3s poison).
-- W (Miasma) rank 5: 19 × (10 + 2.5% AP) = 237.5 (full 5s zone).
+- W (Miasma) rank 5: 200 + 50% AP = 250 (full 5s zone, five per-second
+  ticks — the Total row is exactly 5x the per-second row at every rank).
 - E (Twin Fang) rank 5, level 18, poisoned: 120 + 120 + 65% AP = 305;
   unpoisoned: 120 + 10% AP = 130. The level base is a 40-entry per-level
   array (+4/level past 18): level 20 poisoned = 128 + 120 + 65 = 313.
@@ -75,28 +76,28 @@ class TestQNoxiousBlast:
 
 
 class TestWMiasma:
-    """W: 19 sourced 0.263-second ticks, not the stale 20-tick total."""
+    """W: five per-second ticks = the sourced Total/Per-Second ratio."""
 
     def test_w_is_magic(self, cassiopeia_data) -> None:
         abilities = _parse(cassiopeia_data, ALL_MAXED)
         assert abilities["W"]["damage_type"] == "magic"
 
     def test_w_rank5_total(self, cassiopeia_data) -> None:
-        """19 × (10 + 2.5% x 100 AP) = 237.5."""
+        """200 + 50% x 100 AP = 250 (the Total row, not 19 x per-second/4)."""
         abilities = _parse(cassiopeia_data, ALL_MAXED)
-        assert abilities["W"]["total_raw"] == pytest.approx(237.5)
+        assert abilities["W"]["total_raw"] == pytest.approx(250.0)
 
     def test_w_rank1_total(self, cassiopeia_data) -> None:
-        """19 × (5 + 2.5% x 100 AP) = 142.5."""
+        """100 + 50% x 100 AP = 150."""
         abilities = _parse(cassiopeia_data, {"Q": 0, "W": 1, "E": 0, "R": 0})
-        assert abilities["W"]["total_raw"] == pytest.approx(142.5)
+        assert abilities["W"]["total_raw"] == pytest.approx(150.0)
 
     def test_w_emits_sourced_tick_timeline(self, cassiopeia_data) -> None:
         abilities = _parse(cassiopeia_data, ALL_MAXED)
         part = abilities["W"]["parts"][0]
-        assert part.count == 19
-        assert part.time_offset == pytest.approx(0.263)
-        assert part.hit_interval == pytest.approx(0.263)
+        assert part.count == 5
+        assert part.time_offset == pytest.approx(1.0)
+        assert part.hit_interval == pytest.approx(1.0)
 
     def test_w_cooldown(self, cassiopeia_data) -> None:
         """24/22/20/18/16."""
@@ -220,7 +221,7 @@ class TestFightIntegration:
         )
         breakdown = result["breakdown"]
         assert breakdown["Q"]["total_damage"] == pytest.approx(140.0)
-        assert breakdown["W"]["total_damage"] == pytest.approx(118.75)
+        assert breakdown["W"]["total_damage"] == pytest.approx(125.0)
         assert breakdown["E"]["total_damage"] == pytest.approx(152.5)
         assert breakdown["R"]["total_damage"] == pytest.approx(200.0)
 
