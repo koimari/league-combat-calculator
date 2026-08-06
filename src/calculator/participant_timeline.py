@@ -3915,9 +3915,7 @@ def _simulate_survival(
                 state["threshold_shield"] = 0.0
                 event["threshold_shield_triggered"] = True
                 if math.isfinite(shield_expires_at):
-                    event["threshold_shield_expires_at"] = round(
-                        shield_expires_at, 3
-                    )
+                    event["threshold_shield_expires_at"] = round(shield_expires_at, 3)
                 if state["maw_lifeline_omnivamp_percent"] > 0.0:
                     state["maw_lifeline_omnivamp_active"] = True
                     event["maw_lifeline_omnivamp_activated"] = round(
