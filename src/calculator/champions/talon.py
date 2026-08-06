@@ -36,6 +36,18 @@ _P_BLEED_DURATION = 2.0  # 16 x 0.125s
 _P_BLEED_TICK_INTERVAL = 0.125
 
 
+def _certified_single_hit(parser):
+    """Wrap a simple one-instance parser with the event-order certification."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
+            entry["event_order_certified"] = "single_hit"
+        return entry
+
+    return parse
+
+
 def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: one 3-stack consume bleed per fight (``passive_procs`` option)."""
     ability = ctx.ability()
@@ -67,6 +79,26 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
         "proc_count": count,
         "dot_duration": _P_BLEED_DURATION,
         "dot_tick_interval": _P_BLEED_TICK_INTERVAL,
+        # One sourced event per 3-stack consume: the consuming basic
+        # attack lands the full per-level bleed (16 ticks at the sourced
+        # 0.125s cadence are priced as the per-proc total; the tick
+        # cadence metadata above keeps item burns refreshing through the
+        # tail).  damage.py re-prices each event at the proc's own
+        # mitigated total, so the ledger sums exactly to the row.  The
+        # event is declared at the fight-window end (the engine's
+        # end-of-rotation fallback this replaces) so ordering-certifying
+        # the row does not move its ledger position and cannot change
+        # window-order item outcomes (e.g. Shadowflame's threshold).
+        "event_phase": "effect",
+        "damage_events": [
+            {
+                "time": float(ctx.options.get("fight_duration_seconds", 0.0) or 0.0),
+                "damage_type": "physical",
+                "damage": total,
+                "event_precision": "phase_order",
+            }
+            for _ in range(count)
+        ],
         "detail": (
             f"{count} 3-stack consume(s): per-tick x{_P_BLEED_TICKS} == "
             f"the wiki total bleed ({sum_modifiers(total_leveling, ctx.level):g} "
@@ -78,6 +110,9 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Talon")
 SLOTS["P"] = _blades_end
+SLOTS["Q"] = _certified_single_hit(SLOTS["Q"])
+SLOTS["W"] = _certified_single_hit(SLOTS["W"])
+SLOTS["R"] = _certified_single_hit(SLOTS["R"])
 parse_abilities = build_parser(SLOTS, "Talon")
 
 OPTIONS = list(OPTIONS) + [

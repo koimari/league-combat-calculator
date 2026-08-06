@@ -83,6 +83,23 @@ def _deadly_venom(ctx: SlotCtx) -> dict[str, Any] | None:
         # so item burns stay refreshed through the poison tail.
         "dot_duration": 6.0,
         "dot_tick_interval": 1.0,
+        # One sourced event per fight: the poison packet is priced once
+        # from the poison_stacks option.  The declared event is placed at
+        # the fight-window end — the engine's end-of-rotation fallback
+        # this ledger replaces — so ordering-certifying the row does not
+        # move its ledger position and cannot change window-order item
+        # outcomes (e.g. Shadowflame's threshold).  damage.py re-prices
+        # the declared event at the proc's mitigated total, keeping the
+        # ledger sum exactly equal to the row's total.
+        "event_phase": "effect",
+        "damage_events": [
+            {
+                "time": float(ctx.options.get("fight_duration_seconds", 0.0) or 0.0),
+                "damage_type": "true",
+                "damage": total,
+                "event_precision": "phase_order",
+            }
+        ],
         "detail": (
             f"{stacks} Deadly Venom stack(s) x {per_stack:.2f} total true "
             "damage per stack over 6s"
@@ -115,9 +132,14 @@ def _contaminate(ctx: SlotCtx) -> dict[str, Any] | None:
         "mixed",
     )
     entry["parts"] = (
-        DamagePart("physical", physical),
-        DamagePart("magic", magic),
+        # Both damage types land at the detonation boundary: the sourced
+        # per-stack terms are consumed at the cast, so each part authors
+        # its hit at time_offset 0.0 (the coverage classifier certifies
+        # "hit"-precision events instead of downgrading the row coarse).
+        DamagePart("physical", physical, time_offset=0.0),
+        DamagePart("magic", magic, time_offset=0.0),
     )
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = f"{stacks} Deadly Venom stack(s) consumed"
     return entry
 

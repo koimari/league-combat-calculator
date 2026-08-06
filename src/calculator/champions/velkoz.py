@@ -41,6 +41,18 @@ _PROC_STACKS = 3
 _PROC_LEVELING_ATTR = "Per-Level Scaling"
 
 
+def _certified_single_hit(parser):
+    """Wrap a simple one-instance parser with the event-order certification."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
+            entry["event_order_certified"] = "single_hit"
+        return entry
+
+    return parse
+
+
 def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: one 3-stack true-damage consume per fight, when 3+ abilities land."""
     ability = ctx.ability()
@@ -65,6 +77,23 @@ def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
         "total_raw": total,
         "parts": (DamagePart("true", total),),
         "proc_count": 1,
+        # One sourced event per fight: the 3-stack consume fires once the
+        # rotation's abilities have landed (the applications gate above).
+        # The declared event is placed at the fight-window end — the
+        # engine's end-of-rotation fallback this ledger replaces — so
+        # ordering-certifying the row does not move its ledger position
+        # and cannot change window-order item outcomes (e.g.
+        # Shadowflame's threshold).  damage.py re-prices the declared
+        # event at the proc's mitigated total.
+        "event_phase": "effect",
+        "damage_events": [
+            {
+                "time": float(ctx.options.get("fight_duration_seconds", 0.0) or 0.0),
+                "damage_type": "true",
+                "damage": total,
+                "event_precision": "phase_order",
+            }
+        ],
         "detail": (
             f"3 Deconstruction stacks consumed at level {ctx.level} "
             f"({flat:.2f} + {_PROC_AP_RATIO * 100:g}% AP)"
@@ -137,10 +166,12 @@ def _disintegration_ray(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "W": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": _disintegration_ray,
+    "Q": _certified_single_hit(simple_damage(attr="Magic Damage", dmg_type="magic")),
+    "W": _certified_single_hit(
+        simple_damage(attr="Total Magic Damage", dmg_type="magic")
+    ),
+    "E": _certified_single_hit(simple_damage(attr="Magic Damage", dmg_type="magic")),
+    "R": _disintegration_ray,  # already authors its 13-tick channel timing
     "P": _organic_deconstruction,  # after the damage slots: reads their emissions
 }
 
