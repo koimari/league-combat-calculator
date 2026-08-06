@@ -4,9 +4,13 @@ Why each slot is non-generic:
 - R (Summon: Tibbers) is a custom BUFF-phase slot with three parts:
   a % magic-penetration stat buff (mutated into ``ctx.stats`` and
   emitted as ``stat_buff`` — BUFF phase guarantees Q/W parse after it),
-  the initial burst ("Initial Magic Damage"), and the Tibbers aura,
-  whose numbers are NOT in the JSON (pet stats are not scraped from the
-  wiki) — see the quarantined constants below.
+  the initial burst ("Initial Magic Damage"), the Tibbers aura, and the
+  Tibbers auto attacks.  The aura and auto-attack numbers are NOT in the
+  JSON (pet stats are not scraped from the wiki) — they come from the
+  wiki's Annie pets entry (see the quarantined constants below).  The
+  attacks are emitted as a separate ``tibbers_attacks`` proc row (the R
+  cast itself stays burst + aura) so the fight prices them once over
+  the window instead of per R cast.
 - P (Pyromania) is a stun-only passive shown as a zero-damage row under
   the literal "P" results key (the pre-engine UI shape), so a custom
   slot fn writes it into ``ctx.results`` directly instead of using the
@@ -16,7 +20,7 @@ Why each slot is non-generic:
 - Q/W are plain "Magic Damage" attribute reads.
 
 All numeric values are read from the champion JSON data except the
-Tibbers aura constants.
+Tibbers aura and auto-attack constants (wiki pets entry).
 """
 
 from typing import Any
@@ -28,18 +32,99 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
+    fixed_count_pet_row,
     simple_damage,
 )
 
 # HARDCODED: verify on patch updates — pet stats are not in the JSON.
-# Tibbers aura tick damage comes from the LoL Wiki directly:
+# Tibbers pet numbers come from the LoL Wiki "Annie#Pets" entry:
 # https://wiki.leagueoflegends.com/en-us/Annie
-# Aura ticks every 0.25 seconds.
-# Base damage per tick: 2 / 3 / 4 at R rank 1/2/3.
-# AP ratio per tick: 1% AP (0.01).
+# - Flame Aura ticks every 0.25 seconds; base damage per tick 2/3/4 at
+#   R rank 1/2/3; AP ratio per tick 1% AP (0.01).
+# - Auto attack: 30 / 45 / 60 (based on R rank) + 10% AP magic damage.
+# - Base attack speed 0.625; on summon Tibbers ENRAGES for 3 seconds,
+#   attacking at 1.736 AS for his next 5 attacks, decaying with each
+#   attack (wiki formula:
+#   1.736*(1-(11.505*(x-1)+0.3*((x-2)^3-(x-2))/6+1.7*(x-2)*(x-1)/2)/100)
+#   for x = attacks consumed 1..5), then returning to 0.625 AS.
 _TIBBERS_AURA_BASE_PER_TICK = [2.0, 3.0, 4.0]
 _TIBBERS_AURA_AP_RATIO_PER_TICK = 0.01
 _TIBBERS_AURA_TICK_INTERVAL = 0.25
+_TIBBERS_AUTO_BASE = [30.0, 45.0, 60.0]
+_TIBBERS_AUTO_AP_RATIO = 0.10
+_TIBBERS_BASE_ATTACK_SPEED = 0.625
+_TIBBERS_ENRAGE_ATTACK_COUNT = 5
+_TIBBERS_ENRAGE_BASE_AS = 1.736
+_TIBBERS_DEFAULT_WINDOW = 5.0  # one rotation; timed fights pass the real window
+_TIBBERS_MAX_ATTACKS = 30
+
+
+def _tibbers_enrage_attack_speeds() -> tuple[float, ...]:
+    """The five enrage attack speeds (attacks per second, wiki formula)."""
+    speeds = []
+    for consumed in range(1, _TIBBERS_ENRAGE_ATTACK_COUNT + 1):
+        decay = (
+            11.505 * (consumed - 1)
+            + 0.3 * ((consumed - 2) ** 3 - (consumed - 2)) / 6
+            + 1.7 * (consumed - 2) * (consumed - 1) / 2
+        )
+        speeds.append(_TIBBERS_ENRAGE_BASE_AS * (1.0 - decay / 100.0))
+    return tuple(speeds)
+
+
+def _tibbers_attack_times(count: int) -> list[float]:
+    """First ``count`` Tibbers auto-attack timestamps from the sourced cadence.
+
+    The enrage attacks land at the five decayed attack speeds, then the
+    base 0.625 AS (1.6s interval) takes over.  Timestamps are seconds
+    from the summon cast.
+    """
+    times: list[float] = []
+    elapsed = 0.0
+    for speed in _tibbers_enrage_attack_speeds():
+        elapsed += 1.0 / speed
+        times.append(elapsed)
+        if len(times) >= count:
+            return times
+    while len(times) < count:
+        elapsed += 1.0 / _TIBBERS_BASE_ATTACK_SPEED
+        times.append(elapsed)
+    return times
+
+
+def _tibbers_attacks_row(ctx: SlotCtx, rank: int) -> dict[str, Any] | None:
+    """The Tibbers auto-attack proc row (None when the player wants none).
+
+    The default attack count is the sourced cadence (5 enrage attacks
+    then the 1.6s base-AS interval) truncated to the fight window; the
+    ``tibbers_attacks`` option overrides it — the player steers Tibbers,
+    so positioning/leash uptime is a player choice.
+    """
+    window = float(ctx.options.get("fight_duration_seconds", _TIBBERS_DEFAULT_WINDOW))
+    requested = ctx.options.get("tibbers_attacks")
+    if requested is None:
+        attack_count = sum(
+            1 for time in _tibbers_attack_times(_TIBBERS_MAX_ATTACKS) if time <= window
+        )
+    else:
+        attack_count = min(max(int(requested), 0), _TIBBERS_MAX_ATTACKS)
+    if attack_count <= 0:
+        return None
+    per_attack = (
+        _TIBBERS_AUTO_BASE[min(rank - 1, len(_TIBBERS_AUTO_BASE) - 1)]
+        + _TIBBERS_AUTO_AP_RATIO * ctx.stats["ability_power"]
+    )
+    return fixed_count_pet_row(
+        "Tibbers Attacks",
+        "magic",
+        per_attack,
+        _tibbers_attack_times(attack_count),
+        (
+            f"{attack_count} Tibbers auto attack(s) at {per_attack:.2f} "
+            f"magic each (5 enrage attacks, then "
+            f"{1.0 / _TIBBERS_BASE_ATTACK_SPEED:.1f}s cadence)"
+        ),
+    )
 
 
 def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -78,6 +163,13 @@ def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
     aura_total = aura_per_tick * total_ticks
 
     total = burst + aura_total
+
+    # Tibbers auto attacks: a fixed proc row priced over the fight
+    # window, not per R cast (see _tibbers_attacks_row).
+    attacks = _tibbers_attacks_row(ctx, rank)
+    if attacks is not None:
+        ctx.results["tibbers_attacks"] = attacks
+
     return {
         "name": ability.get("name", "Summon: Tibbers"),
         "rank": rank,
@@ -141,13 +233,27 @@ OPTIONS = [
         "max": 45,
         "step": 0.5,
     },
+    {
+        "key": "tibbers_attacks",
+        "type": "int",
+        "default": 5,
+        "label": (
+            "Tibbers auto attacks (0 = none; defaults to the fight "
+            "window at the sourced enrage + 0.625 AS cadence)"
+        ),
+        "min": 0,
+        "max": 30,
+    },
 ]
 
 ASSUMPTIONS = [
     "R magic penetration passive is always active",
-    "Tibbers auto-attack damage is not modeled (positioning-dependent)",
-    "E retaliation damage is not modeled (requires enemies to hit Annie)",
+    "Tibbers auto attacks are priced at the wiki pets cadence (5 enrage "
+    "attacks from the summon, then the 0.625 base AS) truncated to the "
+    "fight window; positioning/leash uptime is a player choice via the "
+    "tibbers_attacks option",
     "Tibbers aura defaults to 5 seconds of damage",
+    "E retaliation damage is not modeled (requires enemies to hit Annie)",
 ]
 
 SLOTS = {
