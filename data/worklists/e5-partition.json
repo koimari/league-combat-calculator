@@ -1,15 +1,10 @@
 {
  "purpose": "E5: fix rows where the module prices the WRONG wiki attribute (wrong basis/type/static read).",
  "batch1_wrong_basis": {
-  "Nunu": "Q prices Non-Champion True Damage (400-1200) \u2014 use Champion Magic Damage 60-220 + 65% AP + 5% bHP",
-  "Rammus": "W prices Bonus Armor row as magic damage \u2014 real: 15 + 10% armor + 10% MR",
   "Tryndamere": "Q emits 5-25 as MAGIC damage \u2014 Q is a heal (E1 done); remove the spurious damage row",
-  "Zac": "P blob heal emitted as 4% maxHP MAGIC damage vs enemy \u2014 remove spurious damage (E1 heal exists)",
-  "Yone": "E Soul Unbound emits 0.0 \u2014 'Damage Stored' is a % of damage dealt (25-35%); implement stored-damage execute",
   "Zed": "R Death Mark static ~100-120 from a % row \u2014 implement % of stored damage",
   "TwistedFate": "W sums all 3 cards (3.0x AD + 2.2x AP) \u2014 model card selection (gold/red/blue)",
   "Kled": "W rank read clamped to level (11/18) \u2014 read actual W rank for the 4th-attack bonus",
-  "Sett": "W typed magic but center is TRUE damage + grit scaling unrecognized (resolves 0)",
   "Sion": "Q modeled via 'Maximum Base Damage Increase' % as flat \u2014 use Min/Max Physical Damage rows",
   "Veigar": "R always at MAXIMUM execute values \u2014 use base + execute condition"
  },
@@ -19,26 +14,12 @@
   "Nilah": "Q pinned to crit-max 191% AD as flat",
   "Pyke": "R packet is 1.5x-threshold array pinned to first 3 ranks, drops 80% bAD + lethality",
   "Mel": "W models reflected modifier 40-60% as flat; R stored-damage not modeled",
-  "Viktor": "Q modeled as projectile only; Discharge empowered auto missing",
   "Zoe": "W Spell Thief collapsed to one flat bolt (Heal/Barrier/Smite variants)",
   "Riven": "P declared no_damage but wiki has formula (30-46.76% AD per stack)",
   "Zeri": "E Lightning Rounds damage out_of_scope",
-  "Renekton": "W sources Per Hit without count (2 strikes)",
-  "Samira": "R uses Per Shot as single hit (10 shots) \u2014 overlaps E2",
   "Quinn": "P Harrier on-hit out_of_scope while equivalent passives modeled"
  },
  "batch3_missing_damage": {
-  "Naafiri": "Q only initial hit; bleed DoT + recast bonus missing (overlaps E2)",
-  "Talon": "P 3-stack bleed unmodeled (overlaps E2)",
-  "Teemo": "E poison DoT unmodeled (overlaps E2)",
-  "Twitch": "poison stack system unmodeled (overlaps E3)",
-  "Varus": "Blight detonation unmodeled (overlaps E3)",
-  "Velkoz": "3-stack research proc unmodeled (overlaps E3)",
-  "Tristana": "E active detonation missing (overlaps E3)",
-  "Nasus": "Q stack scaling resolves to 0 (unrecognized unit)",
-  "MonkeyKing": "Q armor-reduction debuff unmodeled (infra exists \u2014 KogMaw Q)",
-  "Yasuo": "P crit conversion (crit x2, excess -> AD) + Flow shield unmodeled",
-  "Yone": "P crit conversion unmodeled",
-  "Urgot": "W one Purge shot vs ~12; P legs unmodeled"
+  "MonkeyKing": "Q armor-reduction debuff unmodeled (infra exists \u2014 KogMaw Q)"
  }
 }
