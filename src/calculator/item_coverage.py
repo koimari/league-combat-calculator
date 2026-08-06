@@ -125,7 +125,12 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
     "Verdant Barrier": "Annul is defensive spell protection.",
     "Armored Advance": "Plating and Noxian Endurance are defensive effects.",
     "Bloodthirster": "Ichorshield is a defensive shield.",
-    "Celestial Opposition": "Blessing of the Mountain is defensive mitigation.",
+    "Celestial Opposition": (
+        "Blessing of the Mountain is a defensive proc: 35% reduced champion "
+        "damage with a two-second linger, sourced at 20s cooldown. It changes "
+        "incoming damage, not the holder's outgoing TDD; the target-side "
+        "model applies the same reduction in the ordered ledger."
+    ),
     "Chempunk Chainsword": (
         "Hackshorn applies sourced three-second Grievous Wounds in the coupled "
         "timeline; it does not add direct damage."
@@ -139,7 +144,13 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
     "Cryptbloom": "Life From Death is a post-takedown heal.",
     "Death's Dance": "Ignore Pain and Defy change incoming damage and healing.",
     "Diadem of Songs": "Harmony and Consonance change healing, not outgoing damage.",
-    "Dream Maker": "Dream Maker affects an ally, not the item holder's TDD.",
+    "Dream Maker": (
+        "Dream Maker's bubbles buff an ally (Blue: reduced damage taken; "
+        "Purple: bonus magic damage on the ally's next hit). The effect "
+        "targets a teammate, not the item holder's own TDD; the ordered "
+        "participant support ledger emits it from an authored heal/shield "
+        "trigger when an ally is rostered."
+    ),
     "Echoes of Helia": "Soul Siphon stores damage only to heal an ally.",
     "Edge of Night": "Annul is defensive spell protection.",
     "Force of Nature": "Steadfast grants defensive stats and movement speed.",
@@ -172,7 +183,13 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
     "Crimson Lucidity": "Its passives grant summoner haste and movement speed.",
     "Serylda's Grudge": "Bitter Cold slows without adding direct damage.",
     "Shurelya's Battlesong": "Inspiring Speech grants movement speed.",
-    "Solstice Sleigh": "Going Sledding heals and grants movement speed.",
+    "Solstice Sleigh": (
+        "Going Sledding heals the nearest ally and grants both actors "
+        "movement speed after slowing or immobilizing an enemy (30s "
+        "cooldown). It adds no outgoing TDD from the holder; the ordered "
+        "participant support ledger emits the ally heal from an authored "
+        "control trigger."
+    ),
     "Spirit Visage": "Boundless Vitality increases healing and shielding received.",
     "Boots of Swiftness": "Fleetfooted grants slow resistance.",
     "Ionian Boots of Lucidity": "Ionian Insight grants summoner spell haste.",

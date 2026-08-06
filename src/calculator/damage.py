@@ -8975,10 +8975,21 @@ def _add_shadowflame_cinderbloom(
 
 def _add_expose_weakness(
     state: FightState,
+    rotation: RotationResult,
     autos: AutoAttackResult,
     spellblade: SpellbladeResult,
 ) -> None:
-    """Add Bloodsong's Expose Weakness amp on damage after the first proc."""
+    """Add Bloodsong's Expose Weakness amp on damage after the first proc.
+
+    The first ability cast, the first auto, and the first spellblade proc
+    land before the debuff applies and are excluded from the amp pool; the
+    sourced bonus is then authored back onto the post-proc ledger events at
+    their own timestamps (a pro-rata delta per event, like every other
+    amplifier row) so the exposure is event-ordered and the candidate
+    certifies.  When the first proc's weave-timed event cannot be read from
+    the spellblade row, the row keeps its explicit aggregate-only receipt
+    and stays coarse rather than inventing a boundary.
+    """
     if not (spellblade.item and spellblade.procs > 0):
         return
     expose_rate = (
@@ -9005,12 +9016,46 @@ def _add_expose_weakness(
     amped_damage = max(0, state.total_damage - damage_before_expose)
     expose_bonus = amped_damage * expose_rate
 
-    breakdown[f"expose_weakness_{spellblade.item}"] = {
+    row: dict[str, Any] = {
         "name": f"{spellblade.item} (Expose Weakness)",
         "amplifier": 1.0 + expose_rate,
         "total_damage": expose_bonus,
         "damage_type": "mixed",
     }
+    spellblade_row = breakdown.get(f"spellblade_{spellblade.item}")
+    proc_events = (
+        spellblade_row.get("damage_events")
+        if isinstance(spellblade_row, Mapping)
+        else None
+    )
+    first_proc_time: float | None = None
+    if isinstance(proc_events, list) and proc_events:
+        times = [
+            float(event.get("time", 0.0))
+            for event in proc_events
+            if isinstance(event, Mapping)
+            and _finite_numeric_receipt(event.get("time")) is not None
+        ]
+        if times:
+            first_proc_time = min(times)
+    if first_proc_time is not None:
+        events = _ordered_damage_events(
+            state.breakdown,
+            state.ability_damages,
+            state.cast_order,
+            cast_events=rotation.cast_events,
+            light=True,
+        )
+        amped_events = [
+            event
+            for event in events
+            if float(event[0][0]) > first_proc_time + _PROC_HIT_MATCH_EPS
+        ]
+        delta_events = _amplifier_delta_events(amped_events, expose_bonus)
+        if delta_events:
+            row["damage_events"] = delta_events
+            row["event_phase"] = "amplifier"
+    breakdown[f"expose_weakness_{spellblade.item}"] = row
     state.total_damage += expose_bonus
 
 
@@ -9626,7 +9671,7 @@ def calculate_fight_damage(
     _add_on_hit_healing(state, autos, on_hits)
     _add_first_auto_healing(state)
     _add_shadowflame_cinderbloom(state, config, rotation)
-    _add_expose_weakness(state, autos, spellblade)
+    _add_expose_weakness(state, rotation, autos, spellblade)
 
     # ── Keystone opening-window bonus (First Strike-class) ──────────────
     _add_keystone_window_amp_damage(state, rotation)

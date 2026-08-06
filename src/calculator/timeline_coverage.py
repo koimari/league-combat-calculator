@@ -9,6 +9,14 @@ from typing import Any
 # ranked, with the source receipt kept visible to the caller.  This is
 # deliberately narrow: every other coarse source remains a hard certification
 # failure until its event ledger is authored.
+#
+# E9-BIS-B: Bastionbreaker, Eclipse, and Muramana now author their proc
+# events from the ability's certified ledger (module-authored hit packets,
+# else the sourced cast-instance boundary), so the exclusion below fires
+# only for the audited residual: a DoT-only ability spread (e.g. Kayle with
+# Muramana), where the ability's own damage is not cast-boundary certified.
+# The set stays populated so that residual remains a visible, sourced
+# exclusion instead of silently becoming a partial row.
 EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES = frozenset(
     {
         "muramana_ability",

@@ -56,14 +56,12 @@
     "bis_slot": "buildA.0"
    },
    "expected": {
-    "certified": "93 certified of 96 mid role-compatible candidates",
-    "withheld_before_timeline": [
-     "Bastionbreaker",
-     "Muramana"
-    ],
+    "certified": "95 certified of 96 mid role-compatible candidates",
+    "withheld_before_timeline": [],
     "partial": [
      "Fimbulwinter"
-    ]
+    ],
+    "audit_marker": "E9-BIS-B: Bastionbreaker and Muramana are now certified candidates (Shaped Charge lands on the ordered ability ledger; Shock rides the ability's sourced cast-instance boundary). The remaining partial is Fimbulwinter's Everlasting shield trigger, whose coarse receipt is a separate tracked item."
    }
   },
   {
