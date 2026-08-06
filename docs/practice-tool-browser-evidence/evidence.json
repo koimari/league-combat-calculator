@@ -1,0 +1,51 @@
+{
+ "schema_version": 1,
+ "tier": "local_practice_tool",
+ "run_at": "2026-08-06",
+ "sha": "d531332f6f7062166ea6f91c9be2a5ff3bb27339",
+ "url": "http://127.0.0.1:5000/",
+ "browser": "Playwright headless Chromium (playwright-core, chromium-1129)",
+ "setup": "Each scenario: champion level 18, no items (except Serpent's Fang scenario), one_rotation theory state, enemy Aatrox level 18, auto uptime calculated",
+ "scenarios": {
+  "e3-varus-blight": {
+   "expected_source": "Varus Blight detonation (3 stacks x per-stack %maxHP) + on-hit W",
+   "practice_tool_readout": "650 TDD, kill 0s"
+  },
+  "e2-malzahar-dot": {
+   "expected_source": "Malefic Visions 16 ticks x 13.75 = 220 total + voidlings",
+   "practice_tool_readout": "824 TDD, kill 2.7s"
+  },
+  "e4-zyra-plants": {
+   "expected_source": "Plant attacks 4 x 75 = 300 raw",
+   "practice_tool_readout": "650 TDD, kill 0s"
+  },
+  "e5-zed-mark": {
+   "expected_source": "Death Mark detonation 341 raw (121 AD + 55% stored)",
+   "practice_tool_readout": "814 TDD, kill 3.1s"
+  },
+  "e8-rengar-grey": {
+   "expected_source": "Battle Roar grey-health heal 50% of damage taken",
+   "practice_tool_readout": "764 TDD, survival 2,475 EHP"
+  },
+  "e8-anivia-revive": {
+   "expected_source": "Rebirth revive 100% max HP",
+   "practice_tool_readout": "650 TDD, survival 2,114 EHP (full)"
+  },
+  "item-serpents-fang": {
+   "expected_source": "Serpent's Fang venom 50% shield cut (melee)",
+   "practice_tool_readout": "747 TDD, build A"
+  }
+ },
+ "screenshots": [
+  "e2-malzahar.png",
+  "e3-varus.png",
+  "e4-zyra.png",
+  "e5-zed.png",
+  "e8-anivia.png",
+  "e8-rengar.png",
+  "item-serpents.png",
+  "malzahar.png",
+  "varus.png",
+  "zyra.png"
+ ]
+}
