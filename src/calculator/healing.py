@@ -36,6 +36,50 @@ def _ability(champion_data: dict[str, Any], slot: str) -> dict[str, Any]:
     return entries[0] if entries and isinstance(entries[0], dict) else {}
 
 
+def _leveling_ratio(
+    ability: dict[str, Any], attribute: str, unit_substring: str, rank: int
+) -> float:
+    """Read one sourced modifier whose unit contains a substring at rank.
+
+    Some heal attributes mix modifiers with different unit vocabularies
+    (flat-per-level, "% AP", "% of his missing health"); ``extract_named``
+    resolves the stat-scaling ones but drops units it does not recognize,
+    so the missing-health term needs its own targeted read.
+    """
+    for effect in ability.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute") != attribute:
+                continue
+            for modifier in leveling.get("modifiers", []):
+                units = modifier.get("units", [])
+                values = modifier.get("values", [])
+                if not units or not values:
+                    continue
+                if unit_substring.lower() not in str(units[0]).lower():
+                    continue
+                return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+    return 0.0
+
+
+def _leveling_flat_at_level(
+    ability: dict[str, Any], attribute: str, level: int
+) -> float:
+    """Read the flat (unit-less) modifier of one attribute at champion level."""
+    for effect in ability.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute") != attribute:
+                continue
+            for modifier in leveling.get("modifiers", []):
+                values = modifier.get("values", [])
+                units = modifier.get("units", [])
+                if not values:
+                    continue
+                if units and str(units[0]).strip():
+                    continue
+                return float(values[min(max(level, 1) - 1, len(values) - 1)])
+    return 0.0
+
+
 def _event_source(event: dict[str, Any]) -> str:
     return str(event.get("source_key", ""))
 
@@ -128,15 +172,23 @@ def _heal_from_damage(
 HEALING_RULE_CHAMPIONS = frozenset(
     {
         "Aatrox",
+        "Alistar",
         "Ambessa",
         "Darius",
         "Warwick",
         "Dr. Mundo",
+        "Ekko",
+        "Fiora",
+        "Gangplank",
+        "Garen",
+        "Gragas",
+        "Gwen",
         "Irelia",
         "Renekton",
         "Soraka",
         "Briar",
         "Vladimir",
+        "Yorick",
     }
 )
 
@@ -436,6 +488,263 @@ def derive_self_healing(
                 "Hemoplague",
                 later_target_amount=r_reduced,
                 link_to_damage=False,
+            )
+
+    elif name == "Alistar":
+        # Triumphant Roar: Q (stun + knockup) and W (knockback) each
+        # generate one Triumph stack per enemy champion hit; at 7 stacks
+        # the passive heals Alistar for 5% of his maximum health and
+        # consumes the stacks.  Both numbers are read from the cached
+        # Wiki text ("At 7 stacks, Alistar consumes them all to heal
+        # himself for 5% of his maximum health").  A nearby enemy
+        # champion death would grant all 7 stacks at once, but a 1v1
+        # kill ends the fight before any heal receipt can apply.
+        p_text = " ".join(
+            effect.get("description", "")
+            for effect in _ability(champion_data, "P").get("effects", [])
+        )
+        stack_match = re.search(r"At\s+(\d+)\s+stacks", p_text, flags=re.IGNORECASE)
+        stack_cap = int(stack_match.group(1)) if stack_match else 0
+        self_match = re.search(
+            r"heal(?:s|ing)? himself for\s+(\d+(?:\.\d+)?)%\s+of his "
+            r"maximum health",
+            p_text,
+            flags=re.IGNORECASE,
+        )
+        self_ratio = float(self_match.group(1)) / 100.0 if self_match else 0.0
+        qw_seen = 0
+        for event in damage_events:
+            if _event_source(event) not in {"Q", "W"}:
+                continue
+            if stack_cap <= 0:
+                break
+            qw_seen += 1
+            if qw_seen % stack_cap == 0:
+                healing.append(
+                    {
+                        "time": float(event.get("time", 0.0)),
+                        "amount": self_ratio * float(champion_stats.get("health", 0.0)),
+                        "source": "Triumphant Roar",
+                        "kind": "champion_passive",
+                        **_trigger_fields(event),
+                    }
+                )
+
+    elif name == "Ekko":
+        # Chronobreak: flat heal at detonation, rank-scaled Minimum Heal
+        # (wiki: "Heal: 100 / 150 / 200 (+ 60% AP)", increased by 0% :
+        # 300% based on health lost in the last 4 seconds).  The 4-second
+        # health-loss rider needs incoming-damage history the outgoing
+        # ledger does not carry, so the sourced Minimum Heal is the
+        # conservative floor.  Triggers at detonation even if the paired
+        # R packet was fully blocked: link_to_damage=False.
+        r_rank = _rank(ability_damages, "R")
+        r_heal = extract_named(
+            _ability(champion_data, "R"), "Minimum Heal", r_rank, champion_stats
+        )
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "R"
+        ):
+            _heal_from_damage(
+                healing, event, r_heal, "Chronobreak", link_to_damage=False
+            )
+
+    elif name == "Fiora":
+        # Duelist's Dance: each Vital proc heals Fiora for 35 : 100
+        # (based on level) — the same sourced per-level array the module
+        # prices the proc damage from ("Bonus Damage", 35 at level 1,
+        # 100 at level 18).
+        p_level = int(champion_stats.get("level", 0) or 0)
+        p_heal = extract_named(
+            _ability(champion_data, "P"), "Bonus Damage", p_level, champion_stats
+        )
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "passive"
+        ):
+            _heal_from_damage(healing, event, p_heal, "Duelist's Dance")
+
+    elif name == "Gangplank":
+        # Remove Scurvy: flat rank heal + 90% AP + 13% missing health at
+        # cast (wiki: "Heal: 45 / 70 / 95 / 120 / 145 (+ 90% AP)
+        # (+ 13% missing health)").  W is a heal/cleanse with no damage
+        # event, so the cast timeline is the trigger; the missing-health
+        # term is a live amount_formula the survival ledger re-prices
+        # from the current health at cast time.  One cast pays one
+        # self-heal no matter how many defenders the pair ledger walks.
+        w = _ability(champion_data, "W")
+        w_rank = _rank(ability_damages, "W")
+        w_flat = extract_named(w, "Heal", w_rank, champion_stats)
+        w_missing_ratio = _leveling_ratio(w, "Heal", "missing health", w_rank) / 100.0
+
+        def remove_scurvy_heal(
+            current_health: float,
+            maximum_health: float,
+            flat: float = w_flat,
+            missing_ratio: float = w_missing_ratio,
+        ) -> float:
+            return flat + max(0.0, maximum_health - current_health) * missing_ratio
+
+        for cast in cast_timeline or []:
+            if cast.get("slot") != "W":
+                continue
+            healing.append(
+                {
+                    "time": float(cast.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": remove_scurvy_heal,
+                    "source": "Remove Scurvy",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+            )
+
+    elif name == "Garen":
+        # Perseverance: regenerates 0.15% : 1.01% (based on level) of
+        # maximum health every 0.5 seconds, but is lost for 8 seconds
+        # whenever Garen takes champion damage (refreshing on subsequent
+        # damage).  The ticks are authored with the timeline's combat
+        # gate (same receipt as Warmog's Heart), so a 1v1 fight — which
+        # is continuous champion damage — suppresses every tick with an
+        # explicit skipped receipt instead of silently emitting the
+        # out-of-combat regen.  The per-0.5s array is the second "Max
+        # Health Damage" leveling entry; the Wiki lists the per-5s
+        # phrasing first (10x the same rate).
+        p = _ability(champion_data, "P")
+        p_level = int(champion_stats.get("level", 0) or 0)
+        per_tick = 0.0
+        for effect in p.get("effects", []):
+            for leveling in effect.get("leveling", []):
+                if leveling.get("attribute") != "Max Health Damage":
+                    continue
+                modifiers = leveling.get("modifiers", [])
+                if not modifiers:
+                    continue
+                values = modifiers[0].get("values", [])
+                if not values:
+                    continue
+                per_tick = (
+                    float(values[min(max(p_level, 1) - 1, len(values) - 1)]) / 100.0
+                )
+        duration = max(0.0, float(fight_duration_seconds or 0.0))
+        if per_tick > 0.0 and duration > 0.0:
+            tick = 0.5
+            sequence = 0
+            while tick <= duration + 1e-9:
+                healing.append(
+                    {
+                        "time": tick,
+                        "amount": 0.0,
+                        "amount_formula": (
+                            lambda _current_health, maximum_health, ratio=per_tick: (
+                                maximum_health * ratio
+                            )
+                        ),
+                        "source": "Perseverance",
+                        "kind": "regen",
+                        "actor_wide": True,
+                        "requires_damage_free_seconds": 8.0,
+                        "sequence": sequence,
+                    }
+                )
+                sequence += 1
+                tick += 0.5
+
+    elif name == "Gragas":
+        # Happy Hour: heals for 5.5% of maximum health after each ability
+        # cast (cached Wiki text: "Periodically, after casting an
+        # ability, Gragas heals himself for 5.5% of his maximum
+        # health").  The heal triggers on the cast, not on damage
+        # landing, so the cast timeline is the source; one cast pays one
+        # self-heal per fight (actor-wide receipt).
+        p_text = " ".join(
+            effect.get("description", "")
+            for effect in _ability(champion_data, "P").get("effects", [])
+        )
+        ratio_match = re.search(
+            r"heals himself for\s+(\d+(?:\.\d+)?)%\s+of his maximum health",
+            p_text,
+            flags=re.IGNORECASE,
+        )
+        ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
+        per_cast = ratio * float(champion_stats.get("health", 0.0))
+        if per_cast > 0.0:
+            for cast in cast_timeline or []:
+                slot = cast.get("slot")
+                if slot not in {"Q", "W", "E", "R"}:
+                    continue
+                healing.append(
+                    {
+                        "time": float(cast.get("time", 0.0)),
+                        "amount": per_cast,
+                        "source": f"Happy Hour · {slot}",
+                        "kind": "champion_passive",
+                        "actor_wide": True,
+                    }
+                )
+
+    elif name == "Gwen":
+        # A Thousand Cuts: heals for 50% of the passive instance's
+        # post-mitigation damage dealt against champions, capped per
+        # instance at 10 : 25 (based on level) (+ 6.5% AP) (cached Wiki
+        # text is explicit about the post-mitigation basis, the same
+        # qualification Aatrox's Deathbringer Stance carries — the
+        # engine's post-mitigation event value is the sourced basis
+        # here, unlike lifesteal-style heals whose Wiki text does not
+        # qualify the basis).  The module emits the passive as
+        # auto-attack on-hit instances ("on_hit_ability_passive"); Q
+        # center / Needlework rider instances are folded into their
+        # ability totals and are not separately receipted.
+        p_level = int(champion_stats.get("level", 0) or 0)
+        per_instance_cap = extract_named(
+            _ability(champion_data, "P"), "Bonus Damage", p_level, champion_stats
+        )
+        for event in _attributed_events(
+            damage_events,
+            lambda source, _event: source == "on_hit_ability_passive",
+        ):
+            dealt = float(event.get("damage", 0.0))
+            _heal_from_damage(
+                healing,
+                event,
+                min(0.50 * dealt, per_instance_cap),
+                "A Thousand Cuts",
+            )
+
+    elif name == "Yorick":
+        # Last Rites: the empowered attack heals Yorick for 10 : 78
+        # (based on level) + 6% : 10% (based on rank) of his missing
+        # health against champions (reduced 50% against non-champions;
+        # the 1v1 model only prices the champion branch).  The flat term
+        # is per-LEVEL while the missing-health term is per-RANK, so the
+        # two modifiers are read independently; the missing-health term
+        # is a live amount_formula the survival ledger re-prices from
+        # the current health at the empowered hit.
+        q = _ability(champion_data, "Q")
+        q_rank = _rank(ability_damages, "Q")
+        q_level = int(champion_stats.get("level", 0) or 0)
+        q_flat = _leveling_flat_at_level(q, "Heal", q_level)
+        q_missing_ratio = _leveling_ratio(q, "Heal", "missing health", q_rank) / 100.0
+
+        def last_rites_heal(
+            current_health: float,
+            maximum_health: float,
+            flat: float = q_flat,
+            missing_ratio: float = q_missing_ratio,
+        ) -> float:
+            return flat + max(0.0, maximum_health - current_health) * missing_ratio
+
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "Q"
+        ):
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": last_rites_heal,
+                    "source": "Last Rites",
+                    "kind": "champion_ability",
+                    **_trigger_fields(event),
+                }
             )
 
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
