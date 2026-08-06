@@ -5161,3 +5161,109 @@ if (typeof window.__scryglassEngineReadyHook === "undefined") {
   window.addEventListener("scroll", renderPins, { passive: true });
   renderPins();
 })();
+
+// --- First-run onboarding overlay (P1a) -------------------------------------
+// Additive and self-contained: drives the 3-step welcome tour markup in
+// templates/index.html once per browser, keyed on localStorage
+// "scryglass_onboarded". Never blocks — Skip / × / Escape all persist the
+// flag — and motion stays CSS-driven so prefers-reduced-motion can disable
+// it. If storage is unavailable the tour stays silent (no nagging every
+// load), and if the markup is missing nothing happens.
+(function initOnboardingOverlay() {
+  "use strict";
+
+  const ONBOARDING_KEY = "scryglass_onboarded";
+  const overlay = document.getElementById("onboardingOverlay");
+  if (!overlay) return;
+
+  let seen = false;
+  try {
+    seen = localStorage.getItem(ONBOARDING_KEY) === "1";
+  } catch (error) {
+    return; // storage blocked — never show a tour we cannot remember
+  }
+  if (seen) return;
+
+  const steps = Array.prototype.slice.call(overlay.querySelectorAll(".onboarding-step"));
+  const dots = Array.prototype.slice.call(overlay.querySelectorAll(".onboarding-dots span"));
+  const counter = overlay.querySelector(".onboarding-counter");
+  const nextButton = overlay.querySelector(".onboarding-next");
+  const backButton = overlay.querySelector(".onboarding-back");
+  const skipButton = overlay.querySelector(".onboarding-skip");
+  const closeButton = overlay.querySelector(".onboarding-close");
+  const TOTAL = steps.length;
+  let current = 0;
+
+  function persistDismissal() {
+    try {
+      localStorage.setItem(ONBOARDING_KEY, "1");
+    } catch (error) {
+      // Best effort: the tour is dismissible either way.
+    }
+  }
+
+  function dismiss() {
+    overlay.hidden = true;
+    overlay.classList.remove("is-open");
+    document.body.classList.remove("onboarding-locked");
+    document.removeEventListener("keydown", onKeyDown);
+  }
+
+  function finish() {
+    persistDismissal();
+    dismiss();
+  }
+
+  function showStep(index) {
+    if (!steps.length) return;
+    current = Math.max(0, Math.min(TOTAL - 1, index));
+    steps.forEach((step, i) => {
+      const active = i === current;
+      step.classList.toggle("is-active", active);
+      step.hidden = !active;
+    });
+    dots.forEach((dot, i) => dot.classList.toggle("is-active", i === current));
+    if (counter) counter.textContent = `${current + 1} of ${TOTAL}`;
+    if (backButton) backButton.hidden = current === 0;
+    if (nextButton) {
+      const last = current === TOTAL - 1;
+      nextButton.textContent = last ? "Start building" : "Next";
+      nextButton.setAttribute("aria-label", last ? "Start using Scryglass" : "Next step");
+    }
+  }
+
+  function onKeyDown(event) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      finish();
+    } else if (event.key === "ArrowRight" && current < TOTAL - 1) {
+      event.preventDefault();
+      showStep(current + 1);
+    } else if (event.key === "ArrowLeft" && current > 0) {
+      event.preventDefault();
+      showStep(current - 1);
+    }
+  }
+
+  function open() {
+    overlay.hidden = false;
+    overlay.classList.add("is-open");
+    document.body.classList.add("onboarding-locked");
+    showStep(0);
+    if (nextButton) nextButton.focus();
+    document.addEventListener("keydown", onKeyDown);
+  }
+
+  if (nextButton) {
+    nextButton.addEventListener("click", () => {
+      if (current < TOTAL - 1) showStep(current + 1);
+      else finish();
+    });
+  }
+  if (backButton) backButton.addEventListener("click", () => showStep(current - 1));
+  if (skipButton) skipButton.addEventListener("click", finish);
+  if (closeButton) closeButton.addEventListener("click", finish);
+
+  // Wait one frame so the page paints behind the tour before it opens.
+  window.setTimeout(open, 150);
+})();

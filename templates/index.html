@@ -12,6 +12,108 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    /* P1a first-run onboarding overlay.
+       Self-contained styles so the shared stylesheet stays untouched: the JS
+       only flips `hidden` / `.is-open`, and every [hidden] rule below keeps
+       the global [hidden]{display:none !important} contract intact. */
+    .onboarding-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      overflow-y: auto;
+      background: rgba(7, 26, 21, .58);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    .onboarding-overlay.is-open { display: grid; }
+    .onboarding-overlay[hidden] { display: none !important; }
+    body.onboarding-locked { overflow: hidden; }
+    .onboarding-card {
+      width: min(580px, 100%);
+      max-height: min(660px, calc(100dvh - 40px));
+      overflow-y: auto;
+      padding: 26px 28px 22px;
+      border: 1px solid rgba(255, 253, 243, .35);
+      border-radius: 16px;
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+      animation: onboarding-rise 240ms ease-out;
+    }
+    .onboarding-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+    .onboarding-eyebrow { margin: 0; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .onboarding-head h2 { margin: 5px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.05em; }
+    .onboarding-close {
+      width: 34px; height: 34px; flex: none;
+      border: 1px solid var(--line-dark); border-radius: 50%;
+      background: transparent; color: var(--ink); font-size: 18px; line-height: 1; cursor: pointer;
+    }
+    .onboarding-close:hover { background: var(--black); color: var(--white); }
+    .onboarding-steps { margin-top: 20px; }
+    .onboarding-step {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 4px 12px;
+      align-items: start;
+    }
+    .onboarding-step[hidden] { display: none !important; }
+    .onboarding-step-mark {
+      grid-row: 1 / span 2;
+      display: grid; place-items: center;
+      width: 34px; height: 34px;
+      border: 1px solid var(--ink); border-radius: 50%;
+      font: 800 14px/1 var(--mono);
+      color: var(--ink);
+    }
+    .onboarding-step.is-active .onboarding-step-mark { background: var(--ink); color: var(--paper); }
+    .onboarding-step h3 { margin: 5px 0 0; font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+    .onboarding-step p { margin: 6px 0 0; color: var(--ink-soft); font-size: 13.5px; line-height: 1.55; }
+    .onboarding-step p.onboarding-chip-row { display: flex; gap: 8px; align-items: center; margin: 10px 0 0; }
+    .onboarding-progress {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line);
+    }
+    .onboarding-counter { color: var(--muted); font: 800 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    .onboarding-dots { display: flex; gap: 6px; }
+    .onboarding-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line-dark); opacity: .45; }
+    .onboarding-dots span.is-active { background: var(--ink); opacity: 1; }
+    .onboarding-actions { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+    .onboarding-actions-spacer { flex: 1; }
+    .onboarding-back, .onboarding-skip {
+      min-height: 40px; padding: 0 14px; border: 1px solid transparent; border-radius: 8px;
+      background: transparent; color: var(--muted); font-size: 12px; font-weight: 800; cursor: pointer;
+    }
+    .onboarding-back:hover, .onboarding-skip:hover { color: var(--ink); }
+    .onboarding-next {
+      min-height: 42px; padding: 0 20px; border: 0; border-radius: 8px;
+      background: var(--black); color: var(--white); font-size: 13px; font-weight: 800; cursor: pointer;
+    }
+    .onboarding-next:hover { background: #0c2c23; }
+    .onboarding-next:focus-visible, .onboarding-back:focus-visible, .onboarding-skip:focus-visible, .onboarding-close:focus-visible {
+      outline: 3px solid var(--ink); outline-offset: 2px;
+    }
+    .onboarding-overlay.is-open { animation: onboarding-fade-in 180ms ease-out; }
+    @keyframes onboarding-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes onboarding-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      .onboarding-overlay.is-open, .onboarding-card { animation: none !important; transition: none !important; }
+    }
+    @media (max-width: 640px) {
+      .onboarding-overlay { padding: 12px; align-items: start; }
+      .onboarding-card { padding: 22px 18px 18px; max-height: calc(100dvh - 24px); }
+      .onboarding-head h2 { font-size: 22px; }
+      .onboarding-actions { flex-wrap: wrap; }
+      .onboarding-back, .onboarding-skip, .onboarding-next { min-height: 44px; }
+    }
+    @media (max-width: 420px) {
+      .onboarding-actions-spacer { display: none; }
+      .onboarding-back, .onboarding-skip { flex: 1; }
+    }
+  </style>
 </head>
 <body>
   <div class="map-wash" aria-hidden="true"></div>
@@ -181,6 +283,56 @@
       <p class="share-status" id="shareStatus" role="status"></p>
     </div>
   </main>
+  <!-- P1a first-run onboarding overlay.
+       Shown once per browser (localStorage "scryglass_onboarded"), driven by
+       the self-contained initOnboardingOverlay block in static/js/app.js.
+       Markup stays static so the JS is purely additive: steps, progress,
+       Skip/Back/Next/close. Motion is CSS-only and disabled under
+       prefers-reduced-motion; the card scrolls on small viewports. -->
+  <div id="onboardingOverlay" class="onboarding-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingSteps">
+    <div class="onboarding-card">
+      <header class="onboarding-head">
+        <div>
+          <p class="onboarding-eyebrow">First run · about 5 minutes</p>
+          <h2 id="onboardingTitle">Welcome to Scryglass</h2>
+        </div>
+        <button class="onboarding-close" type="button" aria-label="Close welcome tour">×</button>
+      </header>
+      <div class="onboarding-steps" id="onboardingSteps">
+        <section class="onboarding-step is-active">
+          <span class="onboarding-step-mark" aria-hidden="true">1</span>
+          <h3>Pick your champion + role</h3>
+          <p>Quick mode is the landing page: search a champion, tap it, choose your role. Enemy and current items are optional — that's the whole setup for a recommendation.</p>
+        </section>
+        <section class="onboarding-step" hidden>
+          <span class="onboarding-step-mark" aria-hidden="true">2</span>
+          <h3>Press Best next item</h3>
+          <p>You get the top 3 picks with <em>why</em> — each card shows the damage (TDD) and survival (eHP) delta against your current build plus a plain-language reason.</p>
+        </section>
+        <section class="onboarding-step" hidden>
+          <span class="onboarding-step-mark" aria-hidden="true">3</span>
+          <h3>Dig deeper in Analyst</h3>
+          <p>Open a build in Analyst and every number carries a certainty chip:</p>
+          <p class="onboarding-chip-row" aria-label="Certainty chips legend">
+            <span class="certainty-chip certainty-exact">EXACT</span>
+            <span class="certainty-chip certainty-estimate">ESTIMATE</span>
+            <span class="certainty-chip certainty-boundary">BOUNDARY</span>
+          </p>
+          <p>Exact = sourced formula · Estimate = defaulted player option · Boundary = documented but not computed.</p>
+        </section>
+      </div>
+      <div class="onboarding-progress">
+        <span class="onboarding-counter" id="onboardingCounter" role="status" aria-live="polite">1 of 3</span>
+        <div class="onboarding-dots" aria-hidden="true"><span class="is-active"></span><span></span><span></span></div>
+      </div>
+      <footer class="onboarding-actions">
+        <button class="onboarding-back" type="button" hidden>Back</button>
+        <span class="onboarding-actions-spacer" aria-hidden="true"></span>
+        <button class="onboarding-skip" type="button">Skip tour</button>
+        <button class="onboarding-next" type="button">Next</button>
+      </footer>
+    </div>
+  </div>
 
   <dialog id="picker" class="picker"><div class="picker-shell"><header><div><p class="eyebrow" id="pickerKind">Choose</p><h2 id="pickerTitle">Select</h2></div><button class="picker-close" id="pickerClose" type="button" aria-label="Close picker">×</button></header><label class="search-box"><span aria-hidden="true">⌕</span><input id="pickerSearch" type="search" autocomplete="off" placeholder="Search" aria-label="Search choices" /></label><div id="pickerGrid" class="picker-grid"></div></div></dialog>
   <dialog id="bis" class="picker bis-dialog"><div class="picker-shell"><header><div><p class="eyebrow">Best in slot · scenario</p><h2 id="bisTitle">Rank this slot</h2></div><button class="picker-close" id="bisClose" type="button" aria-label="Close Best in Slot">×</button></header><nav class="bis-objective-filter" aria-label="Best in Slot objective"><span>Rank by</span><div id="bisObjectiveFilter"></div></nav><div class="bis-intro"><strong id="bisSummary"></strong><span>Every candidate is scored into the selected scenario context.</span></div><div id="bisList" class="bis-list"></div></div></dialog>
