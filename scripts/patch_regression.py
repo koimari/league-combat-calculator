@@ -189,8 +189,13 @@ def within_tolerance(cached, game, relative=REL_TOLERANCE, flat=FLAT_TOLERANCE):
 def resolve_patch(cdtb_bin=None):
     """Return the live game patch version via `cdtb versions game -a`."""
     binary = cdtb_bin or CDTB_BIN
+    # cdtb's default storage is a relative `cdn/` directory; run it inside
+    # the (gitignored) game-file cache so the repo root never grows a copy.
+    scratch = DEFAULT_GAME_DIR / ".cdtb"
+    scratch.mkdir(parents=True, exist_ok=True)
     result = subprocess.run(
         [binary, "versions", "game", "-a"],
+        cwd=str(scratch),
         capture_output=True,
         text=True,
         check=False,
@@ -477,8 +482,7 @@ def _slices_match(wiki_values, game_values, flat_tolerance):
     for start in range(len(game_values) - n + 1):
         window = game_values[start : start + n]
         if all(
-            isinstance(g, (int, float))
-            and within_tolerance(w, g, flat=flat_tolerance)
+            isinstance(g, (int, float)) and within_tolerance(w, g, flat=flat_tolerance)
             for w, g in zip(wiki_values, window)
         ):
             return True
@@ -674,9 +678,7 @@ def _compare_entry_rows(entry, spell, slot, index, ddragon=None):
             for data_value in spell.get("DataValues") or []
             if "cooldown" in _normalize_attr(data_value.get("name"))
         ]
-        matched = _slices_match(
-            values, bin_values, COOLDOWN_FLAT_TOLERANCE
-        ) or any(
+        matched = _slices_match(values, bin_values, COOLDOWN_FLAT_TOLERANCE) or any(
             _slices_match(values, row, COOLDOWN_FLAT_TOLERANCE)
             for row in data_cooldowns
         )
@@ -696,9 +698,7 @@ def _compare_entry_rows(entry, spell, slot, index, ddragon=None):
                 # spells, e.g. Rengar Q/W/E; Karthus Q); the wiki's number
                 # comes from elsewhere and is not comparable.
                 unchecked += 1
-                notes.append(
-                    f"{prefix} cooldown unchecked (game files: no cooldown)"
-                )
+                notes.append(f"{prefix} cooldown unchecked (game files: no cooldown)")
             elif dd_values and (
                 _expanded_match(values, dd_values, COOLDOWN_FLAT_TOLERANCE)
                 or _downsample_match(values, dd_values, COOLDOWN_FLAT_TOLERANCE)
@@ -732,9 +732,7 @@ def _compare_entry_rows(entry, spell, slot, index, ddragon=None):
             unchecked += 1
             break
         mana = spell.get("mana")
-        if mana is not None and _slices_match(
-            values, mana, COST_FLAT_TOLERANCE
-        ):
+        if mana is not None and _slices_match(values, mana, COST_FLAT_TOLERANCE):
             checked += 1
         else:
             dd_values = (ddragon or {}).get("cost")
@@ -743,9 +741,7 @@ def _compare_entry_rows(entry, spell, slot, index, ddragon=None):
                 # cost (Briar, Dr. Mundo, Vladimir, Zac, Zyra, ...) that the
                 # game's mana field cannot express — not comparable.
                 unchecked += 1
-                notes.append(
-                    f"{prefix} cost unchecked (game files: no mana cost)"
-                )
+                notes.append(f"{prefix} cost unchecked (game files: no mana cost)")
             elif dd_values and (
                 _expanded_match(values, dd_values, COST_FLAT_TOLERANCE)
                 or _downsample_match(values, dd_values, COST_FLAT_TOLERANCE)
@@ -755,8 +751,7 @@ def _compare_entry_rows(entry, spell, slot, index, ddragon=None):
             elif dd_values:
                 stale += 1
                 notes.append(
-                    f"{prefix} cost drifted (bin and ddragon: "
-                    f"{dd_values[:3]}...)"
+                    f"{prefix} cost drifted (bin and ddragon: " f"{dd_values[:3]}...)"
                 )
             else:
                 unchecked += 1
@@ -779,9 +774,7 @@ def _compare_entry_rows(entry, spell, slot, index, ddragon=None):
                 matched, matched_name = _data_value_matches(values, spell)
                 if matched:
                     row_checked = True
-                    notes.append(
-                        f"{prefix} {attribute} matched {matched_name}"
-                    )
+                    notes.append(f"{prefix} {attribute} matched {matched_name}")
             if not row_has_values:
                 continue
             if row_checked:
@@ -889,9 +882,7 @@ def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None)
         if unchecked:
             notes.append(f"{unchecked} stat(s) unchecked (no game field)")
         if rows_unchecked:
-            notes.append(
-                f"{rows_unchecked} ability row(s) unchecked (no game mapping)"
-            )
+            notes.append(f"{rows_unchecked} ability row(s) unchecked (no game mapping)")
         notes.extend(row_notes[:3])
         champions[name] = {
             "stale": bool(stat_drift) or rows_stale > 0,
@@ -914,9 +905,7 @@ def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None)
                 "note": "not present in game item bin",
             }
             continue
-        stat_drift, checked, unchecked = compare_item_stats(
-            cache_entry, game_item
-        )
+        stat_drift, checked, unchecked = compare_item_stats(cache_entry, game_item)
         note = f"{unchecked} stat(s) unchecked" if unchecked else ""
         items[item_id] = {
             "name": name,
@@ -960,9 +949,7 @@ def verify_wads(patch, champion_names, game_dir, storage=None):
     report = {}
     for name in champion_names:
         champ_dir = _champion_dir(name)
-        wad_path = extract_champion_bin_via_cdtb(
-            patch, name, storage, CDTB_PYTHON
-        )
+        wad_path = extract_champion_bin_via_cdtb(patch, name, storage, CDTB_PYTHON)
         if wad_path is None:
             report[name] = {"error": "cdtb extraction failed"}
             continue
@@ -978,16 +965,15 @@ def verify_wads(patch, champion_names, game_dir, storage=None):
         wad_bin = json.loads(dump.stdout)
         game_stats, _ = champion_game_stats(wad_bin, name)
         raw_bin = json.loads(
-            (
-                Path(game_dir) / "characters" / f"{champ_dir}.bin.json"
-            ).read_text(encoding="utf-8")
+            (Path(game_dir) / "characters" / f"{champ_dir}.bin.json").read_text(
+                encoding="utf-8"
+            )
         )
         raw_stats, _ = champion_game_stats(raw_bin, name)
         deltas = {
             ".".join(key): {"wad": value, "raw": raw_stats.get(key)}
             for key, value in game_stats.items()
-            if raw_stats.get(key) is not None
-            and abs(value - raw_stats[key]) > 1e-9
+            if raw_stats.get(key) is not None and abs(value - raw_stats[key]) > 1e-9
         }
         report[name] = {
             "wad": str(wad_path),
@@ -1025,7 +1011,7 @@ for bundle_id in sorted(bundle_ids):
     st.download_bundle(bundle_id)
 for f in files:
     game.elem.extract_file(f)
-print(game.elem.extract_path(files[0]))
+print(os.path.abspath(game.elem.extract_path(files[0])))
 """
     result = subprocess.run(
         [python_bin, "-c", helper, patch, name, storage],
@@ -1078,9 +1064,7 @@ def main(argv=None):
         help="comma-separated champions to spot-check via real cdtb WAD download",
     )
     check.add_argument("--limit", type=int, help="compare only the first N champions")
-    check.add_argument(
-        "--cdtb-bin", default=CDTB_BIN, help="path to the cdtb CLI"
-    )
+    check.add_argument("--cdtb-bin", default=CDTB_BIN, help="path to the cdtb CLI")
     check.add_argument(
         "--no-ddragon",
         action="store_true",
@@ -1102,8 +1086,10 @@ def main(argv=None):
     if args.limit:
         names = names[: args.limit]
 
-    print(f"patch {patch}: comparing {len(names)} champions and "
-          f"{len(items_cache)} items against game files")
+    print(
+        f"patch {patch}: comparing {len(names)} champions and "
+        f"{len(items_cache)} items against game files"
+    )
     download_game_files(patch, args.cache_dir, names)
 
     document, pending = build_staleness(
@@ -1131,8 +1117,10 @@ def main(argv=None):
                 ddragon=ddragon,
             )
         else:
-            print("ddragon version not found; cooldown/cost rows stay "
-                  "conservatively unchecked")
+            print(
+                "ddragon version not found; cooldown/cost rows stay "
+                "conservatively unchecked"
+            )
 
     if args.verify_wads:
         report = verify_wads(patch, args.verify_wads.split(","), args.cache_dir)
