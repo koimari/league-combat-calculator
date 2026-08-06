@@ -293,6 +293,10 @@ ASSUMPTIONS = [
     "R crit scaling at 30% effectiveness applied",
     "Double shot applies on-hit effects and can crit",
     "W is utility only (no damage)",
+    "Dirty Fighting stacks up to 3 (cap) on the target and the third "
+    "stack consumes them all: each passive_procs entry is one completed "
+    "3-stack detonation (15/40/80/150 by level + 60% AP, the level "
+    "breakpoints and AP ratio regex-read from the wiki description)",
 ]
 
 SLOTS = {
