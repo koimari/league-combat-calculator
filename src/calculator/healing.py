@@ -280,6 +280,18 @@ HEALING_RULE_CHAMPIONS = frozenset(
     }
 )
 
+# Grey-health champions whose self-heals are sourced from damage TAKEN
+# (post-mitigation) stored as a grey pool, then paid back when the
+# champion's active consumes it (Pyke P out-of-vision, Rengar W, Tahm
+# Kench E out-of-combat, Mordekaiser W recast).  The 1v1 heal derivation
+# below only sees the main's OUTGOING events, so these receipts are
+# authored by the participant timeline against its incoming ledger (the
+# enemy -> main pair events) rather than here; the set is shared so the
+# timeline and this module stay in one source of truth.  Kled's Skaarl
+# pool is a revive-boundary pattern (dismount/remount) and is documented
+# in the Kled module, not authored as a heal.
+GREY_HEALTH_RULE_CHAMPIONS = frozenset({"Pyke", "Rengar", "Tahm Kench", "Mordekaiser"})
+
 
 def derive_self_healing(
     champion_data: dict[str, Any],

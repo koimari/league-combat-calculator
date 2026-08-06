@@ -227,6 +227,10 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
+    "W (Battle Roar) stores 50% of post-mitigation damage taken in the "
+    "last 1.5 seconds as grey health and the active heals the stored "
+    "pool (the E8a grey-health primitive authors the heal from the "
+    "incoming ledger at each W cast)",
     "Ferocity caps at 4 stacks (1-second expiry not modeled); at 4 stacks "
     "the next Q/W/E cast is empowered and prices the wiki Ferocity Bonus "
     "values, consuming all stacks",

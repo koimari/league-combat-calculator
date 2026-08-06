@@ -72,6 +72,13 @@ SLOTS["R"] = _death_from_below
 parse_abilities = build_parser(SLOTS, "Pyke")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "P (Gift of the Drowned Ones) stores 9% (+ 0.2% per 1 Lethality) of "
+    "post-mitigation damage taken as grey health (40% + 0.4% per "
+    "Lethality with 2+ visible enemies), capped at 80 + 800% bonus AD "
+    "and 55% of maximum health; the out-of-vision consume heals 100% of "
+    "the stored pool and is a vision boundary the 1v1 ledger does not "
+    "model (the E8a grey-health primitive authors the store receipts, "
+    "no in-window heal)",
     "R (Death from Below) prices the wiki's non-execute damage row — "
     "125 : 275 (based on level) (+ 40% bonus AD) (+ 0.75 per 1 "
     "Lethality) physical damage, the 50%-of-threshold amount dealt to "
