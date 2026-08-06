@@ -133,24 +133,39 @@ def _level_tier(level: int) -> int:
 # Q: To the Skies! (Hammer) / Shock Blast (Cannon)
 # ---------------------------------------------------------------------------
 
-_q_hammer = simple_damage(
-    attr="Physical Damage", dmg_type="physical", source=("Q", _HAMMER)
+
+def _certified(parser):
+    """Certify a single-hit parser's cast boundary as the authored hit."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
+            entry["event_order_certified"] = "single_hit"
+        return entry
+
+    return parse
+
+
+_q_hammer = _certified(
+    simple_damage(attr="Physical Damage", dmg_type="physical", source=("Q", _HAMMER))
 )
 
 # Cannon's two cases DO share one entry shape, so the gate is a plain
 # ``by_option``: gated Shock Blast reads the "Increased Damage" TOTAL,
 # ungated reads the base line.
-_q_cannon = by_option(
-    "accelerated_q",
-    {
-        True: simple_damage(
-            attr="Increased Damage", dmg_type="physical", source=("Q", _CANNON)
-        ),
-        False: simple_damage(
-            attr="Physical Damage", dmg_type="physical", source=("Q", _CANNON)
-        ),
-    },
-    default=True,
+_q_cannon = _certified(
+    by_option(
+        "accelerated_q",
+        {
+            True: simple_damage(
+                attr="Increased Damage", dmg_type="physical", source=("Q", _CANNON)
+            ),
+            False: simple_damage(
+                attr="Physical Damage", dmg_type="physical", source=("Q", _CANNON)
+            ),
+        },
+        default=True,
+    )
 )
 
 
@@ -282,7 +297,9 @@ def _w(ctx: SlotCtx) -> dict[str, Any] | None:
 # E: Thundering Blow (Hammer) / Acceleration Gate (Cannon — no damage)
 # ---------------------------------------------------------------------------
 
-_e_hammer = simple_damage(attr="Magic Damage", dmg_type="magic", source=("E", _HAMMER))
+_e_hammer = _certified(
+    simple_damage(attr="Magic Damage", dmg_type="magic", source=("E", _HAMMER))
+)
 
 
 def _e(ctx: SlotCtx) -> dict[str, Any] | None:

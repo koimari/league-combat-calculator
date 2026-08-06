@@ -10114,6 +10114,7 @@
         "Q": {
           "cooldown": 8.0,
           "damage_type": "physical",
+          "event_order_certified": "single_hit",
           "name": "Shock Blast",
           "parts": [
             "DamagePart(physical, amount=399.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -40918,7 +40919,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "8d191c556748c05b157c9653b65ba7dd9908efa4",
+    "git_head": "4d431ea821fbe193b2c8d264cbf64dae1967bfe2",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785725170.32038,

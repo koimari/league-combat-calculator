@@ -7000,11 +7000,50 @@ def _stacked_champion_proc_times(
             triggers.append((trigger_time, 0, sequence, precision))
 
     if len(forced_attack_events) != rotation.forced_basic_attacks:
-        # A forced attack without a positive authored packet has no certified
-        # landing boundary; retain the explicit coarse fallback rather than
-        # counting an invented cast-time stack.
+        # A forced attack without a positive authored packet normally has no
+        # certified landing boundary; retain the explicit coarse fallback
+        # rather than counting an invented cast-time stack.  Exception: a
+        # CERTIFIED forced-attack cast (single_hit / auto_stack_proc) has no
+        # sub-cast offsets — its explicit cast boundary IS the swing, so it
+        # contributes one trigger at the certified precision (E9-BIS).
         if rotation.forced_basic_attacks > 0:
-            return None
+            missing = rotation.forced_basic_attacks - len(forced_attack_events)
+            for sequence, cast_event in enumerate(rotation.cast_events):
+                if missing <= 0:
+                    break
+                if not isinstance(cast_event, Mapping):
+                    return None
+                slot = cast_event.get("slot")
+                if not isinstance(slot, str):
+                    return None
+                row = state.breakdown.get(slot)
+                if (
+                    not isinstance(row, Mapping)
+                    or float(row.get("total_damage", 0.0)) <= 0
+                ):
+                    continue
+                # A forced-attack row whose own ``basic_attack`` flag IS the
+                # swing receipt (Jayce Hyper Charge, Blitzcrank Power Fist)
+                # certifies its cast boundary as the hit.  Regular certified
+                # ability casts already contributed one stack in the main
+                # loop; only basic_attack rows satisfy the forced-swing count.
+                # An empowered-auto cast rides ``hits`` swings (Hyper Charge
+                # forces 3), each a distinct Eclipse stack at the cast time.
+                if row.get("basic_attack") is not True:
+                    continue
+                ability_info = state.ability_damages.get(slot)
+                empower = (
+                    ability_info.get("empowers_next_auto")
+                    if isinstance(ability_info, Mapping)
+                    else None
+                )
+                hits = _empower_hits(empower) if empower is not None else 1
+                cast_time = _finite_numeric_receipt(cast_event.get("time")) or 0.0
+                for _ in range(hits):
+                    forced_attack_events.append((cast_time, "exact"))
+                missing -= hits
+            if missing > 0:
+                return None
     triggers.extend(
         (time, 1, len(triggers) + index, precision)
         for index, (time, precision) in enumerate(forced_attack_events)
