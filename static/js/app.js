@@ -239,6 +239,85 @@ function participantKindForPath(path) {
   return "main";
 }
 
+function applyControlCapabilities() {
+  // P2 (#78 follow-up): consume contract.controls so the backend can
+  // runtime-disable a control family; unsupported families get disabled
+  // with the backend reason instead of silently ignoring input.
+  const fields = engine.capabilities?.controls?.fields || {};
+  const gated = (token) => {
+    const hit = Object.values(fields).find((f) => f.frontend_token === token);
+    return hit && hit.supported === false ? hit : null;
+  };
+  if (gated("data-bis-path")) {
+    document.querySelectorAll(".bis-trigger, #bisButton").forEach((b) => {
+      b.disabled = true;
+      b.title = gated("data-bis-path").reason || "BIS unavailable";
+    });
+  }
+  if (gated("data-game-state")) {
+    document.querySelectorAll("[data-game-state]").forEach((b) => {
+      b.disabled = true;
+      b.title = gated("data-game-state").reason || "Unavailable";
+    });
+  }
+  if (gated("data-objective")) {
+    document.querySelectorAll("[data-objective]").forEach((b) => {
+      b.disabled = true;
+      b.title = gated("data-objective").reason || "Unavailable";
+    });
+  }
+  if (gated('id="sharePanel"')) {
+    document.querySelectorAll("#sharePanel, #shareAnalystButton").forEach((b) => {
+      if (b) b.hidden = true;
+    });
+  }
+  if (gated("data-remove-target")) {
+    document.querySelectorAll("#addEnemy, #addAlly").forEach((b) => {
+      if (b) b.disabled = true;
+    });
+  }
+}
+
+function maybeInitConsentAnalytics() {
+  // P2(d): privacy-respecting analytics with consent. One anonymous
+  // page_view ping per session via the existing /api/metrics/event
+  // endpoint; nothing is sent without explicit consent (localStorage).
+  if (localStorage.getItem("scryglass_analytics_consent") === "true") {
+    fetch("/api/metrics/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "page_view", took_ms: 0 }),
+    }).catch(() => {});
+    return;
+  }
+  if (localStorage.getItem("scryglass_analytics_consent") !== null) return; // declined
+  const banner = document.createElement("div");
+  banner.className = "consent-banner";
+  banner.setAttribute("role", "dialog");
+  banner.innerHTML =
+    '<span>Allow anonymous usage stats to improve Scryglass? No personal data is collected.</span>' +
+    '<button type="button" id="consentYes">Yes</button>' +
+    '<button type="button" id="consentNo">No</button>';
+  banner.style.cssText =
+    "position:fixed;bottom:12px;left:12px;right:12px;z-index:99;display:flex;gap:10px;align-items:center;" +
+    "flex-wrap:wrap;padding:12px 16px;background:var(--paper,#f6f2df);color:var(--ink,#181818);" +
+    "border:1px solid var(--line,#c9c2a8);border-radius:8px;font:14px/1.4 system-ui,sans-serif;";
+  banner.querySelector("#consentYes").addEventListener("click", () => {
+    localStorage.setItem("scryglass_analytics_consent", "true");
+    banner.remove();
+    fetch("/api/metrics/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "page_view", took_ms: 0 }),
+    }).catch(() => {});
+  });
+  banner.querySelector("#consentNo").addEventListener("click", () => {
+    localStorage.setItem("scryglass_analytics_consent", "false");
+    banner.remove();
+  });
+  document.body.appendChild(banner);
+}
+
 function capabilityFor(kind, field) {
   return engine.capabilities?.participants?.[kind]?.fields?.[field]
     || { supported: false, reason: "This control is not declared by the backend capability contract." };
@@ -4082,6 +4161,8 @@ Promise.all([
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};
     engine.capabilities = config.capabilities || { participants: {}, scenario: { fields: {} } };
+    applyControlCapabilities();
+    maybeInitConsentAnalytics();
     engine.keystones = config.keystones || [];
     engine.defaultTarget = config.default_target || engine.defaultTarget;
     engine.fightDefaults = config.fight_defaults || {};

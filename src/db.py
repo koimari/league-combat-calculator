@@ -931,7 +931,7 @@ def staleness_get(patch: str) -> dict[str, Any] | None:
 # The app validates the event name against the same whitelist before it
 # calls this helper; the check is repeated here so direct callers (the
 # scorecard CLI, tests) cannot write arbitrary event names either.
-_VALID_METRIC_EVENTS = frozenset({"quick_complete"})
+_VALID_METRIC_EVENTS = frozenset({"quick_complete", "page_view"})
 _METRIC_EVENT_MAX_TOOK_MS = 3_600_000
 
 

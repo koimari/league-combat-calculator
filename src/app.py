@@ -3722,7 +3722,7 @@ def api_validation_champions():
 
 # --- Beta metrics (P1b) ---------------------------------------------------
 # Whitelist mirrors db._VALID_METRIC_EVENTS; keep the two in sync.
-_METRICS_EVENT_NAMES = frozenset({"quick_complete"})
+_METRICS_EVENT_NAMES = frozenset({"quick_complete", "page_view"})
 _METRICS_EVENT_MAX_TOOK_MS = 3_600_000
 
 
