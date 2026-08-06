@@ -137,6 +137,31 @@ def role_scoped_shop_items(
     return candidates
 
 
+def role_quest_legal_items(
+    items: Iterable[dict[str, Any]], role: str, role_quest_complete: bool
+) -> list[dict[str, Any]]:
+    """Filter ordinary items to the support-quest stages legal for this state.
+
+    A support role may equip the starter/intermediate stages while its quest
+    is incomplete and the upgraded stage only after completing it; every
+    other role may not equip a support quest item at all.  Candidate pools
+    (the optimizer and BIS) apply this so an illegal stage is never scored or
+    recommended as if it were legal.
+    """
+    parsed_role = validate_role(role)
+    allowed_stages = (
+        {SUPPORT_QUEST_UPGRADED_STAGE}
+        if parsed_role == "support" and role_quest_complete
+        else set(SUPPORT_QUEST_STARTER_STAGES)
+    )
+    return [
+        item
+        for item in items
+        if (stage := support_quest_item_stage(item.get("name"))) is None
+        or (parsed_role == "support" and stage in allowed_stages)
+    ]
+
+
 def validate_resolved_loadout(
     ordinary_items: Iterable[dict[str, Any]],
     *,

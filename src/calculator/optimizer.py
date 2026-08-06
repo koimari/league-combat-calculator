@@ -22,6 +22,7 @@ from .loadout_rules import (
     conflicts_with_groups,
     exclusivity_groups,
     occupied_groups,
+    role_quest_legal_items,
     role_scoped_shop_items,
     validate_resolved_loadout,
 )
@@ -875,8 +876,12 @@ def optimize_build(
     # by roster BIS.  Previously only /api/bis applied this filter, allowing a
     # top-lane main search to rank support-only items such as Shurelya's
     # Battlesong.  No archetype or stat heuristic is added here.
-    all_legendaries = role_scoped_shop_items(
-        optimizer_supported_items(legal_legendaries), base_params.role
+    all_legendaries = role_quest_legal_items(
+        role_scoped_shop_items(
+            optimizer_supported_items(legal_legendaries), base_params.role
+        ),
+        base_params.role,
+        base_params.role_quest_complete,
     )
     all_boots = optimizer_supported_items(legal_boots)
 
