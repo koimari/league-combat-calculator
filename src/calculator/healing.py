@@ -57,9 +57,13 @@ def _leveling_modifier(
     return 0.0
 
 
-def _ability(champion_data: dict[str, Any], slot: str) -> dict[str, Any]:
+def _ability(
+    champion_data: dict[str, Any], slot: str, index: int = 0
+) -> dict[str, Any]:
     entries = champion_data.get("abilities", {}).get(slot, [])
-    return entries[0] if entries and isinstance(entries[0], dict) else {}
+    if index >= len(entries):
+        return {}
+    return entries[index] if isinstance(entries[index], dict) else {}
 
 
 def _leveling_ratio(
@@ -603,6 +607,67 @@ def derive_self_healing(
                             **_trigger_fields(event),
                         }
                     )
+        # P (Crimson Curse) bleed self-heal: "The bleed always heals Briar
+        # for 25% of the pre-mitigation damage dealt" (cached passive prose).
+        # The bleed's own per-stack heal rows (2.5 : 12.5 + 12.5% bonus AD
+        # per stack, +25% per extra-stack share) are exactly 25% of the
+        # pre-mitigation bleed damage at every stack level, so one sourced
+        # rule prices the whole stream.  The wiki's missing-health healing
+        # amplifier (0% : 40%) is a live-state boundary, not priced here.
+        for event in _attributed_events(
+            damage_events,
+            lambda source, _event: source.startswith("stacking_dot_"),
+        ):
+            dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+            amount = 0.25 * dealt
+            if amount > 0.0:
+                healing.append(
+                    {
+                        "time": float(event.get("time", 0.0)),
+                        "amount": amount,
+                        "source": "Crimson Curse",
+                        "kind": "champion_passive",
+                        **_trigger_fields(event),
+                    }
+                )
+        # W[1] (Snack Attack): "healing her for 5% of her maximum health
+        # plus a percentage of the post-mitigation damage dealt" — the
+        # percentage is the sourced "Heal Percentage" row (24 / 28 / 32 /
+        # 36 / 40% by rank).  The heal pays at the bite's hit event.
+        w_rank = _rank(ability_damages, "W")
+        heal_percent = extract_named(
+            _ability(champion_data, "W", 1),
+            "Heal Percentage",
+            w_rank,
+            champion_stats,
+            {},
+        )
+        max_health = float(champion_stats.get("health", 0.0) or 0.0)
+        for event in _attributed_events(
+            damage_events, lambda source, _event: source == "W"
+        ):
+            snack_heal = (
+                0.05 * max_health
+                + float(event.get("damage", 0.0) or 0.0) * heal_percent / 100.0
+            )
+            _heal_from_damage(healing, event, snack_heal, "Snack Attack")
+        # R (Certain Death) grants life steal (10 / 15 / 20% by rank) while
+        # Hematomania lasts; life steal heals for the sourced percentage of
+        # the post-mitigation damage dealt by basic attacks.
+        r_rank = _rank(ability_damages, "R")
+        life_steal = extract_named(
+            _ability(champion_data, "R"), "Life Steal", r_rank, champion_stats, {}
+        )
+        if life_steal > 0.0:
+            for event in _attributed_events(
+                damage_events, lambda source, _event: source == "auto_attacks"
+            ):
+                _heal_from_damage(
+                    healing,
+                    event,
+                    float(event.get("damage", 0.0) or 0.0) * life_steal / 100.0,
+                    "Certain Death",
+                )
 
     elif name == "Kayle":
         # Celestial Blessing (W): flat self-heal per cast (wiki: "Heal:
@@ -662,6 +727,32 @@ def derive_self_healing(
                     "actor_wide": True,
                 }
             )
+        # W passive Hunter's Vigor: at 100 stacks the next basic attack
+        # heals Kindred for 0% : 100% (based on her missing health) of the
+        # sourced per-level heal (47 : 81, data/champions.json W "Heal"
+        # per-level row).  The module emits the W_vigor receipt only at
+        # 100 stacks; the heal pays on the first basic-attack damage event
+        # (the deterministic next auto) and is naturally zero at full
+        # health (the wiki says it is not triggered there).
+        if "W_vigor" in ability_damages:
+            level = int(champion_stats.get("level", 18) or 18)
+            heal = extract_named(
+                _ability(champion_data, "W"), "Heal", level, champion_stats, {}
+            )
+            for event in _attributed_events(
+                damage_events, lambda source, _event: source == "auto_attacks"
+            ):
+                healing.append(
+                    {
+                        "time": float(event.get("time", 0.0)),
+                        "amount": 0.0,
+                        "amount_formula": _missing_health_scaled_heal(0.0, heal),
+                        "source": "Hunter's Vigor",
+                        "kind": "champion_passive",
+                        **_trigger_fields(event),
+                    }
+                )
+                break
 
     elif name == "Lissandra":
         # Frozen Tomb self-cast (R): heals every 0.25 seconds for the 2.5

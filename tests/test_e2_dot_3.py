@@ -65,7 +65,9 @@ _ENEMY = {
 _ROUNDING_TOLERANCE = 0.6
 
 
-def _fight(champion: str, ranks: dict | None = None) -> dict:
+def _fight(
+    champion: str, ranks: dict | None = None, options: dict | None = None
+) -> dict:
     """One-rotation /api/calculate fight, no items, level 18."""
     payload: dict = {
         "champion": champion,
@@ -74,7 +76,7 @@ def _fight(champion: str, ranks: dict | None = None) -> dict:
         "role": "top",
         "fight_mode": "one_rotation",
         "include_auto_attacks": False,
-        "champion_options": {},
+        "champion_options": options or {},
         "enemies": [_ENEMY],
     }
     if ranks is not None:
@@ -304,8 +306,13 @@ class TestVladimirSanguinePool:
     RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
     def test_w_prices_full_pool_total(self):
-        """4 ticks of Magic Damage Per Tick == Total Magic Damage (300)."""
-        data = _fight("Vladimir", self.RANKS)
+        """4 ticks of Magic Damage Per Tick == Total Magic Damage (300).
+
+        The P1-3 Hemoplague AMP (10% increased damage taken) is disabled
+        here so this suite pins the raw per-tick x 4 == Total row; the
+        amplified pricing is covered by tests/test_p1_review_3.py.
+        """
+        data = _fight("Vladimir", self.RANKS, options={"r_hemoplague_debuff": False})
         main_stats, target_stats = _context(data)
         expected = _expected_total(
             "Vladimir", "W", "Total Magic Damage", 5, main_stats, target_stats

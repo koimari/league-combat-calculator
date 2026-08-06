@@ -310,16 +310,27 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "All healing skipped: passive bleed heal (25% of damage dealt; 125% "
-    "of remaining bleed on kill), healing amplification (0-40% by "
-    "missing HP), Snack Attack's heal, E's charge heal, and R's life "
-    "steal healing (the life steal STAT is granted; HP restored isn't "
-    "modeled)",
+    "Self-heals modeled by healing.py (HEALING_RULE_CHAMPIONS): the "
+    "bleed heals 25% of its pre-mitigation damage (Crimson Curse, "
+    "cached prose 'always heals Briar for 25% of the pre-mitigation "
+    "damage dealt'), Snack Attack heals 5% of maximum health + the "
+    "sourced Heal Percentage (24-40%) of the bite's post-mitigation "
+    "damage, and Certain Death's life steal (10/15/20%) heals from "
+    "basic-attack damage while the frenzy lasts",
+    "Bleed kill heal (125% of remaining bleed damage on kill) and the "
+    "missing-health healing amplifier (0-40% + up to 2.5% per 100 "
+    "bonus health) are death/live-state boundaries: the fight ends at "
+    "the kill and the amplifier needs a live health walk, so both stay "
+    "documented, not priced",
+    "E's 35% damage reduction while charging is not modeled — it "
+    "reduces damage Briar TAKES during the ~1s channel, and the "
+    "outgoing-damage packet model has no per-cast incoming-damage "
+    "window (the Amumu E passive precedent); E's charge heal IS "
+    "modeled (healing.py, 4 sourced ticks)",
     "W cleave skipped — it hits only enemies around the primary target, "
     "contributing zero single-target damage; the cleave does not apply "
     "the bleed",
-    "E assumed fully charged (uncharged base is 2-5.5); the 35% damage "
-    "reduction while charging is not modeled",
+    "E assumed fully charged (uncharged base is 2-5.5)",
     "Q's attack-timer reset is not modeled as an extra auto",
     "Bleed cannot crit; bleed damage uses committed accounting — every "
     "stack applied during the fight counts its full 5s of ticks, "
@@ -331,6 +342,12 @@ ASSUMPTIONS = [
     "Blood Frenzy assumed active by default (R's Hematomania re-triggers "
     "it for the whole ult); toggling it off also removes Snack Attack",
 ]
+
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
+    for slot in "PQWER"
+}
+REVIEW_STATUS = "reviewed_module"
 
 SLOTS = {
     "W_frenzy": _blood_frenzy,

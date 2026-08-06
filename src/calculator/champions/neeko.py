@@ -1,8 +1,141 @@
-"""Neeko — CP10.5 full-entry-reviewed packet module."""
+"""Neeko — CP10.5 full-entry-reviewed packet module.
 
+P1-3 closures:
+
+- Q (Blooming Burst): the reviewed packet priced only the "Initial Magic
+  Damage" hit.  The seed re-blooms "up to 2 times per cast" (0.75s
+  apart) whenever the burst hits a champion, so a single-target cast
+  prices the initial burst plus 2 subsequent bursts — the wiki's
+  "Total Maximum Magic Damage" row (130-530 + 110% AP == initial + 2 x
+  subsequent at every rank).
+
+- R (Pop Blossom) shield: the cached wiki page carries no shield row
+  (a known-degraded parse), but the game files source it — neeko.bin.json
+  NeekoR mSpell DataValues ShieldAmount (75/125/175 by rank) and
+  ShieldPerChampion (40/60/80 by rank), with the BaseShield (75% AP) and
+  ShieldMultiplier (40% AP) calculations.  In the deterministic 1v1 the
+  fight's own target is the one nearby enemy champion, so the shield =
+  ShieldAmount + ShieldPerChampion + (75% + 40%) AP for 2 seconds
+  (ShieldDuration), riding the R damage event via self_shield_events.
+"""
+
+from ..ability_spec import DamagePart
+from .engine import SlotCtx, build_parser
 from .reviewed_batch_05 import build_batch_module
+from .slotlib import (
+    attach_self_shield,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+)
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Neeko")
+
+# HARDCODED: verify on patch updates — game-file-sourced R shield rows
+# (the cached wiki page omits the shield; neeko.bin.json NeekoR mSpell
+# DataValues + mSpellCalculations BaseShield / ShieldMultiplier).
+# https://raw.communitydragon.org/latest/game/data/characters/neeko/neeko.bin.json
+_R_SHIELD_AMOUNT = (75.0, 125.0, 175.0)  # by R rank (1-3)
+_R_SHIELD_PER_CHAMPION = (40.0, 60.0, 80.0)  # per nearby enemy champion
+_R_SHIELD_AP_RATIO = 0.75  # BaseShield: + 75% AP
+_R_SHIELD_PER_CHAMPION_AP_RATIO = 0.40  # ShieldMultiplier: + 40% AP per champion
+_R_SHIELD_DURATION = 2.0  # ShieldDuration, seconds
+
+
+def _blooming_burst(ctx: SlotCtx):
+    """Q: initial burst + up to 2 re-blooms (Total Maximum Magic Damage)."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    initial = extract_named(
+        ability, "Initial Magic Damage", rank, ctx.stats, ctx.target
+    )
+    subsequent = extract_named(
+        ability, "Subsequent Magic Damage", rank, ctx.stats, ctx.target
+    )
+    total = initial + 2 * subsequent
+    entry = damage_entry(
+        ability.get("name", "Blooming Burst"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "magic",
+    )
+    entry["parts"] = (
+        DamagePart("magic", amount=initial, time_offset=0.0),
+        DamagePart(
+            "magic",
+            amount=subsequent,
+            count=2,
+            time_offset=0.75,
+            hit_interval=0.75,
+        ),
+    )
+    entry["dot_duration"] = 1.5
+    entry["detail"] = (
+        f"initial {initial:g} + 2 re-blooms of {subsequent:g} "
+        "(0.75s apart; the burst hits a champion, so both re-blooms fire)"
+    )
+    return entry
+
+
+def _pop_blossom(ctx: SlotCtx):
+    """R: magic damage + the 2s self-shield (1 nearby enemy champion)."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability.get("name", "Pop Blossom"),
+        rank,
+        extract_cooldown(ability, rank),
+        damage,
+        "magic",
+    )
+    shield_rank = min(max(rank, 1), 3) - 1
+    ap = float(ctx.stats.get("ability_power", 0.0) or 0.0)
+    shield = (
+        _R_SHIELD_AMOUNT[shield_rank]
+        + _R_SHIELD_PER_CHAMPION[shield_rank]
+        + ap * (_R_SHIELD_AP_RATIO + _R_SHIELD_PER_CHAMPION_AP_RATIO)
+    )
+    entry["event_order_certified"] = "single_hit"
+    attach_self_shield(
+        entry,
+        amount=shield,
+        duration=_R_SHIELD_DURATION,
+        source="Pop Blossom",
+        detail=(
+            f"game-file R shield: {_R_SHIELD_AMOUNT[shield_rank]:g} + "
+            f"{_R_SHIELD_PER_CHAMPION[shield_rank]:g} (1 nearby enemy "
+            "champion) + 115% AP for 2s"
+        ),
+    )
+    return entry
+
+
+SLOTS = dict(SLOTS)
+SLOTS["Q"] = _blooming_burst
+SLOTS["R"] = _pop_blossom
+parse_abilities = build_parser(SLOTS, "Neeko")
+
+ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "Q (Blooming Burst) prices the full three-burst chain: Initial Magic "
+    "Damage + 2 x Subsequent Magic Damage == the wiki's Total Maximum "
+    "Magic Damage row (data/champions.json Q); each re-bloom fires "
+    "because the burst hits a champion, 0.75s apart.",
+    "R (Pop Blossom) shield is priced from the game files (neeko.bin.json "
+    "NeekoR: ShieldAmount 75/125/175 + ShieldPerChampion 40/60/80 per "
+    "nearby enemy champion + 75% AP + 40% AP, 2s) — the cached wiki page "
+    "omits the shield row; the 1v1 fight's own target is the one nearby "
+    "enemy champion.",
+]
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"

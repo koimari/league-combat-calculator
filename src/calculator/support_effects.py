@@ -53,6 +53,15 @@ _CHAMPION_HEAL_ATTR: dict[tuple[str, str], str] = {
     ("Bard", "W"): "Maximum Heal",
 }
 
+# P1-3: per-champion shield-attribute overrides.  Lux W (Prismatic
+# Barrier) shields Lux on both the throw and the return of the wand, so
+# one cast stacks two "Shield Strength" shields into the sourced
+# "Maximum Shield" row (80-200 + 80% AP by rank, data/champions.json);
+# the generic scanner would price one half-strength shield.
+_CHAMPION_SHIELD_ATTR: dict[tuple[str, str], str] = {
+    ("Lux", "W"): "Maximum Shield",
+}
+
 # E8d follow-up: prose-only ally heals that the cached leveling rows do not
 # carry as a resolvable attribute.  Each entry is
 # (base, ap_ratio, max_health_ratio) with the wiki citation in the source
@@ -70,6 +79,11 @@ _MODULE_HEAL_AMOUNTS: dict[tuple[str, str], tuple[float, float, float]] = {
 # roster model targets one selected teammate (the anchor).
 _SCOPE_OVERRIDES: dict[tuple[str, str], str] = {
     ("Yuumi", "E"): "one_teammate",
+    # P1-3: Lux W (Prismatic Barrier) shields Lux herself on the throw and
+    # the return ("Lux gains the shield upon throwing and upon retrieving
+    # the wand"); the allied half needs a teammate roster the 1v1 lacks,
+    # so the deterministic single-target cast targets self.
+    ("Lux", "W"): "self",
 }
 
 # E8c: slots whose shield the champion module authors itself (via the
@@ -291,6 +305,9 @@ def derive_ally_effects(
         # E8d follow-up: a sourced per-champion attribute override wins over
         # the generic lookup (Bard W fully-charged shrine).
         heal_attr = _CHAMPION_HEAL_ATTR.get(champion_key, heal_attr)
+        # P1-3: a sourced per-champion shield attribute override wins over
+        # the generic lookup (Lux W's two stacked shields == Maximum Shield).
+        shield_attr = _CHAMPION_SHIELD_ATTR.get(champion_key, shield_attr)
         # E8d follow-up: prose-only module heals (Taric Q) carry no JSON heal
         # attribute; the registry makes the slot a heal candidate anyway.
         if heal_attr is None and champion_key in _MODULE_HEAL_AMOUNTS:

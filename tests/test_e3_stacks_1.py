@@ -196,7 +196,10 @@ class TestVarusBlight:
         Level 18, no items (AP 0), target 2000 HP -> 3 x 100 = 300 magic,
         alongside the fully-charged arrow's 360 physical.
         """
-        data = _fight("Varus", include_autos=True)
+        # P1-3: the W-active empowered-shot rider is disabled here so this
+        # suite pins the detonation-only math (3 x per-stack %maxHP); the
+        # empower is priced by tests/test_p1_review_3.py.
+        data = _fight("Varus", include_autos=True, options={"w_active_empower": False})
         stats = data["champion_stats"]
         per_stack = _resolve(
             "Varus",
@@ -240,7 +243,11 @@ class TestVarusBlight:
 
     def test_blight_stacks_option_seeds_the_detonation(self) -> None:
         """blight_stacks=0 models a fresh target: no detonation fires."""
-        data = _fight("Varus", options={"blight_stacks": 0}, include_autos=True)
+        data = _fight(
+            "Varus",
+            options={"blight_stacks": 0, "w_active_empower": False},
+            include_autos=True,
+        )
         assert "blight_detonation" not in data["breakdown"]
 
 
