@@ -453,35 +453,19 @@ def infer_damage_type(feat: dict) -> str | None:
 # Classification
 # --------------------------------------------------------------------------
 def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, str]]:
-    """Return [(atom_id, family), ...] for one SpellObject."""
+    """Return [(atom_id, family), ...] for one SpellObject.
+
+    Evidence order (a later tier never overrides an earlier one):
+      1. tag-backed atoms (the engine's own semantic vocabulary) — always,
+      2. keyword matches on the OBJECT NAME — strong,
+      3. multi-token keyword matches in datavalues/calcs — only when the
+         object has no stronger evidence (max 2),
+      4. single datavalue tokens — never.
+    """
     hits: dict[str, str] = {}
-    for atom_id, family, specs in keyword_index:
-        for nk, ktoks in specs:
-            if keyword_matches(nk, ktoks, feat["toks"], feat["hay"]):
-                hits[atom_id] = family
-                break
-    # Split keyword hits into strong (name-based) vs weak (datavalue-only).
-    name_toks = set(tokens(feat["match_name"]))
-    strong: dict[str, str] = {}
-    weak: dict[str, str] = {}
-    for atom_id, family, specs in keyword_index:
-        matched = False
-        for nk, ktoks in specs:
-            if keyword_matches(nk, ktoks, feat["toks"], feat["hay"]):
-                matched = True
-                if nk in name_toks or len(ktoks) >= 2:
-                    strong[atom_id] = family
-                else:
-                    weak[atom_id] = family
-                break
-    hits: dict[str, str] = {}
-    for atom_id, family in strong.items():
-        hits[atom_id] = family
-    if not strong:
-        for atom_id, family in list(weak.items())[:2]:
-            hits[atom_id] = family
-    # binary tag signals: tags are the engine's own semantic vocabulary, so a
-    # tag-backed atom always wins even if the free-text matcher disagrees.
+    evidence: dict[str, str] = {}
+
+    # 1) tags
     for tag in feat["tags"]:
         mapped = (tag_map or {}).get(tag) or TAG_ATOMS.get(tag)
         if mapped:
@@ -492,22 +476,47 @@ def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, 
             if not atom_id:
                 continue
             hits[atom_id] = atom_id.split(".", 1)[0]
+            evidence[atom_id] = f"tag:{tag}"
             feat.setdefault("tag_targets", {})[atom_id] = _tp
+
+    # 2) strong keyword matches (object name). A keyword matches STRONG if
+    # ANY of the atom's keyword variants matches the object name (exact token,
+    # name prefix, or full multi-token phrase in the name); datavalue-only
+    # matches are never strong and never emitted (over-classification).
+    name_toks = set(tokens(feat["match_name"]))
+    for atom_id, family, specs in keyword_index:
+        matched_nk = None
+        for nk, ktoks in specs:
+            if not keyword_matches(nk, ktoks, feat["toks"], feat["hay"]):
+                continue
+            name_prefix = any(len(t) > len(nk) and t.startswith(nk) for t in name_toks)
+            if nk in name_toks or name_prefix or (len(ktoks) >= 2 and all(t in name_toks for t in ktoks)):
+                matched_nk = nk
+                break
+        if matched_nk is not None:
+            hits.setdefault(atom_id, family)
+            evidence.setdefault(atom_id, f"name:{matched_nk}")
+
     # generic execute rule: an ultimate-tagged damage spell whose data values
     # carry a damage cap is an execute (below-health-threshold kill).
     is_ult = any(t.startswith("Trait_Ultimate") for t in feat["tags"])
     if "execute" in feat["toks"]:
         hits.setdefault("damage.execute", "damage")
+        evidence.setdefault("damage.execute", "rule:execute")
     elif is_ult and "cap" in feat["toks"] and "damage" in feat["toks"]:
         hits.setdefault("damage.execute", "damage")
+        evidence.setdefault("damage.execute", "rule:execute")
     # generic crit-event rule: script names like "XxxCritAttack" carry the
     # crit event even though the vocab's "crit" keyword is corpus-generic.
     if "crit" in set(tokens(feat["name"])):
         hits.setdefault("damage.critical-strike", "damage")
+        evidence.setdefault("damage.critical-strike", "rule:crit")
     # generic nuke rule: "Nuke" script names are damage spells ("nuke" is the
     # engine's own word for a spell's damage payload).
     if "nuke" in set(tokens(feat["name"])):
         hits.setdefault("damage.damage-instance", "damage")
+        evidence.setdefault("damage.damage-instance", "rule:nuke")
+    feat["atom_evidence"] = evidence
     return sorted(hits.items())
 
 
@@ -547,6 +556,7 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
             "affects_type_flags": feat["affects_type_flags"],
         }
         for atom_id, family in hits:
+            ev = (feat.get("atom_evidence") or {}).get(atom_id, "")
             dedup_key = (atom_id, feat["name"])
             if dedup_key in atoms:
                 a = atoms[dedup_key]
@@ -566,6 +576,7 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
                 "provenance": {
                     "wiki": list(vocab[atom_id].get("wiki_pages", [])),
                     "binary": [key],
+                    "evidence": ev or "unknown",
                 },
             }
 
@@ -588,7 +599,8 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
                     "provenance": {
                         "wiki": list(vocab.get(atom_id, {}).get("wiki_pages", [])) + [entry.get("wiki_name", "")],
                         "binary": [],
-                        "source": "wiki-passive-map",
+                        "source": "wiki-map",
+                        "evidence": "wiki-map",
                     },
                 }
 
@@ -657,6 +669,7 @@ def extract_champion(champ_name: str, bin_path: Path, keyword_index, vocab, pass
                     "wiki": list(vocab[atom_id].get("wiki_pages", [])),
                     "binary": [entry["object"]],
                     "inherited_from": parent,
+                    "evidence": "inherited:" + parent,
                 },
             }
             atoms[(atom_id, name)] = clone_atom
@@ -798,7 +811,7 @@ def build_sanity_and_suggestions(results, vocab):
                 if ok and key_hint is not None:
                     ok = (any(key_hint.lower() in k.lower() for k in a["provenance"]["binary"])
                           or key_hint.lower() in a["behavior"].lower()
-                          or a["provenance"].get("source") == "wiki-passive-map")
+                          or a["provenance"].get("source") == "wiki-map")
                 if ok:
                     found = a
                     break

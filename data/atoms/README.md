@@ -30,11 +30,10 @@ atoms with dual provenance (wiki page + game binary). Schema:
 - **Noise**: engine/cosmetic artifacts (Managers, VFX, Trackers, skins,
   tooltips, UI helpers) are excluded by object name only.
 
-## Current state (v3)
+## Current state (v4 — no over-classification)
 
 - 173-wiki-champion universe (excludes TFT/test entities).
-- ~8,300 atoms classified; ~1,300 unclassified objects (646 real mechanics —
-  mostly clones/passives for the next iteration; 652 noise).
+- **5,345 atoms, 0 weak-evidence atoms** (over-classification = atoms guessed from datavalues only; none emitted). Evidence is tag/name/rule/inherited/wiki-map only. 19/19 sanity checks.
 - **19/19 sanity checks** across 7 families (heals, shields, stealth,
   summons, clones, executes, resets, DoT, slows, dashes, transforms).
 - Known limitation: damage_type is null for most damage atoms — the
