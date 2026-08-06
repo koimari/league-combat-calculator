@@ -400,7 +400,11 @@ def _kled_w(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    rank = ctx.level
+    # E5-1: the fourth-attack bonus must use the actual W rank, not the
+    # champion level.  Reading ctx.level clamped the "Additional Physical
+    # Damage" row (20..60 flat + 4.5..6.5% max HP) to its rank-5 values
+    # at every level >= 5 and stamped the entry's rank as the level.
+    rank = ctx.rank_for()
     value = extract_named(
         ability, "Additional Physical Damage", rank, ctx.stats, ctx.target
     )

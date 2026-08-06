@@ -735,16 +735,25 @@ def derive_self_healing(
         # Bloodlust consumes all Fury to heal.  The fight model does not
         # track Fury, so the sourced receipt is the 0-Fury minimum the wiki
         # publishes as its own leveling value: "Minimum Heal: 30 / 40 /
-        # 50 / 60 / 70 (+ 30% AP)".  The heal fires on cast regardless of
-        # whether the paired Q damage row landed.
+        # 50 / 60 / 70 (+ 30% AP)".  E5-1 removed the spurious Q
+        # magic-damage row (Bloodlust is a pure heal), so the heal now
+        # anchors to the Q cast timeline — the same trigger receipt Kayle W
+        # and Kindred R use for no-damage abilities — instead of a Q damage
+        # event that no longer exists.
         q_rank = _rank(ability_damages, "Q")
         amount = extract_named(
             _ability(champion_data, "Q"), "Minimum Heal", q_rank, champion_stats
         )
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "Q"
-        ):
-            _heal_from_damage(healing, event, amount, "Bloodlust", link_to_damage=False)
+        for cast_time in _cast_slot_times(cast_timeline, "Q"):
+            healing.append(
+                {
+                    "time": cast_time,
+                    "amount": amount,
+                    "source": "Bloodlust",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+            )
 
     elif name == "Volibear":
         # Frenzied Maul's Wounded bonus: biting an already-Wounded target
