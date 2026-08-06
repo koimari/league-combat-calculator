@@ -258,12 +258,13 @@ def test_ally_ledger_receives_sourced_support(champion, source, kind, amount):
 
 
 def test_yuumi_zoomies_emits_sourced_self_shield_ally_target_is_missing_hook():
-    """Yuumi E (Zoomies) emits the sourced shield; its target is the caster.
+    """Yuumi E (Zoomies) emits the sourced shield; its target is the anchor.
 
     The cached E prose ("Yuumi grants herself a shield") makes the engine's
     support scanner resolve target_scope "self".  The attached-bonus anchor
-    transfer ("Zoomies affects the Anchor instead of Yuumi") is a scope
-    marker the shared scanner does not express — documented E8d missing hook.
+    transfer ("Zoomies affects the Anchor instead of Yuumi") is expressed
+    by the E8d follow-up scope override: the deterministic roster model
+    targets one selected teammate (the anchor).
     """
     combat, _ally_row = _roster_combat("Yuumi")
     events = _support_events(combat, "Zoomies")
@@ -271,8 +272,9 @@ def test_yuumi_zoomies_emits_sourced_self_shield_ally_target_is_missing_hook():
     shield = events[0]
     assert shield["kind"] == "shield"
     assert shield["amount"] == pytest.approx(165.0)
-    assert shield["target_scope"] == "self"
-    assert shield["target"] == "main"
+    assert shield["target_scope"] == "one_teammate"
+    # The anchor is the roster ally (Yuumi attached to Jinx), not the caster.
+    assert shield["target"] == "ally:Jinx"
 
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 """Champion-owned starting defenses compiled from sourced mechanics."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Mapping, Sequence
 
 from .champions.skill_orders import get_ability_rank
@@ -491,6 +491,31 @@ def _galio_starting_defenses(level: int, maximum_health: float) -> StartingDefen
     )
 
 
+def _champion_starting_revive(
+    champion_name: str, level: int, stats: dict[str, float]
+) -> dict[str, float]:
+    """Resolve a champion module's sourced revive fields, if it declares any.
+
+    Mirrors the healing_reduction champion-source lookup: modules that
+    implement ``starting_revive_defense`` (Anivia Rebirth, Zac Cell
+    Division, Zilean Chronoshift) return the revive payload; every other
+    champion fails closed with zero revive fields.
+    """
+    # pylint: disable=import-outside-toplevel
+    from .champions import _CHAMPION_MODULES
+    from importlib import import_module
+
+    module_name = _CHAMPION_MODULES.get(champion_name)
+    if module_name is None:
+        return {}
+    package = f"{__name__.rsplit('.', 1)[0]}.champions"
+    module = import_module(f".{module_name}", package=package)
+    resolver = getattr(module, "starting_revive_defense", None)
+    if resolver is None:
+        return {}
+    return resolver(level, stats)
+
+
 def resolve_starting_defenses(
     champion_name: str,
     level: int,
@@ -502,6 +527,15 @@ def resolve_starting_defenses(
     champion_defenses = StartingDefenses()
     if champion_name == "Galio":
         champion_defenses = _galio_starting_defenses(level, stats["health"])
+    revive_fields = _champion_starting_revive(champion_name, level, stats)
+    if revive_fields:
+        champion_defenses = replace(
+            champion_defenses,
+            revive_health_amount=float(revive_fields.get("revive_health_amount", 0.0)),
+            revive_delay=float(revive_fields.get("revive_delay", 0.0)),
+            revive_cooldown=float(revive_fields.get("revive_cooldown", 0.0)),
+            coverage="modeled_starting_passive",
+        )
 
     names = {str(item.get("name", "")) for item in items}
     magic_shield = champion_defenses.magic_shield
@@ -916,6 +950,16 @@ def resolve_starting_defenses(
         sources.append(_RANDUINS_OMEN_SOURCE)
 
     if not sources:
+        # A champion-owned revive (Anivia/Zac/Zilean) must survive the
+        # no-item path; the empty-StartingDefenses early return would
+        # otherwise drop the sourced revive fields.
+        if revive_health_amount > 0.0:
+            return StartingDefenses(
+                revive_health_amount=revive_health_amount,
+                revive_delay=revive_delay,
+                revive_cooldown=revive_cooldown,
+                coverage="modeled_starting_passive",
+            )
         return StartingDefenses()
     return StartingDefenses(
         magic_shield=magic_shield,

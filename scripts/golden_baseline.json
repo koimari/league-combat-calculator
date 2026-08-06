@@ -20247,6 +20247,7 @@
           "cast_time": 0.25,
           "cooldown": 7.0,
           "damage_type": "magic",
+          "detail": "Q cast also grants the periodic Fey Feathers self-shield (158.2 for 10s, 30:247.94 by level + 95% AP; until-broken modeled as the window)",
           "name": "Gleaming Quill",
           "parts": [
             "DamagePart(magic, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -20254,6 +20255,13 @@
           "rank": 5,
           "resource_cost": 45.0,
           "resource_type": "MANA",
+          "self_shield_events": [
+            {
+              "amount": 158.2,
+              "duration": 10.0,
+              "source": "Fey Feathers"
+            }
+          ],
           "total_raw": 250.0
         },
         "R": {
@@ -40759,7 +40767,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1785669761.071166,
-    "git_head": "df8e14d13ff68779e3913fc488b8ca4ab7c3d4a3",
+    "git_head": "16bdce0c8a028485c49a07a8917de52adef1ecd1",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1785725170.32038,

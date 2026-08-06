@@ -16,7 +16,7 @@ packet.
 from typing import Any
 
 from .engine import build_parser
-from .slotlib import simple_damage
+from .slotlib import attach_self_shield, simple_damage
 
 OPTIONS: list[dict[str, Any]] = []
 
@@ -25,7 +25,10 @@ ASSUMPTIONS = [
     "Grand Entrance counts one completed landing hit.",
     "The Quickness counts one collision per selected enemy; one cast cannot "
     "damage an enemy twice.",
-    "Fey Feathers and Battle Dance are excluded because they deal no enemy damage.",
+    "Battle Dance is excluded because it deals no enemy damage.",
+    "Fey Feathers' periodic self-shield (30:247.94 by level + 95% AP) rides "
+    "the first damaging cast (Q) as a timed shield for the fight window; "
+    "the periodic/out-of-combat refresh cadence is state.",
 ]
 
 SOURCES = [
@@ -61,8 +64,44 @@ SOURCES = [
     },
 ]
 
+# HARDCODED: verify on patch updates — Fey Feathers' shield is the cached
+# "Shield" per-level row (30 : 247.94 based on level) + 95% AP; the
+# "until broken" shield is modeled as the fight window (E8c passive-shield
+# convention).  The shield rides the first damaging cast (Q) so the shared
+# ledger can grant it as a timed self-shield.
+_P_SHIELD_BASE_LEVEL_1 = 30.0
+_P_SHIELD_BASE_LEVEL_18 = 247.94
+_P_SHIELD_AP_RATIO = 0.95
+_P_SHIELD_DURATION_SECONDS = 10.0
+
+
+def _p_shield_amount(level: int, ability_power: float) -> float:
+    base = _P_SHIELD_BASE_LEVEL_1 + (
+        _P_SHIELD_BASE_LEVEL_18 - _P_SHIELD_BASE_LEVEL_1
+    ) * ((level - 1) / 17.0)
+    return base + _P_SHIELD_AP_RATIO * ability_power
+
+
+def _q_with_p_shield(ctx: Any) -> dict[str, Any] | None:
+    entry = simple_damage(attr="Magic Damage", dmg_type="magic")(ctx)
+    if entry is None or int(entry.get("rank", 0) or 0) < 1:
+        return entry
+    shield = _p_shield_amount(ctx.level, ctx.stats.get("ability_power", 0.0))
+    return attach_self_shield(
+        entry,
+        amount=shield,
+        duration=_P_SHIELD_DURATION_SECONDS,
+        source="Fey Feathers",
+        detail=(
+            f"Q cast also grants the periodic Fey Feathers self-shield "
+            f"({shield:g} for {_P_SHIELD_DURATION_SECONDS:g}s, 30:247.94 "
+            f"by level + 95% AP; until-broken modeled as the window)"
+        ),
+    )
+
+
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "Q": _q_with_p_shield,
     "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
 }

@@ -30,9 +30,47 @@ def _first_attribute(ability: dict[str, Any], names: tuple[str, ...]) -> str | N
 # and re-verified on every hit, so a data refresh can never serve a stale
 # answer through a recycled ``id()``.
 _SUPPORT_ATTRIBUTES = frozenset(
-    {"Shield Strength", "Shield", "Total Heal", "Heal", "Heal Per Tick"}
+    {
+        "Shield Strength",
+        "Shield",
+        "Total Heal",
+        "Heal",
+        "Heal Per Tick",
+        # E8d follow-up: Bard W (Caretaker's Shrine) heals scale with charge
+        # time between these two sourced rows; Taric Q carries only the
+        # "Maximum Charges" attribute (prose heal, see _MODULE_HEAL_AMOUNTS).
+        "Minimum Heal",
+        "Maximum Heal",
+    }
 )
 _SUPPORT_ATTRS_MEMO: dict[int, tuple[dict[str, Any], bool]] = {}
+
+# E8d follow-up: per-champion heal-attribute overrides.  Bard W's shrine
+# gathers power over 5s; the deterministic single-target model prices the
+# fully-charged sourced row (Maximum Heal) and documents the charge-time
+# boundary in the packet source label.
+_CHAMPION_HEAL_ATTR: dict[tuple[str, str], str] = {
+    ("Bard", "W"): "Maximum Heal",
+}
+
+# E8d follow-up: prose-only ally heals that the cached leveling rows do not
+# carry as a resolvable attribute.  Each entry is
+# (base, ap_ratio, max_health_ratio) with the wiki citation in the source
+# label; the amount is computed at cast time from the fight's own stats.
+# Taric Q heals for 25 (+15% AP) (+1% max HP) per stocked charge; the
+# stocking cadence is combat state, so the deterministic model prices ONE
+# charge per cast (the conservative floor, documented in ASSUMPTIONS).
+_MODULE_HEAL_AMOUNTS: dict[tuple[str, str], tuple[float, float, float]] = {
+    ("Taric", "Q"): (25.0, 0.15, 0.01),
+}
+
+# E8d follow-up: target-scope overrides for casts whose cached description
+# markers cannot express the sourced targeting.  Yuumi's E (Zoomies) shields
+# the attached ally, not Yuumi herself, while attached — the deterministic
+# roster model targets one selected teammate (the anchor).
+_SCOPE_OVERRIDES: dict[tuple[str, str], str] = {
+    ("Yuumi", "E"): "one_teammate",
+}
 
 # E8c: slots whose shield the champion module authors itself (via the
 # ``self_shield_events`` payload on its damage entry) instead of this
@@ -93,7 +131,10 @@ def _support_profile(
     if memo is not None and memo[0] is ability:
         return memo[1]
     shield_attr = _first_attribute(ability, ("Shield Strength", "Shield"))
-    heal_attr = _first_attribute(ability, ("Total Heal", "Heal", "Heal Per Tick"))
+    heal_attr = _first_attribute(
+        ability,
+        ("Total Heal", "Heal", "Heal Per Tick", "Minimum Heal", "Maximum Heal"),
+    )
     description = " ".join(
         str(effect.get("description", "")) for effect in ability.get("effects", [])
     ).lower()
@@ -209,6 +250,17 @@ def derive_ally_effects(
         if (champion_data.get("name", ""), slot) in _MODULE_AUTHORED_SHIELD_SLOTS:
             continue
         shield_attr, heal_attr, target_self, target_scope = _support_profile(ability)
+        champion_key = (champion_data.get("name", ""), slot)
+        # E8d follow-up: a sourced per-champion attribute override wins over
+        # the generic lookup (Bard W fully-charged shrine).
+        heal_attr = _CHAMPION_HEAL_ATTR.get(champion_key, heal_attr)
+        # E8d follow-up: prose-only module heals (Taric Q) carry no JSON heal
+        # attribute; the registry makes the slot a heal candidate anyway.
+        if heal_attr is None and champion_key in _MODULE_HEAL_AMOUNTS:
+            heal_attr = "_module_prose_heal"
+        # E8d follow-up: a sourced per-champion target-scope override wins
+        # over the description markers (Yuumi E attached anchor).
+        target_scope = _SCOPE_OVERRIDES.get(champion_key, target_scope)
         if shield_attr is None and heal_attr is None:
             continue
         casts = [event for event in cast_timeline if event.get("slot") == slot]
@@ -233,7 +285,21 @@ def derive_ally_effects(
                         }
                     )
             if heal_attr is not None:
-                amount = extract_named(ability, heal_attr, rank, stats, {})
+                module_heal = _MODULE_HEAL_AMOUNTS.get(champion_key)
+                if module_heal is not None:
+                    base, ap_ratio, max_health_ratio = module_heal
+                    amount = (
+                        base
+                        + ap_ratio * float(stats.get("ability_power", 0.0))
+                        + max_health_ratio * float(stats.get("health", 0.0))
+                    )
+                    source_label = (
+                        f"{ability.get('name', slot)} · prose heal "
+                        f"(25 + 15% AP + 1% max HP per charge, 1 charge)"
+                    )
+                else:
+                    amount = extract_named(ability, heal_attr, rank, stats, {})
+                    source_label = f"{ability.get('name', slot)} · {heal_attr}"
                 # A per-tick entry is not a complete heal packet without its
                 # authored duration/tick cadence; fail closed here rather than
                 # multiplying a guessed number.
@@ -245,7 +311,7 @@ def derive_ally_effects(
                             "time": _sourced_cast_time(cast, slot=slot),
                             "kind": "heal",
                             "amount": float(amount),
-                            "source": f"{ability.get('name', slot)} · {heal_attr}",
+                            "source": source_label,
                             "slot": slot,
                             "target_self": False,
                             "target_scope": target_scope,
