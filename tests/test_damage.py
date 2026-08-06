@@ -3017,8 +3017,10 @@ class TestEmpoweredSwingAttribution:
     def test_reattribution_preserves_the_fight_total(self, dr_mundo_data) -> None:
         result = self._fight(dr_mundo_data)
         # Q is current-health damage, so the later casts are priced after the
-        # earlier hits instead of six times against full target health.
-        assert result["total_damage"] == pytest.approx(1883.9662857142857, rel=1e-3)
+        # earlier hits instead of six times against full target health.  F3
+        # derives E (Blunt Force Trauma, bonus-AD buff) first, shifting the
+        # buff/auto cadence — the total is re-captured with the derivation.
+        assert result["total_damage"] == pytest.approx(1868.152, rel=1e-3)
 
     def test_breakdown_rows_still_sum_to_total(self, dr_mundo_data) -> None:
         result = self._fight(dr_mundo_data)

@@ -582,7 +582,10 @@ def test_poppy_q_metadata_receipts_disclose_hammer_shock_rupture():
 def test_hwei_devastating_fire_uses_the_sourced_cast_boundary():
     result = run_fight(_load_public_champion("Hwei"), 18, [], _timed_params())
     fire = result["breakdown"]["Q"]
-    assert [round(event["time"], 2) for event in fire["damage_events"]] == [0.25]
+    # F3 derives R first (Q is a missing-health execute, cast after R's
+    # burst), so Q's sourced cast boundary sits at 0.5s behind R's 0.25s
+    # cast time instead of opening the rotation at 0.25s.
+    assert [round(event["time"], 2) for event in fire["damage_events"]] == [0.5]
     assert sum(event["damage"] for event in fire["damage_events"]) == pytest.approx(
         fire["total_damage"]
     )

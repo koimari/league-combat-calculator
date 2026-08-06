@@ -1,177 +1,207 @@
-# F2 — Optimal Event-Order Engine (combo layer)
+# F3 — Optimal Event-Order Engine (algorithmic derivation for all 173 champions)
 
-Status: implemented on `codex/f2-rotation`.
+Status: implemented on `codex/f3-rotation-all`.
 Owner: Scryglass combat pipeline (`src/calculator/rotation_resolver.py`).
 Gate: `pytest`, `pylint src/ --fail-under=9`, `black --check src/ tests/`,
 `node --check static/js/eventorder.js`, golden snapshot re-capture.
 
 ## Problem
 
-The fight engine's default rotation was the fixed `DEFAULT_CAST_ORDER`
-`("Q", "Q2", "W", "E", "R")` — every champion cast Q, then W, then E,
-then R. That order is wrong for kits whose abilities have real
-setup/consume relationships:
+The F2 engine derived a cast order for ten hand-curated combo champions
+and fell back to the certified/default `DEFAULT_CAST_ORDER`
+`("Q", "Q2", "W", "E", "R")` for everyone else, with a generic rationale.
+That fallback is wrong for kits whose abilities have real setup/consume
+relationships (Cassiopeia's poison-fed Twin Fang, Varus' Blight
+detonation, Darius' Hemorrhage-stack execute, ...) — and the product
+owner's directive is explicit: **derive the order on the fly from the
+atomized ability data, never from a hand-maintained combo database**:
 
-- Cassiopeia's `E` (Twin Fang) only deals its enhanced damage to
-  **poisoned** targets — the rotation must open with `Q` (Noxious Blast)
-  and reapply the poison as soon as its cooldown is back, spamming `E`
-  between reapplications.  A fixed `E`-last order prices the E-spam
-  cadence late, costing casts in short windows.
-- Varus' `Q` (Piercing Arrow) **detonates** the Blight stacks that
-  basic attacks (W) apply — the detonator must come after the appliers.
-- Vladimir's `R` (Hemoplague) amplifies all damage taken by 10% for 4s —
-  it must open, not close, the burst.
-- Aatrox's `R` grants bonus AD as a percentage of total AD — the buff
-  must be up before The Darkin Blade is priced.
+> "trust 100% that results are correct only via atomized and math-backed
+> analysis understanding what exactly each ability does. having that on
+> the go seems faster than having a database of every single possible
+> combo for every champion."
 
-Once abilities and champions are atomized (per-ability leveling rows in
-`data/champions.json`, typed `DamagePart`s and module metadata in
-`src/calculator/champions/`), the optimal order can be **derived from
-data** instead of hard-coded per champion in the engine.
+F3 makes that derivation fully algorithmic for ALL 173 champions.  The
+ten F2 seeds stay as **documented overrides** (verified by hand); every
+other champion's order is computed per request by
+`src/calculator/rotation_resolver.py`.
 
 ## Design
-
-### Where the order comes from
-
-The fight's cast order is resolved in one place,
-`src/calculator/rotation_resolver.py`, as a four-signal score:
-
-| # | Signal | Data source | Weight |
-|---|--------|-------------|--------|
-| a | **Setup/consume relationships** | `on_hit` + `post_hit_proc` (Varus W→Q), `dot_duration` + poisoned-option (Cassiopeia Q→E), Blaze stack applications (Brand P), AMP pseudo-slot (Vladimir R), `stat_buff` (Aatrox R), mark/proc rows (Lux P, Zed R stored damage) | strongest |
-| b | **DPS contribution per rank** | `total_raw` / effective per-rank `cooldown` at the fight's stats, weighted by the number of enemy champions an AoE slot can hit (`rank_ability_dps` with `aoe` + `target_count`) | strong |
-| c | **Cooldown gating** | the engine's shared cast timeline (`_schedule_shared_casts`): placing the low-cooldown spam tool right after its setup starts its cadence earliest | tie-break |
-| d | **Buffs before damage** | `stat_buff` / AMP slots must resolve before the abilities they amplify | strong |
-
-Signal (a) is encoded as each combo rule's `setup` / `consume` slot
-lists; signal (b) is computed from the parsed ability rows; signals (c)
-and (d) are encoded in the rule's `order` and enforced by the engine's
-existing scheduler.
-
-### AoE — abilities that hit more than one champion
-
-Every combo rule carries an `aoe` map: slot → maximum enemy champions the
-ability can hit (conservative caps from the kit's shape — a ground zone or
-cone is capped at 5, Jhin's Dancing Grenade at 4 bounces, Lux's Light
-Binding at 2 roots, Aatrox's Infernal Chains at 2).  The AoE metadata
-feeds two things:
-
-- **The DPS signal (b)** multiplies an AoE slot's effective DPS by
-  `min(roster target count, cap)` — `rank_ability_dps(..., target_count=N)`
-  ranks an ability that hits all five enemies five times higher than the
-  same raw damage on a single target, so the derived order reflects the
-  actual roster, not a 1v1 abstraction.
-- **The rotation receipt** carries `aoe` verbatim so the UI can explain
-  "this slot is AoE — it hits up to N champions" next to the rationale.
-
-The fight engine's own multi-target plumbing (`roster_target_count` in
-`FightConfig`/`target_stats`, item procs, Karthus Q) is untouched; the
-combo layer uses the same count for ranking.  The conservative cap keeps
-the model honest: we never claim more hits than the ability's shape
-allows, and the default 1v1 fight is unchanged (multiplier 1).
 
 ### Resolution chain (explicit order wins)
 
 ```
 /api/calculate payload cast_order  (user-supplied, validated permutation)
-   -> COMBO_TABLE rule              (this module — optimal per-champion order)
-   -> champion module CAST_ORDER    (certified orders: Jayce, Kai'Sa, ...)
-   -> DEFAULT_CAST_ORDER            (Q, Q2, W, E, R — no combo signal)
+   -> COMBO_TABLE rule              (10 verified F2 seeds — documented overrides)
+   -> ALGORITHMIC DERIVATION        (this module — every champion with atomized data)
+        edges?  -> constrained topological order + matrix-consistent DPS tie-break
+        no edges -> certified module CAST_ORDER or DEFAULT_CAST_ORDER (honest flat-kit)
 ```
 
-A combo rule's `order` may omit slots (Aatrox has no E; Annie's E is
-shield-only); the engine skips entries absent from the parsed ability
-package, and `resolve_auto_attack_policy` skips them too.
+`resolve_cast_order` returns a rule for EVERY champion in the cached
+data.  The derived rule carries `derived=True`; the ten seeds are the
+only `derived=False` rules.
 
-### The combo table (batch 1 — 10 champions)
+### The four signals (unchanged priorities)
 
-| Champion | Derived order | Driving atom / metadata | Setup → Consume |
-|----------|---------------|-------------------------|-----------------|
-| *(AoE caps)* | — | every rule carries `aoe` (slot → max champions hit, e.g. Brand W/E 5, Lux R 5, Jhin Q 4) | weighted into signal (b) |
-| Cassiopeia | `Q, E, W, R` | Q `Total Magic Damage` 3s poison (`dot_duration` 3.0, 7 ticks); E poisoned bonus via `target_poisoned` option; E cooldown 0.75s | Q/W → E |
-| Varus | `Q, E, R, W` | W `Bonus Magic Damage per Stack` (% max HP, `blight_stacks` max 3); W `on_hit` applies Blight per auto; Q `post_hit_proc` Blight Detonation | W(autos) → Q/E/R |
-| Brand | `Q, R, E, W` | P `Max Health Damage` 3-stack detonation; Q/W/E apply 1 Blaze stack; R applies 1 per bounce (`r_bounces`); E spreads Blaze | Q/R/W → E |
-| Vladimir | `R, Q, E, W` | R Hemoplague 10% damage-taken AMP (`r_hemoplague_debuff`); R detonation; W 2s DoT | R → all |
-| Aatrox | `R, Q, W` | R `stat_buff` `Bonus Attack Damage` percent_of AD; Q `Sweetspot Damage` rows; W `Total Damage` | R → Q/W |
-| Jhin | `Q, W, E, R` | P 4th-shot guaranteed crit + 15–25% missing health (`p_final_shot`/`p_shot_number`); R 4-shot barrage | autos → R |
-| Annie | `R, Q, W` | P Pyromania stun; R `Initial Magic Damage` + magic-pen `stat_buff` + `tibbers_attacks` | P → R/Q/W |
-| Lux | `E, Q, R, W` | E slow; Q root; R consumes Illumination (`p_illumination_procs`) | E/Q → R |
-| Zed | `W, E, Q, R` | W Living Shadow placement; E/Q `Physical Damage`; R Death Mark 100% AD + % of stored damage, 3s detonation | W → R(stores E+Q) |
-| Aphelios | `Q, W, R` | Q weapon-form variants (`aphelios_main_weapon`); W Phase swap (0.25s CD); R initial blast + follow-up | Q/W → R |
+| # | Signal | Atom surface | Weight |
+|---|--------|--------------|--------|
+| a | **Setup/consume edges** | parsed keys (`dot_duration`, `on_hit`, `applies_dot_stack`, `stacking_dot`, `post_hit_proc`, `target_debuff`, `stat_buff`, `cc_kind`, `recast_of`), module OPTION keys (`target_poisoned`, `blight_stacks`, `p_illumination_procs`, `r_hemoplague_debuff`, execute options, ...), structured wiki attribute rows ("Enhanced Damage", "Bonus Damage Per Stack", "Missing Health Damage") | strongest |
+| b | **Per-rank DPS** | `total_raw` / effective per-rank `cooldown` × AoE weight (`rank_ability_dps`) | strong, but matrix-gated |
+| c | **Cooldown gating** | the engine's shared cast timeline (`_schedule_shared_casts`) — placing the low-cooldown spam tool right after its setup starts its cadence earliest | tie-break |
+| d | **Buffs before damage** | `stat_buff` rows with damage-amp keys (bonus AD/AP, penetration) and damage-taken amplifiers open the burst | strong |
 
-Every rationale and source list is authored in `COMBO_TABLE` with the
-atom/attribute that drives it, so patch-day audits can re-verify each
-rule against the cached `data/champions.json` rows.
+### Edge detection — typed atoms only
 
-### Fallback
+`detect_setup_consume_edges` reads THREE typed atom surfaces and nothing
+else; free-form ability prose is never scanned (the only phrases used are
+the wiki's stable structured rows — "applies a stack of X", "become
+Chilled", "consumes the mark", "takes X% increased damage"):
 
-Champions with **no combo signal** keep the engine's historical
-`DEFAULT_CAST_ORDER` (`Q, Q2, W, E, R`) with a documented fallback
-rationale in the rotation receipt; champions with a certified module
-`CAST_ORDER` keep that reviewed order (those are themselves combos and
-migrate into `COMBO_TABLE` as they are re-certified).
+1. **Parsed ability package** (`ability_damages`) — `dot_duration`
+   (DoT application), `on_hit` (per-auto application), `applies_dot_stack`
+   / `stacking_dot` (stack application), `post_hit_proc` (detonation),
+   `target_debuff` (resistance shred / charm), `stat_buff` (damage-amp),
+   `cc_kind` on `parts` (crowd control), `recast_of` (parent cast).
+2. **Module OPTION keys** (`get_champion_options_meta`) — the typed
+   setup/consume atoms authored by the champion modules:
+   `target_poisoned`, `poison_stacks`, `blight_stacks`, `rend_stacks`,
+   `r_overwhelm_stacks`, `plasma_starting_stacks`,
+   `denting_blows_starting_stacks`, `p_illumination_procs`,
+   `q_marked_target`, `w_wounded`, `q_consume`, `q_execute`,
+   `e_execute`, `r_execute_ready`, `target_missing_hp_pct`,
+   `q_missing_health`, `w_target_missing_health`, `r_hemoplague_debuff`.
+   Self-generated stacks/buffs (`r_stacks`, `q_gathering_storm`,
+   `e_true_grit_stacks`, ...) are excluded by a closed vocabulary — they
+   are not target setup and create no cross-slot edge.
+3. **Structured wiki attribute rows** (`data/champions.json` leveling
+   rows) — "Enhanced Damage", "Total Enhanced Damage", "Bonus Damage Per
+   Stack", "Detonation Magic Damage", "Missing Health Damage", "Mark
+   Magic Damage", "Stored Damage".  These are the wiki's atomized
+   attributes, not prose.
+
+The edge taxonomy (closed, asserted by the tests):
+
+| Edge kind | Direction | Meaning |
+|-----------|-----------|---------|
+| `dot_consume` | Q/W → E | the consumer is enhanced vs the champion's DoT (Cassiopeia poison) |
+| `stack_consume` | applier → consumer | the consumer's damage scales per target stack (Darius R, Twitch E, Mel R, Kalista E) |
+| `detonate` | applier → detonator | the detonator procs the applied stacks (`post_hit_proc`, "Detonation Magic Damage") |
+| `mark_consume` | applier → consumer | the consumer detonates/consumes the mark (Evelynn Q, Lux R) |
+| `mark_applier` | applier → burst | the mark is consumed by ANY next damaging ability (LeBlanc Q, Ezreal W, Ryze E) |
+| `enhanced_consume` | applier → consumer | the consumer's "Enhanced Damage" row is conditional on a TARGET state (Anivia chill) |
+| `execute` | burst → execute | missing-health / stored-damage executes cast after the burst (Veigar R, Mel R, Pantheon Q) |
+| `shred` | shredder → burst | resistance-reduction `target_debuff` opens so the burst benefits (Sion E, Corki E, Jayce R) |
+| `buff` | buffer → burst | damage-amp `stat_buff` resolves before the abilities it amplifies (Vayne R, Twitch R, Darius E pen) |
+| `cc_setup` | CC → burst | `cc_kind` crowd control opens the burst (Ahri charm, Pantheon stun) |
+| `amp` | amplifier → burst | damage-taken amplifiers resolve first (Vladimir R Hemoplague) |
+| `recast` | parent → recast | a recast rides its parent's casts on the shared timeline (Q → Q2, Ambessa) |
+
+Consumers that are also detonators (e.g. Varus Q — `post_hit_proc` +
+missing-health rider) are positioned by the consume relationship; the
+execute rider does not re-order them.  Self-consumed mechanics
+(Tristana's Explosive Charge, Yasuo's Ride the Wind, Xerath's Arcane
+Perfection) produce no cross-slot edge and are flagged for the
+verification swarm when a known combo exists.
+
+### DPS tie-break with a stability gate
+
+Among the slots left unconstrained by the edges, the derivation ranks by
+per-rank DPS at the fight's stats — `total_raw` / effective cooldown,
+AoE-weighted (`rank_ability_dps`; ability haste cancels out of the
+relative ranking).  A DPS promotion is only applied when the resulting
+order **reproduces at every point of a reference matrix** — level 1/11/18
+× no-items/magic/physical/spellblade builds (the same builds the golden
+snapshot sweeps).  If the fight's DPS ranking disagrees with any matrix
+point, the free slots keep their certified/base relative order and the
+rationale says so explicitly.  This makes the derived order
+**deterministic across levels and items by construction** — the invariant
+the tests assert.
+
+The matrix parses are cached per champion (they depend only on the
+cached champion data, never on the request's level/build).
+
+### Fallback — the honest flat-kit classification
+
+A champion with NO detectable edge and flat abilities keeps the certified
+module `CAST_ORDER` when one exists (Jayce, Kai'Sa, Karthus, Shen,
+Taliyah, Vi), else the engine's historical `DEFAULT_CAST_ORDER`, and the
+rationale says exactly that: "no detectable setup/consume signal in the
+atomized ability data — no DoT/poison/mark/stack consumer, no resistance
+shred, no damage-amplifying buff, no missing-health execute".  This is
+the data-driven, honest fallback — not a hidden combo database.
+
+### The ten F2 seeds remain documented overrides
+
+`COMBO_TABLE` is unchanged from F2 (Cassiopeia, Varus, Brand, Vladimir,
+Aatrox, Jhin, Annie, Lux, Zed, Aphelios).  The resolver checks the table
+FIRST; the derivation never touches those ten.  Two seeds deliberately
+deviate from a detected data edge (the seed's judgment wins, documented
+in `tests/test_f3_rotation_all.py`):
+
+- **Cassiopeia**: W (Miasma) also applies poison → data says W→E, but
+  the seed casts E before W to start the 0.75s Twin Fang spam cadence
+  earlier on the shared timeline (W is zoning; Q is the poison).
+- **Varus**: R applies Blight stacks → data says R→Q, but the seed puts
+  the Blight DETONATOR Q first (the auto-applied stacks ride Q; R's own
+  stacks land later in the burst).
+
+### AoE — abilities that hit more than one champion
+
+The derived rule carries an `aoe` map (slot → conservative cap from the
+structured row fields: `targeting`/`spellEffects` "aoe"/"Area of effect"
+→ 5).  The DPS signal multiplies an AoE slot's effective DPS by
+`min(roster target count, cap)`, so roster fights (multi-target) rank AoE
+tools above single-target nukes of the same raw damage; the default 1v1
+fight is unchanged (multiplier 1).
 
 ## Rotation receipt (`/api/calculate`)
 
-Every calculate response now carries a `rotation` receipt so the UI can
-show *why* the order is optimal:
+Every calculate response carries a `rotation` receipt:
 
 ```json
 {
   "rotation": {
-    "order": ["Q", "E", "W", "R", "E", "E", "E", "Q", "E", ...],
-    "rationale": "Q (Noxious Blast) applies the 3s poison (7 ticks) first; E (Twin Fang) consumes the poison ...",
-    "cast_order": ["Q", "E", "W", "R"],
-    "sources": ["Q 'Total Magic Damage' 3s poison (dot_duration 3.0, 7 ticks)", "..."],
-    "setup": ["Q", "W"],
-    "consume": ["E"]
+    "order": ["E", "Q", "W", "R"],
+    "rationale": "E applies cc_kind crowd control — setup before Q. E applies cc_kind ... Derived order: E → Q → W → R.",
+    "cast_order": ["E", "Q", "W", "R"],
+    "sources": ["E applies cc_kind crowd control — setup before Q", "...", "free slots ranked by per-rank DPS ..."],
+    "setup": ["E"],
+    "consume": ["Q", "W", "R"]
   }
 }
 ```
 
-- `order` is the fight's **actual** cast sequence from the engine's
-  cooldown-aware `cast_timeline` — one-rotation mode: the derived
-  permutation, once per slot; timed mode: every recast at its cooldown
-  (Cassiopeia Q at t=0 / 3.75 / 7.5 with E-spam between, exactly the
-  "apply-before-consume, reapply at CD" cadence the product asked for).
-- `rationale` is the plain-language explanation shown verbatim.
-- `cast_order` is the derived permutation; `sources` names the atoms;
-  `setup` / `consume` expose the relationship machine-readably.
-- The fallback receipt for a champion with no combo signal explains that
-  the default order applies.
+- `rationale` names the specific atoms that drove the order (the edge
+  citations); `sources` lists them machine-readably.
+- `setup` / `consume` expose the detected relationship; `aoe` the caps.
+- The flat-kit fallback receipt says "no detectable setup/consume signal"
+  with the kept certified/default order.
 
 ## Cooldown gating in timed mode
 
-The resolver derives the *permutation*; the engine's existing shared
-cast timeline (`_schedule_shared_casts`) does the *cadence*: each cast
-occupies its `cast_time`, an ability recasts when its per-rank cooldown
-— running from the end of its cast — is back up and no other cast is in
-progress, with ties broken by `cast_order` position.  Putting the setup
-ability (Q) before the spam tool (E) means the spam cadence starts at
-the earliest possible moment: in a 3s fight the combo order lands 4
-Twin Fangs vs 3 under the fixed order; Zed's W-first order (zero cast
-time) lets E fire at t=0 and again at t=5.0 where the fixed order
-delays E to t=0.25 and misses the second cast.  These are the
-"expected and desired" golden diffs.
+Unchanged from F2: the engine's shared cast timeline schedules recasts at
+per-rank cooldowns running from the end of each cast, ties broken by
+`cast_order` position.  The derivation's job is the *permutation*; the
+cadence comes from the engine.
 
 ## Frontend
 
-`static/js/eventorder.js` is a self-contained module (no `app.js`
-edits).  It installs a read-only `window.fetch` wrapper before `app.js`
-loads, captures each `/api/calculate` response the app already makes,
-and renders the event-order panel into `#eventOrderPanel`
-(templates/index.html mount point): a chip rail of the cast sequence
-with times, the combo rationale, and the atom sources.  It never
-re-fetches, never mutates the app's responses, and stays hidden when no
-rotation receipt exists.
+Unchanged from F2 (`static/js/eventorder.js` is self-contained).
 
 ## Verification
 
-- `tests/test_f2_rotation.py` — per-combo-champion parse-level rotation
-  assertions (order + rationale + setup/consume) and time-based fights
-  asserting cooldown-respecting cadence (Cassiopeia Q at CD intervals
-  with E in between; Varus autos/Blight before Q detonation).
-- Golden snapshot re-captured: 13 entries change across 6 combo
-  champions (Cassiopeia, Brand, Vladimir, Aatrox, Annie, Zed) — every
-  diff is the optimal-order change (Shadowflame threshold allocation in
-  the magic build, or timed-mode cast counts), explained in the commit.
+- `tests/test_f3_rotation_all.py` — the combo-invariant suite for ALL 173
+  champions: (a) a derived order never violates a detected edge (setup
+  before consume); (b) the rationale cites real atoms; (c) the order is
+  deterministic and stable across the level/build matrix; (d) the order
+  is a permutation of the certified/base slots and the ten seeds stay as
+  overrides.  The two documented seed exceptions are pinned.
+- `tests/test_f2_rotation.py` — unchanged (F2 contract).
+- `docs/rotation-verification-gaps.md` — champions whose derivation is
+  ambiguous (conflicting atoms, or no data signal where a known combo
+  exists), queued for the F4 verification swarm.
+- Golden snapshot re-captured: derived orders change sustained-fight
+  totals for the reordered champions (Sion E-first shred, Dr. Mundo
+  E-first buff, Twitch R/W-first, Vayne R-first, Hwei R-first, Ahri
+  charm-first, ...) — every diff explained in the commit.

@@ -127,7 +127,7 @@
   {
    "id": "e9-e1-aatrox-umbral-dash-heal",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E1",
    "setup": {
     "champion": "Aatrox",
@@ -174,7 +174,7 @@
   {
    "id": "e9-e2-malzahar-malefic-visions",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E2",
    "setup": {
     "champion": "Malzahar",
@@ -210,7 +210,7 @@
   {
    "id": "e9-e3-varus-blight-detonation",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E3",
    "setup": {
     "champion": "Varus",
@@ -250,7 +250,7 @@
   {
    "id": "e9-e3-nasus-siphoning-stacks",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E3",
    "setup": {
     "champion": "Nasus",
@@ -289,7 +289,7 @@
   {
    "id": "e9-e4-zyra-plant-attacks",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E4",
    "setup": {
     "champion": "Zyra",
@@ -327,7 +327,7 @@
   {
    "id": "e9-e4-yorick-mist-walkers",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E4",
    "setup": {
     "champion": "Yorick",
@@ -369,7 +369,7 @@
   {
    "id": "e9-e5-zed-death-mark",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E5",
    "setup": {
     "champion": "Zed",
@@ -405,7 +405,7 @@
   {
    "id": "e9-e5-veigar-primordial-burst",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E5",
    "setup": {
     "champion": "Veigar",
@@ -441,7 +441,7 @@
   {
    "id": "e9-e5-sion-decimating-smash",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E5",
    "setup": {
     "champion": "Sion",
@@ -468,16 +468,16 @@
     "kind": "ability_event",
     "source": "Q",
     "raw_damage": 676.4,
-    "damage": 352.3,
+    "damage": 400.2,
     "time": 0.0,
-    "formula": "Decimating Smash fully charged (q_charge_fraction 1.0): 350 + 240% AD (136) = 676.4 raw physical; post-mitigation vs 92 armor = 352.3"
+    "formula": "F3 shred-first: E (Roar of the Slayer, 25% armor reduction) opens the rotation, so fully charged Decimating Smash (q_charge_fraction 1.0: 350 + 240% AD (136) = 676.4 raw) mitigates at Ahri's shredded armor 92 x 0.75 = 69 -> 676.4 x 100/169 = 400.2"
    },
    "practice_tool_steps": "Load Sion, buy nothing. Level 18, rank 5 Q. Practice Tool: fully charge Q on a practice dummy (2s charge); combat log shows the maximum Decimating Smash of 676.4 physical damage (before the dummy's armor)."
   },
   {
    "id": "e9-e8-rengar-battle-roar-grey",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E8",
    "setup": {
     "champion": "Rengar",
@@ -508,7 +508,7 @@
      {
       "source": "Battle Roar (grey health)",
       "time": 0.0,
-      "amount": 133.3
+      "amount": 97.2
      },
      {
       "source": "Battle Roar (grey health)",
@@ -517,15 +517,15 @@
      }
     ],
     "grey_health_stored": 1162.363,
-    "grey_health_consumed": 158.651,
-    "formula": "W stores 50% of post-mitigation damage taken in the last 1.5s: t=0 cast heals 0.5 x 266.5 opening burst = 133.3; t=10 cast heals 0.5 x 50.7 (taken at 9.703) = 25.4"
+    "grey_health_consumed": 122.588,
+    "formula": "W stores 50% of post-mitigation damage taken in the last 1.5s; the enemy Ahri's F3-derived order opens with E (charm) instead of Q, changing the t=0 opening burst stored (97.2 vs 133.3); the t=10 heal is unchanged at 25.4"
    },
    "practice_tool_steps": "Load Rengar, buy nothing. Level 18, max W. Practice Tool: let Ahri damage you, then cast W twice (t=0 and again ~10s later); the Battle Roar grey-health heal returns 50% of the damage stored in the previous 1.5s (combat log: 133.3 and 25.4 in this pattern)."
   },
   {
    "id": "e9-e8-annie-molten-shield",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -564,7 +564,7 @@
   {
    "id": "e9-e8-anivia-rebirth",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E8",
    "setup": {
     "champion": "Anivia",
@@ -604,7 +604,7 @@
   {
    "id": "e9-e8-morellonomicon-grievous",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E8",
    "setup": {
     "champion": "Aatrox",
@@ -671,7 +671,7 @@
   {
    "id": "e9-e8-serpents-fang-shield-cut",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -720,7 +720,7 @@
   {
    "id": "e9-item-serpents-fang-venom",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "item",
    "setup": {
     "champion": "Katarina",
@@ -757,19 +757,19 @@
    },
    "expected": {
     "kind": "venom_shield",
-    "shield": 174.6586,
-    "applied": 87.3293,
+    "shield": 180.235,
+    "applied": 90.1175,
     "venom_factor": 0.5,
     "venom_until": 5.899,
-    "received": 87.3,
-    "formula": "Katarina (melee) Serpent's Fang: Ahri's Fimbulwinter Everlasting shield (174.66, charm-triggered) is cut by the melee 50% while venom is active -> 87.33 applied"
+    "received": 90.1,
+    "formula": "Katarina (melee) Serpent's Fang: Ahri's Fimbulwinter Everlasting shield (180.235, charm-triggered under the F3-derived E-first order) is cut by the melee 50% while venom is active -> 90.1175 applied"
    },
    "practice_tool_steps": "Practice Tool: Katarina buys Serpent's Fang (melee -> 50% cut); Ahri buys Fimbulwinter. Ahri charms (immobilize triggers Everlasting); the shield 174.66 lands at 87.33 while Katarina's venom window is active (combat log)."
   },
   {
    "id": "e9-item-fimbulwinter-everlasting",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "item",
    "setup": {
     "champion": "Ahri",
@@ -808,7 +808,7 @@
   {
    "id": "e9-item-steraks-lifeline",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "item",
    "setup": {
     "champion": "Darius",
@@ -860,7 +860,7 @@
   {
    "id": "e9-item-bloodthirster-lifesteal",
    "tier": "local",
-   "sha": "5cc55d2e53ccd787fe4e7dfc5402822ae82a0e9f",
+   "sha": "adaa1be855fc3299cd66180de593fd646b743939",
    "workstream": "item",
    "setup": {
     "champion": "Ashe",
