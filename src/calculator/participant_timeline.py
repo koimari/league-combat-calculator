@@ -3058,17 +3058,6 @@ def _simulate_survival(
             state["venom_factor"] = 1.0
 
         if (
-            not state["threshold_shield_triggered"]
-            and state["threshold_shield"] > 0.0
-            and state["threshold_shield_duration"] > 0.0
-            and event_time > state["threshold_shield_duration"]
-            and state["threshold_shield_expired_at"] is None
-        ):
-            state["threshold_shield_expired_at"] = round(
-                state["threshold_shield_duration"], 3
-            )
-
-        if (
             state["temporary_health_amount"] > 0.0
             and state["temporary_health_until"] > 0.0
             and event_time >= state["temporary_health_until"]
@@ -3881,7 +3870,10 @@ def _simulate_survival(
             not state["threshold_shield_triggered"]
             and state["threshold_shield"] > 0.0
             and state["threshold_shield_threshold"] > 0.0
-            and event_time <= state["threshold_shield_duration"]
+            and (
+                state["threshold_shield_expired_at"] is None
+                or event_time <= state["threshold_shield_expired_at"]
+            )
             and state["health"] - amount <= state["threshold_shield_threshold"]
             and state["threshold_shield_damage_type"] in {"all", damage_type}
         )
@@ -3904,9 +3896,28 @@ def _simulate_survival(
                     # hit's venom was applied before the lifeline check.
                     granted *= state["venom_factor"]
                 state["threshold_shield_triggered"] = True
+                shield_expires_at = (
+                    event_time + state["threshold_shield_duration"]
+                    if state["threshold_shield_duration"] > 0.0
+                    else float("inf")
+                )
+                state["threshold_shield_expired_at"] = shield_expires_at
                 state["shields"]["general_shield"] += granted
+                if math.isfinite(shield_expires_at):
+                    state["timed_shields"].append(
+                        {
+                            "amount": granted,
+                            "expires_at": shield_expires_at,
+                            "shield_key": "general_shield",
+                            "source": "Lifeline",
+                        }
+                    )
                 state["threshold_shield"] = 0.0
                 event["threshold_shield_triggered"] = True
+                if math.isfinite(shield_expires_at):
+                    event["threshold_shield_expires_at"] = round(
+                        shield_expires_at, 3
+                    )
                 if state["maw_lifeline_omnivamp_percent"] > 0.0:
                     state["maw_lifeline_omnivamp_active"] = True
                     event["maw_lifeline_omnivamp_activated"] = round(
@@ -6812,6 +6823,33 @@ def build_participant_timeline(
                     else {}
                 ),
                 **(
+                    {
+                        "reactive_shield_triggered": dict(
+                            event["reactive_shield_triggered"]
+                        )
+                    }
+                    if event.get("reactive_shield_triggered")
+                    else {}
+                ),
+                **(
+                    {
+                        "maw_lifeline_omnivamp_activated": round(
+                            float(event["maw_lifeline_omnivamp_activated"]), 3
+                        )
+                    }
+                    if event.get("maw_lifeline_omnivamp_activated") is not None
+                    else {}
+                ),
+                **(
+                    {
+                        "threshold_shield_expires_at": round(
+                            float(event["threshold_shield_expires_at"]), 3
+                        )
+                    }
+                    if event.get("threshold_shield_expires_at") is not None
+                    else {}
+                ),
+                **(
                     {"threshold_health_triggered": True}
                     if event.get("threshold_health_triggered")
                     else {}
@@ -6859,6 +6897,29 @@ def build_participant_timeline(
                 **(
                     {"redirect_skipped_reason": str(event["redirect_skipped_reason"])}
                     if event.get("redirect_skipped_reason")
+                    else {}
+                ),
+                **(
+                    {
+                        "incoming_damage_multiplier": round(
+                            float(event["incoming_damage_multiplier"]), 3
+                        )
+                    }
+                    if event.get("incoming_damage_multiplier") is not None
+                    else {}
+                ),
+                **(
+                    {"incoming_damage_source": str(event["incoming_damage_source"])}
+                    if event.get("incoming_damage_source")
+                    else {}
+                ),
+                **(
+                    {
+                        "incoming_damage_reduction": round(
+                            float(event["incoming_damage_reduction"]), 1
+                        )
+                    }
+                    if event.get("incoming_damage_reduction") is not None
                     else {}
                 ),
                 **(
@@ -7018,6 +7079,20 @@ def build_participant_timeline(
                     else {}
                 ),
                 **({"grey_health": True} if event.get("_grey_health") else {}),
+                **(
+                    {
+                        "ichorshield_generated": round(
+                            float(event["ichorshield_generated"]), 1
+                        )
+                    }
+                    if event.get("ichorshield_generated") is not None
+                    else {}
+                ),
+                **(
+                    {"ichorshield_total": round(float(event["ichorshield_total"]), 1)}
+                    if event.get("ichorshield_total") is not None
+                    else {}
+                ),
             }
             for event in public_healing_events
         ],

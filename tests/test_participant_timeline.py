@@ -3495,7 +3495,10 @@ def test_survival_walk_arms_threshold_shield_before_crossing_health_boundary():
     assert result["target"]["ending_health_ratio"] == 0.5
 
 
-def test_threshold_shield_receipt_marks_expiry_without_late_trigger():
+def test_threshold_shield_stays_armed_past_duration_until_matching_type_hit():
+    """The Lifeline duration is the granted shield's expiry, not a trigger
+    window: an unmatched-type hit after the nominal duration must not
+    consume the shield or mark it expired."""
     source = _dummy_combatant("source", "enemy", health=100.0)
     target = Combatant(
         participant_id="target",
@@ -3532,8 +3535,52 @@ def test_threshold_shield_receipt_marks_expiry_without_late_trigger():
         10.0,
     )
     assert result["target"]["threshold_shield_triggered"] is False
-    assert result["target"]["threshold_shield_expired_at"] == 3.0
+    assert result["target"]["threshold_shield_expired_at"] is None
     assert result["target"]["shield_absorbed"] == 0.0
+
+
+def test_threshold_shield_triggers_on_late_matching_type_hit_and_expires_after_duration():
+    """A magic Lifeline must arm on a magic hit at any fight time, grant the
+    sourced shield, and expire exactly ``duration`` seconds after trigger."""
+    source = _dummy_combatant("source", "enemy", health=100.0)
+    target = Combatant(
+        participant_id="target",
+        team="main",
+        champion_data={"name": "target"},
+        level=1,
+        items=(),
+        stats={"health": 100.0},
+        defenses=SimpleNamespace(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=0.0,
+            threshold_shield_amount=30.0,
+            threshold_shield_health_ratio=0.3,
+            threshold_shield_duration=3.0,
+            threshold_shield_damage_type="magic",
+        ),
+    )
+    result = _simulate_survival(
+        [source, target],
+        {
+            "target": [
+                {
+                    "time": 4.0,
+                    "damage": 80.0,
+                    "damage_type": "magic",
+                    "attacker": "source",
+                    "_event_id": "late-lifeline",
+                }
+            ]
+        },
+        {},
+        {},
+        10.0,
+    )
+    assert result["target"]["threshold_shield_triggered"] is True
+    assert result["target"]["threshold_shield_expired_at"] == pytest.approx(7.0)
+    assert result["target"]["shield_absorbed"] == 30.0
+    assert result["target"]["ending_health"] == 50.0
 
 
 def test_threshold_shield_trigger_is_preserved_on_damage_receipt():
