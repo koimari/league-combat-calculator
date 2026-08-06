@@ -243,6 +243,42 @@ SOURCES = [
     },
 ]
 
-SLOTS = {"W": _wall_of_pain, "Q": _lay_waste, "E": _defile, "R": _requiem}
+
+def _death_defied(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: zero-damage receipt — a death-only trigger outside the fight.
+
+    Death Defied lets Karthus keep casting for 7 seconds after taking
+    fatal damage (including a channeled Requiem).  The deterministic
+    single-target fight has no death event for the main, so the passive
+    contributes zero damage here; this receipt documents the boundary
+    with its sourced trigger so the alive-state package is complete.
+    """
+    ability = ctx.ability("P", 0)
+    if ability is None:
+        return None
+    entry = damage_entry(
+        ability.get("name", "Death Defied"),
+        ctx.level,
+        0.0,
+        0.0,
+        "magic",
+    )
+    entry["parts"] = ()
+    entry["detail"] = (
+        "Post-death channel + Requiem: a death-only trigger the deterministic "
+        "alive-state fight cannot enter (the main never dies in the model); "
+        "priced at zero damage as a documented boundary. Requiem's damage is "
+        "already the sourced R row when the alive-state sequence casts it."
+    )
+    return entry
+
+
+SLOTS = {
+    "W": _wall_of_pain,
+    "Q": _lay_waste,
+    "E": _defile,
+    "R": _requiem,
+    "P": _death_defied,
+}
 
 parse_abilities = build_parser(SLOTS, "Karthus")

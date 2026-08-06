@@ -2673,6 +2673,43 @@ def _simulate_survival(
         event["ichorshield_total"] = round(state["ichorshield_current"], 6)
         return converted
 
+    def _apply_overheal_shield(
+        state: dict[str, Any],
+        event: MutableMapping[str, Any],
+        excess: float,
+        event_time: float,
+    ) -> float:
+        """Convert sourced overheal into a timed shield (Aphelios Severum).
+
+        Severum's wiki passive converts healing in excess of Aphelios'
+        maximum health into a shield capped at the sourced per-level
+        amount (10 : 160 by level + 6% maximum health) that lingers for
+        up to 30 seconds.  The healing rule stamps its Severum heal
+        events with ``overheal_to_shield``, ``overheal_shield_cap`` and
+        ``overheal_shield_duration``; the walk converts the excess (up to
+        the cap) into a timed general shield at the heal's timestamp.
+        Mirrors the Bloodthirster ichorshield conversion above; like it,
+        the compiled optimizer panel does not stage the conversion (the
+        visible /api/calculate receipt uses this authoritative walk).
+        """
+        if not event.get("overheal_to_shield"):
+            return 0.0
+        cap = max(0.0, float(event.get("overheal_shield_cap", 0.0) or 0.0))
+        duration = max(0.0, float(event.get("overheal_shield_duration", 0.0) or 0.0))
+        if cap <= 0.0 or duration <= 0.0:
+            return 0.0
+        converted = min(max(0.0, float(excess)), cap)
+        if converted <= 0.0:
+            return 0.0
+        state["shields"]["general_shield"] += converted
+        state["support_shield_received"] += converted
+        state["timed_shields"].append(
+            {"amount": converted, "expires_at": event_time + duration}
+        )
+        event["overheal_shield_generated"] = round(converted, 6)
+        event["overheal_shield_total"] = round(state["shields"]["general_shield"], 6)
+        return converted
+
     def _update_combat_state(
         participant_id: str, event: MutableMapping[str, Any], event_time: float
     ) -> None:
@@ -3556,7 +3593,15 @@ def _simulate_survival(
                 ichor_converted = _apply_ichorshield(
                     state, event, excess - temporary_health
                 )
-                state["overhealing"] += excess - temporary_health - ichor_converted
+                shield_converted = _apply_overheal_shield(
+                    state,
+                    event,
+                    excess - temporary_health - ichor_converted,
+                    event_time,
+                )
+                state["overhealing"] += (
+                    excess - temporary_health - ichor_converted - shield_converted
+                )
                 state["health"] += received
                 state["healing_received"] += received
                 if temporary_health > 0.0:
@@ -3580,8 +3625,11 @@ def _simulate_survival(
                     event["reduced_amount"] = round(reduced_amount, 6)
                     event["healing_reduction_factor"] = round(reduction_factor, 6)
                     event["overheal"] = round(
-                        excess - temporary_health - ichor_converted, 6
+                        excess - temporary_health - ichor_converted - shield_converted,
+                        6,
                     )
+                    if shield_converted > 0.0:
+                        event["overheal_shield"] = round(shield_converted, 6)
                 event["applied_amount"] = round(received, 6)
                 if event.get("_defy_trigger_id") is not None:
                     state["defy_heal_received"] += received
@@ -3638,7 +3686,15 @@ def _simulate_survival(
             ichor_converted = _apply_ichorshield(
                 state, event, excess - temporary_health
             )
-            state["overhealing"] += excess - temporary_health - ichor_converted
+            shield_converted = _apply_overheal_shield(
+                state,
+                event,
+                excess - temporary_health - ichor_converted,
+                event_time,
+            )
+            state["overhealing"] += (
+                excess - temporary_health - ichor_converted - shield_converted
+            )
             state["health"] += received
             state["healing_received"] += received
             if temporary_health > 0.0:
@@ -3661,8 +3717,11 @@ def _simulate_survival(
                 event["reduced_amount"] = round(reduced_amount, 6)
                 event["healing_reduction_factor"] = round(reduction_factor, 6)
                 event["overheal"] = round(
-                    excess - temporary_health - ichor_converted, 6
+                    excess - temporary_health - ichor_converted - shield_converted,
+                    6,
                 )
+                if shield_converted > 0.0:
+                    event["overheal_shield"] = round(shield_converted, 6)
             event["applied_amount"] = round(received, 6)
             if event.get("_defy_trigger_id") is not None:
                 state["defy_heal_received"] += received

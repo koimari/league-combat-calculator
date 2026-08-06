@@ -142,9 +142,14 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
         ability["name"], r_rank, 120.0, base + 0.20 * ad + ap, "physical"
     )
     entry["parts"] = (DamagePart("physical", amount=base + 0.20 * ad + ap),)
-    entry["detail"] = (
-        f"Moonlight Vigil initial blast · {_WEAPON_LABELS[_main_weapon(ctx)]} follow-up is event-ordered separately"
-    )
+    detail = f"Moonlight Vigil initial blast · {_WEAPON_LABELS[_main_weapon(ctx)]} follow-up is event-ordered separately"
+    # The healing rule reads this marker to gate Severum's overheal-to-
+    # shield conversion (the Shyvana dragon-form convention).
+    if _main_weapon(ctx) == "severum" and bool(
+        ctx.options.get("aphelios_overheal_shield", True)
+    ):
+        detail += " · overheal shield on"
+    entry["detail"] = detail
     return entry
 
 
@@ -185,12 +190,25 @@ OPTIONS = [
         "max": 6,
         "label": "Weapon Master lethality points",
     },
+    {
+        "key": "aphelios_overheal_shield",
+        "type": "bool",
+        "default": True,
+        "label": "Severum overheal converts into a shield",
+    },
 ]
 
 ASSUMPTIONS = [
     "The main weapon and Weapon Master skill-point allocation are explicit scenario inputs.",
     "Onslaught uses the Wiki attack-count rule and 20%-41% AD per attack; its on-hit item payload is not silently invented.",
     "Moonlight Vigil models the sourced initial blast; weapon-specific follow-up attacks remain listed in the result as a separate coverage boundary.",
+    "Severum's excess healing converts into a shield capped at the sourced "
+    "per-level 'Heal' row (10 : 160 by level + 6% maximum health) that "
+    "lingers for up to 30 seconds (wiki P prose); with "
+    "aphelios_overheal_shield (default True) the healing rule stamps each "
+    "Severum heal with the sourced cap and duration, and the participant "
+    "timeline converts heal-in-excess-of-maximum-health into a timed "
+    "shield at the heal's timestamp.",
 ]
 SOURCES = list(_packet_sources) + [
     {

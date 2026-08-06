@@ -255,6 +255,7 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Kha'Zix",
         "Kindred",
         "Lissandra",
+        "Master Yi",
         "Nidalee",
         "Naafiri",
         "Senna",
@@ -1288,6 +1289,25 @@ def derive_self_healing(
                 if ability_scaling is not None
                 else 0.0
             )
+            # Severum's wiki passive converts excess healing into a shield
+            # capped at the per-level "Heal" row (10 : 160 by level + 6%
+            # maximum health), lingering for up to 30 seconds.  In the
+            # fight's deterministic state the conversion is driven by the
+            # survival walk: each heal event carries the sourced cap and
+            # duration, and the participant timeline converts the excess
+            # (heal in excess of the fighter's maximum health, i.e. all of
+            # it while at full health) into a timed shield (the
+            # ``_apply_overheal_shield`` receipt).
+            heal_leveling = find_named_leveling(severum, "Heal")
+            shield_cap = (
+                sum_modifiers(heal_leveling, level, champion_stats, {})
+                if heal_leveling is not None
+                else 0.0
+            )
+            # The module stamps the option state on Moonlight Vigil's
+            # detail (the Shyvana dragon-form convention): "overheal shield
+            # on" when the user enabled the conversion (default on).
+            overheal_shield = "overheal shield on" in r_detail
             for event in damage_events:
                 source = _event_source(event)
                 if source == "auto_attacks":
@@ -1300,6 +1320,10 @@ def derive_self_healing(
                     continue
                 amount = max(0.0, float(event.get("damage", 0.0))) * ratio
                 _heal_from_damage(healing, event, amount, "Severum")
+                if overheal_shield and amount > 0.0 and shield_cap > 0.0:
+                    healing[-1]["overheal_to_shield"] = True
+                    healing[-1]["overheal_shield_cap"] = shield_cap
+                    healing[-1]["overheal_shield_duration"] = 30.0
 
     elif name == "Camille":
         # Tactical Sweep's outer half deals bonus damage and heals Camille
@@ -1746,6 +1770,38 @@ def derive_self_healing(
                     **_trigger_fields(event),
                 }
             )
+
+    elif name == "Master Yi":
+        # Meditate channels for up to 4 seconds, healing Master Yi every
+        # 0.5 seconds, increased by 0% : 100% (based on missing health)
+        # between the sourced Minimum Heal Per Tick and Maximum Heal Per
+        # Tick rows (8 ticks; Minimum/Maximum Total Heal == 8 x per-tick at
+        # every rank).  W deals no enemy damage, so the W cast timeline is
+        # the sourced trigger (Kayle W / Kindred R pattern).
+        w_rank = _rank(ability_damages, "W")
+        w_ability = _ability(champion_data, "W")
+        min_tick = extract_named(
+            w_ability, "Minimum Heal Per Tick", w_rank, champion_stats
+        )
+        max_tick = extract_named(
+            w_ability, "Maximum Heal Per Tick", w_rank, champion_stats
+        )
+        if min_tick > 0.0:
+            for cast_time in _cast_slot_times(cast_timeline, "W"):
+                start = float(cast_time)
+                for index in range(1, 9):
+                    healing.append(
+                        {
+                            "time": start + index * 0.5,
+                            "amount": 0.0,
+                            "amount_formula": _missing_health_scaled_heal(
+                                min_tick, max_tick
+                            ),
+                            "source": "Meditate",
+                            "kind": "champion_ability",
+                            "actor_wide": True,
+                        }
+                    )
 
     elif name == "Udyr":
         # Iron Mantle (W): the shield stance heals every 0.25 s over 4 s
