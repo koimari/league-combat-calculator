@@ -28,6 +28,20 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_batch_module("Nila
 # 100% AD x 1.91 == 191% AD), so the per-crit multiplier is
 # 1 + 0.91 x crit_chance.
 _Q_CRIT_MULTIPLIER_AT_MAX = 1.91
+# HARDCODED: verify on patch updates — Joy Unending (P) converts each
+# self-heal instance beyond maximum health into a shield lasting 6
+# seconds (cached passive description).  The conversion is an
+# excess-heal mechanic the shared ledger only prices for Bloodthirster
+# (its ichorshield path is item-gated), and the conversion % rides the
+# healing source itself: Q's Formless Blade autos heal 0% : 20% (based
+# on crit chance) of post-mitigation damage, R's Apotheosis heals
+# 20% : 50% (based on crit).  The mechanic is documented here with the
+# sourced conversion ratios; no flat shield amount is invented because
+# the excess is a live healing state, not a parse-time value.
+_NILAH_Q_HEAL_TO_SHIELD_MAX_RATIO = 0.20  # Q autos: 0% : 20% by crit
+_NILAH_R_HEAL_TO_SHIELD_MIN_RATIO = 0.20  # R: 20% : 50% by crit
+_NILAH_R_HEAL_TO_SHIELD_MAX_RATIO = 0.50
+_NILAH_EXCESS_SHIELD_DURATION_SECONDS = 6.0
 
 
 def _formless_blade(ctx: SlotCtx):
@@ -65,6 +79,12 @@ SLOTS["Q"] = _formless_blade
 parse_abilities = build_parser(SLOTS, "Nilah")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "P (Joy Unending) converts self-heal excess beyond maximum health "
+    "into a 6-second shield (cached description); the conversion ratios "
+    "are 0%:20% (Q autos) and 20%:50% (R) by critical strike chance "
+    "(module constants). The excess is a live healing state the shared "
+    "ledger only prices for Bloodthirster, so the conversion is "
+    "documented, not emitted as a fixed shield amount",
     "Q (Formless Blade) prices the wiki's 'Minimum Physical Damage' row "
     "(0-40 + 100% AD) as the 0%-crit base. The damage 'increased by "
     "0% : 70% (+ 0% : 21%) (based on critical strike chance)' with the "

@@ -34,6 +34,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
+    attach_self_shield,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -231,6 +232,47 @@ OPTIONS: list[dict[str, Any]] = [
     },
 ]
 
+# HARDCODED: verify on patch updates — Adaptive Defenses' shield amount,
+# duration, and damage-type adaptation are prose-only in the cached
+# passive description (data/champions.json, Camille P): "grants her a
+# shield equal to 20% of her maximum health, lasting for 2 seconds and
+# absorbing damage from either exclusively physical damage or magic
+# damage, based on which type the target has previously dealt most of".
+ADAPTIVE_DEFENSES_MAX_HP_RATIO = 0.20  # 20% of maximum health
+ADAPTIVE_DEFENSES_DURATION_SECONDS = 2.0
+
+
+def _tactical_sweep_with_shield(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: Tactical Sweep carrying Adaptive Defenses' pre-fight shield.
+
+    Adaptive Defenses triggers on Camille's next auto against a champion
+    — a passive with no cast.  The shield (20% max HP for 2s) rides the
+    first W damage event as a ``self_shield_events`` payload so the
+    ledger grants it before incoming damage; the damage-type adaptation
+    (physical OR magic, by the last damage type dealt to Camille) is a
+    documented boundary — the ledger's payload grants a general shield
+    that absorbs both types.
+    """
+    entry = _packet_w(ctx)
+    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+    if entry is None or rank < 1:
+        return entry
+    shield = ADAPTIVE_DEFENSES_MAX_HP_RATIO * ctx.stats.get("health", 0.0)
+    entry["event_order_certified"] = "single_hit"
+    return attach_self_shield(
+        entry,
+        amount=shield,
+        duration=ADAPTIVE_DEFENSES_DURATION_SECONDS,
+        source="Adaptive Defenses",
+        detail=(
+            f"W carries Adaptive Defenses' pre-fight shield: {shield:g} "
+            f"({ADAPTIVE_DEFENSES_MAX_HP_RATIO * 100:g}% of max HP) for "
+            f"{ADAPTIVE_DEFENSES_DURATION_SECONDS:g}s; the physical/magic "
+            "adaptation boundary is documented in ASSUMPTIONS"
+        ),
+    )
+
+
 ASSUMPTIONS = [
     "Q2 is always the delayed recast: doubled bonus damage and the "
     "level-based true conversion (36% + 4% per level, 100% from level 16)",
@@ -242,7 +284,12 @@ ASSUMPTIONS = [
     "W models the outer-cone sweet spot by default; W's self-heal and "
     "slow are not modeled",
     "E's 40-60% attack speed is applied for the whole fight (in-game: 5s "
-    "per cast); E's stun and the passive's shield are not modeled",
+    "per cast); E's stun is not modeled",
+    "P (Adaptive Defenses) is modeled as a pre-fight granted shield: 20% "
+    "of max HP for 2s riding the first W cast. The in-game trigger (the "
+    "next auto against a champion) and the physical/magic adaptation "
+    "are documented boundaries — the model grants a general shield that "
+    "absorbs both damage types",
     "R deals damage only through basic attacks on the trapped target: "
     "with autos disabled (or one-rotation mode) its row is 0. Rider "
     "procs are capped by the zone duration and use decaying current "
@@ -257,4 +304,7 @@ SLOTS = {
     "R": _hextech_ultimatum,
 }
 
+SLOTS = dict(SLOTS)
+_packet_w = SLOTS["W"]
+SLOTS["W"] = _tactical_sweep_with_shield
 parse_abilities = build_parser(SLOTS, "Camille")

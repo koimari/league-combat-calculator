@@ -26,6 +26,17 @@ _AP_PER_SOUL = 1.0
 _ARMOR_PER_SOUL = 1.0
 _DEFAULT_SOULS = 40
 _MAX_SOULS = 500
+# HARDCODED: verify on patch updates — Dark Passage's shield is an ALLY
+# shield: cached description ("Thresh and the first allied champion to
+# come near the lantern are granted a shield for 4 seconds") and the
+# Shield Strength row (50/70/90/110/130 + 2 per Soul collected).  The
+# ally-support scanner emits the packet to the selected teammate (its
+# description markers do not include Thresh himself as a recipient, so
+# in a 1v1 with no ally the packet is dropped — documented boundary);
+# the 2-per-Soul term is unpriced by the scanner, which reads the flat
+# component only.
+_DARK_PASSAGE_SHIELD_DURATION_SECONDS = 4.0
+_DARK_PASSAGE_SHIELD_PER_SOUL = 2.0
 
 
 def _damnation(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -82,7 +93,12 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "Each Soul grants 1 ability power and 1 bonus armor — wiki prose "
     "(module constants); the AP buff applies before all damage slots "
     "parse",
-    "W (Dark Passage) and all CC are utility only — no damage",
+    "W (Dark Passage) shields Thresh and the first allied champion for "
+    "4s at the cast; the ally-support scanner emits the ally packet "
+    "(flat 50/70/90/110/130; the +2-per-Soul term and Thresh's own "
+    "portion are documented boundaries), which absorbs incoming damage "
+    "in the participant ledger when a teammate is selected",
+    "All other CC is utility only — no damage",
 ]
 
 SOURCES = list(_packet_sources)

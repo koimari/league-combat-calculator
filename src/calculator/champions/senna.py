@@ -23,10 +23,9 @@ E3 additions over the CP10.7 packet module:
 
 from typing import Any
 
-from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .reviewed_batch_07 import build_batch_module
-from .slotlib import extract_value
+from .slotlib import attach_self_shield, extract_named, extract_value
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
     build_batch_module("Senna")
@@ -41,6 +40,14 @@ _MIST_STACKS_PER_THRESHOLD = 20
 _MIST_RANGE_PER_THRESHOLD = 20.0  # bonus attack range
 _MIST_CRIT_PER_THRESHOLD = 10.0  # % crit chance
 _MARK_STACKS = 2  # apply on hit 1, consume on hit 2
+# HARDCODED: verify on patch updates — Dawning Shadow's shield duration
+# (3s) and the 150% Mist scaling are cached leveling/prose (R "Shield
+# Strength": 120/160/200 + 50% AP + 150% Mist; description: "grants a
+# shield to Senna and allied champions hit for 3 seconds").  The Mist
+# term is 150% of the user-set Mist stack count (same ``senna_mist_stacks``
+# option as Absolution).
+_DAWNING_SHADOW_SHIELD_DURATION_SECONDS = 3.0
+_DAWNING_SHADOW_MIST_RATIO = 1.5  # 150% of Mist stacks
 
 
 def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -102,7 +109,42 @@ def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:
 _absolution.phase = BUFF
 
 
-SLOTS = {**_packet_slots, "P": _absolution}
+def _dawning_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: the reviewed physical hit plus Senna's own shield payload.
+
+    The light wave shields Senna herself as well as allies; the self
+    portion (flat + 50% AP + 150% Mist, 3s) rides the R damage event as
+    a ``self_shield_events`` payload.  The generic ally-support scanner
+    keeps emitting the ally-targeted Dark Passage-style packet for
+    selected teammates (it cannot price the Mist term), so the two
+    halves do not overlap on Senna herself.
+    """
+    entry = _packet_r(ctx)
+    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+    if entry is None or rank < 1:
+        return entry
+    ability = ctx.ability()
+    shield = extract_named(ability, "Shield Strength", rank, ctx.stats, ctx.target)
+    stacks = int(ctx.options.get("senna_mist_stacks", 40))
+    shield += _DAWNING_SHADOW_MIST_RATIO * stacks
+    entry["event_order_certified"] = "single_hit"
+    return attach_self_shield(
+        entry,
+        amount=shield,
+        duration=_DAWNING_SHADOW_SHIELD_DURATION_SECONDS,
+        source=entry.get("name", "Dawning Shadow"),
+        detail=(
+            f"R also shields Senna for {shield:g} for "
+            f"{_DAWNING_SHADOW_SHIELD_DURATION_SECONDS:g}s "
+            f"(flat + 50% AP + 150% of {stacks} Mist stacks)"
+        ),
+    )
+
+
+SLOTS = dict(_packet_slots)
+SLOTS["P"] = _absolution
+_packet_r = SLOTS["R"]
+SLOTS["R"] = _dawning_shadow
 parse_abilities = build_parser(SLOTS, "Senna")
 
 OPTIONS = list(_packet_options) + [
@@ -132,6 +174,10 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "overstates late-fight consumes",
     "Relic Cannon's on-hit 20% AD bonus physical damage is not modeled "
     "(the packet has no leveling row for it)",
+    "R (Dawning Shadow) also shields Senna herself for flat + 50% AP + "
+    "150% of the selected Mist stacks for 3s at the cast; the ally "
+    "half of the light wave is emitted by the ally-support scanner "
+    "without the Mist term (documented boundary)",
 ]
 
 SOURCES = list(_packet_sources)

@@ -101,6 +101,12 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "short_fuse_refund",
         "timeline_event_model",
         "dot_stack_count",
+        # Module-authored self-shield payloads (E8c).  A list aligned to the
+        # ability's damage-event ordinals; the fight engine copies each entry
+        # onto the matching damage event row as ``self_shield``, which the
+        # participant ledger turns into a timed self-shield event at that
+        # event's timestamp (the Eclipse item authors the same payload shape).
+        "self_shield_events",
     }
 )
 

@@ -58,6 +58,17 @@ _TRIGGER_PER_LEVEL = 10.0
 _BONUS_AUTO_RATIO = 0.4  # immunity-window autos deal 40% of the trigger
 # Stack-immunity window after a proc: 8/6/4s at champion levels 1/6/11.
 _IMMUNITY_BREAKPOINTS = ((11, 4.0), (6, 6.0), (1, 8.0))
+# HARDCODED: verify on patch updates — Unbreakable (E) is projectile-
+# blocking CC/mitigation state, not a shield: the cached leveling row
+# supplies only the barrier duration (3/3.25/3.5/3.75/4s) and the
+# description prose says the first champion-damage instance through the
+# barrier is reduced by 100%, with further instances reduced by
+# 35-55% (rank-based, wiki prose).  The shared ledger's shield events
+# price absorbing barriers, and the directional projectile block is not
+# expressible as a flat shield amount — the ability stays documented
+# state with the sourced duration pinned here.
+_UNBREAKABLE_REDUCTION_MIN = 0.35  # 35% at rank 1 (wiki prose)
+_UNBREAKABLE_REDUCTION_MAX = 0.55  # 55% at rank 5 (wiki prose)
 
 # Event kinds for the passive's hit timeline; Q sorts before autos on
 # equal timestamps (the rotation leads the fight model, as in damage.py).
@@ -297,8 +308,12 @@ ASSUMPTIONS = [
     "Q's 2.5% max HP scaling uses Braum's own built max HP",
     "Q applies a passive stack but no on-hit effects and no "
     "immunity-window bonus (autos only)",
-    "E (Unbreakable) is skipped: pure damage mitigation, no damage or "
-    "stats to model",
+    "E (Unbreakable) is documented as CC/mitigation state: a "
+    "directional projectile barrier lasting 3/3.25/3.5/3.75/4s (cached "
+    "Barrier Duration row) that reduces the first champion-damage "
+    "instance by 100% and further instances by 35-55% (wiki prose, "
+    "module constants). The ledger's shield events price absorbing "
+    "barriers, so no flat shield amount is invented",
     "W resistances affect the stats panel only; no damage in the kit "
     "scales off them",
 ]

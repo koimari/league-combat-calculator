@@ -4041,6 +4041,16 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 float(part.amount) * max(1, int(part.count)) for part in parts
             ),
         }
+        # Module-authored self-shield payloads (E8c) ride the ability's
+        # damage events: ``_ordered_damage_events`` copies each aligned
+        # entry onto the matching damage-event row as ``self_shield`` so the
+        # participant ledger can grant a timed self-shield at that event's
+        # timestamp.  The Eclipse item authors the identical breakdown shape
+        # (``self_shield_events``), so the ledger path is shared, not new.
+        if ability_info.get("self_shield_events") is not None:
+            breakdown[ability_key]["self_shield_events"] = ability_info[
+                "self_shield_events"
+            ]
         timing_is_authored = bool(parts) and all(
             part.time_offset is not None
             and (part.count <= 1 or part.hit_interval is not None)

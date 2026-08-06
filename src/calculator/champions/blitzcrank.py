@@ -30,6 +30,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
+    attach_self_shield,
     damage_entry,
     extract_cooldown,
     extract_value,
@@ -45,6 +46,15 @@ from .slotlib import (
 POWER_FIST_TOTAL_AD_RATIO = 1.0
 POWER_FIST_AP_RATIO = 0.25
 OVERDRIVE_DURATION_SECONDS = 5.0
+# HARDCODED: verify on patch updates — Mana Barrier's shield amount and
+# duration are prose-only in the cached passive description (data/
+# champions.json, Blitzcrank P): "when damaged to 30% maximum health,
+# Blitzcrank generates a shield equal to 35% of maximum mana, lasting
+# for up to 10 seconds", on the cached 90-second cooldown.  The 35% is
+# the cached wiki value at the last data pull (patch 25.22).
+MANA_BARRIER_SHIELD_RATIO = 0.35  # 35% of maximum mana
+MANA_BARRIER_DURATION_SECONDS = 10.0
+MANA_BARRIER_COOLDOWN_SECONDS = 90.0
 
 
 def _overdrive(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -149,7 +159,12 @@ def _static_field(ctx: SlotCtx) -> dict[str, Any] | None:
 OPTIONS: list[dict[str, Any]] = []
 
 ASSUMPTIONS = [
-    "Passive (Mana Barrier) not modeled — defensive shield only",
+    "P (Mana Barrier) is modeled as a pre-fight granted shield: the "
+    "cached passive (35% of maximum mana for up to 10s, 90s cooldown) "
+    "rides the first Q cast's event so the ledger grants it before "
+    "incoming damage. The in-game trigger (damage taken while below "
+    "30% max health) is a documented boundary — the pre-fight grant "
+    "approximates an always-ready barrier for the fight window",
     "W (Overdrive) attack speed (30-70%) is active for the first 5 "
     "seconds of the fight; fights of 5s or less have it up throughout. "
     "Movement speed and the post-buff slow are ignored",
@@ -161,6 +176,35 @@ ASSUMPTIONS = [
     "active; only the active burst is counted",
 ]
 
+
+def _rocket_grab(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: the clean magic hit carrying Mana Barrier's pre-fight shield.
+
+    Mana Barrier is a defensive passive, so it has no cast of its own;
+    the shield rides the first Q damage event (t=0 in one-rotation and
+    timed fights) as a ``self_shield_events`` payload, which the shared
+    ledger grants as a timed self-shield before incoming damage.
+    """
+    entry = _packet_q(ctx)
+    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+    if entry is None or rank < 1:
+        return entry
+    shield = MANA_BARRIER_SHIELD_RATIO * ctx.stats.get("max_mana", 0.0)
+    entry["event_order_certified"] = "single_hit"
+    return attach_self_shield(
+        entry,
+        amount=shield,
+        duration=MANA_BARRIER_DURATION_SECONDS,
+        source="Mana Barrier",
+        detail=(
+            f"Q carries Mana Barrier's pre-fight shield: {shield:g} "
+            f"({MANA_BARRIER_SHIELD_RATIO * 100:g}% of max mana) for up to "
+            f"{MANA_BARRIER_DURATION_SECONDS:g}s; the 30%-health trigger "
+            "boundary is documented in ASSUMPTIONS"
+        ),
+    )
+
+
 SLOTS = {
     "W": _overdrive,
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
@@ -168,4 +212,7 @@ SLOTS = {
     "R": _static_field,
 }
 
+SLOTS = dict(SLOTS)
+_packet_q = SLOTS["Q"]
+SLOTS["Q"] = _rocket_grab
 parse_abilities = build_parser(SLOTS, "Blitzcrank")

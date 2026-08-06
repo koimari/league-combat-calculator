@@ -422,6 +422,36 @@ def damage_entry(
     return entry
 
 
+def attach_self_shield(
+    entry: dict[str, Any],
+    *,
+    amount: float,
+    duration: float,
+    source: str,
+    detail: str | None = None,
+) -> dict[str, Any]:
+    """Attach a module-authored self-shield payload to an ability entry.
+
+    The payload shape mirrors the Eclipse item's ``self_shield_events``
+    breakdown receipt: the fight engine copies the list onto the
+    ability's damage-event rows (aligned by event ordinal), and the
+    participant ledger turns the first event's payload into a timed
+    self-shield at that event's timestamp.  Only abilities that emit
+    damage events can carry the payload (the ledger has no zero-damage
+    channel), so shield-only abilities stay on the ally-support scanner.
+    """
+    entry["self_shield_events"] = [
+        {
+            "amount": round(float(amount), 6),
+            "duration": float(duration),
+            "source": str(source),
+        }
+    ]
+    if detail:
+        entry["detail"] = detail
+    return entry
+
+
 def on_hit_entry(
     name: str,
     damage_per_hit: float,
