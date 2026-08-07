@@ -7,7 +7,7 @@ items, 0 resists unless noted) and asserts the corrected sourced rows:
 - Ahri    P Essence Theft heals 35 : 95 by level + 20% AP once per fight
           when 9+ fragments are supplied.
 - Illaoi  P tentacle hits heal 5% of the fighter's LIVE missing health.
-- Kled    Q (Pocket Pistol) declares Grievous Wounds at the engine's
+- Kled    declares no Grievous Wounds (removed V25.14; stale worklist)
           40%-for-3s constants.
 - LeeSin  Q prices Sonic Wave + the Resonating Strike recast (Min/Max
           Physical Damage rows interpolated by target missing health).
@@ -278,20 +278,17 @@ class TestIllaoiTentacleHeal:
 
 
 class TestKledGrievousWounds:
-    def test_pocket_pistol_declares_sourced_wound(self):
-        """Kled declares Q (Pocket Pistol) at the engine's 40%-for-3s."""
-        kled = get_champion("Kled")
-        assert champion_grievous_wound_sources(kled) == (
-            {
-                "source_key": "Q",
-                "source": "Kled · Pocket Pistol",
-                "factor": GRIEVOUS_WOUNDS_FACTOR,
-                "duration": GRIEVOUS_WOUNDS_DURATION,
-            },
-        )
+    def test_kled_declares_no_wound_source(self):
+        """Kled's wound was removed in V25.14 — no Q source may be declared.
 
-    def test_q_hit_wounds_enemy_self_healer(self):
-        """A Q hit wounds Aatrox: his heals inside the window are reduced."""
+        The e8-interactions worklist entry is stale; the wiki cache carries
+        no Grievous Wounds on either Q entry (autoresearch pass 11).
+        """
+        kled = get_champion("Kled")
+        assert champion_grievous_wound_sources(kled) == ()
+
+    def test_q_hit_does_not_wound_enemy_self_healer(self):
+        """A Q hit must not reduce Aatrox's healing (no wound to apply)."""
         data = _fight(
             "Kled",
             enemies=[
@@ -310,9 +307,9 @@ class TestKledGrievousWounds:
             if p["participant_id"].startswith("enemy")
         )
         survival = enemy["survival"]
-        assert survival["healing_reduced"] > 0.0
-        assert any(
-            "Kled · Pocket Pistol" in event.get("sources", [])
+        assert survival["healing_reduced"] == 0.0
+        assert not any(
+            "Kled" in event.get("sources", [])
             for event in survival["healing_reduction_events"]
         )
 
