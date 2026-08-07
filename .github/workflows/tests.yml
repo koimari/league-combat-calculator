@@ -99,14 +99,18 @@ jobs:
         run: |
           docker run --detach --name lol-calculator-smoke \
             --publish 127.0.0.1:18000:8000 lol-calculator:ci
-          trap 'docker rm --force lol-calculator-smoke' EXIT
+          # On ANY failing exit — including `set -e` mid-script — dump the
+          # container's own logs before cleanup.  A gunicorn worker-boot
+          # death (arbiter exit 3) once reached the health gate with only
+          # `docker inspect` output, and the worker's traceback was lost
+          # with the container.
+          trap 'status=$?; if [ "$status" -ne 0 ]; then docker logs lol-calculator-smoke; fi; docker rm --force lol-calculator-smoke; exit "$status"' EXIT
 
           for attempt in {1..45}; do
             if curl --fail --silent http://127.0.0.1:18000/healthz; then
               break
             fi
             if [ "$attempt" = 45 ]; then
-              docker logs lol-calculator-smoke
               exit 1
             fi
             sleep 1
