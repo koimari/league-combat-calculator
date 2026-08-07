@@ -130,6 +130,7 @@ from typing import Any, Callable, Mapping
 
 from . import item_effects
 from . import rune_effects
+from . import shield_ledger
 from .ability_spec import DamagePart
 from .resistance import (
     apply_resistance,
@@ -1706,31 +1707,47 @@ def _fimbulwinter_event_coverage(
 
 
 @dataclass
-class _ThresholdHealthState:
-    """Ordered temporary-health/healing state for Protoplasm Lifeline.
+class _ThresholdHealDrip:
+    """Protoplasm Harness's sourced heal, delivered over its duration.
 
-    The Wiki sources the pre-damage trigger, five-second health increase, and
-    heal. It does not document what happens to current health when that
-    temporary maximum health expires, so a fight reaching that boundary is
-    withheld instead of guessing.
+    ``shield_ledger`` owns the Lifeline itself — the threshold crossing and
+    the temporary bonus health. The Wiki sources the accompanying heal "over
+    the same duration", so this author delivers it between damage events
+    rather than in one lump. A fight reaching the temporary-health expiry is
+    withheld: the Wiki does not document what happens to current health when
+    that temporary maximum lapses.
     """
 
-    base_max_health: float
-    current_health: float
-    bonus_health: float = 0.0
-    heal_total: float = 0.0
-    health_ratio: float = 0.0
     duration: float = 0.0
+    heal_total: float = 0.0
     triggered: bool = False
     trigger_time: float = -1.0
     last_time: float = 0.0
     healing_received: float = 0.0
 
-    @property
-    def maximum_health(self) -> float:
-        return self.base_max_health + (self.bonus_health if self.triggered else 0.0)
+    def start(
+        self,
+        pools: shield_ledger.ShieldPools,
+        event_time: float,
+        armed: shield_ledger.Absorption,
+    ) -> None:
+        """Begin the drip on the instance whose damage armed the Lifeline.
 
-    def advance_to(self, event_time: float) -> None:
+        The window and the sourced total are read back off the armed Lifeline
+        rather than staged a second time here.  The arming instant already
+        delivered whatever the defender's missing health could take; only the
+        remainder drips, so the two authors never exceed the sourced amount.
+        """
+        self.triggered = True
+        self.trigger_time = event_time
+        self.last_time = event_time
+        self.duration = pools.threshold_health.duration
+        self.heal_total = max(
+            0.0, armed.threshold_health_heal - armed.threshold_health_healed
+        )
+        self.healing_received += armed.threshold_health_healed
+
+    def advance_to(self, pools: shield_ledger.ShieldPools, event_time: float) -> None:
         """Apply sourced over-time healing up to one incoming event."""
         if not self.triggered:
             self.last_time = max(self.last_time, event_time)
@@ -1744,91 +1761,16 @@ class _ThresholdHealthState:
             )
         elapsed = max(0.0, event_time - self.last_time)
         if (
-            self.current_health > 0
+            pools.health > 0
             and self.duration > 0
             and elapsed > 0
             and self.heal_total > 0
         ):
             offered = self.heal_total * elapsed / self.duration
-            received = min(offered, max(0.0, self.maximum_health - self.current_health))
-            self.current_health += received
+            received = min(offered, max(0.0, pools.max_health - pools.health))
+            pools.health += received
             self.healing_received += received
         self.last_time = max(self.last_time, event_time)
-
-    def trigger_before(self, damage: float, event_time: float) -> bool:
-        """Grant health before damage that would cross Lifeline's threshold."""
-        if (
-            self.triggered
-            or damage <= 0
-            or self.bonus_health <= 0
-            or self.health_ratio <= 0
-            or self.duration <= 0
-            or self.current_health - damage >= self.maximum_health * self.health_ratio
-        ):
-            return False
-        self.triggered = True
-        self.trigger_time = event_time
-        self.last_time = event_time
-        self.current_health += self.bonus_health
-        return True
-
-    def take_damage(self, damage: float) -> None:
-        self.current_health = max(0.0, self.current_health - max(0.0, damage))
-
-
-@dataclass
-class _LifelineShieldState:
-    """One-rotation Lifeline threshold shield: trigger, absorb, expire.
-
-    The shield arms before damage that would drop the target below its
-    health threshold, absorbs only its own damage type ("all", "magic",
-    or "physical"), and expires on its sourced duration. Both ordered
-    damage walks (_calculate_shadowflame_bonus and
-    _resolve_starting_shield_outcome) share this one rule.
-    """
-
-    amount: float
-    threshold_hp: float
-    duration: float
-    damage_type: str
-    shield: float = 0.0
-    expires: float = -1.0
-    triggered: bool = False
-    absorbed_total: float = 0.0
-
-    def expire_at(self, event_time: float) -> None:
-        """Drop an active shield whose duration lapsed before this event."""
-        if self.shield > 0 and event_time > self.expires:
-            self.shield = 0.0
-
-    def absorb(
-        self,
-        remaining: float,
-        damage_type: str,
-        event_time: float,
-        current_health: float,
-    ) -> float:
-        """Trigger on a threshold-crossing hit, then absorb matching damage."""
-        if remaining <= 0 or not self._matches(damage_type):
-            return 0.0
-        if (
-            not self.triggered
-            and self.amount > 0
-            and self.threshold_hp > 0
-            and current_health - remaining < self.threshold_hp
-        ):
-            self.triggered = True
-            self.shield = self.amount
-            self.expires = event_time + self.duration
-        if self.shield <= 0:
-            return 0.0
-        absorbed = min(self.shield, remaining)
-        self.shield -= absorbed
-        self.absorbed_total += absorbed
-        return absorbed
-
-    def _matches(self, damage_type: str) -> bool:
-        return self.damage_type in ("all", damage_type)
 
 
 _LIANDRY_BURN_KEY = "burn_Liandry's Torment"
@@ -1884,23 +1826,21 @@ def _calculate_shadowflame_bonus(
     if cast_order is None:
         cast_order = list(DEFAULT_CAST_ORDER)
     crit_bonus = effect.crit_multiplier - 1.0 if effect is not None else 0.0
-    health_state = _ThresholdHealthState(
-        base_max_health=target_health,
-        current_health=target_health,
-        bonus_health=max(0.0, target_threshold_health_bonus),
-        heal_total=max(0.0, target_threshold_health_heal),
-        health_ratio=max(0.0, target_threshold_health_ratio),
-        duration=max(0.0, target_threshold_health_duration),
+    pools = shield_ledger.build_pools(
+        target_health,
+        magic_shield=target_magic_shield,
+        physical_shield=target_physical_shield,
+        general_shield=target_general_shield,
+        threshold_shield_amount=target_threshold_shield_amount,
+        threshold_shield_health_ratio=target_threshold_shield_health_ratio,
+        threshold_shield_duration=target_threshold_shield_duration,
+        threshold_shield_damage_type=target_threshold_shield_damage_type,
+        threshold_health_bonus=target_threshold_health_bonus,
+        threshold_health_heal=target_threshold_health_heal,
+        threshold_health_ratio=target_threshold_health_ratio,
+        threshold_health_duration=target_threshold_health_duration,
     )
-    magic_shield = max(0.0, target_magic_shield)
-    physical_shield = max(0.0, target_physical_shield)
-    general_shield = max(0.0, target_general_shield)
-    lifeline_shield = _LifelineShieldState(
-        amount=target_threshold_shield_amount,
-        threshold_hp=target_health * max(0.0, target_threshold_shield_health_ratio),
-        duration=target_threshold_shield_duration,
-        damage_type=target_threshold_shield_damage_type,
-    )
+    heal_drip = _ThresholdHealDrip()
     total_bonus = 0.0
     bonus_by_type: dict[str, float] = {}
     bonus_events: list[dict[str, Any]] = []
@@ -1919,15 +1859,14 @@ def _calculate_shadowflame_bonus(
         damage = event["damage"]
         dtype = event["damage_type"]
         event_time = float(event["time"])
-        health_state.advance_to(event_time)
-        lifeline_shield.expire_at(event_time)
+        heal_drip.advance_to(pools, event_time)
         source_key = str(event.get("source_key", ""))
         if (
             source_key == _LIANDRY_BURN_KEY
-            and health_state.triggered
-            and event_time > health_state.trigger_time + 1e-9
+            and heal_drip.triggered
+            and event_time > heal_drip.trigger_time + 1e-9
         ):
-            adjusted = damage * health_state.maximum_health / target_health
+            adjusted = damage * pools.max_health / target_health
             liandry_delta += adjusted - damage
             damage = adjusted
         if source_key == _LIANDRY_BURN_KEY:
@@ -1942,8 +1881,7 @@ def _calculate_shadowflame_bonus(
         if (
             effect is not None
             and dtype in ("magic", "true")
-            and health_state.current_health
-            < health_state.maximum_health * effect.health_threshold
+            and pools.health < pools.max_health * effect.health_threshold
         ):
             bonus = damage * crit_bonus
             total_bonus += bonus
@@ -1959,29 +1897,15 @@ def _calculate_shadowflame_bonus(
             )
             event_damage += bonus
 
-        if dtype == "magic":
-            absorbed = min(magic_shield, event_damage)
-            magic_shield -= absorbed
-            event_damage -= absorbed
-        elif dtype == "physical":
-            absorbed = min(physical_shield, event_damage)
-            physical_shield -= absorbed
-            event_damage -= absorbed
-        if event_damage > 0:
-            absorbed = min(general_shield, event_damage)
-            general_shield -= absorbed
-            event_damage -= absorbed
-        event_damage -= lifeline_shield.absorb(
-            event_damage, dtype, event_time, health_state.current_health
-        )
-        health_state.trigger_before(event_damage, event_time)
-        health_state.take_damage(event_damage)
+        outcome = shield_ledger.absorb(pools, event_damage, dtype, event_time)
+        if outcome.threshold_health_triggered:
+            heal_drip.start(pools, event_time, outcome)
 
     adjustments = {
         "liandry_delta": liandry_delta,
         "liandry_events": liandry_events,
-        "threshold_health_triggered": health_state.triggered,
-        "threshold_health_trigger_time": health_state.trigger_time,
+        "threshold_health_triggered": heal_drip.triggered,
+        "threshold_health_trigger_time": heal_drip.trigger_time,
     }
     if return_adjustments:
         return total_bonus, bonus_by_type, bonus_events, adjustments
@@ -9906,51 +9830,35 @@ def _resolve_starting_shield_outcome(
     TDD remains damage dealt. Shields are reported as a separate defensive
     outcome so the UI does not hide how much of that damage reached health.
     """
-    magic_shield = max(0.0, config.target_magic_shield)
-    physical_shield = max(0.0, config.target_physical_shield)
-    general_shield = max(0.0, config.target_general_shield)
-    magic_absorbed = 0.0
-    physical_absorbed = 0.0
-    general_absorbed = 0.0
     repriced = False
-    health_state = _ThresholdHealthState(
-        base_max_health=state.target_health,
-        current_health=state.target_health,
-        bonus_health=max(0.0, config.target_threshold_health_bonus),
-        heal_total=max(0.0, config.target_threshold_health_heal),
-        health_ratio=max(0.0, config.target_threshold_health_ratio),
-        duration=max(0.0, config.target_threshold_health_duration),
+    pools = shield_ledger.build_pools(
+        state.target_health,
+        magic_shield=config.target_magic_shield,
+        physical_shield=config.target_physical_shield,
+        general_shield=config.target_general_shield,
+        threshold_shield_amount=config.target_threshold_shield_amount,
+        threshold_shield_health_ratio=config.target_threshold_shield_health_ratio,
+        threshold_shield_duration=config.target_threshold_shield_duration,
+        threshold_shield_damage_type=config.target_threshold_shield_damage_type,
+        threshold_health_bonus=config.target_threshold_health_bonus,
+        threshold_health_heal=config.target_threshold_health_heal,
+        threshold_health_ratio=config.target_threshold_health_ratio,
+        threshold_health_duration=config.target_threshold_health_duration,
     )
-    lifeline_shield = _LifelineShieldState(
-        amount=config.target_threshold_shield_amount,
-        threshold_hp=state.target_health
-        * max(0.0, config.target_threshold_shield_health_ratio),
-        duration=config.target_threshold_shield_duration,
-        damage_type=config.target_threshold_shield_damage_type,
-    )
-    if (
-        magic_shield <= 0.0
-        and physical_shield <= 0.0
-        and general_shield <= 0.0
-        and (lifeline_shield.amount <= 0.0 or lifeline_shield.threshold_hp <= 0.0)
-        and (
-            health_state.bonus_health <= 0.0
-            or health_state.health_ratio <= 0.0
-            or health_state.duration <= 0.0
-        )
-    ):
+    heal_drip = _ThresholdHealDrip()
+    threshold_health = pools.threshold_health
+    if shield_ledger.is_inert(pools):
         # No shield can absorb and no threshold state can arm: every
         # per-event absorption below is exactly ``- 0.0``, so the walk
         # reduces bit-for-bit to sequential floored health subtraction.
-        current_health = health_state.current_health
+        current_health = pools.health
         for event in damage_events:
             current_health = max(0.0, current_health - event["damage"])
-        health_state.current_health = current_health
+        pools.health = current_health
     else:
         for event in damage_events:
             event_time = float(event["time"])
-            health_state.advance_to(event_time)
-            lifeline_shield.expire_at(event_time)
+            heal_drip.advance_to(pools, event_time)
             remaining = float(event["damage"])
             raw_formula = event.get("raw_formula")
             raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
@@ -9959,15 +9867,13 @@ def _resolve_starting_shield_outcome(
                     0.0,
                     min(
                         1.0,
-                        1.0
-                        - health_state.current_health
-                        / max(health_state.maximum_health, 1e-12),
+                        1.0 - pools.health / max(pools.max_health, 1e-12),
                     ),
                 )
                 try:
                     live_raw = max(
                         0.0,
-                        float(raw_formula(missing_ratio, health_state.maximum_health)),
+                        float(raw_formula(missing_ratio, pools.max_health)),
                     )
                 except TypeError:
                     live_raw = max(0.0, float(raw_formula(missing_ratio)))
@@ -9976,26 +9882,11 @@ def _resolve_starting_shield_outcome(
                     repriced = True
                     remaining = live_damage
                     event["damage"] = live_damage
-            if event["damage_type"] == "magic":
-                absorbed = min(magic_shield, remaining)
-                magic_shield -= absorbed
-                magic_absorbed += absorbed
-                remaining -= absorbed
-            elif event["damage_type"] == "physical":
-                absorbed = min(physical_shield, remaining)
-                physical_shield -= absorbed
-                physical_absorbed += absorbed
-                remaining -= absorbed
-            absorbed = min(general_shield, remaining)
-            general_shield -= absorbed
-            general_absorbed += absorbed
-            remaining -= absorbed
-
-            remaining -= lifeline_shield.absorb(
-                remaining, event["damage_type"], event_time, health_state.current_health
+            outcome = shield_ledger.absorb(
+                pools, remaining, event["damage_type"], event_time
             )
-            health_state.trigger_before(remaining, event_time)
-            health_state.take_damage(remaining)
+            if outcome.threshold_health_triggered:
+                heal_drip.start(pools, event_time, outcome)
 
     if repriced:
         repriced_by_source: dict[str, list[float]] = {}
@@ -10019,24 +9910,23 @@ def _resolve_starting_shield_outcome(
             if isinstance(entry, dict) and not entry.get("informational")
         )
 
-    threshold_absorbed = lifeline_shield.absorbed_total
-    absorbed = (
-        magic_absorbed + physical_absorbed + general_absorbed + threshold_absorbed
-    )
+    absorbed = pools.shield_absorbed
     return {
         "shield_absorbed": absorbed,
-        "magic_shield_absorbed": magic_absorbed,
-        "physical_shield_absorbed": physical_absorbed,
-        "general_shield_absorbed": general_absorbed,
-        "threshold_shield_absorbed": threshold_absorbed,
+        "magic_shield_absorbed": pools.magic_absorbed,
+        "physical_shield_absorbed": pools.physical_absorbed,
+        "general_shield_absorbed": pools.general_absorbed,
+        "threshold_shield_absorbed": pools.threshold_absorbed,
         "health_damage": max(0.0, state.total_damage - absorbed),
-        "threshold_health_triggered": health_state.triggered,
+        "threshold_health_triggered": heal_drip.triggered,
         "threshold_health_bonus_gained": (
-            health_state.bonus_health if health_state.triggered else 0.0
+            threshold_health.bonus
+            if threshold_health is not None and threshold_health.triggered
+            else 0.0
         ),
-        "target_healing_received": health_state.healing_received,
-        "target_ending_health": health_state.current_health,
-        "target_effective_max_health": health_state.maximum_health,
+        "target_healing_received": heal_drip.healing_received,
+        "target_ending_health": pools.health,
+        "target_effective_max_health": pools.max_health,
     }
 
 

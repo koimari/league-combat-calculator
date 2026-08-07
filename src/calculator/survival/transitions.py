@@ -45,6 +45,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, MutableMapping, Sequence
 
 from .actions import ActionKind, SurvivalAction
+from .. import shield_ledger
 from ..healing_reduction import GRIEVOUS_WOUNDS_FACTOR, matching_healing_reduction
 from ..item_effects import sustain_effect_value
 from ..resistance import apply_resistance
@@ -93,13 +94,39 @@ def evaluate_live_raw_formula(
         return max(0.0, float(raw_formula(missing_ratio)))
 
 
-def participant_defenses(defenses: Any) -> dict[str, float]:
-    """The starting shield pools every participant state is armed with."""
-    return {
-        "magic_shield": max(0.0, float(defenses.magic_shield)),
-        "physical_shield": max(0.0, float(defenses.physical_shield)),
-        "general_shield": max(0.0, float(defenses.general_shield)),
-    }
+def participant_pools(combatant: Any) -> shield_ledger.ShieldPools:
+    """Stage one participant's starting health, shields, and Lifelines."""
+    defenses = combatant.defenses
+    return shield_ledger.build_pools(
+        max(0.0, float(combatant.stats.get("health", 0.0))),
+        magic_shield=float(defenses.magic_shield),
+        physical_shield=float(defenses.physical_shield),
+        general_shield=float(defenses.general_shield),
+        threshold_shield_amount=max(
+            0.0, float(getattr(defenses, "threshold_shield_amount", 0.0) or 0.0)
+        ),
+        threshold_shield_health_ratio=max(
+            0.0, float(getattr(defenses, "threshold_shield_health_ratio", 0.0) or 0.0)
+        ),
+        threshold_shield_duration=max(
+            0.0, float(getattr(defenses, "threshold_shield_duration", 0.0) or 0.0)
+        ),
+        threshold_shield_damage_type=str(
+            getattr(defenses, "threshold_shield_damage_type", "all") or "all"
+        ),
+        threshold_health_bonus=max(
+            0.0, float(getattr(defenses, "threshold_health_bonus", 0.0) or 0.0)
+        ),
+        threshold_health_heal=max(
+            0.0, float(getattr(defenses, "threshold_health_heal", 0.0) or 0.0)
+        ),
+        threshold_health_ratio=max(
+            0.0, float(getattr(defenses, "threshold_health_ratio", 0.0) or 0.0)
+        ),
+        threshold_health_duration=max(
+            0.0, float(getattr(defenses, "threshold_health_duration", 0.0) or 0.0)
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -145,99 +172,6 @@ class TransitionContext:
         return self.reduction_profiles[attacker]
 
 
-# ---------------------------------------------------------------------------
-# Timed shields and shield pools
-# ---------------------------------------------------------------------------
-
-
-def expire_timed_shields(state: dict[str, Any], event_time: float) -> None:
-    """Remove unused timed shields before an event at their expiry."""
-    remaining: list[dict[str, Any]] = []
-    for shield in state["timed_shields"]:
-        expires_at = float(shield.get("expires_at", 0.0) or 0.0)
-        amount = max(0.0, float(shield.get("amount", 0.0) or 0.0))
-        if expires_at <= event_time + 1e-9:
-            if amount > 0.0:
-                shield_key = str(shield.get("shield_key", "general_shield"))
-                if shield_key not in state["shields"]:
-                    shield_key = "general_shield"
-                state["shields"][shield_key] = max(
-                    0.0, state["shields"][shield_key] - amount
-                )
-                state["support_shield_expired"] += amount
-            continue
-        remaining.append(shield)
-    state["timed_shields"] = remaining
-
-
-def consume_general_shield(state: dict[str, Any], amount: float) -> float:
-    """Consume earliest-expiring timed shields before untimed general ones."""
-    remaining = max(0.0, float(amount))
-    absorbed = 0.0
-    for shield in sorted(
-        state["timed_shields"],
-        key=lambda entry: float(entry.get("expires_at", float("inf"))),
-    ):
-        if str(shield.get("shield_key", "general_shield")) != "general_shield":
-            continue
-        available = max(0.0, float(shield.get("amount", 0.0) or 0.0))
-        used = min(available, remaining)
-        if used <= 0.0:
-            continue
-        shield["amount"] = available - used
-        remaining -= used
-        absorbed += used
-        state["shields"]["general_shield"] = max(
-            0.0, state["shields"]["general_shield"] - used
-        )
-        if remaining <= 1e-9:
-            break
-    if remaining > 0.0:
-        used = min(state["shields"]["general_shield"], remaining)
-        state["shields"]["general_shield"] -= used
-        absorbed += used
-    state["timed_shields"] = [
-        shield
-        for shield in state["timed_shields"]
-        if float(shield.get("amount", 0.0) or 0.0) > 1e-9
-    ]
-    return absorbed
-
-
-def consume_typed_shield(
-    state: dict[str, Any], shield_key: str, amount: float
-) -> float:
-    """Consume a typed timed shield before the untimed typed pool."""
-    remaining = max(0.0, float(amount))
-    absorbed = 0.0
-    for shield in sorted(
-        state["timed_shields"],
-        key=lambda entry: float(entry.get("expires_at", float("inf"))),
-    ):
-        if str(shield.get("shield_key", "general_shield")) != shield_key:
-            continue
-        available = max(0.0, float(shield.get("amount", 0.0) or 0.0))
-        used = min(available, remaining)
-        if used <= 0.0:
-            continue
-        shield["amount"] = available - used
-        remaining -= used
-        absorbed += used
-        state["shields"][shield_key] = max(0.0, state["shields"][shield_key] - used)
-        if remaining <= 1e-9:
-            break
-    if remaining > 0.0:
-        used = min(state["shields"][shield_key], remaining)
-        state["shields"][shield_key] -= used
-        absorbed += used
-    state["timed_shields"] = [
-        shield
-        for shield in state["timed_shields"]
-        if float(shield.get("amount", 0.0) or 0.0) > 1e-9
-    ]
-    return absorbed
-
-
 def expire_temporary_health(state: dict[str, Any], event_time: float) -> bool:
     """Expire a temporary-health window at ``event_time``; return whether any
     bonus was removed (the authoritative walk's exact clamp semantics)."""
@@ -248,8 +182,8 @@ def expire_temporary_health(state: dict[str, Any], event_time: float) -> bool:
     ):
         return False
     expired = state["temporary_health_amount"]
-    state["max_health"] = max(0.0, state["max_health"] - expired)
-    state["health"] = min(state["health"], state["max_health"])
+    state["pools"].max_health = max(0.0, state["pools"].max_health - expired)
+    state["pools"].health = min(state["pools"].health, state["pools"].max_health)
     state["temporary_health_amount"] = 0.0
     state["temporary_health_expired_at"] = round(state["temporary_health_until"], 3)
     state["temporary_health_until"] = 0.0
@@ -435,7 +369,7 @@ def apply_ichorshield(
     if converted <= 0.0:
         return 0.0
     state["ichorshield_current"] += converted
-    state["shields"]["general_shield"] += converted
+    shield_ledger.grant(state["pools"], converted)
     state["support_shield_received"] += converted
     ctx.ledger.write(
         action,
@@ -469,18 +403,16 @@ def apply_overheal_shield(
     converted = min(max(0.0, float(excess)), action.overheal_shield_cap)
     if converted <= 0.0:
         return 0.0
-    state["shields"]["general_shield"] += converted
-    state["support_shield_received"] += converted
-    state["timed_shields"].append(
-        {
-            "amount": converted,
-            "expires_at": event_time + action.overheal_shield_duration,
-        }
+    shield_ledger.grant(
+        state["pools"],
+        converted,
+        expires_at=event_time + action.overheal_shield_duration,
     )
+    state["support_shield_received"] += converted
     ctx.ledger.write(
         action,
         overheal_shield_generated=round(converted, 6),
-        overheal_shield_total=round(state["shields"]["general_shield"], 6),
+        overheal_shield_total=round(state["pools"].general_shield, 6),
     )
     return converted
 
@@ -507,8 +439,8 @@ def recovery_multiplier(state: Mapping[str, Any], action: SurvivalAction) -> flo
     )
     if (
         below_half_bonus > 0.0
-        and state["max_health"] > 0.0
-        and state["health"] <= state["max_health"] * 0.5 + 1e-9
+        and state["pools"].max_health > 0.0
+        and state["pools"].health <= state["pools"].max_health * 0.5 + 1e-9
     ):
         multiplier *= 1.0 + below_half_bonus
     return multiplier
@@ -546,8 +478,10 @@ def schedule_doran_shield_recovery(
         return
     current_state = state
     missing_ratio = (
-        max(0.0, 1.0 - current_state["health"] / current_state["max_health"])
-        if current_state["max_health"] > 0.0
+        max(
+            0.0, 1.0 - current_state["pools"].health / current_state["pools"].max_health
+        )
+        if current_state["pools"].max_health > 0.0
         else 0.0
     )
     if missing_ratio <= 0.0:
@@ -748,20 +682,18 @@ def grant_reactive_shield(
     # resolves this item-owned amount. Do not multiply it again at
     # trigger time.
     shield_amount = state["reactive_shield_amount"]
-    if state["venom_factor"] < 1.0 and reactive_type != "magic":
+    if state["pools"].venom_factor < 1.0 and reactive_type != "magic":
         # Venom cuts non-magic shields the target gains; the reactive
         # barrier is granted by this same damaging hit, whose venom
         # was already applied above.
-        shield_amount *= state["venom_factor"]
-    state["shields"][f"{reactive_type}_shield"] += shield_amount
+        shield_amount *= state["pools"].venom_factor
     expires_at = event_time + state["reactive_shield_duration"]
-    state["timed_shields"].append(
-        {
-            "amount": shield_amount,
-            "expires_at": expires_at,
-            "shield_key": f"{reactive_type}_shield",
-            "source": state["reactive_shield_source"],
-        }
+    shield_ledger.grant(
+        state["pools"],
+        shield_amount,
+        pool=reactive_type,
+        expires_at=expires_at,
+        source=state["reactive_shield_source"],
     )
     state["support_shield_received"] += shield_amount
     state["reactive_shield_cooldown_until"] = (
@@ -794,16 +726,16 @@ def _apply_revive(
         return
     ratio = max(0.0, min(1.0, action.health_ratio))
     amount = max(0.0, action.amount)
-    restore = amount if amount > 0.0 else state["max_health"] * ratio
-    state["health"] = min(state["max_health"], restore)
+    restore = amount if amount > 0.0 else state["pools"].max_health * ratio
+    state["pools"].health = min(state["pools"].max_health, restore)
     state["death_time"] = None
     state["revive_time"] = float(action.time)
     state["revive_source"] = str(action.source or action.source_key or "Revive")
-    state["revive_health_restored"] = float(state["health"])
+    state["revive_health_restored"] = float(state["pools"].health)
     state["revived"] = True
     state["revive_used"] = True
     state["terminal_phase"] = "revived"
-    ctx.ledger.write(action, applied_amount=round(state["health"], 6))
+    ctx.ledger.write(action, applied_amount=round(state["pools"].health, 6))
 
 
 def _apply_combat_state_transition(
@@ -848,23 +780,22 @@ def _apply_shield(
     Fang venom cuts shields the target gains while its window is active."""
     amount = max(0.0, action.amount)
     amount *= state["healing_received_multiplier"]
-    if state["venom_factor"] < 1.0:
-        amount *= state["venom_factor"]
+    if state["pools"].venom_factor < 1.0:
+        amount *= state["pools"].venom_factor
         ctx.ledger.annotate(
             action,
             venom={
-                "factor": round(state["venom_factor"], 6),
+                "factor": round(state["pools"].venom_factor, 6),
                 "until": round(state["venom_until"], 6),
             },
         )
     if amount <= 0.0:
         ctx.ledger.skip(action, "shield_not_available")
         return
-    state["shields"]["general_shield"] += amount
+    expires_at = action.time + action.duration if action.duration > 0.0 else None
+    shield_ledger.grant(state["pools"], amount, expires_at=expires_at)
     state["support_shield_received"] += amount
-    if action.duration > 0.0:
-        expires_at = action.time + action.duration
-        state["timed_shields"].append({"amount": amount, "expires_at": expires_at})
+    if expires_at is not None:
         ctx.ledger.write(action, expires_at=round(expires_at, 3))
     ctx.ledger.write(action, applied_amount=round(amount, 6))
 
@@ -967,8 +898,8 @@ def _apply_temp_health(
     if amount <= 0.0 or action.duration <= 0.0:
         ctx.ledger.skip(action, "temporary_health_not_available")
         return
-    state["max_health"] += amount
-    state["health"] += amount
+    state["pools"].max_health += amount
+    state["pools"].health += amount
     state["temporary_health_received"] += amount
     state["temporary_health_amount"] += amount
     state["temporary_health_until"] = max(
@@ -994,9 +925,9 @@ def _apply_heal(
     event_time = action.time
     if (
         action.requires_holder_health_ratio > 0.0
-        and state["max_health"] > 0.0
-        and state["health"]
-        <= state["max_health"] * action.requires_holder_health_ratio + 1e-9
+        and state["pools"].max_health > 0.0
+        and state["pools"].health
+        <= state["pools"].max_health * action.requires_holder_health_ratio + 1e-9
     ):
         ctx.ledger.skip(action, "holder_health_gate")
         return
@@ -1006,7 +937,9 @@ def _apply_heal(
     amount = max(0.0, action.amount)
     amount_formula = action.amount_formula
     if callable(amount_formula):
-        amount = max(0.0, float(amount_formula(state["health"], state["max_health"])))
+        amount = max(
+            0.0, float(amount_formula(state["pools"].health, state["pools"].max_health))
+        )
     amount *= recovery_multiplier(state, action)
     reduction_factor = (
         1.0
@@ -1017,7 +950,7 @@ def _apply_heal(
     state["healing_reduced"] += max(0.0, amount - reduced_amount)
     received = min(
         reduced_amount,
-        max(0.0, state["max_health"] - state["health"]),
+        max(0.0, state["pools"].max_health - state["pools"].health),
     )
     excess = max(0.0, reduced_amount - received)
     temporary_duration = max(0.0, action.temporary_health_duration)
@@ -1039,11 +972,11 @@ def _apply_heal(
     state["overhealing"] += (
         excess - temporary_health - ichor_converted - shield_converted
     )
-    state["health"] += received
+    state["pools"].health += received
     state["healing_received"] += received
     if temporary_health > 0.0:
-        state["max_health"] += temporary_health
-        state["health"] += temporary_health
+        state["pools"].max_health += temporary_health
+        state["pools"].health += temporary_health
         state["temporary_health_received"] += temporary_health
         state["temporary_health_amount"] += temporary_health
         state["temporary_health_until"] = max(
@@ -1290,18 +1223,18 @@ def _apply_damage(
     if action.kind is not ActionKind.PLAIN_DAMAGE:
         raw_formula = action.raw_formula
         raw_damage = action.raw_damage
-        if callable(raw_formula) and raw_damage > 0 and state["max_health"] > 0:
+        if callable(raw_formula) and raw_damage > 0 and state["pools"].max_health > 0:
             # The one-attacker engine prices a target-health formula against
             # that pair's full-health target.  Re-price only the sourced
             # health-dependent component here; all typed mitigation and item
             # amplifiers remain represented by the original damage/raw ratio.
             missing_ratio = max(
                 0.0,
-                min(1.0, 1.0 - state["health"] / state["max_health"]),
+                min(1.0, 1.0 - state["pools"].health / state["pools"].max_health),
             )
             try:
                 live_raw = evaluate_live_raw_formula(
-                    raw_formula, missing_ratio, state["max_health"]
+                    raw_formula, missing_ratio, state["pools"].max_health
                 )
             except (TypeError, ValueError):
                 live_raw = raw_damage
@@ -1311,7 +1244,6 @@ def _apply_damage(
         pair_damage=round(original_amount, 6),
         live_damage=round(amount, 6),
     )
-    state["damage_taken"] += amount
     # Serpent's Fang venom rides every damaging hit: it applies before
     # any shield the same hit grants (threshold lifeline, reactive
     # barriers) and refreshes the window on each successive hit.
@@ -1321,118 +1253,48 @@ def _apply_damage(
         state["venom_until"] = max(
             state["venom_until"], float(event_time) + venom_duration
         )
-        state["venom_factor"] = min(state["venom_factor"], venom_keep)
+        state["pools"].venom_factor = min(state["pools"].venom_factor, venom_keep)
         state["venom_events"].append(
             {
                 "time": round(float(event_time), 3),
                 "until": round(state["venom_until"], 3),
-                "factor": round(state["venom_factor"], 6),
+                "factor": round(state["pools"].venom_factor, 6),
             }
         )
         ctx.ledger.annotate(
             action,
             venom={
-                "factor": round(state["venom_factor"], 6),
+                "factor": round(state["pools"].venom_factor, 6),
                 "until": round(state["venom_until"], 6),
             },
         )
     damage_type = action.damage_type
-    event_absorbed = 0.0
-    if damage_type in {"magic", "physical"}:
-        key = f"{damage_type}_shield"
-        absorbed = consume_typed_shield(state, key, amount)
-        amount -= absorbed
-        state["shield_absorbed"] += absorbed
-        event_absorbed += absorbed
-    # Lifeline-style threshold shields and temporary health are armed by
-    # the post-starting-shield damage that would cross the authored
-    # health threshold.  They expire on their sourced duration and never
-    # trigger a second time in the same fight.
-    threshold_due = (
-        not state["threshold_shield_triggered"]
-        and state["threshold_shield"] > 0.0
-        and state["threshold_shield_threshold"] > 0.0
-        and (
-            state["threshold_shield_expired_at"] is None
-            or event_time <= state["threshold_shield_expired_at"]
-        )
-        and state["health"] - amount <= state["threshold_shield_threshold"]
-        and state["threshold_shield_damage_type"] in {"all", damage_type}
-    )
-    health_due = (
-        not state["threshold_health_triggered"]
-        and state["threshold_health_bonus"] > 0.0
-        and state["threshold_health_ratio"] > 0.0
-        and state["threshold_health_duration"] > 0.0
-        and state["health"] - amount
-        <= state["max_health"] * state["threshold_health_ratio"]
-    )
-    if threshold_due or health_due:
-        if threshold_due:
-            granted = state["threshold_shield"]
-            if (
-                state["venom_factor"] < 1.0
-                and state["threshold_shield_damage_type"] != "magic"
-            ):
-                # Venom cuts non-magic shields the target gains; this
-                # hit's venom was applied before the lifeline check.
-                granted *= state["venom_factor"]
-            state["threshold_shield_triggered"] = True
-            shield_expires_at = (
-                event_time + state["threshold_shield_duration"]
-                if state["threshold_shield_duration"] > 0.0
-                else float("inf")
+    # Absorption order, Lifeline arming, and the health transition are owned
+    # by ``shield_ledger`` (issue #159); this kernel supplies the storage and
+    # the ledger annotations, never a second copy of the semantics.
+    outcome = shield_ledger.absorb(state["pools"], amount, damage_type, event_time)
+    event_absorbed = outcome.absorbed
+    applied_to_health = outcome.applied_to_health
+    if outcome.threshold_shield_triggered:
+        ctx.ledger.write(action, threshold_shield_triggered=True)
+        expires_at = outcome.threshold_shield_expires_at
+        if expires_at is not None and math.isfinite(expires_at):
+            ctx.ledger.write(action, threshold_shield_expires_at=round(expires_at, 3))
+        if state["maw_lifeline_omnivamp_percent"] > 0.0:
+            state["maw_lifeline_omnivamp_active"] = True
+            ctx.ledger.write(
+                action,
+                maw_lifeline_omnivamp_activated=round(
+                    state["maw_lifeline_omnivamp_percent"], 6
+                ),
             )
-            state["threshold_shield_expired_at"] = shield_expires_at
-            state["shields"]["general_shield"] += granted
-            if math.isfinite(shield_expires_at):
-                state["timed_shields"].append(
-                    {
-                        "amount": granted,
-                        "expires_at": shield_expires_at,
-                        "shield_key": "general_shield",
-                        "source": "Lifeline",
-                    }
-                )
-            state["threshold_shield"] = 0.0
-            ctx.ledger.write(action, threshold_shield_triggered=True)
-            if math.isfinite(shield_expires_at):
-                ctx.ledger.write(
-                    action, threshold_shield_expires_at=round(shield_expires_at, 3)
-                )
-            if state["maw_lifeline_omnivamp_percent"] > 0.0:
-                state["maw_lifeline_omnivamp_active"] = True
-                ctx.ledger.write(
-                    action,
-                    maw_lifeline_omnivamp_activated=round(
-                        state["maw_lifeline_omnivamp_percent"], 6
-                    ),
-                )
-        if health_due:
-            bonus = state["threshold_health_bonus"]
-            state["max_health"] += bonus
-            state["health"] += bonus
-            heal = min(
-                state["threshold_health_heal"],
-                max(0.0, state["max_health"] - state["health"]),
-            )
-            state["health"] += heal
-            state["healing_received"] += heal
-            state["threshold_health_triggered"] = True
-            ctx.ledger.write(action, threshold_health_triggered=True)
-    general_absorbed = consume_general_shield(state, amount)
-    amount -= general_absorbed
-    state["shield_absorbed"] += general_absorbed
-    event_absorbed += general_absorbed
-    # Damage beyond the remaining shield + health is overkill, not more
-    # effective HP.  Keep the original pair value for diagnostics but
-    # expose only applied damage to the team-fight breakdown.
-    applied_to_health = min(amount, state["health"])
-    overkill = max(0.0, amount - applied_to_health)
-    state["health"] = max(0.0, state["health"] - applied_to_health)
-    state["health_damage"] += applied_to_health
-    state["overkill"] += overkill
-    ctx.ledger.annotate(action, overkill=round(overkill, 6))
+    if outcome.threshold_health_triggered:
+        # The kernel granted the temporary maximum health and delivered
+        # whatever of the sourced heal the arming instant could take; this
+        # walk has no over-time author for the remainder.
+        state["healing_received"] += outcome.threshold_health_healed
+        ctx.ledger.write(action, threshold_health_triggered=True)
+    ctx.ledger.annotate(action, overkill=round(outcome.overkill, 6))
     # The packet's post-mitigation value is replaced with the amount that
     # actually consumed the target's shield/health.  Keep ``pair_damage``
     # and ``live_damage`` above for diagnostics without letting overkill
@@ -1467,10 +1329,11 @@ def _apply_damage(
     if (
         action.execute_threshold_ratio > 0.0
         and applied_to_health > 0.0
-        and state["health"] > 0.0
-        and state["health"] <= state["max_health"] * action.execute_threshold_ratio
+        and state["pools"].health > 0.0
+        and state["pools"].health
+        <= state["pools"].max_health * action.execute_threshold_ratio
     ):
-        state["health"] = 0.0
+        state["pools"].health = 0.0
         state["execute_time"] = float(event_time)
         state["execute_source"] = str(action.execute_source or "The Collector")
         state["death_time"] = min(float(ctx.duration), float(event_time))
@@ -1479,7 +1342,7 @@ def _apply_damage(
             action,
             execute_triggered=True,
             execute_threshold=round(
-                state["max_health"] * action.execute_threshold_ratio, 6
+                state["pools"].max_health * action.execute_threshold_ratio, 6
             ),
         )
         if state["first_death_time"] is None:
@@ -1555,7 +1418,7 @@ def _apply_damage(
                 "sources": sorted(state["healing_reduction_sources"]),
             }
         )
-    if state["health"] <= 0.0 and state["death_time"] is None:
+    if state["pools"].health <= 0.0 and state["death_time"] is None:
         if state["first_death_time"] is None:
             state["first_death_time"] = float(event_time)
         trigger_defy(
@@ -1662,7 +1525,7 @@ def run_survival_walk(
             ledger.skip(action, "outside_window", damage_phase=phase >= 0)
             continue
 
-        expire_timed_shields(state, event_time)
+        shield_ledger.expire_timed(state["pools"], event_time)
         if (
             state["healing_reduction_until"] > 0.0
             and event_time >= state["healing_reduction_until"]
@@ -1674,7 +1537,7 @@ def run_survival_walk(
         if state["venom_until"] > 0.0 and event_time >= state["venom_until"]:
             # A new venom application after expiry starts a fresh window;
             # expired venom must not keep cutting shields.
-            state["venom_factor"] = 1.0
+            state["pools"].venom_factor = 1.0
         expire_temporary_health(state, event_time)
 
         kind = action.kind
@@ -1727,9 +1590,9 @@ def run_survival_walk(
                     holder_state["death_time"] is None
                     and (
                         action.redirect_holder_health_ratio <= 0.0
-                        or holder_state["max_health"] <= 0.0
-                        or holder_state["health"]
-                        > holder_state["max_health"]
+                        or holder_state["pools"].max_health <= 0.0
+                        or holder_state["pools"].health
+                        > holder_state["pools"].max_health
                         * action.redirect_holder_health_ratio
                         + 1e-9
                     )
@@ -1854,7 +1717,7 @@ def finalize_states(states: Sequence[dict[str, Any]], duration: float) -> None:
     """Post-walk expiry: timed shields and temporary health at the window
     edge (the authoritative walk's final pass)."""
     for state in states:
-        expire_timed_shields(state, float(duration))
+        shield_ledger.expire_timed(state["pools"], float(duration))
         expire_temporary_health(state, float(duration))
 
 
@@ -1863,9 +1726,8 @@ __all__ = [
     "apply_transition",
     "evaluate_live_raw_formula",
     "expire_temporary_health",
-    "expire_timed_shields",
     "finalize_states",
-    "participant_defenses",
+    "participant_pools",
     "resolve_grievous",
     "run_survival_walk",
 ]

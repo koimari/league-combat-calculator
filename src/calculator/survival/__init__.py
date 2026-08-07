@@ -6,8 +6,9 @@ Package layout (top-level flow: compile -> transition -> accumulate):
   interface plus the shared ordering helpers;
 * :mod:`transitions` — the single kernel: :func:`apply_transition` per
   kind, the shared :func:`run_survival_walk` loop, and the embedded
-  transitions (timed shields, thresholds, reactive shields, Maw omnivamp,
-  Defy);
+  transitions (reactive shields, Maw omnivamp, Defy).  Shield and health
+  absorption itself belongs to :mod:`calculator.shield_ledger`, which the
+  one-pair engine drives too (issue #159);
 * :mod:`receipt_state` — the annotating ledger adapter (public timeline);
 * :mod:`score_state` — the parallel-array ledger adapter (optimizer);
 * :mod:`compile` — the packet compiler with fail-closed capability
@@ -52,9 +53,8 @@ from .transitions import (
     apply_transition,
     evaluate_live_raw_formula,
     expire_temporary_health,
-    expire_timed_shields,
     finalize_states,
-    participant_defenses,
+    participant_pools,
     resolve_grievous,
     run_survival_walk,
 )
@@ -81,10 +81,9 @@ __all__ = [
     "evaluate_live_raw_formula",
     "event_sequence",
     "expire_temporary_health",
-    "expire_timed_shields",
     "finalize_states",
     "heal_trigger_key",
-    "participant_defenses",
+    "participant_pools",
     "participant_order",
     "resolve_grievous",
     "run_survival_walk",

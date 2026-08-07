@@ -253,8 +253,15 @@ def test_protoplasm_reprices_delayed_target_max_health_ticks_in_coupled_walk():
     ]
     assert survival["threshold_health_triggered"] is True
     assert survival["max_health"] == pytest.approx(429.4)
+    # Issue #159: both walks now share one Lifeline boundary.  The sourced
+    # wording is damage that would reduce you *below* 30%, and the first tick
+    # leaves this 200-HP target on exactly 60 — so it arms on the second tick,
+    # not the first.  Tick two therefore lands at the price the pair engine
+    # gave it; only tick three onward is repriced against the temporary
+    # maximum health.  Before the fix the coupled walk armed a tick early
+    # (``<=``) while the one-pair engine did not (``<``).
     assert [event["damage"] for event in q_events] == pytest.approx(
-        [140.0, 8.6, 18.4, 18.4, 18.4]
+        [140.0, 4.0, 18.4, 18.4, 18.4]
     )
 
 
