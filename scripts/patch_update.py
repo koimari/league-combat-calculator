@@ -406,7 +406,13 @@ def rebuild_static_artifacts():
     Rebuild it by hand, with the sibling checked out, when its wiki inputs move.
     """
     print("== Rebuilding static catalogues ==", flush=True)
-    for builder in ("build_ability_catalog.py", "build_effect_catalog.py"):
+    for builder in (
+        "build_ability_catalog.py",
+        "build_effect_catalog.py",
+        # Issue #163: entity receipts read the unified Atomizer item domain;
+        # a red builder would leave stale receipts in the release tree.
+        "build_receipts.py",
+    ):
         result = subprocess.run(
             [sys.executable, f"scripts/{builder}"], cwd=REPO_ROOT, check=False
         )
