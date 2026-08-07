@@ -339,3 +339,9 @@ numbers yet. The < 72h full re-cert SLA still applies.
   documented in Step 1.
 - Public launch / auth operations — see `docs/deploy-runbook.md`.
 - Issue-closure policy details — see `docs/issue-closure-policy.md`.
+
+## Environment (2026-08-07)
+
+- `LCC_WIKI_DB=/Users/river/Projects/scryglass/data/lol/knowledge/league-wiki.sqlite3`
+- `LCC_WIKI_QUERY=<repo>/vendor/league-wiki-query/scripts/query_league_wiki.py`
+- `LCC_AXWORD_SOURCE=/Users/river/Projects/lol-strength-analysis/src/data/generated/merakiAbilityKits.ts`

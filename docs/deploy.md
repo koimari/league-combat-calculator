@@ -36,3 +36,7 @@ the sensitive `SCRYGLASS_AUTH_USERS` variable. The app stores only a signed,
 seven-day session cookie; `/healthz` remains public for deployment probes.
 
 If Vercel rejects a CLI upload because the local Git author is not a team member, deploy an archive without `.git` metadata. Do not rewrite commit authorship.
+
+## Metrics smoke (issue #144)
+
+After deploy, GET /api/metrics must NOT return "Metrics module unavailable" (that 503 means the scorecard module failed to ship). Without Postgres it may return the distinct 503 "Database unavailable"; with a configured DB it returns the scorecard with the `gate` key. The CI container job asserts exactly this.
