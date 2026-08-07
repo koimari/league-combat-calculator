@@ -22,10 +22,12 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-# Ensure the src directory is on the path so calculator imports work.
-# The beta metrics scorecard lives in src/metrics.py (deployed shape), so no
-# repo-root insert is needed (issue #144).
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# Single import namespace (issue #164): the repository is imported as
+# ``src.calculator`` everywhere (tests, scripts, gunicorn ``src.app:app``).
+# Put the repository root on the path so ``src.calculator.*`` and the
+# ``scripts.*`` scorecard import resolve; never insert ``src/`` itself,
+# which would create a second ``calculator`` package tree in sys.modules.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from flask import (
     Flask,
@@ -39,28 +41,28 @@ from flask import (
     url_for,
 )
 
-from calculator.data_fetcher import (
+from src.calculator.data_fetcher import (
     fetch_champion_data,
     get_champion,
     get_item_by_name,
 )
-from calculator.item_effects import (
+from src.calculator.item_effects import (
     item_input_options_meta,
     refresh_item_effects,
     stat_conversion_metadata,
 )
-from calculator.rune_effects import keystone_catalog, refresh_rune_effects
-from calculator.item_coverage import (
+from src.calculator.rune_effects import keystone_catalog, refresh_rune_effects
+from src.calculator.item_coverage import (
     item_model_coverage,
     require_certified_target_timeline,
     target_item_model_coverage,
 )
-from calculator.loadout_rules import validate_resolved_loadout
-from calculator.defensive_effects import resolve_starting_defenses
-from calculator.participant_timeline import (
+from src.calculator.loadout_rules import validate_resolved_loadout
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.participant_timeline import (
     build_participant_timeline,
 )
-from calculator.champions import (
+from src.calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
     get_champion_module_meta,
@@ -68,19 +70,19 @@ from calculator.champions import (
     registered_engine_champion_names,
     reviewed_champion_names,
 )
-from calculator.champion_coverage import attacker_availability
-from calculator.capabilities import public_capability_contract
-from calculator.optimizer import (
+from src.calculator.champion_coverage import attacker_availability
+from src.calculator.capabilities import public_capability_contract
+from src.calculator.optimizer import (
     exclusivity_groups,
     get_eligible_boots,
     get_selectable_items,
     optimize_build,
     optimize_purchase,
 )
-from calculator.stats import MAX_LEVEL
-from calculator.stats import calculate_total_stats, get_item_stats
-from calculator.timeline_coverage import applicability_exclusion_sources
-from calculator.bis import (
+from src.calculator.stats import MAX_LEVEL
+from src.calculator.stats import calculate_total_stats, get_item_stats
+from src.calculator.timeline_coverage import applicability_exclusion_sources
+from src.calculator.bis import (
     BIS_CERTIFIED_DEFENSIVE_EFFECTS,
     BIS_UNMODELED_DEFENSIVE_EFFECTS,
     bis_candidate_pool,
@@ -91,24 +93,24 @@ from calculator.bis import (
     bis_replaced_loadout,
     roster_target_coverage,
 )
-from calculator.public_response import (
+from src.calculator.public_response import (
     aggregate_public_results,
     serialize_fight_result,
 )
-from calculator.scenario import (
+from src.calculator.scenario import (
     MAX_LOADOUT_ITEMS,
     ChampionLoadout,
     parse_scenario_request,
     resolve_scenario,
     validate_item_input_options,
 )
-from calculator.role_quests import (
+from src.calculator.role_quests import (
     boot_upgrade_contract,
     role_quest_meta,
     support_quest_item_contract,
     support_quest_item_stage,
 )
-from calculator.pipeline import (
+from src.calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
     DEFAULT_AUTO_ATTACK_UPTIME_MODE,
     DEFAULT_FIGHT_DURATION,
@@ -120,10 +122,10 @@ from calculator.pipeline import (
     FightParams,
     run_fight,
 )
-from rate_limit import TokenBucketStore
+from src.rate_limit import TokenBucketStore
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
-from db import (
+from src.db import (
     CacheUnavailable,
     add_feedback,
     cache_backend,
@@ -923,7 +925,7 @@ def _run_data_update():
     """Import data_updater only when actually updating: its import chain
     pulls in vendor/lolstaticdata, which production images don't ship."""
     # pylint: disable-next=import-outside-toplevel  # deliberate, see docstring
-    from calculator.data_updater import update_data
+    from src.calculator.data_updater import update_data
 
     return update_data()
 
@@ -2930,7 +2932,7 @@ def api_metrics():
     """
     try:
         # pylint: disable-next=import-outside-toplevel  # deliberate lazy import
-        from metrics import compute_scorecard
+        from src.metrics import compute_scorecard
     except ImportError as exc:
         app.logger.exception("Failed to import the beta metrics scorecard")
         return jsonify({"error": "Metrics module unavailable"}), 503

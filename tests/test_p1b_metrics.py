@@ -20,7 +20,7 @@ import src.app as app_module
 
 # The app imports its persistence layer as the top-level ``db`` module (src/
 # is placed on sys.path by app.py), so tests reuse that same module instance.
-import db
+from src import db
 
 ROOT = Path(__file__).parents[1]
 
@@ -395,7 +395,7 @@ def _seed_pass_scenario(db_module, tmp_path):
 
 def test_scorecard_pass_gate_from_seeded_rows(sqlite_database, tmp_path):
     report = _seed_pass_scenario(db, tmp_path)
-    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+    scorecard = __import__("src.metrics", fromlist=["compute_scorecard"]).compute_scorecard(
         now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report
     )
 
@@ -465,7 +465,7 @@ def test_scorecard_fail_gate_two_weeks_running(sqlite_database, tmp_path):
     report = tmp_path / "staleness.json"
     _write_staleness_report(report, BETA_START - 3 * DAY)
 
-    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+    scorecard = __import__("src.metrics", fromlist=["compute_scorecard"]).compute_scorecard(
         now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report
     )
     criteria = scorecard["criteria"]
@@ -522,7 +522,7 @@ def test_scorecard_pending_on_single_week_miss(sqlite_database, tmp_path):
     report = tmp_path / "staleness.json"
     _write_staleness_report(report, NOW - DAY)
 
-    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+    scorecard = __import__("src.metrics", fromlist=["compute_scorecard"]).compute_scorecard(
         now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report
     )
     assert scorecard["criteria"]["activation"]["status"] == "at_risk"
@@ -551,7 +551,7 @@ def test_scorecard_pending_while_beta_in_progress(sqlite_database, tmp_path):
     report = tmp_path / "staleness.json"
     _write_staleness_report(report, now - timedelta(hours=6))
 
-    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+    scorecard = __import__("src.metrics", fromlist=["compute_scorecard"]).compute_scorecard(
         now=now, beta_start=BETA_START, weeks=2, staleness_path=report
     )
     assert scorecard["beta"]["complete"] is False
@@ -574,7 +574,7 @@ def test_scorecard_retention_insufficient_until_7_days_elapse(
     report = tmp_path / "staleness.json"
     _write_staleness_report(report, now - timedelta(hours=6))
 
-    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+    scorecard = __import__("src.metrics", fromlist=["compute_scorecard"]).compute_scorecard(
         now=now, beta_start=BETA_START, weeks=2, staleness_path=report
     )
     retention = scorecard["criteria"]["retention"]
@@ -593,7 +593,7 @@ def test_scorecard_activation_ten_second_boundary(sqlite_database, tmp_path):
     report = tmp_path / "staleness.json"
     _write_staleness_report(report, NOW - timedelta(hours=6))
 
-    scorecard = __import__("metrics", fromlist=["compute_scorecard"]).compute_scorecard(
+    scorecard = __import__("src.metrics", fromlist=["compute_scorecard"]).compute_scorecard(
         now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report
     )
     activation = scorecard["criteria"]["activation"]

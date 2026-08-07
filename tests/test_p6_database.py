@@ -18,7 +18,7 @@ import src.app as app_module
 # is placed on sys.path by app.py).  ``import src.db`` would create a second
 # module instance with its own engine, so tests must use the same ``db`` the
 # app resolves.
-import db
+from src import db
 
 
 @pytest.fixture

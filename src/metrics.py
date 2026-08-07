@@ -33,7 +33,7 @@ from typing import Any
 
 from sqlalchemy import select
 
-import db
+from src import db
 
 # Resolves to the repo root locally and to the package root in the deployed
 # artifact (Vercel package root / Docker ``/app``); ``data/`` ships in every
