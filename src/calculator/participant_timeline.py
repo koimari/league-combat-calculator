@@ -2093,8 +2093,6 @@ def _simulate_survival(
             sequence += 1
             time_value += tick
 
-
-
     actions: list[SurvivalAction] = []
     for participant_id, events in support_effects.items():
         for support_index, event in enumerate(events):

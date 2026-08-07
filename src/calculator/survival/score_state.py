@@ -31,7 +31,6 @@ class ScoreLedger:
     write-once trigger marker.
     """
 
-
     __slots__ = ("n_actions", "applied", "status")
 
     def __init__(self, n_actions: int) -> None:
