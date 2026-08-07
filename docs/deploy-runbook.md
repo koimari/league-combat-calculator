@@ -77,8 +77,25 @@ Cache behavior:
 
 ### Project setup
 
+The production project is owned by the **KOI_Developments** team
+(`koidevelopments`). Always link and operate it with that team scope so
+production environment variables and deployments are not accidentally sent
+through a personal Vercel scope:
+
 ```bash
-vercel link --project scryglass-item-calculator
+vercel link --scope koidevelopments --project scryglass-item-calculator
+vercel env ls --scope koidevelopments
+```
+
+The checked-in `.vercel/project.json` must retain the team `orgId` and the
+project ID; do not recreate the project during a team migration. Environment
+values are encrypted and must be inspected only by names/status. For a
+read-only production-backed metrics run, use `vercel env run` rather than
+pulling values into a file:
+
+```bash
+vercel env run --scope koidevelopments -e production -- \
+  .venv/bin/python scripts/beta_metrics.py --beta-start <UTC-START> --weeks 2 --json
 ```
 
 ### Build command

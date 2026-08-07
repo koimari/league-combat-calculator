@@ -43,20 +43,20 @@ def champion_by_name():
     return {data.get("name"): data for data in champions.values()}
 
 
-def _parse(champion_data):
+def _parse(champion_data, champion_options=None):
     stats = calculate_total_stats(champion_data, 11, [])
     return parse_champion_abilities(
         champion_data,
         11,
         stats["ability_power"],
         ability_ranks=None,
+        champion_options=champion_options,
         champion_stats=stats,
         target_stats={
             "target_max_health": 2000.0,
             "target_current_health": 2000.0,
             "target_missing_health": 0.0,
         },
-        champion_options=None,
     )
 
 
@@ -163,3 +163,33 @@ def test_anivia_q_to_e_enhanced_consume(champion_by_name):
     order, edges = _order(champion_by_name, "Anivia")
     assert order[0] == "Q"
     assert _has_edge(edges, "Q", "E", "enhanced_consume")
+
+
+def test_seraphine_order_is_e_r_q_w_with_execute_edges(champion_by_name):
+    """F4 gamma row: Seraphine's Q is a missing-health execute cast after E/R."""
+    order, edges = _order(champion_by_name, "Seraphine")
+    assert order == ["E", "R", "Q", "W"]
+    assert _has_edge(edges, "E", "Q", "execute")
+    assert _has_edge(edges, "R", "Q", "execute")
+
+
+def test_variant_execute_atoms_do_not_leak_into_default_packets(champion_by_name):
+    """Inactive form rows must not create false missing-health edges."""
+    for name in ("Hwei", "Nidalee"):
+        order, edges = _order(champion_by_name, name)
+        assert not _has_edge(edges, "R", "Q", "execute")
+        assert not _has_edge(edges, "W", "Q", "execute")
+        assert not _has_edge(edges, "E", "Q", "execute")
+    assert _order(champion_by_name, "Hwei")[0] == ["Q", "W", "E", "R"]
+    assert _order(champion_by_name, "Nidalee")[0] == ["Q", "W", "E", "R"]
+
+
+def test_hwei_qw_variant_keeps_its_missing_health_execute(champion_by_name):
+    """QW/Severing Bolt retains the source-backed execute edge."""
+    data = champion_by_name["Hwei"]
+    parsed = _parse(data, {"q_variant": 1})
+    assert parsed["Q"]["name"] == "Severing Bolt"
+    order = _resolve(data, parsed)
+    edges = _edges("Hwei", data, parsed)
+    assert order == ["R", "Q", "W", "E"]
+    assert _has_edge(edges, "R", "Q", "execute")

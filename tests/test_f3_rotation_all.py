@@ -86,7 +86,9 @@ _EXPECTED_DERIVED_ORDERS = {
     "Evelynn": ["W", "Q", "E", "R"],  # W charm+shred, Q consumes mark, R execute
     "Ezreal": ["W", "Q", "E", "R"],  # W mark detonated by any ability
     "Garen": ["E", "Q", "W", "R"],  # E armor shred opens
-    "Hwei": ["R", "Q", "W", "E"],  # Q missing-health execute after R's burst
+    # Default QQ (Devastating Fire) has no missing-health rider; the resolver
+    # scopes that execute atom to the QW (Severing Bolt) packet variant.
+    "Hwei": ["Q", "W", "E", "R"],
     "Pantheon": ["W", "E", "R", "Q"],  # W stun opens, Q execute closes
     "Ryze": ["E", "Q", "W", "R"],  # E Flux mark consumed by basic abilities
     "Shaco": ["Q", "W", "R", "E"],  # E execute closes

@@ -397,6 +397,13 @@ _OPTION_SLOT_SPECIAL: dict[str, Any] = {
     "target_missing_hp_pct": {"Bel'Veth": "E", "Briar": "W", "Varus": "Q"},
 }
 
+# Some module options describe only one selected packet variant.  Keep the
+# option atom typed, but do not let it affect an inactive variant's rotation
+# (Hwei's missing-health rider belongs to QW/Severing Bolt, not QQ/QE).
+_OPTION_VARIANT_GATES: dict[tuple[str, str], tuple[str, ...]] = {
+    ("Hwei", "q_missing_health"): ("Severing Bolt",),
+}
+
 # Self-generated stacks / self-buffs: NOT target setup — no cross-slot edge.
 _SELF_OPTIONS = {
     "r_stacks",
@@ -624,6 +631,58 @@ def _corpus_attrs(corpus: Mapping[str, list[str]]) -> str:
     return " ".join(corpus["attrs"]).lower()
 
 
+def _active_slot_text(
+    champion_data: Mapping[str, Any], slot: str, info: Mapping[str, Any]
+) -> tuple[str, str] | None:
+    """Return text/attributes for the parsed variant selected for *slot*.
+
+    A champion JSON slot can contain several form/variant rows (for example
+    Nidalee's Javelin Toss and Takedown, or Hwei's QQ/QW/QE).  The resolver's
+    full slot corpus is still needed for passive-wide signals, but execute and
+    other attribute-driven consumers must inspect only the row represented by
+    the parsed packet.  Otherwise a missing-health row from an inactive
+    variant can create a false cross-slot edge.
+    """
+    abilities = champion_data.get("abilities", {})
+    rows = abilities.get(slot, []) or abilities.get(_PARENT_SLOT.get(slot, slot), [])
+    if not rows:
+        return None
+    active_name = re.sub(r"[^a-z0-9]+", "", str(info.get("name") or "").lower())
+    if not active_name:
+        return None
+
+    def row_name(row: Mapping[str, Any]) -> str:
+        return re.sub(r"[^a-z0-9]+", "", str(row.get("name") or "").lower())
+
+    selected = [row for row in rows if row_name(row) == active_name]
+    if not selected:
+        # Packet modules may decorate a sourced name (e.g. with a hit/form
+        # suffix).  Accept only an unambiguous containment match; otherwise
+        # fall back to the complete corpus rather than silently dropping a
+        # signal.
+        candidates = [
+            row
+            for row in rows
+            if row_name(row)
+            and (row_name(row) in active_name or active_name in row_name(row))
+        ]
+        if len(candidates) == 1:
+            selected = candidates
+    if not selected:
+        return None
+
+    attrs: list[str] = []
+    text: list[str] = []
+    for row in selected:
+        text.extend(str(row.get(key) or "") for key in ("name", "notes", "blurb"))
+        for eff in row.get("effects") or []:
+            text.append(str(eff.get("description") or ""))
+            attrs.extend(
+                str(level.get("attribute") or "") for level in eff.get("leveling") or []
+            )
+    return " ".join(text).lower(), " ".join(attrs).lower()
+
+
 def _is_damage_row(info: Mapping[str, Any]) -> bool:
     if float(info.get("total_raw", 0.0) or 0.0) > 0:
         return True
@@ -721,6 +780,14 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
     infos = {s: ability_damages[s] for s in corpora}
     texts = {s: _corpus_text(c) for s, c in corpora.items()}
     atexts = {s: _corpus_attrs(c) for s, c in corpora.items()}
+    # Keep full-corpus text for passive-wide detection, but use the selected
+    # packet row for attribute/prose consumers so inactive variants cannot
+    # manufacture execute or stored-damage edges.
+    active_texts: dict[str, str] = {}
+    active_atexts: dict[str, str] = {}
+    for s, info in infos.items():
+        active = _active_slot_text(champion_data, s, info)
+        active_texts[s], active_atexts[s] = active or (texts[s], atexts[s])
     slot_by_name: dict[str, str] = {}
     for s, c in corpora.items():
         for n in c["names"]:
@@ -830,6 +897,12 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
         for key in option_keys.get(b, []) + option_keys.get("__all__", []):
             if key in _SELF_OPTIONS:
                 continue
+            gated_names = _OPTION_VARIANT_GATES.get((champion_name, key))
+            if gated_names and not any(
+                name.casefold() in str(info.get("name") or "").casefold()
+                for name in gated_names
+            ):
+                continue
             if key in _CONSUME_OPTIONS:
                 role, cond = _CONSUME_OPTIONS[key]
                 if role == "execute" and not _is_damage_row(info):
@@ -842,7 +915,8 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                 else "proc"
             )
             cons.append(("detonation_consume", "stacks", f"post_hit_proc {nm!r}"))
-        at = atexts[b]
+        at = active_atexts[b]
+        active_text = active_texts[b]
         if _ATTR_PER_STACK.search(at):
             cons.append(
                 (
@@ -852,7 +926,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                 )
             )
         if _ATTR_ENHANCED_DMG.search(at):
-            if _P_TARGET_MISSING.search(texts[b]) and _is_damage_row(info):
+            if _P_TARGET_MISSING.search(active_text) and _is_damage_row(info):
                 # "Enhanced ... based on the target's missing health" rows are
                 # missing-health executes, not conditional-vs-state consumes
                 # (Seraphine Q: up to 75% bonus vs missing health).
@@ -879,8 +953,8 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                     f"attribute {_ATTR_DETONATION.search(at).group(0)!r}",
                 )
             )
-        execute_prose = _P_EXECUTES.search(texts[b])
-        lethal_prose = _P_LETHAL_EXECUTE.search(texts[b])
+        execute_prose = _P_EXECUTES.search(active_text)
+        lethal_prose = _P_LETHAL_EXECUTE.search(active_text)
         # A generic "based on missing health" amplifier (for example
         # Bel'Veth E slashes or Nidalee's human Q packet) is not itself an
         # execute.  The fallback is intentionally narrow: an existing
@@ -891,7 +965,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
             b == "R" and _ATTR_EXECUTE_DAMAGE.search(at)
         )
         if (
-            (_P_TARGET_MISSING.search(texts[b]) and (execute_attr or lethal_prose))
+            (_P_TARGET_MISSING.search(active_text) and (execute_attr or lethal_prose))
             or execute_prose
         ) and _is_damage_row(info):
             if execute_attr:
@@ -901,7 +975,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
             else:
                 cite = "lethal execute prose + target-missing-health"
             cons.append(("execute", "execute", cite))
-        if _ATTR_MARK_DMG.search(at) or _P_ABILITY_CONSUMES_MARK.search(texts[b]):
+        if _ATTR_MARK_DMG.search(at) or _P_ABILITY_CONSUMES_MARK.search(active_text):
             cons.append(("mark_consume", "mark", "mark consumption"))
         if _ATTR_STORED_DMG.search(at):
             cons.append(
@@ -1089,7 +1163,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
     # champion's abilities (Ezreal W, Ryze E) -> slot before the burst
     for b in corpora:
         if (
-            _P_ABILITY_CONSUMES_MARK.search(texts[b])
+            _P_ABILITY_CONSUMES_MARK.search(active_texts[b])
             and "phrase:marks-target" in apply_atoms[b]
         ):
             for a in corpora:
@@ -1243,9 +1317,25 @@ _MATRIX_SPECS = (
 # per-champion cache: matrix DPS rows at the reference points
 _MATRIX_DPS_CACHE: dict[str, list[list[tuple[str, float]]]] = {}
 
-# per-champion cache: the FULL-KIT derived rule (order is matrix-invariant by
-# construction; the fight's own level/build only narrows which slots exist).
-_DERIVED_RULE_CACHE: dict[str, ComboRule] = {}
+# Derived rules are cached by champion plus the selected packet variant for
+# champions whose cast order depends on that selection.  Flat kits retain the
+# inexpensive champion-only key; variant-aware keys prevent Hwei's QQ/QW/QE
+# packet from reusing an order derived for a different subject.
+_DERIVED_RULE_CACHE: dict[tuple[str, tuple[tuple[str, str], ...]], ComboRule] = {}
+_VARIANT_SENSITIVE_CHAMPIONS = {"Hwei"}
+
+
+def _derived_cache_key(
+    champion_name: str, ability_damages: Mapping[str, Any]
+) -> tuple[str, tuple[tuple[str, str], ...]]:
+    if champion_name not in _VARIANT_SENSITIVE_CHAMPIONS:
+        return champion_name, ()
+    signature = tuple(
+        (slot, str(info.get("name") or ""))
+        for slot in _CAST_SLOTS
+        if isinstance((info := ability_damages.get(slot)), Mapping) and info.get("name")
+    )
+    return champion_name, signature
 
 
 def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
@@ -1343,7 +1433,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         The derived rule (``derived=True``).  The order is a permutation
         of the base slots — no new slots, none dropped.
     """
-    cached = _DERIVED_RULE_CACHE.get(champion_name)
+    cache_key = _derived_cache_key(champion_name, ability_damages)
+    cached = _DERIVED_RULE_CACHE.get(cache_key)
     if cached is not None:
         # The cached rule is the FULL-KIT derivation (matrix-invariant); the
         # fight's own parse decides which slots exist — filter the order to
@@ -1374,8 +1465,16 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
 
     # Derive from the CANONICAL full-kit parse (level 11, no items), not the
     # request's parse — the request may be a partial kit (level 1) and the
-    # derivation must reflect the champion's complete mechanic surface.
+    # derivation must reflect the champion's complete mechanic surface.  A
+    # variant-sensitive champion overlays the selected packet rows so its
+    # typed execute/consume atoms remain tied to the active form.
+    request_abilities = ability_damages
     ability_damages = _canonical_kit_parse(champion_name, champion_data)
+    if champion_name in _VARIANT_SENSITIVE_CHAMPIONS:
+        for slot in _CAST_SLOTS:
+            selected = request_abilities.get(slot)
+            if isinstance(selected, Mapping) and selected.get("name"):
+                ability_damages[slot] = selected
 
     from src.calculator.champions import (
         get_champion_options_meta,
@@ -1431,7 +1530,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             aoe=aoe,
             derived=True,
         )
-        _DERIVED_RULE_CACHE[champion_name] = rule
+        _DERIVED_RULE_CACHE[cache_key] = rule
         return rule
 
     base_idx = {s: i for i, s in enumerate(base)}
@@ -1461,7 +1560,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             aoe=aoe,
             derived=True,
         )
-        _DERIVED_RULE_CACHE[champion_name] = rule
+        _DERIVED_RULE_CACHE[cache_key] = rule
         return rule
 
     fight_dps = rank_ability_dps(ability_damages, target_count=1, aoe=aoe)
@@ -1526,7 +1625,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         aoe=aoe,
         derived=True,
     )
-    _DERIVED_RULE_CACHE[champion_name] = rule
+    _DERIVED_RULE_CACHE[cache_key] = rule
     return rule
 
 
